@@ -44,15 +44,16 @@ defmodule PlausibleWeb.UserAuth do
           conn
           |> set_user_token(session.token)
           |> Plug.Conn.put_session("current_team_id", team.identifier)
+          |> PlausibleWeb.LoginPreference.set_sso()
           |> set_logged_in_cookie()
           |> Phoenix.Controller.redirect(to: redirect_to)
 
         {:error, :integration_not_found} ->
           conn
           |> log_out_user()
+          |> Phoenix.Controller.put_flash(:login_error, "Wrong email.")
           |> Phoenix.Controller.redirect(
-            to:
-              Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: redirect_path)
+            to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
           )
 
         {:error, :over_limit} ->
@@ -60,8 +61,9 @@ defmodule PlausibleWeb.UserAuth do
 
           conn
           |> log_out_user()
+          |> Phoenix.Controller.put_flash(:login_error, error)
           |> Phoenix.Controller.redirect(
-            to: Routes.sso_path(conn, :login_form, error: error, return_to: redirect_path)
+            to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
           )
 
         {:error, reason, team, user}

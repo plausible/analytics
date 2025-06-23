@@ -50,12 +50,10 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
         |> Phoenix.Controller.redirect(external: url)
 
       {:error, :not_found} ->
-        Phoenix.Controller.redirect(conn,
-          to:
-            Routes.sso_path(conn, :login_form,
-              error: "Wrong email.",
-              return_to: return_to
-            )
+        conn
+        |> Phoenix.Controller.put_flash(:login_error, "Wrong email.")
+        |> Phoenix.Controller.redirect(
+          to: Routes.sso_path(conn, :login_form, return_to: return_to)
         )
     end
   end
@@ -72,9 +70,9 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
         |> consume(integration_id, cookie, saml_response, relay_state)
 
       {:error, :session_expired} ->
-        Phoenix.Controller.redirect(conn,
-          to: Routes.sso_path(conn, :login_form, error: "Session expired.")
-        )
+        conn
+        |> Phoenix.Controller.put_flash(:login_error, "Session expired.")
+        |> Phoenix.Controller.redirect(to: Routes.sso_path(conn, :login_form))
     end
   end
 
@@ -105,12 +103,10 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
       PlausibleWeb.UserAuth.log_in_user(conn, identity, cookie.return_to)
     else
       {:error, reason} ->
-        Phoenix.Controller.redirect(conn,
-          to:
-            Routes.sso_path(conn, :login_form,
-              error: error_by_reason(reason),
-              return_to: cookie.return_to
-            )
+        conn
+        |> Phoenix.Controller.put_flash(:login_error, error_by_reason(reason))
+        |> Phoenix.Controller.redirect(
+          to: Routes.sso_path(conn, :login_form, return_to: cookie.return_to)
         )
     end
   end

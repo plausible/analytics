@@ -1,7 +1,7 @@
 . {
   bind 0.0.0.0
   template IN TXT plausible.test {
-    answer "{{ .Name }} 60 IN TXT \"plausible-sso-verification=${integration_id}\""
+    answer "{{ .Name }} 60 IN TXT \"plausible-sso-verification=${domain_id}\""
     fallthrough
   }
   log
