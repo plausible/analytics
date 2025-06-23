@@ -228,7 +228,7 @@ defmodule PlausibleWeb.AuthController do
 
   on_ee do
     def login_form(conn, params) do
-      login_preference = LoginPreference.get_preference(conn)
+      login_preference = LoginPreference.get(conn)
 
       case {login_preference, params["prefer"]} do
         {"sso", nil} ->
@@ -286,7 +286,7 @@ defmodule PlausibleWeb.AuthController do
         end
 
       conn
-      |> LoginPreference.set_preference("standard")
+      |> LoginPreference.clear()
       |> UserAuth.log_in_user(user, redirect_path)
     else
       {:error, :wrong_password} ->

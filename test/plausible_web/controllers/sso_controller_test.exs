@@ -24,7 +24,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
     describe "login_form/2" do
       test "renders login view", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :login_form))
+        conn = get(conn, Routes.sso_path(conn, :login_form, prefer: "sso"))
 
         assert html = html_response(conn, 200)
 
@@ -33,22 +33,8 @@ defmodule PlausibleWeb.SSOControllerTest do
         assert text_of_attr(html, "input[name=return_to]", "value") == ""
       end
 
-      test "redirects to standard login view if preferred", %{conn: conn} do
-        conn = PlausibleWeb.LoginPreference.set_preference(conn, "standard")
-        conn = get(conn, Routes.sso_path(conn, :login_form, return_to: "foo"))
-
-        assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form, return_to: "foo")
-      end
-
-      test "keeps sso login form if preference manually overridden", %{conn: conn} do
-        conn = PlausibleWeb.LoginPreference.set_preference(conn, "standard")
-        conn = get(conn, Routes.sso_path(conn, :login_form), prefer: "manual")
-
-        assert html_response(conn, 200)
-      end
-
       test "passes return_to parameter to form", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :login_form, return_to: "/sites"))
+        conn = get(conn, Routes.sso_path(conn, :login_form, return_to: "/sites", prefer: "sso"))
 
         assert html = html_response(conn, 200)
 

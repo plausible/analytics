@@ -44,7 +44,7 @@ defmodule PlausibleWeb.UserAuth do
           conn
           |> set_user_token(session.token)
           |> Plug.Conn.put_session("current_team_id", team.identifier)
-          |> PlausibleWeb.LoginPreference.set_preference("sso")
+          |> PlausibleWeb.LoginPreference.set_sso()
           |> set_logged_in_cookie()
           |> Phoenix.Controller.redirect(to: redirect_to)
 

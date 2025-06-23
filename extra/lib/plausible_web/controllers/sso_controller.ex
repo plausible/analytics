@@ -12,10 +12,10 @@ defmodule PlausibleWeb.SSOController do
        [:owner] when action in [:sso_settings]
 
   def login_form(conn, params) do
-    login_preference = LoginPreference.get_preference(conn)
+    login_preference = LoginPreference.get(conn)
 
     case {login_preference, params["prefer"]} do
-      {"standard", nil} ->
+      {nil, nil} ->
         redirect(conn, to: Routes.auth_path(conn, :login_form, return_to: params["return_to"]))
 
       _ ->
