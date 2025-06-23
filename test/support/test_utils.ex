@@ -1,6 +1,5 @@
 defmodule Plausible.TestUtils do
   use Plausible.Repo
-  use Plausible
   alias Plausible.Factory
 
   defmacro __using__(_) do
@@ -53,7 +52,6 @@ defmodule Plausible.TestUtils do
 
     conn =
       conn
-      |> Plug.Conn.fetch_session()
       |> Plug.Conn.put_session(:current_team_id, team.identifier)
 
     {:ok, conn: conn, team: team}
@@ -99,27 +97,6 @@ defmodule Plausible.TestUtils do
       |> init_session()
 
     {:ok, conn: conn}
-  end
-
-  on_ee do
-    alias Plausible.Auth.SSO
-
-    def setup_sso(%{team: team}) do
-      team = Plausible.Teams.complete_setup(team)
-      integration = SSO.initiate_saml_integration(team)
-
-      {:ok, sso_domain} = SSO.Domains.add(integration, "example.com")
-      _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
-
-      {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
-    end
-
-    def provision_sso_user(%{user: user}) do
-      identity = new_identity(user.name, user.email)
-      {:ok, _, _, sso_user} = SSO.provision_user(identity)
-
-      {:ok, user: sso_user}
-    end
   end
 
   def init_session(conn) do
@@ -350,16 +327,5 @@ defmodule Plausible.TestUtils do
     File.mkdir_p!(tmp_dir)
     ExUnit.Callbacks.on_exit(fn -> File.rm_rf!(tmp_dir) end)
     tmp_dir
-  end
-
-  on_ee do
-    def new_identity(name, email, id \\ Ecto.UUID.generate()) do
-      %Plausible.Auth.SSO.Identity{
-        id: id,
-        name: name,
-        email: email,
-        expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
-      }
-    end
   end
 end

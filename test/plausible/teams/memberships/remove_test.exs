@@ -24,8 +24,6 @@ defmodule Plausible.Teams.Memberships.RemoveTest do
       to: [nil: collaborator.email],
       subject: @subject_prefix <> "Your access to \"#{team.name}\" team has been revoked"
     )
-
-    assert Repo.reload(user)
   end
 
   test "when member is removed, associated personal segment is deleted" do
@@ -123,27 +121,6 @@ defmodule Plausible.Teams.Memberships.RemoveTest do
       assert {:error, :permission_denied} = Remove.remove(team, another_member.id, user)
 
       assert_team_membership(another_member, team, :viewer)
-    end
-  end
-
-  on_ee do
-    describe "SSO user" do
-      setup [:create_user, :create_team, :setup_sso, :provision_sso_user]
-
-      test "removes SSO user along with membership", %{team: team, user: user} do
-        owner = add_member(team, role: :owner)
-
-        assert {:ok, _} = Remove.remove(team, user.id, owner)
-
-        refute_team_member(user, team)
-
-        assert_email_delivered_with(
-          to: [nil: user.email],
-          subject: @subject_prefix <> "Your access to \"#{team.name}\" team has been revoked"
-        )
-
-        refute Repo.reload(user)
-      end
     end
   end
 end

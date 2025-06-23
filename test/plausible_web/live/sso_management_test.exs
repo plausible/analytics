@@ -11,7 +11,6 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
-    alias Plausible.Auth
     alias Plausible.Auth.SSO
 
     @cert_pem """
@@ -242,8 +241,9 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
 
-        {:ok, user, _} = Auth.TOTP.initiate(user)
-        {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
+        user
+        |> Ecto.Changeset.change(totp_enabled: true, totp_secret: "secret")
+        |> Plausible.Repo.update!()
 
         identity = new_identity("Lance Wurst", "lance@org.example.com")
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
@@ -276,6 +276,15 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         conn = assign(conn, :live_module, PlausibleWeb.Live.SSOManagement)
         {:ok, lv, html} = live(conn, Routes.sso_path(conn, :sso_settings))
         {lv, html}
+      end
+
+      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
+        %SSO.Identity{
+          id: id,
+          name: name,
+          email: email,
+          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
+        }
       end
     end
   end

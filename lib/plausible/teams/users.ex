@@ -63,26 +63,15 @@ defmodule Plausible.Teams.Users do
 
   def team_member?(user, opts \\ []) do
     excluded_team_ids = Keyword.get(opts, :except, [])
-    only_setup? = Keyword.get(opts, :only_setup?, false)
 
-    query =
+    Repo.exists?(
       from(
         tm in Teams.Membership,
         where: tm.user_id == ^user.id,
         where: tm.role != :guest,
         where: tm.team_id not in ^excluded_team_ids
       )
-
-    query =
-      if only_setup? do
-        query
-        |> join(:inner, [tm], t in assoc(tm, :team), as: :team)
-        |> where([team: t], t.setup_complete == true)
-      else
-        query
-      end
-
-    Repo.exists?(query)
+    )
   end
 
   def has_sites?(user, opts \\ []) do

@@ -108,21 +108,6 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
     end
   end
 
-  on_ee do
-    describe "accept_invitation/3 - team invitations - SSO user" do
-      setup [:create_user, :create_team, :setup_sso, :provision_sso_user]
-
-      test "does not allow accepting invite by SSO user", %{user: invitee} do
-        inviter = new_user()
-        team = new_site(owner: inviter).team
-
-        invitation = invite_member(team, invitee, inviter: inviter, role: :editor)
-
-        assert {:error, :permission_denied} = Accept.accept(invitation.invitation_id, invitee)
-      end
-    end
-  end
-
   describe "accept_invitation/3 - guest invitations" do
     test "converts an invitation into a membership" do
       inviter = new_user()

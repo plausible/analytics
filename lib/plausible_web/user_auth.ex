@@ -64,8 +64,7 @@ defmodule PlausibleWeb.UserAuth do
             to: Routes.sso_path(conn, :login_form, error: error, return_to: redirect_path)
           )
 
-        {:error, reason, team, user}
-        when reason in [:multiple_memberships, :active_personal_team] ->
+        {:error, :multiple_memberships, team, user} ->
           redirect_path = Routes.site_path(conn, :index, __team: team.identifier)
 
           log_in_user(conn, user, redirect_path)

@@ -3,8 +3,6 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   Service for updating role of a team member.
   """
 
-  use Plausible
-
   alias Plausible.Repo
   alias Plausible.Teams
   alias Plausible.Teams.Memberships
@@ -25,9 +23,9 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
              new_role,
              granting_to_self?
            ),
-         :ok <- check_owner_can_get_demoted(team, team_membership.role, new_role),
-         team_membership = Repo.preload(team_membership, :user),
-         :ok <- check_can_promote_to_owner(team, team_membership.user, new_role) do
+         :ok <- check_owner_can_get_demoted(team, team_membership.role, new_role) do
+      team_membership = Repo.preload(team_membership, :user)
+
       if team_membership.role == :guest and new_role != :guest do
         team_membership.user.email
         |> PlausibleWeb.Email.guest_to_team_member_promotion(
@@ -45,29 +43,6 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
       :ok = maybe_prune_guest_memberships(team_membership)
 
       {:ok, team_membership}
-    end
-  end
-
-  on_ee do
-    defp check_can_promote_to_owner(team, user, :owner) do
-      if team.policy.force_sso == :all_but_owners and not Plausible.Auth.TOTP.enabled?(user) do
-        {:error, :mfa_disabled}
-      else
-        :ok
-      end
-    end
-
-    defp check_can_promote_to_owner(_team, _user, _new_role), do: :ok
-  else
-    defp check_can_promote_to_owner(_team, _user, _new_role) do
-      # The `else` branch is not reachable.
-      # This a workaround for Elixir 1.18+ compiler
-      # being too smart.
-      if :erlang.phash2(1, 1) == 0 do
-        :ok
-      else
-        {:error, :mfa_disabled}
-      end
     end
   end
 

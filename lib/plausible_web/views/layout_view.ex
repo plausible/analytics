@@ -113,9 +113,7 @@ defmodule PlausibleWeb.LayoutView do
           if(not Teams.setup?(current_team),
             do: %{key: "API Keys", value: "api-keys", icon: :key}
           ),
-          if(Plausible.Users.type(conn.assigns.current_user) == :standard,
-            do: %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
-          )
+          %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
         ]
         |> Enum.reject(&is_nil/1)
     }
