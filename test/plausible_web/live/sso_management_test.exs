@@ -236,7 +236,11 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         assert text_of_attr(html, ~s|#sso-policy_sso_session_timeout_minutes|, "value") == "710"
       end
 
-      test "force SSO toggle", %{conn: conn, team: team, user: user} do
+      test "force SSO toggle disabled when operator is standard user", %{
+        conn: conn,
+        team: team,
+        user: user
+      } do
         setup_integration(team, "org.example.com")
         {_lv, html} = get_lv(conn)
 
@@ -247,6 +251,31 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         identity = new_identity("Lance Wurst", "lance@org.example.com")
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        {_lv, html} = get_lv(conn)
+
+        assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
+        assert html =~ "you must be logged in via SSO"
+      end
+
+      test "force SSO toggle works when operator is SSO user", %{
+        conn: conn,
+        team: team,
+        user: user
+      } do
+        setup_integration(team, "example.com")
+        {_lv, html} = get_lv(conn)
+
+        assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
+
+        {:ok, user, _} = Auth.TOTP.initiate(user)
+        {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+        identity = new_identity(user.name, user.email)
+        {:ok, _, _, user} = SSO.provision_user(identity)
+
+        {:ok, conn: conn} = log_in(%{conn: conn, user: user})
+        conn = set_current_team(conn, team)
 
         {lv, html} = get_lv(conn)
 
