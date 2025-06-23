@@ -12,7 +12,21 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.Plugs.NoRobots
     on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
     plug PlausibleWeb.AuthPlug
+    on_ee(do: plug(Plausible.Plugs.SSOTeamAccess))
     plug PlausibleWeb.Plugs.UserSessionTouch
+  end
+
+  on_ee do
+    pipeline :browser_sso_notice do
+      plug :accepts, ["html"]
+      plug :fetch_session
+      plug :fetch_live_flash
+      plug :put_secure_browser_headers
+      plug PlausibleWeb.Plugs.NoRobots
+      on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
+      plug PlausibleWeb.AuthPlug
+      plug PlausibleWeb.Plugs.UserSessionTouch
+    end
   end
 
   pipeline :shared_link do
@@ -465,18 +479,26 @@ defmodule PlausibleWeb.Router do
     delete "/team/delete", SettingsController, :delete_team
   end
 
+  on_ee do
+    scope "/", PlausibleWeb do
+      pipe_through [:browser_sso_notice, :csrf]
+
+      get "/sso/notice", SSOController, :provision_notice
+      get "/sso/issue", SSOController, :provision_issue
+      get "/logout", AuthController, :logout
+      get "/team/select", AuthController, :select_team
+    end
+  end
+
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
-    on_ee do
-      get "/sso/notice", SSOController, :provision_notice
-      get "/sso/issue", SSOController, :provision_issue
+    on_ce do
+      get "/logout", AuthController, :logout
+      get "/team/select", AuthController, :select_team
     end
 
-    get "/logout", AuthController, :logout
     delete "/me", AuthController, :delete_me
-
-    get "/team/select", AuthController, :select_team
 
     get "/auth/google/callback", AuthController, :google_auth_callback
 
