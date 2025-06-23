@@ -13,9 +13,10 @@ defmodule PlausibleWeb.SSOController do
 
   def login_form(conn, params) do
     login_preference = LoginPreference.get(conn)
+    error = Phoenix.Flash.get(conn.assigns.flash, :login_error)
 
-    case {login_preference, params["prefer"]} do
-      {nil, nil} ->
+    case {login_preference, params["prefer"], error} do
+      {nil, nil, nil} ->
         redirect(conn, to: Routes.auth_path(conn, :login_form, return_to: params["return_to"]))
 
       _ ->
@@ -38,7 +39,9 @@ defmodule PlausibleWeb.SSOController do
         )
 
       {:error, :not_found} ->
-        render(conn, "login_form.html", error: "Wrong email.")
+        conn
+        |> put_flash(:login_error, "Wrong email.")
+        |> redirect(to: Routes.sso_path(conn, :login_form))
     end
   end
 

@@ -229,9 +229,10 @@ defmodule PlausibleWeb.AuthController do
   on_ee do
     def login_form(conn, params) do
       login_preference = LoginPreference.get(conn)
+      error = Phoenix.Flash.get(conn.assigns.flash, :login_error)
 
-      case {login_preference, params["prefer"]} do
-        {"sso", nil} ->
+      case {login_preference, params["prefer"], error} do
+        {"sso", nil, nil} ->
           if Plausible.sso_enabled?() do
             redirect(conn, to: Routes.sso_path(conn, :login_form, return_to: params["return_to"]))
           else
@@ -292,13 +293,17 @@ defmodule PlausibleWeb.AuthController do
       {:error, :wrong_password} ->
         maybe_log_failed_login_attempts("wrong password for #{email}")
 
-        render(conn, "login_form.html", error: "Wrong email or password. Please try again.")
+        conn
+        |> put_flash(:login_error, "Wrong email or password. Please try again.")
+        |> render("login_form.html")
 
       {:error, :user_not_found} ->
         maybe_log_failed_login_attempts("user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
-        render(conn, "login_form.html", error: "Wrong email or password. Please try again.")
+        conn
+        |> put_flash(:login_error, "Wrong email or password. Please try again.")
+        |> render("login_form.html")
 
       {:error, {:rate_limit, _}} ->
         maybe_log_failed_login_attempts("too many login attempts for #{email}")

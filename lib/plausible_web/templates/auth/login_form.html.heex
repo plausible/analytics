@@ -29,8 +29,8 @@
       />
     </div>
 
-    <%= if @conn.assigns[:error] do %>
-      <div class="text-red-500 mt-4">{@conn.assigns[:error]}</div>
+    <%= if login_error = Phoenix.Flash.get(@flash, :login_error) do %>
+      <div class="text-red-500 mt-4">{login_error}</div>
     <% end %>
 
     <.input type="hidden" field={f[:return_to]} />

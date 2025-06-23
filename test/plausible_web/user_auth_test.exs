@@ -140,12 +140,14 @@ defmodule PlausibleWeb.UserAuthTest do
         conn =
           conn
           |> init_session()
+          |> fetch_flash()
           |> UserAuth.log_in_user(identity)
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
 
-        assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: "")
+        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "")
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
 
         assert conn.private[:plug_session_info] == :renew
         refute get_session(conn, :user_token)
@@ -170,15 +172,15 @@ defmodule PlausibleWeb.UserAuthTest do
         conn =
           conn
           |> init_session()
+          |> fetch_flash()
           |> UserAuth.log_in_user(identity)
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
 
-        assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :login_form,
-                   error: "Team can't accept more members. Please contact the owner.",
-                   return_to: ""
-                 )
+        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "")
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "Team can't accept more members. Please contact the owner."
 
         assert conn.private[:plug_session_info] == :renew
         refute get_session(conn, :user_token)

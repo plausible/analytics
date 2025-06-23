@@ -40,6 +40,23 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert text_of_attr(html, "input[name=return_to]", "value") == "/sites"
       end
+
+      test "renders error if provided in login_error flash message", %{conn: conn} do
+        conn =
+          conn
+          |> init_session()
+          |> fetch_session()
+          |> fetch_flash()
+          |> put_flash(:login_error, "Wrong email.")
+
+        conn = get(conn, Routes.sso_path(conn, :login_form, return_to: "/sites"))
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Wrong email."
+        assert element_exists?(html, "input[name=email]")
+        assert text_of_attr(html, "input[name=return_to]", "value") == "/sites"
+      end
     end
 
     describe "login/2" do
@@ -83,11 +100,9 @@ defmodule PlausibleWeb.SSOControllerTest do
             "return_to" => "/sites"
           })
 
-        assert html = html_response(conn, 200)
+        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form)
 
-        assert html =~ "Wrong email."
-        assert element_exists?(html, "input[name=email]")
-        assert text_of_attr(html, "input[name=return_to]", "value") == "/sites"
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
       end
     end
 
@@ -177,8 +192,9 @@ defmodule PlausibleWeb.SSOControllerTest do
             "return_to" => "/sites"
           })
 
-        assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: "/sites")
+        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
       end
     end
 

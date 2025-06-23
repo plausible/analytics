@@ -51,9 +51,9 @@ defmodule PlausibleWeb.UserAuth do
         {:error, :integration_not_found} ->
           conn
           |> log_out_user()
+          |> Phoenix.Controller.put_flash(:login_error, "Wrong email.")
           |> Phoenix.Controller.redirect(
-            to:
-              Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: redirect_path)
+            to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
           )
 
         {:error, :over_limit} ->
@@ -61,8 +61,9 @@ defmodule PlausibleWeb.UserAuth do
 
           conn
           |> log_out_user()
+          |> Phoenix.Controller.put_flash(:login_error, error)
           |> Phoenix.Controller.redirect(
-            to: Routes.sso_path(conn, :login_form, error: error, return_to: redirect_path)
+            to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
           )
 
         {:error, :multiple_memberships, team, user} ->
