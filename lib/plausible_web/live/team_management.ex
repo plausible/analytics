@@ -333,7 +333,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp entry_label(%Layout.Entry{role: :guest, type: :membership}, _), do: nil
   defp entry_label(%Layout.Entry{type: :invitation_pending}, _), do: "Invitation Pending"
   defp entry_label(%Layout.Entry{type: :invitation_sent}, _), do: "Invitation Sent"
+
+  defp entry_label(%Layout.Entry{meta: %{user: %{id: id, type: :sso}}}, %{id: id}),
+    do: "You (SSO)"
+
   defp entry_label(%Layout.Entry{meta: %{user: %{id: id}}}, %{id: id}), do: "You"
+  defp entry_label(%Layout.Entry{meta: %{user: %{type: :sso}}}, _), do: "SSO Member"
   defp entry_label(_, _), do: "Team Member"
 
   def at_limit?(layout, limit) do

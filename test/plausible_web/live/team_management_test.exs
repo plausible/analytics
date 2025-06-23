@@ -76,6 +76,13 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
           new_identity(member.name, member.email)
           |> Plausible.Auth.SSO.provision_user()
 
+        {:ok, _, _, user} =
+          new_identity(user.name, user.email)
+          |> Plausible.Auth.SSO.provision_user()
+
+        {:ok, conn: conn} = log_in(%{conn: conn, user: user})
+        conn = set_current_team(conn, team)
+
         lv = get_liveview(conn)
 
         html = render(lv)
@@ -85,7 +92,10 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
                  "#{member_el()}:nth-of-type(1) button"
                ) == "Owner"
 
+        assert text_of_element(html, "#{member_el()}:nth-of-type(1)") =~ "You (SSO)"
+
         assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
+        assert text_of_element(html, "#{member_el()}:nth-of-type(2)") =~ "SSO Member"
 
         change_role(lv, 2, "owner")
         html = render(lv)
