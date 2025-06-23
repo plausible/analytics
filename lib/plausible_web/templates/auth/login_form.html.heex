@@ -53,7 +53,10 @@
         <%= on_ee do %>
           Have a Single Sign-on account?
           <.styled_link href={
-            Routes.sso_path(@conn, :login_form, return_to: @conn.params["return_to"])
+            Routes.sso_path(@conn, :login_form,
+              return_to: @conn.params["return_to"],
+              prefer: "manual"
+            )
           }>
             Sign in here
           </.styled_link>

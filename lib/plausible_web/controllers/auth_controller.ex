@@ -1,11 +1,13 @@
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  use Plausible
 
   alias Plausible.Auth
   alias Plausible.Teams
   alias PlausibleWeb.TwoFactor
   alias PlausibleWeb.UserAuth
+  alias PlausibleWeb.LoginPreference
 
   require Logger
 
@@ -224,8 +226,26 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
-  def login_form(conn, _params) do
-    render(conn, "login_form.html")
+  on_ee do
+    def login_form(conn, params) do
+      login_preference = LoginPreference.get_preference(conn)
+
+      case {login_preference, params["prefer"]} do
+        {"sso", nil} ->
+          if Plausible.sso_enabled?() do
+            redirect(conn, to: Routes.sso_path(conn, :login_form, return_to: params["return_to"]))
+          else
+            render(conn, "login_form.html")
+          end
+
+        _ ->
+          render(conn, "login_form.html")
+      end
+    end
+  else
+    def login_form(conn, _params) do
+      render(conn, "login_form.html")
+    end
   end
 
   def login(conn, %{"user" => params}) do
@@ -265,7 +285,9 @@ defmodule PlausibleWeb.AuthController do
             params["return_to"]
         end
 
-      UserAuth.log_in_user(conn, user, redirect_path)
+      conn
+      |> LoginPreference.set_preference("standard")
+      |> UserAuth.log_in_user(user, redirect_path)
     else
       {:error, :wrong_password} ->
         maybe_log_failed_login_attempts("wrong password for #{email}")

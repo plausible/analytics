@@ -4,6 +4,7 @@ defmodule PlausibleWeb.SSOController do
   require Logger
 
   alias Plausible.Auth.SSO
+  alias PlausibleWeb.LoginPreference
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
@@ -11,7 +12,15 @@ defmodule PlausibleWeb.SSOController do
        [:owner] when action in [:sso_settings]
 
   def login_form(conn, params) do
-    render(conn, "login_form.html", error: params["error"])
+    login_preference = LoginPreference.get_preference(conn)
+
+    case {login_preference, params["prefer"]} do
+      {"standard", nil} ->
+        redirect(conn, to: Routes.auth_path(conn, :login_form, return_to: params["return_to"]))
+
+      _ ->
+        render(conn, "login_form.html")
+    end
   end
 
   def login(conn, %{"email" => email} = params) do

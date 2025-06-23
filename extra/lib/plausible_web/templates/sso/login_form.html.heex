@@ -33,7 +33,10 @@
       <:item>
         Have a standard account?
         <.styled_link href={
-          Routes.auth_path(@conn, :login_form, return_to: @conn.params["return_to"])
+          Routes.auth_path(@conn, :login_form,
+            return_to: @conn.params["return_to"],
+            prefer: "manual"
+          )
         }>
           Log in here
         </.styled_link>

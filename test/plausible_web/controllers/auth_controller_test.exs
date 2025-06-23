@@ -488,6 +488,20 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert input_value == "/dummy.site"
     end
+
+    @tag :ee_only
+    test "redirects to sso login if preferred", %{conn: conn} do
+      conn = PlausibleWeb.LoginPreference.set_preference(conn, "sso")
+      conn = get(conn, "/login?return_to=foo")
+      assert redirected_to(conn, 302) == "/sso/login?return_to=foo"
+    end
+
+    @tag :ee_only
+    test "keeps standard login form if preference manually overridden", %{conn: conn} do
+      conn = PlausibleWeb.LoginPreference.set_preference(conn, "sso")
+      conn = get(conn, "/login?prefer=manual")
+      assert html_response(conn, 200) =~ "Enter your account credentials"
+    end
   end
 
   describe "POST /login" do
