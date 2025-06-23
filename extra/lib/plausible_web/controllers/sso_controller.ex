@@ -54,7 +54,9 @@ defmodule PlausibleWeb.SSOController do
       case params["issue"] do
         "not_a_member" -> :not_a_member
         "multiple_memberships" -> :multiple_memberships
+        "multiple_memberships_noforce" -> :multiple_memberships_noforce
         "active_personal_team" -> :active_personal_team
+        "active_personal_team_noforce" -> :active_personal_team_noforce
         _ -> :unknown
       end
 
