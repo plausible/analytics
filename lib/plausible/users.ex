@@ -41,6 +41,13 @@ defmodule Plausible.Users do
     :ok
   end
 
+  @spec remember_last_team(Auth.User.t(), String.t() | nil) :: :ok
+  def remember_last_team(%Auth.User{id: user_id}, team_identifier) do
+    q = from(u in Auth.User, where: u.id == ^user_id)
+    Repo.update_all(q, set: [last_team_identifier: team_identifier])
+    :ok
+  end
+
   @spec has_email_code?(Auth.User.t()) :: boolean()
   def has_email_code?(user) do
     Auth.EmailVerification.any?(user)
