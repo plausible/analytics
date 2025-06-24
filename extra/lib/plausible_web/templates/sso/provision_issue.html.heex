@@ -3,31 +3,39 @@
     Single Sign-On enforcement
   </:title>
 
-  <p :if={@issue == :multiple_memberships} class="text-sm">
+  <p :if={@issue == :multiple_memberships}>
     To access this team, you must first leave all other teams.
   </p>
 
-  <p :if={@issue == :multiple_memberships_noforce} class="text-sm">
-    To access this team as an SSO user, you must first leave all other teams.
+  <p :if={@issue == :multiple_memberships_noforce}>
+    To log in as an SSO user, you must first leave all other teams.
   </p>
 
-  <p :if={@issue == :active_personal_team} class="text-sm">
-    To access this team, you must either remove or transfer all sites
-    you own under "My Personal Sites". You also have to cancel subscription
-    on "My Personal Sites" if there's an active one.
-  </p>
+  <div :if={@issue == :active_personal_team} class="flex flex-col space-y-2">
+    <p>
+      To access this team, you must either remove or transfer all sites you own under "My Personal Sites".
+    </p>
 
-  <p :if={@issue == :active_personal_team_noforce} class="text-sm">
-    To access this team as an SSO user, you must either remove or transfer all sites
-    you own under "My Personal Sites". You also have to cancel subscription
-    on "My Personal Sites" if there's an active one.
-  </p>
+    <p>
+      You also have to cancel subscription for "My Personal Sites" if there is an active one.
+    </p>
+  </div>
 
-  <p :if={@issue == :not_a_member} class="text-sm">
+  <div :if={@issue == :active_personal_team_noforce} class="flex flex-col space-y-2">
+    <p>
+      To log in as an SSO user, you must either remove or transfer all sites you own under "My Personal Sites".
+    </p>
+
+    <p>
+      You also have to cancel subscription on "My Personal Sites" if there is an active one.
+    </p>
+  </div>
+
+  <p :if={@issue == :not_a_member}>
     To access this team, you must join as a team member first.
   </p>
 
-  <p :if={!@conn.assigns[:current_user]} class="text-sm">
+  <p :if={!@conn.assigns[:current_user]} class="mt-4">
     <.styled_link href={Routes.auth_path(@conn, :login_form, prefer: "manual")}>
       Log in
     </.styled_link>

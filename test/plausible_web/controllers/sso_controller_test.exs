@@ -261,7 +261,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         assert html = html_response(conn, 200)
 
         assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team as an SSO user, you must first leave all other teams"
+        assert html =~ "To log in as an SSO user, you must first leave all other teams"
 
         assert html =~ "Log in"
         assert html =~ "with your email and password"
@@ -288,7 +288,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         assert html =~ "Single Sign-On enforcement"
 
         assert html =~
-                 "To access this team as an SSO user, you must either remove or transfer all sites"
+                 "To log in as an SSO user, you must either remove or transfer all sites"
 
         assert html =~ "Log in"
         assert html =~ "with your email and password"
