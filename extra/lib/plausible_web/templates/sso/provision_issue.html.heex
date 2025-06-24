@@ -2,16 +2,23 @@
   <:title>
     Single Sign-On enforcement
   </:title>
+  <:subtitle>
+    The owner of <span :if={is_nil(@conn.assigns[:current_team])}>the team</span>
+    <span :if={@conn.assigns[:current_team]}>"{@conn.assigns[:current_team].name}"</span>
+    has turned off regular email and password logins.
+    To keep things secure and simple, you can only sign in using your organization's
+    Single Sign-On (SSO) system.
+  </:subtitle>
 
-  <p :if={@issue == :multiple_memberships}>
+  <p :if={@issue == :multiple_memberships} class="text-sm">
     To access this team, you must first leave all other teams.
   </p>
 
-  <p :if={@issue == :multiple_memberships_noforce}>
+  <p :if={@issue == :multiple_memberships_noforce} class="text-sm">
     To log in as an SSO user, you must first leave all other teams.
   </p>
 
-  <div :if={@issue == :active_personal_team} class="flex flex-col space-y-2">
+  <div :if={@issue == :active_personal_team} class="text-sm flex flex-col space-y-2">
     <p>
       To access this team, you must either remove or transfer all sites you own under "My Personal Sites".
     </p>
@@ -21,7 +28,7 @@
     </p>
   </div>
 
-  <div :if={@issue == :active_personal_team_noforce} class="flex flex-col space-y-2">
+  <div :if={@issue == :active_personal_team_noforce} class="text-sm flex flex-col space-y-2">
     <p>
       To log in as an SSO user, you must either remove or transfer all sites you own under "My Personal Sites".
     </p>
@@ -31,11 +38,11 @@
     </p>
   </div>
 
-  <p :if={@issue == :not_a_member}>
+  <p :if={@issue == :not_a_member} class="text-sm">
     To access this team, you must join as a team member first.
   </p>
 
-  <p :if={!@conn.assigns[:current_user]} class="mt-4">
+  <p :if={!@conn.assigns[:current_user]} class="text-sm mt-4">
     <.styled_link href={Routes.auth_path(@conn, :login_form, prefer: "manual")}>
       Log in
     </.styled_link>
