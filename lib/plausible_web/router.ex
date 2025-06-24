@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.Plugs.NoRobots
     on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
     plug PlausibleWeb.AuthPlug
+    on_ee(do: plug(Plausible.Plugs.HandleExpiredSession))
     on_ee(do: plug(Plausible.Plugs.SSOTeamAccess))
     plug PlausibleWeb.Plugs.UserSessionTouch
   end
@@ -25,6 +26,7 @@ defmodule PlausibleWeb.Router do
       plug PlausibleWeb.Plugs.NoRobots
       on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
       plug PlausibleWeb.AuthPlug
+      on_ee(do: plug(Plausible.Plugs.HandleExpiredSession))
       plug PlausibleWeb.Plugs.UserSessionTouch
     end
   end

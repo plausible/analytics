@@ -33,7 +33,10 @@ defmodule Plausible.Auth.UserSessions do
     end
   end
 
-  @spec get_by_token(String.t()) :: {:ok, Auth.UserSession.t()} | {:error, :not_found}
+  @spec get_by_token(String.t()) ::
+          {:ok, Auth.UserSession.t()}
+          | {:error, :not_found}
+          | {:error, :expired, Auth.UserSession.t()}
   def get_by_token(token) do
     now = NaiveDateTime.utc_now(:second)
 
@@ -50,14 +53,18 @@ defmodule Plausible.Auth.UserSessions do
         left_join: o in assoc(t, :owners),
         left_lateral_join: ts in subquery(last_team_subscription_query),
         on: true,
-        where: us.token == ^token and us.timeout_at > ^now,
+        where: us.token == ^token,
         order_by: t.id,
         preload: [user: {u, team_memberships: {tm, team: {t, subscription: ts, owners: o}}}]
       )
 
     case Repo.one(token_query) do
       %Auth.UserSession{} = user_session ->
-        {:ok, user_session}
+        if NaiveDateTime.compare(user_session.timeout_at, now) == :gt do
+          {:ok, user_session}
+        else
+          {:error, :expired, user_session}
+        end
 
       nil ->
         {:error, :not_found}

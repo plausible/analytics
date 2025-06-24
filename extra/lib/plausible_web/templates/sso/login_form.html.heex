@@ -9,7 +9,12 @@
       </p>
     <% end %>
   </:subtitle>
-  <.form :let={f} for={@conn} action={Routes.sso_path(@conn, :login)}>
+  <script :if={@autosubmit}>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("sso-login-form").submit();
+    });
+  </script>
+  <.form :let={f} id="sso-login-form" for={@conn} action={Routes.sso_path(@conn, :login)}>
     <div class="my-4 mt-8">
       <.input
         type="email"

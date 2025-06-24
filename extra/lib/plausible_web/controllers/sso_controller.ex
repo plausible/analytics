@@ -20,7 +20,7 @@ defmodule PlausibleWeb.SSOController do
         redirect(conn, to: Routes.auth_path(conn, :login_form, return_to: params["return_to"]))
 
       _ ->
-        render(conn, "login_form.html")
+        render(conn, "login_form.html", autosubmit: params["autosubmit"] != nil)
     end
   end
 

@@ -75,6 +75,9 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:teams, teams)
         |> assign(:more_teams?, teams_count > 3)
 
+      {:error, :session_expired, user_session} ->
+        assign(conn, :expired_session, user_session)
+
       _ ->
         conn
     end
