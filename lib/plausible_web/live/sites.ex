@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Live.Sites do
         }
         class="mt-4 dark:text-gray-100 text-center"
       >
-        You currently have no personal sites. Are you looking for your team’s sites? 
+        You currently have no personal sites. Are you looking for your team’s sites?
         <.styled_link href={Routes.auth_path(@socket, :select_team)}>
           Go to your team &rarr;
         </.styled_link>
