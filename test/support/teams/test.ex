@@ -49,12 +49,6 @@ defmodule Plausible.Teams.Test do
     |> insert(args)
   end
 
-  def new_team() do
-    new_user()
-    |> Map.fetch!(:team_memberships)
-    |> List.first()
-  end
-
   def new_user(args \\ []) do
     {team_args, args} = Keyword.pop(args, :team, [])
     {trial_expiry_date, args} = Keyword.pop(args, :trial_expiry_date)
