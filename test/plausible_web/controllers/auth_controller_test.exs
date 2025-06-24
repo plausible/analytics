@@ -1724,6 +1724,48 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  describe "GET /team/select" do
+    setup [:create_user, :log_in]
+
+    test "redirects to /sites if no teams available", %{conn: conn} do
+      conn = get(conn, Routes.auth_path(conn, :select_team))
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+    end
+
+    test "redirects to /sites?__team if one team set up available", %{conn: conn, user: user} do
+      new_site(owner: user)
+      team = team_of(user)
+      assert Plausible.Teams.complete_setup(team)
+      conn = get(conn, Routes.auth_path(conn, :select_team))
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
+    end
+
+    test "displays team switcher if >1 teams available", %{conn: conn, user: user} do
+      t1 = new_site(owner: user).team
+      t2 = new_site().team
+
+      add_member(t2, user: user, role: :viewer)
+
+      Plausible.Teams.complete_setup(t1)
+      Plausible.Teams.complete_setup(t2)
+
+      conn = get(conn, Routes.auth_path(conn, :select_team))
+      assert html = html_response(conn, 200)
+
+      assert text(html) =~ "Switch your current team"
+
+      assert element_exists?(
+               html,
+               ~s|a[href="#{Routes.site_path(conn, :index, __team: t1.identifier)}"]|
+             )
+
+      assert element_exists?(
+               html,
+               ~s|a[href="#{Routes.site_path(conn, :index, __team: t2.identifier)}"]|
+             )
+    end
+  end
+
   defp login_with_cookie(conn, email, password) do
     conn
     |> post(Routes.auth_path(conn, :login), %{
