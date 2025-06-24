@@ -66,11 +66,15 @@ defmodule PlausibleWeb.UserAuth do
             to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
           )
 
-        {:error, reason, team, user}
+        {:error, reason, _team, _user}
         when reason in [:multiple_memberships, :active_personal_team] ->
-          redirect_path = Routes.site_path(conn, :index, __team: team.identifier)
+          issue = to_string(reason) <> "_noforce"
 
-          log_in_user(conn, user, redirect_path)
+          conn
+          |> log_out_user()
+          |> Phoenix.Controller.redirect(
+            to: Routes.sso_path(conn, :provision_issue, issue: issue)
+          )
       end
     end
   end

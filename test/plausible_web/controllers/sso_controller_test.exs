@@ -218,5 +218,81 @@ defmodule PlausibleWeb.SSOControllerTest do
         assert html =~ "Configure and manage Single Sign-On for your team"
       end
     end
+
+    describe "provision_notice/2" do
+      test "renders the notice", %{conn: conn} do
+        conn = get(conn, Routes.sso_path(conn, :provision_notice))
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Single Sign-On enforcement"
+        assert html =~ "To access this team, you must first"
+        assert html =~ "log out"
+        assert html =~ "and log in as SSO user"
+      end
+    end
+
+    describe "provision_issue/2" do
+      test "renders issue for not_a_member", %{conn: conn} do
+        conn = get(conn, Routes.sso_path(conn, :provision_issue, issue: "not_a_member"))
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Single Sign-On enforcement"
+        assert html =~ "To access this team, you must join as a team member first"
+      end
+
+      test "renders issue for multiple_memberships", %{conn: conn} do
+        conn = get(conn, Routes.sso_path(conn, :provision_issue, issue: "multiple_memberships"))
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Single Sign-On enforcement"
+        assert html =~ "To access this team, you must first leave all other teams"
+      end
+
+      test "renders issue for multiple_memberships_noforce", %{conn: conn} do
+        conn =
+          get(
+            conn,
+            Routes.sso_path(conn, :provision_issue, issue: "multiple_memberships_noforce")
+          )
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Single Sign-On enforcement"
+        assert html =~ "To log in as an SSO user, you must first leave all other teams"
+
+        assert html =~ "Log in"
+        assert html =~ "with your email and password"
+      end
+
+      test "renders issue for active_personal_team", %{conn: conn} do
+        conn = get(conn, Routes.sso_path(conn, :provision_issue, issue: "active_personal_team"))
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Single Sign-On enforcement"
+        assert html =~ "To access this team, you must either remove or transfer all sites"
+      end
+
+      test "renders issue for active_personal_team_noforce", %{conn: conn} do
+        conn =
+          get(
+            conn,
+            Routes.sso_path(conn, :provision_issue, issue: "active_personal_team_noforce")
+          )
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Single Sign-On enforcement"
+
+        assert html =~
+                 "To log in as an SSO user, you must either remove or transfer all sites"
+
+        assert html =~ "Log in"
+        assert html =~ "with your email and password"
+      end
+    end
   end
 end

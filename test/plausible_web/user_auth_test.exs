@@ -186,7 +186,7 @@ defmodule PlausibleWeb.UserAuthTest do
         refute get_session(conn, :user_token)
       end
 
-      test "passes through for user matching SSO identity on multiple teams, redirecting to team",
+      test "tries to log out for user matching SSO identity on multiple teams, redirecting to issue notice",
            %{
              conn: conn,
              user: user
@@ -209,11 +209,13 @@ defmodule PlausibleWeb.UserAuthTest do
           |> init_session()
           |> UserAuth.log_in_user(identity)
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
-        assert get_session(conn, :user_token)
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :provision_issue, issue: "multiple_memberships_noforce")
+
+        refute get_session(conn, :user_token)
       end
 
-      test "passes through for user matching SSO identity with active personal team, redirecting to team",
+      test "tries to log out for user matching SSO identity with active personal team, redirecting to issue notice",
            %{
              conn: conn,
              user: user
@@ -236,8 +238,10 @@ defmodule PlausibleWeb.UserAuthTest do
           |> init_session()
           |> UserAuth.log_in_user(identity)
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
-        assert get_session(conn, :user_token)
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :provision_issue, issue: "active_personal_team_noforce")
+
+        refute get_session(conn, :user_token)
       end
     end
   end
