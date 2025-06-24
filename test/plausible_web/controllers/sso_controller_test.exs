@@ -22,6 +22,36 @@ defmodule PlausibleWeb.SSOControllerTest do
       {:ok, team: team, integration: integration, domain: domain, sso_domain: sso_domain}
     end
 
+    describe "settings item visibility" do
+      test "sso team settings item renders when SSO feature plan is added", %{conn: conn} do
+        user =
+          new_user() |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.SSO])
+
+        team = new_site(owner: user).team |> Plausible.Teams.complete_setup()
+        {:ok, conn: conn} = log_in(%{conn: conn, user: user})
+        conn = set_current_team(conn, team)
+
+        conn = get(conn, Routes.settings_path(conn, :team_general))
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Single Sign-On"
+      end
+
+      test "sso team settings item is hidden when there's no SSO plan feature", %{conn: conn} do
+        user = new_user()
+        team = new_site(owner: user).team |> Plausible.Teams.complete_setup()
+        {:ok, conn: conn} = log_in(%{conn: conn, user: user})
+        conn = set_current_team(conn, team)
+
+        conn = get(conn, Routes.settings_path(conn, :team_general))
+
+        assert html = html_response(conn, 200)
+
+        refute html =~ "Single Sign-On"
+      end
+    end
+
     describe "login_form/2" do
       test "renders login view", %{conn: conn} do
         conn = get(conn, Routes.sso_path(conn, :login_form, prefer: "sso"))
@@ -208,7 +238,16 @@ defmodule PlausibleWeb.SSOControllerTest do
         assert redirected_to(conn, 302) == "/sites"
       end
 
-      test "renders when team is setup", %{conn: conn, team: team} do
+      test "redirects when team lacks SSO plan feature", %{conn: conn, team: team} do
+        team = Plausible.Teams.complete_setup(team)
+        conn = set_current_team(conn, team)
+        conn = get(conn, Routes.sso_path(conn, :sso_settings))
+
+        assert redirected_to(conn, 302) == "/sites"
+      end
+
+      test "renders when team has SSO plan feature", %{conn: conn, team: team, user: user} do
+        user |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.SSO])
         team = Plausible.Teams.complete_setup(team)
         conn = set_current_team(conn, team)
         conn = get(conn, Routes.sso_path(conn, :sso_settings))

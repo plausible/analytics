@@ -75,7 +75,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           hourly_api_request_limit: 600,
           site_limit: 50,
           team_member_limit: 10,
-          features: Plausible.Billing.Feature.list()
+          features: Plausible.Billing.Feature.list() -- [Plausible.Billing.Feature.SSO]
         }
       end
 

@@ -37,7 +37,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
       end
 
       test "sso team settings item is guarded by the env var", %{conn: conn} do
-        user = new_user()
+        user =
+          new_user() |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.SSO])
+
         team = new_site(owner: user).team |> Plausible.Teams.complete_setup()
         {:ok, ctx} = log_in(%{conn: conn, user: user})
         conn = ctx[:conn]

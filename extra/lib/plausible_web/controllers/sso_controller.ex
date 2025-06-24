@@ -78,7 +78,8 @@ defmodule PlausibleWeb.SSOController do
   end
 
   def sso_settings(conn, _params) do
-    if Plausible.Teams.setup?(conn.assigns.current_team) and Plausible.sso_enabled?() do
+    if Plausible.Teams.setup?(conn.assigns.current_team) and Plausible.sso_enabled?() and
+         Plausible.Billing.Feature.SSO.check_availability(conn.assigns.current_team) == :ok do
       render(conn, :sso_settings,
         layout: {PlausibleWeb.LayoutView, :settings},
         connect_live_socket: true

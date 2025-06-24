@@ -12,7 +12,7 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Teams
 
   alias Plausible.Billing.{EnterprisePlan, Feature, Plan, Plans, Quota}
-  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, SharedLinks}
+  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, SharedLinks, SSO}
 
   require Plausible.Billing.Subscription.Status
 
@@ -556,8 +556,21 @@ defmodule Plausible.Teams.Billing do
               )
         )
 
-      if sites_api_used? do
-        site_scoped_feature_usage ++ [SitesAPI]
+      site_scoped_feature_usage =
+        if sites_api_used? do
+          site_scoped_feature_usage ++ [SitesAPI]
+        else
+          site_scoped_feature_usage
+        end
+
+      sso_used? =
+        case Plausible.Auth.SSO.get_integration_for(team) do
+          {:ok, _} -> true
+          _ -> false
+        end
+
+      if sso_used? do
+        site_scoped_feature_usage ++ [SSO]
       else
         site_scoped_feature_usage
       end
@@ -662,7 +675,7 @@ defmodule Plausible.Teams.Billing do
 
       nil ->
         if Teams.on_trial?(team) do
-          Feature.list() -- [SitesAPI]
+          Feature.list() -- [SitesAPI, SSO]
         else
           [Goals]
         end

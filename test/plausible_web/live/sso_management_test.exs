@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
     """
 
     describe "/settings/sso/general" do
-      setup [:create_user, :log_in, :create_team, :setup_team]
+      setup [:create_user, :log_in, :create_team, :add_plan, :setup_team]
 
       test "renders", %{conn: conn} do
         resp =
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
     end
 
     describe "live" do
-      setup [:create_user, :log_in, :create_team, :setup_team]
+      setup [:create_user, :log_in, :create_team, :add_plan, :setup_team]
 
       test "init setup - basic walk through", %{conn: conn} do
         {lv, _html} = get_lv(conn)
@@ -305,6 +305,12 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         conn = assign(conn, :live_module, PlausibleWeb.Live.SSOManagement)
         {:ok, lv, html} = live(conn, Routes.sso_path(conn, :sso_settings))
         {lv, html}
+      end
+
+      defp add_plan(%{user: user}) do
+        subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.SSO])
+
+        :ok
       end
     end
   end
