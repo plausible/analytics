@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Live.Sites do
 
       <p
         :if={
-          @has_sites? and Teams.name(@current_team) == Teams.default_name() and @sites.entries == [] and
+          @has_sites? and not Teams.setup?(@current_team) and @sites.entries == [] and
             @filter_text == ""
         }
         class="mt-4 dark:text-gray-100 text-center"
