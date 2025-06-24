@@ -78,7 +78,8 @@ defmodule Plausible.Billing.Feature do
     Plausible.Billing.Feature.RevenueGoals,
     Plausible.Billing.Feature.SiteSegments,
     Plausible.Billing.Feature.SitesAPI,
-    Plausible.Billing.Feature.StatsAPI
+    Plausible.Billing.Feature.StatsAPI,
+    Plausible.Billing.Feature.SSO
   ]
 
   # Generate a union type for features
@@ -229,6 +230,15 @@ defmodule Plausible.Billing.Feature.SitesAPI do
   use Plausible.Billing.Feature,
     name: :sites_api,
     display_name: "Sites API"
+end
+
+defmodule Plausible.Billing.Feature.SSO do
+  use Plausible
+
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :sso,
+    display_name: "Single Sign-On"
 end
 
 defmodule Plausible.Billing.Feature.Teams do

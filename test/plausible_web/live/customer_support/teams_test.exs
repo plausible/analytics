@@ -176,7 +176,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "revenue_goals" => "false",
               "site_segments" => "false",
               "shared_links" => "true",
-              "sites_api" => "true"
+              "sites_api" => "true",
+              "sso" => "false"
             }
           }
         })
