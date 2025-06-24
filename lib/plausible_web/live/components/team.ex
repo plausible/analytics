@@ -44,7 +44,13 @@ defmodule PlausibleWeb.Live.Components.Team do
         <div class="flex-1 text-right">
           <.dropdown id={"role-dropdown-#{@user.email}"}>
             <:button class="role bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-              {@role |> to_string() |> String.capitalize()}
+              <span :if={@disabled} class="text-gray-400">
+                {@role |> to_string() |> String.capitalize()}
+              </span>
+              <span :if={not @disabled}>
+                {@role |> to_string() |> String.capitalize()}
+              </span>
+              <Heroicons.chevron_down :if={@disabled} mini class="text-gray-400 size-4 mt-0.5" />
               <Heroicons.chevron_down :if={not @disabled} mini class="size-4 mt-0.5" />
             </:button>
             <:menu class="dropdown-items max-w-60">
@@ -104,6 +110,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 View all sites under your team
               </.role_item>
               <.dropdown_divider />
+
               <.dropdown_item
                 id={"#{:erlang.phash2(@user.email)}-remove"}
                 href="#"

@@ -148,6 +148,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
           label={entry_label(entry, @current_user)}
           my_role={@my_role}
           remove_disabled={not Layout.removable?(@layout, email)}
+          disabled={@my_role not in [:owner, :admin]}
         />
       </div>
 
