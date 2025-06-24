@@ -93,7 +93,16 @@ defmodule PlausibleWeb.AuthController do
         }
       end)
 
-    render(conn, "select_team.html", teams_selection: teams)
+    case teams do
+      [] ->
+        redirect(conn, to: Routes.site_path(conn, :index))
+
+      [%{identifier: sole_team_identifier}] ->
+        redirect(conn, to: Routes.site_path(conn, :index, __team: sole_team_identifier))
+
+      [_ | _] ->
+        render(conn, "select_team.html", teams_selection: teams)
+    end
   end
 
   def activate_form(conn, params) do
