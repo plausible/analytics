@@ -48,7 +48,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
     service_opts = [
       skip_checks?: meta["skip_checks"] == true,
       verification_opts: [
-        nameservers: Application.get_env(:plausible, :sso_verification_nameservers) || []
+        nameservers: Application.get_env(:plausible, :sso_verification_nameservers)
       ]
     ]
 
