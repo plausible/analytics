@@ -293,10 +293,7 @@ defmodule PlausibleWeb.UserAuthTest do
       assert {:error, :no_valid_token} = UserAuth.get_user_session(%{"current_user_id" => 123})
     end
 
-    test "returns error on missing session", %{
-      conn: conn,
-      user: user
-    } do
+    test "returns error on missing session", %{conn: conn, user: user} do
       %{sessions: [user_session]} = Repo.preload(user, :sessions)
       Repo.delete!(user_session)
 
@@ -304,6 +301,16 @@ defmodule PlausibleWeb.UserAuthTest do
 
       assert {:error, :session_not_found} =
                UserAuth.get_user_session(%{"user_token" => user_session.token})
+    end
+
+    test "returns error on expired session", %{conn: conn} do
+      now = NaiveDateTime.utc_now(:second)
+      in_the_past = NaiveDateTime.add(now, -1, :hour)
+      {:ok, user_session} = UserAuth.get_user_session(conn)
+      user_session |> Ecto.Changeset.change(timeout_at: in_the_past) |> Repo.update!()
+
+      assert {:error, :session_expired, expired_session} = UserAuth.get_user_session(conn)
+      assert expired_session.id == user_session.id
     end
   end
 
