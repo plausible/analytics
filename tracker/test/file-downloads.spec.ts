@@ -536,7 +536,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
 
       await page.click('a')
       const [[, trackingResponseTime], [, navigationTime]] = await resolveWithTimestamps([
-        trackingPromise
+        trackingPromise,
         navigationPromise
       ])
       await expect(downloadableFileMock.getRequestList()).resolves.toHaveLength(

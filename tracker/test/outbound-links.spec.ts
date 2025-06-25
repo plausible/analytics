@@ -255,7 +255,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await page.click('a')
     const [[, trackingResponseTime], [, navigationTime]] = await resolveWithTimestamps([
       trackingPromise,
-      navigationPromise,
+      navigationPromise
     ])
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)

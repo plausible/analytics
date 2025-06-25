@@ -345,7 +345,7 @@ for (const mode of ['legacy', 'web']) {
         [trackingRequestList, trackingResponseTime], 
         [, navigationTime]
       ] = await resolveWithTimestamps([
-        eventsApiMock.getRequestList()
+        eventsApiMock.getRequestList(),
         navigationPromise
       ])
       await expect(page.getByText('Subscription successful')).toBeVisible()
