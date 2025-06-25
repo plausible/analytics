@@ -19,18 +19,13 @@
           href_base="/settings/"
         />
 
-        <div class="hidden lg:block py-4  top-0 sticky">
+        <div class="hidden lg:block py-4 top-0 sticky">
           <h3 class="uppercase text-sm text-indigo-600 font-semibold">Account Settings</h3>
           <p class="text-xs dark:text-gray-400 truncate">{@current_user.email}</p>
-          <%= for %{key: key, value: value, icon: icon} <- options["Account Settings"]  do %>
-            {render("_settings_tab.html",
-              icon: icon,
-              this_tab: value,
-              text: key,
-              conn: @conn,
-              submenu?: false
-            )}
-          <% end %>
+          <Layout.settings_sidebar
+            selected_fn={&is_current_tab(@conn, &1)}
+            options={options["Account Settings"]}
+          />
 
           <div :if={Plausible.Teams.setup?(@current_team)}>
             <h3 class="uppercase text-sm text-indigo-600 font-semibold mt-6">Team Settings</h3>
@@ -38,15 +33,10 @@
               {Plausible.Teams.name(@current_team)}
             </p>
 
-            <%= for %{key: key, value: value, icon: icon} <- options["Team Settings"]  do %>
-              {render("_settings_tab.html",
-                icon: icon,
-                this_tab: value,
-                text: key,
-                conn: @conn,
-                submenu?: false
-              )}
-            <% end %>
+            <Layout.settings_sidebar
+              selected_fn={&is_current_tab(@conn, &1)}
+              options={options["Team Settings"]}
+            />
           </div>
         </div>
       </div>

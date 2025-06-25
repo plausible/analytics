@@ -4,6 +4,7 @@ defmodule PlausibleWeb.LayoutView do
 
   alias Plausible.Teams
   alias PlausibleWeb.Components.Billing.Notice
+  alias PlausibleWeb.Components.Layout
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()
@@ -78,21 +79,6 @@ defmodule PlausibleWeb.LayoutView do
       end
     ]
     |> Enum.reject(&is_nil/1)
-  end
-
-  def flat_site_settings_options(conn) do
-    conn
-    |> site_settings_sidebar()
-    |> Enum.map(fn
-      %{value: value, key: key} when is_binary(value) ->
-        {key, value}
-
-      %{value: submenu_items, key: parent_key} when is_list(submenu_items) ->
-        Enum.map(submenu_items, fn submenu_item ->
-          {"#{parent_key}: #{submenu_item.key}", submenu_item.value}
-        end)
-    end)
-    |> List.flatten()
   end
 
   def account_settings_sidebar(conn) do
