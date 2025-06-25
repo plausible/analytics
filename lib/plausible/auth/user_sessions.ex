@@ -3,6 +3,8 @@ defmodule Plausible.Auth.UserSessions do
   Functions for interacting with user sessions.
   """
 
+  use Plausible
+
   import Ecto.Query
   alias Plausible.Auth
   alias Plausible.Repo
@@ -17,6 +19,58 @@ defmodule Plausible.Auth.UserSessions do
         where: us.timeout_at >= ^now,
         order_by: [desc: us.last_used_at, desc: us.id]
     )
+  end
+
+  on_ee do
+    alias Plausible.Teams
+
+    @spec list_sso_for_team(Teams.Team.t(), NaiveDateTime.t()) :: [Auth.UserSession.t()]
+    def list_sso_for_team(team, now \\ NaiveDateTime.utc_now(:second)) do
+      user_ids =
+        Repo.all(
+          from t in Teams.Team,
+            inner_join: tm in assoc(t, :team_memberships),
+            inner_join: u in assoc(tm, :user),
+            where: t.id == ^team.id,
+            where: tm.role != :guest,
+            where: u.type == :sso,
+            select: u.id
+        )
+
+      Repo.all(
+        from us in Auth.UserSession,
+          inner_join: u in assoc(us, :user),
+          where: us.user_id in ^user_ids,
+          where: us.timeout_at >= ^now,
+          order_by: [desc: us.last_used_at, desc: us.id],
+          preload: [user: u]
+      )
+    end
+
+    @spec revoke_sso_by_id(Teams.Team.t(), pos_integer()) :: :ok
+    def revoke_sso_by_id(team, session_id) do
+      {_, tokens} =
+        Repo.delete_all(
+          from us in Auth.UserSession,
+            inner_join: u in assoc(us, :user),
+            inner_join: tm in assoc(u, :team_memberships),
+            where: u.type == :sso,
+            where: us.id == ^session_id,
+            where: tm.role != :guest,
+            where: tm.team_id == ^team.id,
+            select: us.token
+        )
+
+      case tokens do
+        [token] ->
+          disconnect_by_token(token)
+
+        _ ->
+          :pass
+      end
+
+      :ok
+    end
   end
 
   @spec last_used_humanize(Auth.UserSession.t(), NaiveDateTime.t()) :: String.t()
