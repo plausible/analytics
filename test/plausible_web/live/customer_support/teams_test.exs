@@ -232,6 +232,291 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ "Plan saved"
       end
 
+      test "displays existing custom plan with edit button", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "existing-plan-123",
+            billing_interval: :yearly,
+            monthly_pageview_limit: 5_000_000,
+            site_limit: 200,
+            team_member_limit: 25,
+            hourly_api_request_limit: 2000,
+            features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "billing"))
+        html = render(lv)
+
+        assert text(html) =~ "existing-plan-123"
+        assert text(html) =~ "yearly"
+        assert text(html) =~ "5,000,000"
+        assert text(html) =~ "200"
+        assert text(html) =~ "25"
+        assert text(html) =~ "2,000"
+
+        assert element_exists?(html, ~s|button[phx-click="edit-plan"][phx-value-id="#{plan.id}"]|)
+        assert text(html) =~ "Edit"
+      end
+
+      test "edit plan loads existing values into form", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "edit-test-plan",
+            billing_interval: :monthly,
+            monthly_pageview_limit: 10_000_000,
+            site_limit: 300,
+            team_member_limit: 50,
+            hourly_api_request_limit: 5000,
+            features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv
+        |> element(~s|button[phx-click="edit-plan"][phx-value-id="#{plan.id}"]|)
+        |> render_click()
+
+        html = render(lv)
+
+        assert element_exists?(html, ~s|form#save-plan[phx-submit="update-plan"]|)
+
+        assert text_of_attr(html, ~s|input[name="enterprise_plan[paddle_plan_id]"]|, "value") ==
+                 "edit-test-plan"
+
+        assert text_of_element(
+                 html,
+                 ~s|select[name="enterprise_plan[billing_interval]"] option[selected="selected"]|
+               ) ==
+                 "monthly"
+
+        assert text_of_attr(
+                 html,
+                 ~s|input[name="enterprise_plan[monthly_pageview_limit]"]|,
+                 "value"
+               ) == "10000000"
+
+        assert text_of_attr(html, ~s|input[name="enterprise_plan[site_limit]"]|, "value") == "300"
+
+        assert text_of_attr(html, ~s|input[name="enterprise_plan[team_member_limit]"]|, "value") ==
+                 "50"
+
+        assert text_of_attr(
+                 html,
+                 ~s|input[name="enterprise_plan[hourly_api_request_limit]"]|,
+                 "value"
+               ) == "5000"
+
+        assert element_exists?(
+                 html,
+                 ~s|input[name="enterprise_plan[features[]][stats_api]"][checked="checked"]|
+               )
+
+        assert element_exists?(
+                 html,
+                 ~s|input[name="enterprise_plan[features[]][funnels]"][checked="checked"]|
+               )
+
+        refute element_exists?(
+                 html,
+                 ~s|input[name="enterprise_plan[features[]][revenue_goals]"][checked="checked"]|
+               )
+
+        assert text(html) =~ "Update Plan"
+        refute text(html) =~ "Save Custom Plan"
+      end
+
+      test "successfully updates existing plan", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "original-plan",
+            billing_interval: :monthly,
+            monthly_pageview_limit: 1_000_000,
+            site_limit: 100,
+            team_member_limit: 10,
+            hourly_api_request_limit: 1000,
+            features: [Plausible.Billing.Feature.StatsAPI]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv
+        |> element(~s|button[phx-click="edit-plan"][phx-value-id="#{plan.id}"]|)
+        |> render_click()
+
+        lv
+        |> element(~s|form#save-plan|)
+        |> render_change(%{
+          "enterprise_plan" => %{
+            "paddle_plan_id" => "updated-plan-456",
+            "billing_interval" => "yearly",
+            "monthly_pageview_limit" => "15000000",
+            "site_limit" => "500",
+            "team_member_limit" => "100",
+            "hourly_api_request_limit" => "8000",
+            "features[]" => %{
+              "stats_api" => "true",
+              "funnels" => "true",
+              "props" => "false",
+              "revenue_goals" => "false",
+              "site_segments" => "false",
+              "shared_links" => "false",
+              "sites_api" => "false",
+              "sso" => "false"
+            }
+          }
+        })
+
+        lv |> element("form#save-plan") |> render_submit()
+
+        html = render(lv)
+        assert text(html) =~ "Plan updated"
+
+        updated_plan = Plausible.Repo.reload!(plan)
+        assert updated_plan.paddle_plan_id == "updated-plan-456"
+        assert updated_plan.billing_interval == :yearly
+        assert updated_plan.monthly_pageview_limit == 15_000_000
+        assert updated_plan.site_limit == 500
+        assert updated_plan.team_member_limit == 100
+        assert updated_plan.hourly_api_request_limit == 8000
+
+        feature_names = Enum.map(updated_plan.features, & &1.name())
+        assert :stats_api in feature_names
+        assert :funnels in feature_names
+        refute :shared_links in feature_names
+
+        refute element_exists?(html, ~s|form#save-plan|)
+
+        assert text(html) =~ "updated-plan-456"
+        assert text(html) =~ "yearly"
+        assert text(html) =~ "15,000,000"
+        assert text(html) =~ "500"
+        assert text(html) =~ "100"
+        assert text(html) =~ "8,000"
+      end
+
+      test "handles validation errors when updating plan", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "valid-plan",
+            billing_interval: :monthly,
+            monthly_pageview_limit: 1_000_000,
+            site_limit: 100,
+            team_member_limit: 10,
+            hourly_api_request_limit: 1000
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv
+        |> element(~s|button[phx-click="edit-plan"][phx-value-id="#{plan.id}"]|)
+        |> render_click()
+
+        lv
+        |> element(~s|form#save-plan|)
+        |> render_submit(%{
+          "enterprise_plan" => %{
+            "paddle_plan_id" => "",
+            "billing_interval" => "monthly",
+            "monthly_pageview_limit" => "1000000",
+            "site_limit" => "100",
+            "team_member_limit" => "10",
+            "hourly_api_request_limit" => "1000"
+          }
+        })
+
+        html = render(lv)
+
+        assert text(html) =~ "Error updating plan"
+        assert element_exists?(html, ~s|form#save-plan|)
+
+        unchanged_plan = Plausible.Repo.reload!(plan)
+        assert unchanged_plan.paddle_plan_id == "valid-plan"
+      end
+
+      test "cancel edit returns to plan list", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        plan = insert(:enterprise_plan, team: team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv
+        |> element(~s|button[phx-click="edit-plan"][phx-value-id="#{plan.id}"]|)
+        |> render_click()
+
+        html = render(lv)
+        assert element_exists?(html, ~s|form#save-plan|)
+
+        lv |> element(~s|button[phx-click="hide-plan-form"]|) |> render_click()
+
+        html = render(lv)
+        refute element_exists?(html, ~s|form#save-plan|)
+        assert element_exists?(html, ~s|button#new-custom-plan|)
+      end
+
+      test "multiple plans can be displayed and edited independently", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        plan1 =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "plan-1",
+            monthly_pageview_limit: 1_000_000
+          )
+
+        plan2 =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "plan-2",
+            monthly_pageview_limit: 5_000_000
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+        html = render(lv)
+
+        assert text(html) =~ "plan-1"
+        assert text(html) =~ "plan-2"
+        assert text(html) =~ "1,000,000"
+        assert text(html) =~ "5,000,000"
+
+        assert element_exists?(
+                 html,
+                 ~s|button[phx-click="edit-plan"][phx-value-id="#{plan1.id}"]|
+               )
+
+        assert element_exists?(
+                 html,
+                 ~s|button[phx-click="edit-plan"][phx-value-id="#{plan2.id}"]|
+               )
+
+        lv
+        |> element(~s|button[phx-click="edit-plan"][phx-value-id="#{plan2.id}"]|)
+        |> render_click()
+
+        html = render(lv)
+
+        assert text_of_attr(html, ~s|input[name="enterprise_plan[paddle_plan_id]"]|, "value") ==
+                 "plan-2"
+
+        assert text_of_attr(
+                 html,
+                 ~s|input[name="enterprise_plan[monthly_pageview_limit]"]|,
+                 "value"
+               ) == "5000000"
+      end
+
       defp open_custom_plan(conn, team) do
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
         render(lv)
