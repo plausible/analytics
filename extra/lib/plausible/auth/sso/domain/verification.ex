@@ -74,12 +74,20 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
     record_value = to_charlist("#{@prefix}=#{domain_identifier}")
 
     timeout = Keyword.get(opts, :timeout, 5_000)
-    nameservers = Keyword.get(opts, :nameservers, [])
-    opts = [timeout: timeout, nameservers: nameservers]
+    nameservers = Keyword.get(opts, :nameservers)
+
+    lookup_opts =
+      case nameservers do
+        nil ->
+          [timeout: timeout]
+
+        [_ | _] ->
+          [timeout: timeout, nameservers: nameservers]
+      end
 
     sso_domain
     |> to_charlist()
-    |> :inet_res.lookup(:in, :txt, opts, timeout)
+    |> :inet_res.lookup(:in, :txt, lookup_opts, timeout)
     |> Enum.find_value(false, fn
       [^record_value] -> true
       _ -> false
