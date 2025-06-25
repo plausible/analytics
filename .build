@@ -151,6 +151,7 @@ Plausible.Plugins.API.SharedLinks.html
 Plausible.Plugins.API.Token.html
 Plausible.Plugins.API.Tokens.html
 Plausible.Plugs.AuthorizeTeamAccess.html
+Plausible.Plugs.HandleExpiredSession.html
 Plausible.Plugs.RestrictUserType.html
 Plausible.Plugs.SSOTeamAccess.html
 Plausible.PromEx.Buckets.html
@@ -505,8 +506,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-9A066BAF.js
-dist/sidebar_items-83ABE64E.js
+dist/search_data-B590E79C.js
+dist/sidebar_items-AFF86B79.js
 index.html
 readme.html
 search.html
