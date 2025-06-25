@@ -54,6 +54,47 @@ defmodule Plausible.Auth.UserSessionsTest do
     end
   end
 
+  describe "get_by_token/1" do
+    setup do
+      user = new_user()
+
+      session =
+        user
+        |> Auth.UserSession.new_session("A Device")
+        |> Repo.insert!()
+
+      {:ok, user: user, session: session}
+    end
+
+    test "fetches token by session", %{session: session, user: user} do
+      user |> subscribe_to_growth_plan()
+      team = team_of(user)
+      assert {:ok, fetched} = UserSessions.get_by_token(session.token)
+
+      assert fetched.id == session.id
+      assert fetched.user.id == user.id
+      assert [ownership] = fetched.user.team_memberships
+      assert ownership.role == :owner
+      assert ownership.team.id == team.id
+      assert ownership.team.subscription.id
+      assert [owner] = ownership.team.owners
+      assert owner.id == user.id
+    end
+
+    test "returns not found when no matching session found" do
+      assert {:error, :not_found} = UserSessions.get_by_token(Ecto.UUID.generate())
+    end
+
+    test "returns expired when the matching session is expired", %{session: session} do
+      now = NaiveDateTime.utc_now(:second)
+      in_the_past = NaiveDateTime.add(now, -1, :hour)
+      session = session |> Ecto.Changeset.change(timeout_at: in_the_past) |> Repo.update!()
+
+      assert {:error, :expired, expired_session} = UserSessions.get_by_token(session.token)
+      assert expired_session.id == session.id
+    end
+  end
+
   describe "touch/1,2" do
     setup do
       user = new_user()

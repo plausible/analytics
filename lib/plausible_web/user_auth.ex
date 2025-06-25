@@ -96,7 +96,9 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   @spec get_user_session(Plug.Conn.t() | map()) ::
-          {:ok, Auth.UserSession.t()} | {:error, :no_valid_token | :session_not_found}
+          {:ok, Auth.UserSession.t()}
+          | {:error, :no_valid_token | :session_not_found}
+          | {:error, :session_expired, Auth.UserSession.t()}
   def get_user_session(%Plug.Conn{assigns: %{current_user_session: user_session}}) do
     {:ok, user_session}
   end
@@ -106,6 +108,7 @@ defmodule PlausibleWeb.UserAuth do
       case Auth.UserSessions.get_by_token(token) do
         {:ok, session} -> {:ok, session}
         {:error, :not_found} -> {:error, :session_not_found}
+        {:error, :expired, user_session} -> {:error, :session_expired, user_session}
       end
     end
   end

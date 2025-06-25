@@ -160,4 +160,20 @@ defmodule PlausibleWeb.AuthPlugTest do
     assert is_nil(updated_user.last_team_identifier)
     refute get_session(conn, "current_team_id")
   end
+
+  test "assigns expired session for further subsequent processing", %{conn: conn} do
+    now = NaiveDateTime.utc_now(:second)
+    in_the_past = NaiveDateTime.add(now, -1, :hour)
+    {:ok, user_session} = PlausibleWeb.UserAuth.get_user_session(conn)
+    user_session |> Ecto.Changeset.change(timeout_at: in_the_past) |> Plausible.Repo.update!()
+
+    conn =
+      conn
+      |> Plug.Adapters.Test.Conn.conn(:get, "/", %{})
+      |> AuthPlug.call(%{})
+
+    refute conn.assigns[:current_user]
+    refute conn.assigns[:current_team]
+    assert conn.assigns[:expired_session].id == user_session.id
+  end
 end
