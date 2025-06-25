@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>callbacks</title>
+</head>
+
+<body>
+  <script>
+    const params = new URLSearchParams(window.location.search)
+    const src = params.get('src')
+    const endpoint = params.get('endpoint')
+
+    const script = document.createElement('script')
+
+    script.src = src
+    script.id = 'plausible'
+    script.setAttribute('data-domain', 'test.com')
+    script.setAttribute('data-api', endpoint)
+
+    var r = document.getElementsByTagName("script")[0]
+    r.parentNode.insertBefore(script, r)
+
+    window.callPlausible = function () {
+      return new Promise((resolve, reject) => {
+        plausible('event', {
+          callback: (result) => { resolve(result) }
+        })
+      })
+    }
+  </script>
+</body>
+</html>

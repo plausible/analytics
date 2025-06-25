@@ -2,16 +2,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   @moduledoc false
   use Plausible.CustomerSupport.Resource, :component
 
+  alias Plausible.Auth.SSO
+  alias Plausible.Billing.EnterprisePlan
   alias Plausible.Billing.{Plans, Subscription}
+  alias Plausible.Repo
   alias Plausible.Teams
   alias Plausible.Teams.Management.Layout
-  alias Plausible.Billing.EnterprisePlan
-
   alias PlausibleWeb.Router.Helpers, as: Routes
 
   require Plausible.Billing.Subscription.Status
 
-  alias Plausible.Repo
   import Ecto.Query
 
   def update(%{resource_id: resource_id}, socket) do
@@ -21,13 +21,26 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
     usage = Teams.Billing.quota_usage(team, with_features: true)
 
+    sso_integration = get_sso_integration(team)
+
     limits = %{
       monthly_pageviews: Teams.Billing.monthly_pageview_limit(team),
       sites: Teams.Billing.site_limit(team),
       team_members: Teams.Billing.team_member_limit(team)
     }
 
-    {:ok, assign(socket, team: team, form: form, usage: usage, limits: limits)}
+    {:ok,
+     assign(socket,
+       team: team,
+       form: form,
+       usage: usage,
+       limits: limits,
+       sso_integration: sso_integration
+     )}
+  end
+
+  def update(%{tab: "sso"}, %{assigns: %{team: _team}} = socket) do
+    {:ok, assign(socket, tab: "sso")}
   end
 
   def update(%{tab: "sites"}, %{assigns: %{team: team}} = socket) do
@@ -62,7 +75,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           hourly_api_request_limit: 600,
           site_limit: 50,
           team_member_limit: 10,
-          features: Plausible.Billing.Feature.list()
+          features: Plausible.Billing.Feature.list() -- [Plausible.Billing.Feature.SSO]
         }
       end
 
@@ -161,6 +174,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.tab to="sites" tab={@tab}>
                 Sites ({number_format(@usage.sites)}/{number_format(@limits.sites)})
               </.tab>
+              <.tab :if={@sso_integration} to="sso" tab={@tab}>
+                SSO
+              </.tab>
               <.tab to="billing" tab={@tab}>
                 Billing
               </.tab>
@@ -220,6 +236,52 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               </div>
             </span>
           </div>
+        </div>
+
+        <div :if={@tab == "sso"} class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
+          <p :if={@sso_integration} class="mb-4">
+            Configured?: <code>{SSO.Integration.configured?(@sso_integration)}</code>
+            <br /> IDP Signin URL:
+            <code>
+              {@sso_integration.config.idp_signin_url}
+            </code>
+            <br />IDP Entity ID: <code>{@sso_integration.config.idp_entity_id}</code>
+          </p>
+          <.table
+            :if={not Enum.empty?(@sso_integration.sso_domains)}
+            rows={@sso_integration.sso_domains}
+          >
+            <:thead>
+              <.th>Domain</.th>
+              <.th>Status</.th>
+              <.th></.th>
+            </:thead>
+            <:tbody :let={sso_domain}>
+              <.td>
+                {sso_domain.domain}
+              </.td>
+              <.td>
+                {sso_domain.status}
+                <span :if={sso_domain.verified_via}>
+                  (via {sso_domain.verified_via} at {Calendar.strftime(
+                    sso_domain.last_verified_at,
+                    "%b %-d, %Y"
+                  )})
+                </span>
+              </.td>
+              <.td actions>
+                <.delete_button
+                  :if={can_delete?(sso_domain)}
+                  id={"remove-domain-#{sso_domain.identifier}"}
+                  phx-click="remove-domain"
+                  phx-value-identifier={sso_domain.identifier}
+                  phx-target={@myself}
+                  class="text-sm text-red-600"
+                  data-confirm={"Are you sure you want to remove domain '#{sso_domain.domain}'?"}
+                />
+              </.td>
+            </:tbody>
+          </.table>
         </div>
 
         <div :if={@tab == "billing"} class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
@@ -358,10 +420,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               :if={not mod.free?()}
               x-on:change="featureChangeCallback(event)"
               type="checkbox"
-              name={"#{f.name}[features[]][]"}
-              value={mod.name()}
+              value={mod in (f.source.changes[:features] || [])}
+              name={"#{f.name}[features[]][#{mod.name()}]"}
               label={mod.display_name()}
-              checked={mod in (f.source.changes[:features] || [])}
             />
 
             <div class="mt-8 flex align-center gap-x-4">
@@ -572,6 +633,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def handle_event("show-plan-form", _, socket) do
     {:noreply, assign(socket, show_plan_form?: true)}
+  end
+
+  def handle_event("remove-domain", %{"identifier" => i}, socket) do
+    domain = Enum.find(socket.assigns.sso_integration.sso_domains, &(&1.identifier == i))
+    SSO.Domains.remove(domain)
+    {:noreply, assign(socket, sso_integration: get_sso_integration(socket.assigns.team))}
   end
 
   def handle_event("hide-plan-form", _, socket) do
@@ -878,7 +945,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   defp update_features_to_list(params) do
-    Map.put(params, "features", Enum.reject(params["features[]"], &(&1 == "false" or &1 == "")))
+    features =
+      params["features[]"]
+      |> Enum.reject(fn {_key, value} -> value == "false" or value == "" end)
+      |> Enum.map(fn {key, _value} -> key end)
+
+    Map.put(params, "features", features)
   end
 
   defp preview_number(n) do
@@ -897,7 +969,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     ~H"""
     <.input
       name={"#{@for.name}-preview"}
-      label="Preview (read-only)"
+      label="Preview"
       autocomplete="off"
       width="w-[500]"
       readonly
@@ -905,5 +977,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       class="bg-transparent border-0 p-0 m-0 text-sm w-full"
     />
     """
+  end
+
+  defp can_delete?(sso_domain) do
+    Plausible.Auth.SSO.Domains.check_can_remove(sso_domain) == :ok
+  end
+
+  defp get_sso_integration(team) do
+    case SSO.get_integration_for(team) do
+      {:error, :not_found} -> nil
+      {:ok, integration} -> integration
+    end
   end
 end

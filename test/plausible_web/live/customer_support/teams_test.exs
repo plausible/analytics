@@ -8,6 +8,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
+    alias Plausible.Auth.SSO
+
     require Plausible.Billing.Subscription.Status
 
     defp open_team(id, qs \\ []) do
@@ -130,19 +132,19 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
             "site_limit" => "1000",
             "team_member_limit" => "30",
             "hourly_api_request_limit" => "1000",
-            "features[]" => [
-              "false",
-              "false",
-              "false",
-              "teams",
-              "false",
-              "shared_links",
-              "false",
-              "false",
-              "false",
-              "false",
-              "sites_api"
-            ]
+            "features[]" => %{
+              "stats_api" => "false",
+              "outbound_links" => "false",
+              "form_submissions" => "false",
+              "file_downloads" => "false",
+              "funnels" => "false",
+              "props" => "false",
+              "shared_segments" => "false",
+              "revenue_goals" => "false",
+              "site_segments" => "false",
+              "shared_links" => "true",
+              "sites_api" => "true"
+            }
           }
         })
 
@@ -163,18 +165,20 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
             "site_limit" => "1000",
             "team_member_limit" => "30",
             "hourly_api_request_limit" => "1000",
-            "features[]" => [
-              "false",
-              "false",
-              "false",
-              "false",
-              "shared_links",
-              "false",
-              "false",
-              "false",
-              "false",
-              "sites_api"
-            ]
+            "features[]" => %{
+              "stats_api" => "false",
+              "outbound_links" => "false",
+              "form_submissions" => "false",
+              "file_downloads" => "false",
+              "funnels" => "false",
+              "props" => "false",
+              "shared_segments" => "false",
+              "revenue_goals" => "false",
+              "site_segments" => "false",
+              "shared_links" => "true",
+              "sites_api" => "true",
+              "sso" => "false"
+            }
           }
         })
 
@@ -233,6 +237,57 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         render(lv)
         lv |> element("button#new-custom-plan") |> render_click()
         lv
+      end
+    end
+
+    describe "sso" do
+      setup [:create_user, :log_in, :create_site]
+
+      setup %{user: user} do
+        patch_env(:super_admin_user_ids, [user.id])
+      end
+
+      test "sso tab normally won't render", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+
+        refute element_exists?(html, ~s|a[href="?tab=sso"]|)
+      end
+
+      test "tab renders when there's sso integration", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        SSO.initiate_saml_integration(team)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+
+        assert element_exists?(html, ~s|a[href="?tab=sso"]|)
+      end
+
+      test "sso tab displays domains", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        integration = SSO.initiate_saml_integration(team)
+
+        SSO.Domains.add(integration, "sso1.example.com")
+        SSO.Domains.add(integration, "sso2.example.com")
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
+
+        html = render(lv)
+
+        assert html =~ "sso1.example.com"
+        assert html =~ "sso2.example.com"
+      end
+
+      test "delete domain", %{conn: conn, user: user} do
+        team = team_of(user)
+        integration = SSO.initiate_saml_integration(team)
+        {:ok, domain} = SSO.Domains.add(integration, "sso1.example.com")
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
+
+        lv |> element("button#remove-domain-#{domain.identifier}") |> render_click()
+        refute render(lv) =~ "sso1.example.com"
       end
     end
   end

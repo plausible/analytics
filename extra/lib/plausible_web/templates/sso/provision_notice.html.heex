@@ -1,0 +1,18 @@
+<.focus_box>
+  <:title>
+    Single Sign-On enforcement
+  </:title>
+  <:subtitle>
+    The owner of <span :if={is_nil(@conn.assigns[:current_team])}>the team</span>
+    <span :if={@conn.assigns[:current_team]}>"{@conn.assigns[:current_team].name}"</span>
+    has turned off regular email and password logins.
+    To keep things secure and simple, you can only sign in using your organization's
+    Single Sign-On (SSO) system.
+  </:subtitle>
+
+  <p class="text-sm">
+    To access this team, you must first
+    <.styled_link href="/logout">log out</.styled_link>
+    and log in as SSO user.
+  </p>
+</.focus_box>

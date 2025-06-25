@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.Sites do
         :team_invitations,
         Teams.Invitations.all(socket.assigns.current_user)
       )
-      |> assign(:filter_text, params["filter_text"] || "")
+      |> assign(:filter_text, String.trim(params["filter_text"] || ""))
 
     {:ok, socket}
   end
@@ -88,11 +88,21 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </div>
 
-      <p
-        :if={String.trim(@filter_text) != "" and @sites.entries == []}
-        class="mt-4 dark:text-gray-100"
-      >
+      <p :if={@filter_text != "" and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
         No sites found. Please search for something else.
+      </p>
+
+      <p
+        :if={
+          @has_sites? and not Teams.setup?(@current_team) and @sites.entries == [] and
+            @filter_text == ""
+        }
+        class="mt-4 dark:text-gray-100 text-center"
+      >
+        You currently have no personal sites. Are you looking for your team’s sites?
+        <.styled_link href={Routes.auth_path(@socket, :select_team)}>
+          Go to your team &rarr;
+        </.styled_link>
       </p>
 
       <div :if={@has_sites?}>
@@ -719,6 +729,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp set_filter_text(socket, filter_text) do
+    filter_text = String.trim(filter_text)
     uri = socket.assigns.uri
 
     uri_params =

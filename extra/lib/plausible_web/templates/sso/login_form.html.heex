@@ -9,7 +9,12 @@
       </p>
     <% end %>
   </:subtitle>
-  <.form :let={f} for={@conn} action={Routes.sso_path(@conn, :login)}>
+  <script :if={@autosubmit}>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("sso-login-form").submit();
+    });
+  </script>
+  <.form :let={f} id="sso-login-form" for={@conn} action={Routes.sso_path(@conn, :login)}>
     <div class="my-4 mt-8">
       <.input
         type="email"
@@ -19,8 +24,8 @@
       />
     </div>
 
-    <%= if @conn.assigns[:error] do %>
-      <div class="text-red-500 mt-4">{@conn.assigns[:error]}</div>
+    <%= if login_error = Phoenix.Flash.get(@flash, :login_error) do %>
+      <div class="text-red-500 mt-4">{login_error}</div>
     <% end %>
 
     <.input type="hidden" field={f[:return_to]} />
@@ -33,7 +38,10 @@
       <:item>
         Have a standard account?
         <.styled_link href={
-          Routes.auth_path(@conn, :login_form, return_to: @conn.params["return_to"])
+          Routes.auth_path(@conn, :login_form,
+            return_to: @conn.params["return_to"],
+            prefer: "manual"
+          )
         }>
           Log in here
         </.styled_link>

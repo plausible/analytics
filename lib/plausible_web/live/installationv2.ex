@@ -19,19 +19,34 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       ])
 
     tracker_script_configuration =
-      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site.id)
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+        outbound_links: true,
+        form_submissions: true,
+        file_downloads: true,
+        installation_type: :manual
+      })
 
     {:ok,
      assign(socket,
        site: site,
-       tracker_script_configuration: tracker_script_configuration,
-       flow: "provisioning",
-       installation_type: params["type"] || "manual"
+       tracker_script_configuration_form:
+         to_form(
+           Plausible.Site.TrackerScriptConfiguration.installation_changeset(
+             tracker_script_configuration,
+             %{}
+           )
+         ),
+       flow: params["flow"] || "provisioning",
+       installation_type: get_installation_type(params, tracker_script_configuration)
      )}
   end
 
   def handle_params(params, _url, socket) do
-    {:noreply, assign(socket, installation_type: params["type"] || "manual")}
+    {:noreply,
+     assign(socket,
+       installation_type:
+         get_installation_type(params, socket.assigns.tracker_script_configuration_form.data)
+     )}
   end
 
   def render(assigns) do
@@ -55,32 +70,35 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           </.tab>
         </div>
 
-        <.manual_instructions
-          :if={@installation_type == "manual"}
-          tracker_script_configuration={@tracker_script_configuration}
-        />
+        <.form for={@tracker_script_configuration_form} phx-submit="submit" class="mt-4">
+          <.input
+            type="hidden"
+            field={@tracker_script_configuration_form[:installation_type]}
+            value={@installation_type}
+          />
+          <.manual_instructions
+            :if={@installation_type == "manual"}
+            tracker_script_configuration_form={@tracker_script_configuration_form}
+          />
 
-        <.wordpress_instructions :if={@installation_type == "wordpress"} />
-        <.gtm_instructions :if={@installation_type == "gtm"} />
-        <.npm_instructions :if={@installation_type == "npm"} />
+          <.wordpress_instructions :if={@installation_type == "wordpress"} flow={@flow} />
+          <.gtm_instructions :if={@installation_type == "gtm"} />
+          <.npm_instructions :if={@installation_type == "npm"} />
 
-        <.button phx-click="submit" class="w-full mt-8">
-          <%= if @flow == PlausibleWeb.Flows.domain_change() do %>
-            I understand, I'll update my website
-          <% else %>
+          <.button type="submit" class="w-full mt-8">
             <%= if @flow == PlausibleWeb.Flows.review() do %>
               Verify your installation
             <% else %>
               Start collecting data
             <% end %>
-          <% end %>
-        </.button>
+          </.button>
+        </.form>
       </.focus_box>
     </div>
     """
   end
 
-  attr :tracker_script_configuration, :map, required: true
+  attr :tracker_script_configuration_form, :map, required: true
 
   defp manual_instructions(assigns) do
     ~H"""
@@ -97,9 +115,124 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       Once done, click the button below to verify your installation.
     </div>
 
-    <div class="mt-8">
-      <.snippet_form tracker_script_configuration={@tracker_script_configuration} />
+    <.snippet_form tracker_script_configuration={@tracker_script_configuration_form.data} />
+    <.h2 class="mt-8 text-sm font-medium">Optional measurements</.h2>
+    <.script_config_control
+      field={@tracker_script_configuration_form[:outbound_links]}
+      label="Outbound links"
+      tooltip="Automatically track clicks on external links. These count towards your billable pageviews."
+      learn_more="https://plausible.io/docs/outbound-link-click-tracking"
+    />
+    <.script_config_control
+      field={@tracker_script_configuration_form[:file_downloads]}
+      label="File downloads"
+      tooltip="Automatically track file downloads. These count towards your billable pageviews."
+      learn_more="https://plausible.io/docs/file-downloads-tracking"
+    />
+    <.script_config_control
+      field={@tracker_script_configuration_form[:form_submissions]}
+      label="Form submissions"
+      tooltip="Automatically track form submissions. These count towards your billable pageviews."
+      learn_more="https://plausible.io/docs/form-submissions-tracking"
+    />
+
+    <.disclosure>
+      <.disclosure_button class="mt-4 flex items-center group">
+        <.h2 class="text-sm font-medium">Advanced options</.h2>
+        <Heroicons.chevron_down mini class="size-4 ml-1 mt-0.5 group-data-[open=true]:rotate-180" />
+      </.disclosure_button>
+      <.disclosure_panel>
+        <ul class="list-disc list-inside mt-2 space-y-2">
+          <.advanced_option
+            variant="tagged-events"
+            label="Manual tagging"
+            tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
+            learn_more="https://plausible.io/docs/custom-event-goals"
+          />
+          <.advanced_option
+            variant="404"
+            label="404 error pages"
+            tooltip="Find 404 error pages on your site. These count towards your billable pageviews. Additional action required."
+            learn_more="https://plausible.io/docs/error-pages-tracking-404"
+          />
+          <.advanced_option
+            variant="hash"
+            label="Hashed page paths"
+            tooltip="Automatically track page paths that use a # in the URL."
+            learn_more="https://plausible.io/docs/hash-based-routing"
+          />
+          <.advanced_option
+            variant="pageview-props"
+            label="Custom properties"
+            tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required."
+            learn_more="https://plausible.io/docs/custom-props/introduction"
+          />
+          <.advanced_option
+            variant="revenue"
+            label="Ecommerce revenue"
+            tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
+            learn_more="https://plausible.io/docs/ecommerce-revenue-tracking"
+          />
+        </ul>
+      </.disclosure_panel>
+    </.disclosure>
+    """
+  end
+
+  attr :field, :any, required: true
+  attr :label, :string, required: true
+  attr :tooltip, :string, required: true
+  attr :learn_more, :string, required: true
+
+  defp script_config_control(assigns) do
+    ~H"""
+    <div class="mt-2 p-1 text-sm">
+      <div class="flex items-center">
+        <.input mt?={false} field={@field} label={@label} type="checkbox" />
+        <div class="ml-2 collapse md:visible">
+          <.tooltip sticky?={false}>
+            <:tooltip_content>
+              {@tooltip}
+              <br /><br />Click to learn more.
+            </:tooltip_content>
+            <a href={@learn_more} target="_blank" rel="noopener noreferrer">
+              <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
+            </a>
+          </.tooltip>
+        </div>
+        <div class="ml-2 visible md:invisible">
+          <a href={@learn_more} target="_blank" rel="noopener noreferrer">
+            <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
+          </a>
+        </div>
+      </div>
     </div>
+    """
+  end
+
+  defp advanced_option(assigns) do
+    ~H"""
+    <li class="p-1 text-sm">
+      <div class="inline-flex items-center">
+        <div>{@label}</div>
+        <div class="ml-2 collapse md:visible">
+          <.tooltip sticky?={false}>
+            <:tooltip_content>
+              {@tooltip}
+              <br /><br />Click to learn more.
+            </:tooltip_content>
+            <a href={@learn_more} target="_blank" rel="noopener noreferrer">
+              <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
+            </a>
+          </.tooltip>
+        </div>
+        <div class="ml-2 visible md:invisible">
+          <a href={@learn_more} target="_blank" rel="noopener noreferrer">
+            <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
+          </a>
+        </div>
+      </div>
+    </li>
     """
   end
 
@@ -180,34 +313,32 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   defp snippet_form(assigns) do
     ~H"""
-    <form>
-      <div class="relative">
-        <textarea
-          id="snippet"
-          class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 "
-          rows="8"
-          readonly
-        ><%= render_snippet(@tracker_script_configuration) %></textarea>
+    <div class="relative">
+      <textarea
+        id="snippet"
+        class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 "
+        rows="4"
+        readonly
+      ><%= render_snippet(@tracker_script_configuration) %></textarea>
 
-        <a
-          onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
-          href="javascript:void(0)"
-          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline bottom-2 right-4 p-2 bg-white dark:bg-gray-900"
-        >
-          <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
-          <span>
-            COPY
-          </span>
-        </a>
-      </div>
-    </form>
+      <a
+        onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
+        href="javascript:void(0)"
+        class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline bottom-2 right-4 p-2 bg-white dark:bg-gray-900"
+      >
+        <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
+        <span>
+          COPY
+        </span>
+      </a>
+    </div>
     """
   end
 
-  def handle_event("submit", _params, socket) do
+  def handle_event("submit", %{"tracker_script_configuration" => params}, socket) do
     PlausibleWeb.Tracker.update_script_configuration(
       socket.assigns.site,
-      %{installation_type: socket.assigns.installation_type},
+      params,
       :installation
     )
 
@@ -295,5 +426,13 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       />
     </svg>
     """
+  end
+
+  defp get_installation_type(params, tracker_script_configuration) do
+    if params["type"] do
+      params["type"]
+    else
+      Atom.to_string(tracker_script_configuration.installation_type)
+    end
   end
 end

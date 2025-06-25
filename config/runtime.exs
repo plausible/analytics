@@ -357,7 +357,8 @@ config :plausible, PlausibleWeb.Endpoint,
   http: [port: http_port, ip: listen_ip] ++ default_http_opts,
   secret_key_base: secret_key_base,
   websocket_url: websocket_url,
-  secure_cookie: secure_cookie
+  secure_cookie: secure_cookie,
+  base_url: base_url
 
 # maybe enable HTTPS in CE
 if config_env() in [:ce, :ce_dev, :ce_test] do

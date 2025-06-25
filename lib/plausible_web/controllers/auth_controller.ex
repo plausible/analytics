@@ -1,11 +1,13 @@
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  use Plausible
 
   alias Plausible.Auth
   alias Plausible.Teams
   alias PlausibleWeb.TwoFactor
   alias PlausibleWeb.UserAuth
+  alias PlausibleWeb.LoginPreference
 
   require Logger
 
@@ -30,7 +32,7 @@ defmodule PlausibleWeb.AuthController do
            :activate_form,
            :activate,
            :request_activation_code,
-           :initiate_2fa,
+           :initiate_2fa_setup,
            :verify_2fa_setup_form,
            :verify_2fa_setup,
            :disable_2fa,
@@ -39,6 +41,9 @@ defmodule PlausibleWeb.AuthController do
            :switch_team
          ]
   )
+
+  plug Plausible.Plugs.RestrictUserType,
+       [deny: :sso] when action in [:delete_me, :disable_2fa]
 
   plug(
     :clear_2fa_user
@@ -88,7 +93,16 @@ defmodule PlausibleWeb.AuthController do
         }
       end)
 
-    render(conn, "select_team.html", teams_selection: teams)
+    case teams do
+      [] ->
+        redirect(conn, to: Routes.site_path(conn, :index))
+
+      [%{identifier: sole_team_identifier}] ->
+        redirect(conn, to: Routes.site_path(conn, :index, __team: sole_team_identifier))
+
+      [_ | _] ->
+        render(conn, "select_team.html", teams_selection: teams)
+    end
   end
 
   def activate_form(conn, params) do
@@ -169,21 +183,21 @@ defmodule PlausibleWeb.AuthController do
 
   def password_reset_request(conn, %{"email" => email} = params) do
     if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      user = Repo.get_by(Plausible.Auth.User, email: email)
+      case Auth.lookup(email) do
+        {:ok, _user} ->
+          token = Auth.Token.sign_password_reset(email)
+          url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
+          email_template = PlausibleWeb.Email.password_reset_email(email, url)
+          Plausible.Mailer.deliver_later(email_template)
 
-      if user do
-        token = Auth.Token.sign_password_reset(email)
-        url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
-        email_template = PlausibleWeb.Email.password_reset_email(email, url)
-        Plausible.Mailer.deliver_later(email_template)
+          Logger.debug(
+            "Password reset e-mail sent. In dev environment GET /sent-emails for details."
+          )
 
-        Logger.debug(
-          "Password reset e-mail sent. In dev environment GET /sent-emails for details."
-        )
+          render(conn, "password_reset_request_success.html", email: email)
 
-        render(conn, "password_reset_request_success.html", email: email)
-      else
-        render(conn, "password_reset_request_success.html", email: email)
+        {:error, _} ->
+          render(conn, "password_reset_request_success.html", email: email)
       end
     else
       render(conn, "password_reset_request_form.html",
@@ -224,8 +238,27 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
-  def login_form(conn, _params) do
-    render(conn, "login_form.html")
+  on_ee do
+    def login_form(conn, params) do
+      login_preference = LoginPreference.get(conn)
+      error = Phoenix.Flash.get(conn.assigns.flash, :login_error)
+
+      case {login_preference, params["prefer"], error} do
+        {"sso", nil, nil} ->
+          if Plausible.sso_enabled?() do
+            redirect(conn, to: Routes.sso_path(conn, :login_form, return_to: params["return_to"]))
+          else
+            render(conn, "login_form.html")
+          end
+
+        _ ->
+          render(conn, "login_form.html")
+      end
+    end
+  else
+    def login_form(conn, _params) do
+      render(conn, "login_form.html")
+    end
   end
 
   def login(conn, %{"user" => params}) do
@@ -234,7 +267,7 @@ defmodule PlausibleWeb.AuthController do
 
   def login(conn, %{"email" => email, "password" => password} = params) do
     with :ok <- Auth.rate_limit(:login_ip, conn),
-         {:ok, user} <- Auth.get_user_by(email: email),
+         {:ok, user} <- Auth.lookup(email),
          :ok <- Auth.rate_limit(:login_user, user),
          :ok <- Auth.check_password(user, password),
          :ok <- check_2fa_verified(conn, user) do
@@ -265,18 +298,24 @@ defmodule PlausibleWeb.AuthController do
             params["return_to"]
         end
 
-      UserAuth.log_in_user(conn, user, redirect_path)
+      conn
+      |> LoginPreference.clear()
+      |> UserAuth.log_in_user(user, redirect_path)
     else
       {:error, :wrong_password} ->
         maybe_log_failed_login_attempts("wrong password for #{email}")
 
-        render(conn, "login_form.html", error: "Wrong email or password. Please try again.")
+        conn
+        |> put_flash(:login_error, "Wrong email or password. Please try again.")
+        |> render("login_form.html")
 
       {:error, :user_not_found} ->
         maybe_log_failed_login_attempts("user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
-        render(conn, "login_form.html", error: "Wrong email or password. Please try again.")
+        conn
+        |> put_flash(:login_error, "Wrong email or password. Please try again.")
+        |> render("login_form.html")
 
       {:error, {:rate_limit, _}} ->
         maybe_log_failed_login_attempts("too many login attempts for #{email}")

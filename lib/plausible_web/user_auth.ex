@@ -44,15 +44,16 @@ defmodule PlausibleWeb.UserAuth do
           conn
           |> set_user_token(session.token)
           |> Plug.Conn.put_session("current_team_id", team.identifier)
+          |> PlausibleWeb.LoginPreference.set_sso()
           |> set_logged_in_cookie()
           |> Phoenix.Controller.redirect(to: redirect_to)
 
         {:error, :integration_not_found} ->
           conn
           |> log_out_user()
+          |> Phoenix.Controller.put_flash(:login_error, "Wrong email.")
           |> Phoenix.Controller.redirect(
-            to:
-              Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: redirect_path)
+            to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
           )
 
         {:error, :over_limit} ->
@@ -60,14 +61,20 @@ defmodule PlausibleWeb.UserAuth do
 
           conn
           |> log_out_user()
+          |> Phoenix.Controller.put_flash(:login_error, error)
           |> Phoenix.Controller.redirect(
-            to: Routes.sso_path(conn, :login_form, error: error, return_to: redirect_path)
+            to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
           )
 
-        {:error, :multiple_memberships, team, user} ->
-          redirect_path = Routes.site_path(conn, :index, __team: team.identifier)
+        {:error, reason, _team, _user}
+        when reason in [:multiple_memberships, :active_personal_team] ->
+          issue = to_string(reason) <> "_noforce"
 
-          log_in_user(conn, user, redirect_path)
+          conn
+          |> log_out_user()
+          |> Phoenix.Controller.redirect(
+            to: Routes.sso_path(conn, :provision_issue, issue: issue)
+          )
       end
     end
   end
@@ -89,7 +96,9 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   @spec get_user_session(Plug.Conn.t() | map()) ::
-          {:ok, Auth.UserSession.t()} | {:error, :no_valid_token | :session_not_found}
+          {:ok, Auth.UserSession.t()}
+          | {:error, :no_valid_token | :session_not_found}
+          | {:error, :session_expired, Auth.UserSession.t()}
   def get_user_session(%Plug.Conn{assigns: %{current_user_session: user_session}}) do
     {:ok, user_session}
   end
@@ -99,6 +108,7 @@ defmodule PlausibleWeb.UserAuth do
       case Auth.UserSessions.get_by_token(token) do
         {:ok, session} -> {:ok, session}
         {:error, :not_found} -> {:error, :session_not_found}
+        {:error, :expired, user_session} -> {:error, :session_expired, user_session}
       end
     end
   end

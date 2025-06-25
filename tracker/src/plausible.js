@@ -1,16 +1,19 @@
 import { init as initEngagementTracking } from './engagement'
 import { init as initConfig, config } from './config'
-import { init as initCustomEvents } from './custom-events'
+import { init as initCustomEvents, DEFAULT_FILE_TYPES } from './custom-events'
 import { init as initAutocapture } from './autocapture'
 import { track } from './track'
 
 function init(overrides) {
+  initConfig(overrides || {})
+
   if (COMPILE_PLAUSIBLE_WEB && window.plausible && window.plausible.l) {
-    console.warn('Plausible analytics script was already initialized, skipping init')
+    if (config.logging) {
+      console.warn('Plausible analytics script was already initialized, skipping init')
+    }
     return
   }
 
-  initConfig(overrides)
   initEngagementTracking()
 
   if (!COMPILE_MANUAL || (COMPILE_CONFIG && config.autoCapturePageviews)) {
@@ -49,4 +52,4 @@ if (COMPILE_PLAUSIBLE_WEB) {
 }
 
 // In npm module, we export the init and track functions
-// export { init, track }
+// export { init, track, DEFAULT_FILE_TYPES }

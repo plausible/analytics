@@ -13,9 +13,28 @@ defmodule PlausibleWeb.Live.SitesTest do
     test "renders empty sites page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, "/sites")
 
-      assert text(html) =~ "My Personal Sites"
+      text = text(html)
+      assert text =~ "My Personal Sites"
+      assert text =~ "You don't have any sites yet"
+      refute text =~ "You currently have no personal sites"
+      refute text =~ "Go to your team"
+    end
 
-      assert text(html) =~ "You don't have any sites yet"
+    test "renders team switcher link, if on personal sites with other teams available", %{
+      conn: conn,
+      user: user
+    } do
+      team2 = new_site().team
+
+      add_member(team2, user: user, role: :admin)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+      text = text(html)
+
+      assert text =~ "My Personal Sites"
+      refute text =~ "You don't have any sites yet"
+      assert text =~ "You currently have no personal sites"
+      assert text =~ "Go to your team"
     end
 
     test "renders settings link when current team is set", %{user: user, conn: conn} do

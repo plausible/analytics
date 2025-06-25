@@ -8,7 +8,11 @@ export function sendRequest(endpoint, payload, options) {
 
     request.onreadystatechange = function () {
       if (request.readyState === 4) {
-        options && options.callback && options.callback({ status: request.status })
+        if (request.status === 0) {
+          options && options.callback && options.callback({ error: new Error('Network error') })
+        } else {
+          options && options.callback && options.callback({ status: request.status })
+        }
       }
     }
   } else {
@@ -22,7 +26,9 @@ export function sendRequest(endpoint, payload, options) {
         body: JSON.stringify(payload)
       }).then(function (response) {
         options && options.callback && options.callback({ status: response.status })
-      }).catch(function () { })
+      }).catch(function (error) {
+        options && options.callback && options.callback({ error })
+      })
     }
   }
 }

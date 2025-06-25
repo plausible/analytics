@@ -113,7 +113,9 @@ defmodule PlausibleWeb.LayoutView do
           if(not Teams.setup?(current_team),
             do: %{key: "API Keys", value: "api-keys", icon: :key}
           ),
-          %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
+          if(Plausible.Users.type(conn.assigns.current_user) == :standard,
+            do: %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
+          )
         ]
         |> Enum.reject(&is_nil/1)
     }
@@ -133,7 +135,9 @@ defmodule PlausibleWeb.LayoutView do
           if(current_team_role in [:owner, :billing, :admin, :editor],
             do: %{key: "API Keys", value: "api-keys", icon: :key}
           ),
-          if(Plausible.sso_enabled?() and current_team_role == :owner,
+          if(
+            Plausible.sso_enabled?() and current_team_role == :owner and
+              Plausible.Billing.Feature.SSO.check_availability(current_team) == :ok,
             do: %{key: "Single Sign-On", value: "sso/general", icon: :cloud}
           ),
           if(current_team_role == :owner,

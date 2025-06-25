@@ -88,7 +88,7 @@ function wrapInstantlyEvaluatingFunction(baseCode) {
 
 // Works around minification limitation of swc not allowing exports
 function addExports(code) {
-  return `${code}\nexport { init, track }`
+  return `${code}\nexport { init, track, DEFAULT_FILE_TYPES }`
 }
 
 export function compileWebSnippet() {
@@ -129,7 +129,7 @@ function minify(code, globals, variant = {}) {
   }
 
   if (variant.npm_package) {
-    minifyOptions.mangle.reserved = ['init', 'track']
+    minifyOptions.mangle.reserved = ['init', 'track', 'DEFAULT_FILE_TYPES']
     minifyOptions.mangle.toplevel = true
   }
 

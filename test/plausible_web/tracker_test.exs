@@ -34,6 +34,34 @@ defmodule PlausibleWeb.TrackerTest do
              }
     end
 
+    test "can create config with params" do
+      site = new_site()
+
+      tracker_script_configuration =
+        Tracker.get_or_create_tracker_script_configuration!(site, %{
+          outbound_links: true,
+          form_submissions: true,
+          installation_type: :manual
+        })
+
+      assert tracker_script_configuration.outbound_links
+      assert tracker_script_configuration.form_submissions
+      refute tracker_script_configuration.file_downloads
+      assert tracker_script_configuration.installation_type == :manual
+    end
+
+    test "goals are created when config is created" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{
+        outbound_links: true,
+        installation_type: :manual
+      })
+
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Outbound Link: Click")
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "File Download")
+    end
+
     test "can update config" do
       site = new_site()
       tracker_script_configuration = create_config(site)
@@ -57,7 +85,7 @@ defmodule PlausibleWeb.TrackerTest do
         site = new_site()
 
         tracker_script_configuration =
-          Tracker.get_or_create_tracker_script_configuration!(site.id)
+          Tracker.get_or_create_tracker_script_configuration!(site)
 
         Tracker.update_script_configuration(
           site,
@@ -75,7 +103,7 @@ defmodule PlausibleWeb.TrackerTest do
         site = new_site()
 
         tracker_script_configuration =
-          Tracker.get_or_create_tracker_script_configuration!(site.id)
+          Tracker.get_or_create_tracker_script_configuration!(site)
 
         Tracker.update_script_configuration(site, %{installation_type: :wordpress}, :installation)
 

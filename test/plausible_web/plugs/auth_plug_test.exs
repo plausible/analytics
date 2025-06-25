@@ -123,4 +123,57 @@ defmodule PlausibleWeb.AuthPlugTest do
     assert conn.assigns[:current_team].id == team.id
     assert conn.assigns[:current_team_role] == :editor
   end
+
+  test "stores team identifier when team changes", %{conn: conn, user: user} do
+    subscribe_to_plan(user, "123", inserted_at: NaiveDateTime.utc_now())
+    team = team_of(user)
+
+    assert is_nil(user.last_team_identifier)
+
+    conn =
+      conn
+      |> Plug.Adapters.Test.Conn.conn(:get, "/", %{__team: team.identifier})
+      |> AuthPlug.call(%{})
+
+    updated_user = Plausible.Repo.reload!(user)
+    assert updated_user.last_team_identifier == team.identifier
+    assert get_session(conn, "current_team_id") == team.identifier
+  end
+
+  test "clears team identifier when recently stored team identifier doesn't exist", %{
+    conn: conn,
+    user: user
+  } do
+    subscribe_to_plan(user, "123", inserted_at: NaiveDateTime.utc_now())
+
+    stale_team_id = Ecto.UUID.generate()
+    :ok = Plausible.Users.remember_last_team(user, stale_team_id)
+    assert Plausible.Repo.reload!(user).last_team_identifier
+
+    conn =
+      conn
+      |> put_session("current_team_id", stale_team_id)
+      |> Plug.Adapters.Test.Conn.conn(:get, "/", %{})
+      |> AuthPlug.call(%{})
+
+    updated_user = Plausible.Repo.reload!(user)
+    assert is_nil(updated_user.last_team_identifier)
+    refute get_session(conn, "current_team_id")
+  end
+
+  test "assigns expired session for further subsequent processing", %{conn: conn} do
+    now = NaiveDateTime.utc_now(:second)
+    in_the_past = NaiveDateTime.add(now, -1, :hour)
+    {:ok, user_session} = PlausibleWeb.UserAuth.get_user_session(conn)
+    user_session |> Ecto.Changeset.change(timeout_at: in_the_past) |> Plausible.Repo.update!()
+
+    conn =
+      conn
+      |> Plug.Adapters.Test.Conn.conn(:get, "/", %{})
+      |> AuthPlug.call(%{})
+
+    refute conn.assigns[:current_user]
+    refute conn.assigns[:current_team]
+    assert conn.assigns[:expired_session].id == user_session.id
+  end
 end

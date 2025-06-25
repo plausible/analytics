@@ -662,23 +662,26 @@ defmodule PlausibleWeb.Live.SSOManagement do
     toggle_mode = if team.policy.force_sso == :none, do: :all_but_owners, else: :none
 
     {can_toggle_force_sso?, toggle_disabled_reason} =
-      case SSO.check_force_sso(team, toggle_mode) do
-        :ok ->
+      case {SSO.check_force_sso(team, toggle_mode), socket.assigns.current_user.type} do
+        {:ok, :sso} ->
           {true, nil}
 
-        {:error, :no_integration} ->
+        {:ok, :standard} ->
+          {false, "you must be logged in via SSO"}
+
+        {{:error, :no_integration}, _} ->
           {false, "you must first setup Single Sign-on"}
 
-        {:error, :no_domain} ->
+        {{:error, :no_domain}, _} ->
           {false, "you must add a domain"}
 
-        {:error, :no_verified_domain} ->
+        {{:error, :no_verified_domain}, _} ->
           {false, "you must verify a domain"}
 
-        {:error, :owner_mfa_disabled} ->
+        {{:error, :owner_mfa_disabled}, _} ->
           {false, "all Owners must have MFA enabled"}
 
-        {:error, :no_sso_user} ->
+        {{:error, :no_sso_user}, _} ->
           {false, "at least one SSO user must log in successfully"}
       end
 

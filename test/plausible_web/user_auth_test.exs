@@ -76,7 +76,7 @@ defmodule PlausibleWeb.UserAuthTest do
         conn: conn,
         user: user
       } do
-        team = new_site(owner: user).team
+        team = new_site(owner: user).team |> Plausible.Teams.complete_setup()
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
@@ -140,12 +140,14 @@ defmodule PlausibleWeb.UserAuthTest do
         conn =
           conn
           |> init_session()
+          |> fetch_flash()
           |> UserAuth.log_in_user(identity)
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
 
-        assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: "")
+        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "")
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
 
         assert conn.private[:plug_session_info] == :renew
         refute get_session(conn, :user_token)
@@ -170,31 +172,31 @@ defmodule PlausibleWeb.UserAuthTest do
         conn =
           conn
           |> init_session()
+          |> fetch_flash()
           |> UserAuth.log_in_user(identity)
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
 
-        assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :login_form,
-                   error: "Team can't accept more members. Please contact the owner.",
-                   return_to: ""
-                 )
+        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "")
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "Team can't accept more members. Please contact the owner."
 
         assert conn.private[:plug_session_info] == :renew
         refute get_session(conn, :user_token)
       end
 
-      test "passes through for user matching SSO identity on multiple teams, redirecting to team",
+      test "tries to log out for user matching SSO identity on multiple teams, redirecting to issue notice",
            %{
              conn: conn,
              user: user
            } do
-        team = new_site().team
+        team = new_site().team |> Plausible.Teams.complete_setup()
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
         add_member(team, user: user, role: :editor)
-        another_team = new_site().team
+        another_team = new_site().team |> Plausible.Teams.complete_setup()
         add_member(another_team, user: user, role: :viewer)
 
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
@@ -207,17 +209,39 @@ defmodule PlausibleWeb.UserAuthTest do
           |> init_session()
           |> UserAuth.log_in_user(identity)
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
-        assert get_session(conn, :user_token)
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :provision_issue, issue: "multiple_memberships_noforce")
+
+        refute get_session(conn, :user_token)
       end
 
-      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
-        %SSO.Identity{
-          id: id,
-          name: name,
-          email: email,
-          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
-        }
+      test "tries to log out for user matching SSO identity with active personal team, redirecting to issue notice",
+           %{
+             conn: conn,
+             user: user
+           } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+        # personal team with site created
+        new_site(owner: user)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :provision_issue, issue: "active_personal_team_noforce")
+
+        refute get_session(conn, :user_token)
       end
     end
   end
@@ -269,10 +293,7 @@ defmodule PlausibleWeb.UserAuthTest do
       assert {:error, :no_valid_token} = UserAuth.get_user_session(%{"current_user_id" => 123})
     end
 
-    test "returns error on missing session", %{
-      conn: conn,
-      user: user
-    } do
+    test "returns error on missing session", %{conn: conn, user: user} do
       %{sessions: [user_session]} = Repo.preload(user, :sessions)
       Repo.delete!(user_session)
 
@@ -280,6 +301,16 @@ defmodule PlausibleWeb.UserAuthTest do
 
       assert {:error, :session_not_found} =
                UserAuth.get_user_session(%{"user_token" => user_session.token})
+    end
+
+    test "returns error on expired session", %{conn: conn} do
+      now = NaiveDateTime.utc_now(:second)
+      in_the_past = NaiveDateTime.add(now, -1, :hour)
+      {:ok, user_session} = UserAuth.get_user_session(conn)
+      user_session |> Ecto.Changeset.change(timeout_at: in_the_past) |> Repo.update!()
+
+      assert {:error, :session_expired, expired_session} = UserAuth.get_user_session(conn)
+      assert expired_session.id == user_session.id
     end
   end
 

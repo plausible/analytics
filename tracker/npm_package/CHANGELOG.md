@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remove now unnecessary navigation delays on link clicks and form submissions.
 
-## [0.2.3] - 2025-06-17
+## [0.2.4] - 2025-06-19
 
-- Rename `Form Submission` system event to `Form: Submission`.
+- Add `logging` option
+- Improve `callback` option
+- Improve `fileDownloads` typing, export `DEFAULT_FILE_TYPES`
 
 ## [0.2.2] - 2025-06-16
 

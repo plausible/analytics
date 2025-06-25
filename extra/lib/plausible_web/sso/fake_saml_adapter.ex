@@ -48,12 +48,10 @@ defmodule PlausibleWeb.SSO.FakeSAMLAdapter do
         PlausibleWeb.UserAuth.log_in_user(conn, identity, params["return_to"])
 
       {:error, :not_found} ->
-        Phoenix.Controller.redirect(conn,
-          to:
-            Routes.sso_path(conn, :login_form,
-              error: "Wrong email.",
-              return_to: params["return_to"]
-            )
+        conn
+        |> Phoenix.Controller.put_flash(:login_error, "Wrong email.")
+        |> Phoenix.Controller.redirect(
+          to: Routes.sso_path(conn, :login_form, return_to: params["return_to"])
         )
     end
   end

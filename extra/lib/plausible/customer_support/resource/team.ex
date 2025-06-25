@@ -55,6 +55,18 @@ defmodule Plausible.CustomerSupport.Resource.Team do
           preload: [subscription: s]
       end
 
+    q =
+      if opts[:with_sso_only?] do
+        from t in q,
+          inner_join: sso_integration in assoc(t, :sso_integration),
+          as: :sso_integration,
+          left_join: sso_domains in assoc(sso_integration, :sso_domains),
+          as: :sso_domains,
+          or_where: ilike(sso_domains.domain, ^"%#{input}%")
+      else
+        q
+      end
+
     Plausible.Repo.all(q)
   end
 

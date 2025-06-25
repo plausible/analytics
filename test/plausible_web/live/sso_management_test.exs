@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
+    alias Plausible.Auth
     alias Plausible.Auth.SSO
 
     @cert_pem """
@@ -49,7 +50,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
     """
 
     describe "/settings/sso/general" do
-      setup [:create_user, :log_in, :create_team, :setup_team]
+      setup [:create_user, :log_in, :create_team, :add_plan, :setup_team]
 
       test "renders", %{conn: conn} do
         resp =
@@ -63,7 +64,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
     end
 
     describe "live" do
-      setup [:create_user, :log_in, :create_team, :setup_team]
+      setup [:create_user, :log_in, :create_team, :add_plan, :setup_team]
 
       test "init setup - basic walk through", %{conn: conn} do
         {lv, _html} = get_lv(conn)
@@ -235,18 +236,46 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         assert text_of_attr(html, ~s|#sso-policy_sso_session_timeout_minutes|, "value") == "710"
       end
 
-      test "force SSO toggle", %{conn: conn, team: team, user: user} do
+      test "force SSO toggle disabled when operator is standard user", %{
+        conn: conn,
+        team: team,
+        user: user
+      } do
         setup_integration(team, "org.example.com")
         {_lv, html} = get_lv(conn)
 
         assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
 
-        user
-        |> Ecto.Changeset.change(totp_enabled: true, totp_secret: "secret")
-        |> Plausible.Repo.update!()
+        {:ok, user, _} = Auth.TOTP.initiate(user)
+        {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
 
         identity = new_identity("Lance Wurst", "lance@org.example.com")
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        {_lv, html} = get_lv(conn)
+
+        assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
+        assert html =~ "you must be logged in via SSO"
+      end
+
+      test "force SSO toggle works when operator is SSO user", %{
+        conn: conn,
+        team: team,
+        user: user
+      } do
+        setup_integration(team, "example.com")
+        {_lv, html} = get_lv(conn)
+
+        assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
+
+        {:ok, user, _} = Auth.TOTP.initiate(user)
+        {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+        identity = new_identity(user.name, user.email)
+        {:ok, _, _, user} = SSO.provision_user(identity)
+
+        {:ok, conn: conn} = log_in(%{conn: conn, user: user})
+        conn = set_current_team(conn, team)
 
         {lv, html} = get_lv(conn)
 
@@ -278,13 +307,10 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         {lv, html}
       end
 
-      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
-        %SSO.Identity{
-          id: id,
-          name: name,
-          email: email,
-          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
-        }
+      defp add_plan(%{user: user}) do
+        subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.SSO])
+
+        :ok
       end
     end
   end

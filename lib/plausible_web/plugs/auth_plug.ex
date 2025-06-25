@@ -20,7 +20,9 @@ defmodule PlausibleWeb.AuthPlug do
         user = user_session.user
 
         current_team_id_from_session = Plug.Conn.get_session(conn, "current_team_id")
-        current_team_id = conn.params["__team"] || current_team_id_from_session
+
+        current_team_id =
+          conn.params["__team"] || current_team_id_from_session || user.last_team_identifier
 
         {current_team, current_team_role} =
           if current_team_id do
@@ -35,9 +37,11 @@ defmodule PlausibleWeb.AuthPlug do
         conn =
           cond do
             current_team && current_team_id != current_team_id_from_session ->
+              Plausible.Users.remember_last_team(user, current_team_id)
               Plug.Conn.put_session(conn, "current_team_id", current_team_id)
 
             is_nil(current_team) && not is_nil(current_team_id_from_session) ->
+              Plausible.Users.remember_last_team(user, nil)
               Plug.Conn.delete_session(conn, "current_team_id")
 
             true ->
@@ -70,6 +74,9 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:teams_count, teams_count)
         |> assign(:teams, teams)
         |> assign(:more_teams?, teams_count > 3)
+
+      {:error, :session_expired, user_session} ->
+        assign(conn, :expired_session, user_session)
 
       _ ->
         conn

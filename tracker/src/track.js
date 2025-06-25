@@ -128,7 +128,10 @@ export function track(eventName, options) {
 
 
 function onIgnoredEvent(eventName, options, reason) {
-  if (reason) console.warn('Ignoring Event: ' + reason);
+  if (reason && config.logging) {
+    console.warn('Ignoring Event: ' + reason);
+  }
+
   options && options.callback && options.callback()
 
   if (eventName === 'pageview') {

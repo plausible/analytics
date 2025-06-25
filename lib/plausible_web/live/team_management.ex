@@ -148,6 +148,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
           label={entry_label(entry, @current_user)}
           my_role={@my_role}
           remove_disabled={not Layout.removable?(@layout, email)}
+          disabled={@my_role not in [:owner, :admin]}
         />
       </div>
 
@@ -314,6 +315,13 @@ defmodule PlausibleWeb.Live.TeamManagement do
           "The team has to have at least one owner"
         )
 
+      {{:error, :mfa_disabled}, _} ->
+        socket
+        |> put_live_flash(
+          :error,
+          "User must have 2FA enabled to become an owner"
+        )
+
       {{:error, {:over_limit, limit}}, _} ->
         socket
         |> put_live_flash(
@@ -326,7 +334,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp entry_label(%Layout.Entry{role: :guest, type: :membership}, _), do: nil
   defp entry_label(%Layout.Entry{type: :invitation_pending}, _), do: "Invitation Pending"
   defp entry_label(%Layout.Entry{type: :invitation_sent}, _), do: "Invitation Sent"
+
+  defp entry_label(%Layout.Entry{meta: %{user: %{id: id, type: :sso}}}, %{id: id}),
+    do: "You (SSO)"
+
   defp entry_label(%Layout.Entry{meta: %{user: %{id: id}}}, %{id: id}), do: "You"
+  defp entry_label(%Layout.Entry{meta: %{user: %{type: :sso}}}, _), do: "SSO Member"
   defp entry_label(_, _), do: "Team Member"
 
   def at_limit?(layout, limit) do

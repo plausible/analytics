@@ -29,8 +29,8 @@
       />
     </div>
 
-    <%= if @conn.assigns[:error] do %>
-      <div class="text-red-500 mt-4">{@conn.assigns[:error]}</div>
+    <%= if login_error = Phoenix.Flash.get(@flash, :login_error) do %>
+      <div class="text-red-500 mt-4">{login_error}</div>
     <% end %>
 
     <.input type="hidden" field={f[:return_to]} />
@@ -53,7 +53,10 @@
         <%= on_ee do %>
           Have a Single Sign-on account?
           <.styled_link href={
-            Routes.sso_path(@conn, :login_form, return_to: @conn.params["return_to"])
+            Routes.sso_path(@conn, :login_form,
+              return_to: @conn.params["return_to"],
+              prefer: "manual"
+            )
           }>
             Sign in here
           </.styled_link>
