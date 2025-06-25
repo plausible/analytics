@@ -315,9 +315,9 @@ sso_saml_adapter =
 sso_verification_nameservers =
   case get_var_from_path_or_env(config_dir, "SSO_VERIFICATION_NAMESERVERS") do
     nil ->
-      []
+      nil
 
-    some ->
+    some when is_binary(some) ->
       some
       |> String.split(",")
       |> Enum.map(fn addr ->
