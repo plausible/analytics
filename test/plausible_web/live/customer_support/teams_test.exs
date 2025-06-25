@@ -258,7 +258,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ "2,000"
 
         assert element_exists?(html, ~s|button[phx-click="edit-plan"][phx-value-id="#{plan.id}"]|)
-        assert text(html) =~ "Edit"
       end
 
       test "edit plan loads existing values into form", %{conn: conn, user: user} do

@@ -355,14 +355,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 <span :for={feat <- plan.features}>{feat.display_name()}<br /></span>
               </.td>
               <.td class="align-top">
-                <.button
-                  class="px-2 py-1 text-xs"
-                  phx-click="edit-plan"
-                  phx-value-id={plan.id}
-                  phx-target={@myself}
-                >
-                  Edit
-                </.button>
+                <.edit_button phx-click="edit-plan" phx-value-id={plan.id} phx-target={@myself} />
               </.td>
             </:tbody>
           </.table>
