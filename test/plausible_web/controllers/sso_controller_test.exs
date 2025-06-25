@@ -63,6 +63,24 @@ defmodule PlausibleWeb.SSOControllerTest do
         assert text_of_attr(html, "input[name=return_to]", "value") == ""
       end
 
+      test "renders autosubmit js snippet when instructed", %{conn: conn} do
+        conn =
+          get(
+            conn,
+            Routes.sso_path(conn, :login_form,
+              prefer: "sso",
+              email: "user@example.com",
+              autosubmit: true
+            )
+          )
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "Enter your Single Sign-on email"
+        assert text_of_attr(html, "input[name=email]", "value") == "user@example.com"
+        assert html =~ ~s|document.getElementById("sso-login-form").submit()|
+      end
+
       test "passes return_to parameter to form", %{conn: conn} do
         conn = get(conn, Routes.sso_path(conn, :login_form, return_to: "/sites", prefer: "sso"))
 
