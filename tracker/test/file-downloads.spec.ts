@@ -202,8 +202,8 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
       await page.click('a')
       const [
-        [ trackingRequestList, trackingResponseTime ],
-        [ downloadMockRequestList, downloadRequestTime ]
+        [trackingRequestList, trackingResponseTime],
+        [downloadMockRequestList, downloadRequestTime]
       ] = await resolveWithTimestamps([
         eventsApiMock.getRequestList(),
         pdfMock.getRequestList()
@@ -535,7 +535,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       })
 
       await page.click('a')
-      const [[_, trackingResponseTime], [_, navigationTime]] = await resolveWithTimestamps([
+      const [[, trackingResponseTime], [, navigationTime]] = await resolveWithTimestamps([
         trackingPromise
         navigationPromise
       ])

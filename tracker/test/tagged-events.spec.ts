@@ -343,7 +343,7 @@ for (const mode of ['legacy', 'web']) {
       await page.click('a')
       const [
         [trackingRequestList, trackingResponseTime], 
-        [_, navigationTime]
+        [, navigationTime]
       ] = await resolveWithTimestamps([
         eventsApiMock.getRequestList()
         navigationPromise
@@ -517,7 +517,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       timeout: 2000
     })
     await page.click('a')
-    const [[_, trackingResponseTime], [_, navigationTime]] = await resolveWithTimestamps(
+    const [[, trackingResponseTime], [, navigationTime]] = await resolveWithTimestamps(
       [
         trackingPromise, 
         navigationPromise
