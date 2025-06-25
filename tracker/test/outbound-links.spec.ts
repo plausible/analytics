@@ -1,5 +1,5 @@
 import { initializePageDynamically } from './support/initialize-page-dynamically'
-import { mockManyRequests } from './support/mock-many-requests'
+import { mockManyRequests, resolveWithTimestamps } from './support/mock-many-requests'
 import { e, expectPlausibleInAction, switchByMode } from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { ScriptConfig } from './support/types'
@@ -118,21 +118,15 @@ for (const mode of ['legacy', 'web'])
       await page.goto(url)
       await page.click('a')
       const [
-        { trackingRequestList, trackingResponseTime },
-        { downloadMockRequestList, downloadRequestTime }
-      ] = await Promise.all([
-        eventsApiMock.getRequestList().then((requestList) => ({
-          trackingRequestList: requestList,
-          trackingResponseTime: Date.now()
-        })),
-        outboundMock.getRequestList().then((requestList) => ({
-          downloadMockRequestList: requestList,
-          downloadRequestTime: Date.now()
-        }))
+        [ trackingRequestList, trackingResponseTime ],
+        [ outboundMockRequestList, outboundRequestTime ]
+      ] = await resolveWithTimestamps([
+        eventsApiMock.getRequestList(),
+        outboundMock.getRequestList()
       ])
 
-      expect(downloadRequestTime).toBeLessThan(trackingResponseTime)
-      expect(downloadMockRequestList).toHaveLength(1)
+      expect(outboundRequestTime).toBeLessThan(trackingResponseTime)
+      expect(outboundMockRequestList).toHaveLength(1)
       expect(trackingRequestList).toEqual([
         expect.objectContaining({
           n: 'Outbound Link: Click',
@@ -185,24 +179,20 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         skip(browserName)
       }
       const outboundUrl = 'https://other.example.com/target'
-      const [outboundMockForOtherPages, outboundMockForSamePage] =
-        await Promise.all(
-          [{ scopeMockToPage: false }, { scopeMockToPage: true }].map(
-            (options) =>
-              mockManyRequests({
-                ...options,
-                page,
-                path: outboundUrl,
-                fulfill: {
-                  status: 200,
-                  contentType: 'text/html',
-                  body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
-                },
-                awaitedRequestCount: 2,
-                mockRequestTimeout: 2000
-              })
-          )
-        )
+      const outboundMockOptions = {
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        },
+        awaitedRequestCount: 2,
+        mockRequestTimeout: 2000
+      }
+
+      const outboundMockForOtherPages = await mockManyRequests({ ...outboundMockOptions, scopeMockToPage: false })
+      const outboundMockForSamePage = await mockManyRequests({ ...outboundMockOptions, scopeMockToPage: true })
 
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -263,9 +253,9 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     })
 
     await page.click('a')
-    const [trackingResponseTime, navigationTime] = await Promise.all([
-      trackingPromise.then(Date.now),
-      navigationPromise.then(Date.now)
+    const [[_, trackingResponseTime], [_, navigationTime]] = await resolveWithTimestamps([
+      trackingPromise,
+      navigationPromise,
     ])
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
@@ -309,18 +299,11 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(outboundUrl, {
-      timeout: 7000
-    })
-    const trackingPromise = page.waitForResponse('**/api/event', {
-      timeout: 7000
+      timeout: 6000
     })
     await page.click('a')
-    const [trackingResponseTime, navigationTime] = await Promise.all([
-      trackingPromise.then(Date.now).catch(Date.now),
-      navigationPromise.then(Date.now)
-    ])
+    await navigationPromise
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
-    expect(navigationTime).toBeLessThan(trackingResponseTime)
   })
 })

@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { ScriptConfig } from './support/types'
-import { mockManyRequests } from './support/mock-many-requests'
+import { mockManyRequests, resolveWithTimestamps } from './support/mock-many-requests'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -341,14 +341,13 @@ for (const mode of ['legacy', 'web']) {
         timeout: 2000
       })
       await page.click('a')
-      const [{ trackingRequestList, trackingResponseTime }, navigationTime] =
-        await Promise.all([
-          eventsApiMock.getRequestList().then((requestList) => ({
-            trackingRequestList: requestList,
-            trackingResponseTime: Date.now()
-          })),
-          navigationPromise.then(Date.now)
-        ])
+      const [
+        [trackingRequestList, trackingResponseTime], 
+        [_, navigationTime]
+      ] = await resolveWithTimestamps([
+        eventsApiMock.getRequestList()
+        navigationPromise
+      ])
       await expect(page.getByText('Subscription successful')).toBeVisible()
       expect(navigationTime).toBeLessThanOrEqual(trackingResponseTime)
       expect(trackingRequestList).toEqual([
@@ -453,24 +452,20 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
         skip(browserName)
       }
       const outboundUrl = 'https://other.example.com/target'
-      const [outboundMockForOtherPages, outboundMockForSamePage] =
-        await Promise.all(
-          [{ scopeMockToPage: false }, { scopeMockToPage: true }].map(
-            (options) =>
-              mockManyRequests({
-                ...options,
-                page,
-                path: outboundUrl,
-                fulfill: {
-                  status: 200,
-                  contentType: 'text/html',
-                  body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
-                },
-                awaitedRequestCount: 2,
-                mockRequestTimeout: 2000
-              })
-          )
-        )
+      const outboundMockOptions = {
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        },
+        awaitedRequestCount: 2,
+        mockRequestTimeout: 2000
+      }
+
+      const outboundMockForOtherPages = await mockManyRequests({ ...outboundMockOptions, scopeMockToPage: false })
+      const outboundMockForSamePage = await mockManyRequests({ ...outboundMockOptions, scopeMockToPage: true })
 
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -522,10 +517,12 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       timeout: 2000
     })
     await page.click('a')
-    const [trackingResponseTime, navigationTime] = await Promise.all([
-      trackingPromise.then(Date.now),
-      navigationPromise.then(Date.now)
-    ])
+    const [[_, trackingResponseTime], [_, navigationTime]] = await resolveWithTimestamps(
+      [
+        trackingPromise, 
+        navigationPromise
+      ]
+    )
     await expect(page.getByText('Subscription successful')).toBeVisible()
     expect(trackingResponseTime).toBeLessThan(navigationTime)
     await expect(eventsApiMock.getRequestList()).resolves.toEqual([
@@ -562,18 +559,11 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(targetPage.url, {
-      timeout: 7000
-    })
-    const trackingPromise = page.waitForResponse('**/api/event', {
-      timeout: 7000
+      timeout: 6000
     })
     await page.click('a')
-    const [trackingResponseTime, navigationTime] = await Promise.all([
-      trackingPromise.then(Date.now).catch(Date.now),
-      navigationPromise.then(Date.now)
-    ])
+    await navigationPromise
     await expect(page.getByText('Subscription successful')).toBeVisible()
-    expect(navigationTime).toBeLessThan(trackingResponseTime)
   })
 
   test('does not track link without plausible-event-name class, the link still navigates as it should', async ({

@@ -97,3 +97,7 @@ function shouldAllow(
     return true
   }
 }
+
+export function resolveWithTimestamps<T>(promises: Array<Promise<T>>): Array<[T, number]> {
+  return Promise.all(promises.map(mock => mock.then(result => ([ result, Date.now() ]))))
+}
