@@ -1,0 +1,36 @@
+<.settings_tiles>
+  <.tile docs="sso-login-management">
+    <:title>
+      <a id="user-sessions">SSO Login Management</a>
+    </:title>
+    <:subtitle>
+      Review and log out Single Sign-On user sessions
+    </:subtitle>
+
+    <div :if={@sso_sessions == []} class="mt-4 dark:text-gray-100 text-center">
+      There are currently no active SSO sessions
+    </div>
+
+    <.table id="sso-sessions-list" rows={@sso_sessions}>
+      <:thead>
+        <.th>User</.th>
+        <.th hide_on_mobile>Device</.th>
+        <.th hide_on_mobile>Last seen</.th>
+        <.th invisible>Actions</.th>
+      </:thead>
+      <:tbody :let={session}>
+        <.td truncate max_width="max-w-40">{session.user.name}</.td>
+        <.td hide_on_mobile>{session.device}</.td>
+        <.td hide_on_mobile>{Plausible.Auth.UserSessions.last_used_humanize(session)}</.td>
+        <.td :if={@current_user_session.id == session.id} actions>Current session</.td>
+        <.td :if={@current_user_session.id != session.id} actions>
+          <.delete_button
+            href={Routes.sso_path(@conn, :delete_session, session.id)}
+            method="delete"
+            data-confirm="Are you sure you want to log out this session?"
+          />
+        </.td>
+      </:tbody>
+    </.table>
+  </.tile>
+</.settings_tiles>

@@ -427,26 +427,13 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr :selected_fn, :any, required: true
 
   def mobile_nav_dropdown(%{options: options} = assigns) do
-    options =
-      Enum.reduce(options, Map.new(), fn
-        {section, opts}, acc when is_list(opts) ->
-          Map.put(acc, section, for(o <- opts, do: {o.key, o.value}))
-
-        {key, value}, _acc when is_binary(key) and is_binary(value) ->
-          options
-      end)
-
-    assigns = assign(assigns, :options, options)
+    assigns = assign(assigns, :options, flatten_options(options))
 
     ~H"""
     <.form for={@conn} class="lg:hidden py-4">
       <.input
         value={
           @options
-          |> Enum.flat_map(fn
-            {_section, opts} when is_list(opts) -> opts
-            {k, v} when is_binary(k) and is_binary(v) -> [{k, v}]
-          end)
           |> Enum.find_value(fn {_k, v} ->
             apply(@selected_fn, [v]) && v
           end)
@@ -459,5 +446,25 @@ defmodule PlausibleWeb.Live.Components.Form do
       />
     </.form>
     """
+  end
+
+  defp flatten_options(options, prefix \\ "") do
+    options
+    |> Enum.map(fn
+      {key, suboptions} when is_list(suboptions) ->
+        flatten_options(suboptions, prefix <> key <> ": ")
+
+      {key, value} when is_binary(value) ->
+        {prefix <> key, value}
+
+      %{value: value, key: key} when is_binary(value) ->
+        {prefix <> key, value}
+
+      %{value: submenu_items, key: parent_key} when is_list(submenu_items) ->
+        Enum.map(submenu_items, fn submenu_item ->
+          {"#{prefix}#{parent_key}: #{submenu_item.key}", submenu_item.value}
+        end)
+    end)
+    |> List.flatten()
   end
 end

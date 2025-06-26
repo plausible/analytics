@@ -35,6 +35,13 @@ defmodule Plausible.TestUtils do
     end
   end
 
+  def setup_do(context \\ %{}, step_fn) do
+    case step_fn.(context) do
+      {:ok, ctx} -> Map.merge(context, Map.new(ctx))
+      ctx -> Map.merge(context, Map.new(ctx))
+    end
+  end
+
   def create_user(_) do
     {:ok, user: Plausible.Teams.Test.new_user()}
   end
@@ -104,11 +111,11 @@ defmodule Plausible.TestUtils do
   on_ee do
     alias Plausible.Auth.SSO
 
-    def setup_sso(%{team: team}) do
+    def setup_sso(%{team: team} = ctx) do
       team = Plausible.Teams.complete_setup(team)
       integration = SSO.initiate_saml_integration(team)
 
-      {:ok, sso_domain} = SSO.Domains.add(integration, "example.com")
+      {:ok, sso_domain} = SSO.Domains.add(integration, ctx[:domain] || "example.com")
       _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
       {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}

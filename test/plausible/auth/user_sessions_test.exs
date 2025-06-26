@@ -33,6 +33,199 @@ defmodule Plausible.Auth.UserSessionsTest do
     end
   end
 
+  on_ee do
+    describe "list_for_sso_team/1,2" do
+      test "lists only SSO member sessions for a given team" do
+        %{team: sso_team, site: site} =
+          setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&create_site/1)
+          |> setup_do(&setup_sso/1)
+
+        %{team: _other_sso_team} =
+          %{domain: "example2.com"}
+          |> setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&setup_sso/1)
+
+        %{team: _other_team, user: other_member} =
+          setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+
+        add_guest(site, user: other_member, role: :editor)
+        _other_member_session = Auth.UserSessions.create!(other_member, "Unknown")
+
+        %{user: sso_member} =
+          %{user: %{name: "Jerry Wane", email: "wane@example.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        now = NaiveDateTime.utc_now(:second)
+
+        sso_member_session =
+          insert_session(sso_member, "Unknown", NaiveDateTime.add(now, -1, :hour))
+
+        %{user: sso_member2} =
+          %{user: %{name: "Joan McGuire", email: "joan@example.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        sso_member2_session1 =
+          insert_session(sso_member2, "Unknown", NaiveDateTime.add(now, -2, :hour))
+
+        sso_member2_session2 = insert_session(sso_member2, "Unknown", now)
+
+        in_the_past = NaiveDateTime.add(NaiveDateTime.utc_now(:second), -1, :hour)
+
+        _sso_member2_session_past =
+          Auth.UserSessions.create!(sso_member2, "Unknown", timeout_at: in_the_past)
+
+        team = new_site().team
+        standard_member = add_member(team, role: :editor)
+        _standard_member_session = insert_session(standard_member, "Unknown", now)
+
+        %{user: other_sso_member} =
+          %{user: %{name: "Veronica Dogwright", email: "veronica@example2.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        _other_sso_member_session = insert_session(other_sso_member, "Unknown", now)
+
+        %{user: guest_sso_member} =
+          %{user: %{name: "Jimmy Felon", email: "jimmy@example2.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        add_guest(site, user: Repo.reload!(guest_sso_member), role: :viewer)
+
+        _guest_sso_member_session = insert_session(guest_sso_member, "Unknown", now)
+
+        assert [s1, s2, s3] = Auth.UserSessions.list_sso_for_team(sso_team)
+
+        assert s1.token == sso_member2_session2.token
+        assert s2.token == sso_member_session.token
+        assert s3.token == sso_member2_session1.token
+      end
+    end
+
+    describe "revoke_sso_by_id/2" do
+      test "deletes and disconnects user session" do
+        %{team: sso_team} =
+          setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&setup_sso/1)
+
+        %{user: user} =
+          %{user: %{name: "Jerry Wane", email: "wane@example.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        now = NaiveDateTime.utc_now(:second)
+        active_session = insert_session(user, "Unknown", now)
+        another_session = insert_session(user, "Unknown", now)
+
+        live_socket_id = "user_sessions:" <> Base.url_encode64(active_session.token)
+        Phoenix.PubSub.subscribe(Plausible.PubSub, live_socket_id)
+
+        assert :ok = UserSessions.revoke_sso_by_id(sso_team, active_session.id)
+
+        assert [remaining_session] = Repo.preload(user, :sessions).sessions
+        assert_broadcast "disconnect", %{}
+        assert remaining_session.id == another_session.id
+        refute Repo.reload(active_session)
+        assert Repo.reload(another_session)
+      end
+
+      test "does not delete session of user on another team" do
+        %{team: sso_team} =
+          setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&setup_sso/1)
+
+        %{team: _other_sso_team} =
+          %{domain: "example2.com"}
+          |> setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&setup_sso/1)
+
+        %{user: user} =
+          %{user: %{name: "Jerry Wane", email: "wane@example.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        now = NaiveDateTime.utc_now(:second)
+
+        active_session = insert_session(user, "Unknown", now)
+
+        %{user: other_user} =
+          %{user: %{name: "Judy Wasteland", email: "judy@example2.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        other_session = insert_session(other_user, "Unknown", now)
+
+        assert :ok = UserSessions.revoke_sso_by_id(sso_team, other_session.id)
+
+        assert Repo.reload(active_session)
+        assert Repo.reload(other_session)
+      end
+
+      test "does not revoke session of standard user" do
+        %{team: sso_team} =
+          setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&setup_sso/1)
+
+        user = add_member(sso_team, role: :editor)
+
+        now = NaiveDateTime.utc_now(:second)
+        active_session = insert_session(user, "Unknown", now)
+
+        assert :ok = UserSessions.revoke_sso_by_id(sso_team, active_session.id)
+
+        assert Repo.reload(active_session)
+      end
+
+      test "does not revoke session of a guest who happens to be SSO user" do
+        %{team: sso_team, site: site} =
+          setup_do(&create_user/1)
+          |> setup_do(&create_site/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&setup_sso/1)
+
+        %{team: _other_sso_team} =
+          %{domain: "example2.com"}
+          |> setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&setup_sso/1)
+
+        %{user: user} =
+          %{user: %{name: "Judy Wasteland", email: "judy@example2.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        user = add_guest(site, user: Repo.reload!(user), role: :editor)
+
+        now = NaiveDateTime.utc_now(:second)
+        active_session = insert_session(user, "Unknown", now)
+
+        assert :ok = UserSessions.revoke_sso_by_id(sso_team, active_session.id)
+
+        assert Repo.reload(active_session)
+      end
+
+      test "executes gracefully when session does not exist" do
+        %{team: sso_team} =
+          setup_do(&create_user/1)
+          |> setup_do(&create_team/1)
+          |> setup_do(&setup_sso/1)
+
+        %{user: user} =
+          %{user: %{name: "Jerry Wane", email: "wane@example.com"}}
+          |> setup_do(&provision_sso_user/1)
+
+        now = NaiveDateTime.utc_now(:second)
+        active_session = insert_session(user, "Unknown", now)
+
+        Repo.delete!(active_session)
+
+        assert :ok = UserSessions.revoke_sso_by_id(sso_team, active_session.id)
+      end
+    end
+  end
+
   describe "last_used_humanize/2" do
     test "returns humanized relative time" do
       user = insert(:user)

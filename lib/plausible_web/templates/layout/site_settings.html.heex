@@ -1,4 +1,5 @@
 <%= render_layout "app.html", assigns do %>
+  <% options = site_settings_sidebar(@conn) %>
   <div class="container pt-6">
     <.styled_link
       class="text-indigo-600 font-bold text-sm"
@@ -13,7 +14,6 @@
     </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
       <div class="lg:col-span-3">
-        <% options = flat_site_settings_options(@conn) %>
         <.mobile_nav_dropdown
           conn={@conn}
           options={options}
@@ -23,39 +23,11 @@
         />
 
         <div class="hidden lg:block py-4 sticky top-0" data-testid="site_settings_sidebar">
-          <%= for %{key: key, value: value, icon: icon} <- site_settings_sidebar(@conn) do %>
-            <%= if is_binary(value) do %>
-              {render("_site_settings_tab.html",
-                icon: icon,
-                this_tab: value,
-                text: key,
-                site: @site,
-                conn: @conn,
-                submenu?: false
-              )}
-            <% else %>
-              {render("_site_settings_tab.html",
-                icon: icon,
-                this_tab: nil,
-                text: key,
-                site: @site,
-                conn: @conn,
-                submenu?: false
-              )}
-              <div class="ml-6">
-                <%= for %{key: key, value: val} <- value do %>
-                  {render("_site_settings_tab.html",
-                    icon: nil,
-                    this_tab: val,
-                    text: key,
-                    site: @site,
-                    conn: @conn,
-                    submenu?: true
-                  )}
-                <% end %>
-              </div>
-            <% end %>
-          <% end %>
+          <Layout.settings_sidebar
+            prefix={"/#{URI.encode_www_form(@site.domain)}"}
+            selected_fn={&is_current_tab(@conn, &1)}
+            options={options}
+          />
         </div>
       </div>
 

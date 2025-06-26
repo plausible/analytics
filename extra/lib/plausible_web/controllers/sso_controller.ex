@@ -3,6 +3,7 @@ defmodule PlausibleWeb.SSOController do
 
   require Logger
 
+  alias Plausible.Auth
   alias Plausible.Auth.SSO
   alias PlausibleWeb.LoginPreference
 
@@ -10,6 +11,9 @@ defmodule PlausibleWeb.SSOController do
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner] when action in [:sso_settings]
+
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner, :admin] when action in [:team_sessions, :delete_session]
 
   def login_form(conn, params) do
     login_preference = LoginPreference.get(conn)
@@ -88,6 +92,24 @@ defmodule PlausibleWeb.SSOController do
       conn
       |> redirect(to: Routes.site_path(conn, :index))
     end
+  end
+
+  def team_sessions(conn, _params) do
+    sso_sessions = Auth.UserSessions.list_sso_for_team(conn.assigns.current_team)
+
+    render(conn, :team_sessions,
+      layout: {PlausibleWeb.LayoutView, :settings},
+      sso_sessions: sso_sessions
+    )
+  end
+
+  def delete_session(conn, %{"session_id" => session_id}) do
+    current_team = conn.assigns.current_team
+    Auth.UserSessions.revoke_sso_by_id(current_team, session_id)
+
+    conn
+    |> put_flash(:success, "Session logged out successfully")
+    |> redirect(to: Routes.sso_path(conn, :team_sessions))
   end
 
   defp saml_adapter() do

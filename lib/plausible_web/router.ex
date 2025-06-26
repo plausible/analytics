@@ -472,6 +472,8 @@ defmodule PlausibleWeb.Router do
 
     on_ee do
       get "/sso/general", SSOController, :sso_settings
+      get "/sso/sessions", SSOController, :team_sessions
+      delete "/sso/sessions/:session_id", SSOController, :delete_session
     end
 
     post "/team/invitations/:invitation_id/accept", InvitationController, :accept_invitation

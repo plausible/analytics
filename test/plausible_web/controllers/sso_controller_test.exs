@@ -8,18 +8,21 @@ defmodule PlausibleWeb.SSOControllerTest do
     import Plausible.Teams.Test
     import Plausible.Test.Support.HTML
 
+    alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Repo
 
     setup do
-      team = new_site().team |> Plausible.Teams.complete_setup()
+      owner = new_user()
+      team = new_site(owner: owner).team |> Plausible.Teams.complete_setup()
       integration = SSO.initiate_saml_integration(team)
       domain = "example-#{Enum.random(1..10_000)}.com"
 
       {:ok, sso_domain} = SSO.Domains.add(integration, domain)
       sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-      {:ok, team: team, integration: integration, domain: domain, sso_domain: sso_domain}
+      {:ok,
+       owner: owner, team: team, integration: integration, domain: domain, sso_domain: sso_domain}
     end
 
     describe "settings item visibility" do
@@ -349,6 +352,92 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html =~ "Log in"
         assert html =~ "with your email and password"
+      end
+    end
+
+    describe "team_sessions/2" do
+      setup %{conn: conn, team: team, owner: owner} do
+        %{conn: conn} =
+          %{conn: conn, user: owner}
+          |> setup_do(&log_in/1)
+
+        conn = set_current_team(conn, team)
+
+        {:ok, conn: conn}
+      end
+
+      test "lists SSO sessions", %{conn: conn, domain: domain} do
+        now = NaiveDateTime.utc_now(:second)
+
+        %{user: user1} =
+          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}}
+          |> setup_do(&provision_sso_user/1)
+
+        Auth.UserSessions.create!(user1, "Device 1", now: NaiveDateTime.shift(now, hour: -3))
+
+        %{user: user2} =
+          %{user: %{name: "Grace Holmes", email: "grace@" <> domain}}
+          |> setup_do(&provision_sso_user/1)
+
+        Auth.UserSessions.create!(user2, "Device 2")
+        Auth.UserSessions.create!(user2, "Device 3", now: NaiveDateTime.shift(now, hour: -6))
+
+        %{user: user3} =
+          %{user: %{name: "Kate Loselet", email: "kate@" <> domain}}
+          |> setup_do(&provision_sso_user/1)
+
+        Auth.UserSessions.create!(user3, "Device 4", now: NaiveDateTime.shift(now, hour: -2))
+
+        conn = get(conn, Routes.sso_path(conn, :team_sessions))
+
+        assert html = html_response(conn, 200)
+
+        assert ["Grace Holmes", "Kate Loselet", "Frank Rubin", "Grace Holmes"] =
+                 find(html, "table#sso-sessions-list tr td:nth-of-type(1)")
+                 |> Enum.map(&Floki.text/1)
+                 |> Enum.map(&String.trim/1)
+
+        assert ["Device 2", "Device 4", "Device 1", "Device 3"] =
+                 find(html, "table#sso-sessions-list tr td:nth-of-type(2)")
+                 |> Enum.map(&Floki.text/1)
+                 |> Enum.map(&String.trim/1)
+      end
+
+      test "shows empty state when there are no sessions", %{conn: conn} do
+        conn = get(conn, Routes.sso_path(conn, :team_sessions))
+
+        assert html = html_response(conn, 200)
+
+        assert html =~ "There are currently no active SSO sessions"
+      end
+    end
+
+    describe "delete_session/2" do
+      setup %{conn: conn, team: team, owner: owner} do
+        %{conn: conn} =
+          %{conn: conn, user: owner}
+          |> setup_do(&log_in/1)
+
+        conn = set_current_team(conn, team)
+
+        {:ok, conn: conn}
+      end
+
+      test "revokes session and redirects back to sessions list", %{conn: conn, domain: domain} do
+        %{user: user} =
+          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}}
+          |> setup_do(&provision_sso_user/1)
+
+        session = Auth.UserSessions.create!(user, "Unknown")
+
+        conn = delete(conn, Routes.sso_path(conn, :delete_session, session.id))
+
+        assert redirected_to(conn, 302) == Routes.sso_path(conn, :team_sessions)
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+                 "Session logged out successfully"
+
+        refute Repo.reload(session)
       end
     end
   end
