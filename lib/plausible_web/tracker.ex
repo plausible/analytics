@@ -36,7 +36,6 @@ defmodule PlausibleWeb.Tracker do
     %{
       domain: tracker_script_configuration.site.domain,
       endpoint: tracker_ingestion_endpoint(),
-      hashBasedRouting: tracker_script_configuration.hash_based_routing,
       outboundLinks: tracker_script_configuration.outbound_links,
       fileDownloads: tracker_script_configuration.file_downloads,
       formSubmissions: tracker_script_configuration.form_submissions
