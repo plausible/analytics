@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   User assistance module around Plausible installation instructions/onboarding
   """
   use PlausibleWeb, :live_view
+  alias Plausible.Verification.{Checks, State}
 
   def mount(
         %{"domain" => domain} = params,
@@ -26,6 +27,18 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         installation_type: :manual
       })
 
+    if connected?(socket) do
+      Checks.run("https://#{site.domain}", site.domain,
+        checks: [
+          Checks.FetchBody,
+          Checks.ScanBody
+        ],
+        report_to: self(),
+        async?: true,
+        slowdown: 0
+      )
+    end
+
     {:ok,
      assign(socket,
        site: site,
@@ -37,8 +50,27 @@ defmodule PlausibleWeb.Live.InstallationV2 do
            )
          ),
        flow: params["flow"] || "provisioning",
-       installation_type: get_installation_type(params, tracker_script_configuration)
+       installation_type: get_installation_type(params, tracker_script_configuration),
+       detected_installation_type: nil
      )}
+  end
+
+  def handle_info({:verification_end, %State{} = state}, socket) do
+    installation_type =
+      case state.diagnostics do
+        %{wordpress_likely?: true} -> "wordpress"
+        %{gtm_likely?: true} -> "gtm"
+        _ -> "manual"
+      end
+
+    {:noreply,
+     assign(socket,
+       detected_installation_type: installation_type
+     )}
+  end
+
+  def handle_info({:verification_check_start, _}, socket) do
+    {:noreply, socket}
   end
 
   def handle_params(params, _url, socket) do
@@ -70,7 +102,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           </.tab>
         </div>
 
-        <.form for={@tracker_script_configuration_form} phx-submit="submit" class="mt-4">
+        <.form
+          :if={@flow == PlausibleWeb.Flows.provisioning() and not is_nil(@detected_installation_type)}
+          for={@tracker_script_configuration_form}
+          phx-submit="submit"
+          class="mt-4"
+        >
           <.input
             type="hidden"
             field={@tracker_script_configuration_form[:installation_type]}
