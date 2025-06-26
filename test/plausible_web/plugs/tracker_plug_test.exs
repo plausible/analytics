@@ -46,7 +46,6 @@ defmodule PlausibleWeb.TrackerPlugTest do
 
       assert String.contains?(response, "!function(){var")
       assert String.contains?(response, "domain:\"#{site.domain}\"")
-      assert String.contains?(response, "hashBasedRouting:!0")
       assert String.contains?(response, "formSubmissions:!0")
       refute String.contains?(response, "outboundLinks:!0")
       refute String.contains?(response, "fileDownloads:!0")

@@ -27,7 +27,6 @@ defmodule PlausibleWeb.TrackerTest do
       assert PlausibleWeb.Tracker.plausible_main_config(tracker_script_configuration) == %{
                domain: site.domain,
                endpoint: "#{PlausibleWeb.Endpoint.url()}/api/event",
-               hashBasedRouting: true,
                outboundLinks: false,
                fileDownloads: false,
                formSubmissions: true
@@ -121,7 +120,7 @@ defmodule PlausibleWeb.TrackerTest do
       script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(tracker_script_configuration)
 
       assert script_tag =~
-               ~s(={endpoint:"#{PlausibleWeb.Endpoint.url()}/api/event",domain:"#{site.domain}",hashBasedRouting:!0,formSubmissions:!0})
+               ~s(={endpoint:"#{PlausibleWeb.Endpoint.url()}/api/event",domain:"#{site.domain}",formSubmissions:!0})
     end
 
     test "script tag escapes problematic characters as expected" do
