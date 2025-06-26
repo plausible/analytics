@@ -10,7 +10,6 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "calculates cost for business plan with monthly billing" do
         result =
           EnterprisePlan.estimate(
-            :business,
             "monthly",
             20_000_000,
             1000,
@@ -25,7 +24,6 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "bugfix - from float" do
         result =
           EnterprisePlan.estimate(
-            :business,
             "monthly",
             20_000_000,
             0,
@@ -40,7 +38,6 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "Bogdan's example (https://3.basecamp.com/5308029/buckets/26383192/card_tables/cards/8506177450#__recording_8689686259)" do
         result =
           EnterprisePlan.estimate(
-            :business,
             "monthly",
             10_000,
             500,
@@ -55,7 +52,6 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "calculates cost for business plan with yearly billing" do
         result =
           EnterprisePlan.estimate(
-            :business,
             "yearly",
             20_000_000,
             1000,
@@ -69,44 +65,24 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
     end
 
     describe "pv_rate/2" do
-      test "returns correct rate for growth plan" do
-        assert EnterprisePlan.pv_rate(:growth, 10_000) == 9
-        assert EnterprisePlan.pv_rate(:growth, 100_000) == 19
-        assert EnterprisePlan.pv_rate(:growth, 200_000) == 29
-        assert EnterprisePlan.pv_rate(:growth, 500_000) == 49
-        assert EnterprisePlan.pv_rate(:growth, 1_000_000) == 69
-        assert EnterprisePlan.pv_rate(:growth, 2_000_000) == 89
-        assert EnterprisePlan.pv_rate(:growth, 5_000_000) == 129
-        assert EnterprisePlan.pv_rate(:growth, 10_000_000) == 169
-        assert EnterprisePlan.pv_rate(:growth, 20_000_000) == 319
-        assert EnterprisePlan.pv_rate(:growth, 50_000_000) == 689
-        assert EnterprisePlan.pv_rate(:growth, 100_000_000) == 1029
-        assert EnterprisePlan.pv_rate(:growth, 200_000_000) == 1629
-        assert EnterprisePlan.pv_rate(:growth, 300_000_000) == 2369
-        assert EnterprisePlan.pv_rate(:growth, 400_000_000) == 2989
-        assert EnterprisePlan.pv_rate(:growth, 500_000_000) == 3729
-        assert EnterprisePlan.pv_rate(:growth, 1_000_000_000) == 7219
-        assert EnterprisePlan.pv_rate(:growth, 1_500_000_000) == 7219
-      end
-
       test "returns correct rate for business plan" do
-        assert EnterprisePlan.pv_rate(:business, 10_000) == 19
-        assert EnterprisePlan.pv_rate(:business, 100_000) == 39
-        assert EnterprisePlan.pv_rate(:business, 200_000) == 59
-        assert EnterprisePlan.pv_rate(:business, 500_000) == 99
-        assert EnterprisePlan.pv_rate(:business, 1_000_000) == 139
-        assert EnterprisePlan.pv_rate(:business, 2_000_000) == 179
-        assert EnterprisePlan.pv_rate(:business, 5_000_000) == 259
-        assert EnterprisePlan.pv_rate(:business, 10_000_000) == 339
-        assert EnterprisePlan.pv_rate(:business, 20_000_000) == 639
-        assert EnterprisePlan.pv_rate(:business, 50_000_000) == 1379
-        assert EnterprisePlan.pv_rate(:business, 100_000_000) == 2059
-        assert EnterprisePlan.pv_rate(:business, 200_000_000) == 3259
-        assert EnterprisePlan.pv_rate(:business, 300_000_000) == 4739
-        assert EnterprisePlan.pv_rate(:business, 400_000_000) == 5979
-        assert EnterprisePlan.pv_rate(:business, 500_000_000) == 7459
-        assert EnterprisePlan.pv_rate(:business, 1_000_000_000) == 14_439
-        assert EnterprisePlan.pv_rate(:business, 1_500_000_000) == 14_439
+        assert EnterprisePlan.pv_rate(10_000) == 19
+        assert EnterprisePlan.pv_rate(100_000) == 39
+        assert EnterprisePlan.pv_rate(200_000) == 59
+        assert EnterprisePlan.pv_rate(500_000) == 99
+        assert EnterprisePlan.pv_rate(1_000_000) == 139
+        assert EnterprisePlan.pv_rate(2_000_000) == 179
+        assert EnterprisePlan.pv_rate(5_000_000) == 259
+        assert EnterprisePlan.pv_rate(10_000_000) == 339
+        assert EnterprisePlan.pv_rate(20_000_000) == 639
+        assert EnterprisePlan.pv_rate(50_000_000) == 1379
+        assert EnterprisePlan.pv_rate(100_000_000) == 2059
+        assert EnterprisePlan.pv_rate(200_000_000) == 3259
+        assert EnterprisePlan.pv_rate(300_000_000) == 4739
+        assert EnterprisePlan.pv_rate(400_000_000) == 5979
+        assert EnterprisePlan.pv_rate(500_000_000) == 7459
+        assert EnterprisePlan.pv_rate(1_000_000_000) == 14_439
+        assert EnterprisePlan.pv_rate(1_500_000_000) == 14_439
       end
     end
 

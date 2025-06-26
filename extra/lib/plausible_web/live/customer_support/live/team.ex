@@ -73,7 +73,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         %{
           monthly_pageview_limit: 10_000,
           hourly_api_request_limit: 600,
-          site_limit: 50,
+          site_limit: 10,
           team_member_limit: 10,
           features: Plausible.Billing.Feature.list() -- [Plausible.Billing.Feature.SSO]
         }
@@ -95,8 +95,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
        show_plan_form?: false,
        editing_plan: nil,
        tab: "billing",
-       cost_estimate: 0,
-       cost_estimate_tier: :business
+       cost_estimate: 0
      )}
   end
 
@@ -431,16 +430,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             />
 
             <div class="mt-8 flex align-center gap-x-4">
-              <.input
-                mt?={false}
-                type="select"
-                id="cost-estimate-tier"
-                name="enterprise_plan[cost-estimate-tier]"
-                options={[{"business", "business"}, {"growth", "growth"}]}
-                label="Plan"
-                value={@cost_estimate_tier}
-              />
-
               <.input_with_clipboard
                 id="cost-estimate"
                 name="cost-estimate"
@@ -705,11 +694,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
     params = sanitize_params(params)
 
-    kind = String.to_existing_atom(params["cost-estimate-tier"])
-
     cost_estimate =
       Plausible.CustomerSupport.EnterprisePlan.estimate(
-        kind,
         params["billing_interval"],
         get_int_param(params, "monthly_pageview_limit"),
         get_int_param(params, "site_limit"),
@@ -720,7 +706,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
     socket =
       assign(socket,
-        cost_estimate_tier: params["cost-estimate-tier"],
         cost_estimate: cost_estimate,
         plan_form: form
       )
