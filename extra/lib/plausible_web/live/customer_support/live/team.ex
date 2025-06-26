@@ -645,18 +645,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     plan = Enum.find(socket.assigns.plans, &(&1.id == plan_id))
 
     if plan do
-      attrs =
-        %{
-          paddle_plan_id: plan.paddle_plan_id,
-          billing_interval: plan.billing_interval,
-          monthly_pageview_limit: plan.monthly_pageview_limit,
-          site_limit: plan.site_limit,
-          team_member_limit: plan.team_member_limit,
-          hourly_api_request_limit: plan.hourly_api_request_limit,
-          features: Enum.map(plan.features, &to_string(&1.name()))
-        }
-
-      plan_form = to_form(EnterprisePlan.changeset(plan, attrs))
+      plan_form = to_form(EnterprisePlan.changeset(plan, %{}))
 
       {:noreply, assign(socket, show_plan_form?: true, editing_plan: plan, plan_form: plan_form)}
     else
