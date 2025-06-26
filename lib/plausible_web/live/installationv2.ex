@@ -102,8 +102,15 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           </.tab>
         </div>
 
+        <div
+          :if={@flow == PlausibleWeb.Flows.provisioning() and is_nil(@detected_installation_type)}
+          class="flex items-center justify-center py-8"
+        >
+          <.spinner class="w-6 h-6" />
+        </div>
+
         <.form
-          :if={@flow == PlausibleWeb.Flows.provisioning() and not is_nil(@detected_installation_type)}
+          :if={@flow != PlausibleWeb.Flows.provisioning() or not is_nil(@detected_installation_type)}
           for={@tracker_script_configuration_form}
           phx-submit="submit"
           class="mt-4"
