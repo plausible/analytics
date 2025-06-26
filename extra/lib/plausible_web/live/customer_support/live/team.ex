@@ -93,6 +93,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
        plans: plans,
        plan_form: plan_form,
        show_plan_form?: false,
+       editing_plan: nil,
        tab: "billing",
        cost_estimate: 0,
        cost_estimate_tier: :business
@@ -319,6 +320,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.th>Paddle Plan ID</.th>
               <.th>Limits</.th>
               <.th>Features</.th>
+              <.th invisible>Actions</.th>
             </:thead>
             <:tbody :let={plan}>
               <.td class="align-top">
@@ -352,6 +354,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.td class="align-top">
                 <span :for={feat <- plan.features}>{feat.display_name()}<br /></span>
               </.td>
+              <.td class="align-top">
+                <.edit_button phx-click="edit-plan" phx-value-id={plan.id} phx-target={@myself} />
+              </.td>
             </:tbody>
           </.table>
 
@@ -360,7 +365,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             :if={@show_plan_form?}
             for={@plan_form}
             id="save-plan"
-            phx-submit="save-plan"
+            phx-submit={if @editing_plan, do: "update-plan", else: "save-plan"}
             phx-target={@myself}
             phx-change="estimate-cost"
           >
@@ -420,7 +425,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               :if={not mod.free?()}
               x-on:change="featureChangeCallback(event)"
               type="checkbox"
-              value={mod in (f.source.changes[:features] || [])}
+              value={mod in (f.source.changes[:features] || f.source.data.features || [])}
               name={"#{f.name}[features[]][#{mod.name()}]"}
               label={mod.display_name()}
             />
@@ -448,7 +453,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               </.button>
 
               <.button type="submit">
-                Save Custom Plan
+                {if @editing_plan, do: "Update Plan", else: "Save Custom Plan"}
               </.button>
             </div>
           </.form>
@@ -632,7 +637,20 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def handle_event("show-plan-form", _, socket) do
-    {:noreply, assign(socket, show_plan_form?: true)}
+    {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
+  end
+
+  def handle_event("edit-plan", %{"id" => plan_id}, socket) do
+    {plan_id, _} = Integer.parse(plan_id)
+    plan = Enum.find(socket.assigns.plans, &(&1.id == plan_id))
+
+    if plan do
+      plan_form = to_form(EnterprisePlan.changeset(plan, %{}))
+
+      {:noreply, assign(socket, show_plan_form?: true, editing_plan: plan, plan_form: plan_form)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("remove-domain", %{"identifier" => i}, socket) do
@@ -642,7 +660,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def handle_event("hide-plan-form", _, socket) do
-    {:noreply, assign(socket, show_plan_form?: false)}
+    {:noreply, assign(socket, show_plan_form?: false, editing_plan: nil)}
   end
 
   def handle_event("save-team", %{"team" => params}, socket) do
@@ -724,10 +742,42 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         plans = get_plans(socket.assigns.team.id)
 
         {:noreply,
-         assign(socket, plans: plans, plan_form: to_form(changeset), show_plan_form?: false)}
+         assign(socket,
+           plans: plans,
+           plan_form: to_form(changeset),
+           show_plan_form?: false,
+           editing_plan: nil
+         )}
 
       {:error, changeset} ->
-        failure(socket, "Error saving team: #{inspect(changeset.errors)}")
+        failure(socket, "Error saving plan: #{inspect(changeset.errors)}")
+        {:noreply, assign(socket, plan_form: to_form(changeset))}
+    end
+  end
+
+  def handle_event("update-plan", %{"enterprise_plan" => params}, socket) do
+    params =
+      params
+      |> update_features_to_list()
+      |> sanitize_params()
+
+    changeset = EnterprisePlan.changeset(socket.assigns.editing_plan, params)
+
+    case Plausible.Repo.update(changeset) do
+      {:ok, _plan} ->
+        success(socket, "Plan updated")
+        plans = get_plans(socket.assigns.team.id)
+
+        {:noreply,
+         assign(socket,
+           plans: plans,
+           plan_form: to_form(changeset),
+           show_plan_form?: false,
+           editing_plan: nil
+         )}
+
+      {:error, changeset} ->
+        failure(socket, "Error updating plan: #{inspect(changeset.errors)}")
         {:noreply, assign(socket, plan_form: to_form(changeset))}
     end
   end
