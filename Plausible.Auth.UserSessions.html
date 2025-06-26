@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-AF031440.js"></script>
+    <script src="dist/sidebar_items-E8A0D96B.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -197,6 +197,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#list_sso_for_team/2" data-no-tooltip translate="no">list_sso_for_team(team, now \\ NaiveDateTime.utc_now(:second))</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#remove_by_token/1" data-no-tooltip translate="no">remove_by_token(token)</a>
 
       </div>
@@ -214,6 +222,14 @@ Pages
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#revoke_by_id/2" data-no-tooltip translate="no">revoke_by_id(user, session_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#revoke_sso_by_id/2" data-no-tooltip translate="no">revoke_sso_by_id(team, session_id)</a>
 
       </div>
 
@@ -258,7 +274,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">create!(user, device_name, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L75" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L129" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -285,7 +301,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">disconnect_by_token(token_or_socket_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L140" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L194" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -311,7 +327,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">get_by_token(token)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L40" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L94" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -342,7 +358,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">last_used_humanize(user_session, now \\ NaiveDateTime.utc_now(:second))</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L23" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L77" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -371,7 +387,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">list_for_user(user, now \\ NaiveDateTime.utc_now(:second))</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L13" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L15" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -391,6 +407,36 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="list_sso_for_team/2">
+
+    <span id="list_sso_for_team/1"></span>
+
+  <div class="detail-header">
+    <a href="#list_sso_for_team/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">list_sso_for_team(team, now \\ NaiveDateTime.utc_now(:second))</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L28" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_sso_for_team(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(), <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>()) :: [
+  <a href="Plausible.Auth.UserSession.html#t:t/0">Plausible.Auth.UserSession.t</a>()
+]</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="remove_by_token/1">
 
   <div class="detail-header">
@@ -399,7 +445,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">remove_by_token(token)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L82" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L136" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -427,7 +473,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">revoke_all(user, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L122" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L176" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -453,7 +499,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">revoke_by_id(user, session_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L102" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L156" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -471,6 +517,32 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="revoke_sso_by_id/2">
+
+  <div class="detail-header">
+    <a href="#revoke_sso_by_id/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">revoke_sso_by_id(team, session_id)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L51" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> revoke_sso_by_id(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="socket_id/1">
 
   <div class="detail-header">
@@ -479,7 +551,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">socket_id(token)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L153" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L207" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -507,7 +579,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">touch(user_session, now \\ NaiveDateTime.utc_now(:second))</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L88" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user_sessions.ex#L142" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
