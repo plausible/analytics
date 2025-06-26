@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
          ),
        flow: params["flow"] || "provisioning",
        installation_type: get_installation_type(params, tracker_script_configuration),
-       detected_installation_type: nil
+       recommended_installation_type: nil
      )}
   end
 
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
     {:noreply,
      assign(socket,
-       detected_installation_type: installation_type
+       recommended_installation_type: installation_type
      )}
   end
 
@@ -88,29 +88,31 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
       <.focus_box>
         <div class="flex flex-row gap-2 bg-gray-100 rounded-md p-1">
-          <.tab patch="?type=manual" selected={@installation_type == "manual"}>
+          <.tab patch={"?type=manual&flow=#{@flow}"} selected={@installation_type == "manual"}>
             <.script_icon /> Script
           </.tab>
-          <.tab patch="?type=wordpress" selected={@installation_type == "wordpress"}>
+          <.tab patch={"?type=wordpress&flow=#{@flow}"} selected={@installation_type == "wordpress"}>
             <.wordpress_icon /> WordPress
           </.tab>
-          <.tab patch="?type=gtm" selected={@installation_type == "gtm"}>
+          <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type == "gtm"}>
             <.tag_manager_icon /> Tag Manager
           </.tab>
-          <.tab patch="?type=npm" selected={@installation_type == "npm"}>
+          <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type == "npm"}>
             <.npm_icon /> NPM
           </.tab>
         </div>
 
         <div
-          :if={@flow == PlausibleWeb.Flows.provisioning() and is_nil(@detected_installation_type)}
+          :if={@flow == PlausibleWeb.Flows.provisioning() and is_nil(@recommended_installation_type)}
           class="flex items-center justify-center py-8"
         >
           <.spinner class="w-6 h-6" />
         </div>
 
         <.form
-          :if={@flow != PlausibleWeb.Flows.provisioning() or not is_nil(@detected_installation_type)}
+          :if={
+            @flow != PlausibleWeb.Flows.provisioning() or not is_nil(@recommended_installation_type)
+          }
           for={@tracker_script_configuration_form}
           phx-submit="submit"
           class="mt-4"
