@@ -8,7 +8,10 @@ import { expect, test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { ScriptConfig } from './support/types'
-import { mockManyRequests, resolveWithTimestamps } from './support/mock-many-requests'
+import {
+  mockManyRequests,
+  resolveWithTimestamps
+} from './support/mock-many-requests'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -341,13 +344,11 @@ for (const mode of ['legacy', 'web']) {
         timeout: 2000
       })
       await page.click('a')
-      const [
-        [trackingRequestList, trackingResponseTime], 
-        [, navigationTime]
-      ] = await resolveWithTimestamps([
-        eventsApiMock.getRequestList(),
-        navigationPromise
-      ])
+      const [[trackingRequestList, trackingResponseTime], [, navigationTime]] =
+        await resolveWithTimestamps([
+          eventsApiMock.getRequestList(),
+          navigationPromise
+        ])
       await expect(page.getByText('Subscription successful')).toBeVisible()
       expect(navigationTime).toBeLessThanOrEqual(trackingResponseTime)
       expect(trackingRequestList).toEqual([
@@ -464,8 +465,14 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
         mockRequestTimeout: 2000
       }
 
-      const outboundMockForOtherPages = await mockManyRequests({ ...outboundMockOptions, scopeMockToPage: false })
-      const outboundMockForSamePage = await mockManyRequests({ ...outboundMockOptions, scopeMockToPage: true })
+      const outboundMockForOtherPages = await mockManyRequests({
+        ...outboundMockOptions,
+        scopeMockToPage: false
+      })
+      const outboundMockForSamePage = await mockManyRequests({
+        ...outboundMockOptions,
+        scopeMockToPage: true
+      })
 
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -517,12 +524,8 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       timeout: 2000
     })
     await page.click('a')
-    const [[, trackingResponseTime], [, navigationTime]] = await resolveWithTimestamps(
-      [
-        trackingPromise, 
-        navigationPromise
-      ]
-    )
+    const [[, trackingResponseTime], [, navigationTime]] =
+      await resolveWithTimestamps([trackingPromise, navigationPromise])
     await expect(page.getByText('Subscription successful')).toBeVisible()
     expect(trackingResponseTime).toBeLessThan(navigationTime)
     await expect(eventsApiMock.getRequestList()).resolves.toEqual([

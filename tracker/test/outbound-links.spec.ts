@@ -1,6 +1,9 @@
 import { initializePageDynamically } from './support/initialize-page-dynamically'
-import { mockManyRequests, resolveWithTimestamps } from './support/mock-many-requests'
-import { e, expectPlausibleInAction, switchByMode } from './support/test-utils'
+import {
+  mockManyRequests,
+  resolveWithTimestamps
+} from './support/mock-many-requests'
+import { expectPlausibleInAction, switchByMode } from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { ScriptConfig } from './support/types'
 import { LOCAL_SERVER_ADDR } from './support/server'
@@ -191,8 +194,14 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         mockRequestTimeout: 2000
       }
 
-      const outboundMockForOtherPages = await mockManyRequests({ ...outboundMockOptions, scopeMockToPage: false })
-      const outboundMockForSamePage = await mockManyRequests({ ...outboundMockOptions, scopeMockToPage: true })
+      const outboundMockForOtherPages = await mockManyRequests({
+        ...outboundMockOptions,
+        scopeMockToPage: false
+      })
+      const outboundMockForSamePage = await mockManyRequests({
+        ...outboundMockOptions,
+        scopeMockToPage: true
+      })
 
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -253,10 +262,8 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     })
 
     await page.click('a')
-    const [[, trackingResponseTime], [, navigationTime]] = await resolveWithTimestamps([
-      trackingPromise,
-      navigationPromise
-    ])
+    const [[, trackingResponseTime], [, navigationTime]] =
+      await resolveWithTimestamps([trackingPromise, navigationPromise])
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
     expect(trackingResponseTime).toBeLessThanOrEqual(navigationTime)

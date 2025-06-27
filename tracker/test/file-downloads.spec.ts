@@ -8,7 +8,10 @@ import { expect, test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { ScriptConfig } from './support/types'
-import { mockManyRequests, resolveWithTimestamps } from './support/mock-many-requests'
+import {
+  mockManyRequests,
+  resolveWithTimestamps
+} from './support/mock-many-requests'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -314,7 +317,10 @@ for (const mode of ['legacy', 'web']) {
         testId,
         scriptConfig: switchByMode(
           {
-            web: { ...DEFAULT_CONFIG, fileDownloads: { fileExtensions: ['iso'] } },
+            web: {
+              ...DEFAULT_CONFIG,
+              fileDownloads: { fileExtensions: ['iso'] }
+            },
             legacy:
               '<script defer src="/tracker/js/plausible.file-downloads.local.js" file-types="iso"></script>'
           },
@@ -451,8 +457,14 @@ test.describe('file downloads feature when using legacy .compat extension', () =
         mockRequestTimeout: 2000
       }
 
-      const downloadMockForOtherPages = await mockManyRequests({ ...downloadMockOptions, scopeMockToPage: false })
-      const downloadMockForSamePage = await mockManyRequests({ ...downloadMockOptions, scopeMockToPage: true })
+      const downloadMockForOtherPages = await mockManyRequests({
+        ...downloadMockOptions,
+        scopeMockToPage: false
+      })
+      const downloadMockForSamePage = await mockManyRequests({
+        ...downloadMockOptions,
+        scopeMockToPage: true
+      })
 
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -535,10 +547,8 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       })
 
       await page.click('a')
-      const [[, trackingResponseTime], [, navigationTime]] = await resolveWithTimestamps([
-        trackingPromise,
-        navigationPromise
-      ])
+      const [[, trackingResponseTime], [, navigationTime]] =
+        await resolveWithTimestamps([trackingPromise, navigationPromise])
       await expect(downloadableFileMock.getRequestList()).resolves.toHaveLength(
         1
       )
