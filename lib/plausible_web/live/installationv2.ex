@@ -2,7 +2,9 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   @moduledoc """
   User assistance module around Plausible installation instructions/onboarding
   """
+  alias PlausibleWeb.Flows
   use PlausibleWeb, :live_view
+  alias Plausible.Verification.{Checks, State}
 
   def mount(
         %{"domain" => domain} = params,
@@ -26,6 +28,20 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         installation_type: :manual
       })
 
+    flow = params["flow"] || Flows.provisioning()
+
+    if connected?(socket) and flow == Flows.provisioning() do
+      Checks.run("https://#{site.domain}", site.domain,
+        checks: [
+          Checks.FetchBody,
+          Checks.ScanBody
+        ],
+        report_to: self(),
+        async?: true,
+        slowdown: 0
+      )
+    end
+
     {:ok,
      assign(socket,
        site: site,
@@ -37,8 +53,28 @@ defmodule PlausibleWeb.Live.InstallationV2 do
            )
          ),
        flow: params["flow"] || "provisioning",
-       installation_type: get_installation_type(params, tracker_script_configuration)
+       installation_type: get_installation_type(params, tracker_script_configuration),
+       recommended_installation_type: nil
      )}
+  end
+
+  def handle_info({:verification_end, %State{} = state}, socket) do
+    installation_type =
+      case state.diagnostics do
+        %{wordpress_likely?: true} -> "wordpress"
+        %{gtm_likely?: true} -> "gtm"
+        _ -> "manual"
+      end
+
+    {:noreply,
+     assign(socket,
+       installation_type: installation_type,
+       recommended_installation_type: installation_type
+     )}
+  end
+
+  def handle_info({:verification_check_start, _}, socket) do
+    {:noreply, socket}
   end
 
   def handle_params(params, _url, socket) do
@@ -56,21 +92,35 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
       <.focus_box>
         <div class="flex flex-row gap-2 bg-gray-100 rounded-md p-1">
-          <.tab patch="?type=manual" selected={@installation_type == "manual"}>
+          <.tab patch={"?type=manual&flow=#{@flow}"} selected={@installation_type == "manual"}>
             <.script_icon /> Script
           </.tab>
-          <.tab patch="?type=wordpress" selected={@installation_type == "wordpress"}>
+          <.tab patch={"?type=wordpress&flow=#{@flow}"} selected={@installation_type == "wordpress"}>
             <.wordpress_icon /> WordPress
           </.tab>
-          <.tab patch="?type=gtm" selected={@installation_type == "gtm"}>
+          <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type == "gtm"}>
             <.tag_manager_icon /> Tag Manager
           </.tab>
-          <.tab patch="?type=npm" selected={@installation_type == "npm"}>
+          <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type == "npm"}>
             <.npm_icon /> NPM
           </.tab>
         </div>
 
-        <.form for={@tracker_script_configuration_form} phx-submit="submit" class="mt-4">
+        <div
+          :if={@flow == PlausibleWeb.Flows.provisioning() and is_nil(@recommended_installation_type)}
+          class="flex items-center justify-center py-8"
+        >
+          <.spinner class="w-6 h-6" />
+        </div>
+
+        <.form
+          :if={
+            @flow != PlausibleWeb.Flows.provisioning() or not is_nil(@recommended_installation_type)
+          }
+          for={@tracker_script_configuration_form}
+          phx-submit="submit"
+          class="mt-4"
+        >
           <.input
             type="hidden"
             field={@tracker_script_configuration_form[:installation_type]}
@@ -81,8 +131,15 @@ defmodule PlausibleWeb.Live.InstallationV2 do
             tracker_script_configuration_form={@tracker_script_configuration_form}
           />
 
-          <.wordpress_instructions :if={@installation_type == "wordpress"} flow={@flow} />
-          <.gtm_instructions :if={@installation_type == "gtm"} />
+          <.wordpress_instructions
+            :if={@installation_type == "wordpress"}
+            flow={@flow}
+            recommended_installation_type={@recommended_installation_type}
+          />
+          <.gtm_instructions
+            :if={@installation_type == "gtm"}
+            recommended_installation_type={@recommended_installation_type}
+          />
           <.npm_instructions :if={@installation_type == "npm"} />
 
           <.button type="submit" class="w-full mt-8">
@@ -242,7 +299,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       WordPress installation
     </.title>
     <div class="text-sm mt-4 leading-6">
-      Using WordPress? Here's how to integrate Plausible:
+      <span :if={@recommended_installation_type == "wordpress"}>
+        We've detected your website is using WordPress. Here's how to integrate Plausible:
+      </span>
+      <span :if={@recommended_installation_type != "wordpress"}>
+        Using Wordpress? Here's how to integrate Plausible:
+      </span>
       <.focus_list>
         <:item>
           <.styled_link href="https://plausible.io/wordpress-analytics-plugin" new_tab={true}>
@@ -263,7 +325,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       Tag Manager installation
     </.title>
     <div class="text-sm mt-4 leading-6">
-      Using Google Tag Manager? Here's how to integrate Plausible:
+      <span :if={@recommended_installation_type == "gtm"}>
+        We've detected your website is using Google Tag Manager. Here's how to integrate Plausible:
+      </span>
+      <span :if={@recommended_installation_type != "gtm"}>
+        Using Google Tag Manager? Here's how to integrate Plausible:
+      </span>
       <.focus_list>
         <:item>
           <.styled_link href="https://plausible.io/docs/google-tag-manager" new_tab={true}>
