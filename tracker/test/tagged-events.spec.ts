@@ -361,6 +361,42 @@ for (const mode of ['legacy', 'web']) {
       ])
     })
 
+    test('tracks event and does not error on tagged link clicks if the link is within an svg tag and has no href attribute', async ({
+      page
+    }, { testId }) => {
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG },
+            legacy:
+              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <a class="plausible-event-name=link+click">
+              <circle cx="50" cy="50" r="50" />
+            </a>
+          </svg>
+        `
+      })
+
+      const pageErrors: Error[] = []
+      page.on('pageerror', (err) => pageErrors.push(err))
+
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('circle'),
+        expectedRequests: [{ n: 'link click' }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+
+      expect(pageErrors).toHaveLength(0)
+    })
+
     test('does not track button without plausible-event-name class', async ({
       page
     }, { testId }) => {

@@ -32,7 +32,7 @@ function handleLinkClickEvent(event) {
   if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
 
   var link = getLinkEl(event.target)
-  var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
+  var hrefWithoutQuery = link && link.href && typeof link.href === 'string' && link.href.split('?')[0]
 
   if (COMPILE_TAGGED_EVENTS) {
     if (isElementOrParentTagged(link, 0)) {

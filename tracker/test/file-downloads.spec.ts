@@ -343,6 +343,38 @@ for (const mode of ['legacy', 'web']) {
       })
       await expect(isoMock.getRequestList()).resolves.toHaveLength(1)
     })
+
+    test('file downloads tracking does not cause errors with clicks on links with non-string href attribute', async ({
+      page
+    }, { testId }) => {
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: true },
+            legacy:
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><a><circle cx="50" cy="50" r="50" /></a></svg>
+            `
+      })
+
+      const pageErrors: Error[] = []
+      page.on('pageerror', (err) => pageErrors.push(err))
+
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('a'),
+        refutedRequests: [{ n: expect.any(String) }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+
+      expect(pageErrors).toHaveLength(0)
+    })
   })
 }
 

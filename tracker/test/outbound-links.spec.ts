@@ -3,7 +3,12 @@ import {
   mockManyRequests,
   resolveWithTimestamps
 } from './support/mock-many-requests'
-import { expectPlausibleInAction, switchByMode } from './support/test-utils'
+import {
+  expectPlausibleInAction,
+  isEngagementEvent,
+  isPageviewEvent,
+  switchByMode
+} from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { ScriptConfig } from './support/types'
 import { LOCAL_SERVER_ADDR } from './support/server'
@@ -138,6 +143,38 @@ for (const mode of ['legacy', 'web'])
           }
         })
       ])
+    })
+
+    test('outbound link tracking does not cause errors with clicks on links with non-string href attribute', async ({
+      page
+    }, { testId }) => {
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, outboundLinks: true },
+            legacy:
+              '<script defer src="/tracker/js/plausible.local.outbound-links.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><a><circle cx="50" cy="50" r="50" /></a></svg>
+                `
+      })
+
+      const pageErrors: Error[] = []
+      page.on('pageerror', (err) => pageErrors.push(err))
+
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('a'),
+        refutedRequests: [{ n: expect.any(String) }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+
+      expect(pageErrors).toHaveLength(0)
     })
   })
 
