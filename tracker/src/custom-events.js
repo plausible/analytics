@@ -56,6 +56,9 @@ function handleLinkClickEvent(event) {
 }
 
 function sendLinkClickEvent(event, link, eventAttrs) {
+  // In some legacy variants, this block delays opening the link up to 5 seconds,
+  // or until analytics request finishes, otherwise navigation prevents the analytics event from being sent.
+  if (COMPILE_COMPAT) {
   var followedLink = false
 
   function followLink() {
@@ -79,6 +82,13 @@ function sendLinkClickEvent(event, link, eventAttrs) {
       attrs.revenue = eventAttrs.revenue
     }
     track(eventAttrs.name, attrs)
+  }
+  } else {
+  var attrs = { props: eventAttrs.props }
+  if (COMPILE_REVENUE) {
+    attrs.revenue = eventAttrs.revenue
+  }
+  track(eventAttrs.name, attrs)
   }
 }
 
@@ -190,6 +200,9 @@ export function init() {
       var eventAttrs = getTaggedEventAttributes(form)
       if (!eventAttrs.name) { return }
 
+      // In some legacy variants, this block delays submitting the form for up to 5 seconds,
+      // or until analytics request finishes, otherwise form-related navigation can prevent the analytics event from being sent.
+      if (COMPILE_COMPAT) {
       event.preventDefault()
       var formSubmitted = false
 
@@ -207,6 +220,13 @@ export function init() {
         attrs.revenue = eventAttrs.revenue
       }
       track(eventAttrs.name, attrs)
+      } else {
+      var attrs = { props: eventAttrs.props }
+      if (COMPILE_REVENUE) {
+        attrs.revenue = eventAttrs.revenue
+      }
+      track(eventAttrs.name, attrs)
+      }
     }
 
     function isForm(element) {

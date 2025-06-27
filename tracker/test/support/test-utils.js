@@ -4,28 +4,6 @@ import { mockManyRequests } from "./mock-many-requests"
 
 export const tracker_script_version = packageJson.tracker_script_version
 
-// Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
-// data. If the request is not made, resolves to null after 3 seconds.
-export const mockRequest = function (page, path) {
-  return new Promise((resolve, _reject) => {
-    const requestTimeoutTimer = setTimeout(() => resolve(null), 3000)
-
-    page.route(path, (route, request) => {
-      clearTimeout(requestTimeoutTimer)
-      resolve(request)
-      return route.fulfill({ status: 202, contentType: 'text/plain', body: 'ok' })
-    })
-  })
-}
-
-export const metaKey = function() {
-  if (process.platform === 'darwin') {
-    return 'Meta'
-  } else {
-    return 'Control'
-  }
-}
-
 /**
  * A powerful utility function that makes it easy to assert on the event
  * requests that should or should not have been made after doing a page
@@ -52,7 +30,7 @@ export const metaKey = function() {
  * @param {Array|Function} [args.shouldIgnoreRequest] - When provided, ignores certain requests
  * @param {number} [args.responseDelay] - When provided, delays the response from the Plausible
  *  API by the given number of milliseconds.
- *  @param {Function} [args.mockRequestTimeout] - How long to wait for the requests to be made
+ *  @param {number} [args.mockRequestTimeout] - How long to wait for the requests to be made
  */
 export const expectPlausibleInAction = async function (page, {
   action,
@@ -68,13 +46,14 @@ export const expectPlausibleInAction = async function (page, {
   const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
   const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
 
-  const getRequestList = await mockManyRequests({
+  const { getRequestList } = await mockManyRequests({
     page,
     path: pathToMock,
+    fulfill: { status: 202, contentType: 'text/plain', body: 'ok' },
     responseDelay,
     shouldIgnoreRequest,
-    numberOfRequests: requestsToAwait,
-    mockRequestTimeout: mockRequestTimeout
+    awaitedRequestCount: requestsToAwait,
+    mockRequestTimeout
   })
   await action()
   const requestBodies = await getRequestList()
@@ -210,4 +189,17 @@ function checkEqual(a, b) {
 
 export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+export function switchByMode(cases, mode) {
+  switch (mode) {
+    case 'web':
+      return cases.web
+    case 'esm': 
+      return cases.esm
+    case 'legacy':
+      return cases.legacy
+    default:
+      throw new Error(`Unimplemented mode: ${mode}`)
+  }
 }

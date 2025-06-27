@@ -1,8 +1,6 @@
 import {
   expectPlausibleInAction,
   hideAndShowCurrentTab,
-  metaKey,
-  mockRequest,
   e as expecting,
   isPageviewEvent,
   isEngagementEvent,
@@ -33,9 +31,11 @@ export async function callInit(page, config, parent) {
 
 export function testPlausibleConfiguration({ openPage, initPlausible, fixtureName, fixtureTitle }) {
   test.describe('shared configuration tests', () => {
-    test.beforeEach(({ page }) => {
+    test.beforeEach(async ({ page }) => {
       // Mock file download requests
-      mockRequest(page, 'https://awesome.website.com/file.pdf')
+      await page.context().route('https://awesome.website.com/file.pdf', async (request) => {
+        await request.fulfill({status: 200, contentType: 'application/pdf', body: 'mocked pdf content'})
+      })
     })
 
     test('triggers pageview and engagement automatically', async ({ page }) => {
@@ -106,7 +106,7 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
       await expectPlausibleInAction(page, {
         action: async () => {
           await openPage(page, {})
-          await page.click('#file-download', { modifiers: [metaKey()] })
+          await page.click('#file-download', { modifiers: ['ControlOrMeta'] })
         },
         expectedRequests: [{ n: 'pageview' } ],
         refutedRequests: [{ n: 'File Download' }],

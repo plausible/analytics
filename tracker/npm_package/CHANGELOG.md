@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Remove now unnecessary navigation delays on link clicks and form submissions.
+
 ## [0.2.4] - 2025-06-19
 
 - Add `logging` option

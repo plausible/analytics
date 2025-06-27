@@ -6,7 +6,8 @@ import { defineConfig, devices  } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './test',
-  timeout: 60 * 1000,
+  /* Can be overridden in specific tests with test('a longer running test', async () => { test.setTimeout(<longer timeout>); // test content... }) */
+  timeout: 10 * 1000, 
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,

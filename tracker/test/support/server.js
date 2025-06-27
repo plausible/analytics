@@ -20,14 +20,17 @@ export function runLocalFileServer() {
   app.get('/tracker/js/*', async (req, res) => {
     const name = req.params[0]
     const variant = VARIANTS.find((variant) => variant.name === name)
+    if (!variant) {
+      res.type('application/javascript').status(404).send({error: new Error(`Variant not found with name ${name}`)})
+    } else {
+      let code = await compileFile(variant, { returnCode: true })
 
-    let code = await compileFile(variant, { returnCode: true })
+      if (name === 'plausible-web.js') {
+        code = code.replace('"<%= @config_js %>"', req.query.script_config)
+      }
 
-    if (name === 'plausible-web.js') {
-      code = code.replace('"<%= @config_js %>"', req.query.script_config)
-    }
-
-    res.type('application/javascript').send(code)
+      res.type('application/javascript').send(code)
+    }  
   });
 
   // A test utility - serve an image with an artificial delay
