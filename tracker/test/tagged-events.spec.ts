@@ -361,6 +361,54 @@ for (const mode of ['legacy', 'web']) {
       ])
     })
 
+    test('tracks tagged link clicks even if the link is within an svg tag, but fails to include href properly', async ({
+      page
+    }, { testId }) => {
+      const targetPage = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: '',
+        bodyContent: `<h1>Navigation successful</h1>`,
+        path: '/target'
+      })
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG },
+            legacy:
+              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <a class="plausible-event-name=link+click" href="${targetPage.url}">
+              <circle cx="50" cy="50" r="50" />
+            </a>
+          </svg>
+        `
+      })
+
+      const pageErrors: Error[] = []
+      page.on('pageerror', (err) => pageErrors.push(err))
+
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('circle'),
+        expectedRequests: [
+          {
+            n: 'link click'
+            // bug with p.url, can't assert
+          }
+        ],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+
+      expect(pageErrors).toHaveLength(0)
+      await expect(page.getByText('Navigation successful')).toBeVisible()
+    })
+
     test('does not track button without plausible-event-name class', async ({
       page
     }, { testId }) => {
@@ -380,7 +428,7 @@ for (const mode of ['legacy', 'web']) {
 
       await expectPlausibleInAction(page, {
         action: () => page.click('button'),
-        refutedRequests: [{ n: expect.any(String) }],
+        refutedRequests: [{}],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
     })
@@ -404,7 +452,7 @@ for (const mode of ['legacy', 'web']) {
 
       await expectPlausibleInAction(page, {
         action: () => page.click('span'),
-        refutedRequests: [{ n: expect.any(String) }],
+        refutedRequests: [{}],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
     })
@@ -588,9 +636,44 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
 
     await expectPlausibleInAction(page, {
       action: () => page.click('a'),
-      refutedRequests: [{ n: expect.any(String) }],
-      shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      refutedRequests: [{}]
     })
+
+    await expect(page.getByText('Subscription successful')).toBeVisible()
+  })
+
+  test('does not intercept navigation for links within svgs, causing slow track requests to fail', async ({
+    page
+  }, { testId }) => {
+    const targetPage = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: '',
+      bodyContent: `<h1>Subscription successful</h1>`,
+      path: '/target'
+    })
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig:
+        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+      bodyContent: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <a class="plausible-event-name=link+click" href="${targetPage.url}">
+            <circle cx="50" cy="50" r="50" />
+          </a>
+        </svg>
+      `
+    })
+    const pageErrors: Error[] = []
+    page.on('pageerror', (err) => pageErrors.push(err))
+    await page.goto(url)
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('a'),
+      refutedRequests: [{}],
+      responseDelay: 500,
+      mockRequestTimeout: 250
+    })
+    expect(pageErrors).toHaveLength(0)
 
     await expect(page.getByText('Subscription successful')).toBeVisible()
   })
