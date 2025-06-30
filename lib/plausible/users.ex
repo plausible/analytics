@@ -41,11 +41,6 @@ defmodule Plausible.Users do
     :ok
   end
 
-  @spec get(pos_integer()) :: Auth.User.t()
-  def get(id) do
-    Repo.get(Auth.User, id)
-  end
-
   @spec remember_last_team(Auth.User.t(), String.t() | nil) :: :ok
   def remember_last_team(%Auth.User{id: user_id}, team_identifier) do
     q = from(u in Auth.User, where: u.id == ^user_id)

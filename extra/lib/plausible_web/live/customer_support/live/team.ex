@@ -698,7 +698,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def handle_event("deprovision-user", %{"identifier" => user_id}, socket) do
-    user_id |> String.to_integer() |> Plausible.Users.get() |> SSO.deprovision_user!()
+    [id: String.to_integer(user_id)]
+    |> Plausible.Auth.find_user_by()
+    |> SSO.deprovision_user!()
+
     {:noreply, push_navigate(put_flash(socket, :success, "Team deleted"), to: "/cs")}
   end
 
