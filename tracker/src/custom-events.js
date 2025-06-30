@@ -116,7 +116,7 @@ function isTagged(element) {
 }
 
 function normalizeHref(link) {
-  if (link) {
+  if (link && link.href) {
     /** If the link is an SVG element, href is an object @see SVGAnimatedString. */
     if (link.href.animVal) {
       // Create a temporary anchor element to normalize reading the href attribute
@@ -127,6 +127,7 @@ function normalizeHref(link) {
     
     return link.href
   }
+  // returns undefined if the link is not an anchor element or has a falsy value as href
 }
 
 function isElementOrParentTagged(element, parentsChecked) {
