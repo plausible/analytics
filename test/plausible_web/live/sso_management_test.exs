@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         |> element("form#sso-policy")
         |> render_submit(%{
           policy: %{
-            sso_default_role: "owner",
+            sso_default_role: "admin",
             sso_session_timeout_minutes: "710"
           }
         })
@@ -231,7 +231,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
                  html,
                  ~s|#sso-policy_sso_default_role option[selected="selected"]|,
                  "value"
-               ) == "owner"
+               ) == "admin"
 
         assert text_of_attr(html, ~s|#sso-policy_sso_session_timeout_minutes|, "value") == "710"
       end
