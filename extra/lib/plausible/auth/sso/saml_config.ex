@@ -69,13 +69,19 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
     if pem = get_change(changeset, field) do
       pem = clean_pem(pem)
 
-      case X509.Certificate.from_pem(pem) do
+      case parse_pem(pem) do
         {:ok, _cert} -> put_change(changeset, field, pem)
         {:error, _} -> add_error(changeset, field, "invalid certificate", validation: :cert_pem)
       end
     else
       changeset
     end
+  end
+
+  defp parse_pem(pem) do
+    X509.Certificate.from_pem(pem)
+  catch
+    _, _ -> {:error, :failed_to_parse}
   end
 
   defp clean_pem(pem) do

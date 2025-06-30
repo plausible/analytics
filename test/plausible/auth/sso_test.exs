@@ -191,6 +191,31 @@ defmodule Plausible.Auth.SSOTest do
                    opts[:validation]
                  end)
       end
+
+      test "returns error on invalid certificate (#2)" do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+
+        invalid_cert = """
+        -----BEGIN CERTIFICATE-----
+        MIIFdTCCA12gAwIBAgIUNcATm3CidmlEMMsZa9KBZpWYCVcwDQYJKoZIhvcNAQEL
+        BQAwYzELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoM
+        """
+
+        assert {:error, changeset} =
+                 SSO.update_integration(integration, %{
+                   idp_signin_url: "https://example.com",
+                   idp_entity_id: "some-entity",
+                   idp_cert_pem: invalid_cert
+                 })
+
+        assert %{
+                 idp_cert_pem: [:cert_pem]
+               } =
+                 Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
+                   opts[:validation]
+                 end)
+      end
     end
 
     describe "provision_user/1" do
