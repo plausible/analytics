@@ -672,13 +672,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def handle_event("remove-sso-integration", _, socket) do
     :ok = SSO.remove_integration(socket.assigns.sso_integration, force_deprovision?: true)
-    socket = success(socket, "SSO integration removed")
+    socket = socket |> success("SSO integration removed") |> refresh_members()
     {:noreply, assign(socket, sso_integration: nil, tab: "overview")}
   end
 
   def handle_event("remove-sso-domain", %{"identifier" => i}, socket) do
     domain = Enum.find(socket.assigns.sso_integration.sso_domains, &(&1.identifier == i))
     :ok = SSO.Domains.remove(domain, force_deprovision?: true)
+    socket = socket |> success("SSO domain removed") |> refresh_members()
     {:noreply, assign(socket, sso_integration: get_sso_integration(socket.assigns.team))}
   end
 
@@ -720,8 +721,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     |> Plausible.Auth.find_user_by()
     |> SSO.deprovision_user!()
 
-    success(socket, "User deprovisioned")
-    {:noreply, refresh_members(socket)}
+    socket = socket |> success("SSO user deprovisioned") |> refresh_members()
+    {:noreply, socket}
   end
 
   def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do
