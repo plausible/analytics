@@ -7,7 +7,7 @@ defmodule Plausible.Teams.Policy do
 
   import Ecto.Changeset
 
-  @sso_member_roles Plausible.Teams.Membership.roles() -- [:guest]
+  @sso_member_roles Plausible.Teams.Membership.roles() -- [:guest, :owner]
   @force_sso_modes [:none, :all_but_owners]
 
   @update_fields [:sso_default_role, :sso_session_timeout_minutes]
