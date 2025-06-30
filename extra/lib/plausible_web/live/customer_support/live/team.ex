@@ -672,8 +672,24 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def handle_event("remove-sso-integration", _, socket) do
     :ok = SSO.remove_integration(socket.assigns.sso_integration, force_deprovision?: true)
-    socket = socket |> success("SSO integration removed") |> refresh_members()
-    {:noreply, assign(socket, sso_integration: nil, tab: "overview")}
+
+    socket =
+      socket
+      |> assign(sso_integration: nil)
+      |> put_flash(:success, "SSO integration removed")
+      |> refresh_members()
+      |> push_navigate(
+        to:
+          Routes.customer_support_resource_path(
+            socket,
+            :details,
+            :teams,
+            :team,
+            socket.assigns.team.id
+          )
+      )
+
+    {:noreply, socket}
   end
 
   def handle_event("remove-sso-domain", %{"identifier" => i}, socket) do

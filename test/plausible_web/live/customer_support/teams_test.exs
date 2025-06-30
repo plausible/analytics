@@ -609,9 +609,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
-        html = lv |> element("button#remove-sso-integration") |> render_click()
+        assert {:error, {:live_redirect, %{to: to}}} =
+                 lv |> element("button#remove-sso-integration") |> render_click()
 
-        refute element_exists?(html, ~s|a[href="?tab=sso"]|)
+        assert to == "/cs/teams/team/#{team.id}"
       end
     end
   end
