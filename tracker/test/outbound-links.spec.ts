@@ -148,6 +148,18 @@ for (const mode of ['legacy', 'web'])
     test('outbound link tracking does not cause errors with clicks on links with non-string href attribute', async ({
       page
     }, { testId }) => {
+      const outboundUrl = 'https://other.example.com/target'
+      const outboundMock = await mockManyRequests({
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        },
+        awaitedRequestCount: 1
+      })
+
       const { url } = await initializePageDynamically(page, {
         testId,
         scriptConfig: switchByMode(
@@ -159,8 +171,12 @@ for (const mode of ['legacy', 'web'])
           mode
         ),
         bodyContent: `
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><a><circle cx="50" cy="50" r="50" /></a></svg>
-                `
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <a href="${outboundUrl}">
+              <circle cx="50" cy="50" r="50" />
+            </a>
+          </svg>
+        `
       })
 
       const pageErrors: Error[] = []
@@ -170,11 +186,14 @@ for (const mode of ['legacy', 'web'])
 
       await expectPlausibleInAction(page, {
         action: () => page.click('a'),
-        refutedRequests: [{ n: expect.any(String) }],
+        expectedRequests: [
+          { n: 'Outbound Link: Click', props: { url: outboundUrl } }
+        ],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 
       expect(pageErrors).toHaveLength(0)
+      await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
     })
   })
 
@@ -349,5 +368,59 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await navigationPromise
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
+  })
+  
+  test(`tracks and follows links within svg tags`, async ({ page, browserName }, {
+    testId
+  }) => {
+    const outboundUrl = 'https://other.example.com/target'
+    const outboundMockOptions = {
+      page,
+      path: outboundUrl,
+      fulfill: {
+        status: 200,
+        contentType: 'text/html',
+        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+      },
+      awaitedRequestCount: 2,
+      mockRequestTimeout: 2000
+    }
+
+    const outboundMockForOtherPages = await mockManyRequests({
+      ...outboundMockOptions,
+      scopeMockToPage: false
+    })
+    const outboundMockForSamePage = await mockManyRequests({
+      ...outboundMockOptions,
+      scopeMockToPage: true
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig:
+        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
+      bodyContent: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <a href="${outboundUrl}">
+            <circle cx="50" cy="50" r="50" />
+          </a>
+        </svg>
+      `
+    })
+    await page.goto(url)
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('a'),
+      expectedRequests: [{ n: 'Outbound Link: Click', p: { url: outboundUrl } }]
+    })
+
+    const [requestsOnOtherPages, requestsOnSamePage] = await Promise.all([
+      outboundMockForOtherPages.getRequestList().then((d) => d.length),
+      outboundMockForSamePage.getRequestList().then((d) => d.length)
+    ])
+    expect({ requestsOnOtherPages, requestsOnSamePage }).toEqual({
+      requestsOnOtherPages: 0,
+      requestsOnSamePage: 1
+    })
   })
 })

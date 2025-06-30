@@ -361,7 +361,7 @@ for (const mode of ['legacy', 'web']) {
       ])
     })
 
-    test('tracks event and does not error on tagged link clicks if the link is within an svg tag and has no href attribute', async ({
+    test('tracks event and does not error on tagged link clicks if the link is within an svg tag', async ({
       page
     }, { testId }) => {
       const { url } = await initializePageDynamically(page, {
@@ -376,7 +376,7 @@ for (const mode of ['legacy', 'web']) {
         ),
         bodyContent: `
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <a class="plausible-event-name=link+click">
+            <a class="plausible-event-name=link+click" href="/other-page">
               <circle cx="50" cy="50" r="50" />
             </a>
           </svg>
@@ -390,7 +390,7 @@ for (const mode of ['legacy', 'web']) {
 
       await expectPlausibleInAction(page, {
         action: () => page.click('circle'),
-        expectedRequests: [{ n: 'link click' }],
+        expectedRequests: [{ n: 'link click', p: { url: `${LOCAL_SERVER_ADDR}/other-page` } }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 

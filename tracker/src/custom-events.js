@@ -22,17 +22,34 @@ function isLink(element) {
 function shouldFollowLink(event, link) {
   // If default has been prevented by an external script, Plausible should not intercept navigation.
   if (event.defaultPrevented) { return false }
-
-  var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
+  var target = link.getAttribute('target')
+  var targetsCurrentWindow = !target || target.match(/^_(self|parent|top)$/i)
   var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
   return targetsCurrentWindow && isRegularClick
+}
+
+function getUnifiedUrl(link) {
+  var href
+  if (link && link.href) {
+    if (typeof link.href.animVal === 'string') {
+      href = link.href.animVal
+    } else if (typeof link.href === 'string') {
+      href = link.href
+    }
+  }
+  if (href) {
+    const u = new URL(l, document.baseURI)
+    return u
+  }
 }
 
 function handleLinkClickEvent(event) {
   if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
 
   var link = getLinkEl(event.target)
-  var hrefWithoutQuery = link && link.href && typeof link.href === 'string' && link.href.split('?')[0]
+  var unifiedUrl = getUnifiedUrl(link)
+  var unifiedUrlWithoutQuery = unifiedUrl ? new URL(unifiedUrl.origin + unifiedUrl.pathname) : undefined
+  link.unifiedUrl = unifiedUrl
 
   if (COMPILE_TAGGED_EVENTS) {
     if (isElementOrParentTagged(link, 0)) {
@@ -44,13 +61,13 @@ function handleLinkClickEvent(event) {
 
   if (COMPILE_OUTBOUND_LINKS && (!COMPILE_CONFIG || config.outboundLinks)) {
     if (isOutboundLink(link)) {
-      return sendLinkClickEvent(event, link, { name: 'Outbound Link: Click', props: { url: link.href } })
+      return sendLinkClickEvent(event, link, { name: 'Outbound Link: Click', props: { url: unifiedUrl } })
     }
   }
 
   if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
-    if (isDownloadToTrack(hrefWithoutQuery)) {
-      return sendLinkClickEvent(event, link, { name: 'File Download', props: { url: hrefWithoutQuery } })
+    if (isDownloadToTrack(unifiedUrlWithoutQuery)) {
+      return sendLinkClickEvent(event, link, { name: 'File Download', props: { url: unifiedUrlWithoutQuery } })
     }
   }
 }
@@ -64,7 +81,7 @@ function sendLinkClickEvent(event, link, eventAttrs) {
   function followLink() {
     if (!followedLink) {
       followedLink = true
-      window.location = link.href
+      window.location = link.unifiedUrl
     }
   }
 
@@ -93,13 +110,13 @@ function sendLinkClickEvent(event, link, eventAttrs) {
 }
 
 function isOutboundLink(link) {
-  return link && link.href && link.host && link.host !== location.host
+  return link && link.unifiedUrl && link.unifiedUrl.host && link.unifiedUrl.host !== location.host
 }
 
 function isDownloadToTrack(url) {
   if (!url) { return false }
 
-  var fileType = url.split('.').pop();
+  var fileType = url.toString().split('.').pop();
   return fileTypesToTrack.some(function (fileTypeToTrack) {
     return fileTypeToTrack === fileType
   })
@@ -258,7 +275,9 @@ export function init() {
         if (clickedLink) {
           // if the clicked tagged element is a link, we attach the `url` property
           // automatically for user convenience
-          eventAttrs.props.url = clickedLink.href
+          const unifiedUrl = getUnifiedUrl(clickedLink.href)
+          // WIP something wrong here
+          eventAttrs.props.url = unifiedUrl
           sendLinkClickEvent(event, clickedLink, eventAttrs)
         } else {
           var attrs = {}
