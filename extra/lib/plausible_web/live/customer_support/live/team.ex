@@ -99,9 +99,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
      )}
   end
 
-  def update(%{tab: "members"}, %{assigns: %{team: team}} = socket) do
-    team_layout = Layout.init(team)
-    {:ok, assign(socket, team_layout: team_layout, tab: "members")}
+  def update(%{tab: "members"}, socket) do
+    {:ok, refresh_members(socket)}
   end
 
   def update(_, socket) do
@@ -239,14 +238,27 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         </div>
 
         <div :if={@tab == "sso"} class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
-          <p :if={@sso_integration} class="mb-4">
-            Configured?: <code>{SSO.Integration.configured?(@sso_integration)}</code>
-            <br /> IDP Signin URL:
-            <code>
-              {@sso_integration.config.idp_signin_url}
-            </code>
-            <br />IDP Entity ID: <code>{@sso_integration.config.idp_entity_id}</code>
-          </p>
+          <div :if={@sso_integration} class="flex gap-x-8 mb-4 justify-between items-start">
+            <p>
+              Configured?: <code>{SSO.Integration.configured?(@sso_integration)}</code>
+              <br /> IDP Signin URL:
+              <code>
+                {@sso_integration.config.idp_signin_url}
+              </code>
+              <br />IDP Entity ID: <code>{@sso_integration.config.idp_entity_id}</code>
+            </p>
+            <div class="ml-auto">
+              <.button
+                data-confirm="Are you sure you want to remove this SSO team integration, including all its domains and users?"
+                id="remove-sso-integration"
+                phx-click="remove-sso-integration"
+                phx-target={@myself}
+                theme="danger"
+              >
+                Remove Integration
+              </.button>
+            </div>
+          </div>
           <.table
             :if={not Enum.empty?(@sso_integration.sso_domains)}
             rows={@sso_integration.sso_domains}
@@ -271,13 +283,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               </.td>
               <.td actions>
                 <.delete_button
-                  :if={can_delete?(sso_domain)}
-                  id={"remove-domain-#{sso_domain.identifier}"}
-                  phx-click="remove-domain"
+                  id={"remove-sso-domain-#{sso_domain.identifier}"}
+                  phx-click="remove-sso-domain"
                   phx-value-identifier={sso_domain.identifier}
                   phx-target={@myself}
                   class="text-sm text-red-600"
-                  data-confirm={"Are you sure you want to remove domain '#{sso_domain.domain}'?"}
+                  data-confirm={"Are you sure you want to remove domain '#{sso_domain.domain}'? All SSO users will be deprovisioned and logged out."}
                 />
               </.td>
             </:tbody>
@@ -540,6 +551,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           <.table rows={Layout.sorted_for_display(@team_layout)}>
             <:thead>
               <.th>User</.th>
+              <.th>Sessions</.th>
               <.th>Type</.th>
               <.th>Role</.th>
             </:thead>
@@ -570,13 +582,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </div>
               </.td>
               <.td>
+                {@session_counts[member.meta.user.id] || 0}
+              </.td>
+              <.td>
                 <div class="flex items-center gap-x-1">
                   <span :if={member.meta.user.type == :sso}>SSO </span>{member.type}
 
                   <.delete_button
                     :if={member.meta.user.type == :sso}
-                    id={"deprovision-user-#{member.id}"}
-                    phx-click="deprovision-user"
+                    id={"deprovision-sso-user-#{member.id}"}
+                    phx-click="deprovision-sso-user"
                     phx-value-identifier={member.id}
                     phx-target={@myself}
                     class="text-sm"
@@ -655,9 +670,32 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     end
   end
 
-  def handle_event("remove-domain", %{"identifier" => i}, socket) do
+  def handle_event("remove-sso-integration", _, socket) do
+    :ok = SSO.remove_integration(socket.assigns.sso_integration, force_deprovision?: true)
+
+    socket =
+      socket
+      |> assign(sso_integration: nil)
+      |> put_flash(:success, "SSO integration removed")
+      |> refresh_members()
+      |> push_navigate(
+        to:
+          Routes.customer_support_resource_path(
+            socket,
+            :details,
+            :teams,
+            :team,
+            socket.assigns.team.id
+          )
+      )
+
+    {:noreply, socket}
+  end
+
+  def handle_event("remove-sso-domain", %{"identifier" => i}, socket) do
     domain = Enum.find(socket.assigns.sso_integration.sso_domains, &(&1.identifier == i))
-    SSO.Domains.remove(domain)
+    :ok = SSO.Domains.remove(domain, force_deprovision?: true)
+    socket = socket |> success("SSO domain removed") |> refresh_members()
     {:noreply, assign(socket, sso_integration: get_sso_integration(socket.assigns.team))}
   end
 
@@ -694,14 +732,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     end
   end
 
-  def handle_event("deprovision-user", %{"identifier" => user_id}, socket) do
+  def handle_event("deprovision-sso-user", %{"identifier" => user_id}, socket) do
     [id: String.to_integer(user_id)]
     |> Plausible.Auth.find_user_by()
     |> SSO.deprovision_user!()
 
-    team_layout = Layout.init(socket.assigns.team)
-    success(socket, "User deprovisioned")
-    {:noreply, assign(socket, team_layout: team_layout)}
+    socket = socket |> success("SSO user deprovisioned") |> refresh_members()
+    {:noreply, socket}
   end
 
   def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do
@@ -1037,14 +1074,22 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     """
   end
 
-  defp can_delete?(sso_domain) do
-    Plausible.Auth.SSO.Domains.check_can_remove(sso_domain) == :ok
-  end
-
   defp get_sso_integration(team) do
     case SSO.get_integration_for(team) do
       {:error, :not_found} -> nil
       {:ok, integration} -> integration
     end
+  end
+
+  defp refresh_members(socket) do
+    team_layout = Layout.init(socket.assigns.team)
+
+    session_counts =
+      team_layout
+      |> Enum.map(fn {_, entry} -> entry.meta.user end)
+      |> Plausible.Auth.UserSessions.count_for_users()
+      |> Enum.into(%{})
+
+    assign(socket, team_layout: team_layout, session_counts: session_counts, tab: "members")
   end
 end
