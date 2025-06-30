@@ -699,7 +699,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     |> Plausible.Auth.find_user_by()
     |> SSO.deprovision_user!()
 
-    {:noreply, push_navigate(put_flash(socket, :success, "Team deleted"), to: "/cs")}
+    team_layout = Layout.init(socket.assigns.team)
+    success(socket, "User deprovisioned")
+    {:noreply, assign(socket, team_layout: team_layout)}
   end
 
   def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do
