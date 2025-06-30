@@ -115,6 +115,20 @@ function isTagged(element) {
   return false
 }
 
+function normalizeHref(link) {
+  if (link) {
+    /** If the link is an SVG element, href is an object @see SVGAnimatedString. */
+    if (link.href.animVal) {
+      // Create a temporary anchor element to normalize reading the href attribute
+      var a = document.createElement('a')
+      a.setAttribute('href', link.href.animVal)
+      return a.href
+    }
+    
+    return link.href
+  }
+}
+
 function isElementOrParentTagged(element, parentsChecked) {
   if (!element || parentsChecked > PARENTS_TO_SEARCH_LIMIT) { return false }
   if (isTagged(element)) { return true }
@@ -256,15 +270,11 @@ export function init() {
         var eventAttrs = getTaggedEventAttributes(taggedElement)
 
         if (clickedLink) {
-          /**
-           * If the clicked tagged element is a link, we attach the `url` property
-           * automatically for user convenience.
-           * Note: href.animValue is checked to read correct url within svg elements @see SVGAnimatedString
-           */
-          var normalizedLinkHref =
-            clickedLink.href && (clickedLink.href.animVal || clickedLink.href)
-          eventAttrs.props.url = normalizedLinkHref
-          sendLinkClickEvent(event, clickedLink, eventAttrs, normalizedLinkHref)
+          // If the clicked tagged element is a link, we attach the `url` property
+          // automatically for user convenience.
+          var normalizedHref = normalizeHref(clickedLink)
+          eventAttrs.props.url = normalizedHref
+          sendLinkClickEvent(event, clickedLink, eventAttrs, normalizedHref)
         } else {
           var attrs = {}
           attrs.props = eventAttrs.props
