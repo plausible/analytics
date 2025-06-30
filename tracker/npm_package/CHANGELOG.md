@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 - Fix issue with link tracking features (tagged events, file downloads, outbound links) causing errors on the page when clicking on `a` tags within `svg` tags.
-- Fix issue with invalid `url` property being added to tagged events when clicking on `a` tags within `svg` tags.
 
 ## [0.3.0] - 2025-06-27
 

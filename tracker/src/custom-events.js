@@ -19,13 +19,16 @@ function isLink(element) {
   return element && element.tagName && element.tagName.toLowerCase() === 'a'
 }
 
-function shouldFollowLink(event, link) {
+function shouldInterceptNavigation(event, link) {
   // If default has been prevented by an external script, Plausible should not intercept navigation.
-  if (event.defaultPrevented) { return false }
+  if (event.defaultPrevented) return false;
+  var target = link.target;
+  // If the link directs to open the link in a different context, or we're not sure, do not intercept navigation
+  if (target && (typeof target !== 'string' || !target.match(/^_(self|parent|top)$/i))) return false;
+  // If the click is not a regular click (e.g. ctrl, meta, shift, or not a click event), do not intercept navigation
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.type !== 'click') return false;
 
-  var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
-  var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
-  return targetsCurrentWindow && isRegularClick
+  return true;
 }
 
 function handleLinkClickEvent(event) {
@@ -55,20 +58,20 @@ function handleLinkClickEvent(event) {
   }
 }
 
-function sendLinkClickEvent(event, link, eventAttrs, normalizedHref) {
+function sendLinkClickEvent(event, link, eventAttrs) {
   // In some legacy variants, this block delays opening the link up to 5 seconds,
-  // or until analytics request finishes, otherwise navigation prevents the analytics event from being sent.
+  // or until analytics request finishes, otherwise navigation could prevent the analytics event from being sent.
   if (COMPILE_COMPAT) {
   var followedLink = false
 
   function followLink() {
     if (!followedLink) {
       followedLink = true
-      window.location = normalizedHref || link.href
+      window.location = link.href
     }
   }
 
-  if (shouldFollowLink(event, link)) {
+  if (shouldInterceptNavigation(event, link)) {
     var attrs = { props: eventAttrs.props, callback: followLink }
     if (COMPILE_REVENUE) {
       attrs.revenue = eventAttrs.revenue
@@ -113,21 +116,6 @@ function isTagged(element) {
     }
   }
   return false
-}
-
-function normalizeHref(link) {
-  if (link && link.href) {
-    /** If the link is an SVG element, href is an object @see SVGAnimatedString. */
-    if (link.href.animVal) {
-      // Create a temporary anchor element to normalize reading the href attribute
-      var a = document.createElement('a')
-      a.setAttribute('href', link.href.animVal)
-      return a.href
-    }
-    
-    return link.href
-  }
-  // returns undefined if the link is not an anchor element or has a falsy value as href
 }
 
 function isElementOrParentTagged(element, parentsChecked) {
@@ -216,7 +204,7 @@ export function init() {
       if (!eventAttrs.name) { return }
 
       // In some legacy variants, this block delays submitting the form for up to 5 seconds,
-      // or until analytics request finishes, otherwise form-related navigation can prevent the analytics event from being sent.
+      // or until analytics request finishes, otherwise form-related navigation could prevent the analytics event from being sent.
       if (COMPILE_COMPAT) {
       event.preventDefault()
       var formSubmitted = false
@@ -271,11 +259,10 @@ export function init() {
         var eventAttrs = getTaggedEventAttributes(taggedElement)
 
         if (clickedLink) {
-          // If the clicked tagged element is a link, we attach the `url` property
-          // automatically for user convenience.
-          var normalizedHref = normalizeHref(clickedLink)
-          eventAttrs.props.url = normalizedHref
-          sendLinkClickEvent(event, clickedLink, eventAttrs, normalizedHref)
+          // if the clicked tagged element is a link, we attach the `url` property
+          // automatically for user convenience
+          eventAttrs.props.url = clickedLink.href
+          sendLinkClickEvent(event, clickedLink, eventAttrs)
         } else {
           var attrs = {}
           attrs.props = eventAttrs.props

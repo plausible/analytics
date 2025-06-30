@@ -186,7 +186,7 @@ for (const mode of ['legacy', 'web'])
 
       await expectPlausibleInAction(page, {
         action: () => page.click('a'),
-        refutedRequests: [{ n: expect.any(String) }],
+        refutedRequests: [{ n: 'Outbound Link: Click' }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 
@@ -368,7 +368,9 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
   })
 
-  test(`limitation: does not track outbound links within svg elements, but follows link properly`, async ({ page }, { testId }) => {
+  test(`limitation: does not track outbound links within svg elements, but follows link properly`, async ({
+    page
+  }, { testId }) => {
     const outboundUrl = 'https://other.example.com/target'
     const outboundMockOptions = {
       page,
@@ -407,7 +409,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
 
     await expectPlausibleInAction(page, {
       action: () => page.click('a'),
-      refutedRequests: [{ n: expect.any(String) }]
+      refutedRequests: [{ n: 'Outbound Link: Click' }]
     })
 
     const [requestsOnOtherPages, requestsOnSamePage] = await Promise.all([

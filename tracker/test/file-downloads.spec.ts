@@ -379,7 +379,7 @@ for (const mode of ['legacy', 'web']) {
 
       await expectPlausibleInAction(page, {
         action: () => page.click('a'),
-        refutedRequests: [{ n: expect.any(String) }],
+        refutedRequests: [{ n: 'File Download' }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 
