@@ -542,7 +542,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.th>User</.th>
               <.th>Type</.th>
               <.th>Role</.th>
-              <.th invisible>Actions</.th>
             </:thead>
             <:tbody :let={{_, member}}>
               <.td truncate>
@@ -589,8 +588,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.td>
                 {member.role}
               </.td>
-
-              <.td></.td>
             </:tbody>
           </.table>
         </div>
