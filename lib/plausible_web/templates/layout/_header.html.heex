@@ -2,30 +2,7 @@
   <div class="container print:max-w-full">
     <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
       <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
-        <a href={home_dest(@conn)}>
-          <img
-            src={
-              PlausibleWeb.Router.Helpers.static_path(
-                @conn,
-                logo_path("logo_dark.svg")
-              )
-            }
-            class="w-44 -mt-2 hidden dark:inline"
-            alt="Plausible logo"
-            loading="lazy"
-          />
-          <img
-            src={
-              PlausibleWeb.Router.Helpers.static_path(
-                @conn,
-                logo_path("logo_light.svg")
-              )
-            }
-            class="w-44 -mt-2 inline dark:hidden"
-            alt="Plausible logo"
-            loading="lazy"
-          />
-        </a>
+
       </div>
       <div class="absolute inset-y-0 right-0 flex items-center justify-end">
         <%= cond do %>

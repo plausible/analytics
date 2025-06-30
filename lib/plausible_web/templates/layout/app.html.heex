@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Plausible is a lightweight and open-source web analytics tool. Your website data is 100% yours and the privacy of your visitors is respected."
+      content="Stateofweb Analytics is a lightweight and open-source web analytics tool. Your website data is 100% yours and the privacy of your visitors is respected."
     />
     <%= if assigns[:connect_live_socket] do %>
       <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
@@ -18,7 +18,7 @@
 
     <title>
       {assigns[:title] ||
-        "Plausible · Simple, privacy-friendly alternative to Google Analytics"}
+        "Stateofweb Analytics"}
     </title>
     <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
     <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />

@@ -1,0 +1,99 @@
+services:
+  plausible_db:
+    image: postgres:16-alpine
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      start_period: 1m
+
+  plausible_events_db:
+    image: clickhouse/clickhouse-server:24.12-alpine
+    restart: always
+    volumes:
+      - event-data:/var/lib/clickhouse
+      - event-logs:/var/log/clickhouse-server
+      - ./clickhouse/logs.xml:/etc/clickhouse-server/config.d/logs.xml:ro
+      # This makes ClickHouse bind to IPv4 only, since Docker doesn't enable IPv6 in bridge networks by default.
+      # Fixes "Listen [::]:9000 failed: Address family for hostname not supported" warnings.
+      - ./clickhouse/ipv4-only.xml:/etc/clickhouse-server/config.d/ipv4-only.xml:ro
+      # This makes ClickHouse consume less resources, which is useful for small setups.
+      # https://clickhouse.com/docs/en/operations/tips#using-less-than-16gb-of-ram
+      - ./clickhouse/low-resources.xml:/etc/clickhouse-server/config.d/low-resources.xml:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    environment:
+      - CLICKHOUSE_SKIP_USER_SETUP=1
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 -O - http://127.0.0.1:8123/ping || exit 1"]
+      start_period: 1m
+
+  plausible:
+    ports:
+      - "8000:8000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
+    depends_on:
+      plausible_db:
+        condition: service_healthy
+      plausible_events_db:
+        condition: service_healthy
+    volumes:
+      - plausible-data:/var/lib/plausible
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    environment:
+      - TMPDIR=/var/lib/plausible/tmp
+      # required: https://github.com/plausible/community-edition/wiki/configuration#required
+      - BASE_URL=${BASE_URL}
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      # optional: https://github.com/plausible/community-edition/wiki/configuration#optional
+      # registration: https://github.com/plausible/community-edition/wiki/configuration#registration
+      - TOTP_VAULT_KEY
+      - DISABLE_REGISTRATION
+      - ENABLE_EMAIL_VERIFICATION
+      # web: https://github.com/plausible/community-edition/wiki/configuration#web
+      - HTTP_PORT
+      - HTTPS_PORT
+      # databases: https://github.com/plausible/community-edition/wiki/configuration#database
+      - DATABASE_URL
+      - CLICKHOUSE_DATABASE_URL
+      # Google: https://github.com/plausible/community-edition/wiki/configuration#google
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      # geolocation: https://github.com/plausible/community-edition/wiki/configuration#ip-geolocation
+      - IP_GEOLOCATION_DB
+      - GEONAMES_SOURCE_FILE
+      - MAXMIND_LICENSE_KEY
+      - MAXMIND_EDITION
+      # email: https://github.com/plausible/community-edition/wiki/configuration#email
+      - MAILER_ADAPTER
+      - MAILER_EMAIL
+      - MAILER_NAME
+      - SMTP_HOST_ADDR
+      - SMTP_HOST_PORT
+      - SMTP_USER_NAME
+      - SMTP_USER_PWD
+      - SMTP_HOST_SSL_ENABLED
+      - POSTMARK_API_KEY
+      - MAILGUN_API_KEY
+      - MAILGUN_DOMAIN
+      - MAILGUN_BASE_URI
+      - MANDRILL_API_KEY
+      - SENDGRID_API_KEY
+
+volumes:
+  db-data:
+  event-data:
+  event-logs:
+  plausible-data:
