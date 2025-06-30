@@ -361,9 +361,15 @@ for (const mode of ['legacy', 'web']) {
       ])
     })
 
-    test('tracks event and does not error on tagged link clicks if the link is within an svg tag', async ({
+    test('tracks tagged link clicks even if the link is within an svg tag', async ({
       page
     }, { testId }) => {
+      const targetPage = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: '',
+        bodyContent: `<h1>Navigation successful</h1>`,
+        path: '/target'
+      })
       const { url } = await initializePageDynamically(page, {
         testId,
         scriptConfig: switchByMode(
@@ -376,7 +382,7 @@ for (const mode of ['legacy', 'web']) {
         ),
         bodyContent: `
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <a class="plausible-event-name=link+click" href="/other-page">
+            <a class="plausible-event-name=link+click" href="${targetPage.url}">
               <circle cx="50" cy="50" r="50" />
             </a>
           </svg>
@@ -390,11 +396,12 @@ for (const mode of ['legacy', 'web']) {
 
       await expectPlausibleInAction(page, {
         action: () => page.click('circle'),
-        expectedRequests: [{ n: 'link click', p: { url: `${LOCAL_SERVER_ADDR}/other-page` } }],
+        expectedRequests: [{ n: 'link click', p: { url: `${LOCAL_SERVER_ADDR}${targetPage.url}` } }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 
       expect(pageErrors).toHaveLength(0)
+      await expect(page.getByText('Navigation successful')).toBeVisible()
     })
 
     test('does not track button without plausible-event-name class', async ({

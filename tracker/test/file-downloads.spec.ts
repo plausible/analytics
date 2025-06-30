@@ -344,9 +344,19 @@ for (const mode of ['legacy', 'web']) {
       await expect(isoMock.getRequestList()).resolves.toHaveLength(1)
     })
 
-    test('file downloads tracking does not cause errors with clicks on links with non-string href attribute', async ({
+    test('limitation: does track downloads of links within svg elements', async ({
       page
     }, { testId }) => {
+      const csvFileURL = `https://example.com/file.csv`
+      const csvMock = await mockManyRequests({
+        page,
+        path: csvFileURL,
+        fulfill: {
+          contentType: 'text/csv'
+        },
+        awaitedRequestCount: 1
+      })
+
       const { url } = await initializePageDynamically(page, {
         testId,
         scriptConfig: switchByMode(
@@ -358,7 +368,7 @@ for (const mode of ['legacy', 'web']) {
           mode
         ),
         bodyContent: `
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><a><circle cx="50" cy="50" r="50" /></a></svg>
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><a href="${csvFileURL}"><circle cx="50" cy="50" r="50" /></a></svg>
             `
       })
 
@@ -374,6 +384,7 @@ for (const mode of ['legacy', 'web']) {
       })
 
       expect(pageErrors).toHaveLength(0)
+      await expect(csvMock.getRequestList()).resolves.toHaveLength(1)
     })
   })
 }

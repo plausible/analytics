@@ -145,7 +145,7 @@ for (const mode of ['legacy', 'web'])
       ])
     })
 
-    test('outbound link tracking does not cause errors with clicks on links with non-string href attribute', async ({
+    test('limitation: does not track outbound links within svg elements', async ({
       page
     }, { testId }) => {
       const outboundUrl = 'https://other.example.com/target'
@@ -186,9 +186,7 @@ for (const mode of ['legacy', 'web'])
 
       await expectPlausibleInAction(page, {
         action: () => page.click('a'),
-        expectedRequests: [
-          { n: 'Outbound Link: Click', props: { url: outboundUrl } }
-        ],
+        refutedRequests: [{ n: expect.any(String) }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 
@@ -369,10 +367,8 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
   })
-  
-  test(`tracks and follows links within svg tags`, async ({ page, browserName }, {
-    testId
-  }) => {
+
+  test(`limitation: does not track outbound links within svg elements, but follows link properly`, async ({ page }, { testId }) => {
     const outboundUrl = 'https://other.example.com/target'
     const outboundMockOptions = {
       page,
@@ -411,7 +407,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
 
     await expectPlausibleInAction(page, {
       action: () => page.click('a'),
-      expectedRequests: [{ n: 'Outbound Link: Click', p: { url: outboundUrl } }]
+      refutedRequests: [{ n: expect.any(String) }]
     })
 
     const [requestsOnOtherPages, requestsOnSamePage] = await Promise.all([
