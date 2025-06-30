@@ -542,6 +542,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.th>User</.th>
               <.th>Type</.th>
               <.th>Role</.th>
+              <.th invisible>Actions</.th>
             </:thead>
             <:tbody :let={{_, member}}>
               <.td truncate>
@@ -570,11 +571,26 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </div>
               </.td>
               <.td>
-                {member.type}
+                <div class="flex items-center gap-x-1">
+                  <span :if={member.meta.user.type == :sso}>SSO </span>{member.type}
+
+                  <.delete_button
+                    :if={member.meta.user.type == :sso}
+                    id={"deprovision-user-#{member.id}"}
+                    phx-click="deprovision-user"
+                    phx-value-identifier={member.id}
+                    phx-target={@myself}
+                    class="text-sm"
+                    icon={:user_minus}
+                    data-confirm="Are you sure you want to deprovision SSO user and convert them to a standard user? This will sign them out and force to use regular e-mail/password combination to log in again."
+                  />
+                </div>
               </.td>
               <.td>
                 {member.role}
               </.td>
+
+              <.td></.td>
             </:tbody>
           </.table>
         </div>
@@ -679,6 +695,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
         {:noreply, socket}
     end
+  end
+
+  def handle_event("deprovision-user", %{"identifier" => user_id}, socket) do
+    user_id |> String.to_integer() |> Plausible.Users.get() |> SSO.deprovision_user!()
+    {:noreply, push_navigate(put_flash(socket, :success, "Team deleted"), to: "/cs")}
   end
 
   def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do

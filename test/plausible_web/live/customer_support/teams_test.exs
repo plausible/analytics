@@ -573,6 +573,34 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         lv |> element("button#remove-domain-#{domain.identifier}") |> render_click()
         refute render(lv) =~ "sso1.example.com"
       end
+
+      test "deprovisioning users", %{conn: conn, user: user} do
+        team = team_of(user) |> Plausible.Teams.complete_setup()
+        integration = SSO.initiate_saml_integration(team)
+        {:ok, sso_domain} = SSO.Domains.add(integration, "example.com")
+
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        {:ok, :standard, team, user} =
+          SSO.provision_user(%SSO.Identity{
+            id: Ecto.UUID.generate(),
+            name: user.name,
+            email: user.email,
+            expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
+          })
+
+        # need to re-authenticate for SSO to take effect
+        {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :members))
+
+        html = render(lv)
+
+        assert text(html) =~ "SSO membership"
+        lv |> element("#deprovision-user-#{user.id}") |> render_click()
+
+        assert Plausible.Repo.reload!(user).type == :standard
+      end
     end
   end
 end
