@@ -570,7 +570,20 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </div>
               </.td>
               <.td>
-                {member.type}
+                <div class="flex items-center gap-x-1">
+                  <span :if={member.meta.user.type == :sso}>SSO </span>{member.type}
+
+                  <.delete_button
+                    :if={member.meta.user.type == :sso}
+                    id={"deprovision-user-#{member.id}"}
+                    phx-click="deprovision-user"
+                    phx-value-identifier={member.id}
+                    phx-target={@myself}
+                    class="text-sm"
+                    icon={:user_minus}
+                    data-confirm="Are you sure you want to deprovision SSO user and convert them to a standard user? This will sign them out and force to use regular e-mail/password combination to log in again."
+                  />
+                </div>
               </.td>
               <.td>
                 {member.role}
@@ -679,6 +692,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
         {:noreply, socket}
     end
+  end
+
+  def handle_event("deprovision-user", %{"identifier" => user_id}, socket) do
+    [id: String.to_integer(user_id)]
+    |> Plausible.Auth.find_user_by()
+    |> SSO.deprovision_user!()
+
+    team_layout = Layout.init(socket.assigns.team)
+    success(socket, "User deprovisioned")
+    {:noreply, assign(socket, team_layout: team_layout)}
   end
 
   def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do

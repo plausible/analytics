@@ -804,38 +804,52 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :href, :string, default: nil
+  attr :icon, :atom, default: :pencil_square
   attr :rest, :global, include: ~w(method disabled)
 
   def edit_button(assigns) do
     if assigns[:href] do
       ~H"""
       <.unstyled_link href={@href} {@rest}>
-        <Heroicons.pencil_square class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+        <.dynamic_icon
+          name={@icon}
+          class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
+        />
       </.unstyled_link>
       """
     else
       ~H"""
       <button {@rest}>
-        <Heroicons.pencil_square class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+        <.dynamic_icon
+          name={@icon}
+          class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
+        />
       </button>
       """
     end
   end
 
   attr :href, :string, default: nil
+  attr :icon, :atom, default: :trash
   attr :rest, :global, include: ~w(method disabled)
 
   def delete_button(assigns) do
     if assigns[:href] do
       ~H"""
       <.unstyled_link href={@href} {@rest}>
-        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400" />
+        <.dynamic_icon
+          name={@icon}
+          class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
+        />
       </.unstyled_link>
       """
     else
       ~H"""
       <button {@rest}>
-        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400" />
+        <.dynamic_icon
+          name={@icon}
+          class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
+        />
       </button>
       """
     end
