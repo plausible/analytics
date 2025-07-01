@@ -33,6 +33,23 @@ defmodule Plausible.Auth.UserSessionsTest do
     end
   end
 
+  describe "count_for_users/2" do
+    test "counts user sessions" do
+      now = NaiveDateTime.utc_now(:second)
+      thirty_minutes_ago = NaiveDateTime.shift(now, minute: -30)
+
+      u1 = insert(:user)
+      u2 = insert(:user)
+      u3 = insert(:user)
+
+      insert_session(u1, "Recent Device", thirty_minutes_ago)
+      insert_session(u1, "Recent Device 2", thirty_minutes_ago)
+      insert_session(u2, "Recent Device", thirty_minutes_ago)
+
+      assert UserSessions.count_for_users([u1, u2, u3], now) == [{u1.id, 2}, {u2.id, 1}]
+    end
+  end
+
   on_ee do
     describe "list_for_sso_team/1,2" do
       test "lists only SSO member sessions for a given team" do

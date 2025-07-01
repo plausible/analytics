@@ -570,7 +570,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         {:ok, domain} = SSO.Domains.add(integration, "sso1.example.com")
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
-        lv |> element("button#remove-domain-#{domain.identifier}") |> render_click()
+        lv |> element("button#remove-sso-domain-#{domain.identifier}") |> render_click()
         refute render(lv) =~ "sso1.example.com"
       end
 
@@ -597,9 +597,22 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         html = render(lv)
 
         assert text(html) =~ "SSO membership"
-        lv |> element("#deprovision-user-#{user.id}") |> render_click()
+        lv |> element("#deprovision-sso-user-#{user.id}") |> render_click()
 
         assert Plausible.Repo.reload!(user).type == :standard
+      end
+
+      test "removing integration", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        SSO.initiate_saml_integration(team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
+
+        assert {:error, {:live_redirect, %{to: to}}} =
+                 lv |> element("button#remove-sso-integration") |> render_click()
+
+        assert to == "/cs/teams/team/#{team.id}"
       end
     end
   end
