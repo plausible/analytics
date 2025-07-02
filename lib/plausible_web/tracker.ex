@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Tracker do
 
   # Sync plausible goals with the updated script config
   defp sync_goals(site, original_config, updated_config) do
-    [:track_404_pages, :outbound_links, :file_downloads]
+    [:track_404_pages, :outbound_links, :file_downloads, :form_submissions]
     |> Enum.map(fn key ->
       {key, Map.get(original_config, key, false), Map.get(updated_config, key, false)}
     end)
@@ -107,6 +107,8 @@ defmodule PlausibleWeb.Tracker do
       {:outbound_links, true, false} -> Plausible.Goals.delete_outbound_links(site)
       {:file_downloads, false, true} -> Plausible.Goals.create_file_downloads(site)
       {:file_downloads, true, false} -> Plausible.Goals.delete_file_downloads(site)
+      {:form_submissions, false, true} -> Plausible.Goals.create_form_submissions(site)
+      {:form_submissions, true, false} -> Plausible.Goals.delete_form_submissions(site)
       _ -> nil
     end)
   end
