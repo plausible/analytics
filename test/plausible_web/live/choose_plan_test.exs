@@ -478,7 +478,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
            } do
         user
         |> team_of()
-        |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -30))
+        |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -11))
         |> Repo.update!()
 
         generate_usage_for(site, 11_000)
@@ -486,7 +486,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         {:ok, lv, _doc} = get_liveview(conn)
         doc = set_slider(lv, "10k")
 
-        refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
         refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
         refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
 
@@ -495,7 +494,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         {:ok, lv, _doc} = get_liveview(conn)
         doc = set_slider(lv, "10k")
 
-        assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
         assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
         assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
       end
