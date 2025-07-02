@@ -1391,9 +1391,14 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp breakdown_custom_prop_values(conn, site, %{"prop_key" => prop_key} = params) do
     pagination = parse_pagination(params)
-    prefixed_prop = "event:props:" <> prop_key
 
-    params = Map.put(params, "property", prefixed_prop)
+    ## WIP
+    filtering_on_form_submissions? =
+      String.contains?(params["filters"] || "", "[\"Form: Submission\"]")
+    dimension_to_breakdown_by = if(filtering_on_form_submissions?, do: "event:page", else: "event:props:" <> prop_key)
+    dimension_key_in_results = if(filtering_on_form_submissions?, do: :page, else: prop_key)
+
+    params = Map.put(params, "property", dimension_to_breakdown_by)
 
     query = Query.from(site, params, debug_metadata(conn))
 
@@ -1408,7 +1413,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     props =
       results
-      |> transform_keys(%{prop_key => :name})
+      |> transform_keys(%{dimension_key_in_results => :name})
 
     %{
       results: props,
