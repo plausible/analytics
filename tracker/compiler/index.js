@@ -66,11 +66,14 @@ export async function compileAll(options = {}) {
 
 function copyVerifierToPriv() {
   const verifierSource = relPath('../verifier/verifier-v1.js')
-  const verifierTarget = relPath('../../priv/tracker/verifier-v1.js')
+  const verifierTargetDir = relPath('../../priv/tracker/verifier')
+  const verifierTarget = path.join(verifierTargetDir, 'verifier-v1.js')
+  
+  fs.mkdirSync(verifierTargetDir, { recursive: true })
   
   fs.copyFileSync(verifierSource, verifierTarget)
   
-  console.log('Copied verifier-v1.js to priv/tracker/')
+  console.log('Copied verifier-v1.js to priv/tracker/verifier/')
 }
 
 export async function compileFile(variant, options) {

@@ -1,7 +1,7 @@
 defmodule Plausible.Verification.Checks.Installation do
   require Logger
 
-  @verifier_script_filename "tracker/verifier-v1.js"
+  @verifier_script_filename "tracker/verifier/verifier-v1.js"
   @verifier_script_path Path.join(:code.priv_dir(:plausible), @verifier_script_filename)
   @external_resource @verifier_script_path
   @verifier_code File.read!(@verifier_script_path)

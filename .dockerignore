@@ -59,6 +59,7 @@ npm-debug.log
 
 # Auto-generated tracker files
 /priv/tracker/js/*.js
+/priv/tracker/verifier/
 
 # Dializer
 /priv/plts/*.plt
