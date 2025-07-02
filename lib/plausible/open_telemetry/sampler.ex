@@ -17,7 +17,7 @@ defmodule Plausible.OpenTelemetry.Sampler do
   @behaviour :otel_sampler
   require OpenTelemetry.Tracer, as: Tracer
 
-  @routes_to_ignore ["/api/event", "/api/event/"]
+  @routes_to_ignore ["/api/event", "/api/event/", "/api//event", "//api/event"]
   @tables_to_ignore ["oban_jobs", "site_imports"]
 
   @impl true
