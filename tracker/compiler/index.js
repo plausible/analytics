@@ -59,6 +59,18 @@ export async function compileAll(options = {}) {
   bar.stop()
 
   console.log(`Completed compilation of ${ALL_VARIANTS.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
+  
+  // Copy verifier.js to priv directory
+  copyVerifierToPriv()
+}
+
+function copyVerifierToPriv() {
+  const verifierSource = relPath('../verifier/verifier.js')
+  const verifierTarget = relPath('../../priv/tracker/verifier.js')
+  
+  fs.copyFileSync(verifierSource, verifierTarget)
+  
+  console.log('Copied verifier.js to priv/tracker/')
 }
 
 export async function compileFile(variant, options) {

@@ -121,6 +121,27 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           event_name: PlausibleWeb.TrackerPlug.telemetry_event(:legacy),
           tags: [:status],
           tag_values: &%{status: &1.status}
+        ),
+        counter(
+          metric_prefix ++ [:verification, :v1],
+          event_name: Plausible.Verification.Checks.Installation.telemetry_event(),
+          tags: [
+            :plausible_installed_js,
+            :callback_status_js,
+            :any_diff,
+            :snippets_head_diff,
+            :snippets_body_diff,
+            :data_domain_mismatch_diff
+          ],
+          tag_values:
+            &%{
+              plausible_installed_js: &1.plausible_installed_js,
+              callback_status_js: &1.callback_status_js,
+              diff: &1.diff,
+              snippets_head_diff: &1.snippets_head_diff,
+              snippets_body_diff: &1.snippets_body_diff,
+              data_domain_mismatch_diff: &1.data_domain_mismatch_diff
+            }
         )
       ]
     )

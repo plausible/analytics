@@ -208,7 +208,16 @@ defmodule PlausibleWeb.Live.VerificationTest do
   end
 
   defp plausible_installed(bool \\ true, callback_status \\ 202) do
-    %{"data" => %{"plausibleInstalled" => bool, "callbackStatus" => callback_status}}
+    %{
+      "data" => %{
+        "completed" => true,
+        "snippetsFoundInHead" => 0,
+        "snippetsFoundInBody" => 0,
+        "plausibleInstalled" => bool,
+        "dataDomainMismatch" => nil,
+        "callbackStatus" => callback_status
+      }
+    }
   end
 
   defp source(domain) do
