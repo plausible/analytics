@@ -13,6 +13,16 @@ config :plausible, PlausibleWeb.Endpoint,
     accepts: ~w(html json)
   ]
 
+config :plausible, PlausibleWeb.InternalEndpoint,
+  # Does not to have to be secret, as per: https://github.com/phoenixframework/phoenix/issues/2146
+  live_view: [signing_salt: "f+bZg/crMtgjZJJY7X6OwIWc3XJR2C5Y"],
+  pubsub_server: Plausible.PubSub,
+  render_errors: [
+    view: PlausibleWeb.ErrorView,
+    layout: {PlausibleWeb.LayoutView, "base_error.html"},
+    accepts: ~w(html json)
+  ]
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 

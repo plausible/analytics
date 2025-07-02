@@ -530,7 +530,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.td>
                 <.styled_link
                   new_tab={true}
-                  href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain, [])}
+                  href={Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, [])}
                 >
                   Dashboard
                 </.styled_link>
@@ -538,7 +538,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.td>
                 <.styled_link
                   new_tab={true}
-                  href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, site.domain, [])}
+                  href={Routes.site_url(PlausibleWeb.Endpoint, :settings_general, site.domain, [])}
                 >
                   Settings
                 </.styled_link>
