@@ -20,7 +20,7 @@ async function mockSuccessfulEventResponse(page, responseDelay = 0) {
 }
 
 test.describe('legacy verifier', () => {
-  test('finds snippet in head and executes plausible function', async ({ page }, { testId }) => {
+  test('correct installation', async ({ page }, { testId }) => {
     mockSuccessfulEventResponse(page)
 
     const { url } = await initializePageDynamically(page, {
@@ -34,6 +34,7 @@ test.describe('legacy verifier', () => {
     expect(result.data.snippetsFoundInHead).toBe(1)
     expect(result.data.snippetsFoundInBody).toBe(0)
     expect(result.data.callbackStatus).toBe(202)
+    expect(result.data.dataDomainMismatch).toBe(false)
   })
 
   test('detects dataDomainMismatch', async ({ page }, { testId }) => {
@@ -47,6 +48,19 @@ test.describe('legacy verifier', () => {
     const result = await verify(page, {url: url, expectedDataDomain: 'right.com'})
     
     expect(result.data.dataDomainMismatch).toBe(true)
+  })
+
+  test('dataDomainMismatch is false when data-domain matches but "www." prefixed', async ({ page }, { testId }) => {
+    mockSuccessfulEventResponse(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script defer data-domain="www.right.com" src="/tracker/js/plausible.local.js"></script>`
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: 'right.com'})
+    
+    expect(result.data.dataDomainMismatch).toBe(false)
   })
 
   test('console logs in debug mode', async ({ page }, { testId }) => {

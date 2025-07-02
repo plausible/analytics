@@ -76,7 +76,7 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
       if (!scriptDataDomain) return false
 
       const multiple = scriptDataDomain.split(',').map(d => d.trim())
-      const dataDomainMismatch = !multiple.includes(expectedDataDomain)
+      const dataDomainMismatch = !multiple.some((domain) => domain.replace(/^www\./, '') === expectedDataDomain)
       log(`Data domain mismatch: ${dataDomainMismatch}`)
       return dataDomainMismatch
     })
