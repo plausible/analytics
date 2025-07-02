@@ -19,7 +19,7 @@ async function mockEventResponseSuccess(page, responseDelay = 0) {
   })
 }
 
-test.describe('v1 verifier', () => {
+test.describe('v1 verifier (basic diagnostics)', () => {
   test('correct installation', async ({ page }, { testId }) => {
     mockEventResponseSuccess(page)
 
@@ -52,6 +52,35 @@ test.describe('v1 verifier', () => {
     expect(result.data.dataDomainMismatch).toBe(false)
   })
 
+  test('detects dataDomainMismatch', async ({ page }, { testId }) => {
+    mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script defer data-domain="wrong.com" src="/tracker/js/plausible.local.js"></script>`
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: 'right.com'})
+    
+    expect(result.data.dataDomainMismatch).toBe(true)
+  })
+
+  test('dataDomainMismatch is false when data-domain without "www." prefix matches', async ({ page }, { testId }) => {
+    mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script defer data-domain="www.right.com" src="/tracker/js/plausible.local.js"></script>`
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: 'right.com'})
+    
+    expect(result.data.dataDomainMismatch).toBe(false)
+  })
+
+})
+
+test.describe('v1 verifier (window.plausible)', () => {
   test('callbackStatus is 404 when /api/event not found', async ({ page }, { testId }) => {
     await page.context().route('**/api/event', async (route) => {
       await route.fulfill({status: 404})
@@ -82,7 +111,7 @@ test.describe('v1 verifier', () => {
     expect(result.data.callbackStatus).toBe(0)
   })
 
-  test('callBackStatus is -1 when a network error occurs on sending test event', async ({ page }, { testId }) => {
+  test('callBackStatus is -1 when a network error occurs on sending event', async ({ page }, { testId }) => {
     await page.context().route('**/api/event', async (route) => {
       await route.abort()
     })
@@ -97,33 +126,9 @@ test.describe('v1 verifier', () => {
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.callbackStatus).toBe(-1)
   })
+})
 
-  test('detects dataDomainMismatch', async ({ page }, { testId }) => {
-    mockEventResponseSuccess(page)
-
-    const { url } = await initializePageDynamically(page, {
-      testId,
-      scriptConfig: `<script defer data-domain="wrong.com" src="/tracker/js/plausible.local.js"></script>`
-    })
-
-    const result = await verify(page, {url: url, expectedDataDomain: 'right.com'})
-    
-    expect(result.data.dataDomainMismatch).toBe(true)
-  })
-
-  test('dataDomainMismatch is false when data-domain without "www." prefix matches', async ({ page }, { testId }) => {
-    mockEventResponseSuccess(page)
-
-    const { url } = await initializePageDynamically(page, {
-      testId,
-      scriptConfig: `<script defer data-domain="www.right.com" src="/tracker/js/plausible.local.js"></script>`
-    })
-
-    const result = await verify(page, {url: url, expectedDataDomain: 'right.com'})
-    
-    expect(result.data.dataDomainMismatch).toBe(false)
-  })
-
+test.describe('v1 verifier (logging)', () => {
   test('console logs in debug mode', async ({ page }, { testId }) => {
     mockEventResponseSuccess(page)
 
