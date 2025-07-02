@@ -187,6 +187,10 @@ export function init() {
   if (COMPILE_CONFIG && config.formSubmissions) {
     function trackFormSubmission(e) {
       if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
+        if (COMPILE_TAGGED_EVENTS && isElementOrParentTagged(e.target, 0)) {
+          // If the form is tagged, we don't track it as a generic form submission.
+          return
+        }
         track('Form: Submission', { props: { path: location.pathname } });
       }
     }

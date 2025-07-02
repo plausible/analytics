@@ -1,4 +1,10 @@
-import { expectPlausibleInAction, switchByMode } from './support/test-utils'
+import {
+  ensurePlausibleInitialized,
+  expectPlausibleInAction,
+  isEngagementEvent,
+  isPageviewEvent,
+  switchByMode
+} from './support/test-utils'
 import { test, expect } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
@@ -146,6 +152,103 @@ for (const mode of ['legacy', 'web']) {
       })
 
       await expect(downloadMock.getRequestList()).resolves.toHaveLength(1)
+    })
+  })
+}
+
+for (const mode of ['web', 'esm']) {
+  test.describe(`form submissions and tagged events features hierarchy on overlap v2-specific (${mode})`, () => {
+    test('sends only tagged event if a form is tagged', async ({
+      page
+    }, { testId }) => {
+      const config = { ...DEFAULT_CONFIG, formSubmissions: true }
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: config,
+            esm: `
+            <script type="module">
+              import { init, track } from '/tracker/js/npm_package/plausible.js'; 
+              init(${JSON.stringify(config)})
+              window.plausible = { l: true }
+            </script>
+          `
+          },
+          mode
+        ),
+        bodyContent: `
+          <form method="POST" class="plausible-event-name=A+Tagged+Form">
+            <input id="name" type="text" placeholder="Name" /><input type="submit" value="Submit" />
+          </form>
+        `
+      })
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await page.goto(url)
+          await ensurePlausibleInitialized(page)
+          await page.fill('input[type="text"]', 'Any Name')
+          await page.click('input[type="submit"]')
+        },
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
+        expectedRequests: [
+          {
+            n: 'A Tagged Form',
+            u: `${LOCAL_SERVER_ADDR}${url}`
+          }
+        ],
+        refutedRequests: [{ n: 'Form: Submission' }],
+        mockRequestTimeout: 1000
+      })
+    })
+
+    test('sends only tagged event if the form parent is tagged', async ({
+      page
+    }, { testId }) => {
+      const config = { ...DEFAULT_CONFIG, formSubmissions: true }
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: config,
+            esm: `
+            <script type="module">
+              import { init, track } from '/tracker/js/npm_package/plausible.js'; 
+              init(${JSON.stringify(config)})
+              window.plausible = { l: true }
+            </script>
+          `
+          },
+          mode
+        ),
+        bodyContent: `
+          <div class="plausible-event-name--A+Tagged+Form">
+            <form onsubmit="event.preventDefault(); console.log('Form submitted');">
+              <input type="email" />
+            </form>
+          </div>
+        `
+      })
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await page.goto(url)
+          await ensurePlausibleInitialized(page)
+          await page.fill('input[type="email"]', 'any@example.com')
+          await page.press('input[type="email"]', 'Enter')
+        },
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
+        expectedRequests: [
+          { n: 'A Tagged Form', u: `${LOCAL_SERVER_ADDR}${url}` }
+        ],
+        refutedRequests: [
+          {
+            n: 'Form: Submission'
+          }
+        ],
+        mockRequestTimeout: 1000
+      })
     })
   })
 }
