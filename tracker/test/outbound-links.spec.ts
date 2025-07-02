@@ -3,7 +3,12 @@ import {
   mockManyRequests,
   resolveWithTimestamps
 } from './support/mock-many-requests'
-import { expectPlausibleInAction, switchByMode } from './support/test-utils'
+import {
+  expectPlausibleInAction,
+  isEngagementEvent,
+  isPageviewEvent,
+  switchByMode
+} from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { ScriptConfig } from './support/types'
 import { LOCAL_SERVER_ADDR } from './support/server'
@@ -138,6 +143,55 @@ for (const mode of ['legacy', 'web'])
           }
         })
       ])
+    })
+
+    test('limitation: does not track outbound links within svg elements', async ({
+      page
+    }, { testId }) => {
+      const outboundUrl = 'https://other.example.com/target'
+      const outboundMock = await mockManyRequests({
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        },
+        awaitedRequestCount: 1
+      })
+
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, outboundLinks: true },
+            legacy:
+              '<script defer src="/tracker/js/plausible.local.outbound-links.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <a href="${outboundUrl}">
+              <circle cx="50" cy="50" r="50" />
+            </a>
+          </svg>
+        `
+      })
+
+      const pageErrors: Error[] = []
+      page.on('pageerror', (err) => pageErrors.push(err))
+
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('a'),
+        refutedRequests: [{ n: 'Outbound Link: Click' }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+
+      expect(pageErrors).toHaveLength(0)
+      await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
     })
   })
 
@@ -312,5 +366,59 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await navigationPromise
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
+  })
+
+  test(`limitation: does not track outbound links within svg elements, but follows link properly`, async ({
+    page
+  }, { testId }) => {
+    const outboundUrl = 'https://other.example.com/target'
+    const outboundMockOptions = {
+      page,
+      path: outboundUrl,
+      fulfill: {
+        status: 200,
+        contentType: 'text/html',
+        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+      },
+      awaitedRequestCount: 2,
+      mockRequestTimeout: 2000
+    }
+
+    const outboundMockForOtherPages = await mockManyRequests({
+      ...outboundMockOptions,
+      scopeMockToPage: false
+    })
+    const outboundMockForSamePage = await mockManyRequests({
+      ...outboundMockOptions,
+      scopeMockToPage: true
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig:
+        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
+      bodyContent: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <a href="${outboundUrl}">
+            <circle cx="50" cy="50" r="50" />
+          </a>
+        </svg>
+      `
+    })
+    await page.goto(url)
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('a'),
+      refutedRequests: [{ n: 'Outbound Link: Click' }]
+    })
+
+    const [requestsOnOtherPages, requestsOnSamePage] = await Promise.all([
+      outboundMockForOtherPages.getRequestList().then((d) => d.length),
+      outboundMockForSamePage.getRequestList().then((d) => d.length)
+    ])
+    expect({ requestsOnOtherPages, requestsOnSamePage }).toEqual({
+      requestsOnOtherPages: 0,
+      requestsOnSamePage: 1
+    })
   })
 })
