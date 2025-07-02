@@ -48,6 +48,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   return (
     <>
@@ -74,6 +75,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         )}
       >
         <Popover.Panel
+          ref={panelRef}
           className={classNames(popover.panel.classNames.roundedSheet)}
           data-testid="filtermenu"
         >
@@ -105,7 +107,10 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
               </div>
             ))}
           </div>
-          <SearchableSegmentsSection closeList={closeDropdown} />
+          <SearchableSegmentsSection
+            closeList={closeDropdown}
+            tooltipContainerRef={panelRef}
+          />
         </Popover.Panel>
       </Transition>
     </>
