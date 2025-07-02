@@ -258,6 +258,12 @@ defmodule Plausible.Goals do
     :ok
   end
 
+  @spec create_form_submissions(Plausible.Site.t()) :: :ok
+  def create_form_submissions(%Plausible.Site{} = site) do
+    create(site, %{"event_name" => "Form: Submission"}, upsert?: true)
+    :ok
+  end
+
   @spec create_404(Plausible.Site.t()) :: :ok
   def create_404(%Plausible.Site{} = site) do
     create(site, %{"event_name" => "404"}, upsert?: true)
@@ -292,6 +298,17 @@ defmodule Plausible.Goals do
       from g in Goal,
         where: g.site_id == ^site.id,
         where: g.event_name == "404"
+
+    Repo.delete_all(q)
+    :ok
+  end
+
+  @spec delete_form_submissions(Plausible.Site.t()) :: :ok
+  def delete_form_submissions(%Plausible.Site{} = site) do
+    q =
+      from g in Goal,
+        where: g.site_id == ^site.id,
+        where: g.event_name == "Form: Submission"
 
     Repo.delete_all(q)
     :ok
