@@ -133,7 +133,7 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
             if (!callbackResolved) {
               callbackResolved = true
               clearTimeout(callbackTimeout)
-              resolve({status: options && options.status})
+              resolve({status: options && options.status ? options.status : -1 })
             }
           }
         })

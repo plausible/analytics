@@ -5,7 +5,7 @@ import { initializePageDynamically } from '../support/initialize-page-dynamicall
 
 const SOME_DOMAIN = 'somesite.com'
 
-async function mockSuccessfulEventResponse(page, responseDelay = 0) {
+async function mockEventResponseSuccess(page, responseDelay = 0) {
   await page.context().route('**/api/event', async (route) => {
     if (responseDelay > 0) {
       await delay(responseDelay)
@@ -19,9 +19,9 @@ async function mockSuccessfulEventResponse(page, responseDelay = 0) {
   })
 }
 
-test.describe('legacy verifier', () => {
+test.describe('v1 verifier', () => {
   test('correct installation', async ({ page }, { testId }) => {
-    mockSuccessfulEventResponse(page)
+    mockEventResponseSuccess(page)
 
     const { url } = await initializePageDynamically(page, {
       testId,
@@ -37,8 +37,69 @@ test.describe('legacy verifier', () => {
     expect(result.data.dataDomainMismatch).toBe(false)
   })
 
+  test('missing snippet', async ({ page }, { testId }) => {
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: ''
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    
+    expect(result.data.plausibleInstalled).toBe(false)
+    expect(result.data.callbackStatus).toBe(0)
+    expect(result.data.snippetsFoundInHead).toBe(0)
+    expect(result.data.snippetsFoundInBody).toBe(0)
+    expect(result.data.dataDomainMismatch).toBe(false)
+  })
+
+  test('callbackStatus is 404 when /api/event not found', async ({ page }, { testId }) => {
+    await page.context().route('**/api/event', async (route) => {
+      await route.fulfill({status: 404})
+    })
+    
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    
+    expect(result.data.plausibleInstalled).toBe(true)
+    expect(result.data.callbackStatus).toBe(404)
+  })
+
+  test('callBackStatus is 0 when event request times out', async ({ page }, { testId }) => {
+    mockEventResponseSuccess(page, 20000)
+    
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    
+    expect(result.data.plausibleInstalled).toBe(true)
+    expect(result.data.callbackStatus).toBe(0)
+  })
+
+  test('callBackStatus is -1 when a network error occurs on sending test event', async ({ page }, { testId }) => {
+    await page.context().route('**/api/event', async (route) => {
+      await route.abort()
+    })
+    
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
+    
+    expect(result.data.plausibleInstalled).toBe(true)
+    expect(result.data.callbackStatus).toBe(-1)
+  })
+
   test('detects dataDomainMismatch', async ({ page }, { testId }) => {
-    mockSuccessfulEventResponse(page)
+    mockEventResponseSuccess(page)
 
     const { url } = await initializePageDynamically(page, {
       testId,
@@ -50,8 +111,8 @@ test.describe('legacy verifier', () => {
     expect(result.data.dataDomainMismatch).toBe(true)
   })
 
-  test('dataDomainMismatch is false when data-domain matches but "www." prefixed', async ({ page }, { testId }) => {
-    mockSuccessfulEventResponse(page)
+  test('dataDomainMismatch is false when data-domain without "www." prefix matches', async ({ page }, { testId }) => {
+    mockEventResponseSuccess(page)
 
     const { url } = await initializePageDynamically(page, {
       testId,
@@ -64,7 +125,7 @@ test.describe('legacy verifier', () => {
   })
 
   test('console logs in debug mode', async ({ page }, { testId }) => {
-    mockSuccessfulEventResponse(page)
+    mockEventResponseSuccess(page)
 
     let logs = []
     page.context().on('console', msg => msg.type() === 'log' && logs.push(msg.text()))
@@ -81,7 +142,7 @@ test.describe('legacy verifier', () => {
   })
   
   test('does not log by default', async ({ page }, { testId }) => {
-    mockSuccessfulEventResponse(page)
+    mockEventResponseSuccess(page)
 
     let logs = []
     page.context().on('console', msg => msg.type() === 'log' && logs.push(msg.text()))

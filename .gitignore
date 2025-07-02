@@ -92,7 +92,7 @@ plausible-report.xml
 
 # Auto-generated tracker files
 /priv/tracker/js/plausible*.js*
-/priv/tracker/verifier.js
+/priv/tracker/verifier-v1.js
 
 # Docker volumes
 .clickhouse_db_vol*
