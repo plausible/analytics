@@ -13,16 +13,55 @@ import { useSiteContext } from '../../site-context'
 import { useQueryContext } from '../../query-context'
 import { customPropsRoute } from '../../router'
 
+function getFilterInfoForPath(listItem) {
+  return {
+    prefix: EVENT_PROPS_PREFIX,
+    filter: ['is', `${EVENT_PROPS_PREFIX}path`, [listItem.name]]
+  }
+}
+
+function getFilterInfoForUrl(listItem) {
+  return {
+    prefix: EVENT_PROPS_PREFIX,
+    filter: ['is', `${EVENT_PROPS_PREFIX}url`, [listItem.name]]
+  }
+}
+
 export const SPECIAL_GOALS = {
   404: { title: '404 Pages', prop: 'path' },
-  'Outbound Link: Click': { title: 'Outbound Links', prop: 'url' },
-  'Cloaked Link: Click': { title: 'Cloaked Links', prop: 'url' },
-  'File Download': { title: 'File Downloads', prop: 'url' },
+  'Outbound Link: Click': {
+    title: 'Outbound Links',
+    prop: 'url',
+    getFilterInfo: getFilterInfoForUrl
+  },
+  'Cloaked Link: Click': {
+    title: 'Cloaked Links',
+    prop: 'url',
+    getFilterInfo: getFilterInfoForUrl
+  },
+  'File Download': {
+    title: 'File Downloads',
+    prop: 'url',
+    getFilterInfo: getFilterInfoForUrl
+  },
   'WP Search Queries': {
     title: 'WordPress Search Queries',
-    prop: 'search_query'
+    prop: 'search_query',
+    getFilterInfo: (listItem) => ({
+      prefix: EVENT_PROPS_PREFIX,
+      filter: ['is', `${EVENT_PROPS_PREFIX}search_query`, [listItem.name]]
+    })
   },
-  'WP Form Completions': { title: 'WordPress Form Completions', prop: 'path' }
+  'WP Form Completions': {
+    title: 'WordPress Form Completions',
+    prop: 'path',
+    getFilterInfo: getFilterInfoForPath
+  },
+  'Form: Submission': {
+    title: 'Form Submissions',
+    prop: 'path',
+    getFilterInfo: (listItem) => ({ filter: ['is', 'page', [listItem.name]] })
+  }
 }
 
 function getSpecialGoal(query) {
@@ -32,7 +71,9 @@ function getSpecialGoal(query) {
   }
   const [operation, _filterKey, clauses] = goalFilter
   if (operation === FILTER_OPERATIONS.is && clauses.length == 1) {
-    return SPECIAL_GOALS[clauses[0]] || null
+    const filteredGoalName = clauses[0]
+    const goal = SPECIAL_GOALS[filteredGoalName]
+    return goal ? { ...goal, id: filteredGoalName } : null
   }
   return null
 }
@@ -41,7 +82,7 @@ export function specialTitleWhenGoalFilter(query, defaultTitle) {
   return getSpecialGoal(query)?.title || defaultTitle
 }
 
-function SpecialPropBreakdown({ prop, afterFetchData }) {
+function SpecialPropBreakdown({ getFilterInfo, prop, afterFetchData }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
 
@@ -49,18 +90,11 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
     return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
   }
 
-  function getExternalLinkUrlFactory() {
+  function getExternalLinkUrl(listItem) {
     if (prop === 'path') {
-      return (listItem) => url.externalLinkForPage(site.domain, listItem.name)
+      return url.externalLinkForPage(site.domain, listItem.name)
     } else {
-      return (listItem) => listItem.name
-    }
-  }
-
-  function getFilterInfo(listItem) {
-    return {
-      prefix: EVENT_PROPS_PREFIX,
-      filter: ['is', `${EVENT_PROPS_PREFIX}${prop}`, [listItem['name']]]
+      return listItem.name
     }
   }
 
@@ -90,7 +124,7 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
         params: { propKey: url.maybeEncodeRouteParam(prop) },
         search: (search) => search
       }}
-      getExternalLinkUrl={getExternalLinkUrlFactory()}
+      getExternalLinkUrl={getExternalLinkUrl}
       maybeHideDetails={true}
       color="bg-red-50"
       colMinWidth={90}
@@ -105,6 +139,7 @@ export default function GoalConversions({ afterFetchData, onGoalFilterClick }) {
   if (specialGoal) {
     return (
       <SpecialPropBreakdown
+        getFilterInfo={specialGoal.getFilterInfo}
         prop={specialGoal.prop}
         afterFetchData={afterFetchData}
       />

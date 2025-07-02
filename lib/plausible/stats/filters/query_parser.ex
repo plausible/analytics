@@ -99,7 +99,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     parse_list(filters, &parse_filter/1)
   end
 
-  def parse_filters(_invalid_metrics), do: {:error, "Invalid filters passed."}
+  def parse_filters(_invalid_filters), do: {:error, "Invalid filters passed."}
 
   defp parse_filter(filter) do
     with {:ok, operator} <- parse_operator(filter),

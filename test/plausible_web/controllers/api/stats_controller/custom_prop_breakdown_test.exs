@@ -1261,6 +1261,57 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
+    test "returns path breakdown for Form: Submission goal", %{conn: conn, site: site} do
+      insert(:goal, event_name: "Form: Submission", site: site)
+
+      populate_stats(site, [
+        build(:event,
+          name: "Form: Submission",
+          pathname: "/shop/cart"
+        ),
+        build(:event,
+          name: "pageview",
+          pathname: "/newsletter",
+          user_id: 100
+        ),
+        build(:event,
+          name: "Form: Submission",
+          pathname: "/newsletter",
+          user_id: 100
+        ),
+        build(:event,
+          name: "pageview",
+          pathname: "/newsletter",
+          user_id: 200
+        ),
+        build(:event,
+          name: "Form: Submission",
+          pathname: "/shop/cart"
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/path?period=day&with_imported=true&filters=#{JSON.encode!([[:is, "event:goal", ["Form: Submission"]]])}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "visitors" => 2,
+                 "name" => "/shop/cart",
+                 "events" => 2,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "visitors" => 2,
+                 "name" => "/newsletter",
+                 "events" => 1,
+                 "conversion_rate" => 50.0
+               }
+             ]
+    end
+
     for goal_name <- Plausible.Imported.goals_with_path() do
       test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)
