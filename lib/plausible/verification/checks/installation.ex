@@ -30,7 +30,7 @@ defmodule Plausible.Verification.Checks.Installation do
 
   @moduledoc """
   Calls the browserless.io service (local instance can be spawned with `make browserless`)
-  and runs #{@verifier_script_filename} via the [function API](https://docs.browserless.io/HTTP-APIs/function).
+  and runs verifier script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
 
   The verification uses a vanilla JS script that runs in the browser context,
   performing a comprehensive Plausible installation verification. Providing
