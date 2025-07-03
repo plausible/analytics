@@ -311,8 +311,8 @@ defmodule Plausible.Stats.ClickhouseTest do
     test "gets pageview counts for each of sites' imports" do
       site = insert(:site)
 
-      import1 = insert(:site_import, site: site)
-      import2 = insert(:site_import, site: site)
+      import1 = new_site_import(site: site)
+      import2 = new_site_import(site: site)
 
       # legacy import
       populate_stats(site, [

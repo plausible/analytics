@@ -345,7 +345,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         conn: conn,
         user: user
       } do
-        previous_owner = insert(:user)
+        previous_owner = new_user()
         site = new_site(owner: previous_owner)
 
         insert(:goal, site: site, currency: :USD, event_name: "Purchase")

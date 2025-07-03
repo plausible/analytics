@@ -18,7 +18,7 @@ defmodule Plausible.Site.SiteRemovalTest do
     site = new_site(owner: owner)
 
     team_membership =
-      insert(:team_membership, user: build(:user), team: site.team, role: :guest)
+      insert(:team_membership, user: new_user(), team: site.team, role: :guest)
 
     insert(:guest_membership, team_membership: team_membership, site: site, role: :viewer)
 

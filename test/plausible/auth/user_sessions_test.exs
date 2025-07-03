@@ -11,7 +11,7 @@ defmodule Plausible.Auth.UserSessionsTest do
 
   describe "list_for_user/2" do
     test "lists user sessions" do
-      user = insert(:user)
+      user = new_user()
 
       now = NaiveDateTime.utc_now(:second)
       thirty_minutes_ago = NaiveDateTime.shift(now, minute: -30)
@@ -23,7 +23,7 @@ defmodule Plausible.Auth.UserSessionsTest do
       old_session = insert_session(user, "Old Device", ten_hours_ago)
       older_session = insert_session(user, "Older Device", ten_days_ago)
       _expired_session = insert_session(user, "Expired Device", twenty_days_ago)
-      _rogue_session = insert_session(insert(:user), "Unrelated device", now)
+      _rogue_session = insert_session(new_user(), "Unrelated device", now)
 
       assert [session1, session2, session3] = UserSessions.list_for_user(user, now)
 
@@ -38,9 +38,9 @@ defmodule Plausible.Auth.UserSessionsTest do
       now = NaiveDateTime.utc_now(:second)
       thirty_minutes_ago = NaiveDateTime.shift(now, minute: -30)
 
-      u1 = insert(:user)
-      u2 = insert(:user)
-      u3 = insert(:user)
+      u1 = new_user()
+      u2 = new_user()
+      u3 = new_user()
 
       insert_session(u1, "Recent Device", thirty_minutes_ago)
       insert_session(u1, "Recent Device 2", thirty_minutes_ago)
@@ -245,7 +245,7 @@ defmodule Plausible.Auth.UserSessionsTest do
 
   describe "last_used_humanize/2" do
     test "returns humanized relative time" do
-      user = insert(:user)
+      user = new_user()
       now = NaiveDateTime.utc_now(:second)
       thirty_minutes_ago = NaiveDateTime.shift(now, minute: -30)
       ninety_minutes_ago = NaiveDateTime.shift(now, minute: -90)
@@ -403,7 +403,9 @@ defmodule Plausible.Auth.UserSessionsTest do
           NaiveDateTime.utc_now(:second)
           |> NaiveDateTime.shift(minute: 65)
 
-        user |> Ecto.Changeset.change(type: :sso) |> Repo.update!()
+        skip_audit do
+          user |> Ecto.Changeset.change(type: :sso) |> Repo.update!()
+        end
 
         session = Repo.reload!(session)
 
@@ -453,7 +455,7 @@ defmodule Plausible.Auth.UserSessionsTest do
 
     test "does not delete session of another user", %{user: user, session: active_session} do
       other_session =
-        insert(:user)
+        new_user()
         |> Auth.UserSession.new_session("Some Device")
         |> Repo.insert!()
 
@@ -492,7 +494,7 @@ defmodule Plausible.Auth.UserSessionsTest do
         |> Repo.insert!()
 
       unrelated_session =
-        insert(:user)
+        new_user()
         |> Auth.UserSession.new_session("Some Device")
         |> Repo.insert!()
 
@@ -505,7 +507,7 @@ defmodule Plausible.Auth.UserSessionsTest do
     end
 
     test "executes gracefully when user has no sessions" do
-      user = insert(:user)
+      user = new_user()
 
       assert :ok = UserSessions.revoke_all(user)
     end

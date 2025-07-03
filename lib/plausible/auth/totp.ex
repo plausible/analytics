@@ -80,6 +80,8 @@ defmodule Plausible.Auth.TOTP do
 
   """
 
+  use Plausible
+
   import Ecto.Changeset, only: [change: 2]
   import Ecto.Query, only: [from: 2]
 
@@ -146,26 +148,28 @@ defmodule Plausible.Auth.TOTP do
   end
 
   defp do_enable(user) do
-    {:ok, {user, recovery_codes}} =
-      Repo.transaction(fn ->
-        user =
-          user
-          |> change(
-            totp_enabled: true,
-            totp_token: generate_token()
-          )
-          |> Repo.update!()
+    audit %{type: "2fa_enabled"} do
+      {:ok, {user, recovery_codes}} =
+        Repo.transaction(fn ->
+          user =
+            user
+            |> change(
+              totp_enabled: true,
+              totp_token: generate_token()
+            )
+            |> Repo.update!()
 
-        {:ok, recovery_codes} = do_generate_recovery_codes(user)
+          {:ok, recovery_codes} = do_generate_recovery_codes(user)
 
-        {user, recovery_codes}
-      end)
+          {user, recovery_codes}
+        end)
 
-    user
-    |> Email.two_factor_enabled_email()
-    |> Plausible.Mailer.send()
+      user
+      |> Email.two_factor_enabled_email()
+      |> Plausible.Mailer.send()
 
-    {:ok, user, %{recovery_codes: recovery_codes}}
+      {:ok, user, %{recovery_codes: recovery_codes}}
+    end
   end
 
   @spec disable(Auth.User.t(), String.t()) :: {:ok, Auth.User.t()} | {:error, :invalid_password}

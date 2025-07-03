@@ -7,7 +7,7 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
 
     test "returns custom event goal suggestions including imported data, ordered by visitor count",
          %{site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(
         site,
@@ -34,7 +34,7 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
 
     test "returns custom event goal suggestions with search input, including imported data",
          %{site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:event, name: "Some Signup"),
@@ -71,7 +71,7 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
 
     test "ignores event names with either white space on either end or consisting only of whitespace",
          %{site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:event, name: "Signup"),

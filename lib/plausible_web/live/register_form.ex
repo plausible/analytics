@@ -321,9 +321,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   defp add_user(socket, user, opts \\ []) do
     result =
-      Repo.transaction(fn ->
+      audit %{type: "user_added_via_invitation"} do
         do_add_user(user, opts)
-      end)
+      end
 
     case result do
       {:ok, _user} ->
@@ -351,10 +351,10 @@ defmodule PlausibleWeb.Live.RegisterForm do
           {:ok, _} = Plausible.Teams.get_or_create(user)
         end
 
-        user
+        {:ok, user}
 
-      {:error, reason} ->
-        Repo.rollback(reason)
+      error ->
+        error
     end
   end
 

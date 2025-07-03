@@ -3,6 +3,7 @@ defmodule Plausible.Teams.Test do
   Convenience assertions for teams schema transition
   """
   use Plausible
+  use Plausible.CarboniteHelpers
 
   alias Plausible.Repo
   alias Plausible.Teams
@@ -16,11 +17,18 @@ defmodule Plausible.Teams.Test do
   defmacro __using__(_) do
     quote do
       import Plausible.Teams.Test
+      use Plausible.CarboniteHelpers
     end
   end
 
   def set_current_team(conn, team) do
     Plug.Conn.put_session(conn, :current_team_id, team.identifier)
+  end
+
+  def new_site_import(args \\ []) do
+    skip_audit do
+      insert(:site_import, args)
+    end
   end
 
   def new_site(args \\ []) do
@@ -50,34 +58,36 @@ defmodule Plausible.Teams.Test do
   end
 
   def new_user(args \\ []) do
-    {team_args, args} = Keyword.pop(args, :team, [])
-    {trial_expiry_date, args} = Keyword.pop(args, :trial_expiry_date)
+    skip_audit do
+      {team_args, args} = Keyword.pop(args, :team, [])
+      {trial_expiry_date, args} = Keyword.pop(args, :trial_expiry_date)
 
-    on_ee do
-      args = Keyword.merge([type: :standard], args)
-    end
-
-    user = insert(:user, args)
-
-    trial_expiry_date =
-      if team_args != [] && !trial_expiry_date do
-        Date.add(Date.utc_today(), 30)
-      else
-        trial_expiry_date
+      on_ee do
+        args = Keyword.merge([type: :standard], args)
       end
 
-    if trial_expiry_date do
-      {:ok, team} = Teams.get_or_create(user)
+      user = insert(:user, args)
 
-      team_args =
-        Keyword.merge(team_args, trial_expiry_date: trial_expiry_date)
+      trial_expiry_date =
+        if team_args != [] && !trial_expiry_date do
+          Date.add(Date.utc_today(), 30)
+        else
+          trial_expiry_date
+        end
 
-      team
-      |> Ecto.Changeset.change(team_args)
-      |> Repo.update!()
+      if trial_expiry_date do
+        {:ok, team} = Teams.get_or_create(user)
+
+        team_args =
+          Keyword.merge(team_args, trial_expiry_date: trial_expiry_date)
+
+        team
+        |> Ecto.Changeset.change(team_args)
+        |> Repo.update!()
+      end
+
+      Repo.preload(user, team_memberships: :team)
     end
-
-    Repo.preload(user, team_memberships: :team)
   end
 
   def team_of(subject, opts \\ [])

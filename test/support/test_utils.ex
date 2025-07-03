@@ -1,6 +1,8 @@
 defmodule Plausible.TestUtils do
   use Plausible.Repo
   use Plausible
+  use Plausible.CarboniteHelpers
+
   alias Plausible.Factory
 
   defmacro __using__(_) do
@@ -72,13 +74,16 @@ defmodule Plausible.TestUtils do
 
   def create_site_import(%{site: site} = opts) do
     site_import =
-      Factory.insert(:site_import,
-        site: site,
-        start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
-        source: :universal_analytics,
-        legacy: opts[:create_legacy_import?] == true
-      )
+      skip_audit do
+        Factory.insert(
+          :site_import,
+          site: site,
+          start_date: ~D[2005-01-01],
+          end_date: Timex.today(),
+          source: :universal_analytics,
+          legacy: opts[:create_legacy_import?] == true
+        )
+      end
 
     {:ok, site_import: site_import}
   end
@@ -112,20 +117,24 @@ defmodule Plausible.TestUtils do
     alias Plausible.Auth.SSO
 
     def setup_sso(%{team: team} = ctx) do
-      team = Plausible.Teams.complete_setup(team)
-      integration = SSO.initiate_saml_integration(team)
+      skip_audit do
+        team = Plausible.Teams.complete_setup(team)
+        integration = SSO.initiate_saml_integration(team)
 
-      {:ok, sso_domain} = SSO.Domains.add(integration, ctx[:domain] || "example.com")
-      _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = SSO.Domains.add(integration, ctx[:domain] || "example.com")
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-      {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
+        {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
+      end
     end
 
     def provision_sso_user(%{user: user}) do
-      identity = new_identity(user.name, user.email)
-      {:ok, _, _, sso_user} = SSO.provision_user(identity)
+      skip_audit do
+        identity = new_identity(user.name, user.email)
+        {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
-      {:ok, user: sso_user}
+        {:ok, user: sso_user}
+      end
     end
   end
 

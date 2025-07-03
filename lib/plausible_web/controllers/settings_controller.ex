@@ -203,7 +203,12 @@ defmodule PlausibleWeb.SettingsController do
   def update_name(conn, %{"user" => params}) do
     changeset = Auth.User.name_changeset(conn.assigns.current_user, params)
 
-    case Repo.update(changeset) do
+    result =
+      audit %{type: "name_changed"} do
+        Repo.update(changeset)
+      end
+
+    case result do
       {:ok, _user} ->
         conn
         |> put_flash(:success, "Name changed")
@@ -249,7 +254,7 @@ defmodule PlausibleWeb.SettingsController do
 
     with :ok <- Auth.rate_limit(:email_change_user, user),
          changes = Auth.User.email_changeset(user, params),
-         {:ok, user} <- Repo.update(changes) do
+         {:ok, user} <- audit(%{type: "update_email"}, do: Repo.update(changes)) do
       if user.email_verified do
         handle_email_updated(conn)
       else
@@ -272,9 +277,14 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def cancel_update_email(conn, _params) do
-    changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
+    result =
+      audit %{type: "email_update_cancel"} do
+        changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
 
-    case Repo.update(changeset) do
+        Repo.update(changeset)
+      end
+
+    case result do
       {:ok, user} ->
         conn
         |> put_flash(:success, "Email changed back to #{user.email}")

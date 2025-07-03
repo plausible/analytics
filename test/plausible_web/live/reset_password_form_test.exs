@@ -12,7 +12,8 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
 
   describe "/password/reset" do
     test "sets new password with valid token", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
+
       token = Token.sign_password_reset(user.email)
 
       lv = get_liveview(conn, "/password/reset?token=#{token}")
@@ -28,7 +29,7 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
     end
 
     test "reset's user's TOTP token when present", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
       {:ok, user, _} = TOTP.initiate(user)
       {:ok, user, _} = TOTP.enable(user, :skip_verify)
 
@@ -46,7 +47,7 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
     end
 
     test "renders error when new password fails validation", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
       token = Token.sign_password_reset(user.email)
 
       lv = get_liveview(conn, "/password/reset?token=#{token}")

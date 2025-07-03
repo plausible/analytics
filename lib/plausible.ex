@@ -25,6 +25,28 @@ defmodule Plausible do
     do_on_ce(clauses)
   end
 
+  defmacro audit(meta, do: block) do
+    quote generated: true do
+      r =
+        Plausible.Repo.transaction(fn ->
+          {:ok, _} =
+            Carbonite.insert_transaction(Plausible.Repo, %{meta: unquote(meta)})
+
+          case unquote(block) do
+            {:ok, _} = ok -> ok
+            {:error, error} -> Plausible.Repo.rollback(error)
+            other -> other
+          end
+        end)
+
+      case r do
+        {:ok, {:ok, ret}} -> {:ok, ret}
+        {:ok, ret} -> ret
+        {:error, err} = e -> e
+      end
+    end
+  end
+
   # :erlang.phash2(1, 1) == 0 tricks dialyzer as per:
   # https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/lib/gen_server.ex#L771-L778
   # and also tricks elixir 1.18 type checker

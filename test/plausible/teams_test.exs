@@ -202,7 +202,10 @@ defmodule Plausible.TeamsTest do
     test "returns error if user does not exist anymore" do
       user = new_user()
       _site = new_site(owner: user)
-      Repo.delete!(user)
+
+      skip_audit do
+        Repo.delete!(user)
+      end
 
       assert {:error, :no_team} = Teams.get_by_owner(user)
     end

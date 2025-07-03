@@ -662,7 +662,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       site: site
     } do
       site_import =
-        insert(:site_import, site: site, start_date: ~D[2021-01-01], has_scroll_depth: true)
+        new_site_import(site: site, start_date: ~D[2021-01-01], has_scroll_depth: true)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -705,7 +705,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     setup [:create_user, :log_in, :create_site]
 
     setup context do
-      insert(:site_import,
+      new_site_import(
         site: context.site,
         start_date: ~D[2021-03-01],
         end_date: ~D[2021-03-31]
@@ -1048,7 +1048,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "returns scroll_depth with a page filter with imported data", %{conn: conn, site: site} do
       site_import =
-        insert(:site_import, site: site, start_date: ~D[2021-01-01], has_scroll_depth: true)
+        new_site_import(site: site, start_date: ~D[2021-01-01], has_scroll_depth: true)
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),

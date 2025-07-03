@@ -120,7 +120,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
         |> Repo.update!()
 
       existing_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: ~D[2021-01-02],
           end_date: ~D[2021-01-08],
@@ -152,7 +152,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
         |> Repo.update!()
 
       existing_import1 =
-        insert(:site_import,
+        new_site_import(
           site: site1,
           start_date: ~D[2021-01-02],
           end_date: ~D[2021-01-08],
@@ -166,7 +166,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
         |> Repo.update!()
 
       existing_import2 =
-        insert(:site_import,
+        new_site_import(
           site: site2,
           start_date: ~D[2021-01-02],
           end_date: ~D[2021-01-08],
@@ -185,7 +185,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
         |> Repo.update!()
 
       _existing_import3 =
-        insert(:site_import,
+        new_site_import(
           site: site4,
           start_date: ~D[2021-01-02],
           end_date: ~D[2021-01-08],
@@ -211,13 +211,13 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
   describe "imported_stats_end_date/1" do
     test "returns nil when there are no stats" do
-      site_import = insert(:site_import)
+      site_import = new_site_import()
 
       assert SiteImports.imported_stats_end_date(site_import.site_id, [site_import.id]) == nil
     end
 
     test "returns date when there are stats recorded in one imported table" do
-      site_import = insert(:site_import)
+      site_import = new_site_import()
 
       populate_stats(site_import.site, site_import.id, [
         build(:imported_visitors, date: ~D[2021-01-01])
@@ -228,7 +228,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
     end
 
     test "returns max date across all imported tables" do
-      site_import = insert(:site_import)
+      site_import = new_site_import()
 
       populate_stats(site_import.site, site_import.id, [
         build(:imported_visitors, date: ~D[2021-01-01]),
@@ -259,7 +259,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
       all_tables = SiteImports.imported_tables_april_2024()
 
       for {table, idx} <- Enum.with_index(all_tables) do
-        site_import = insert(:site_import)
+        site_import = new_site_import()
         end_date = Date.add(date, idx)
 
         populate_stats(site_import.site, site_import.id, [

@@ -640,7 +640,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "refuses deletion when not logged in" do
       another_session =
-        insert(:user)
+        new_user()
         |> Auth.UserSession.new_session("Some Device")
         |> Repo.insert!()
 
@@ -898,9 +898,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "updates email and forces reverification", %{conn: conn, user: user} do
       password = "very-long-very-secret-123"
 
-      user
-      |> Auth.User.set_password(password)
-      |> Repo.update!()
+      skip_audit do
+        user
+        |> Auth.User.set_password(password)
+        |> Repo.update!()
+      end
 
       assert user.email_verified
 
@@ -962,7 +964,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "renders form with error on already taken email", %{conn: conn, user: user} do
-      other_user = insert(:user)
+      other_user = new_user()
 
       password = "very-long-very-secret-123"
 
@@ -1030,13 +1032,15 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "cancels email reverification in progress", %{conn: conn, user: user} do
       user =
-        user
-        |> Ecto.Changeset.change(
-          email_verified: false,
-          email: "new" <> user.email,
-          previous_email: user.email
-        )
-        |> Repo.update!()
+        skip_audit do
+          user
+          |> Ecto.Changeset.change(
+            email_verified: false,
+            email: "new" <> user.email,
+            previous_email: user.email
+          )
+          |> Repo.update!()
+        end
 
       conn = post(conn, Routes.settings_path(conn, :cancel_update_email))
 
@@ -1055,18 +1059,19 @@ defmodule PlausibleWeb.SettingsControllerTest do
       user: user
     } do
       user =
-        user
-        |> Ecto.Changeset.change(
-          email_verified: false,
-          email: "new" <> user.email,
-          previous_email: user.email
-        )
-        |> Repo.update!()
+        skip_audit do
+          user
+          |> Ecto.Changeset.change(
+            email_verified: false,
+            email: "new" <> user.email,
+            previous_email: user.email
+          )
+          |> Repo.update!()
+        end
 
-      _other_user = insert(:user, email: user.previous_email)
+      _other_user = new_user(email: user.previous_email)
 
-      conn =
-        post(conn, Routes.settings_path(conn, :cancel_update_email))
+      conn = post(conn, Routes.settings_path(conn, :cancel_update_email))
 
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :activate_form)
 
@@ -1078,13 +1083,15 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      user
-      |> Ecto.Changeset.change(
-        email_verified: false,
-        email: "new" <> user.email,
-        previous_email: nil
-      )
-      |> Repo.update!()
+      skip_audit do
+        user
+        |> Ecto.Changeset.change(
+          email_verified: false,
+          email: "new" <> user.email,
+          previous_email: nil
+        )
+        |> Repo.update!()
+      end
 
       assert_raise RuntimeError, ~r/Previous email is empty for user/, fn ->
         post(conn, Routes.settings_path(conn, :cancel_update_email))

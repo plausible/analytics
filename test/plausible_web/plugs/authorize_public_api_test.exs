@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   test "halts with error on missing site ID when request made to Stats API", %{conn: conn} do
-    api_key = insert(:api_key, user: build(:user))
+    api_key = insert(:api_key, user: new_user())
 
     conn =
       conn
@@ -160,7 +160,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   test "halts with error when API lacks required scope", %{conn: conn} do
-    user = insert(:user)
+    user = new_user()
     api_key = insert(:api_key, user: user)
 
     conn =
@@ -256,7 +256,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   test "passes and sets current user when valid API key with required scope provided", %{
     conn: conn
   } do
-    user = insert(:user)
+    user = new_user()
     api_key = insert(:api_key, user: user, scopes: ["sites:provision:*"])
 
     conn =
@@ -351,7 +351,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   test "passes for subscope match", %{conn: conn} do
-    user = insert(:user)
+    user = new_user()
     api_key = insert(:api_key, user: user, scopes: ["funnels:*"])
 
     conn =

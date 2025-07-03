@@ -896,13 +896,13 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "renders imports in import list", %{conn: conn, site: site} do
-      _site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
-      _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
+      _site_import1 = new_site_import(site: site, status: SiteImport.pending())
+      _site_import2 = new_site_import(site: site, status: SiteImport.importing())
 
       site_import3 =
-        insert(:site_import, label: "123456", site: site, status: SiteImport.completed())
+        new_site_import(label: "123456", site: site, status: SiteImport.completed())
 
-      _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
+      _site_import4 = new_site_import(site: site, status: SiteImport.failed())
 
       populate_stats(site, site_import3.id, [
         build(:imported_visitors, pageviews: 7777),
@@ -920,10 +920,13 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "disables import buttons when imports are at maximum", %{conn: conn, site: site} do
-      insert_list(Plausible.Imported.max_complete_imports(), :site_import,
-        site: site,
-        status: SiteImport.completed()
-      )
+      1..Plausible.Imported.max_complete_imports()
+      |> Enum.each(fn _ ->
+        new_site_import(
+          site: site,
+          status: SiteImport.completed()
+        )
+      end)
 
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
 
@@ -933,7 +936,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "considers older legacy imports when showing pageview count", %{conn: conn, site: site} do
       _site_import =
-        insert(:site_import, site: site, legacy: true, status: SiteImport.completed())
+        new_site_import(site: site, legacy: true, status: SiteImport.completed())
 
       populate_stats(site, [
         build(:imported_visitors, pageviews: 7777),
@@ -948,8 +951,8 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "disables import buttons when there's import in progress", %{conn: conn, site: site} do
-      _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
-      _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
+      _site_import1 = new_site_import(site: site, status: SiteImport.completed())
+      _site_import2 = new_site_import(site: site, status: SiteImport.importing())
 
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       assert html_response(conn, 200) =~ "No new imports can be started"
@@ -959,8 +962,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       site: site
     } do
-      _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
-      _site_import2 = insert(:site_import, site: site, status: SiteImport.failed())
+      _site_import1 = new_site_import(site: site, status: SiteImport.completed())
+      _site_import2 = new_site_import(site: site, status: SiteImport.failed())
 
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       refute html_response(conn, 200) =~ "No new imports can be started"
@@ -972,10 +975,10 @@ defmodule PlausibleWeb.SiteControllerTest do
     } do
       six_minutes_ago = NaiveDateTime.add(NaiveDateTime.utc_now(), -360)
 
-      _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
+      _site_import1 = new_site_import(site: site, status: SiteImport.completed())
 
       _site_import2 =
-        insert(:site_import,
+        new_site_import(
           site: site,
           status: SiteImport.importing(),
           updated_at: six_minutes_ago
@@ -1781,7 +1784,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       site: site,
       site_import: legacy_site_import
     } do
-      other_site_import = insert(:site_import, site: site)
+      other_site_import = new_site_import(site: site)
 
       # legacy stats
       populate_stats(site, [

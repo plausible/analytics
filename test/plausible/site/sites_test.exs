@@ -67,7 +67,7 @@ defmodule Plausible.SitesTest do
     end
 
     test "fails on invalid timezone" do
-      user = insert(:user)
+      user = new_user()
 
       params = %{"domain" => "example.com", "timezone" => "blah"}
 
@@ -192,7 +192,7 @@ defmodule Plausible.SitesTest do
 
     test "ignores imported stats" do
       site = insert(:site)
-      insert(:site_import, site: site)
+      new_site_import(site: site)
 
       assert Sites.native_stats_start_date(site) == nil
     end
@@ -853,7 +853,7 @@ defmodule Plausible.SitesTest do
     end
 
     test "raises on invalid site/user combination" do
-      user = insert(:user)
+      user = new_user()
       site = insert(:site)
 
       assert_raise Ecto.NoResultsError, fn ->

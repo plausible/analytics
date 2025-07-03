@@ -189,7 +189,10 @@ defmodule Plausible.BillingTest do
 
     test "fails on callback with non-existent user" do
       user = new_user()
-      Repo.delete!(user)
+
+      skip_audit do
+        Repo.delete!(user)
+      end
 
       assert_raise Ecto.NoResultsError, fn ->
         %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id}"}
@@ -462,7 +465,7 @@ defmodule Plausible.BillingTest do
     end
 
     test "ignores if subscription cannot be found" do
-      user = insert(:user)
+      user = new_user()
       _site = new_site(owner: user)
       team = team_of(user)
 

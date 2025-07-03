@@ -333,7 +333,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     end
 
     test "pageview combo considers imported pageviews as well", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:imported_pages, page: "/go/to/page/1", pageviews: 2),

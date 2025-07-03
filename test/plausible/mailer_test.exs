@@ -4,7 +4,7 @@ defmodule Plausible.MailerTest do
 
   describe "from" do
     setup do
-      {:ok, user: insert(:user)}
+      {:ok, user: new_user()}
     end
 
     # see config tests as well

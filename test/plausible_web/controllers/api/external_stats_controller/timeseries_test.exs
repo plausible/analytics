@@ -1567,7 +1567,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:imported_visitors, pageviews: 1, date: ~D[2021-01-01])
@@ -1598,7 +1598,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -1636,7 +1636,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:imported_visitors, visitors: 1, date: ~D[2021-01-01])
@@ -1687,7 +1687,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site, end_date: ~D[2020-12-29])
+      site_import = new_site_import(site: site, end_date: ~D[2020-12-29])
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -1716,7 +1716,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview, browser: "Chrome", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
@@ -1812,7 +1812,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       insert(:goal, site: site, event_name: "Outbound Link: Click")
 
@@ -1870,7 +1870,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
            conn: conn,
            site: site
          } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       insert(:goal, site: site, event_name: "Signup")
 
@@ -1907,7 +1907,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       insert(:goal, site: site, event_name: "Outbound Link: Click")
 

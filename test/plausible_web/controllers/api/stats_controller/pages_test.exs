@@ -1877,7 +1877,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     end
 
     test "filter by :is page with imported data", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 1, pathname: "/", timestamp: ~N[2021-01-01 12:00:00]),
@@ -1929,7 +1929,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     end
 
     test "filter by :member page with imported data", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 1, pathname: "/", timestamp: ~N[2021-01-01 12:00:00]),
@@ -2000,7 +2000,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     end
 
     test "filter by :matches_wildcard page with imported data", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 1, pathname: "/aaa", timestamp: ~N[2021-01-01 12:00:00]),
@@ -2502,7 +2502,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     end
 
     test "filter by :matches_member entry_page with imported data", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview, pathname: "/aaa", timestamp: ~N[2021-01-01 12:00:00]),
@@ -2884,7 +2884,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     end
 
     test "filter by :is_not exit_page with imported data", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview, pathname: "/aaa", timestamp: ~N[2021-01-01 12:00:00]),
