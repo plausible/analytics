@@ -104,6 +104,32 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     expect(result.data.dataDomainMismatch).toBe(true)
   })
 
+  test('counting snippets', async ({ page }, { testId }) => {
+    await mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <head>
+        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        </head>
+        <body>
+        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        </body>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: "example.com"})
+
+    expect(result.data.plausibleInstalled).toBe(true)
+    expect(result.data.snippetsFoundInHead).toBe(2)
+    expect(result.data.snippetsFoundInBody).toBe(3)
+    expect(result.data.callbackStatus).toBe(202)
+    expect(result.data.dataDomainMismatch).toBe(false)
+  })
 
   test('detects dataDomainMismatch', async ({ page }, { testId }) => {
     await mockEventResponseSuccess(page)
