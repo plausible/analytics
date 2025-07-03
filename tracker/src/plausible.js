@@ -36,6 +36,10 @@ function init(overrides) {
     window.plausible.init = init
     window.plausible.l = true
   }
+
+  if (COMPILE_PLAUSIBLE_NPM && config.setWindowFlag !== false) {
+    window.__plausible_npm = true
+  }
 }
 
 if (COMPILE_PLAUSIBLE_WEB) {
