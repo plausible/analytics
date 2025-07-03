@@ -9,6 +9,8 @@ defmodule Plausible.Auth.EmailVerification do
   alias Plausible.Auth.EmailActivationCode
   alias Plausible.Repo
 
+  use Plausible
+
   require Logger
 
   @expiration_hours 4
@@ -56,13 +58,13 @@ defmodule Plausible.Auth.EmailVerification do
           :ok | {:error, :incorrect | :expired}
   def verify_code(user, code) do
     with {:ok, verification} <- get_verification(user, code) do
-      Repo.transaction(fn ->
+      audit %{type: "verify_2fa_code"} do
         user
         |> Ecto.Changeset.change(email_verified: true)
         |> Repo.update!()
 
         Repo.delete_all(from(c in EmailActivationCode, where: c.id == ^verification.id))
-      end)
+      end
 
       :ok
     end

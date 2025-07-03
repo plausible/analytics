@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryResultTest do
   alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer}
 
   setup do
-    user = insert(:user)
+    user = new_user()
 
     site =
       new_site(

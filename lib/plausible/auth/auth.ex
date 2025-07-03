@@ -121,16 +121,16 @@ defmodule Plausible.Auth do
   end
 
   defp delete_team_and_user(team, user) do
-    Repo.transaction(fn ->
+    audit %{type: "delete_team_and_user"} do
       case Teams.delete(team) do
         {:ok, :deleted} ->
           delete_user!(user)
-          :deleted
+          {:ok, :deleted}
 
-        {:error, error} ->
-          Repo.rollback(error)
+        {:error, _} = error ->
+          error
       end
-    end)
+    end
   end
 
   defp delete_user!(user) do

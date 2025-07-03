@@ -16,7 +16,7 @@ defmodule Plausible.Auth.TOTP.VaultTest do
     test "TOTP secret is stored encrypted and decrypted on read" do
       secret = NimbleTOTP.secret()
 
-      user = insert(:user, totp_secret: secret)
+      user = new_user(totp_secret: secret)
       user = Repo.reload!(user)
 
       assert user.totp_secret == secret

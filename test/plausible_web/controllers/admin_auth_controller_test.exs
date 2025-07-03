@@ -5,7 +5,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
   describe "GET /" do
     @describetag :ce_build_only
     test "disable registration", %{conn: conn} do
-      insert(:user)
+      new_user()
       patch_config(disable_registration: true)
       conn = get(conn, "/register")
       assert redirected_to(conn) == "/login"

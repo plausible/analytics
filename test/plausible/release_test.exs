@@ -19,13 +19,13 @@ defmodule Plausible.ReleaseTest do
 
     @tag :ee_only
     test "returns false when not self-hosted and has users" do
-      insert(:user)
+      new_user()
       refute Release.should_be_first_launch?()
     end
 
     @tag :ce_build_only
     test "returns false when self-hosted and has users" do
-      insert(:user)
+      new_user()
       refute Release.should_be_first_launch?()
     end
   end

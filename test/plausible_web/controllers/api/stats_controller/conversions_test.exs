@@ -369,7 +369,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:event,
@@ -865,7 +865,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, site: site, event_name: "Purchase")
       insert(:goal, site: site, page_path: "/test")
 
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -922,7 +922,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, site: site, event_name: "Activation")
       insert(:goal, site: site, page_path: "/test")
 
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -974,7 +974,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, site: site, event_name: "Activation")
       insert(:goal, site: site, page_path: "/test")
 
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -1042,7 +1042,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, site: site, event_name: "Activation")
       insert(:goal, site: site, page_path: "/test")
 
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -1095,7 +1095,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, site: site, page_path: "/test")
       insert(:goal, site: site, page_path: "/blog")
 
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -1163,7 +1163,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, site: site, page_path: "/blog/thr**")
       insert(:goal, site: site, page_path: "/blog/*")
 
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:imported_pages, page: "/", visitors: 1, pageviews: 1, date: ~D[2021-01-01]),
@@ -1203,7 +1203,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       site: site
     } do
       site_import =
-        insert(:site_import,
+        new_site_import(
           start_date: ~D[2005-01-01],
           end_date: Timex.today(),
           source: :universal_analytics
@@ -1241,7 +1241,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       site: site
     } do
       site_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: ~D[2005-01-01],
           end_date: Timex.today(),

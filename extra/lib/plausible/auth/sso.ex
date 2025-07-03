@@ -12,6 +12,7 @@ defmodule Plausible.Auth.SSO do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  use Plausible
   use Plausible.Auth.SSO.Domain.Status
 
   require Plausible.Billing.Subscription.Status
@@ -54,13 +55,15 @@ defmodule Plausible.Auth.SSO do
 
   @spec initiate_saml_integration(Teams.Team.t()) :: SSO.Integration.t()
   def initiate_saml_integration(team) do
-    changeset = SSO.Integration.init_changeset(team)
+    audit %{type: "initiate_saml_integration"} do
+      changeset = SSO.Integration.init_changeset(team)
 
-    Repo.insert!(changeset,
-      on_conflict: [set: [updated_at: NaiveDateTime.utc_now(:second)]],
-      conflict_target: :team_id,
-      returning: true
-    )
+      Repo.insert!(changeset,
+        on_conflict: [set: [updated_at: NaiveDateTime.utc_now(:second)]],
+        conflict_target: :team_id,
+        returning: true
+      )
+    end
   end
 
   @spec update_integration(SSO.Integration.t(), map()) ::

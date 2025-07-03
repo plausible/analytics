@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
     describe "live" do
       setup [:create_user, :log_in, :create_team, :add_plan, :setup_team]
 
-      test "init setup - basic walk through", %{conn: conn} do
+      test "init setup - basic walk through", %{conn: conn, team: team} do
         {lv, _html} = get_lv(conn)
         lv |> element("form#sso-init") |> render_submit()
         html = render(lv)
@@ -82,6 +82,13 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         assert text =~ "Entity ID can't be blank"
         assert text =~ "Certificate in PEM format can't be blank"
 
+        Plausible.Repo.query!("""
+        SELECT current_setting('carbonite_default.override_mode', true) AS custom_var_value;
+        """)
+        |> IO.inspect(label: :override)
+
+        IO.puts(:now)
+
         lv
         |> element("form#sso-idp-config")
         |> render_submit(%{
@@ -91,6 +98,9 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
             idp_cert_pem: @cert_pem
           }
         })
+
+        assert SSO.get_integration_for(team)
+               |> IO.inspect(label: :in)
 
         lv
         |> element("form#sso-add-domain")

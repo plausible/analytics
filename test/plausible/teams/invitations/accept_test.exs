@@ -184,7 +184,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
     end
 
     test "returns an error on non-existent invitation" do
-      invitee = insert(:user)
+      invitee = new_user()
 
       assert {:error, :invitation_not_found} =
                Accept.accept("does_not_exist", invitee)

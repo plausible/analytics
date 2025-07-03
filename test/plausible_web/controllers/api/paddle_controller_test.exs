@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
 
   describe "webhook verification" do
     test "is verified when signature is correct", %{conn: conn} do
-      insert(:user, id: 235)
+      new_user(id: 235)
 
       # NOTE: signature check happens sooner
       assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->

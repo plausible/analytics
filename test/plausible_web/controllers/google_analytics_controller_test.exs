@@ -246,7 +246,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
       end_date = ~D[2024-03-13]
 
       _existing_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: start_date,
           end_date: end_date,
@@ -825,7 +825,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
       end_date = ~D[2024-03-13]
 
       _existing_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: start_date,
           end_date: end_date,

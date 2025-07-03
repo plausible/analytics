@@ -57,7 +57,7 @@ defmodule Plausible.Auth.TOTP.RecoveryCodeTest do
 
   describe "changeset_to_map/2" do
     test "converts changeset to a map suitable for Repo.insert_all/3" do
-      user = %{id: user_id} = insert(:user)
+      user = %{id: user_id} = new_user()
       [plain_code] = RecoveryCode.generate_codes(1)
 
       changeset =

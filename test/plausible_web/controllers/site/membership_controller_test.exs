@@ -240,7 +240,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "sends invitation email for existing user", %{conn: conn, user: user} do
-      existing_user = insert(:user)
+      existing_user = new_user()
       site = new_site(owner: user)
 
       post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: existing_user.email})

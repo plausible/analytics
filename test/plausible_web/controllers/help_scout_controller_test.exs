@@ -11,7 +11,7 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
 
     describe "callback/2" do
       test "returns details on success", %{conn: conn} do
-        user = insert(:user)
+        user = new_user()
         signature_key = Application.fetch_env!(:plausible, HelpScout)[:signature_key]
         data = ~s|{"conversation-id":"123","customer-id":"500"}|
 
@@ -76,8 +76,8 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
 
     describe "search/2" do
       test "returns results", %{conn: conn} do
-        insert(:user, email: "hs.match@plausible.test")
-        insert(:user, email: "hs.nomatch@plausible.test")
+        new_user(email: "hs.match@plausible.test")
+        new_user(email: "hs.nomatch@plausible.test")
 
         token = sign_conversation_token("123")
 
@@ -118,7 +118,7 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
 
     describe "show/2" do
       test "returns details on success", %{conn: conn} do
-        user = insert(:user, email: "hs.match@plausible.test", notes: "Some note\nwith new line")
+        user = new_user(email: "hs.match@plausible.test", notes: "Some note\nwith new line")
 
         token = sign_conversation_token("123")
 

@@ -15,12 +15,12 @@ defmodule Plausible.ImportedTest do
     test "returns imports in various states" do
       site = insert(:site)
 
-      _rogue_import = insert(:site_import)
+      _rogue_import = new_site_import()
 
-      import1 = insert(:site_import, site: site, status: :pending)
-      import2 = insert(:site_import, site: site, status: :importing)
-      import3 = insert(:site_import, site: site, status: :completed)
-      import4 = insert(:site_import, site: site, status: :failed)
+      import1 = new_site_import(site: site, status: :pending)
+      import2 = new_site_import(site: site, status: :importing)
+      import3 = new_site_import(site: site, status: :completed)
+      import4 = new_site_import(site: site, status: :failed)
 
       assert [%{id: id1}, %{id: id2}, %{id: id3}, %{id: id4}] = Imported.list_all_imports(site)
 
@@ -43,10 +43,10 @@ defmodule Plausible.ImportedTest do
     test "returns nil when only incomplete or failed imports are present" do
       site = insert(:site)
 
-      _import1 = insert(:site_import, site: site, status: :pending)
-      _import2 = insert(:site_import, site: site, status: :importing)
-      _import3 = insert(:site_import, site: site, status: :failed)
-      _rogue_import = insert(:site_import, site: build(:site), status: :completed)
+      _import1 = new_site_import(site: site, status: :pending)
+      _import2 = new_site_import(site: site, status: :importing)
+      _import3 = new_site_import(site: site, status: :failed)
+      _rogue_import = new_site_import(site: build(:site), status: :completed)
 
       assert is_nil(Imported.earliest_import_start_date(site))
     end
@@ -55,7 +55,7 @@ defmodule Plausible.ImportedTest do
       site = insert(:site)
 
       _import1 =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: ~D[2020-04-02],
           end_date: ~D[2022-06-22],
@@ -64,7 +64,7 @@ defmodule Plausible.ImportedTest do
         )
 
       _import2 =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: ~D[2022-06-22],
           end_date: ~D[2024-01-08],
@@ -80,10 +80,10 @@ defmodule Plausible.ImportedTest do
       site = insert(:site)
 
       site_import_feb =
-        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
+        new_site_import(site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
 
       site_import_apr =
-        insert(:site_import, site: site, start_date: ~D[2021-04-10], end_date: ~D[2021-04-20])
+        new_site_import(site: site, start_date: ~D[2021-04-10], end_date: ~D[2021-04-20])
 
       {:ok, %{site: site, site_import_feb: site_import_feb, site_import_apr: site_import_apr}}
     end
@@ -148,7 +148,7 @@ defmodule Plausible.ImportedTest do
       end_date = ~D[2021-05-12]
 
       _existing_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: start_date,
           end_date: end_date,
@@ -170,7 +170,7 @@ defmodule Plausible.ImportedTest do
       end_date = ~D[2021-05-12]
 
       _existing_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: start_date,
           end_date: end_date,
@@ -185,7 +185,7 @@ defmodule Plausible.ImportedTest do
       site = insert(:site)
 
       _existing_import1 =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: ~D[2020-10-14],
           end_date: ~D[2024-04-01],
@@ -193,7 +193,7 @@ defmodule Plausible.ImportedTest do
         )
 
       _existing_import2 =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: ~D[2012-01-18],
           end_date: ~D[2018-03-09],
@@ -231,7 +231,7 @@ defmodule Plausible.ImportedTest do
       end_date = ~D[2024-01-13]
 
       _existing_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: start_date,
           end_date: end_date,
@@ -286,7 +286,7 @@ defmodule Plausible.ImportedTest do
       end_date = ~D[2023-10-25]
 
       _existing_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: start_date,
           end_date: end_date,

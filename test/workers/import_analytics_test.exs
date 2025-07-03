@@ -201,9 +201,11 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
     setup do
       on_exit(fn ->
         Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
-          Repo.delete_all(Plausible.Site)
-          Repo.delete_all(Plausible.Auth.User)
-          Repo.delete_all(Oban.Job)
+          skip_audit wrap?: true do
+            Repo.delete_all(Plausible.Site)
+            Repo.delete_all(Plausible.Auth.User)
+            Repo.delete_all(Oban.Job)
+          end
         end)
 
         :ok
@@ -221,7 +223,11 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       import_opts: import_opts
     } do
       Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
-        user = new_user(trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+        user =
+          skip_audit wrap?: true do
+            new_user(trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+          end
+
         site = new_site(owner: user)
         site_id = site.id
         import_opts = Keyword.put(import_opts, :listen?, true)
@@ -242,7 +248,11 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       import_opts: import_opts
     } do
       Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
-        user = new_user(trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+        user =
+          skip_audit wrap?: true do
+            new_user(trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+          end
+
         site = new_site(owner: user)
         site_id = site.id
 
@@ -267,7 +277,11 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       import_opts: import_opts
     } do
       Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
-        user = new_user(trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+        user =
+          skip_audit wrap?: true do
+            new_user(trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+          end
+
         site = new_site(owner: user)
         site_id = site.id
 
@@ -304,7 +318,14 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
            import_opts: import_opts
          } do
       Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
-        user = new_user(trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+        user =
+          skip_audit wrap?: true do
+            new_user(
+              email: "foo#{Enum.random(1..10000)}@example.com",
+              trial_expiry_date: Timex.today() |> Timex.shift(days: 1)
+            )
+          end
+
         site = new_site(owner: user)
         site_id = site.id
 

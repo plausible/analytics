@@ -192,7 +192,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
   end
 
   test "can break down by visit:device with only percentage metric", %{conn: conn, site: site} do
-    site_import = insert(:site_import, site: site)
+    site_import = new_site_import(site: site)
 
     populate_stats(site, site_import.id, [
       build(:pageview, screen_size: "Mobile"),
@@ -462,7 +462,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
 
     test "with imported data", %{conn: conn, site: site} do
       site_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: ~D[2020-01-01],
           end_date: ~D[2020-12-31]

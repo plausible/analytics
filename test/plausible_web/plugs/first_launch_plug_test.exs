@@ -1,5 +1,7 @@
 defmodule PlausibleWeb.FirstLaunchPlugTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
+
   @moduletag :ce_build_only
   import Plug.Test
 
@@ -34,7 +36,7 @@ defmodule PlausibleWeb.FirstLaunchPlugTest do
     end
 
     test "no-op when not first launch" do
-      insert(:user)
+      new_user()
       refute Release.should_be_first_launch?()
       conn = conn("GET", "/sites")
       conn = FirstLaunchPlug.call(conn, @opts)

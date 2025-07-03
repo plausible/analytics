@@ -1224,7 +1224,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       site: site
     } do
       insert(:goal, event_name: "WP Search Queries", site: site)
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:event,
@@ -1264,7 +1264,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
     for goal_name <- Plausible.Imported.goals_with_path() do
       test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)
-        site_import = insert(:site_import, site: site)
+        site_import = new_site_import(site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
@@ -1323,7 +1323,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
     for goal_name <- Plausible.Imported.goals_with_url() do
       test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)
-        site_import = insert(:site_import, site: site)
+        site_import = new_site_import(site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
@@ -1385,7 +1385,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
         site: site
       } do
         insert(:goal, event_name: unquote(goal_name), site: site)
-        site_import = insert(:site_import, site: site)
+        site_import = new_site_import(site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,

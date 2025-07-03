@@ -27,14 +27,16 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "POST /login (register_action = register_form)" do
     test "registering sends an activation link", %{conn: conn} do
-      Repo.insert!(
-        User.new(%{
-          name: "Jane Doe",
-          email: "user@example.com",
-          password: "very-secret-and-very-long-123",
-          password_confirmation: "very-secret-and-very-long-123"
-        })
-      )
+      skip_audit do
+        Repo.insert!(
+          User.new(%{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123"
+          })
+        )
+      end
 
       post(conn, "/login",
         user: %{
@@ -50,14 +52,16 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "user is redirected to activate page after registration", %{conn: conn} do
-      Repo.insert!(
-        User.new(%{
-          name: "Jane Doe",
-          email: "user@example.com",
-          password: "very-secret-and-very-long-123",
-          password_confirmation: "very-secret-and-very-long-123"
-        })
-      )
+      skip_audit do
+        Repo.insert!(
+          User.new(%{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123"
+          })
+        )
+      end
 
       conn =
         post(conn, "/login",
@@ -73,14 +77,16 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "logs the user in", %{conn: conn} do
       user =
-        Repo.insert!(
-          User.new(%{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
-          })
-        )
+        skip_audit do
+          Repo.insert!(
+            User.new(%{
+              name: "Jane Doe",
+              email: "user@example.com",
+              password: "very-secret-and-very-long-123",
+              password_confirmation: "very-secret-and-very-long-123"
+            })
+          )
+        end
 
       conn =
         post(conn, "/login",
@@ -117,14 +123,16 @@ defmodule PlausibleWeb.AuthControllerTest do
       invitation = invite_guest(site, "user@email.co", role: :editor, inviter: inviter)
 
       user =
-        Repo.insert!(
-          User.new(%{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
-          })
-        )
+        skip_audit do
+          Repo.insert!(
+            User.new(%{
+              name: "Jane Doe",
+              email: "user@example.com",
+              password: "very-secret-and-very-long-123",
+              password_confirmation: "very-secret-and-very-long-123"
+            })
+          )
+        end
 
       {:ok, %{site: site, invitation: invitation, user: user}}
     end
@@ -202,7 +210,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn: conn,
       user: user
     } do
-      user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+      skip_audit do
+        user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+      end
 
       conn =
         post(conn, "/login",
@@ -231,7 +241,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       invite_member(team, user, role: :viewer, inviter: owner)
 
-      user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+      skip_audit do
+        user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+      end
 
       conn =
         post(conn, "/login",
@@ -263,7 +275,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       add_member(team, user: user, role: :viewer)
 
-      user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+      skip_audit do
+        user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+      end
 
       conn =
         post(conn, "/login",
@@ -391,7 +405,10 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "marks the user account as active", %{conn: conn, user: user} do
-      Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+      skip_audit do
+        Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+      end
+
       post(conn, "/activate/request-code")
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
@@ -408,7 +425,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       site = new_site(owner: owner)
       invite_guest(site, user, role: :viewer, inviter: owner)
 
-      Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+      skip_audit do
+        Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+      end
 
       post(conn, "/activate/request-code")
 
@@ -428,7 +447,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       team = team_of(owner)
       invite_member(team, user, role: :viewer, inviter: owner)
 
-      Repo.update!(Auth.User.changeset(user, %{email_verified: false}))
+      skip_audit do
+        Repo.update!(Auth.User.changeset(user, %{email_verified: false}))
+      end
 
       {:ok, %{code: code}} = Auth.EmailVerification.issue_code(user)
 
@@ -449,7 +470,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       team = team_of(owner)
       add_member(team, user: user, role: :viewer)
 
-      Repo.update!(Auth.User.changeset(user, %{email_verified: false}))
+      skip_audit do
+        Repo.update!(Auth.User.changeset(user, %{email_verified: false}))
+      end
 
       {:ok, %{code: code}} = Auth.EmailVerification.issue_code(user)
 
@@ -460,7 +483,10 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "removes used up verification code", %{conn: conn, user: user} do
-      Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+      skip_audit do
+        Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+      end
+
       post(conn, "/activate/request-code")
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
@@ -506,7 +532,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "POST /login" do
     test "valid email and password - logs the user in", %{conn: conn} do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       conn = post(conn, "/login", email: user.email, password: "password")
 
@@ -516,7 +542,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "valid email and password, user on multiple teams - logs the user in", %{conn: conn} do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       # first team
       new_site(owner: user)
@@ -533,7 +559,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "valid email and password with return_to set - redirects properly", %{conn: conn} do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       conn =
         post(conn, "/login",
@@ -548,7 +574,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "valid email and password with 2FA enabled - sets 2FA session and redirects", %{
       conn: conn
     } do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -564,7 +590,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "valid email and password with 2FA enabled and remember 2FA cookie set - logs the user in",
          %{conn: conn} do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -583,13 +609,13 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "valid email and password with 2FA enabled and rogue remember 2FA cookie set - logs the user in",
          %{conn: conn} do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      another_user = insert(:user)
+      another_user = new_user()
       conn = set_remember_2fa_cookie(conn, another_user)
 
       conn = post(conn, "/login", email: user.email, password: "password")
@@ -678,7 +704,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "bad password - renders login form again", %{conn: conn} do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
       conn = post(conn, "/login", email: user.email, password: "wrong")
 
       assert get_session(conn, :user_token) == nil
@@ -686,7 +712,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "limits login attempts to 5 per minute" do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       conn = put_req_header(build_conn(), "x-forwarded-for", "1.2.3.5")
 
@@ -724,7 +750,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "email is present and exists - sends password reset email", %{conn: conn} do
       mock_captcha_success()
-      user = insert(:user)
+      user = new_user()
       conn = post(conn, "/password/request-reset", %{email: user.email})
 
       assert html_response(conn, 200) =~ "Success!"
@@ -733,7 +759,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "renders captcha errors in case of captcha input verification failure", %{conn: conn} do
       mock_captcha_failure()
-      user = insert(:user)
+      user = new_user()
       conn = post(conn, "/password/request-reset", %{email: user.email})
 
       assert html_response(conn, 200) =~ "Please complete the captcha"
@@ -779,7 +805,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "GET /password/reset" do
     test "with valid token - shows form", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
       token = Plausible.Auth.Token.sign_password_reset(user.email)
       conn = get(conn, "/password/reset", %{token: token})
 
@@ -963,7 +989,10 @@ defmodule PlausibleWeb.AuthControllerTest do
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
       add_member(another_site.team, user: user, role: :owner)
-      Repo.delete!(another_owner)
+
+      skip_audit do
+        Repo.delete!(another_owner)
+      end
 
       conn = delete(conn, "/me")
 
@@ -1289,7 +1318,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "GET /2fa/verify" do
     test "renders verification form when 2FA session present", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1322,7 +1351,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to login when cookie not found", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1334,7 +1363,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to login when 2FA not enabled", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1352,7 +1381,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "POST /2fa/verify" do
     test "redirects to sites when code verification succeeds", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1375,7 +1404,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to return_to when set", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1392,7 +1421,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "sets remember cookie when device trusted", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1415,7 +1444,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "overwrites rogue remember cookie when device trusted", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1423,7 +1452,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = login_with_cookie(conn, user.email, "password")
 
-      another_user = insert(:user, totp_token: "different_token")
+      another_user = new_user(totp_token: "different_token")
       conn = set_remember_2fa_cookie(conn, another_user)
 
       code = NimbleTOTP.verification_code(user.totp_secret)
@@ -1442,7 +1471,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "clears rogue remember cookie when device _not_ trusted", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1450,7 +1479,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = login_with_cookie(conn, user.email, "password")
 
-      another_user = insert(:user, totp_token: "different_token")
+      another_user = new_user(totp_token: "different_token")
       conn = set_remember_2fa_cookie(conn, another_user)
 
       code = NimbleTOTP.verification_code(user.totp_secret)
@@ -1468,7 +1497,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "returns error on invalid code", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1485,7 +1514,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to login when cookie not found", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1499,7 +1528,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "passes through when 2FA is disabled", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1522,7 +1551,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "limits verification attempts to 5 per minute", %{conn: conn} do
-      user = insert(:user, email: "ratio#{Ecto.UUID.generate()}@example.com")
+      user = new_user(email: "ratio#{Ecto.UUID.generate()}@example.com")
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1556,7 +1585,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "GET /2fa/use_recovery_code" do
     test "renders recovery verification form when 2FA session present", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1577,7 +1606,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to login when cookie not found", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1589,7 +1618,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to login when 2FA not enabled", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1607,7 +1636,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "POST /2fa/use_recovery_code" do
     test "redirects to sites when recovery code verification succeeds", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1629,7 +1658,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "returns error on invalid recovery code", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1647,7 +1676,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to login when cookie not found", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1663,7 +1692,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "passes through when 2FA is disabled", %{conn: conn} do
-      user = insert(:user)
+      user = new_user()
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
@@ -1687,7 +1716,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "limits verification attempts to 5 per minute", %{conn: conn} do
-      user = insert(:user, email: "ratio#{Ecto.UUID.generate()}@example.com")
+      user = new_user(email: "ratio#{Ecto.UUID.generate()}@example.com")
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)

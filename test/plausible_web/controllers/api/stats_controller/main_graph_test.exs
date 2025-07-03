@@ -675,7 +675,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "returns scroll depth per day with imported data", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         # 2020-01-01 - only native data

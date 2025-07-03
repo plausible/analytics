@@ -358,7 +358,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   test "breaks down all metrics by visit:referrer with imported data", %{conn: conn, site: site} do
     site_import =
-      insert(:site_import,
+      new_site_import(
         site: site,
         start_date: ~D[2005-01-01],
         end_date: Timex.today(),
@@ -551,7 +551,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   test "breaks down all metrics by visit:utm_source with imported data", %{conn: conn, site: site} do
     site_import =
-      insert(:site_import,
+      new_site_import(
         site: site,
         start_date: ~D[2005-01-01],
         end_date: Timex.today(),
@@ -876,7 +876,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   test "pageviews breakdown by event:page - imported data having pageviews=0 and visitors=n should be bypassed",
        %{conn: conn, site: site} do
     site_import =
-      insert(:site_import,
+      new_site_import(
         site: site,
         start_date: ~D[2005-01-01],
         end_date: Timex.today(),
@@ -995,7 +995,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   describe "breakdown by visit:exit_page" do
     setup %{site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -2518,7 +2518,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   describe "metrics" do
     test "returns time_on_page with imported data", %{conn: conn, site: site} do
       site_import =
-        insert(:site_import,
+        new_site_import(
           site: site,
           start_date: ~D[2005-01-01],
           end_date: Timex.today(),
@@ -3235,7 +3235,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   describe "imported data" do
     test "returns screen sizes breakdown when filtering by screen size", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -3269,7 +3269,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       insert(:goal, site: site, event_name: "Purchase")
       insert(:goal, site: site, page_path: "/test")
 
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -3331,7 +3331,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:imported_browsers, browser: "Chrome", pageviews: 1, date: ~D[2021-01-01]),
@@ -3375,7 +3375,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     for goal_name <- Plausible.Imported.goals_with_url() do
       test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)
-        site_import = insert(:site_import, site: site)
+        site_import = new_site_import(site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
@@ -3435,7 +3435,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     for goal_name <- Plausible.Imported.goals_with_path() do
       test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)
-        site_import = insert(:site_import, site: site)
+        site_import = new_site_import(site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
@@ -3496,7 +3496,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       insert(:goal, event_name: "Signup", site: site)
 
@@ -3558,7 +3558,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site, end_date: Date.add(Date.utc_today(), -3))
+      site_import = new_site_import(site: site, end_date: Date.add(Date.utc_today(), -3))
 
       insert(:goal, event_name: "Signup", site: site)
 
@@ -3588,7 +3588,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       conn: conn,
       site: site
     } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:imported_sources, source: "Google", utm_medium: "organic", utm_term: "one"),
@@ -3619,7 +3619,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            conn: conn,
            site: site
          } do
-      site_import = insert(:site_import, site: site)
+      site_import = new_site_import(site: site)
 
       populate_stats(site, site_import.id, [
         build(:imported_sources, source: "Google"),

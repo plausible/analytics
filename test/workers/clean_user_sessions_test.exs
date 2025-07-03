@@ -1,5 +1,6 @@
 defmodule Plausible.Workers.CleanUserSessionsTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
 
   alias Plausible.Auth.UserSession
   alias Plausible.Workers.CleanUserSessions
@@ -25,7 +26,7 @@ defmodule Plausible.Workers.CleanUserSessionsTest do
   end
 
   defp insert_session(now) do
-    user = insert(:user)
+    user = new_user()
 
     user
     |> UserSession.new_session("Unknown", now: now)

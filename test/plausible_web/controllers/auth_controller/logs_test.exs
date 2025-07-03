@@ -19,7 +19,7 @@ defmodule PlausibleWeb.AuthController.LogsTest do
     end
 
     test "logs on wrong password", %{conn: conn} do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       logs =
         capture_log(fn ->
@@ -30,7 +30,7 @@ defmodule PlausibleWeb.AuthController.LogsTest do
     end
 
     test "logs on too many login attempts" do
-      user = insert(:user, password: "password")
+      user = new_user(password: "password")
 
       conn =
         build_conn()

@@ -25,6 +25,7 @@ defmodule PlausibleWeb.ConnCase do
       alias PlausibleWeb.Router.Helpers, as: Routes
       import Plausible.Factory
       import Plausible.AssertMatches
+      use Plausible.Teams.Test
 
       # The default endpoint for testing
       @endpoint PlausibleWeb.Endpoint

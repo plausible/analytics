@@ -455,7 +455,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
   def handle_event("update-integration", params, socket) do
     socket =
-      case SSO.update_integration(socket.assigns.integration, params["saml_config"] || %{}) do
+      case SSO.update_integration(socket.assigns.integration, params["saml_config"] || %{})
+           |> IO.inspect(label: :here) do
         {:ok, integration} ->
           socket
           |> assign(:integration, integration)
