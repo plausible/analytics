@@ -1,10 +1,12 @@
 defmodule Plausible.Verification.Checks.Installation do
   require Logger
 
-  @verifier_script_filename "tracker/verifier/verifier-v1.js"
-  @verifier_script_path Path.join(:code.priv_dir(:plausible), @verifier_script_filename)
-  @external_resource @verifier_script_path
-  @verifier_code File.read!(@verifier_script_path)
+  path = Application.app_dir(:plausible, "tracker/verifier/verifier-v1.js")
+  # On CI, the file might not be present for static checks so we create an empty one
+  File.touch!(path)
+
+  @verifier_code File.read!(path)
+  @external_resource "tracker/verifier/verifier-v1.js"
 
   # Puppeteer wrapper function that executes the vanilla JS verifier code
   @puppeteer_wrapper_code """
