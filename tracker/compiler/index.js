@@ -59,26 +59,17 @@ export async function compileAll(options = {}) {
   bar.stop()
 
   console.log(`Completed compilation of ${ALL_VARIANTS.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
-  
-  // Copy `verifier-v1.js` to priv directory
-  copyVerifierToPriv()
-}
-
-function copyVerifierToPriv() {
-  const verifierSource = relPath('../verifier/verifier-v1.js')
-  const verifierTargetDir = relPath('../../priv/tracker/verifier')
-  const verifierTarget = path.join(verifierTargetDir, 'verifier-v1.js')
-  
-  fs.mkdirSync(verifierTargetDir, { recursive: true })
-  
-  fs.copyFileSync(verifierSource, verifierTarget)
-  
-  console.log('Copied verifier-v1.js to priv/tracker/verifier/')
 }
 
 export async function compileFile(variant, options) {
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
-  let code = options.bundledCode || await bundleCode()
+  let code
+
+  if (variant.entry_point) {
+    code = await bundleCode(variant.entry_point)
+  } else {
+    code = options.bundledCode || await bundleCode()
+  }
 
   if (!variant.npm_package) {
     code = wrapInstantlyEvaluatingFunction(code)
@@ -116,18 +107,20 @@ export function compileWebSnippet() {
   `
 }
 
-async function bundleCode(format = 'esm') {
+async function bundleCode(entryPoint = 'src/plausible.js') {
   const bundle = await rollup({
-    input: 'src/plausible.js',
+    input: entryPoint,
   })
 
-  const { output } = await bundle.generate({ format })
+  const { output } = await bundle.generate({ format: 'esm' })
 
   return output[0].code
 }
 
 function outputPath(variant, options) {
-  if (variant.npm_package) {
+  if (variant.output_path) {
+    return relPath(`../../${variant.output_path}${options.suffix || ""}`)
+  } else if (variant.npm_package) {
     return relPath(`../${variant.name}${options.suffix || ""}`)
   } else {
     return relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`)
