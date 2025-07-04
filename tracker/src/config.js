@@ -43,7 +43,8 @@ export function init(overrides) {
     }
     Object.assign(config, overrides, {
       autoCapturePageviews: overrides.autoCapturePageviews !== false,
-      logging: overrides.logging !== false
+      logging: overrides.logging !== false,
+      bindToWindow: overrides.bindToWindow !== false
     })
     config.isInitialized = true
   } else {

@@ -45,9 +45,9 @@ export interface PlausibleConfig {
   // parameters, e.g. to clean URLs of values that should not be recorded.
   transformRequest?: (payload: PlausibleRequestPayload) => PlausibleRequestPayload | null
 
-  // If enabled (the default), the script will set `window.__plausible_npm` variable to true.
+  // If enabled (the default), the script will set `window.plausible` after `init` is called.
   // This is used by the verifier to detect if the script is loaded from npm package.
-  setWindowFlag?: boolean
+  bindToWindow?: boolean
 }
 
 export interface PlausibleEventOptions {
