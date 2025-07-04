@@ -70,6 +70,8 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
     test "returns error when owner is over their team member limit" do
       [owner, inviter, invitee] = for _ <- 1..3, do: new_user()
 
+      subscribe_to_growth_plan(owner)
+
       site = new_site(owner: owner)
       inviter = add_member(site.team, user: inviter, role: :admin)
       for _ <- 1..4, do: add_guest(site, role: :viewer)
@@ -81,6 +83,7 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
     @tag :ee_only
     test "allows inviting users who were already invited to other sites, within the limit" do
       owner = new_user()
+      subscribe_to_growth_plan(owner)
       site = new_site(owner: owner)
 
       invite = fn site, email ->
@@ -100,6 +103,8 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
     @tag :ee_only
     test "allows inviting users who are already members of other sites, within the limit" do
       [u1, u2, u3, u4] = for _ <- 1..4, do: new_user()
+      subscribe_to_growth_plan(u1)
+
       site = new_site(owner: u1)
       add_guest(site, user: u2, role: :viewer)
       add_guest(site, user: u3, role: :viewer)

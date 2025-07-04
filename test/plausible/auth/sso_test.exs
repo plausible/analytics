@@ -426,6 +426,8 @@ defmodule Plausible.Auth.SSOTest do
         domain: domain,
         team: team
       } do
+        insert(:growth_subscription, team: team)
+
         add_member(team, role: :viewer)
         add_member(team, role: :viewer)
         add_member(team, role: :viewer)

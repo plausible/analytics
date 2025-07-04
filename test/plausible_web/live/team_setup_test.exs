@@ -215,7 +215,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
 
     @tag :ee_only
-    test "fails to save layout with limits breached", %{conn: conn} do
+    test "fails to save layout with limits breached", %{conn: conn, team: team} do
+      insert(:growth_subscription, team: team)
+
       lv = get_child_lv(conn)
       html = render(lv)
       refute attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")

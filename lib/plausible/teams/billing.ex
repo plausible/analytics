@@ -255,7 +255,7 @@ defmodule Plausible.Teams.Billing do
   end
 
   on_ee do
-    @team_member_limit_for_trials 3
+    @team_member_limit_for_trials 10
 
     def team_member_limit(nil) do
       @team_member_limit_for_trials
