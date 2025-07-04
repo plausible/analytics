@@ -37,8 +37,10 @@ function init(overrides) {
     window.plausible.l = true
   }
 
-  if (COMPILE_PLAUSIBLE_NPM && config.setWindowFlag !== false) {
-    window.__plausible_npm = true
+  // Bind to window to be detectable by the verifier tool
+  // This is done in a 'safe' way to avoid breaking the page if window is frozen or running without window
+  if (COMPILE_PLAUSIBLE_NPM && config.bindToWindow && typeof window !== 'undefined') {
+    window.plausible = track
   }
 }
 
