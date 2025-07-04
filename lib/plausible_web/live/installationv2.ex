@@ -428,7 +428,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   end
 
   defp tracker_url(tracker_script_configuration) do
-    "https://plausible.io/js/s-#{tracker_script_configuration.id}.js"
+    "https://plausible.io/t/#{tracker_script_configuration.id}.js"
   end
 
   defp script_icon(assigns) do
