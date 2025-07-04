@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Dogfood do
 
         env in ["dev", "ce_dev"] ->
           # By default we're not letting the app track itself on localhost.
-          # The requested script will be `s-.js` and it will respond with 404.
+          # The requested script will be `t/.js` and it will respond with 404.
           # If you wish to track the app itself, uncomment the following line
           # and replace the site_id if necessary (1 stands for dummy.site).
 
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Dogfood do
           ""
       end
 
-    "#{PlausibleWeb.Endpoint.url()}/js/s-#{tracker_script_config_id}.js"
+    "#{PlausibleWeb.Endpoint.url()}/t/#{tracker_script_config_id}.js"
   end
 
   # TRICKY: The React dashboard uses history-based SPA navigation

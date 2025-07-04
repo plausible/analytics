@@ -40,10 +40,17 @@ defmodule PlausibleWeb.TrackerPlug do
 
   def call(conn, files_available: files_available) do
     case conn.request_path do
+      "/t/" <> path ->
+        if String.ends_with?(path, ".js") do
+          request_tracker_script(path, conn)
+        else
+          conn
+        end
+
+      # Legacy path: Can be removed once we've updated GTM template
       "/js/s-" <> path ->
         if String.ends_with?(path, ".js") do
-          tag = String.replace_trailing(path, ".js", "")
-          request_tracker_script(tag, conn)
+          request_tracker_script(path, conn)
         else
           conn
         end
@@ -61,7 +68,8 @@ defmodule PlausibleWeb.TrackerPlug do
 
   def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
-  defp request_tracker_script(tag, conn) do
+  defp request_tracker_script(path, conn) do
+    tag = String.replace_trailing(path, ".js", "")
     script_tag = get_plausible_web_script_tag(tag)
 
     if script_tag do
