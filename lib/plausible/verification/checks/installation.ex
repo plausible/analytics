@@ -74,7 +74,7 @@ defmodule Plausible.Verification.Checks.Installation do
 
     case Req.post(verification_endpoint(), opts) do
       {:ok, %{status: 200, body: %{"data" => %{"completed" => true} = js_data}}} ->
-        emit_telemetry(state.diagnostics, js_data)
+        emit_telemetry_and_log(state.diagnostics, js_data, data_domain)
 
         snippets_head =
           [js_data["snippetsFoundInHead"], state.diagnostics.snippets_found_in_head]
@@ -92,23 +92,19 @@ defmodule Plausible.Verification.Checks.Installation do
         )
 
       {:ok, %{status: status, body: %{"data" => %{"error" => error}}}} ->
-        Logger.warning("Browserless error: #{inspect(error)}")
+        Logger.warning("[VERIFICATION] Browserless error: #{inspect(error)}")
         put_diagnostics(state, plausible_installed?: false, service_error: status)
 
       {:error, %{reason: reason}} ->
-        Logger.warning("Browserless error: #{inspect(reason)}")
+        Logger.warning("[VERIFICATION] Browserless error: #{inspect(reason)}")
         put_diagnostics(state, plausible_installed?: false, service_error: reason)
     end
   end
 
-  @doc """
-  In the future, the plan is to move most checks to the client side.
-  # But for now, to be safe, we are still relying on checks carried out in
-  # Elixir while sending telemetry events to find out possible differences.
-  """
-  def telemetry_event(), do: [:plausible, :verification, :v1]
+  def telemetry_event(true = _diff), do: [:plausible, :verification, :js_elixir_diff]
+  def telemetry_event(false = _diff), do: [:plausible, :verification, :js_elixir_match]
 
-  defp emit_telemetry(existing_elixir_diagnostics, js_data) do
+  defp emit_telemetry_and_log(existing_elixir_diagnostics, js_data, data_domain) do
     %{
       snippets_found_in_head: snippets_found_in_head_elixir,
       snippets_found_in_body: snippets_found_in_body_elixir,
@@ -142,21 +138,30 @@ defmodule Plausible.Verification.Checks.Installation do
         {_, _} -> 0
       end
 
-    any_diff? =
-      [snippets_head_diff, snippets_body_diff, data_domain_mismatch_diff, proxy_likely_diff]
-      |> Enum.any?(&(&1 != 0))
+    diffs =
+      %{
+        snippets_head_diff: snippets_head_diff,
+        snippets_body_diff: snippets_body_diff,
+        data_domain_mismatch_diff: data_domain_mismatch_diff,
+        proxy_likely_diff: proxy_likely_diff
+      }
+      |> Map.reject(fn {_key, value} -> value == 0 end)
 
-    telemetry_metadata = %{
-      plausible_installed_js: plausible_installed_js,
-      callback_status_js: callback_status_js,
-      diff: any_diff?,
-      snippets_head_diff: snippets_head_diff,
-      snippets_body_diff: snippets_body_diff,
-      data_domain_mismatch_diff: data_domain_mismatch_diff,
-      proxy_likely_diff: proxy_likely_diff
-    }
+    any_diff? = map_size(diffs) > 0
 
-    :telemetry.execute(telemetry_event(), %{}, telemetry_metadata)
+    if any_diff? do
+      info =
+        %{
+          domain: data_domain,
+          plausible_installed_js: plausible_installed_js,
+          callback_status_js: callback_status_js
+        }
+        |> Map.merge(diffs)
+
+      Logger.info("[VERIFICATION] js_elixir_diff: #{inspect(info)}")
+    end
+
+    :telemetry.execute(telemetry_event(any_diff?), %{})
   end
 
   defp verification_endpoint() do
