@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import verify from '../support/verify-playwright-wrapper'
 import { delay } from '../support/test-utils'
 import { initializePageDynamically } from '../support/initialize-page-dynamically'
+import { compileFile } from '../../compiler'
 
 const SOME_DOMAIN = 'somesite.com'
 
@@ -35,6 +36,11 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     expect(result.data.snippetsFoundInBody).toBe(0)
     expect(result.data.callbackStatus).toBe(202)
     expect(result.data.dataDomainMismatch).toBe(false)
+
+    // `data.proxyLikely` is mostly expected to be true in tests because
+    // any local script src is considered a proxy. More involved behaviour
+    // is covered by unit tests under `check-proxy-likely.spec.js`
+    expect(result.data.proxyLikely).toBe(true)
   })
 
   test('missing snippet', async ({ page }, { testId }) => {
@@ -86,7 +92,6 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     expect(result.data.dataDomainMismatch).toBe(false)
   })
 
-
   test('figures out well placed snippet in a multi-domain mismatch', async ({ page }, { testId }) => {
     await mockEventResponseSuccess(page)
 
@@ -102,6 +107,42 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     expect(result.data.snippetsFoundInBody).toBe(0)
     expect(result.data.callbackStatus).toBe(202)
     expect(result.data.dataDomainMismatch).toBe(true)
+  })
+
+  test('proxyLikely is false when every snippet starts with an official plausible.io URL', async ({ page }, { testId }) => {
+    const prodScriptLocation = 'https://plausible.io/js/'
+    
+    mockEventResponseSuccess(page)
+
+    // We speed up the test by serving "just some script"
+    // (avoiding the event callback delay in verifier)
+    const code = await compileFile({
+      name: "plausible.local.js",
+      globals: {
+        "COMPILE_LOCAL": true,
+        "COMPILE_PLAUSIBLE_LEGACY_VARIANT": true
+      }
+    }, { returnCode: true })
+    
+    await page.context().route(`${prodScriptLocation}**`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: code
+      })
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <head><script defer src="${prodScriptLocation + 'script.js'}" data-domain="${SOME_DOMAIN}"></script></head>
+        <body><script defer src="${prodScriptLocation + 'plausible.outbound-links.js'}" data-domain="${SOME_DOMAIN}"></script></body>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
+
+    expect(result.data.proxyLikely).toBe(false)
   })
 
   test('counting snippets', async ({ page }, { testId }) => {

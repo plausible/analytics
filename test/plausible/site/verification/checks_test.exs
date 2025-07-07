@@ -925,6 +925,7 @@ defmodule Plausible.Verification.ChecksTest do
         "snippetsFoundInBody" => 0,
         "plausibleInstalled" => bool,
         "dataDomainMismatch" => nil,
+        "proxyLikely" => nil,
         "callbackStatus" => callback_status
       }
     }

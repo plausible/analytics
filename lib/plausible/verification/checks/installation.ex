@@ -39,7 +39,8 @@ defmodule Plausible.Verification.Checks.Installation do
   - `data.snippetsFoundInHead` - plausible snippets found in <head>
   - `data.snippetsFoundInBody` - plausible snippets found in <body>
   - `data.dataDomainMismatch` - whether or not script[data-domain] mismatched with site.domain
-  - `data.plausibleInstalled` - boolean indicating whether the `plausible()` window function was found
+  - `data.proxyLikely` - whether the script[src] is not a plausible.io URL
+  - `data.plausibleInstalled` - whether or not the `plausible()` window function was found
   - `data.callbackStatus` - integer. 202 indicates that the server acknowledged the test event.
 
   The test event ingestion is discarded based on user-agent, see: `Plausible.Verification.user_agent/0`
@@ -111,13 +112,15 @@ defmodule Plausible.Verification.Checks.Installation do
     %{
       snippets_found_in_head: snippets_found_in_head_elixir,
       snippets_found_in_body: snippets_found_in_body_elixir,
-      data_domain_mismatch?: data_domain_mismatch_elixir
+      data_domain_mismatch?: data_domain_mismatch_elixir,
+      proxy_likely?: proxy_likely_elixir
     } = existing_elixir_diagnostics
 
     %{
       "snippetsFoundInHead" => snippets_found_in_head_js,
       "snippetsFoundInBody" => snippets_found_in_body_js,
       "dataDomainMismatch" => data_domain_mismatch_js,
+      "proxyLikely" => proxy_likely_js,
       "callbackStatus" => callback_status_js,
       "plausibleInstalled" => plausible_installed_js
     } = js_data
@@ -132,8 +135,15 @@ defmodule Plausible.Verification.Checks.Installation do
         {_, _} -> 0
       end
 
+    proxy_likely_diff =
+      case {proxy_likely_js, proxy_likely_elixir} do
+        {true, false} -> 1
+        {false, true} -> -1
+        {_, _} -> 0
+      end
+
     any_diff? =
-      [snippets_head_diff, snippets_body_diff, data_domain_mismatch_diff]
+      [snippets_head_diff, snippets_body_diff, data_domain_mismatch_diff, proxy_likely_diff]
       |> Enum.any?(&(&1 != 0))
 
     telemetry_metadata = %{
@@ -142,7 +152,8 @@ defmodule Plausible.Verification.Checks.Installation do
       any_diff: any_diff?,
       snippets_head_diff: snippets_head_diff,
       snippets_body_diff: snippets_body_diff,
-      data_domain_mismatch_diff: data_domain_mismatch_diff
+      data_domain_mismatch_diff: data_domain_mismatch_diff,
+      proxy_likely_diff: proxy_likely_diff
     }
 
     :telemetry.execute(telemetry_event(), %{}, telemetry_metadata)

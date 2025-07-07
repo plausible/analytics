@@ -1,37 +1,25 @@
 import { runThrottledCheck } from "./run-check"
 
-export async function snippetCheckV1(expectedDataDomain, log) {
+export async function waitForSnippetsV1(log) {
   log('Starting snippet detection...')
 
-  let snippetCounts = await waitForFirstSnippet(log)
+  let snippetCounts = await waitForFirstSnippet()
 
   if (snippetCounts.all > 0) {
+    log(`Found snippets: head=${snippetCounts.head}; body=${snippetCounts.body}`)
     log('Waiting for additional snippets to appear...')
-    snippetCounts = await waitForAdditionalSnippets(log)
+
+    snippetCounts = await waitForAdditionalSnippets()
+
+    log(`Final snippet count: head=${snippetCounts.head}, body=${snippetCounts.body}`)
+  } else {
+    log('No snippets found after 5 seconds') 
   }
 
-  log(`Final snippet count: head=${snippetCounts.head}, body=${snippetCounts.body}`)
-    
   return {
-    snippetCounts: snippetCounts,
-    dataDomainMismatch: checkDataDomainMismatch(expectedDataDomain, log)
+    nodes: [...getHeadSnippets(), ...getBodySnippets()],
+    counts: snippetCounts,
   }
-}
-
-function checkDataDomainMismatch(expectedDataDomain, log) {
-  const snippets = [...getHeadSnippets(), ...getBodySnippets()]
-
-  if (snippets.length === 0) return false
-
-  return snippets.some(snippet => {
-    const scriptDataDomain = snippet.getAttribute('data-domain')
-    if (!scriptDataDomain) return false
-
-    const multiple = scriptDataDomain.split(',').map(d => d.trim())
-    const dataDomainMismatch = !multiple.some((domain) => domain.replace(/^www\./, '') === expectedDataDomain)
-    log(`Data domain mismatch: ${dataDomainMismatch}`)
-    return dataDomainMismatch
-  })
 }
 
 function getHeadSnippets() {
@@ -53,17 +41,11 @@ function countSnippets() {
   }
 }
 
-async function waitForFirstSnippet(log) {
+async function waitForFirstSnippet() {
   const checkFn = (opts) => {
     const snippetsFound = countSnippets()
     
-    if (snippetsFound.all > 0) {
-      log(`Found snippets: head=${snippetsFound.head}; body=${snippetsFound.body}`)
-      return snippetsFound
-    }
-
-    if (opts.timeout) {
-      log('No snippets found after 5 seconds') 
+    if (snippetsFound.all > 0 || opts.timeout) {
       return snippetsFound
     }
 
@@ -73,7 +55,7 @@ async function waitForFirstSnippet(log) {
   return await runThrottledCheck(checkFn, {timeout: 5000, interval: 100})
 }
 
-async function waitForAdditionalSnippets(log) {
+async function waitForAdditionalSnippets() {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(countSnippets())
