@@ -3,7 +3,6 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
   Real implementation of SAML authentication interface.
   """
   alias Plausible.Auth.SSO
-  alias SimpleXml.XmlNode
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
@@ -86,7 +85,7 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
          public_key = X509.Certificate.public_key(cert),
          :ok <-
            SimpleSaml.verify_and_validate_response(root, assertion, public_key, @verify_opts),
-         {:ok, attributes} <- extract_attributes(root) do
+         {:ok, attributes} <- extract_attributes(assertion) do
       session_timeout_minutes = integration.team.policy.sso_session_timeout_minutes
 
       expires_at =
@@ -128,47 +127,31 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
     |> String.trim()
   end
 
-  defp extract_attributes(root_node) do
-    with {:ok, assertion_node} <- XmlNode.first_child(root_node, ~r/.*:?Assertion$/),
-         {:ok, attributes_node} <-
-           XmlNode.first_child(assertion_node, ~r/.*:?AttributeStatement$/),
-         {:ok, attribute_nodes} <- XmlNode.children(attributes_node) do
-      found = get_attributes(attribute_nodes)
+  defp extract_attributes(assertion) do
+    attributes =
+      Enum.reduce([:email, :first_name, :last_name], %{}, fn field, attrs ->
+        value =
+          assertion.attributes
+          |> Map.get(to_string(field), [])
+          |> List.first()
 
-      attributes = %{
-        email: String.trim(found["email"] || ""),
-        first_name: String.trim(found["first_name"] || ""),
-        last_name: String.trim(found["last_name"] || "")
-      }
+        Map.put(attrs, field, String.trim(value || ""))
+      end)
 
-      cond do
-        attributes.email == "" ->
-          {:error, :missing_email_attribute}
+    cond do
+      attributes.email == "" ->
+        {:error, :missing_email_attribute}
 
-        # very rudimentary way to check if the attribute is at least email-like
-        not String.contains?(attributes.email, "@") or String.length(attributes.email) < 3 ->
-          {:error, :invalid_email_attribute}
+      # very rudimentary way to check if the attribute is at least email-like
+      not String.contains?(attributes.email, "@") or String.length(attributes.email) < 3 ->
+        {:error, :invalid_email_attribute}
 
-        attributes.first_name == "" and attributes.last_name == "" ->
-          {:error, :missing_name_attributes}
+      attributes.first_name == "" and attributes.last_name == "" ->
+        {:error, :missing_name_attributes}
 
-        true ->
-          {:ok, attributes}
-      end
+      true ->
+        {:ok, attributes}
     end
-  end
-
-  defp get_attributes(nodes) do
-    Enum.reduce(nodes, %{}, fn node, attributes ->
-      with {:ok, name} <- XmlNode.attribute(node, "Name"),
-           {:ok, value_node} <- XmlNode.first_child(node, ~r/.*:?AttributeValue$/),
-           {:ok, value} <- XmlNode.text(value_node) do
-        Map.put(attributes, name, value)
-      else
-        _ ->
-          attributes
-      end
-    end)
   end
 
   defp safe_decode_www_form(nil), do: ""
