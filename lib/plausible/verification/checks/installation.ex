@@ -149,7 +149,7 @@ defmodule Plausible.Verification.Checks.Installation do
     telemetry_metadata = %{
       plausible_installed_js: plausible_installed_js,
       callback_status_js: callback_status_js,
-      any_diff: any_diff?,
+      diff: any_diff?,
       snippets_head_diff: snippets_head_diff,
       snippets_body_diff: snippets_body_diff,
       data_domain_mismatch_diff: data_domain_mismatch_diff,

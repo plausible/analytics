@@ -128,10 +128,11 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           tags: [
             :plausible_installed_js,
             :callback_status_js,
-            :any_diff,
+            :diff,
             :snippets_head_diff,
             :snippets_body_diff,
-            :data_domain_mismatch_diff
+            :data_domain_mismatch_diff,
+            :proxy_likely_diff
           ],
           tag_values:
             &%{
@@ -140,7 +141,8 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               diff: &1.diff,
               snippets_head_diff: &1.snippets_head_diff,
               snippets_body_diff: &1.snippets_body_diff,
-              data_domain_mismatch_diff: &1.data_domain_mismatch_diff
+              data_domain_mismatch_diff: &1.data_domain_mismatch_diff,
+              proxy_likely_diff: &1.proxy_likely_diff
             }
         )
       ]
