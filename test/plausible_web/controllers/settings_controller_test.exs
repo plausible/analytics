@@ -1296,7 +1296,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html = html_response(conn, 200)
 
       refute html =~ "Your account cannot be deleted because you have an active subscription"
-      assert html =~ "Delete my account"
+      assert html =~ "Delete My Account"
     end
 
     test "with active subscription", %{conn: conn, user: user} do
@@ -1306,7 +1306,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html = html_response(conn, 200)
 
       assert html =~ "Your account cannot be deleted because you have an active subscription"
-      refute html =~ "Delete my account"
+      refute html =~ "Delete My Account"
     end
 
     test "with a setup team", %{conn: conn, user: user} do
@@ -1322,7 +1322,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html = html_response(conn, 200)
 
       assert html =~ "You are the sole owner of one or more teams"
-      refute html =~ "Delete my account"
+      refute html =~ "Delete My Account"
     end
   end
 
