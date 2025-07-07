@@ -292,6 +292,37 @@ test.describe('v1 verifier (WordPress detection)', () => {
   })
 })
 
+test.describe('v1 verifier (GTM detection)', () => {
+  test('detects GTM', async ({ page }, { testId }) => {
+    await mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <html>
+        <head>
+          <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+          <!-- Google Tag Manager -->
+          <script>
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','XXXX');
+          </script>
+          <!-- End Google Tag Manager -->
+        </head>
+        <body>Hello</body>
+        </html>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+
+    expect(result.data.gtmLikely).toBe(true)
+  })
+})
+
 test.describe('v1 verifier (logging)', () => {
   test('console logs in debug mode', async ({ page }, { testId }) => {
     await mockEventResponseSuccess(page)

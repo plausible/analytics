@@ -3,6 +3,7 @@ import { plausibleFunctionCheck } from "./plausible-function-check"
 import { checkDataDomainMismatch } from "./check-data-domain-mismatch"
 import { checkProxyLikely } from "./check-proxy-likely"
 import { detectWordPress } from "./detect-wp"
+import { detectGTM } from "./detect-gtm"
 
 window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   function log(message) {
@@ -24,6 +25,9 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   log(`wordpressPlugin: ${wordpressPlugin}`)
   log(`wordpressLikely: ${wordpressLikely}`)
 
+  const gtmLikely = detectGTM(document)
+  log(`gtmLikely: ${gtmLikely}`)
+
   return {
     data: {
       completed: true,
@@ -34,7 +38,8 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
       dataDomainMismatch: dataDomainMismatch,
       proxyLikely: proxyLikely,
       wordpressPlugin: wordpressPlugin,
-      wordpressLikely: wordpressLikely
+      wordpressLikely: wordpressLikely,
+      gtmLikely: gtmLikely
     }
   }
 }
