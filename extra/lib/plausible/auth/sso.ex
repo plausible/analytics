@@ -11,6 +11,7 @@ defmodule Plausible.Auth.SSO do
   alias Plausible.Billing.Subscription
   alias Plausible.Repo
   alias Plausible.Teams
+  alias Plausible.Audit
 
   use Plausible.Auth.SSO.Domain.Status
 
@@ -61,6 +62,11 @@ defmodule Plausible.Auth.SSO do
       conflict_target: :team_id,
       returning: true
     )
+    |> tap(fn _ ->
+      Audit.new("saml_integration_initiated", team_id: team.id)
+      |> Audit.track_changes(changeset)
+      |> Audit.persist()
+    end)
   end
 
   @spec update_integration(SSO.Integration.t(), map()) ::
@@ -102,13 +108,21 @@ defmodule Plausible.Auth.SSO do
 
     :ok = Auth.UserSessions.revoke_all(user)
 
-    user
-    |> Ecto.Changeset.change()
-    |> Ecto.Changeset.put_change(:type, :standard)
-    |> Ecto.Changeset.put_change(:sso_identity_id, nil)
-    |> Ecto.Changeset.put_assoc(:sso_integration, nil)
-    |> Ecto.Changeset.put_assoc(:sso_domain, nil)
+    changeset =
+      user
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.put_change(:type, :standard)
+      |> Ecto.Changeset.put_change(:sso_identity_id, nil)
+      |> Ecto.Changeset.put_assoc(:sso_integration, nil)
+      |> Ecto.Changeset.put_assoc(:sso_domain, nil)
+
+    changeset
     |> Repo.update!()
+    |> tap(fn _ ->
+      Audit.new("sso_user_deprovisioned", team_id: user.sso_integration.team_id, user_id: user.id)
+      |> Audit.track_changes(changeset)
+      |> Audit.persist()
+    end)
   end
 
   @spec update_policy(Teams.Team.t(), [policy_attr()]) ::
@@ -399,6 +413,10 @@ defmodule Plausible.Auth.SSO do
       |> put_assoc(:sso_domain, domain)
 
     with {:ok, user} <- Repo.update(changeset) do
+      Audit.new("sso_user_provisioned", team_id: integration.team_id, user_id: user.id)
+      |> Audit.track_changes(changeset)
+      |> Audit.persist()
+
       {:ok, :sso, integration.team, user}
     end
   end
@@ -419,6 +437,10 @@ defmodule Plausible.Auth.SSO do
          :ok <- ensure_empty_personal_team(user, integration.team),
          :ok <- Auth.UserSessions.revoke_all(user),
          {:ok, user} <- Repo.update(changeset) do
+      Audit.new("sso_user_provisioned", team_id: integration.team_id, user_id: user.id)
+      |> Audit.track_changes(changeset)
+      |> Audit.persist()
+
       {:ok, :standard, integration.team, user}
     end
   end
@@ -472,6 +494,10 @@ defmodule Plausible.Auth.SSO do
 
     case result do
       {:ok, {type, team, user}} ->
+        Audit.new("sso_user_provisioned", team_id: team.id, user_id: user.id)
+        |> Audit.track_changes(changeset)
+        |> Audit.persist()
+
         {:ok, type, team, user}
 
       {:error, _} = error ->

@@ -9,6 +9,7 @@ defmodule Plausible.Auth.SSOTest do
     alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Teams
+    alias Plausible.Audit
 
     describe "initiate_saml_integration/1" do
       test "initiates new saml integration" do
@@ -19,6 +20,9 @@ defmodule Plausible.Auth.SSOTest do
         assert integration.team_id == team.id
         assert is_binary(integration.identifier)
         assert %SSO.SAMLConfig{} = integration.config
+
+        assert [%Audit.Entry{name: "saml_integration_initiated"}] =
+                 Audit.list_by(team_id: team.id)
       end
 
       test "does nothing if integration is already initiated" do
@@ -334,6 +338,24 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.sso_integration_id == integration.id
         assert sso_user.sso_domain_id == sso_domain.id
         assert sso_user.last_sso_login
+
+        user_id = "#{user.id}"
+
+        assert [
+                 %Audit.Entry{
+                   name: "saml_integration_initiated"
+                 },
+                 %Audit.Entry{
+                   name: "sso_user_provisioned",
+                   entity: "Plausible.Auth.User",
+                   entity_id: ^user_id,
+                   changed_from: %{"type" => "standard"},
+                   changed_to: %{"type" => "sso"}
+                 },
+                 %Audit.Entry{
+                   name: "sso_user_provisioned"
+                 }
+               ] = Audit.list_by(team_id: team.id)
       end
 
       test "does not provision user without matching setup integration", %{team: team} do
@@ -463,6 +485,7 @@ defmodule Plausible.Auth.SSOTest do
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         identity = new_identity("Clarence Fortridge", "clarence@" <> domain)
+
         {:ok, _, _, user} = SSO.provision_user(identity)
 
         user = Repo.reload!(user)
@@ -476,6 +499,20 @@ defmodule Plausible.Auth.SSOTest do
         refute updated_user.sso_identity_id
         refute updated_user.sso_integration_id
         refute updated_user.sso_domain_id
+
+        user_id = user.id
+
+        assert [
+                 %Audit.Entry{name: "saml_integration_initiated"},
+                 %Audit.Entry{
+                   name: "sso_user_provisioned",
+                   # XXX: how to get user id here? 
+                   entity_id: ^user_id,
+                   entity: "Plausible.Auth.User"
+                 },
+                 %Audit.Entry{name: "sso_user_deprovisioned"}
+               ] =
+                 Audit.list_by(team_id: team.id)
       end
 
       test "handles standard user gracefully without revoking existing sessions" do

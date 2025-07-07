@@ -65,6 +65,11 @@ defmodule PlausibleWeb.AuthPlug do
         Plausible.OpenTelemetry.add_user_attributes(user)
         Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
 
+        Plausible.Audit.set_context(
+          current_user_id: user && user.id,
+          current_team_id: current_team && current_team.id
+        )
+
         conn
         |> assign(:current_user, user)
         |> assign(:current_user_session, user_session)
