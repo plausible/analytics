@@ -435,6 +435,19 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def team_member_left(team_membership) do
+    priority_email()
+    |> to(team_membership.user.email)
+    |> tag("team-member-left")
+    |> subject(
+      "[#{Plausible.product_name()}] You have left \"#{team_membership.team.name}\" team"
+    )
+    |> render("team_member_left.html",
+      user: team_membership.user,
+      team_membership: team_membership
+    )
+  end
+
   def import_success(site_import, user) do
     import_api = Plausible.Imported.ImportSources.by_name(site_import.source)
     label = import_api.label()

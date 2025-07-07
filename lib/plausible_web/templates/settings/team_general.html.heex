@@ -42,4 +42,16 @@
       session: %{"mode" => "team-management"}
     )}
   </.tile>
+  <.tile docs="users-roles#leaving-team">
+    <:title>Leave Team</:title>
+    <:subtitle>Leaving the team removes you from this team as a member.</:subtitle>
+    <.button_link
+      data-confirm="Are you sure you want to leave this team?"
+      href={Routes.settings_path(@conn, :leave_team)}
+      method="post"
+      theme="danger"
+    >
+      Leave team
+    </.button_link>
+  </.tile>
 </.settings_tiles>

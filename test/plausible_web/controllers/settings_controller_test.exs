@@ -1430,6 +1430,29 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert text(html_response(conn, 200)) =~ "can't be blank"
     end
 
+    test "POST /settings/team/leave", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+      add_member(team, role: :owner)
+
+      conn = post(conn, Routes.settings_path(conn, :leave_team))
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: "none")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You have left"
+    end
+
+    test "POST /settings/team/leave - only owner", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn = post(conn, Routes.settings_path(conn, :leave_team))
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "You can't leave"
+    end
+
     test "GET /settings/team/delete - without active subscription", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
 
