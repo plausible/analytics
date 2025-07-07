@@ -2,6 +2,7 @@ import { waitForSnippetsV1 } from "./snippet-checks"
 import { plausibleFunctionCheck } from "./plausible-function-check"
 import { checkDataDomainMismatch } from "./check-data-domain-mismatch"
 import { checkProxyLikely } from "./check-proxy-likely"
+import { detectWordPress } from "./detect-wp"
 
 window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   function log(message) {
@@ -19,6 +20,10 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   const proxyLikely = checkProxyLikely(snippetData.nodes)
   log(`proxyLikely: ${proxyLikely}`)
 
+  const {wordpressPlugin, wordpressLikely} = detectWordPress(document)
+  log(`wordpressPlugin: ${wordpressPlugin}`)
+  log(`wordpressLikely: ${wordpressLikely}`)
+
   return {
     data: {
       completed: true,
@@ -27,7 +32,9 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
       snippetsFoundInHead: snippetData.counts.head,
       snippetsFoundInBody: snippetData.counts.body,
       dataDomainMismatch: dataDomainMismatch,
-      proxyLikely: proxyLikely
+      proxyLikely: proxyLikely,
+      wordpressPlugin: wordpressPlugin,
+      wordpressLikely: wordpressLikely
     }
   }
 }

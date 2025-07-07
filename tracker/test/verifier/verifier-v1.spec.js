@@ -36,6 +36,8 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     expect(result.data.snippetsFoundInBody).toBe(0)
     expect(result.data.callbackStatus).toBe(202)
     expect(result.data.dataDomainMismatch).toBe(false)
+    expect(result.data.wordpressPlugin).toBe(false)
+    expect(result.data.wordpressLikely).toBe(false)
 
     // `data.proxyLikely` is mostly expected to be true in tests because
     // any local script src is considered a proxy. More involved behaviour
@@ -140,7 +142,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.proxyLikely).toBe(false)
   })
@@ -241,10 +243,52 @@ test.describe('v1 verifier (window.plausible)', () => {
       scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.callbackStatus).toBe(-1)
+  })
+})
+
+test.describe('v1 verifier (WordPress detection)', () => {
+  test('if wordpress plugin detected, wordpressLikely is also true', async ({ page }, { testId }) => {
+    await mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <head>
+          <meta name="plausible-analytics-version" content="2.3.1">
+          <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+        </head>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+
+    expect(result.data.wordpressPlugin).toBe(true)
+    expect(result.data.wordpressLikely).toBe(true)
+  })
+
+  test('detects wordpressLikely by wp signatures', async ({ page }, { testId }) => {
+    await mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <head>
+          <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+        </head>
+        <body>
+          <script src="/wp-content/themes/mytheme/script.js"></script>
+        </body>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+
+    expect(result.data.wordpressPlugin).toBe(false)
+    expect(result.data.wordpressLikely).toBe(true)
   })
 })
 

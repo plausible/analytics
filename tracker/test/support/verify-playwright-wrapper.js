@@ -10,7 +10,7 @@ export default async function verify(page, context) {
   const verifierCode = await compileFile(VARIANT, { returnCode: true })
 
   await page.goto(url)
-  await page.addScriptTag({ content: verifierCode })
+  await page.evaluate(verifierCode)
 
   return await page.evaluate(async ({expectedDataDomain, debug}) => {
     return await window.verifyPlausibleInstallation(expectedDataDomain, debug)
