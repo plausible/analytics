@@ -343,6 +343,49 @@ for (const mode of ['legacy', 'web']) {
       })
       await expect(isoMock.getRequestList()).resolves.toHaveLength(1)
     })
+
+    test('limitation: does track downloads of links within svg elements', async ({
+      page
+    }, { testId }) => {
+      const csvFileURL = `https://example.com/file.csv`
+      const csvMock = await mockManyRequests({
+        page,
+        path: csvFileURL,
+        fulfill: {
+          contentType: 'text/csv'
+        },
+        awaitedRequestCount: 1
+      })
+
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: true },
+            legacy:
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><a href="${csvFileURL}"><circle cx="50" cy="50" r="50" /></a></svg>
+            `
+      })
+
+      const pageErrors: Error[] = []
+      page.on('pageerror', (err) => pageErrors.push(err))
+
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('a'),
+        refutedRequests: [{ n: 'File Download' }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+
+      expect(pageErrors).toHaveLength(0)
+      await expect(csvMock.getRequestList()).resolves.toHaveLength(1)
+    })
   })
 }
 
