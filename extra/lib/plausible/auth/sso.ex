@@ -68,7 +68,7 @@ defmodule Plausible.Auth.SSO do
   def update_integration(integration, params) do
     changeset = SSO.Integration.update_changeset(integration, params)
 
-    case Repo.update(changeset) do
+    case Repo.update_with_audit(changeset, "sso_integration_updated") do
       {:ok, integration} -> {:ok, integration}
       {:error, changeset} -> {:error, changeset.changes.config}
     end
@@ -108,7 +108,7 @@ defmodule Plausible.Auth.SSO do
     |> Ecto.Changeset.put_change(:sso_identity_id, nil)
     |> Ecto.Changeset.put_assoc(:sso_integration, nil)
     |> Ecto.Changeset.put_assoc(:sso_domain, nil)
-    |> Repo.update!()
+    |> Repo.update_with_audit!("sso_user_deprovioned")
   end
 
   @spec update_policy(Teams.Team.t(), [policy_attr()]) ::
@@ -122,7 +122,7 @@ defmodule Plausible.Auth.SSO do
       |> Ecto.Changeset.change()
       |> Ecto.Changeset.put_embed(:policy, policy_changeset)
 
-    case Repo.update(changeset) do
+    case Repo.update_with_audit(changeset, "sso_policy_updated") do
       {:ok, integration} -> {:ok, integration}
       {:error, changeset} -> {:error, changeset.changes.policy}
     end
@@ -143,7 +143,7 @@ defmodule Plausible.Auth.SSO do
       team
       |> Ecto.Changeset.change()
       |> Ecto.Changeset.put_embed(:policy, policy_changeset)
-      |> Repo.update()
+      |> Repo.update_with_audit("sso_forced")
     end
   end
 
@@ -405,7 +405,7 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
       |> put_assoc(:sso_domain, domain)
 
-    with {:ok, user} <- Repo.update(changeset) do
+    with {:ok, user} <- Repo.update_with_audit(changeset, "sso_user_provisioned") do
       {:ok, :sso, integration.team, user}
     end
   end
@@ -425,7 +425,7 @@ defmodule Plausible.Auth.SSO do
          :ok <- ensure_one_membership(user, integration.team),
          :ok <- ensure_empty_personal_team(user, integration.team),
          :ok <- Auth.UserSessions.revoke_all(user),
-         {:ok, user} <- Repo.update(changeset) do
+         {:ok, user} <- Repo.update_with_audit(changeset, "sso_user_provisioned") do
       {:ok, :standard, integration.team, user}
     end
   end
