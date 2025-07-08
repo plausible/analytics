@@ -41,7 +41,10 @@ defmodule PlausibleWeb.Live.Installation do
       ])
 
     if FunWithFlags.enabled?(:scriptv2, for: site) do
-      {:ok, redirect(socket, to: "/#{domain}/installationv2?flow=#{params["flow"]}")}
+      {:ok,
+       redirect(socket,
+         to: Routes.site_path(socket, :installation_v2, site.domain, flow: params["flow"])
+       )}
     else
       flow = params["flow"]
 
