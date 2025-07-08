@@ -1,7 +1,7 @@
 export type Options = {
   hashBasedRouting: boolean
   outboundLinks: boolean
-  fileDownloads: boolean | string[]
+  fileDownloads: boolean | { fileExtensions: string[] }
   formSubmissions: boolean
   captureOnLocalhost: boolean
   autoCapturePageviews: boolean

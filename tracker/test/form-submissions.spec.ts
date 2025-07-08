@@ -1,12 +1,14 @@
-import { test, Page } from '@playwright/test'
+import { test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import {
+  ensurePlausibleInitialized,
   expectPlausibleInAction,
   isEngagementEvent,
   isPageviewEvent
 } from './support/test-utils'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { ScriptConfig } from './support/types'
+import { customSubmitHandlerStub } from './support/html-fixtures'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -21,12 +23,10 @@ test('does not track form submissions when the feature is disabled', async ({
     testId,
     scriptConfig: DEFAULT_CONFIG,
     bodyContent: `
-      <div>
-        <form>
-          <input type="text" /><input type="submit" value="Submit" />
-        </form>
-      </div>
-      `
+      <form>
+        <input type="text" /><input type="submit" value="Submit" />
+      </form>
+    `
   })
 
   await expectPlausibleInAction(page, {
@@ -52,11 +52,9 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
-      <div>
         <form method="GET">
           <input id="name" type="text" placeholder="Name" /><input type="submit" value="Submit" />
         </form>
-      </div>
       `
     })
 
@@ -84,11 +82,9 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
-      <div>
         <form onsubmit="${customSubmitHandlerStub}">
           <input type="text" /><input type="submit" value="Submit" />
         </form>
-      </div>
       `
     })
 
@@ -154,12 +150,10 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
-      <div>
         <form novalidate onsubmit="${customSubmitHandlerStub}">
           <input type="email" />
           <input type="submit" value="Submit" />
         </form>
-      </div>
       `
     })
 
@@ -188,12 +182,10 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
-      <div>
         <form>
           <input type="email" />
           <input type="submit" value="Submit" />
         </form>
-      </div>
       `
     })
 
@@ -221,12 +213,10 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
-      <div>
         <form id="form">
           <input type="text" placeholder="Name" />
         </form>
         <button id="trigger-FormElement-submit" onclick="document.getElementById('form').submit()">Submit</button>
-      </div>
       `
     })
 
@@ -254,7 +244,6 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
-      <div>
         <form onsubmit="${customSubmitHandlerStub}">
           <h2>Form 1</h2>
           <input type="text" /><input type="submit" value="Submit" />
@@ -263,7 +252,6 @@ test.describe('form submissions feature is enabled', () => {
           <h2>Form 2</h2>
           <input type="email" />
         </form>
-      </div>
       `
     })
 
@@ -297,18 +285,3 @@ test.describe('form submissions feature is enabled', () => {
     })
   })
 })
-/**
- * This function ensures that the tracker script has attached the event listener before test is run.
- * Note that this race condition happens in the real world as well:
- * forms submitted before the tracker script is initialized will not be tracked.
- */
-function ensurePlausibleInitialized(page: Page) {
-  return page.waitForFunction(() => (window as any).plausible?.l === true)
-}
-
-/**
- * This is a stub for custom form onsubmit handlers Plausible users may have on their websites.
- * Overriding onsubmit with a custom handler is common practice in web development for a variety of reasons (mostly UX),
- * so it's important to track form submissions from forms with such handlers.
- */
-const customSubmitHandlerStub = "event.preventDefault(); console.log('Form submitted')"

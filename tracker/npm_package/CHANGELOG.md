@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Do not send "Form: Submission" event if the form is tagged
+
 ## [0.3.0] - 2025-06-27
 
 - Remove now unnecessary navigation delays on link clicks and form submissions.
