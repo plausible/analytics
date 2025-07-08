@@ -111,6 +111,49 @@ defmodule Plausible.Auth.SSOTest do
                  X509.Certificate.from_pem(@cert_pem)
       end
 
+      test "updates integration with PEM missing boundaries" do
+        boundless_pem =
+          "MIIDqjCCApKgAwIBAgIGAZfpTJclMA0GCSqGSIb3DQEBCwUAMIGVMQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzENMAsGA1UECgwET2t0YTEUMBIGA1UECwwLU1NPUHJvdmlkZXIxFjAUBgNVBAMMDXRyaWFsLTU1OTk4NzkxHDAaBgkqhkiG9w0BCQEWDWluZm9Ab2t0YS5jb20wHhcNMjUwNzA4MDkwOTAwWhcNMzUwNzA4MDkxMDAwWjCBlTELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xDTALBgNVBAoMBE9rdGExFDASBgNVBAsMC1NTT1Byb3ZpZGVyMRYwFAYDVQQDDA10cmlhbC01NTk5ODc5MRwwGgYJKoZIhvcNAQkBFg1pbmZvQG9rdGEuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzmF1LGsjEQkdLfCR6epCX5uKaJnowd3ZE8/t+kPiW0TIIvp4a3bH7r+pBbbili7Wz8LRs6C99RmtG4KjfBd6IAS1vYVba1RJ3XkoiIfVeDCP5sXKPyRquNj1/gyZkYxTYZVnh3ibXXUmlIkCDrF0TeO+4VfrWXQlc5/vNz7fbhH3bYCFj8jy3tKqXsE18X5USALRH22K4N2ZcGujNMwxzXIqGkPyPfRpnSY+AS8tGnW36Xn4WnKs9ciAnmTtTMXNrGrc6OLkbAEKLxSegpV9oSugChZ21siJXFf2Xz3jp71C12kbEDCXQ8Xi86iS3PnBYvp2ThT0Qiby1vscdNGaUwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCEbceBacHt0sx6Q0sU68E6CyyEfYVHPUOxLwBq4lrqeh9b0fctNuyFAceJbejIto9sqQ+RQzqob5PGfNpFanPbrcOx5F4NLgS9keR/bJGetSfiQe0nw/2ikNd7O0mWeWo1LvRtTGOAS2o3NTkLv3W1mxCkgjbi24hQs6eR5ARY6//AqYQWwWIDMIZotuIuRh285A8Gn1Vxj6ApWski3jttCLzU7NDJU7I6CXfzbDdEpr9I18CEZ7oOei/61q4wNq/x3CT4TsbDnVLVcYs0qqe/EKwQ6alqkHqlp2zxThOVvMW6tz0X8hNnxrXmmZdp7WF6s/8/Pw9Dq691L0AIKnIL"
+
+        pem = """
+        -----BEGIN CERTIFICATE-----
+        MIIDqjCCApKgAwIBAgIGAZfpTJclMA0GCSqGSIb3DQEBCwUAMIGVMQswCQYDVQQGEwJVUzETMBEG
+        A1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzENMAsGA1UECgwET2t0YTEU
+        MBIGA1UECwwLU1NPUHJvdmlkZXIxFjAUBgNVBAMMDXRyaWFsLTU1OTk4NzkxHDAaBgkqhkiG9w0B
+        CQEWDWluZm9Ab2t0YS5jb20wHhcNMjUwNzA4MDkwOTAwWhcNMzUwNzA4MDkxMDAwWjCBlTELMAkG
+        A1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xDTAL
+        BgNVBAoMBE9rdGExFDASBgNVBAsMC1NTT1Byb3ZpZGVyMRYwFAYDVQQDDA10cmlhbC01NTk5ODc5
+        MRwwGgYJKoZIhvcNAQkBFg1pbmZvQG9rdGEuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+        CgKCAQEAzmF1LGsjEQkdLfCR6epCX5uKaJnowd3ZE8/t+kPiW0TIIvp4a3bH7r+pBbbili7Wz8LR
+        s6C99RmtG4KjfBd6IAS1vYVba1RJ3XkoiIfVeDCP5sXKPyRquNj1/gyZkYxTYZVnh3ibXXUmlIkC
+        DrF0TeO+4VfrWXQlc5/vNz7fbhH3bYCFj8jy3tKqXsE18X5USALRH22K4N2ZcGujNMwxzXIqGkPy
+        PfRpnSY+AS8tGnW36Xn4WnKs9ciAnmTtTMXNrGrc6OLkbAEKLxSegpV9oSugChZ21siJXFf2Xz3j
+        p71C12kbEDCXQ8Xi86iS3PnBYvp2ThT0Qiby1vscdNGaUwIDAQABMA0GCSqGSIb3DQEBCwUAA4IB
+        AQCEbceBacHt0sx6Q0sU68E6CyyEfYVHPUOxLwBq4lrqeh9b0fctNuyFAceJbejIto9sqQ+RQzqo
+        b5PGfNpFanPbrcOx5F4NLgS9keR/bJGetSfiQe0nw/2ikNd7O0mWeWo1LvRtTGOAS2o3NTkLv3W1
+        mxCkgjbi24hQs6eR5ARY6//AqYQWwWIDMIZotuIuRh285A8Gn1Vxj6ApWski3jttCLzU7NDJU7I6
+        CXfzbDdEpr9I18CEZ7oOei/61q4wNq/x3CT4TsbDnVLVcYs0qqe/EKwQ6alqkHqlp2zxThOVvMW6
+        tz0X8hNnxrXmmZdp7WF6s/8/Pw9Dq691L0AIKnIL
+        -----END CERTIFICATE-----
+        """
+
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+
+        assert {:ok, integration} =
+                 SSO.update_integration(integration, %{
+                   idp_signin_url: "https://example.com",
+                   idp_entity_id: "some-entity",
+                   idp_cert_pem: boundless_pem
+                 })
+
+        assert integration.config.idp_signin_url == "https://example.com"
+        assert integration.config.idp_entity_id == "some-entity"
+
+        assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
+                 X509.Certificate.from_pem(pem)
+      end
+
       test "optionally accepts metadata" do
         team = new_site().team
         integration = SSO.initiate_saml_integration(team)
