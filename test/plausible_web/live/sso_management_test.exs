@@ -78,8 +78,8 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         text = text(render(lv))
 
-        assert text =~ "Sign-in URL can't be blank"
-        assert text =~ "Entity ID can't be blank"
+        assert text =~ "SSO URL / Sign-on URL / Login URL can't be blank"
+        assert text =~ "Entity ID / Issuer / Identifier can't be blank"
         assert text =~ "Certificate in PEM format can't be blank"
 
         lv
