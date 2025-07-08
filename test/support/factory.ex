@@ -141,14 +141,19 @@ defmodule Plausible.Factory do
       index_of_path_key = Enum.find_index(meta_keys, &(&1 == "path"))
 
       if index_of_path_key == nil do
-        attrs = attrs
-        |> Map.put(:"meta.key", meta_keys ++ ["path"])
-        |> Map.put(:"meta.value", meta_values ++ [pathname])
+        attrs =
+          attrs
+          |> Map.put(:"meta.key", meta_keys ++ ["path"])
+          |> Map.put(:"meta.value", meta_values ++ [pathname])
       else
         if index_of_path_key !== nil && Enum.at(meta_values, index_of_path_key) == nil do
-          attrs = attrs
-          |> Map.put(:"meta.key", List.delete_at(meta_keys, index_of_path_key) ++ ["path"])
-          |> Map.put(:"meta.value", List.delete_at(meta_values, index_of_path_key) ++ [pathname])
+          attrs =
+            attrs
+            |> Map.put(:"meta.key", List.delete_at(meta_keys, index_of_path_key) ++ ["path"])
+            |> Map.put(
+              :"meta.value",
+              List.delete_at(meta_values, index_of_path_key) ++ [pathname]
+            )
         end
       end
     end
