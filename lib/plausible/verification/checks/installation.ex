@@ -37,13 +37,26 @@ defmodule Plausible.Verification.Checks.Installation do
   the following information:
 
   - `data.snippetsFoundInHead` - plausible snippets found in <head>
-  - `data.snippetsFoundInBody` - plausible snippets found in <body>
-  - `data.dataDomainMismatch` - whether or not script[data-domain] mismatched with site.domain
-  - `data.proxyLikely` - whether the script[src] is not a plausible.io URL
-  - `data.plausibleInstalled` - whether or not the `plausible()` window function was found
-  - `data.callbackStatus` - integer. 202 indicates that the server acknowledged the test event.
 
-  The test event ingestion is discarded based on user-agent, see: `Plausible.Verification.user_agent/0`
+  - `data.snippetsFoundInBody` - plausible snippets found in <body>
+
+  - `data.plausibleInstalled` - whether or not the `plausible()` window function was found
+
+  - `data.callbackStatus` - integer. 202 indicates that the server acknowledged the test event.
+                            The test event ingestion is discarded based on user-agent, see:
+                            `Plausible.Verification.user_agent/0`
+
+  - `data.dataDomainMismatch` - whether or not script[data-domain] mismatched with site.domain
+
+  - `data.proxyLikely` - whether the script[src] is not a plausible.io URL
+
+  - `data.wordpressPlugin` - whether or not there's a `<meta>` tag with the WP plugin version
+
+  - `data.wordpressLikely` - whether or not the site is built on WordPress
+
+  - `data.gtmLikely` - whether or not the site uses GTM
+
+  - `data.cookieBannerLikely` - whether or not there's a cookie banner blocking Plausible
   """
   use Plausible.Verification.Check
 
@@ -104,48 +117,28 @@ defmodule Plausible.Verification.Checks.Installation do
   def telemetry_event(true = _diff), do: [:plausible, :verification, :js_elixir_diff]
   def telemetry_event(false = _diff), do: [:plausible, :verification, :js_elixir_match]
 
-  defp emit_telemetry_and_log(existing_elixir_diagnostics, js_data, data_domain) do
-    %{
-      snippets_found_in_head: snippets_found_in_head_elixir,
-      snippets_found_in_body: snippets_found_in_body_elixir,
-      data_domain_mismatch?: data_domain_mismatch_elixir,
-      proxy_likely?: proxy_likely_elixir
-    } = existing_elixir_diagnostics
-
-    %{
-      "snippetsFoundInHead" => snippets_found_in_head_js,
-      "snippetsFoundInBody" => snippets_found_in_body_js,
-      "dataDomainMismatch" => data_domain_mismatch_js,
-      "proxyLikely" => proxy_likely_js,
-      "callbackStatus" => callback_status_js,
-      "plausibleInstalled" => plausible_installed_js
-    } = js_data
-
-    snippets_head_diff = snippets_found_in_head_js - snippets_found_in_head_elixir
-    snippets_body_diff = snippets_found_in_body_js - snippets_found_in_body_elixir
-
-    data_domain_mismatch_diff =
-      case {data_domain_mismatch_js, data_domain_mismatch_elixir} do
-        {true, false} -> 1
-        {false, true} -> -1
-        {_, _} -> 0
-      end
-
-    proxy_likely_diff =
-      case {proxy_likely_js, proxy_likely_elixir} do
-        {true, false} -> 1
-        {false, true} -> -1
-        {_, _} -> 0
-      end
-
+  defp emit_telemetry_and_log(elixir_data, js_data, data_domain) do
     diffs =
-      %{
-        snippets_head_diff: snippets_head_diff,
-        snippets_body_diff: snippets_body_diff,
-        data_domain_mismatch_diff: data_domain_mismatch_diff,
-        proxy_likely_diff: proxy_likely_diff
-      }
-      |> Map.reject(fn {_key, value} -> value == 0 end)
+      for {diff, elixir_diagnostic, js_diagnostic} <- [
+            {:data_domain_mismatch_diff, :data_domain_mismatch?, "dataDomainMismatch"},
+            {:proxy_likely_diff, :proxy_likely?, "proxyLikely"},
+            {:wordpress_plugin_diff, :wordpress_plugin?, "wordpressPlugin"},
+            {:wordpress_likely_diff, :wordpress_likely?, "wordpressLikely"},
+            {:gtm_likely_diff, :gtm_likely, "gtmLikely"},
+            {:cookie_banner_likely_diff, :cookie_banner_likely, "cookieBannerLikely"}
+          ] do
+        case {Map.get(elixir_data, elixir_diagnostic), js_data[js_diagnostic]} do
+          {true, false} -> {diff, 1}
+          {false, true} -> {diff, -1}
+          {_, _} -> {diff, 0}
+        end
+      end
+      |> Map.new()
+      |> Map.merge(%{
+        snippets_head_diff: js_data["snippetsFoundInHead"] - elixir_data.snippets_found_in_head,
+        snippets_body_diff: js_data["snippetsFoundInBody"] - elixir_data.snippets_found_in_body
+      })
+      |> Map.reject(fn {_k, v} -> v == 0 end)
 
     any_diff? = map_size(diffs) > 0
 
@@ -153,8 +146,8 @@ defmodule Plausible.Verification.Checks.Installation do
       info =
         %{
           domain: data_domain,
-          plausible_installed_js: plausible_installed_js,
-          callback_status_js: callback_status_js
+          plausible_installed_js: js_data["plausibleInstalled"],
+          callback_status_js: js_data["callbackStatus"]
         }
         |> Map.merge(diffs)
 
