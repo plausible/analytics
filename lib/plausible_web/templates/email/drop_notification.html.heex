@@ -1,8 +1,8 @@
-We've recorded {@current_visitors} visitors on
-<a href={"https://" <> @site.domain}><%= @site.domain %></a> in the last 12 hours.
+Wir haben {@current_visitors} Besucher auf
+<a href={"https://" <> @site.domain}><%= @site.domain %></a> in den letzten 12 Stunden aufgezeichnet.
 <%= if @dashboard_link do %>
-  <br /><br /> View dashboard: <a href={@dashboard_link}>{@dashboard_link}</a>
-  <br /><br /> Something looks off? Please
-  <a href={@installation_link}>review your installation</a>
-  to verify that Plausible has been integrated correctly.
+  <br /><br /> Dashboard anzeigen: <a href={@dashboard_link}>{@dashboard_link}</a>
+  <br /><br /> Sieht etwas seltsam aus? Bitte
+  <a href={@installation_link}>überprüfen Sie Ihre Installation</a>,
+  um zu verifizieren, dass Plausible korrekt integriert wurde.
 <% end %>

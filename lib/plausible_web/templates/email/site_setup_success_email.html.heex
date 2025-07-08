@@ -1,18 +1,18 @@
-Congrats! We've recorded the first visitor on
-<a href={"https://#{@site.domain}"}><%= @site.domain %></a>. Your traffic is now being counted without compromising the user experience and privacy of your visitors.
+Glückwunsch! Wir haben den ersten Besucher auf
+<a href={"https://#{@site.domain}"}><%= @site.domain %></a> erfasst. Ihr Traffic wird nun gezählt, ohne die Benutzererfahrung und Privatsphäre Ihrer Besucher zu beeinträchtigen.
 <br /><br />
-Do check out your <a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}?__team=#{@site_team.identifier}"}>easy to use, fast-loading and privacy-friendly dashboard</a>.
+Schauen Sie sich Ihr <a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}?__team=#{@site_team.identifier}"}>benutzerfreundliches, schnell ladendes und datenschutzfreundliches Dashboard</a> an.
 <br /><br />
-Something looks off? Take a look at our <a href="https://plausible.io/docs/troubleshoot-integration">installation troubleshooting guide</a>.
+Stimmt etwas nicht? Werfen Sie einen Blick auf unsere <a href="https://plausible.io/docs/troubleshoot-integration">Anleitung zur Fehlerbehebung bei der Installation</a>.
 <br /><br />
 <%= if (ee?() and Plausible.Teams.on_trial?(@site_team)) do %>
-  You're on a 30-day free trial with no obligations so do take your time to explore Plausible.
-  Here's how to get <a href="https://plausible.io/docs/your-plausible-experience">the most out of your Plausible experience</a>.
+  Sie befinden sich in einer 30-tägigen kostenlosen Testphase ohne Verpflichtungen, lassen Sie sich also die Zeit, Plausible zu erkunden.
+  Hier erfahren Sie, wie Sie <a href="https://plausible.io/docs/your-plausible-experience">das Beste aus Ihrer Plausible-Erfahrung herausholen</a>.
   <br /><br />
 <% end %>
-PS: You can import your historical Google Analytics stats into your Plausible dashboard.
-<a href="https://plausible.io/docs/google-analytics-import">Learn how our GA importer works</a>.
+PS: Sie können Ihre historischen Google Analytics-Statistiken in Ihr Plausible-Dashboard importieren.
+<a href="https://plausible.io/docs/google-analytics-import">Erfahren Sie, wie unser GA-Importer funktioniert</a>.
 <br /><br />
 <%= unless Plausible.ce?() do %>
-  Do reply back to this email if you have any questions. We're here to help.
+  Antworten Sie gerne auf diese E-Mail, wenn Sie Fragen haben. Wir sind hier, um zu helfen.
 <% end %>

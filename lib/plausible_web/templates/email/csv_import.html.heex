@@ -1,15 +1,15 @@
 <%= if @success do %>
-  Your CSV import has completed successfully. The Plausible dashboard for {@site_import.site.domain} now contains historical imported data from {date_format(
+  Ihr CSV-Import wurde erfolgreich abgeschlossen. Das Plausible-Dashboard für {@site_import.site.domain} enthält nun historische importierte Daten vom {date_format(
     @site_import.start_date
-  )} to {date_format(@site_import.end_date)}
+  )} bis {date_format(@site_import.end_date)}
   <br /><br />
-  <a href={@link}>Click here</a>
-  to view your dashboard.
+  <a href={@link}>Klicken Sie hier</a>,
+  um Ihr Dashboard anzuzeigen.
 <% else %>
-  Unfortunately, your CSV import for {@site_import.site.domain} did not complete successfully. Sorry about that!
-  <br /><br /> Please try to do the import once again.
+  Leider wurde Ihr CSV-Import für {@site_import.site.domain} nicht erfolgreich abgeschlossen. Das tut uns leid!
+  <br /><br /> Bitte versuchen Sie den Import noch einmal.
   <%= if ee?() do %>
     <br /> <br />
-    Please reply to this email to let us know if you're still experiencing issues with the import.
+    Bitte antworten Sie auf diese E-Mail, um uns mitzuteilen, wenn Sie weiterhin Probleme mit dem Import haben.
   <% end %>
 <% end %>

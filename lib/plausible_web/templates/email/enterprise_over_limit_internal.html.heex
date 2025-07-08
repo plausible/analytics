@@ -1,14 +1,14 @@
-Automated notice about an enterprise account that has gone over their limits. <br /><br />
-Customer email: {@user.email}<br />
-Last billing cycle: {PlausibleWeb.TextHelpers.format_date_range(
+Automatische Benachrichtigung über ein Enterprise-Konto, das seine Grenzen überschritten hat. <br /><br />
+Kunden-E-Mail: {@user.email}<br />
+Letzter Abrechnungszyklus: {PlausibleWeb.TextHelpers.format_date_range(
   @pageview_usage.last_cycle.date_range
 )}<br />
-Last cycle pageview usage: {PlausibleWeb.AuthView.delimit_integer(
+Seitenaufrufe im letzten Zyklus: {PlausibleWeb.AuthView.delimit_integer(
   @pageview_usage.last_cycle.total
-)} billable pageviews<br />
-Penultimate billing cycle: {PlausibleWeb.TextHelpers.format_date_range(
+)} abrechenbare Seitenaufrufe<br />
+Vorletzter Abrechnungszyklus: {PlausibleWeb.TextHelpers.format_date_range(
   @pageview_usage.penultimate_cycle.date_range
 )}<br />
-Penultimate cycle pageview usage: {PlausibleWeb.AuthView.delimit_integer(
+Seitenaufrufe im vorletzten Zyklus: {PlausibleWeb.AuthView.delimit_integer(
   @pageview_usage.penultimate_cycle.total
-)} billable pageviews<br /> Site usage: {@site_usage} / {@site_allowance} allowed sites<br />
+)} abrechenbare Seitenaufrufe<br /> Website-Nutzung: {@site_usage} / {@site_allowance} erlaubte Websites<br />

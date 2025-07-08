@@ -1,31 +1,31 @@
-There are currently <b>{@current_visitors}</b>
-visitors on <a href={"https://" <> @site.domain}><%= @site.domain %></a>. <br />
+Es sind derzeit <b>{@current_visitors}</b>
+Besucher auf <a href={"https://" <> @site.domain}><%= @site.domain %></a>. <br />
 <%= if Enum.count(@sources) > 0 do %>
-  <br /> The top sources for current visitors:<br />
+  <br /> Die Top-Quellen für aktuelle Besucher:<br />
   <ul>
     <%= for %{dimensions: [source], metrics: [visitors]} <- @sources do %>
       <li>
-        <b>{visitors}</b> visitor{if visitors > 1, do: "s"} from <b>{source}</b>
+        <b>{visitors}</b> Besucher{if visitors > 1, do: ""} von <b>{source}</b>
       </li>
     <% end %>
   </ul>
 <% end %>
 
-<br /> Your top pages being visited:<br />
+<br /> Ihre meistbesuchten Seiten:<br />
 <ul>
   <%= for %{dimensions: [page], metrics: [visitors]} <- @pages do %>
     <li>
-      <b>{visitors}</b> visitor{if visitors > 1, do: "s"} on <b>{page}</b>
+      <b>{visitors}</b> Besucher{if visitors > 1, do: ""} auf <b>{page}</b>
     </li>
   <% end %>
 </ul>
 
 <%= if @link do %>
-  <br /> View dashboard: <a href={@link}>{@link}</a>
+  <br /> Dashboard anzeigen: <a href={@link}>{@link}</a>
 <% end %>
-<br /><br /> Congrats on the spike in traffic!
+<br /><br /> Gratulation zum Traffic-Anstieg!
 <%= if ce?() do %>
-  <br /><br /> Plausible CE is funded by our cloud subscribers. If you
-  <a href="https://plausible.io/?utm_medium=email&utm_source=CE">enjoy using Plausible</a>
-  and know someone who might benefit from it, please spread the word.
+  <br /><br /> Plausible CE wird von unseren Cloud-Abonnenten finanziert. Wenn Ihnen
+  <a href="https://plausible.io/?utm_medium=email&utm_source=CE">die Nutzung von Plausible gefällt</a>
+  und Sie jemanden kennen, der davon profitieren könnte, erzählen Sie bitte weiter.
 <% end %>

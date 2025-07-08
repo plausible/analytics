@@ -1,21 +1,21 @@
-Last week we sent a reminder that your site traffic has exceeded the limits of your {Plausible.product_name()} subscription tier for two consecutive months. Since we haven't received a response, we've had to temporarily lock access to your stats.
+Letzte Woche haben wir Sie daran erinnert, dass der Traffic Ihrer Website die Grenzen Ihres {Plausible.product_name()}-Abonnement-Tarifs für zwei aufeinanderfolgende Monate überschritten hat. Da wir keine Antwort erhalten haben, mussten wir den Zugang zu Ihren Statistiken vorübergehend sperren.
 <br /><br />
-Your subscription is still active, we're still counting your stats and haven't deleted any of your data but as you have outgrown your subscription tier, we kindly ask you to upgrade to match your new traffic levels. Upon upgrading to a suitable tier, your dashboard access will be immediately restored.
+Ihr Abonnement ist weiterhin aktiv, wir zählen weiterhin Ihre Statistiken und haben keine Ihrer Daten gelöscht. Da Sie jedoch über Ihren Abonnement-Tarif hinausgewachsen sind, bitten wir Sie höflich, ein Upgrade durchzuführen, um Ihren neuen Traffic-Levels zu entsprechen. Nach dem Upgrade auf einen geeigneten Tarif wird Ihr Dashboard-Zugang sofort wiederhergestellt.
 <br /><br />
-During the last billing cycle ({PlausibleWeb.TextHelpers.format_date_range(
+Während des letzten Abrechnungszyklus ({PlausibleWeb.TextHelpers.format_date_range(
   @usage.last_cycle.date_range
-)}), your account recorded {PlausibleWeb.AuthView.delimit_integer(@usage.last_cycle.total)} billable pageviews. In the billing cycle before that ({PlausibleWeb.TextHelpers.format_date_range(
+)}) verzeichnete Ihr Konto {PlausibleWeb.AuthView.delimit_integer(@usage.last_cycle.total)} abrechenbare Seitenaufrufe. Im Abrechnungszyklus davor ({PlausibleWeb.TextHelpers.format_date_range(
   @usage.penultimate_cycle.date_range
-)}), the usage was {PlausibleWeb.AuthView.delimit_integer(@usage.penultimate_cycle.total)} billable pageviews. Note that billable pageviews include both standard pageviews and custom events. In your
-<a href={PlausibleWeb.Router.Helpers.settings_url(PlausibleWeb.Endpoint, :subscription) <> "?__team=#{@team.identifier}"}>account settings</a>, you'll find an overview of your usage and limits.
+)}) betrug die Nutzung {PlausibleWeb.AuthView.delimit_integer(@usage.penultimate_cycle.total)} abrechenbare Seitenaufrufe. Beachten Sie, dass abrechenbare Seitenaufrufe sowohl Standard-Seitenaufrufe als auch benutzerdefinierte Events umfassen. In Ihren
+<a href={PlausibleWeb.Router.Helpers.settings_url(PlausibleWeb.Endpoint, :subscription) <> "?__team=#{@team.identifier}"}>Konto-Einstellungen</a> finden Sie eine Übersicht über Ihre Nutzung und Limits.
 <br /><br />
 <%= if @suggested_volume == :enterprise do %>
-  Your usage exceeds our standard plans, so please reply back to this email for a tailored quote.
+  Ihre Nutzung überschreitet unsere Standard-Tarife. Bitte antworten Sie auf diese E-Mail für ein maßgeschneidertes Angebot.
 <% else %>
-  <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>Click here to upgrade your subscription</a>. We recommend you upgrade to the {@suggested_volume}/mo plan. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
+  <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>Klicken Sie hier, um Ihr Abonnement zu upgraden</a>. Wir empfehlen Ihnen, auf den {@suggested_volume}/Monat-Tarif zu upgraden. Die neue Gebühr wird anteilig berechnet, um den bereits gezahlten Betrag und die Zeit bis zum Ablauf Ihres aktuellen Abonnements zu berücksichtigen.
   <br /><br />
-  If your usage decreases in the future, you can switch to a lower plan at any time. Any credit balance will automatically apply to future payments.
+  Falls Ihre Nutzung in Zukunft abnimmt, können Sie jederzeit zu einem niedrigeren Tarif wechseln. Jedes Guthaben wird automatisch auf zukünftige Zahlungen angerechnet.
 <% end %>
 <br /><br />
-Do you have questions or need help with anything? Just reply to this email. We're here to help!
-<br /><br /> Thanks for understanding and for being a Plausible subscriber!
+Haben Sie Fragen oder benötigen Sie Hilfe? Antworten Sie einfach auf diese E-Mail. Wir sind hier, um zu helfen!
+<br /><br /> Vielen Dank für Ihr Verständnis und dafür, dass Sie Plausible-Abonnent sind!

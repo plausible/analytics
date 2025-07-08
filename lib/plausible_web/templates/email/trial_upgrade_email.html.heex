@@ -1,18 +1,18 @@
-Thanks for exploring Plausible, a simple and privacy-friendly alternative to Google Analytics. Your free 30-day trial is ending {@day}, but you can keep using Plausible by upgrading to a paid plan.
+Vielen Dank, dass Sie Plausible erkundet haben, eine einfache und datenschutzfreundliche Alternative zu Google Analytics. Ihre kostenlose 30-Tage-Testversion endet {@day}, aber Sie können Plausible weiterhin nutzen, indem Sie auf einen kostenpflichtigen Plan upgraden.
 <br /><br />
-In the last month, your account has used {PlausibleWeb.AuthView.delimit_integer(@usage)} billable pageviews{if @custom_events >
+Im letzten Monat hat Ihr Konto {PlausibleWeb.AuthView.delimit_integer(@usage)} abrechenbare Seitenaufrufe{if @custom_events >
                                                                                                                  0,
                                                                                                                do:
-                                                                                                                 " and custom events in total",
+                                                                                                                 " und benutzerdefinierte Events insgesamt",
                                                                                                                else:
-                                                                                                                 ""}.
+                                                                                                                 ""} verwendet.
 <%= if @suggested_volume == :enterprise do %>
-  This is more than our standard plans, so please reply back to this email to get a quote for your volume.
+  Das ist mehr als unsere Standard-Tarife bieten. Bitte antworten Sie auf diese E-Mail, um ein Angebot für Ihr Volumen zu erhalten.
 <% else %>
-  Based on that we recommend you select a {@suggested_volume}/mo plan. <br /><br />
+  Basierend darauf empfehlen wir Ihnen einen {@suggested_volume}/Monat-Tarif. <br /><br />
   <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>
-    Upgrade now
+    Jetzt upgraden
   </a>
   <br /><br />
-  Have a question, feedback or need some guidance? Just reply to this email to get in touch!
+  Haben Sie eine Frage, Feedback oder benötigen Unterstützung? Antworten Sie einfach auf diese E-Mail!
 <% end %>

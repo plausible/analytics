@@ -1,22 +1,22 @@
-Thanks for being a {Plausible.product_name()} subscriber! <br /><br />
-This is a friendly reminder that your traffic has exceeded your subscription tier for two consecutive months. Congrats on all that traffic!
+Vielen Dank, dass Sie {Plausible.product_name()}-Abonnent sind! <br /><br />
+Dies ist eine freundliche Erinnerung, dass Ihr Traffic Ihren Abonnement-Tarif für zwei aufeinanderfolgende Monate überschritten hat. Gratulation zu all diesem Traffic!
 <br /><br />
-To maintain uninterrupted access to your stats, we kindly ask you to upgrade your account to match your new traffic levels. Please note, if your account isn't upgraded within the next 7 days, access to your stats will be temporarily locked.
+Um den ununterbrochenen Zugang zu Ihren Statistiken zu gewährleisten, bitten wir Sie höflich, Ihr Konto zu upgraden, um Ihren neuen Traffic-Levels zu entsprechen. Bitte beachten Sie, dass der Zugang zu Ihren Statistiken vorübergehend gesperrt wird, falls Ihr Konto nicht innerhalb der nächsten 7 Tage upgegradet wird.
 <br /><br />
-During the last billing cycle ({PlausibleWeb.TextHelpers.format_date_range(
+Während des letzten Abrechnungszyklus ({PlausibleWeb.TextHelpers.format_date_range(
   @usage.last_cycle.date_range
-)}), your account recorded {PlausibleWeb.AuthView.delimit_integer(@usage.last_cycle.total)} billable pageviews. In the billing cycle before that ({PlausibleWeb.TextHelpers.format_date_range(
+)}) verzeichnete Ihr Konto {PlausibleWeb.AuthView.delimit_integer(@usage.last_cycle.total)} abrechenbare Seitenaufrufe. Im Abrechnungszyklus davor ({PlausibleWeb.TextHelpers.format_date_range(
   @usage.penultimate_cycle.date_range
-)}), your account used {PlausibleWeb.AuthView.delimit_integer(@usage.penultimate_cycle.total)} billable pageviews. Note that billable pageviews include both standard pageviews and custom events. In your
-<a href={plausible_url() <> PlausibleWeb.Router.Helpers.settings_path(PlausibleWeb.Endpoint, :subscription) <> "?__team=#{@team.identifier}"}>account settings</a>, you'll find an overview of your usage and limits.
+)}) nutzte Ihr Konto {PlausibleWeb.AuthView.delimit_integer(@usage.penultimate_cycle.total)} abrechenbare Seitenaufrufe. Beachten Sie, dass abrechenbare Seitenaufrufe sowohl Standard-Seitenaufrufe als auch benutzerdefinierte Events umfassen. In Ihren
+<a href={plausible_url() <> PlausibleWeb.Router.Helpers.settings_path(PlausibleWeb.Endpoint, :subscription) <> "?__team=#{@team.identifier}"}>Konto-Einstellungen</a> finden Sie eine Übersicht über Ihre Nutzung und Limits.
 <br /><br />
 <%= if @suggested_volume == :enterprise do %>
-  Your usage exceeds our standard plans, so please reply back to this email for a tailored quote.
+  Ihre Nutzung überschreitet unsere Standard-Tarife. Bitte antworten Sie auf diese E-Mail für ein maßgeschneidertes Angebot.
 <% else %>
-  <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>Click here to upgrade your subscription</a>. We recommend you upgrade to the {@suggested_volume}/mo plan. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
+  <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>Klicken Sie hier, um Ihr Abonnement zu upgraden</a>. Wir empfehlen Ihnen, auf den {@suggested_volume}/Monat-Tarif zu upgraden. Die neue Gebühr wird anteilig berechnet, um den bereits gezahlten Betrag und die Zeit bis zum Ablauf Ihres aktuellen Abonnements zu berücksichtigen.
   <br /><br />
-  If your usage decreases in the future, you can switch to a lower plan at any time. Any credit balance will automatically apply to future payments.
+  Falls Ihre Nutzung in Zukunft abnimmt, können Sie jederzeit zu einem niedrigeren Tarif wechseln. Jedes Guthaben wird automatisch auf zukünftige Zahlungen angerechnet.
 <% end %>
 <br /><br />
-Do you have questions or need help with anything? Just reply to this email. We're here to help!
-<br /><br /> Thanks again for using our product and for your support!
+Haben Sie Fragen oder benötigen Sie Hilfe? Antworten Sie einfach auf diese E-Mail. Wir sind hier, um zu helfen!
+<br /><br /> Nochmals vielen Dank für die Nutzung unseres Produkts und Ihre Unterstützung!

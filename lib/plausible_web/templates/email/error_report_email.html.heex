@@ -1,10 +1,10 @@
-<h1>Error report</h1>
+<h1>Fehlerbericht</h1>
 <p>
-  Reported by: {@reported_by}
-  <br /> Sentry trace: <a href={sentry_link(@trace_id)}>{@trace_id}</a>
+  Gemeldet von: {@reported_by}
+  <br /> Sentry-Verfolgung: <a href={sentry_link(@trace_id)}>{@trace_id}</a>
   <br />
 </p>
-<h2>User feedback:</h2>
+<h2>Benutzer-Feedback:</h2>
 <pre>
 <%= @feedback %>
 </pre>

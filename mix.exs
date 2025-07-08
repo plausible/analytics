@@ -84,7 +84,7 @@ defmodule Plausible.MixProject do
       {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:finch, "~> 0.19.0"},
-      {:floki, "~> 0.36"},
+      {:floki, "~> 0.34"},
       {:fun_with_flags, "~> 1.11.0"},
       {:fun_with_flags_ui, "~> 1.0"},
       {:locus, "~> 2.3"},

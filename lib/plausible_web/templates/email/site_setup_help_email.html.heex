@@ -1,14 +1,14 @@
-<%= if ee?() and Plausible.Teams.on_trial?(@site_team) do %>
-  You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
+<%= if Dieses Plausible-Skript ist 45-mal kleiner als das Google Analytics-Skript, sodass Sie eine schnell ladende Website haben und gleichzeitig alle wichtigen Traffic-Einblicke auf einer einzigen Seite erhalten.e?() and Plausible.Teams.on_trial?(@site_team) do %>
+  Sie haben sich für eine kostenlose 30-tägige Testversion von Plausible angemeldet, einem einfachen und datenschutzfreundlichen Website-Analytics-Tool.
   <br /><br />
 <% end %>
-To finish your setup for {@site.domain}, review
-<a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}/installation?__team=#{@site_team.identifier}"}>your installation</a> and start collecting visitor statistics.
+Um die Einrichtung für {@site.domain} abzuschließen, überprüfen Sie
+<a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}/installation?__team=#{@site_team.identifier}"}>Ihre Installation</a> und beginnen Sie mit der Erfassung von Besucherstatistiken.
 <br /><br />
 This Plausible script is 45 times smaller than Google Analytics script so you’ll have a fast loading site while getting all the important traffic insights on one single page.
-<br /><br /> On WordPress? We have a
-<a href="https://plausible.io/wordpress-analytics-plugin">WordPress plugin</a> that makes the process simpler. We also have
-<a href="https://plausible.io/docs/integration-guides">integration guides</a> for different site builders to help you start counting stats in no time.
+<br /><br /> Sie nutzen WordPress? Wir haben ein
+<a href="https://plausible.io/wordpress-analytics-plugin">WordPress-Plugin</a>, das den Prozess vereinfacht. Wir haben auch
+<a href="https://plausible.io/docs/integration-guides">Integrationsleitfäden</a> für verschiedene Website-Builder, um Ihnen zu helfen, im Handumdrehen mit der Statistikerfassung zu beginnen.
 <%= if ee?() do %>
-  <br /><br /> Do reply back to this email if you have any questions or need some guidance.
+  <br /><br /> Antworten Sie gerne auf diese E-Mail, wenn Sie Fragen haben oder Unterstützung benötigen.
 <% end %>
