@@ -678,8 +678,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
         {{:error, :no_verified_domain}, _} ->
           {false, "you must verify a domain"}
 
-        {{:error, :owner_mfa_disabled}, _} ->
-          {false, "all Owners must have MFA enabled"}
+        {{:error, :owner_2fa_disabled}, _} ->
+          {false, "all Owners must have 2FA enabled"}
 
         {{:error, :no_sso_user}, _} ->
           {false, "at least one SSO user must log in successfully"}

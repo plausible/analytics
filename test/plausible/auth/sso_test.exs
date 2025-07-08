@@ -538,7 +538,7 @@ defmodule Plausible.Auth.SSOTest do
 
     describe "check_force_sso/2" do
       test "returns ok when conditions are met for setting all_but_owners" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -559,13 +559,13 @@ defmodule Plausible.Auth.SSOTest do
         assert :ok = SSO.check_force_sso(team, :all_but_owners)
       end
 
-      test "returns error when one owner does not have MFA configured" do
+      test "returns error when one owner does not have 2FA configured" do
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
-        # Owner without MFA
+        # Owner without 2FA
         another_owner = new_user()
         add_member(team, user: another_owner, role: :owner)
 
@@ -581,11 +581,11 @@ defmodule Plausible.Auth.SSOTest do
         identity = new_identity("Carrie Mower", "lance@" <> domain)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
-        assert {:error, :owner_mfa_disabled} = SSO.check_force_sso(team, :all_but_owners)
+        assert {:error, :owner_2fa_disabled} = SSO.check_force_sso(team, :all_but_owners)
       end
 
       test "returns error when there's no provisioned SSO user present" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -602,7 +602,7 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error when there's no verified SSO domain present" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -619,7 +619,7 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error when there's no SSO domain present" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -632,7 +632,7 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error when there's no SSO integration present" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
