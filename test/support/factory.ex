@@ -133,12 +133,32 @@ defmodule Plausible.Factory do
       raise "Acquisition channel cannot be written directly since it's a materialized column."
     end
 
+    pathname = Map.get(attrs, :pathname, "/")
+
+    if Map.get(attrs, :name) in Plausible.Goals.SystemGoals.goals_with_path() do
+      meta_keys = Map.get(attrs, :"meta.key", [])
+      meta_values = Map.get(attrs, :"meta.value", [])
+      index_of_path_key = Enum.find_index(meta_keys, &(&1 == "path"))
+
+      if index_of_path_key == nil do
+        attrs = attrs
+        |> Map.put(:"meta.key", meta_keys ++ ["path"])
+        |> Map.put(:"meta.value", meta_values ++ [pathname])
+      else
+        if index_of_path_key !== nil && Enum.at(meta_values, index_of_path_key) == nil do
+          attrs = attrs
+          |> Map.put(:"meta.key", List.delete_at(meta_keys, index_of_path_key) ++ ["path"])
+          |> Map.put(:"meta.value", List.delete_at(meta_values, index_of_path_key) ++ [pathname])
+        end
+      end
+    end
+
     hostname = sequence(:domain, &"example-#{&1}.com")
 
     event = %Plausible.ClickhouseEventV2{
       hostname: hostname,
       site_id: Enum.random(1000..10_000),
-      pathname: "/",
+      pathname: pathname,
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())

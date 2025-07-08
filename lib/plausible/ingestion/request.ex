@@ -94,6 +94,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_props(request_body)
         |> put_engagement_fields(request_body)
         |> put_pathname()
+        |> maybe_put_props_path()
         |> put_query_params()
         |> put_revenue_source(request_body)
         |> put_interactive(request_body)
@@ -169,6 +170,22 @@ defmodule Plausible.Ingestion.Request do
     hash_mode = Changeset.get_field(changeset, :hash_mode)
     pathname = get_pathname(uri, hash_mode)
     Changeset.put_change(changeset, :pathname, pathname)
+  end
+
+  defp maybe_put_props_path(changeset) do
+    if Changeset.get_field(changeset, :event_name) in Plausible.Goals.SystemGoals.goals_with_path() do
+      with {:ok, props} <-
+        Plausible.Goals.SystemGoals.maybe_sync_props_path_with_pathname(
+          Changeset.get_field(changeset, :pathname),
+          Changeset.get_field(changeset, :props)
+        ) do
+        Changeset.put_change(changeset, :props, props)
+      else
+        {:error, _} -> changeset
+      end
+    else
+      changeset
+    end
   end
 
   defp map_domains(changeset, %{} = request_body) do

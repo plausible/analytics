@@ -130,7 +130,7 @@ defmodule Plausible.Stats.Imported.Base do
         [:is, "event:goal", names | _rest] -> names
         _ -> []
       end)
-      |> Enum.any?(&(&1 in special_goals_for(property)))
+      |> Enum.any?(&(&1 in Plausible.Goals.SystemGoals.special_goals_for(property)))
 
     has_unsupported_filters? =
       query.filters
@@ -201,7 +201,4 @@ defmodule Plausible.Stats.Imported.Base do
       _ -> []
     end
   end
-
-  def special_goals_for("event:props:url"), do: Imported.goals_with_url()
-  def special_goals_for("event:props:path"), do: Imported.goals_with_path()
 end
