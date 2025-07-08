@@ -27,6 +27,10 @@ defmodule Plausible.Auth.SSO.Domain do
 
   use Plausible.Auth.SSO.Domain.Status
 
+  @derive {Plausible.Audit.Encoder,
+           only: [:identifier, :domain, :verified_via, :status, :sso_integration],
+           allow_not_loaded: [:sso_integration]}
+
   schema "sso_domains" do
     field :identifier, Ecto.UUID
     field :domain, :string
