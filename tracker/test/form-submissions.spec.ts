@@ -69,7 +69,7 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`
         }
       ]
     })
@@ -98,7 +98,7 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`
         }
       ]
     })
@@ -137,7 +137,7 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`
         }
       ]
     })
@@ -169,7 +169,7 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`
         }
       ]
     })
@@ -265,7 +265,7 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`
         }
       ]
     })
@@ -279,7 +279,7 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`
         }
       ]
     })
