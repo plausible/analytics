@@ -2,8 +2,8 @@ import { waitForSnippetsV1 } from "./snippet-checks"
 import { plausibleFunctionCheck } from "./plausible-function-check"
 import { checkDataDomainMismatch } from "./check-data-domain-mismatch"
 import { checkProxyLikely } from "./check-proxy-likely"
-import { detectWordPress } from "./detect-wp"
-import { detectGTM } from "./detect-gtm"
+import { checkWordPress } from "./check-wordpress"
+import { checkGTM } from "./check-gtm"
 
 window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   function log(message) {
@@ -21,11 +21,11 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   const proxyLikely = checkProxyLikely(snippetData.nodes)
   log(`proxyLikely: ${proxyLikely}`)
 
-  const {wordpressPlugin, wordpressLikely} = detectWordPress(document)
+  const {wordpressPlugin, wordpressLikely} = checkWordPress(document)
   log(`wordpressPlugin: ${wordpressPlugin}`)
   log(`wordpressLikely: ${wordpressLikely}`)
 
-  const gtmLikely = detectGTM(document)
+  const gtmLikely = checkGTM(document)
   log(`gtmLikely: ${gtmLikely}`)
 
   return {

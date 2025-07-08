@@ -25,7 +25,7 @@ function scanWp(html) {
   return false
 }
 
-export function detectWordPress(document) {
+export function checkWordPress(document) {
   if (typeof document === 'object') {
     const wordpressPlugin = scanWpPlugin(document)
     const wordpressLikely = wordpressPlugin || scanWp(document.documentElement?.outerHTML)

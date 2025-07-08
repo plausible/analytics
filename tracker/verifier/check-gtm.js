@@ -12,7 +12,7 @@ function scanGTM(html) {
   return false
 }
 
-export function detectGTM(document) {
+export function checkGTM(document) {
   if (typeof document === 'object') {
     return scanGTM(document.documentElement?.outerHTML)
   }
