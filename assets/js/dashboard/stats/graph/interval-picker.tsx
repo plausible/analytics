@@ -14,11 +14,11 @@ import { Dayjs } from 'dayjs'
 import { QueryPeriod } from '../../query-time-periods'
 
 const INTERVAL_LABELS: Record<string, string> = {
-  minute: 'Minutes',
-  hour: 'Hours',
-  day: 'Days',
-  week: 'Weeks',
-  month: 'Months'
+  minute: 'Minuten',
+  hour: 'Stunden',
+  day: 'Tage',
+  week: 'Wochen',
+  month: 'Monate'
 }
 
 function validIntervals(site: PlausibleSite, query: DashboardQuery): string[] {
