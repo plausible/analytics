@@ -135,28 +135,11 @@ defmodule Plausible.Factory do
 
     pathname = Map.get(attrs, :pathname, "/")
 
-    if Map.get(attrs, :name) in Plausible.Goals.SystemGoals.goals_with_path() do
-      meta_keys = Map.get(attrs, :"meta.key", [])
-      meta_values = Map.get(attrs, :"meta.value", [])
-      index_of_path_key = Enum.find_index(meta_keys, &(&1 == "path"))
-
-      if index_of_path_key == nil do
-        attrs =
-          attrs
-          |> Map.put(:"meta.key", meta_keys ++ ["path"])
-          |> Map.put(:"meta.value", meta_values ++ [pathname])
-      else
-        if index_of_path_key !== nil && Enum.at(meta_values, index_of_path_key) == nil do
-          attrs =
-            attrs
-            |> Map.put(:"meta.key", List.delete_at(meta_keys, index_of_path_key) ++ ["path"])
-            |> Map.put(
-              :"meta.value",
-              List.delete_at(meta_values, index_of_path_key) ++ [pathname]
-            )
-        end
-      end
-    end
+    attrs =
+      if(Map.get(attrs, :name) in Plausible.Goals.SystemGoals.goals_with_path(),
+        do: maybe_sync_pathname_to_meta_for_special_goal(attrs, pathname),
+        else: attrs
+      )
 
     hostname = sequence(:domain, &"example-#{&1}.com")
 
@@ -172,6 +155,21 @@ defmodule Plausible.Factory do
     event
     |> merge_attributes(attrs)
     |> evaluate_lazy_attributes()
+  end
+
+  defp maybe_sync_pathname_to_meta_for_special_goal(attrs, pathname) do
+    meta_keys = Map.get(attrs, :"meta.key", [])
+    meta_values = Map.get(attrs, :"meta.value", [])
+    index_of_path_key = Enum.find_index(meta_keys, &(&1 == "path"))
+
+    if index_of_path_key == nil do
+      Map.merge(attrs, %{
+        "meta.key": meta_keys ++ ["path"],
+        "meta.value": meta_values ++ [pathname]
+      })
+    else
+      attrs
+    end
   end
 
   def goal_factory(attrs) do

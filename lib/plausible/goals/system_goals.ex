@@ -19,14 +19,17 @@ defmodule Plausible.Goals.SystemGoals do
     @goals_with_path
   end
 
+  @spec special_goals_for(String.t()) :: [String.t()]
   def special_goals_for("event:props:url"), do: goals_with_url()
   def special_goals_for("event:props:path"), do: goals_with_path()
 
+  @spec maybe_sync_props_path_with_pathname(String.t(), map()) ::
+          {:ok, map()} | {:error, String.t()}
   def maybe_sync_props_path_with_pathname(_pathname, %{"path" => _} = _props) do
     {:error, "Path has been already set in props, won't override"}
   end
 
-  def maybe_sync_props_path_with_pathname(pathname, props) do
+  def maybe_sync_props_path_with_pathname(pathname, %{} = props) do
     {:ok, Map.merge(props, %{"path" => pathname})}
   end
 end
