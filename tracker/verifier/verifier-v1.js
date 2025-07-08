@@ -4,6 +4,7 @@ import { checkDataDomainMismatch } from "./check-data-domain-mismatch"
 import { checkProxyLikely } from "./check-proxy-likely"
 import { checkWordPress } from "./check-wordpress"
 import { checkGTM } from "./check-gtm"
+import { checkCookieBanner } from "./check-cookie-banner"
 
 window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   function log(message) {
@@ -14,6 +15,9 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
     waitForSnippetsV1(log),
     plausibleFunctionCheck(log)
   ])
+
+  const plausibleInstalled = plausibleFunctionDiagnostics.plausibleInstalled
+  const callbackStatus = plausibleFunctionDiagnostics.callbackStatus || 0
 
   const dataDomainMismatch = checkDataDomainMismatch(snippetData.nodes, expectedDataDomain)
   log(`dataDomainMismatch: ${dataDomainMismatch}`)
@@ -28,6 +32,16 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   const gtmLikely = checkGTM(document)
   log(`gtmLikely: ${gtmLikely}`)
 
+  let cookieBannerLikely
+
+  if (plausibleInstalled && [200, 202].includes(callbackStatus)) {
+    cookieBannerLikely = false
+  } else {
+    cookieBannerLikely = checkCookieBanner()
+  }
+
+  log(`cookieBannerLikely: ${cookieBannerLikely}`)
+
   return {
     data: {
       completed: true,
@@ -39,7 +53,8 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
       proxyLikely: proxyLikely,
       wordpressPlugin: wordpressPlugin,
       wordpressLikely: wordpressLikely,
-      gtmLikely: gtmLikely
+      gtmLikely: gtmLikely,
+      cookieBannerLikely: cookieBannerLikely
     }
   }
 }

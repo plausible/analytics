@@ -38,6 +38,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     expect(result.data.dataDomainMismatch).toBe(false)
     expect(result.data.wordpressPlugin).toBe(false)
     expect(result.data.wordpressLikely).toBe(false)
+    expect(result.data.cookieBannerLikely).toBe(false)
 
     // `data.proxyLikely` is mostly expected to be true in tests because
     // any local script src is considered a proxy. More involved behaviour
@@ -320,6 +321,45 @@ test.describe('v1 verifier (GTM detection)', () => {
     const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.gtmLikely).toBe(true)
+  })
+})
+
+test.describe('v1 verifier (cookieBanner detection)', () => {
+  test('detects a dynamically loaded cookiebot', async ({ page }, { testId }) => {
+    // While in real world the plausible script would be prevented
+    // from loading when cookiebot is present, to speed up the test
+    // we let it load, but mock a general network error. That is to
+    // avoid the a 202 response which skips cookiebot detection.
+    await page.context().route('**/api/event', async (route) => {
+      // To make sure the banner gets dynamically loaded before the
+      // event callback finishes, we mock a 1s delay before aborting.
+      await delay(1000)
+      await route.abort()
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <html>
+          <head>
+            <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+          </head>
+          <body>
+            <script>
+              setTimeout(() => {
+                const banner = document.createElement('div')
+                banner.id = 'CybotCookiebotDialog'
+                document.body.appendChild(banner)
+              }, 500);
+            </script>
+          </body>
+        </html>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+
+    expect(result.data.cookieBannerLikely).toBe(true)
   })
 })
 
