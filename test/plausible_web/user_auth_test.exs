@@ -158,6 +158,7 @@ defmodule PlausibleWeb.UserAuthTest do
         user: user
       } do
         team = new_site().team
+        insert(:growth_subscription, team: team)
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         add_member(team, role: :viewer)
