@@ -173,18 +173,16 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp maybe_put_props_path(changeset) do
-    if Changeset.get_field(changeset, :event_name) in Plausible.Goals.SystemGoals.goals_with_path() do
-      with {:ok, props} <-
-             Plausible.Goals.SystemGoals.maybe_sync_props_path_with_pathname(
-               Changeset.get_field(changeset, :pathname),
-               Changeset.get_field(changeset, :props)
-             ) do
-        Changeset.put_change(changeset, :props, props)
-      else
-        {:error, _} -> changeset
-      end
+    with true <-
+           Changeset.get_field(changeset, :event_name) in Plausible.Goals.SystemGoals.goals_with_path(),
+         {:ok, props} <-
+           Plausible.Goals.SystemGoals.maybe_sync_props_path_with_pathname(
+             Changeset.get_field(changeset, :pathname),
+             Changeset.get_field(changeset, :props)
+           ) do
+      Changeset.put_change(changeset, :props, props)
     else
-      changeset
+      _ -> changeset
     end
   end
 
