@@ -11,63 +11,78 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(user)
     |> tag("activation-email")
-    |> subject("#{code} is your Plausible email verification code")
+    |> subject("#{code} ist Ihr Analytics E-Mail-Bestätigungscode")
     |> render("activation_email.html", user: user, code: code)
   end
 
   def welcome_email(user) do
-    base_email()
-    |> to(user)
-    |> tag("welcome-email")
-    |> subject("Welcome to Plausible")
-    |> render("welcome_email.html", user: user)
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user)
+    # |> tag("welcome-email")
+    # |> subject("Willkommen bei Stateofweb Analytics")
+    # |> render("welcome_email.html", user: user)
   end
 
   def create_site_email(user) do
-    base_email()
-    |> to(user)
-    |> tag("create-site-email")
-    |> subject("Your Plausible setup: Add your website details")
-    |> render("create_site_email.html", user: user)
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user)
+    # |> tag("create-site-email")
+    # |> subject("Ihr Analytics-Setup: Fügen Sie Ihre Website-Details hinzu")
+    # |> render("create_site_email.html", user: user)
   end
 
   def site_setup_help(user, team, site) do
-    base_email()
-    |> to(user)
-    |> tag("help-email")
-    |> subject("Your Plausible setup: Waiting for the first page views")
-    |> render("site_setup_help_email.html",
-      user: user,
-      site: site,
-      site_team: team
-    )
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user)
+    # |> tag("help-email")
+    # |> subject("Ihr Analytics-Setup: Warten auf die ersten Seitenaufrufe")
+    # |> render("site_setup_help_email.html",
+    #   user: user,
+    #   site: site,
+    #   site_team: team
+    # )
   end
 
   def site_setup_success(user, team, site) do
-    base_email()
-    |> to(user)
-    |> tag("setup-success-email")
-    |> subject("Plausible is now tracking your website stats")
-    |> render("site_setup_success_email.html",
-      user: user,
-      site: site,
-      site_team: team
-    )
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user)
+    # |> tag("setup-success-email")
+    # |> subject("Analytics verfolgt jetzt Ihre Website-Statistiken")
+    # |> render("site_setup_success_email.html",
+    #   user: user,
+    #   site: site,
+    #   site_team: team
+    # )
   end
 
   def check_stats_email(user) do
-    base_email()
-    |> to(user)
-    |> tag("check-stats-email")
-    |> subject("Check your Plausible website stats")
-    |> render("check_stats_email.html", user: user)
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user)
+    # |> tag("check-stats-email")
+    # |> subject("Überprüfen Sie Ihre Analytics Website-Statistiken")
+    # |> render("check_stats_email.html", user: user)
   end
 
   def password_reset_email(email, reset_link) do
     priority_email(%{layout: nil})
     |> to(email)
     |> tag("password-reset-email")
-    |> subject("Plausible password reset")
+    |> subject("Analytics Passwort zurücksetzen")
     |> render("password_reset_email.html", reset_link: reset_link)
   end
 
@@ -75,7 +90,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(user)
     |> tag("two-factor-enabled-email")
-    |> subject("Plausible Two-Factor Authentication enabled")
+    |> subject("Analytics Zwei-Faktor-Authentifizierung aktiviert")
     |> render("two_factor_enabled_email.html", user: user)
   end
 
@@ -83,168 +98,201 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(user)
     |> tag("two-factor-disabled-email")
-    |> subject("Plausible Two-Factor Authentication disabled")
+    |> subject("Analytics Zwei-Faktor-Authentifizierung deaktiviert")
     |> render("two_factor_disabled_email.html", user: user)
   end
 
   def trial_one_week_reminder(user, team) do
-    base_email()
-    |> to(user)
-    |> tag("trial-one-week-reminder")
-    |> subject("Your Plausible trial expires next week")
-    |> render("trial_one_week_reminder.html", user: user, team: team)
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user)
+    # |> tag("trial-one-week-reminder")
+    # |> subject("Ihre Analytics-Testversion läuft nächste Woche ab")
+    # |> render("trial_one_week_reminder.html", user: user, team: team)
   end
 
   def trial_upgrade_email(user, team, day, usage, suggested_volume) do
-    base_email()
-    |> to(user)
-    |> tag("trial-upgrade-email")
-    |> subject("Your Plausible trial ends #{day}")
-    |> render("trial_upgrade_email.html",
-      user: user,
-      team: team,
-      day: day,
-      custom_events: usage.custom_events,
-      usage: usage.total,
-      suggested_volume: suggested_volume
-    )
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user)
+    # |> tag("trial-upgrade-email")
+    # |> subject("Ihre Analytics-Testversion endet #{day}")
+    # |> render("trial_upgrade_email.html",
+    #   user: user,
+    #   team: team,
+    #   day: day,
+    #   custom_events: usage.custom_events,
+    #   usage: usage.total,
+    #   suggested_volume: suggested_volume
+    # )
   end
 
   def trial_over_email(user, team) do
-    base_email()
-    |> to(user)
-    |> tag("trial-over-email")
-    |> subject("Your Plausible trial has ended")
-    |> render("trial_over_email.html",
-      user: user,
-      team: team,
-      extra_offset: Plausible.Teams.Team.trial_accept_traffic_until_offset_days()
-    )
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user)
+    # |> tag("trial-over-email")
+    # |> subject("Ihre Analytics-Testversion ist beendet")
+    # |> render("trial_over_email.html",
+    #   user: user,
+    #   team: team,
+    #   extra_offset: Plausible.Teams.Team.trial_accept_traffic_until_offset_days()
+    # )
   end
 
   def stats_report(email, assigns) do
     base_email(%{layout: nil})
     |> to(email)
     |> tag("#{assigns.type}-report")
-    |> subject("#{assigns.name} report for #{assigns.site.domain}")
+    |> subject("#{assigns.name} Bericht für #{assigns.site.domain}")
     |> html_body(PlausibleWeb.MJML.StatsReport.render(assigns))
   end
 
   def spike_notification(email, site, stats, dashboard_link) do
-    base_email()
-    |> to(email)
-    |> tag("spike-notification")
-    |> subject("Traffic Spike on #{site.domain}")
-    |> render("spike_notification.html", %{
-      site: site,
-      current_visitors: stats.current_visitors,
-      sources: stats.sources,
-      pages: stats.pages,
-      link: dashboard_link
-    })
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(email)
+    # |> tag("spike-notification")
+    # |> subject("Traffic-Spitze auf #{site.domain}")
+    # |> render("spike_notification.html", %{
+    #   site: site,
+    #   current_visitors: stats.current_visitors,
+    #   sources: stats.sources,
+    #   pages: stats.pages,
+    #   link: dashboard_link
+    # })
   end
 
   def drop_notification(email, site, current_visitors, dashboard_link, installation_link) do
-    base_email()
-    |> to(email)
-    |> tag("drop-notification")
-    |> subject("Traffic Drop on #{site.domain}")
-    |> render("drop_notification.html", %{
-      site: site,
-      current_visitors: current_visitors,
-      dashboard_link: dashboard_link,
-      installation_link: installation_link
-    })
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(email)
+    # |> tag("drop-notification")
+    # |> subject("Traffic-Rückgang auf #{site.domain}")
+    # |> render("drop_notification.html", %{
+    #   site: site,
+    #   current_visitors: current_visitors,
+    #   dashboard_link: dashboard_link,
+    #   installation_link: installation_link
+    # })
   end
 
   def over_limit_email(user, team, usage, suggested_volume) do
-    priority_email()
-    |> to(user)
-    |> tag("over-limit")
-    |> subject("[Action required] You have outgrown your Plausible subscription tier")
-    |> render("over_limit.html", %{
-      user: user,
-      team: team,
-      usage: usage,
-      suggested_volume: suggested_volume
-    })
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # priority_email()
+    # |> to(user)
+    # |> tag("over-limit")
+    # |> subject("[Aktion erforderlich] Sie haben Ihre Analytics-Abonnementstufe überschritten")
+    # |> render("over_limit.html", %{
+    #   user: user,
+    #   team: team,
+    #   usage: usage,
+    #   suggested_volume: suggested_volume
+    # })
   end
 
   def enterprise_over_limit_internal_email(user, pageview_usage, site_usage, site_allowance) do
-    base_email(%{layout: nil})
-    |> to("enterprise@plausible.io")
-    |> tag("enterprise-over-limit")
-    |> subject("#{user.email} has outgrown their enterprise plan")
-    |> render("enterprise_over_limit_internal.html", %{
-      user: user,
-      pageview_usage: pageview_usage,
-      site_usage: site_usage,
-      site_allowance: site_allowance
-    })
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email(%{layout: nil})
+    # |> to("enterprise@plausible.io")
+    # |> tag("enterprise-over-limit")
+    # |> subject("#{user.email} hat seinen Enterprise-Plan überschritten")
+    # |> render("enterprise_over_limit_internal.html", %{
+    #   user: user,
+    #   pageview_usage: pageview_usage,
+    #   site_usage: site_usage,
+    #   site_allowance: site_allowance
+    # })
   end
 
   def dashboard_locked(user, team, usage, suggested_volume) do
-    priority_email()
-    |> to(user)
-    |> tag("dashboard-locked")
-    |> subject("[Action required] Your Plausible dashboard is now locked")
-    |> render("dashboard_locked.html", %{
-      user: user,
-      team: team,
-      usage: usage,
-      suggested_volume: suggested_volume
-    })
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # priority_email()
+    # |> to(user)
+    # |> tag("dashboard-locked")
+    # |> subject("[Aktion erforderlich] Ihr Analytics-Dashboard ist nun gesperrt")
+    # |> render("dashboard_locked.html", %{
+    #   user: user,
+    #   team: team,
+    #   usage: usage,
+    #   suggested_volume: suggested_volume
+    # })
   end
 
   def yearly_renewal_notification(team, owner) do
-    date = Calendar.strftime(team.subscription.next_bill_date, "%B %-d, %Y")
-
-    priority_email()
-    |> to(owner)
-    |> tag("yearly-renewal")
-    |> subject("Your Plausible subscription is up for renewal")
-    |> render("yearly_renewal_notification.html", %{
-      user: owner,
-      team: team,
-      date: date,
-      next_bill_amount: team.subscription.next_bill_amount,
-      currency: team.subscription.currency_code
-    })
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # date = Calendar.strftime(team.subscription.next_bill_date, "%B %-d, %Y")
+    # 
+    # priority_email()
+    # |> to(owner)
+    # |> tag("yearly-renewal")
+    # |> subject("Ihr Analytics-Abonnement steht zur Verlängerung an")
+    # |> render("yearly_renewal_notification.html", %{
+    #   user: owner,
+    #   team: team,
+    #   date: date,
+    #   next_bill_amount: team.subscription.next_bill_amount,
+    #   currency: team.subscription.currency_code
+    # })
   end
 
   def yearly_expiration_notification(team, owner) do
-    next_bill_date = Calendar.strftime(team.subscription.next_bill_date, "%B %-d, %Y")
-
-    accept_traffic_until =
-      team
-      |> Plausible.Teams.accept_traffic_until()
-      |> Calendar.strftime("%B %-d, %Y")
-
-    priority_email()
-    |> to(owner)
-    |> tag("yearly-expiration")
-    |> subject("Your Plausible subscription is about to expire")
-    |> render("yearly_expiration_notification.html", %{
-      user: owner,
-      team: team,
-      next_bill_date: next_bill_date,
-      accept_traffic_until: accept_traffic_until
-    })
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # next_bill_date = Calendar.strftime(team.subscription.next_bill_date, "%B %-d, %Y")
+    # 
+    # accept_traffic_until =
+    #   team
+    #   |> Plausible.Teams.accept_traffic_until()
+    #   |> Calendar.strftime("%B %-d, %Y")
+    # 
+    # priority_email()
+    # |> to(owner)
+    # |> tag("yearly-expiration")
+    # |> subject("Ihr Analytics-Abonnement läuft bald ab")
+    # |> render("yearly_expiration_notification.html", %{
+    #   user: owner,
+    #   team: team,
+    #   next_bill_date: next_bill_date,
+    #   accept_traffic_until: accept_traffic_until
+    # })
   end
 
   def cancellation_email(user) do
-    base_email()
-    |> to(user.email)
-    |> tag("cancelled-email")
-    |> subject("Mind sharing your thoughts on Plausible?")
-    |> render("cancellation_email.html", user: user)
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(user.email)
+    # |> tag("cancelled-email")
+    # |> subject("Möchten Sie Ihre Gedanken zu Stateofweb Analytics teilen?")
+    # |> render("cancellation_email.html", user: user)
   end
 
   def new_user_invitation(email, invitation_id, site, inviter) do
     priority_email()
     |> to(email)
     |> tag("new-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
+    |> subject("[#{Plausible.product_name()}] Sie wurden zu #{site.domain} eingeladen")
     |> render("new_user_invitation.html",
       invitation_id: invitation_id,
       site: site,
@@ -256,7 +304,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("existing-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
+    |> subject("[#{Plausible.product_name()}] Sie wurden zu #{site.domain} eingeladen")
     |> render("existing_user_invitation.html",
       site: site,
       inviter: inviter
@@ -267,7 +315,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("new-user-team-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
+    |> subject("[#{Plausible.product_name()}] Sie wurden zum Team \"#{team.name}\" eingeladen")
     |> render("new_user_team_invitation.html",
       invitation_id: invitation_id,
       team: team,
@@ -279,7 +327,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("existing-user-team-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
+    |> subject("[#{Plausible.product_name()}] Sie wurden zum Team \"#{team.name}\" eingeladen")
     |> render("existing_user_team_invitation.html",
       team: team,
       inviter: inviter
@@ -290,7 +338,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("guest-to-team-member-promotion")
-    |> subject("[#{Plausible.product_name()}] Welcome to \"#{team.name}\" team")
+    |> subject("[#{Plausible.product_name()}] Willkommen im Team \"#{team.name}\"")
     |> render("guest_to_team_member_promotion.html", inviter: inviter, team: team)
   end
 
@@ -298,7 +346,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("ownership-transfer-request")
-    |> subject("[#{Plausible.product_name()}] Request to transfer ownership of #{site.domain}")
+    |> subject("[#{Plausible.product_name()}] Anfrage zur Eigentumsübertragung von #{site.domain}")
     |> render("ownership_transfer_request.html",
       invitation_id: invitation_id,
       inviter: inviter,
@@ -312,7 +360,7 @@ defmodule PlausibleWeb.Email do
     |> to(inviter_email)
     |> tag("guest-invitation-accepted")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to #{site.domain}"
+      "[#{Plausible.product_name()}] #{invitee_email} hat Ihre Einladung zu #{site.domain} angenommen"
     )
     |> render("guest_invitation_accepted.html",
       invitee_email: invitee_email,
@@ -326,7 +374,7 @@ defmodule PlausibleWeb.Email do
     |> to(inviter_email)
     |> tag("team-invitation-accepted")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to \"#{team.name}\" team"
+      "[#{Plausible.product_name()}] #{invitee_email} hat Ihre Einladung zum Team \"#{team.name}\" angenommen"
     )
     |> render("team_invitation_accepted.html",
       invitee_email: invitee_email,
@@ -339,7 +387,7 @@ defmodule PlausibleWeb.Email do
     |> to(guest_invitation.team_invitation.inviter.email)
     |> tag("guest-invitation-rejected")
     |> subject(
-      "[#{Plausible.product_name()}] #{guest_invitation.team_invitation.email} rejected your invitation to #{guest_invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{guest_invitation.team_invitation.email} hat Ihre Einladung zu #{guest_invitation.site.domain} abgelehnt"
     )
     |> render("guest_invitation_rejected.html",
       team: guest_invitation.team_invitation.team,
@@ -352,7 +400,7 @@ defmodule PlausibleWeb.Email do
     |> to(team_invitation.inviter.email)
     |> tag("team-invitation-rejected")
     |> subject(
-      "[#{Plausible.product_name()}] #{team_invitation.email} rejected your invitation to \"#{team_invitation.team.name}\" team"
+      "[#{Plausible.product_name()}] #{team_invitation.email} hat Ihre Einladung zum Team \"#{team_invitation.team.name}\" abgelehnt"
     )
     |> render("team_invitation_rejected.html",
       team: team_invitation.team,
@@ -371,7 +419,7 @@ defmodule PlausibleWeb.Email do
     |> to(inviter_email)
     |> tag("ownership-transfer-accepted")
     |> subject(
-      "[#{Plausible.product_name()}] #{new_owner_email} accepted the ownership transfer of #{site.domain}"
+      "[#{Plausible.product_name()}] #{new_owner_email} hat die Eigentumsübertragung von #{site.domain} angenommen"
     )
     |> render("ownership_transfer_accepted.html",
       new_owner_email: new_owner_email,
@@ -386,7 +434,7 @@ defmodule PlausibleWeb.Email do
     |> to(owner_email)
     |> tag("team-changed")
     |> subject(
-      "[#{Plausible.product_name()}] #{user.email} has transferred #{site.domain} to \"#{team.name}\" team"
+      "[#{Plausible.product_name()}] #{user.email} hat #{site.domain} zum Team \"#{team.name}\" übertragen"
     )
     |> render("team_changed.html",
       user: user,
@@ -400,7 +448,7 @@ defmodule PlausibleWeb.Email do
     |> to(site_transfer.initiator.email)
     |> tag("ownership-transfer-rejected")
     |> subject(
-      "[#{Plausible.product_name()}] #{site_transfer.email} rejected the ownership transfer of #{site_transfer.site.domain}"
+      "[#{Plausible.product_name()}] #{site_transfer.email} hat die Eigentumsübertragung von #{site_transfer.site.domain} abgelehnt"
     )
     |> render("ownership_transfer_rejected.html",
       user: site_transfer.initiator,
@@ -414,7 +462,7 @@ defmodule PlausibleWeb.Email do
     |> to(guest_membership.team_membership.user.email)
     |> tag("site-member-removed")
     |> subject(
-      "[#{Plausible.product_name()}] Your access to #{guest_membership.site.domain} has been revoked"
+      "[#{Plausible.product_name()}] Ihr Zugang zu #{guest_membership.site.domain} wurde entfernt"
     )
     |> render("site_member_removed.html",
       user: guest_membership.team_membership.user,
@@ -427,7 +475,7 @@ defmodule PlausibleWeb.Email do
     |> to(team_membership.user.email)
     |> tag("team-member-removed")
     |> subject(
-      "[#{Plausible.product_name()}] Your access to \"#{team_membership.team.name}\" team has been revoked"
+      "[#{Plausible.product_name()}] Ihr Zugang zum Team \"#{team_membership.team.name}\" wurde entfernt"
     )
     |> render("team_member_removed.html",
       user: team_membership.user,
@@ -443,7 +491,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(user)
     |> tag("import-success-email")
-    |> subject("#{label} data imported for #{site_import.site.domain}")
+    |> subject("#{label} Daten für #{site_import.site.domain} importiert")
     |> render(import_api.email_template(), %{
       site_import: site_import,
       label: label,
@@ -462,7 +510,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(user)
     |> tag("import-failure-email")
-    |> subject("#{label} import failed for #{site_import.site.domain}")
+    |> subject("#{label} Import für #{site_import.site.domain} fehlgeschlagen")
     |> render(import_api.email_template(), %{
       site_import: site_import,
       label: label,
@@ -490,7 +538,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(user)
     |> tag("export-success")
-    |> subject("[#{Plausible.product_name()}] Your export is now ready for download")
+    |> subject("[#{Plausible.product_name()}] Ihr Export steht jetzt zum Download bereit")
     |> render("export_success.html",
       user: user,
       site: site,
@@ -502,7 +550,7 @@ defmodule PlausibleWeb.Email do
   def export_failure(user, site) do
     priority_email()
     |> to(user)
-    |> subject("[#{Plausible.product_name()}] Your export has failed")
+    |> subject("[#{Plausible.product_name()}] Ihr Export ist fehlgeschlagen")
     |> render("export_failure.html", user: user, site: site)
   end
 
@@ -522,41 +570,47 @@ defmodule PlausibleWeb.Email do
   end
 
   def approaching_accept_traffic_until(notification) do
-    base_email()
-    |> to(notification.email)
-    |> tag("drop-traffic-warning-first")
-    |> subject("We'll stop counting your stats")
-    |> render("approaching_accept_traffic_until.html",
-      time: "next week",
-      user: %{email: notification.email, name: notification.name},
-      team: notification.team
-    )
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(notification.email)
+    # |> tag("drop-traffic-warning-first")
+    # |> subject("Wir werden aufhören, Ihre Statistiken zu zählen")
+    # |> render("approaching_accept_traffic_until.html",
+    #   time: "next week",
+    #   user: %{email: notification.email, name: notification.name},
+    #   team: notification.team
+    # )
   end
 
   def approaching_accept_traffic_until_tomorrow(notification) do
-    base_email()
-    |> to(notification.email)
-    |> tag("drop-traffic-warning-final")
-    |> subject("A reminder that we'll stop counting your stats tomorrow")
-    |> render("approaching_accept_traffic_until.html",
-      time: "tomorrow",
-      user: %{email: notification.email, name: notification.name},
-      team: notification.team
-    )
+    # Diese E-Mail wurde deaktiviert
+    nil
+    
+    # base_email()
+    # |> to(notification.email)
+    # |> tag("drop-traffic-warning-final")
+    # |> subject("Eine Erinnerung, dass wir morgen aufhören werden, Ihre Statistiken zu zählen")
+    # |> render("approaching_accept_traffic_until.html",
+    #   time: "tomorrow",
+    #   user: %{email: notification.email, name: notification.name},
+    #   team: notification.team
+    # )
   end
 
   on_ee do
     def sso_domain_verification_success(domain, user) do
       priority_email()
       |> to(user.email)
-      |> subject("Your SSO domain #{domain} is ready!")
+      |> subject("Ihre SSO-Domain #{domain} ist bereit!")
       |> render("sso_domain_verification_success.html", domain: domain)
     end
 
     def sso_domain_verification_failure(domain, user) do
       priority_email()
       |> to(user)
-      |> subject("SSO domain #{domain} verification failure")
+      |> subject("SSO-Domain #{domain} Verifizierung fehlgeschlagen")
       |> render("sso_domain_verification_failure.html", domain: domain)
     end
   end

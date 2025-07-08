@@ -1,5 +1,5 @@
-{@new_owner_email} hat die Eigentumsübertragung von {@site.domain} angenommen. Sie werden ab sofort für die Abrechnung verantwortlich sein<%= if @initiator_as_guest_editor? do %>
-  und Ihre Rolle wurde zu <b>Gast-Editor</b> geändert.
+{@new_owner_email} hat die Eigentumsübertragung von {@site.domain} angenommen.<%= if @initiator_as_guest_editor? do %>
+ Ihre Rolle wurde zu <b>Gast-Editor</b> geändert.
   <a href={Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @site.domain) <> "?__team=none"}>
     Klicken Sie hier
   </a>,
