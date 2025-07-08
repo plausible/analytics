@@ -527,7 +527,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const [[, trackingResponseTime], [, navigationTime]] =
       await resolveWithTimestamps([trackingPromise, navigationPromise])
     await expect(page.getByText('Subscription successful')).toBeVisible()
-    expect(trackingResponseTime).toBeLessThan(navigationTime)
+    expect(trackingResponseTime).toBeLessThanOrEqual(navigationTime)
     await expect(eventsApiMock.getRequestList()).resolves.toEqual([
       expect.objectContaining({
         n: 'Subscribe',

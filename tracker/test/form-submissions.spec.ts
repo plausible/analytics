@@ -8,6 +8,7 @@ import {
 } from './support/test-utils'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { ScriptConfig } from './support/types'
+import { customSubmitHandlerStub } from './support/html-fixtures'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -284,10 +285,3 @@ test.describe('form submissions feature is enabled', () => {
     })
   })
 })
-
-/**
- * This is a stub for custom form onsubmit handlers Plausible users may have on their websites.
- * Overriding onsubmit with a custom handler is common practice in web development for a variety of reasons (mostly UX),
- * so it's important to track form submissions from forms with such handlers.
- */
-const customSubmitHandlerStub = "event.preventDefault(); console.log('Form submitted')"

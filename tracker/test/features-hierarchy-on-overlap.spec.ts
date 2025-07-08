@@ -10,6 +10,7 @@ import { LOCAL_SERVER_ADDR } from './support/server'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { mockManyRequests } from './support/mock-many-requests'
 import { ScriptConfig } from './support/types'
+import { customSubmitHandlerStub } from './support/html-fixtures'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -17,7 +18,7 @@ const DEFAULT_CONFIG: ScriptConfig = {
   captureOnLocalhost: true
 }
 
-for (const mode of ['legacy', 'web']) {
+for (const mode of ['legacy', 'web'] as const) {
   test.describe(`outbound links, file downloads, tagged events features hierarchy on overlap legacy/v2 parity (${mode})`, () => {
     test('sends only tagged event if the link is a tagged outbound download link', async ({
       page
@@ -156,7 +157,7 @@ for (const mode of ['legacy', 'web']) {
   })
 }
 
-for (const mode of ['web', 'esm']) {
+for (const mode of ['web', 'esm'] as const) {
   test.describe(`form submissions and tagged events features hierarchy on overlap v2-specific (${mode})`, () => {
     test('sends only tagged event if a form is tagged', async ({
       page
@@ -224,7 +225,7 @@ for (const mode of ['web', 'esm']) {
         ),
         bodyContent: `
           <div class="plausible-event-name--A+Tagged+Form">
-            <form onsubmit="event.preventDefault(); console.log('Form submitted');">
+            <form onsubmit="${customSubmitHandlerStub}">
               <input type="email" />
             </form>
           </div>
