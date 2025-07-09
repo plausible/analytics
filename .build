@@ -253,6 +253,7 @@ Plausible.Teams.Invitations.RemoveFromTeam.html
 Plausible.Teams.Management.Layout.Entry.html
 Plausible.Teams.Management.Layout.html
 Plausible.Teams.Membership.html
+Plausible.Teams.Memberships.Leave.html
 Plausible.Teams.Memberships.Remove.html
 Plausible.Teams.Memberships.UpdateRole.html
 Plausible.Teams.Policy.html
@@ -506,8 +507,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-2EDD2A48.js
-dist/sidebar_items-EFA9A993.js
+dist/search_data-09EA7427.js
+dist/sidebar_items-6D2A0949.js
 index.html
 readme.html
 search.html
