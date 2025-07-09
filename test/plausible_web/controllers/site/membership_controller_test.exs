@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     test "display a notice when is over limit", %{conn: conn, user: user} do
       site = new_site(owner: user)
 
-      for _ <- 1..5 do
+      for _ <- 1..11 do
         add_guest(site, role: :viewer)
       end
 
@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         |> html_response(200)
 
       assert text_of_element(html, ~s/[data-test="limit-exceeded-notice"]/) =~
-               "This account is limited to 3 members"
+               "This account is limited to 10 members"
     end
   end
 
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     test "fails to create invitation when is over limit", %{conn: conn, user: user} do
       site = new_site(owner: user)
 
-      for _ <- 1..5 do
+      for _ <- 1..11 do
         add_guest(site, role: :viewer)
       end
 
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         })
 
       assert html_response(conn, 200) =~
-               "Your account is limited to 3 team members. You can upgrade your plan to increase this limit."
+               "Your account is limited to 10 team members. You can upgrade your plan to increase this limit."
     end
 
     test "fails to create invitation with insufficient permissions", %{conn: conn, user: user} do

@@ -440,10 +440,10 @@ defmodule Plausible.Billing.QuotaTest do
         assert :unlimited == Plausible.Teams.Billing.team_member_limit(team)
       end
 
-      test "returns 5 when user in on trial" do
+      test "returns 10 when user in on trial" do
         team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
 
-        assert 3 == Plausible.Teams.Billing.team_member_limit(team)
+        assert 10 == Plausible.Teams.Billing.team_member_limit(team)
       end
 
       test "returns the enterprise plan limit" do

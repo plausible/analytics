@@ -308,6 +308,8 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
     test "limits are checked", %{user: user, team: team} do
       on_ee do
+        subscribe_to_growth_plan(user)
+
         assert {:error, {:over_limit, 3}} =
                  team
                  |> Layout.init()

@@ -203,3 +203,14 @@ export function switchByMode(cases, mode) {
       throw new Error(`Unimplemented mode: ${mode}`)
   }
 }
+
+/**
+ * This function ensures that the tracker script has attached the event listener before test is run.
+ * Note that this race condition happens in the real world as well:
+ * Events from features like form submissions, file downloads, outbound links, tagged events 
+ * that work with event handlers registered on the document
+ * will not be tracked if the event happens before the tracker script has attached the event listener.
+ */
+export function ensurePlausibleInitialized(page) {
+  return page.waitForFunction(() =>(window.plausible?.l === true))
+}

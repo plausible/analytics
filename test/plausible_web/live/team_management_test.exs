@@ -178,6 +178,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
     @tag :ee_only
     test "fails to save layout with limits breached", %{conn: conn, team: team} do
+      insert(:growth_subscription, team: team)
+
       lv = get_liveview(conn)
       add_invite(lv, "new1@example.com", "admin")
       add_invite(lv, "new2@example.com", "admin")
@@ -205,6 +207,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       user: user,
       team: team
     } do
+      insert(:growth_subscription, team: team)
+
       member2 = add_member(team, role: :admin)
       _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
 
