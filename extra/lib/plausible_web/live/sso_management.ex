@@ -225,7 +225,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           :if={@domain.status in [Status.in_progress(), Status.unverified(), Status.verified()]}
           type="submit"
         >
-          Run verification now
+          Run Verification Now
         </.button>
 
         <.button :if={@domain.status == Status.pending()} type="submit">Continue</.button>
