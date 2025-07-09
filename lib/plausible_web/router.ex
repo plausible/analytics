@@ -469,6 +469,7 @@ defmodule PlausibleWeb.Router do
 
     get "/team/general", SettingsController, :team_general
     post "/team/general/name", SettingsController, :update_team_name
+    post "/team/leave", SettingsController, :leave_team
 
     on_ee do
       get "/sso/general", SSOController, :sso_settings
