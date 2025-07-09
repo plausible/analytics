@@ -1,4 +1,5 @@
 defmodule Plausible.Audit.TestSchema do
+  @moduledoc false
   use Ecto.Schema
 
   @derive {Plausible.Audit.Encoder, only: [:id, :name]}
@@ -8,6 +9,7 @@ defmodule Plausible.Audit.TestSchema do
   end
 
   defmodule VariantWithAssociation do
+    @moduledoc false
     use Ecto.Schema
 
     @derive {Plausible.Audit.Encoder, only: [:id, :team]}
@@ -18,6 +20,7 @@ defmodule Plausible.Audit.TestSchema do
   end
 
   defmodule VariantWithAssociationAllowNotLoaded do
+    @moduledoc false
     use Ecto.Schema
 
     @derive {Plausible.Audit.Encoder, only: [:id, :team], allow_not_loaded: [:team]}
