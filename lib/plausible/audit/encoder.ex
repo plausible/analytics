@@ -42,7 +42,7 @@ defimpl Plausible.Audit.Encoder, for: Map do
         else
           raise Plausible.Audit.EncoderError,
             message:
-              "#{k} association not loaded. Either preload, exclude or mark it as :optional in #{__MODULE__} options"
+              "#{k} association not loaded. Either preload, exclude or mark it as :allow_not_loaded in #{__MODULE__} options"
         end
 
       {k, v}, acc ->
@@ -68,10 +68,6 @@ end
 
 defimpl Plausible.Audit.Encoder, for: List do
   def encode(x), do: Enum.map(x, &Plausible.Audit.Encoder.encode/1)
-end
-
-defimpl Plausible.Audit.Encoder, for: BitString do
-  def encode(x), do: x
 end
 
 defimpl Plausible.Audit.Encoder, for: Any do
