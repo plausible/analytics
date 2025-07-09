@@ -73,7 +73,10 @@ defmodule PlausibleWeb.Live.SSOManagement do
   def init_view(assigns) do
     ~H"""
     <form id="sso-init" for={} phx-submit="init-sso">
-      <p class="text-sm">Click below to start setting up Single Sign-On for your team.</p>
+      <p class="text-sm">
+        Single Sign-On (SSO) enables team members to sign in without having to register an account. For more details, 
+        <.styled_link href="https://plausible.io/docs/sso">see our documentation</.styled_link>.
+      </p>
 
       <.button type="submit">Start Configuring SSO</.button>
     </form>
