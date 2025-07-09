@@ -39,6 +39,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     expect(result.data.wordpressPlugin).toBe(false)
     expect(result.data.wordpressLikely).toBe(false)
     expect(result.data.cookieBannerLikely).toBe(false)
+    expect(result.data.manualScriptExtension).toBe(false)
 
     // `data.proxyLikely` is mostly expected to be true in tests because
     // any local script src is considered a proxy. More involved behaviour
@@ -360,6 +361,31 @@ test.describe('v1 verifier (cookieBanner detection)', () => {
     const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.cookieBannerLikely).toBe(true)
+  })
+})
+
+test.describe('v1 verifier (manualScriptExtension detection)', () => {
+  test('manualScriptExtension is true when any snippet src has "manual." in it', async ({ page }, { testId }) => {
+    await mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <html>
+          <head>
+            <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+            <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.hash.js"></script>
+          </head>
+          <body>
+            <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.manual.js"></script>
+          </body>
+        </html>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+
+    expect(result.data.manualScriptExtension).toBe(true)
   })
 })
 
