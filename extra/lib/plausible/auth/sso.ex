@@ -56,7 +56,10 @@ defmodule Plausible.Auth.SSO do
   def initiate_saml_integration(team) do
     changeset = SSO.Integration.init_changeset(team)
 
-    Repo.insert!(changeset,
+    Repo.insert_with_audit!(
+      changeset,
+      "saml_integration_initiated",
+      %{},
       on_conflict: [set: [updated_at: NaiveDateTime.utc_now(:second)]],
       conflict_target: :team_id,
       returning: true
@@ -206,7 +209,7 @@ defmodule Plausible.Auth.SSO do
             integration = Repo.preload(integration, :sso_domains)
             Enum.each(users, &deprovision_user!/1)
             Enum.each(integration.sso_domains, &SSO.Domains.cancel_verification(&1.domain))
-            Repo.delete!(integration)
+            Repo.delete_with_audit!(integration, "sso_integration_removed")
             :ok
           end)
 
@@ -458,7 +461,7 @@ defmodule Plausible.Auth.SSO do
 
     result =
       Repo.transaction(fn ->
-        with {:ok, user} <- Repo.insert(changeset),
+        with {:ok, user} <- Repo.insert_with_audit(changeset, "sso_user_provisioned"),
              :ok <- Teams.Invitations.check_team_member_limit(team, role, user.email),
              {:ok, team_membership} <-
                Teams.Invitations.create_team_membership(team, role, user, now) do

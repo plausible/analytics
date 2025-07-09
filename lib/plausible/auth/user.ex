@@ -21,6 +21,7 @@ defmodule Plausible.Auth.User do
 
   @derive {Plausible.Audit.Encoder,
            only: [
+             :id,
              :email,
              :name,
              :email_verified,

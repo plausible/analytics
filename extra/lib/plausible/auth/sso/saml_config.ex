@@ -21,7 +21,7 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   @fields [:idp_signin_url, :idp_entity_id, :idp_cert_pem, :idp_metadata]
   @required_fields @fields -- [:idp_metadata]
 
-  @derive {Plausible.Audit.Encoder, only: [:idp_signin_url, :idp_entity_id, :idp_metadata]}
+  @derive {Plausible.Audit.Encoder, only: [:id, :idp_signin_url, :idp_entity_id, :idp_metadata]}
 
   embedded_schema do
     field :idp_signin_url, :string
