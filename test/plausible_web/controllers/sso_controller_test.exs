@@ -61,7 +61,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Enter your Single Sign-on email"
+        assert html =~ "Enter your Single Sign-On email"
         assert element_exists?(html, "input[name=email]")
         assert text_of_attr(html, "input[name=return_to]", "value") == ""
       end
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Enter your Single Sign-on email"
+        assert html =~ "Enter your Single Sign-On email"
         assert text_of_attr(html, "input[name=email]", "value") == "user@example.com"
         assert html =~ ~s|document.getElementById("sso-login-form").submit()|
       end
@@ -172,7 +172,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Processing Single Sign-on request..."
+        assert html =~ "Processing Single Sign-On request..."
 
         assert text_of_attr(html, "form#sso-req-form", "action") ==
                  Routes.sso_path(conn, :saml_consume, integration.identifier)

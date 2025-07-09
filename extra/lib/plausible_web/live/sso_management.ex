@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       <.input_with_clipboard
         id="sp-acs-url"
         name="sp-acs-url"
-        label="ACS URL / Single sign-on URL / Reply URL"
+        label="ACS URL / Single Sign-On URL / Reply URL"
         value={saml_acs_url(@integration)}
       />
 
@@ -253,7 +253,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           <.input_with_clipboard
             id="sp-acs-url"
             name="sp-acs-url"
-            label="ACS URL / Single sign-on URL / Reply URL"
+            label="ACS URL / Single Sign-On URL / Reply URL"
             value={saml_acs_url(@integration)}
           />
 
@@ -681,7 +681,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           {false, "you must be logged in via SSO"}
 
         {{:error, :no_integration}, _} ->
-          {false, "you must first setup Single Sign-on"}
+          {false, "you must first setup Single Sign-On"}
 
         {{:error, :no_domain}, _} ->
           {false, "you must add a domain"}
