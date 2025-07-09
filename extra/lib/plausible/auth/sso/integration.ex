@@ -20,7 +20,7 @@ defmodule Plausible.Auth.SSO.Integration do
 
   @type t() :: %__MODULE__{}
 
-  @derive {Plausible.Audit.Encoder, only: [:identifier]}
+  @derive {Plausible.Audit.Encoder, only: [:id, :identifier]}
   schema "sso_integrations" do
     field :identifier, Ecto.UUID
 

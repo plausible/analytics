@@ -23,6 +23,7 @@ defmodule Plausible.Teams.Team do
 
   @derive {Plausible.Audit.Encoder,
            only: [
+             :id,
              :identifier,
              :name,
              :trial_expiry_date,
