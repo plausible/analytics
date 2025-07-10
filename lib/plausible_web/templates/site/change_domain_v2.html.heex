@@ -1,0 +1,46 @@
+<.focus_box>
+  <:title>Change your website domain</:title>
+
+  <:subtitle>
+    Once you change your domain, you <i>must</i>
+    update Plausible Installation on your site within 72 hours to guarantee continuous tracking.
+    <br /><br />If you're using the API, please also make sure to update your API credentials. Visit our
+    <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+      documentation
+    </.styled_link>
+    for details.
+  </:subtitle>
+
+  <:footer>
+    <.focus_list>
+      <:item>
+        Changed your mind? Go back to
+        <.styled_link href={Routes.site_path(@conn, :settings_general, @site.domain)}>
+          Site Settings
+        </.styled_link>
+      </:item>
+    </.focus_list>
+  </:footer>
+
+  <.form
+    :let={f}
+    for={@changeset}
+    action={
+      Routes.site_path(@conn, :change_domain_v2_submit, @site.domain,
+        flow: PlausibleWeb.Flows.domain_change()
+      )
+    }
+  >
+    <.input
+      help_text="Just the naked domain or subdomain without 'www', 'https' etc."
+      type="text"
+      placeholder="example.com"
+      field={f[:domain]}
+      label="Domain"
+    />
+
+    <.button type="submit" class="mt-4 w-full">
+      Change Domain and add new Snippet
+    </.button>
+  </.form>
+</.focus_box>
