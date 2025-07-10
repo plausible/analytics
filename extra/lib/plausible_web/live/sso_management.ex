@@ -379,7 +379,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       </div>
     </.tile>
 
-    <.tile docs="sso">
+    <.tile docs="sso#sso-policy">
       <:title>
         <a id="sso-policy-config">SSO Policy</a>
       </:title>
