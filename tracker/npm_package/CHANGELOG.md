@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- "Form: Submission" event payload does not need to contain props.path any more: it is saved to be the same as the pathname of the event
+
 ## [0.3.1] - 2025-07-08
 
 - Do not send "Form: Submission" event if the form is tagged

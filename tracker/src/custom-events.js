@@ -191,7 +191,7 @@ export function init() {
           // If the form is tagged, we don't track it as a generic form submission.
           return
         }
-        track('Form: Submission', { props: { path: location.pathname } });
+        track('Form: Submission');
       }
     }
 

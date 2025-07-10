@@ -91,9 +91,9 @@ defmodule Plausible.Ingestion.Request do
         |> put_user_agent(conn)
         |> put_request_params(request_body)
         |> put_referrer(request_body)
+        |> put_pathname()
         |> put_props(request_body)
         |> put_engagement_fields(request_body)
-        |> put_pathname()
         |> put_query_params()
         |> put_revenue_source(request_body)
         |> put_interactive(request_body)
@@ -171,6 +171,18 @@ defmodule Plausible.Ingestion.Request do
     Changeset.put_change(changeset, :pathname, pathname)
   end
 
+  defp maybe_set_props_path_to_pathname(props_in_request, changeset) do
+    if Plausible.Goals.SystemGoals.sync_props_path_with_pathname?(
+         Changeset.get_field(changeset, :event_name),
+         props_in_request
+       ) do
+      # "path" props is added to the head of the props enum to avoid it being cut off
+      [{"path", Changeset.get_field(changeset, :pathname)}] ++ props_in_request
+    else
+      props_in_request
+    end
+  end
+
   defp map_domains(changeset, %{} = request_body) do
     raw = request_body["d"] || request_body["domain"]
     raw = if is_binary(raw), do: String.trim(raw)
@@ -227,6 +239,7 @@ defmodule Plausible.Ingestion.Request do
       (request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"])
       |> Plausible.Helpers.JSON.decode_or_fallback()
       |> Enum.reduce([], &filter_bad_props/2)
+      |> maybe_set_props_path_to_pathname(changeset)
       |> Enum.take(@max_props)
       |> Map.new()
 
