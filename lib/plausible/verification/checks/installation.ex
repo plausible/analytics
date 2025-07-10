@@ -52,7 +52,7 @@ defmodule Plausible.Verification.Checks.Installation do
 
   - `data.manualScriptExtension` - whether the site is using script.manual.js
 
-  - `data.unknownAttributes` - whether the script tag has any unknown attirbutes
+  - `data.unknownAttributes` - whether the script tag has any unknown attributes
 
   - `data.wordpressPlugin` - whether or not there's a `<meta>` tag with the WP plugin version
 
