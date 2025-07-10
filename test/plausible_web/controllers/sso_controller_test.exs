@@ -132,7 +132,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         domain: domain,
         integration: integration
       } do
-        email = "paul@" <> domain
+        email = "claire@" <> domain
 
         conn =
           post(conn, Routes.sso_path(conn, :login), %{"email" => email, "return_to" => "/sites"})
@@ -155,11 +155,32 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
       end
+
+      test "limits login attempts to 5 per minute", %{conn: conn} do
+        conn = put_req_header(conn, "x-forwarded-for", "1.2.3.9")
+        email = "invalid@example.com"
+
+        response =
+          eventually(
+            fn ->
+              Enum.each(1..5, fn _ ->
+                post(conn, Routes.sso_path(conn, :login), %{"email" => email})
+              end)
+
+              conn = post(conn, Routes.sso_path(conn, :login), %{"email" => email})
+
+              {conn.status == 429, conn}
+            end,
+            500
+          )
+
+        assert html_response(response, 429) =~ "Too many login attempts"
+      end
     end
 
     describe "saml_signin/2 (fake SAML)" do
       test "renders autosubmitted form", %{conn: conn, domain: domain, integration: integration} do
-        email = "paul@" <> domain
+        email = "jesper@" <> domain
 
         conn =
           get(
