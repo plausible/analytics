@@ -532,9 +532,7 @@ defmodule PlausibleWeb.Router do
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
     get "/sites/:domain/change-domain", SiteController, :change_domain
-    get "/sites/:domain/change-domain-v2", SiteController, :change_domain_v2
     put "/sites/:domain/change-domain", SiteController, :change_domain_submit
-    put "/sites/:domain/change-domain-v2", SiteController, :change_domain_v2_submit
     post "/sites/:domain/make-public", SiteController, :make_public
     post "/sites/:domain/make-private", SiteController, :make_private
     post "/sites/:domain/weekly-report/enable", SiteController, :enable_weekly_report
@@ -625,6 +623,12 @@ defmodule PlausibleWeb.Router do
               dogfood_page_path: "/:website/verification"
             } do
         live "/:domain/verification", Verification, :verification, as: :site
+      end
+
+      scope assigns: %{
+              dogfood_page_path: "/:website/change-domain-v2"
+            } do
+        live "/:domain/change-domain-v2", ChangeDomainV2, :change_domain_v2, as: :site
       end
     end
 
