@@ -32,6 +32,12 @@
       "npm_package": "esm"
     },
     {
+      "name": "detector.js",
+      "entry_point": "verifier/detector.js",
+      "output_path": "priv/tracker/verifier/detector.js",
+      "globals": {}
+    },
+    {
       "name": "verifier-v1.js",
       "entry_point": "verifier/verifier-v1.js",
       "output_path": "priv/tracker/verifier/verifier-v1.js",
