@@ -133,20 +133,12 @@ defmodule Plausible.Factory do
       raise "Acquisition channel cannot be written directly since it's a materialized column."
     end
 
-    pathname = Map.get(attrs, :pathname, "/")
-
-    attrs =
-      if(Map.get(attrs, :name) in Plausible.Goals.SystemGoals.goals_with_path(),
-        do: maybe_sync_pathname_to_meta_for_special_goal(attrs, pathname),
-        else: attrs
-      )
-
     hostname = sequence(:domain, &"example-#{&1}.com")
 
     event = %Plausible.ClickhouseEventV2{
       hostname: hostname,
       site_id: Enum.random(1000..10_000),
-      pathname: pathname,
+      pathname: "/",
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
@@ -155,21 +147,6 @@ defmodule Plausible.Factory do
     event
     |> merge_attributes(attrs)
     |> evaluate_lazy_attributes()
-  end
-
-  defp maybe_sync_pathname_to_meta_for_special_goal(attrs, pathname) do
-    meta_keys = Map.get(attrs, :"meta.key", [])
-    meta_values = Map.get(attrs, :"meta.value", [])
-    index_of_path_key = Enum.find_index(meta_keys, &(&1 == "path"))
-
-    if index_of_path_key == nil do
-      Map.merge(attrs, %{
-        "meta.key": meta_keys ++ ["path"],
-        "meta.value": meta_values ++ [pathname]
-      })
-    else
-      attrs
-    end
   end
 
   def goal_factory(attrs) do
