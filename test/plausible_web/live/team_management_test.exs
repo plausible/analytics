@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         :setup_team
       ]
 
-      test "fails to save layout with SSO user updated to owner with Force SSO but without MFA",
+      test "fails to save layout with SSO user updated to owner with Force SSO but without 2FA",
            %{
              conn: conn,
              team: team,

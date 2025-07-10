@@ -85,11 +85,19 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   end
 
   defp clean_pem(pem) do
-    pem
-    |> String.split("\n")
-    |> Enum.map(&String.trim/1)
-    |> Enum.reject(&(&1 == ""))
-    |> Enum.join("\n")
-    |> String.trim()
+    cleaned =
+      pem
+      |> String.split("\n")
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.join("\n")
+      |> String.trim()
+
+    # Trying to account for PEM certificates without markers
+    if String.starts_with?(cleaned, "-----BEGIN CERTIFICATE-----") do
+      cleaned
+    else
+      "-----BEGIN CERTIFICATE-----\n" <> cleaned <> "\n-----END CERTIFICATE-----"
+    end
   end
 end

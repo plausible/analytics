@@ -303,14 +303,14 @@ defmodule PlausibleWeb.AuthController do
       |> UserAuth.log_in_user(user, redirect_path)
     else
       {:error, :wrong_password} ->
-        maybe_log_failed_login_attempts("wrong password for #{email}")
+        Auth.log_failed_login_attempt("wrong password for #{email}")
 
         conn
         |> put_flash(:login_error, "Wrong email or password. Please try again.")
         |> render("login_form.html")
 
       {:error, :user_not_found} ->
-        maybe_log_failed_login_attempts("user not found for #{email}")
+        Auth.log_failed_login_attempt("user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
         conn
@@ -318,7 +318,7 @@ defmodule PlausibleWeb.AuthController do
         |> render("login_form.html")
 
       {:error, {:rate_limit, _}} ->
-        maybe_log_failed_login_attempts("too many login attempts for #{email}")
+        Auth.log_failed_login_attempt("too many login attempts for #{email}")
 
         render_error(
           conn,
@@ -463,9 +463,7 @@ defmodule PlausibleWeb.AuthController do
           |> UserAuth.log_in_user(user, params["return_to"])
 
         {:error, :invalid_code} ->
-          maybe_log_failed_login_attempts(
-            "wrong 2FA verification code provided for #{user.email}"
-          )
+          Auth.log_failed_login_attempt("wrong 2FA verification code provided for #{user.email}")
 
           conn
           |> put_flash(:error, "The provided code is invalid. Please try again")
@@ -500,7 +498,7 @@ defmodule PlausibleWeb.AuthController do
           UserAuth.log_in_user(conn, user)
 
         {:error, :invalid_code} ->
-          maybe_log_failed_login_attempts("wrong 2FA recovery code provided for #{user.email}")
+          Auth.log_failed_login_attempt("wrong 2FA recovery code provided for #{user.email}")
 
           conn
           |> put_flash(:error, "The provided recovery code is invalid. Please try another one")
@@ -520,7 +518,7 @@ defmodule PlausibleWeb.AuthController do
           {:ok, user}
         else
           {:error, {:rate_limit, _}} ->
-            maybe_log_failed_login_attempts("too many login attempts for #{user.email}")
+            Auth.log_failed_login_attempt("too many login attempts for #{user.email}")
 
             conn
             |> TwoFactor.Session.clear_2fa_user()
@@ -656,11 +654,5 @@ defmodule PlausibleWeb.AuthController do
 
   defp redirect_to_login(conn) do
     redirect(conn, to: Routes.auth_path(conn, :login_form))
-  end
-
-  defp maybe_log_failed_login_attempts(message) do
-    if Application.get_env(:plausible, :log_failed_login_attempts) do
-      Logger.warning("[login] #{message}")
-    end
   end
 end

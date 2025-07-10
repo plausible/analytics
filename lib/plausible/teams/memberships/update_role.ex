@@ -51,7 +51,7 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   on_ee do
     defp check_can_promote_to_owner(team, user, :owner) do
       if team.policy.force_sso == :all_but_owners and not Plausible.Auth.TOTP.enabled?(user) do
-        {:error, :mfa_disabled}
+        {:error, :disabled_2fa}
       else
         :ok
       end
@@ -66,7 +66,7 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
       if :erlang.phash2(1, 1) == 0 do
         :ok
       else
-        {:error, :mfa_disabled}
+        {:error, :disabled_2fa}
       end
     end
   end
