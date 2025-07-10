@@ -30,7 +30,10 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
     flow = params["flow"] || Flows.provisioning()
 
-    if connected?(socket) and flow == Flows.provisioning() do
+    detect_installation_type? =
+      connected?(socket) and flow == Flows.provisioning() and !params["type"]
+
+    if detect_installation_type? do
       Checks.run("https://#{site.domain}", site.domain,
         checks: [
           Checks.FetchBody,
@@ -53,6 +56,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
            )
          ),
        flow: params["flow"] || "provisioning",
+       detect_installation_type?: detect_installation_type?,
        installation_type: get_installation_type(params, tracker_script_configuration),
        recommended_installation_type: nil
      )}
@@ -107,7 +111,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         </div>
 
         <div
-          :if={@flow == PlausibleWeb.Flows.provisioning() and is_nil(@recommended_installation_type)}
+          :if={@detect_installation_type? and is_nil(@recommended_installation_type)}
           class="flex items-center justify-center py-8"
         >
           <.spinner class="w-6 h-6" />
@@ -115,7 +119,8 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
         <.form
           :if={
-            @flow != PlausibleWeb.Flows.provisioning() or not is_nil(@recommended_installation_type)
+            not @detect_installation_type? or
+              (@detect_installation_type? and not is_nil(@recommended_installation_type))
           }
           for={@tracker_script_configuration_form}
           phx-submit="submit"

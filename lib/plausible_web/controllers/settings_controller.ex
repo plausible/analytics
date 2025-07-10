@@ -29,7 +29,7 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def update_team_name(conn, %{"team" => params}) do
-    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.current_team, params)
+    changeset = Teams.Team.name_changeset(conn.assigns.current_team, params)
 
     case Repo.update(changeset) do
       {:ok, _user} ->
@@ -43,7 +43,7 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   defp render_team_general(conn, opts \\ []) do
-    if Plausible.Teams.setup?(conn.assigns.current_team) do
+    if Teams.setup?(conn.assigns.current_team) do
       name_changeset =
         Keyword.get(
           opts,
@@ -59,6 +59,23 @@ defmodule PlausibleWeb.SettingsController do
     else
       conn
       |> redirect(to: Routes.site_path(conn, :index))
+    end
+  end
+
+  def leave_team(conn, _params) do
+    case Teams.Memberships.Leave.leave(conn.assigns.current_team, conn.assigns.current_user) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "You have left \"#{Teams.name(conn.assigns.current_team)}\"")
+        |> redirect(to: Routes.site_path(conn, :index, __team: "none"))
+
+      {:error, :only_one_owner} ->
+        conn
+        |> put_flash(:error, "You can't leave as you are the only Owner on the team")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+
+      {:error, :membership_not_found} ->
+        redirect(conn, to: Routes.site_path(conn, :index, __team: "none"))
     end
   end
 
