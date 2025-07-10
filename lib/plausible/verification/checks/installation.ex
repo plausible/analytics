@@ -93,17 +93,7 @@ defmodule Plausible.Verification.Checks.Installation do
       {:ok, %{status: 200, body: %{"data" => %{"completed" => true} = js_data}}} ->
         emit_telemetry_and_log(state.diagnostics, js_data, data_domain)
 
-        snippets_head =
-          [js_data["snippetsFoundInHead"], state.diagnostics.snippets_found_in_head]
-          |> Enum.max()
-
-        snippets_body =
-          [js_data["snippetsFoundInBody"], state.diagnostics.snippets_found_in_body]
-          |> Enum.max()
-
         put_diagnostics(state,
-          snippets_found_in_head: snippets_head,
-          snippets_found_in_body: snippets_body,
           plausible_installed?: js_data["plausibleInstalled"],
           callback_status: js_data["callbackStatus"]
         )
