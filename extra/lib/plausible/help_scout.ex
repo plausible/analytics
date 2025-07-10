@@ -11,7 +11,7 @@ defmodule Plausible.HelpScout do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
+  alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
 
   require Plausible.Billing.Subscription.Status
 
@@ -106,8 +106,8 @@ defmodule Plausible.HelpScout do
           end)
 
         user_link =
-          Routes.customer_support_resource_url(
-            PlausibleWeb.Endpoint,
+          InternalRoutes.customer_support_resource_url(
+            PlausibleWeb.InternalEndpoint,
             :details,
             :users,
             :user,
@@ -136,16 +136,16 @@ defmodule Plausible.HelpScout do
 
         status_link =
           if team do
-            Routes.customer_support_resource_url(
-              PlausibleWeb.Endpoint,
+            InternalRoutes.customer_support_resource_url(
+              PlausibleWeb.InternalEndpoint,
               :details,
               :teams,
               :team,
               team.id
             )
           else
-            Routes.customer_support_resource_url(
-              PlausibleWeb.Endpoint,
+            InternalRoutes.customer_support_resource_url(
+              PlausibleWeb.InternalEndpoint,
               :details,
               :users,
               :user,
