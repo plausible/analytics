@@ -27,17 +27,21 @@ defmodule Plausible.Goals.SystemGoals do
   Checks if the event name is for a special goal that should have the event.props.path synced with the event.pathname property.
 
   ### Examples
-  iex> should_sync_props_path_with_pathname?("404", [{"path", "/foo"}])
+  iex> sync_props_path_with_pathname?("404", [{"path", "/foo"}])
   false
 
-  iex> should_sync_props_path_with_pathname?("404", [{"path", nil}])
+  Note: Should not override event.props.path if it is set deliberately to nil
+  iex> sync_props_path_with_pathname?("404", [{"path", nil}])
   false
 
-  iex> should_sync_props_path_with_pathname?("404", [])
+  iex> sync_props_path_with_pathname?("404", [{"other", "value"}])
+  true
+
+  iex> sync_props_path_with_pathname?("404", [])
   true
   """
-  @spec should_sync_props_path_with_pathname?(String.t(), [{String.t(), String.t()}]) :: boolean()
-  def should_sync_props_path_with_pathname?(event_name, props_in_request) do
+  @spec sync_props_path_with_pathname?(String.t(), [{String.t(), String.t()}]) :: boolean()
+  def sync_props_path_with_pathname?(event_name, props_in_request) do
     event_name in goals_with_path() and
       not Enum.any?(props_in_request, fn {k, _} -> k == "path" end)
   end

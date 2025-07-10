@@ -172,7 +172,7 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp maybe_set_props_path_to_pathname(props_in_request, changeset) do
-    if Plausible.Goals.SystemGoals.should_sync_props_path_with_pathname?(
+    if Plausible.Goals.SystemGoals.sync_props_path_with_pathname?(
          Changeset.get_field(changeset, :event_name),
          props_in_request
        ) do
