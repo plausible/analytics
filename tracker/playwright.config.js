@@ -25,11 +25,13 @@ export default defineConfig({
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
+      testIgnore: 'test/verifier/**',
     },
 
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+      testIgnore: 'test/verifier/**',
     },
   ],
   webServer: {

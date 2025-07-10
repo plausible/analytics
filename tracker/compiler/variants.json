@@ -30,6 +30,12 @@
         "COMPILE_REVENUE": true
       },
       "npm_package": "esm"
+    },
+    {
+      "name": "verifier-v1.js",
+      "entry_point": "verifier/verifier-v1.js",
+      "output_path": "priv/tracker/verifier/verifier-v1.js",
+      "globals": {}
     }
   ],
   "legacyVariants": [

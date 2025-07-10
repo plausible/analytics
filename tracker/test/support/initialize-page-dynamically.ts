@@ -12,6 +12,13 @@ interface DynamicPageOptions {
   path?: string
 }
 
+interface DynamicPageOptionsFullPage {
+  testId: string,
+  // Full html response
+  response: string,
+  path?: string
+}
+
 interface DynamicPageInfo {
   /** the url where the page is served */
   url: string
@@ -55,16 +62,23 @@ function getConfiguredPlausibleWebSnippet({
 
 export async function initializePageDynamically(
   page: Page,
-  { testId, scriptConfig, bodyContent, path = '' }: DynamicPageOptions
+  options: DynamicPageOptions | DynamicPageOptionsFullPage
 ): Promise<DynamicPageInfo> {
-  const url = `/dynamic/${testId}${path}`
+  const url = `/dynamic/${options.testId}${options.path || ''}`
   await page.context().route(url, async (route) => {
-    const responseBody = RESPONSE_BODY_TEMPLATE.replace(
-      '<script>// Plausible script</script>',
-      typeof scriptConfig === 'string'
-        ? scriptConfig
-        : getConfiguredPlausibleWebSnippet(scriptConfig)
-    ).replace('<body></body>', `<body>${bodyContent}</body>`)
+    let responseBody: string
+
+    if ('response' in options) {
+      responseBody = options.response
+    } else {
+      responseBody = RESPONSE_BODY_TEMPLATE.replace(
+        '<script>// Plausible script</script>',
+        typeof options.scriptConfig === 'string'
+          ? options.scriptConfig
+          : getConfiguredPlausibleWebSnippet(options.scriptConfig)
+      ).replace('<body></body>', `<body>${options.bodyContent}</body>`)
+    }
+
     await route.fulfill({
       body: responseBody,
       contentType: 'text/html'

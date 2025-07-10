@@ -918,7 +918,15 @@ defmodule Plausible.Verification.ChecksTest do
   end
 
   defp plausible_installed(bool \\ true, callback_status \\ 202) do
-    %{"data" => %{"plausibleInstalled" => bool, "callbackStatus" => callback_status}}
+    %{
+      "data" => %{
+        "completed" => true,
+        "snippetsFoundInHead" => 0,
+        "snippetsFoundInBody" => 0,
+        "plausibleInstalled" => bool,
+        "callbackStatus" => callback_status
+      }
+    }
   end
 
   defp refute_unhandled(interpretation) do
