@@ -23,13 +23,22 @@ defmodule Plausible.Goals.SystemGoals do
   def special_goals_for("event:props:url"), do: goals_with_url()
   def special_goals_for("event:props:path"), do: goals_with_path()
 
-  @spec maybe_sync_props_path_with_pathname(String.t(), map()) ::
-          {:ok, map()} | {:error, String.t()}
-  def maybe_sync_props_path_with_pathname(_pathname, %{"path" => _} = _props) do
-    {:error, "Path has been already set in props, won't override"}
-  end
+  @doc """
+  Checks if the event name is for a special goal that should have the event.props.path synced with the event.pathname property.
 
-  def maybe_sync_props_path_with_pathname(pathname, %{} = props) do
-    {:ok, Map.merge(props, %{"path" => pathname})}
+  ### Examples
+  iex> should_sync_props_path_with_pathname?("404", [{"path", "/foo"}])
+  false
+
+  iex> should_sync_props_path_with_pathname?("404", [{"path", nil}])
+  false
+
+  iex> should_sync_props_path_with_pathname?("404", [])
+  true
+  """
+  @spec should_sync_props_path_with_pathname?(String.t(), [{String.t(), String.t()}]) :: boolean()
+  def should_sync_props_path_with_pathname?(event_name, props_in_request) do
+    event_name in goals_with_path() and
+      not Enum.any?(props_in_request, fn {k, _} -> k == "path" end)
   end
 end
