@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
     ~H"""
     <form id="sso-init" for={} phx-submit="init-sso">
       <p class="text-sm">
-        Single Sign-On (SSO) enables team members to sign in without having to register an account. For more details, 
+        Single Sign-On (SSO) enables team members to sign in without having to register an account. For more details,
         <.styled_link href="https://plausible.io/docs/sso">see our documentation</.styled_link>.
       </p>
 
