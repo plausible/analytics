@@ -389,6 +389,55 @@ test.describe('v1 verifier (manualScriptExtension detection)', () => {
   })
 })
 
+test.describe('v1 verifier (unknownAttributes detection)', () => {
+  test('unknownAttributes is false when all attrs are known', async ({ page }, { testId }) => {
+    await mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <html>
+          <head>
+            <script
+              defer
+              type="text/javascript"
+              data-cfasync="false"
+              data-api="some"
+              data-include="some"
+              data-exclude="some"
+              data-domain="${SOME_DOMAIN}"
+              src="/tracker/js/plausible.manual.js">
+            </script>
+          </head>
+        </html>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+
+    expect(result.data.unknownAttributes).toBe(false)
+  })
+
+  test('unknownAttributes is true when any unknown attributes are present', async ({ page }, { testId }) => {
+    await mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+        <html>
+          <head>
+            <script defer weird="one" data-domain="${SOME_DOMAIN}" src="/tracker/js/script.js"></script>
+          </head>
+        </html>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+
+    expect(result.data.unknownAttributes).toBe(true)
+  })
+})
+
 test.describe('v1 verifier (logging)', () => {
   test('console logs in debug mode', async ({ page }, { testId }) => {
     await mockEventResponseSuccess(page)

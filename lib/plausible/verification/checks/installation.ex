@@ -50,6 +50,10 @@ defmodule Plausible.Verification.Checks.Installation do
 
   - `data.proxyLikely` - whether the script[src] is not a plausible.io URL
 
+  - `data.manualScriptExtension` - whether the site is using script.manual.js
+
+  - `data.unknownAttributes` - whether the script tag has any unknown attirbutes
+
   - `data.wordpressPlugin` - whether or not there's a `<meta>` tag with the WP plugin version
 
   - `data.wordpressLikely` - whether or not the site is built on WordPress
@@ -117,19 +121,21 @@ defmodule Plausible.Verification.Checks.Installation do
   def telemetry_event(true = _diff), do: [:plausible, :verification, :js_elixir_diff]
   def telemetry_event(false = _diff), do: [:plausible, :verification, :js_elixir_match]
 
-  defp emit_telemetry_and_log(elixir_data, js_data, data_domain) do
+  def emit_telemetry_and_log(elixir_data, js_data, data_domain) do
     diffs =
       for {diff, elixir_diagnostic, js_diagnostic} <- [
             {:data_domain_mismatch_diff, :data_domain_mismatch?, "dataDomainMismatch"},
             {:proxy_likely_diff, :proxy_likely?, "proxyLikely"},
+            {:manual_script_extension_diff, :manual_script_extension?, "manualScriptExtension"},
+            {:unknown_attributes_diff, :snippet_unknown_attributes?, "unknownAttributes"},
             {:wordpress_plugin_diff, :wordpress_plugin?, "wordpressPlugin"},
             {:wordpress_likely_diff, :wordpress_likely?, "wordpressLikely"},
-            {:gtm_likely_diff, :gtm_likely, "gtmLikely"},
-            {:cookie_banner_likely_diff, :cookie_banner_likely, "cookieBannerLikely"}
+            {:gtm_likely_diff, :gtm_likely?, "gtmLikely"},
+            {:cookie_banner_likely_diff, :cookie_banner_likely?, "cookieBannerLikely"}
           ] do
         case {Map.get(elixir_data, elixir_diagnostic), js_data[js_diagnostic]} do
-          {true, false} -> {diff, 1}
-          {false, true} -> {diff, -1}
+          {true, false} -> {diff, -1}
+          {false, true} -> {diff, 1}
           {_, _} -> {diff, 0}
         end
       end
@@ -151,7 +157,7 @@ defmodule Plausible.Verification.Checks.Installation do
         }
         |> Map.merge(diffs)
 
-      Logger.info("[VERIFICATION] js_elixir_diff: #{inspect(info)}")
+      IO.inspect("[VERIFICATION] js_elixir_diff: #{inspect(info)}")
     end
 
     :telemetry.execute(telemetry_event(any_diff?), %{})

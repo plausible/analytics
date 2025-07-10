@@ -6,6 +6,7 @@ import { checkWordPress } from "./check-wordpress"
 import { checkGTM } from "./check-gtm"
 import { checkCookieBanner } from "./check-cookie-banner"
 import { checkManualExtension } from "./check-manual-extension"
+import { checkUnknownAttributes } from "./check-unknown-attributes"
 
 window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   function log(message) {
@@ -24,6 +25,10 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   log(`dataDomainMismatch: ${dataDomainMismatch}`)
 
   const manualScriptExtension = checkManualExtension(snippetData.nodes)
+  log(`manualScriptExtension: ${manualScriptExtension}`)
+
+  const unknownAttributes = checkUnknownAttributes(snippetData.nodes)
+  log(`unknownAttributes: ${unknownAttributes}`)
 
   const proxyLikely = checkProxyLikely(snippetData.nodes)
   log(`proxyLikely: ${proxyLikely}`)
@@ -58,7 +63,8 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
       wordpressLikely: wordpressLikely,
       gtmLikely: gtmLikely,
       cookieBannerLikely: cookieBannerLikely,
-      manualScriptExtension: manualScriptExtension
+      manualScriptExtension: manualScriptExtension,
+      unknownAttributes: unknownAttributes
     }
   }
 }
