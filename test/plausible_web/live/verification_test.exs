@@ -214,8 +214,6 @@ defmodule PlausibleWeb.Live.VerificationTest do
         "snippetsFoundInHead" => 0,
         "snippetsFoundInBody" => 0,
         "plausibleInstalled" => bool,
-        "dataDomainMismatch" => nil,
-        "proxyLikely" => nil,
         "callbackStatus" => callback_status
       }
     }
