@@ -147,7 +147,7 @@ defmodule Plausible.Verification.Checks.Installation do
         }
         |> Map.merge(diffs)
 
-      IO.inspect("[VERIFICATION] js_elixir_diff: #{inspect(info)}")
+      Logger.info("[VERIFICATION] js_elixir_diff: #{inspect(info)}")
     end
 
     :telemetry.execute(telemetry_event(any_diff?), %{})
