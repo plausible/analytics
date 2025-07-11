@@ -1,4 +1,4 @@
-defmodule Plausible.Verification.Checks.CSPTest do
+defmodule Plausible.InstallationSupport.Checks.CSPTest do
   use Plausible.DataCase, async: true
 
   alias Plausible.InstallationSupport.{State, LegacyVerification}

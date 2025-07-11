@@ -1,4 +1,4 @@
-defmodule Plausible.Verification.Checks.ScanBodyTest do
+defmodule Plausible.InstallationSupport.Checks.ScanBodyTest do
   use Plausible.DataCase, async: true
 
   alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}

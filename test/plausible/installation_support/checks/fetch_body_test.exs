@@ -1,4 +1,4 @@
-defmodule Plausible.Verification.Checks.FetchBodyTest do
+defmodule Plausible.InstallationSupport.Checks.FetchBodyTest do
   use Plausible.DataCase, async: true
 
   import Plug.Conn
