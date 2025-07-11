@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
 
   @user_id Enum.random(1000..9999)
 

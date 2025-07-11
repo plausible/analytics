@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
 
   describe "GET /api/stats/:domain/operating-systems" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]

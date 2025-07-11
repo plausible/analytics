@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
 
   describe "GET /api/stats/:domain/browsers" do
     setup [:create_user, :log_in, :create_site, :create_site_import]

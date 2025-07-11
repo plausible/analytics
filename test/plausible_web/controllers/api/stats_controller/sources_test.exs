@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.SourcesTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)

@@ -1,5 +1,5 @@
 defmodule Plausible.PropsTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Plausible.Teams.Test
 
   test "allow/2 returns error when user plan does not include props" do

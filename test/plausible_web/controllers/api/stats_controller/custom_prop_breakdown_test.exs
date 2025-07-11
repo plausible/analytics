@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Teams.Test
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key" do

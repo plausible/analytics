@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Teams.Test
   import Plausible.TestUtils
   alias Plausible.Billing.Feature

@@ -1,5 +1,5 @@
 defmodule Plausible.ExportsTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
 
   doctest Plausible.Exports, import: true
 

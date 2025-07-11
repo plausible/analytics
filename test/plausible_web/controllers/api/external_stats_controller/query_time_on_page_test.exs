@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key, :create_site_import]
 

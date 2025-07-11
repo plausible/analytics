@@ -1,5 +1,5 @@
 defmodule Plausible.FunnelsTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   @moduletag :ee_only
 
   use Plausible

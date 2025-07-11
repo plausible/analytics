@@ -1,5 +1,5 @@
 defmodule Plausible.GoalsTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Plausible
   use Plausible.Teams.Test
   alias Plausible.Goals

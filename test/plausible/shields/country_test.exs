@@ -1,5 +1,5 @@
 defmodule Plausible.Shields.CountryTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   import Plausible.Shields
 
   setup do

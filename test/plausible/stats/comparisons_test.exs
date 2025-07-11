@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.ComparisonsTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   alias Plausible.Stats.{Query, Comparisons}
   import Plausible.TestUtils
 

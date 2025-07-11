@@ -1,5 +1,5 @@
 defmodule Plausible.ImportedTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Plausible
 
   alias Plausible.Imported
