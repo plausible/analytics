@@ -3,7 +3,9 @@ defmodule Plausible.Verification.Checks.FetchBodyTest do
 
   import Plug.Conn
 
-  @check Plausible.Verification.Checks.FetchBody
+  alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
+
+  @check Checks.FetchBody
 
   @normal_body """
   <html>
@@ -16,8 +18,9 @@ defmodule Plausible.Verification.Checks.FetchBodyTest do
 
   setup do
     {:ok,
-     state: %Plausible.Verification.State{
-       url: "https://example.com"
+     state: %State{
+       url: "https://example.com",
+       diagnostics: %LegacyVerification.Diagnostics{}
      }}
   end
 

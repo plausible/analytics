@@ -1,17 +1,18 @@
 defmodule Plausible.Verification.Checks.CSPTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.Verification.State
+  alias Plausible.InstallationSupport.{State, LegacyVerification}
 
-  @check Plausible.Verification.Checks.CSP
+  @check Plausible.InstallationSupport.Checks.CSP
+  @default_state %State{diagnostics: %LegacyVerification.Diagnostics{}}
 
   test "skips no headers" do
-    state = %State{}
+    state = @default_state
     assert ^state = @check.perform(state)
   end
 
   test "skips no headers 2" do
-    state = %State{} |> State.assign(headers: %{})
+    state = @default_state |> State.assign(headers: %{})
     assert ^state = @check.perform(state)
   end
 
@@ -19,7 +20,7 @@ defmodule Plausible.Verification.Checks.CSPTest do
     headers = %{"content-security-policy" => ["default-src 'self' foo.local; example.com"]}
 
     state =
-      %State{}
+      @default_state
       |> State.assign(headers: headers)
       |> @check.perform()
 
@@ -30,7 +31,7 @@ defmodule Plausible.Verification.Checks.CSPTest do
     headers = %{"content-security-policy" => ["default-src 'self' example.com; localhost"]}
 
     state =
-      %State{}
+      @default_state
       |> State.assign(headers: headers)
       |> @check.perform()
 

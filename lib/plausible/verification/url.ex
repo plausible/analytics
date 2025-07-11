@@ -1,6 +1,6 @@
-defmodule Plausible.Verification.URL do
+defmodule Plausible.InstallationSupport.URL do
   @moduledoc """
-  Busting some caches by appending ?plausible_verification=12345 to it.
+  URL utilities for installation support, including cache busting functionality.
   """
 
   def bust_url(url) do

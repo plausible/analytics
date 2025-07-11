@@ -1,6 +1,6 @@
-defmodule Plausible.Verification.Errors do
+defmodule Plausible.InstallationSupport.LegacyVerification.Errors do
   @moduledoc """
-  A go-to definition of all verification errors
+  A go-to definition of all legacy verification errors
   """
 
   @errors %{

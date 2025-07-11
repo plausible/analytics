@@ -1,10 +1,10 @@
-defmodule Plausible.Verification.Diagnostics do
+defmodule Plausible.InstallationSupport.LegacyVerification.Diagnostics do
   @moduledoc """
   Module responsible for translating diagnostics to user-friendly errors and recommendations.
   """
   require Logger
 
-  @errors Plausible.Verification.Errors.all()
+  @errors Plausible.InstallationSupport.LegacyVerification.Errors.all()
 
   defstruct plausible_installed?: false,
             snippets_found_in_head: 0,

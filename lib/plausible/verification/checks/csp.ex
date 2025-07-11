@@ -1,9 +1,9 @@
-defmodule Plausible.Verification.Checks.CSP do
+defmodule Plausible.InstallationSupport.Checks.CSP do
   @moduledoc """
   Scans the Content Security Policy header to ensure that the Plausible domain is allowed.
-  See `Plausible.Verification.Checks` for the execution sequence.
+  See `Plausible.InstallationSupport.LegacyVerification.Checks` for the execution sequence.
   """
-  use Plausible.Verification.Check
+  use Plausible.InstallationSupport.Check
 
   @impl true
   def report_progress_as, do: "We're visiting your site to ensure that everything is working"

@@ -1,8 +1,8 @@
-defmodule Plausible.Verification.Checks.ScanBody do
+defmodule Plausible.InstallationSupport.Checks.ScanBody do
   @moduledoc """
   Naive way of detecting GTM and WordPress powered sites.
   """
-  use Plausible.Verification.Check
+  use Plausible.InstallationSupport.Check
 
   @impl true
   def report_progress_as, do: "We're visiting your site to ensure that everything is working"
@@ -67,7 +67,7 @@ defmodule Plausible.Verification.Checks.ScanBody do
   defp scan_cookie_banners(%{assigns: %{raw_body: body}} = state) do
     # We'll start with CookieBot. Not using the selectors yet, as seen at
     # https://github.com/cavi-au/Consent-O-Matic/blob/master/rules/cookiebot.json
-    # because those don't seem to be appearing without JS evaluation. 
+    # because those don't seem to be appearing without JS evaluation.
     # If this ever becomes an issue, we'll have to move that check to headless.
     if String.contains?(body, "cookiebot") do
       put_diagnostics(state, cookie_banner_likely?: true)

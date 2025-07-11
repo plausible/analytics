@@ -1,12 +1,15 @@
-defmodule Plausible.Verification.Checks.SnippetCacheBust do
+defmodule Plausible.InstallationSupport.Checks.SnippetCacheBust do
   @moduledoc """
-  A naive way of trying to figure out whether the latest site contents 
+  A naive way of trying to figure out whether the latest site contents
   is wrapped with some CDN/caching layer.
-  In case no snippets were found, we'll try to bust the cache by appending a random query parameter
-  and re-run `Plausible.Verification.Checks.FetchBody` and `Plausible.Verification.Checks.Snippet` checks.
+
+  In case no snippets were found, we'll try to bust the cache by appending
+  a random query parameter and re-run `FetchBody` and `Snippet` checks.
   If the result is different this time, we'll assume cache likely.
   """
-  use Plausible.Verification.Check
+  use Plausible.InstallationSupport.Check
+
+  alias Plausible.InstallationSupport.{LegacyVerification, Checks, URL}
 
   @impl true
   def report_progress_as, do: "We're looking for the Plausible snippet on your site"
@@ -15,7 +18,7 @@ defmodule Plausible.Verification.Checks.SnippetCacheBust do
   def perform(
         %State{
           url: url,
-          diagnostics: %Diagnostics{
+          diagnostics: %LegacyVerification.Diagnostics{
             snippets_found_in_head: 0,
             snippets_found_in_body: 0,
             body_fetched?: true
@@ -23,10 +26,10 @@ defmodule Plausible.Verification.Checks.SnippetCacheBust do
         } = state
       ) do
     state2 =
-      %{state | url: Plausible.Verification.URL.bust_url(url)}
-      |> Plausible.Verification.Checks.FetchBody.perform()
-      |> Plausible.Verification.Checks.ScanBody.perform()
-      |> Plausible.Verification.Checks.Snippet.perform()
+      %{state | url: URL.bust_url(url)}
+      |> Checks.FetchBody.perform()
+      |> Checks.ScanBody.perform()
+      |> Checks.Snippet.perform()
 
     if state2.diagnostics.snippets_found_in_head > 0 or
          state2.diagnostics.snippets_found_in_body > 0 do

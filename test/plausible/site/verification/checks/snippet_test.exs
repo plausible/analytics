@@ -1,12 +1,13 @@
-defmodule Plausible.Verification.Checks.SnippetTest do
+defmodule Plausible.InstallationSupport.Checks.SnippetTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.Verification.State
+  alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
 
-  @check Plausible.Verification.Checks.Snippet
+  @check Checks.Snippet
+  @default_state %State{diagnostics: %LegacyVerification.Diagnostics{}}
 
   test "skips when there's no document" do
-    state = %State{}
+    state = @default_state
     assert ^state = @check.perform(state)
   end
 
@@ -156,7 +157,7 @@ defmodule Plausible.Verification.Checks.SnippetTest do
       [data_domain: "example.com"]
       |> Keyword.merge(opts)
 
-    State
+    @default_state
     |> struct!(opts)
     |> State.assign(document: doc)
   end

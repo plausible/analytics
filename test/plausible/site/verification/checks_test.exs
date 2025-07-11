@@ -1,14 +1,12 @@
-defmodule Plausible.Verification.ChecksTest do
+defmodule Plausible.InstallationSupport.LegacyVerification.ChecksTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.Verification.Checks
-  alias Plausible.Verification.Diagnostics
-  alias Plausible.Verification.State
+  alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
 
   import ExUnit.CaptureLog
   import Plug.Conn
 
-  @errors Plausible.Verification.Errors.all()
+  @errors LegacyVerification.Errors.all()
 
   describe "successful verification" do
     @normal_body """
@@ -25,7 +23,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_ok()
     end
 
@@ -33,7 +31,7 @@ defmodule Plausible.Verification.ChecksTest do
       ref = :counters.new(1, [:atomics])
       test = self()
 
-      Req.Test.stub(Plausible.Verification.Checks.FetchBody, fn conn ->
+      Req.Test.stub(Checks.FetchBody, fn conn ->
         if :counters.get(ref, 1) < 2 do
           :counters.add(ref, 1, 1)
           send(test, :redirect_sent)
@@ -51,7 +49,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_ok()
 
       assert_receive :redirect_sent
@@ -76,7 +74,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_ok()
     end
 
@@ -94,7 +92,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_ok()
     end
 
@@ -107,7 +105,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, 202))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_ok()
     end
 
@@ -124,7 +122,7 @@ defmodule Plausible.Verification.ChecksTest do
       ref = :counters.new(1, [:atomics])
       test = self()
 
-      Req.Test.stub(Plausible.Verification.Checks.FetchBody, fn conn ->
+      Req.Test.stub(Checks.FetchBody, fn conn ->
         if :counters.get(ref, 1) == 0 do
           :counters.add(ref, 1, 1)
           send(test, :redirect_sent)
@@ -142,7 +140,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_ok()
 
       assert_receive :redirect_sent
@@ -155,7 +153,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(400, %{})
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.temporary)
     end
 
@@ -167,7 +165,7 @@ defmodule Plausible.Verification.ChecksTest do
       {_, log} =
         with_log(fn ->
           run_checks()
-          |> Checks.interpret_diagnostics()
+          |> LegacyVerification.Checks.interpret_diagnostics()
           |> assert_ok()
         end)
 
@@ -190,7 +188,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.unreachable, url: "https://example.com")
 
       assert_receive :redirect_sent
@@ -217,7 +215,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.snippet_in_body)
     end
 
@@ -242,7 +240,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.multiple_snippets)
     end
 
@@ -262,7 +260,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.no_snippet)
     end
 
@@ -283,7 +281,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_ok()
     end
 
@@ -315,7 +313,7 @@ defmodule Plausible.Verification.ChecksTest do
       end)
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.cache_general)
     end
 
@@ -357,7 +355,7 @@ defmodule Plausible.Verification.ChecksTest do
       end)
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.cache_wp_no_plugin)
     end
 
@@ -400,7 +398,7 @@ defmodule Plausible.Verification.ChecksTest do
       end)
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.cache_wp_plugin)
     end
 
@@ -409,7 +407,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.no_snippet)
     end
 
@@ -429,13 +427,13 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.no_snippet_wp)
     end
 
     test "a check that raises" do
       defmodule FaultyCheckRaise do
-        use Plausible.Verification.Check
+        use Plausible.InstallationSupport.Check
 
         @impl true
         def report_progress_as, do: "Faulty check"
@@ -450,16 +448,16 @@ defmodule Plausible.Verification.ChecksTest do
         end)
 
       assert log =~
-               ~s|Error running check Plausible.Verification.ChecksTest.FaultyCheckRaise on https://example.com: %RuntimeError{message: "boom"}|
+               ~s|Error running check Plausible.InstallationSupport.LegacyVerification.ChecksTest.FaultyCheckRaise on https://example.com: %RuntimeError{message: "boom"}|
 
       result
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.unreachable, url: "https://example.com")
     end
 
     test "a check that throws" do
       defmodule FaultyCheckThrow do
-        use Plausible.Verification.Check
+        use Plausible.InstallationSupport.Check
 
         @impl true
         def report_progress_as, do: "Faulty check"
@@ -474,10 +472,10 @@ defmodule Plausible.Verification.ChecksTest do
         end)
 
       assert log =~
-               ~s|Error running check Plausible.Verification.ChecksTest.FaultyCheckThrow on https://example.com: :boom|
+               ~s|Error running check Plausible.InstallationSupport.LegacyVerification.ChecksTest.FaultyCheckThrow on https://example.com: :boom|
 
       result
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.unreachable, url: "https://example.com")
     end
 
@@ -492,7 +490,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.csp)
     end
 
@@ -507,7 +505,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.no_snippet)
     end
 
@@ -517,13 +515,15 @@ defmodule Plausible.Verification.ChecksTest do
 
       final_state = run_checks(report_to: self())
 
-      assert_receive {:verification_check_start, {Checks.FetchBody, %State{}}}
-      assert_receive {:verification_check_start, {Checks.CSP, %State{}}}
-      assert_receive {:verification_check_start, {Checks.ScanBody, %State{}}}
-      assert_receive {:verification_check_start, {Checks.Snippet, %State{}}}
-      assert_receive {:verification_check_start, {Checks.SnippetCacheBust, %State{}}}
-      assert_receive {:verification_check_start, {Checks.Installation, %State{}}}
-      assert_receive {:verification_end, %State{} = ^final_state}
+      assert_receive {:check_start, {Checks.FetchBody, %State{}}}
+      assert_receive {:check_start, {Checks.CSP, %State{}}}
+      assert_receive {:check_start, {Checks.ScanBody, %State{}}}
+      assert_receive {:check_start, {Checks.Snippet, %State{}}}
+
+      assert_receive {:check_start, {Checks.SnippetCacheBust, %State{}}}
+
+      assert_receive {:check_start, {Checks.Installation, %State{}}}
+      assert_receive {:all_checks_done, %State{} = ^final_state}
       refute_receive _
     end
 
@@ -555,7 +555,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.csp)
     end
 
@@ -564,7 +564,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.gtm)
     end
 
@@ -591,7 +591,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.gtm_cookie_banner)
     end
 
@@ -605,7 +605,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.unreachable, url: "https://example.com")
     end
 
@@ -614,7 +614,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, 0))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.proxy_misconfigured)
     end
 
@@ -633,7 +633,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.proxy_wp_no_plugin)
     end
 
@@ -642,13 +642,13 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       result = run_checks()
-      interpretation = Checks.interpret_diagnostics(result)
+      interpretation = LegacyVerification.Checks.interpret_diagnostics(result)
 
       refute interpretation.ok?
       assert interpretation.errors == ["We encountered an error with your Plausible proxy"]
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.proxy_general)
     end
 
@@ -657,7 +657,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, 0))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.unknown)
     end
 
@@ -675,7 +675,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.illegal_attrs_general)
     end
 
@@ -694,7 +694,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.illegal_attrs_wp_no_plugin)
     end
 
@@ -714,7 +714,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.illegal_attrs_wp_plugin)
     end
 
@@ -723,7 +723,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, -1))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.generic)
     end
 
@@ -732,7 +732,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, -1))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.old_script_wp_no_plugin)
     end
 
@@ -741,7 +741,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, -1))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.old_script_wp_plugin)
     end
 
@@ -750,7 +750,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, 500))
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.unknown)
     end
 
@@ -759,7 +759,7 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.different_data_domain, domain: "example.com")
     end
 
@@ -780,14 +780,14 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       run_checks()
-      |> Checks.interpret_diagnostics()
+      |> LegacyVerification.Checks.interpret_diagnostics()
       |> assert_error(@errors.different_data_domain, domain: "example.com")
     end
   end
 
   describe "unhhandled cases from sentry" do
     test "APP-58: 4b1435e3f8a048eb949cc78fa578d1e4" do
-      %Plausible.Verification.Diagnostics{
+      %LegacyVerification.Diagnostics{
         plausible_installed?: true,
         snippets_found_in_head: 0,
         snippets_found_in_body: 0,
@@ -810,7 +810,7 @@ defmodule Plausible.Verification.ChecksTest do
     end
 
     test "service timeout" do
-      %Plausible.Verification.Diagnostics{
+      %LegacyVerification.Diagnostics{
         plausible_installed?: false,
         snippets_found_in_head: 1,
         snippets_found_in_body: 0,
@@ -833,7 +833,7 @@ defmodule Plausible.Verification.ChecksTest do
     end
 
     test "malformed snippet code, that headless somewhat accepts" do
-      %Plausible.Verification.Diagnostics{
+      %LegacyVerification.Diagnostics{
         plausible_installed?: true,
         snippets_found_in_head: 0,
         snippets_found_in_body: 0,
@@ -856,7 +856,7 @@ defmodule Plausible.Verification.ChecksTest do
     end
 
     test "gtm+wp detected, but likely script id attribute interfering" do
-      %Plausible.Verification.Diagnostics{
+      %LegacyVerification.Diagnostics{
         plausible_installed?: false,
         snippets_found_in_head: 1,
         snippets_found_in_body: 0,
@@ -881,12 +881,12 @@ defmodule Plausible.Verification.ChecksTest do
 
   defp interpret_sentry_case(diagnostics) do
     diagnostics
-    |> Diagnostics.interpret("example.com")
+    |> LegacyVerification.Diagnostics.interpret("example.com")
     |> refute_unhandled()
   end
 
   defp run_checks(extra_opts \\ []) do
-    Checks.run(
+    LegacyVerification.Checks.run(
       "https://example.com",
       "example.com",
       Keyword.merge([async?: false, report_to: nil, slowdown: 0], extra_opts)
@@ -894,11 +894,11 @@ defmodule Plausible.Verification.ChecksTest do
   end
 
   defp stub_fetch_body(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.Verification.Checks.FetchBody, f)
+    Req.Test.stub(Checks.FetchBody, f)
   end
 
   defp stub_installation(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.Verification.Checks.Installation, f)
+    Req.Test.stub(Checks.Installation, f)
   end
 
   defp stub_fetch_body(status, body) do

@@ -1,18 +1,18 @@
 defmodule Plausible.Verification.Checks.ScanBodyTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.Verification.State
+  alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
 
-  @check Plausible.Verification.Checks.ScanBody
+  @check Checks.ScanBody
+  @default_state %State{diagnostics: %LegacyVerification.Diagnostics{}}
 
   test "skips on no raw body" do
-    state = %State{}
-    assert ^state = @check.perform(state)
+    assert @default_state = @check.perform(@default_state)
   end
 
   test "detects nothing" do
     state =
-      %State{}
+      @default_state
       |> State.assign(raw_body: "...")
       |> @check.perform()
 
@@ -22,7 +22,7 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
 
   test "detects GTM" do
     state =
-      %State{}
+      @default_state
       |> State.assign(raw_body: "...googletagmanager.com/gtm.js...")
       |> @check.perform()
 
@@ -33,7 +33,7 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
 
   test "detects GTM and cookie banner" do
     state =
-      %State{}
+      @default_state
       |> State.assign(raw_body: "...googletagmanager.com/gtm.js...cookiebot...")
       |> @check.perform()
 
@@ -45,7 +45,7 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
   for signature <- ["wp-content", "wp-includes", "wp-json"] do
     test "detects WordPress: #{signature}" do
       state =
-        %State{}
+        @default_state
         |> State.assign(raw_body: "...#{unquote(signature)}...")
         |> @check.perform()
 
@@ -57,7 +57,7 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
 
   test "detects GTM and WordPress" do
     state =
-      %State{}
+      @default_state
       |> State.assign(raw_body: "...googletagmanager.com/gtm.js....wp-content...")
       |> @check.perform()
 
@@ -72,7 +72,7 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
 
   test "detects official plugin" do
     state =
-      %State{}
+      @default_state
       |> State.assign(raw_body: @d, document: Floki.parse_document!(@d))
       |> @check.perform()
 

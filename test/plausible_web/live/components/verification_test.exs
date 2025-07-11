@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
   import Phoenix.LiveViewTest, only: [render_component: 2]
   import Plausible.Test.Support.HTML
 
+  alias Plausible.InstallationSupport.{State, LegacyVerification}
+
   @component PlausibleWeb.Live.Components.Verification
   @progress ~s|#progress-indicator p#progress|
 
@@ -36,8 +38,9 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
   test "renders diagnostic interpretation" do
     interpretation =
-      Plausible.Verification.Checks.interpret_diagnostics(%Plausible.Verification.State{
-        url: "example.com"
+      LegacyVerification.Checks.interpret_diagnostics(%State{
+        url: "example.com",
+        diagnostics: %LegacyVerification.Diagnostics{}
       })
 
     html =
@@ -58,12 +61,13 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
   end
 
   test "renders super-admin report" do
-    state = %Plausible.Verification.State{
-      url: "example.com"
+    state = %State{
+      url: "example.com",
+      diagnostics: %LegacyVerification.Diagnostics{}
     }
 
     interpretation =
-      Plausible.Verification.Checks.interpret_diagnostics(state)
+      LegacyVerification.Checks.interpret_diagnostics(state)
 
     html =
       render_component(@component,

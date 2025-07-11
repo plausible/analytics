@@ -1,15 +1,16 @@
-defmodule Plausible.Verification.Checks.FetchBody do
+defmodule Plausible.InstallationSupport.Checks.FetchBody do
   @moduledoc """
   Fetches the body of the site and extracts the HTML document, if available, for
-  further processing.
-  See `Plausible.Verification.Checks` for the execution sequence.
+  further processing. See `Plausible.InstallationSupport.LegacyVerification.Checks`
+  for the execution sequence.
   """
-  use Plausible.Verification.Check
+  use Plausible.InstallationSupport.Check
 
   @impl true
   def report_progress_as, do: "We're visiting your site to ensure that everything is working"
 
   @impl true
+
   def perform(%State{url: "https://" <> _ = url} = state) do
     fetch_body_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
 

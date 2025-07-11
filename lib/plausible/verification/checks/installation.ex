@@ -1,4 +1,4 @@
-defmodule Plausible.Verification.Checks.Installation do
+defmodule Plausible.InstallationSupport.Checks.Installation do
   require Logger
 
   path = Application.app_dir(:plausible, "priv/tracker/verifier/verifier-v1.js")
@@ -45,7 +45,7 @@ defmodule Plausible.Verification.Checks.Installation do
 
   - `data.callbackStatus` - integer. 202 indicates that the server acknowledged the test event.
                             The test event ingestion is discarded based on user-agent, see:
-                            `Plausible.Verification.user_agent/0`
+                            `Plausible.InstallationSupport.user_agent/0`
 
   - `data.dataDomainMismatch` - whether or not script[data-domain] mismatched with site.domain
 
@@ -63,7 +63,7 @@ defmodule Plausible.Verification.Checks.Installation do
 
   - `data.cookieBannerLikely` - whether or not there's a cookie banner blocking Plausible
   """
-  use Plausible.Verification.Check
+  use Plausible.InstallationSupport.Check
 
   @impl true
   def report_progress_as, do: "We're verifying that your visitors are being counted correctly"
@@ -77,8 +77,8 @@ defmodule Plausible.Verification.Checks.Installation do
           code: @puppeteer_wrapper_code,
           context: %{
             expectedDataDomain: data_domain,
-            url: Plausible.Verification.URL.bust_url(url),
-            userAgent: Plausible.Verification.user_agent(),
+            url: Plausible.InstallationSupport.URL.bust_url(url),
+            userAgent: Plausible.InstallationSupport.user_agent(),
             debug: Application.get_env(:plausible, :environment) == "dev"
           }
         }),
@@ -90,7 +90,7 @@ defmodule Plausible.Verification.Checks.Installation do
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
     opts = Keyword.merge(opts, extra_opts)
 
-    case Req.post(verification_endpoint(), opts) do
+    case Req.post(Plausible.InstallationSupport.browserless_function_api_endpoint(), opts) do
       {:ok, %{status: 200, body: %{"data" => %{"completed" => true} = js_data}}} ->
         emit_telemetry_and_log(state.diagnostics, js_data, data_domain)
 
@@ -158,12 +158,5 @@ defmodule Plausible.Verification.Checks.Installation do
     end
 
     :telemetry.execute(telemetry_event(any_diff?), %{})
-  end
-
-  defp verification_endpoint() do
-    config = Application.fetch_env!(:plausible, __MODULE__)
-    token = Keyword.fetch!(config, :token)
-    endpoint = Keyword.fetch!(config, :endpoint)
-    Path.join(endpoint, "function?token=#{token}&stealth")
   end
 end

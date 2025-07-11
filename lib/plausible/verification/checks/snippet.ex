@@ -1,10 +1,10 @@
-defmodule Plausible.Verification.Checks.Snippet do
+defmodule Plausible.InstallationSupport.Checks.Snippet do
   @moduledoc """
   The check looks for Plausible snippets and tries to address the common
-  integration issues, such as bad placement, data-domain typos, unknown 
+  integration issues, such as bad placement, data-domain typos, unknown
   attributes frequently added by performance optimization plugins, etc.
   """
-  use Plausible.Verification.Check
+  use Plausible.InstallationSupport.Check
 
   @impl true
   def report_progress_as, do: "We're looking for the Plausible snippet on your site"

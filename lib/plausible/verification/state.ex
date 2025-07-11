@@ -1,17 +1,29 @@
-defmodule Plausible.Verification.State do
+defmodule Plausible.InstallationSupport.State do
   @moduledoc """
-  The struct and interface describing the state of the site verification process.
-  Assigns are meant to be used to communicate between checks, while diagnostics
-  are later on interpreted (translated into user-friendly messages and recommendations)
-  via `Plausible.Verification.Diagnostics` module.
+  The state to be shared across check during site installation support.
+
+  Assigns are meant to be used to communicate between checks, while
+  `diagnostics` are specific to the check group being executed.
   """
+
   defstruct url: nil,
             data_domain: nil,
             report_to: nil,
             assigns: %{},
-            diagnostics: %Plausible.Verification.Diagnostics{}
+            diagnostics: %{}
 
-  @type t() :: %__MODULE__{}
+  @type diagnostics_type ::
+          Plausible.InstallationSupport.LegacyVerification.Diagnostics.t()
+          | Plausible.InstallationSupport.Verification.Diagnostics.t()
+          | Plausible.InstallationSupport.Detection.Diagnostics.t()
+
+  @type t :: %__MODULE__{
+          url: String.t() | nil,
+          data_domain: String.t() | nil,
+          report_to: pid() | nil,
+          assigns: map(),
+          diagnostics: diagnostics_type()
+        }
 
   def assign(%__MODULE__{} = state, assigns) do
     %{state | assigns: Map.merge(state.assigns, Enum.into(assigns, %{}))}
