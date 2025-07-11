@@ -1,9 +1,9 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use Plausible
-  use PlausibleWeb.ConnCase, async: false
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
   use Plausible.Teams.Test
-  use Bamboo.Test
+  use Bamboo.Test, shared: false
 
   on_ee do
     setup :create_user

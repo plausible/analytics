@@ -1,7 +1,7 @@
 defmodule Plausible.Teams.Invitations.InviteToSiteTest do
   use Plausible
-  use Plausible.DataCase
-  use Bamboo.Test
+  use Plausible.DataCase, async: true
+  use Bamboo.Test, shared: false
   use Plausible.Teams.Test
 
   alias Plausible.Teams.Invitations.InviteToSite

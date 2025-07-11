@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.RegionsTest do
   use Plausible.Teams.Test
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
 
   describe "GET /api/stats/:domain/regions" do
     defp seed(%{site: site}) do

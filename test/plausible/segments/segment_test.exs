@@ -1,5 +1,5 @@
 defmodule Plausible.Segments.SegmentTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Plausible.Segments.Segment, import: true
 
   setup do

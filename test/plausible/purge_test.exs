@@ -1,5 +1,5 @@
 defmodule Plausible.PurgeTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Plausible.Teams.Test
 
   setup do

@@ -1,5 +1,5 @@
 defmodule Plausible.Ingestion.AcquisitionTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
 
   setup_all do
     Plausible.DataMigration.AcquisitionChannel.run(quiet: true)

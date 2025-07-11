@@ -1,6 +1,6 @@
 defmodule Plausible.Billing.FeatureTest do
   alias Plausible.Billing.Feature.SiteSegments
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Plausible.Teams.Test
 
   alias Plausible.Billing.Feature.{

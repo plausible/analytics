@@ -1,8 +1,8 @@
 defmodule PlausibleWeb.Site.MembershipControllerTest do
   use Plausible
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
-  use Bamboo.Test
+  use Bamboo.Test, shared: false
 
   use Plausible.Teams.Test
   import Plausible.Teams.Test
