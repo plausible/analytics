@@ -27,6 +27,16 @@ jobs:
         include:
           - mix_env: "ce_test"
             postgres_image: "postgres:16"
+            mix_test_partition: 1
+          - mix_env: "ce_test"
+            postgres_image: "postgres:16"
+            mix_test_partition: 2
+          - mix_env: "ce_test"
+            postgres_image: "postgres:16"
+            mix_test_partition: 3
+          - mix_env: "ce_test"
+            postgres_image: "postgres:16"
+            mix_test_partition: 4
 
     env:
       MIX_ENV: ${{ matrix.mix_env }}
@@ -109,8 +119,10 @@ jobs:
           MINIO_HOST_FOR_CLICKHOUSE: "172.17.0.1"
           MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
 
-      - run: mix test --include slow --include migrations --max-failures 1 --warnings-as-errors
+      - run: mix test --include slow --include migrations --max-failures 1 --warnings-as-errors --partitions 4
         if: env.MIX_ENV == 'ce_test'
+        env:
+          MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
 
   static:
     name: Static checks (format, credo, dialyzer)
