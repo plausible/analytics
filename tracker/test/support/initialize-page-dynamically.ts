@@ -2,14 +2,23 @@ import { Page } from '@playwright/test'
 import { ScriptConfig } from './types'
 import { compileWebSnippet } from '../../compiler'
 
-interface DynamicPageOptions {
+interface SharedOptions {
+  /** unique ID that becomes part of the dynamic page URL */
+  testId: string
+  /** optional path to append to the dynamic page URL */
+  path?: string
+}
+
+interface TemplatedResponse {
   /** string like `<script defer id="plausible" src="/plausible.compat.local.js"></script>` or ScriptConfig to be set to web snippet */
   scriptConfig: ScriptConfig | string
   /** vanilla HTML string, which can contain JS, will be set in the body of the page */
   bodyContent: string
-  testId: string
-  /** optional path to append to the dynamic page URL */
-  path?: string
+}
+
+interface FullResponse {
+  // Full html response
+  response: string
 }
 
 interface DynamicPageInfo {
@@ -55,16 +64,23 @@ function getConfiguredPlausibleWebSnippet({
 
 export async function initializePageDynamically(
   page: Page,
-  { testId, scriptConfig, bodyContent, path = '' }: DynamicPageOptions
+  options: SharedOptions & (TemplatedResponse | FullResponse)
 ): Promise<DynamicPageInfo> {
-  const url = `/dynamic/${testId}${path}`
+  const url = `/dynamic/${options.testId}${options.path || ''}`
   await page.context().route(url, async (route) => {
-    const responseBody = RESPONSE_BODY_TEMPLATE.replace(
-      '<script>// Plausible script</script>',
-      typeof scriptConfig === 'string'
-        ? scriptConfig
-        : getConfiguredPlausibleWebSnippet(scriptConfig)
-    ).replace('<body></body>', `<body>${bodyContent}</body>`)
+    let responseBody: string
+
+    if ('response' in options) {
+      responseBody = options.response
+    } else {
+      responseBody = RESPONSE_BODY_TEMPLATE.replace(
+        '<script>// Plausible script</script>',
+        typeof options.scriptConfig === 'string'
+          ? options.scriptConfig
+          : getConfiguredPlausibleWebSnippet(options.scriptConfig)
+      ).replace('<body></body>', `<body>${options.bodyContent}</body>`)
+    }
+
     await route.fulfill({
       body: responseBody,
       contentType: 'text/html'

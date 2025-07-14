@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_VERSION: v14
+  CACHE_VERSION: v15
   PERSISTENT_CACHE_DIR: cached
 
 jobs:
@@ -81,6 +81,7 @@ jobs:
             _build
             tracker/node_modules
             priv/tracker/js
+            priv/tracker/verifier
             ${{ env.PERSISTENT_CACHE_DIR }}
           key: ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
@@ -94,9 +95,9 @@ jobs:
           filters: |
             tracker:
               - 'tracker/**'
-      - name: Check if priv/tracker/js/plausible-web.js exists
+      - name: Check if tracker and verifier are built already
         run: |
-          if [ -f priv/tracker/js/plausible-web.js ]; then
+          if [ -f priv/tracker/js/plausible-web.js ] && [ -f priv/tracker/verifier/verifier-v1.js ]; then
             echo "HAS_BUILT_TRACKER=true" >> $GITHUB_ENV
           else
             echo "HAS_BUILT_TRACKER=false" >> $GITHUB_ENV
