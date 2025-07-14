@@ -104,6 +104,7 @@ Plausible.Funnels.html
 Plausible.Geo.html
 Plausible.Goal.Revenue.html
 Plausible.Goal.html
+Plausible.Goals.SystemGoals.html
 Plausible.Goals.html
 Plausible.Google.API.Mock.html
 Plausible.Google.API.html
@@ -507,8 +508,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-FB8B86DE.js
-dist/sidebar_items-6D2A0949.js
+dist/search_data-ADBBBB13.js
+dist/sidebar_items-6769BA24.js
 index.html
 readme.html
 search.html
