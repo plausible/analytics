@@ -1,5 +1,8 @@
 const SELECTORS = {
   // https://github.com/cavi-au/Consent-O-Matic/blob/master/rules/cookiebot.json
+  // We check whether any of the selectors mentioner under
+  // `cookiebot.detectors[0].showingMatcher[0].target.selector`
+  // is visible on the page.
   cookiebot: [
     '#CybotCookiebotDialogBodyButtonAccept',
     '#CybotCookiebotDialogBody',
