@@ -1,6 +1,7 @@
 import { test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import {
+  e,
   ensurePlausibleInitialized,
   expectPlausibleInAction,
   isEngagementEvent,
@@ -45,9 +46,7 @@ test('does not track form submissions when the feature is disabled', async ({
 })
 
 test.describe('form submissions feature is enabled', () => {
-  test('tracks forms that use GET method', async ({ page }, {
-    testId
-  }) => {
+  test('tracks forms that use GET method', async ({ page }, { testId }) => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
@@ -69,7 +68,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -98,7 +98,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -137,7 +138,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -169,7 +171,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -265,7 +268,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -279,7 +283,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
