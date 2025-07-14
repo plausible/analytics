@@ -47,6 +47,40 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     expect(result.data.proxyLikely).toBe(true)
   })
 
+  test('handles a dynamically loaded snippet', async ({ page }, { testId }) => {
+    await mockEventResponseSuccess(page)
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      response: `
+      <html>
+        <head></head>
+        <body>
+          <script>
+            const script = document.createElement('script')
+
+            script.defer = true
+            script.dataset.domain = '${SOME_DOMAIN}'
+            script.src = "/tracker/js/plausible.local.manual.js"
+
+            setTimeout(() => {
+              document.getElementsByTagName('head')[0].appendChild(script)
+            }, 500)
+          </script>
+        </body>
+      </html>
+      `
+    })
+
+    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
+
+    expect(result.data.plausibleInstalled).toBe(true)
+    expect(result.data.snippetsFoundInHead).toBe(1)
+    expect(result.data.snippetsFoundInBody).toBe(0)
+    expect(result.data.callbackStatus).toBe(202)
+    expect(result.data.dataDomainMismatch).toBe(false)
+  })
+
   test('missing snippet', async ({ page }, { testId }) => {
     const { url } = await initializePageDynamically(page, {
       testId,
