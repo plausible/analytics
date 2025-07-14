@@ -292,6 +292,55 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.pathname == "/pictures/index.html#foo"
   end
 
+  for event_name <- Plausible.Goals.SystemGoals.goals_with_path() do
+    test "event.props.path is synced from event.pathname for special path-based event '#{event_name}'" do
+      payload = %{
+        name: unquote(event_name),
+        domain: "dummy.site",
+        url: "http://dummy.site/pictures/index.html#foo"
+      }
+
+      conn = build_conn(:post, "/api/events", payload)
+
+      assert {:ok, request} = Request.build(conn)
+
+      assert request.pathname == "/pictures/index.html"
+      assert request.props == %{"path" => "/pictures/index.html"}
+    end
+
+    test "event.props.path is synced from event.pathname for special path-based event '#{event_name}' with hashMode" do
+      payload = %{
+        name: unquote(event_name),
+        domain: "dummy.site",
+        url: "http://dummy.site/pictures/index.html#foo",
+        hashMode: 1
+      }
+
+      conn = build_conn(:post, "/api/events", payload)
+
+      assert {:ok, request} = Request.build(conn)
+
+      assert request.pathname == "/pictures/index.html#foo"
+      assert request.props == %{"path" => "/pictures/index.html#foo"}
+    end
+
+    test "event.props.path is not synced from event.pathname for special path-based event '#{event_name}' if it's set explicitly (legacy support)" do
+      payload = %{
+        name: unquote(event_name),
+        domain: "dummy.site",
+        url: "http://dummy.site/pictures/index.html#foo",
+        props: %{"path" => "/album"}
+      }
+
+      conn = build_conn(:post, "/api/events", payload)
+
+      assert {:ok, request} = Request.build(conn)
+
+      assert request.pathname == "/pictures/index.html"
+      assert request.props == %{"path" => "/album"}
+    end
+  end
+
   test "query params are set" do
     payload = %{
       name: "pageview",
