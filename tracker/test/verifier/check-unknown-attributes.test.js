@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { checkUnknownAttributes } from '../verifier/check-unknown-attributes.js'
+import { checkUnknownAttributes } from '../../verifier/check-unknown-attributes.js'
 
 test.describe('checkUnknownAttributes', () => {
   test('returns false when no snippets', () => {
