@@ -2,21 +2,23 @@ import { Page } from '@playwright/test'
 import { ScriptConfig } from './types'
 import { compileWebSnippet } from '../../compiler'
 
-interface DynamicPageOptions {
-  /** string like `<script defer id="plausible" src="/plausible.compat.local.js"></script>` or ScriptConfig to be set to web snippet */
-  scriptConfig: ScriptConfig | string
-  /** vanilla HTML string, which can contain JS, will be set in the body of the page */
-  bodyContent: string
+interface SharedOptions {
+  /** unique ID that becomes part of the dynamic page URL */
   testId: string
   /** optional path to append to the dynamic page URL */
   path?: string
 }
 
-interface DynamicPageOptionsFullPage {
-  testId: string,
+interface TemplatedResponse {
+  /** string like `<script defer id="plausible" src="/plausible.compat.local.js"></script>` or ScriptConfig to be set to web snippet */
+  scriptConfig: ScriptConfig | string
+  /** vanilla HTML string, which can contain JS, will be set in the body of the page */
+  bodyContent: string
+}
+
+interface FullResponse {
   // Full html response
-  response: string,
-  path?: string
+  response: string
 }
 
 interface DynamicPageInfo {
@@ -62,7 +64,7 @@ function getConfiguredPlausibleWebSnippet({
 
 export async function initializePageDynamically(
   page: Page,
-  options: DynamicPageOptions | DynamicPageOptionsFullPage
+  options: SharedOptions & (TemplatedResponse | FullResponse)
 ): Promise<DynamicPageInfo> {
   const url = `/dynamic/${options.testId}${options.path || ''}`
   await page.context().route(url, async (route) => {
