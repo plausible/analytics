@@ -26,7 +26,10 @@ defmodule PlausibleWeb.Live.SSOManagement do
     ~H"""
     <.flash_messages flash={@flash} />
 
-    <.tile :if={@mode != :manage} docs={if @mode in [:domain_setup, :domain_verify], do: "sso#sso-domains", else: "sso"}>
+    <.tile
+      :if={@mode != :manage}
+      docs={if @mode in [:domain_setup, :domain_verify], do: "sso#sso-domains", else: "sso"}
+    >
       <:title>
         <a id="sso-config">Single Sign-On</a>
       </:title>
