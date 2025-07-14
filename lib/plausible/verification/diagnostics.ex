@@ -211,11 +211,13 @@ defmodule Plausible.Verification.Diagnostics do
   def interpret(
         %__MODULE__{
           plausible_installed?: true,
-          callback_status: 0,
+          callback_status: callback_status,
           proxy_likely?: true
         },
         _url
-      ) do
+      )
+      when callback_status in [0, 500]
+      do
     error(@errors.proxy_misconfigured)
   end
 
