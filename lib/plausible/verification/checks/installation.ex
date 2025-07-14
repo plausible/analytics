@@ -23,7 +23,8 @@ defmodule Plausible.Verification.Checks.Installation do
         return await window.verifyPlausibleInstallation(expectedDataDomain, debug);
       }, context.expectedDataDomain, context.debug);
     } catch (error) {
-      return {data: {completed: false, error: error}}
+      const msg = error.message ? error.message : JSON.stringify(error)
+      return {data: {completed: false, error: msg}}
     }
   }
   """
