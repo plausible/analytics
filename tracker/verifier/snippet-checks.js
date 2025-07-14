@@ -11,7 +11,7 @@ export async function waitForSnippetsV1(log) {
 
     snippetCounts = await waitForAdditionalSnippets()
 
-    log(`Final snippet count: head=${snippetCounts.head}, body=${snippetCounts.body}`)
+    log(`Final snippet count: head=${snippetCounts.head}; body=${snippetCounts.body}`)
   } else {
     log('No snippets found after 5 seconds') 
   }
