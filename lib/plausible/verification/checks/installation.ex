@@ -100,11 +100,17 @@ defmodule Plausible.Verification.Checks.Installation do
         )
 
       {:ok, %{status: status, body: %{"data" => %{"error" => error}}}} ->
-        Logger.warning("[VERIFICATION] Browserless JS error (data_domain='#{data_domain}'): #{inspect(error)}")
+        Logger.warning(
+          "[VERIFICATION] Browserless JS error (data_domain='#{data_domain}'): #{inspect(error)}"
+        )
+
         put_diagnostics(state, plausible_installed?: false, service_error: status)
 
       {:error, %{reason: reason}} ->
-        Logger.warning("[VERIFICATION] Browserless request error (data_domain='#{data_domain}'): #{inspect(reason)}")
+        Logger.warning(
+          "[VERIFICATION] Browserless request error (data_domain='#{data_domain}'): #{inspect(reason)}"
+        )
+
         put_diagnostics(state, plausible_installed?: false, service_error: reason)
     end
   end

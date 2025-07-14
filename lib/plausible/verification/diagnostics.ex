@@ -216,8 +216,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       )
-      when callback_status in [0, 500]
-      do
+      when callback_status in [0, 500] do
     error(@errors.proxy_misconfigured)
   end
 
