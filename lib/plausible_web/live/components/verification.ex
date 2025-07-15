@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   use Plausible
 
   alias PlausibleWeb.Router.Helpers, as: Routes
+  alias Plausible.InstallationSupport.{State, LegacyVerification}
 
   import PlausibleWeb.Components.Generic
 
@@ -19,8 +20,8 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr(:super_admin?, :boolean, default: false)
   attr(:finished?, :boolean, default: false)
   attr(:success?, :boolean, default: false)
-  attr(:verification_state, Plausible.Verification.State, default: nil)
-  attr(:interpretation, Plausible.Verification.Diagnostics.Result, default: nil)
+  attr(:verification_state, State, default: nil)
+  attr(:interpretation, LegacyVerification.Diagnostics.Result, default: nil)
   attr(:attempts, :integer, default: 0)
   attr(:flow, :string, default: "")
   attr(:installation_type, :string, default: nil)

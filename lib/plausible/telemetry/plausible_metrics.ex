@@ -124,11 +124,13 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         ),
         counter(
           metric_prefix ++ [:verification, :js_elixir_diff],
-          event_name: Plausible.Verification.Checks.Installation.telemetry_event(_diff = true)
+          event_name:
+            Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = true)
         ),
         counter(
           metric_prefix ++ [:verification, :js_elixir_match],
-          event_name: Plausible.Verification.Checks.Installation.telemetry_event(_diff = false)
+          event_name:
+            Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = false)
         )
       ]
     )

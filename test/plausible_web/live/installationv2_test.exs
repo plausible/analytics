@@ -279,7 +279,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
   end
 
   defp stub_fetch_body(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.Verification.Checks.FetchBody, f)
+    Req.Test.stub(Plausible.InstallationSupport.Checks.FetchBody, f)
   end
 
   defp stub_fetch_body(status, body) do

@@ -15,7 +15,11 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'list',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  /*
+  Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions.
+  NOTE: We run the installation support tests on Chrome only because the Browserless /function API
+  runs a Chromium-based browser environment.
+  */
   projects: [
     {
       name: 'chromium',
@@ -25,13 +29,13 @@ export default defineConfig({
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testIgnore: 'test/verifier/**',
+      testIgnore: 'test/installation_support/**',
     },
 
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testIgnore: 'test/verifier/**',
+      testIgnore: 'test/installation_support/**',
     },
   ],
   webServer: {
