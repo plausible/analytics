@@ -8,18 +8,18 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.Verification.Check — Plausible v0.0.1</title>
+    <title>Plausible.InstallationSupport.Checks.FetchBody — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-01DF2B65.js"></script>
+    <script src="dist/sidebar_items-6EE5C05B.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
-  <body data-type="modules" class="page-behaviour">
+  <body data-type="modules" class="page-module">
     <script>
 
       try {
@@ -126,23 +126,21 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/verification/check.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/installation_support/checks/fetch_body.ex#L1" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
-    <span translate="no">Plausible.Verification.Check</span> <small>behaviour</small>
+    <span translate="no">Plausible.InstallationSupport.Checks.FetchBody</span> 
     <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>Behaviour to be implemented by specific site verification checks.
-<code class="inline">report_progress_as()</code> doesn't necessarily reflect the actual check description,
-it serves as a user-facing message grouping mechanism, to prevent frequent message flashing when checks rotate often.
-Each check operates on <code class="inline">state()</code> and is expected to return it, optionally modified, by all means.
-<code class="inline">perform_safe/1</code> is used to guarantee no exceptions are thrown by faulty implementations, not to interrupt LiveView.</p>
+<p>Fetches the body of the site and extracts the HTML document, if available, for
+further processing. See <a href="Plausible.InstallationSupport.LegacyVerification.Checks.html"><code class="inline">Plausible.InstallationSupport.LegacyVerification.Checks</code></a>
+for the execution sequence.</p>
     </section>
 
 </div>
@@ -154,36 +152,14 @@ Each check operates on <code class="inline">state()</code> and is expected to re
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
+<div class="summary-functions summary">
   <h2>
-    <a href="#types">Types</a>
+    <a href="#functions">Functions</a>
   </h2>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:state/0" data-no-tooltip translate="no">state()</a>
-
-      </div>
-
-    </div>
-
-</div>
-<div class="summary-callbacks summary">
-  <h2>
-    <a href="#callbacks">Callbacks</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#c:perform/1" data-no-tooltip translate="no">perform(state)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#c:report_progress_as/0" data-no-tooltip translate="no">report_progress_as()</a>
+        <a href="#perform_safe/1" data-no-tooltip translate="no">perform_safe(state)</a>
 
       </div>
 
@@ -194,23 +170,23 @@ Each check operates on <code class="inline">state()</code> and is expected to re
   </section>
 
 
-  <section id="types" class="details-list">
+  <section id="functions" class="details-list">
     <h1 class="section-heading">
-      <a class="hover-link" href="#types">
+      <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
       </a>
-      <span class="text">Types</span>
+      <span class="text">Functions</span>
     </h1>
-    <div class="types-list">
-<section class="detail" id="t:state/0">
+    <div class="functions-list">
+<section class="detail" id="perform_safe/1">
 
   <div class="detail-header">
-    <a href="#t:state/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+    <a href="#perform_safe/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">state()</h1>
+    <h1 class="signature" translate="no">perform_safe(state)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/verification/check.ex#L9" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/installation_support/checks/fetch_body.ex#L7" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -218,76 +194,6 @@ Each check operates on <code class="inline">state()</code> and is expected to re
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> state() :: <a href="Plausible.Verification.State.html#t:t/0">Plausible.Verification.State.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
-
-  <section id="callbacks" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#callbacks">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Callbacks</span>
-    </h1>
-    <div class="callbacks-list">
-<section class="detail" id="c:perform/1">
-
-  <div class="detail-header">
-    <a href="#c:perform/1" class="detail-link" data-no-tooltip aria-label="Link to this callback">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">perform(state)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/verification/check.ex#L11" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@callback</span> perform(<a href="#t:state/0">state</a>()) :: <a href="#t:state/0">state</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="c:report_progress_as/0">
-
-  <div class="detail-header">
-    <a href="#c:report_progress_as/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">report_progress_as()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/verification/check.ex#L10" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@callback</span> report_progress_as() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
-
-      </div>
 
 
   </section>

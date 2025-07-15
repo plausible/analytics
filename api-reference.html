@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-01DF2B65.js"></script>
+    <script src="dist/sidebar_items-6EE5C05B.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -1340,6 +1340,150 @@ to detect user errors early.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.html" translate="no">Plausible.InstallationSupport</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This top level module is the middle ground between pre-installation
+site scans and verification of whether Plausible has been installed
+correctly.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Check.html" translate="no">Plausible.InstallationSupport.Check</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Behaviour to be implemented by a specific installation support check.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.CheckRunner.html" translate="no">Plausible.InstallationSupport.CheckRunner</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Takes two arguments</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.CSP.html" translate="no">Plausible.InstallationSupport.Checks.CSP</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Scans the Content Security Policy header to ensure that the Plausible domain is allowed.
+See <a href="Plausible.InstallationSupport.LegacyVerification.Checks.html"><code class="inline">Plausible.InstallationSupport.LegacyVerification.Checks</code></a> for the execution sequence.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.FetchBody.html" translate="no">Plausible.InstallationSupport.Checks.FetchBody</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Fetches the body of the site and extracts the HTML document, if available, for
+further processing. See <a href="Plausible.InstallationSupport.LegacyVerification.Checks.html"><code class="inline">Plausible.InstallationSupport.LegacyVerification.Checks</code></a>
+for the execution sequence.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.Installation.html" translate="no">Plausible.InstallationSupport.Checks.Installation</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
+and runs verifier script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.ScanBody.html" translate="no">Plausible.InstallationSupport.Checks.ScanBody</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Naive way of detecting GTM and WordPress powered sites.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.Snippet.html" translate="no">Plausible.InstallationSupport.Checks.Snippet</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The check looks for Plausible snippets and tries to address the common
+integration issues, such as bad placement, data-domain typos, unknown
+attributes frequently added by performance optimization plugins, etc.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.SnippetCacheBust.html" translate="no">Plausible.InstallationSupport.Checks.SnippetCacheBust</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A naive way of trying to figure out whether the latest site contents
+is wrapped with some CDN/caching layer.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.LegacyVerification.Checks.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Checks</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Checks that are performed during v1 site verification.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.LegacyVerification.Diagnostics.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Diagnostics</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Module responsible for translating diagnostics to user-friendly errors and recommendations.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.LegacyVerification.Diagnostics.Result.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Diagnostics.Result</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Diagnostics interpretation result.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.LegacyVerification.Errors.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Errors</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A go-to definition of all legacy verification errors</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.State.html" translate="no">Plausible.InstallationSupport.State</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The state to be shared across check during site installation support.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.URL.html" translate="no">Plausible.InstallationSupport.URL</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>URL utilities for installation support, including cache busting functionality.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.License.html" translate="no">Plausible.License</a>
 
   </div>
@@ -2509,152 +2653,6 @@ re-record the cassettes anyway).</p></div>
   </div>
 
     <div class="summary-synopsis"><p>User context</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.html" translate="no">Plausible.Verification</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Module defining the user-agent used for site verification.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Check.html" translate="no">Plausible.Verification.Check</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Behaviour to be implemented by specific site verification checks.
-<code class="inline">report_progress_as()</code> doesn't necessarily reflect the actual check description,
-it serves as a user-facing message grouping mechanism, to prevent frequent message flashing when checks rotate often.
-Each check operates on <code class="inline">state()</code> and is expected to return it, optionally modified, by all means.
-<code class="inline">perform_safe/1</code> is used to guarantee no exceptions are thrown by faulty implementations, not to interrupt LiveView.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Checks.html" translate="no">Plausible.Verification.Checks</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Checks that are performed during site verification.
-Each module defined in <code class="inline">@checks</code> implements the <a href="Plausible.Verification.Check.html"><code class="inline">Plausible.Verification.Check</code></a> behaviour.
-Checks are normally run asynchronously, except when synchronous execution is optionally required
-for tests. Slowdowns can be optionally added, the user doesn't benefit from running the checks too quickly.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Checks.CSP.html" translate="no">Plausible.Verification.Checks.CSP</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Scans the Content Security Policy header to ensure that the Plausible domain is allowed.
-See <a href="Plausible.Verification.Checks.html"><code class="inline">Plausible.Verification.Checks</code></a> for the execution sequence.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Checks.FetchBody.html" translate="no">Plausible.Verification.Checks.FetchBody</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Fetches the body of the site and extracts the HTML document, if available, for
-further processing.
-See <a href="Plausible.Verification.Checks.html"><code class="inline">Plausible.Verification.Checks</code></a> for the execution sequence.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Checks.Installation.html" translate="no">Plausible.Verification.Checks.Installation</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
-and runs verifier script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Checks.ScanBody.html" translate="no">Plausible.Verification.Checks.ScanBody</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Naive way of detecting GTM and WordPress powered sites.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Checks.Snippet.html" translate="no">Plausible.Verification.Checks.Snippet</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>The check looks for Plausible snippets and tries to address the common
-integration issues, such as bad placement, data-domain typos, unknown 
-attributes frequently added by performance optimization plugins, etc.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Checks.SnippetCacheBust.html" translate="no">Plausible.Verification.Checks.SnippetCacheBust</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A naive way of trying to figure out whether the latest site contents 
-is wrapped with some CDN/caching layer.
-In case no snippets were found, we'll try to bust the cache by appending a random query parameter
-and re-run <a href="Plausible.Verification.Checks.FetchBody.html"><code class="inline">Plausible.Verification.Checks.FetchBody</code></a> and <a href="Plausible.Verification.Checks.Snippet.html"><code class="inline">Plausible.Verification.Checks.Snippet</code></a> checks.
-If the result is different this time, we'll assume cache likely.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Diagnostics.html" translate="no">Plausible.Verification.Diagnostics</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Module responsible for translating diagnostics to user-friendly errors and recommendations.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Diagnostics.Result.html" translate="no">Plausible.Verification.Diagnostics.Result</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Diagnostics interpretation result.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.Errors.html" translate="no">Plausible.Verification.Errors</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A go-to definition of all verification errors</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.State.html" translate="no">Plausible.Verification.State</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>The struct and interface describing the state of the site verification process.
-Assigns are meant to be used to communicate between checks, while diagnostics
-are later on interpreted (translated into user-friendly messages and recommendations)
-via <a href="Plausible.Verification.Diagnostics.html"><code class="inline">Plausible.Verification.Diagnostics</code></a> module.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Verification.URL.html" translate="no">Plausible.Verification.URL</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Busting some caches by appending ?plausible_verification=12345 to it.</p></div>
 
 </div>
 <div class="summary-row">
