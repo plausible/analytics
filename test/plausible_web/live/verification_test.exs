@@ -184,11 +184,11 @@ defmodule PlausibleWeb.Live.VerificationTest do
   end
 
   defp stub_fetch_body(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.Verification.Checks.FetchBody, f)
+    Req.Test.stub(Plausible.InstallationSupport.Checks.FetchBody, f)
   end
 
   defp stub_installation(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.Verification.Checks.Installation, f)
+    Req.Test.stub(Plausible.InstallationSupport.Checks.Installation, f)
   end
 
   defp stub_fetch_body(status, body) do
@@ -208,7 +208,15 @@ defmodule PlausibleWeb.Live.VerificationTest do
   end
 
   defp plausible_installed(bool \\ true, callback_status \\ 202) do
-    %{"data" => %{"plausibleInstalled" => bool, "callbackStatus" => callback_status}}
+    %{
+      "data" => %{
+        "completed" => true,
+        "snippetsFoundInHead" => 0,
+        "snippetsFoundInBody" => 0,
+        "plausibleInstalled" => bool,
+        "callbackStatus" => callback_status
+      }
+    }
   end
 
   defp source(domain) do

@@ -3,6 +3,16 @@
 This document describes the design goals informing the architecture of the Plausible tracker script codebase as well as a map
 to how the code is laid out.
 
+## Installation Support
+
+The tracker subdirectory also includes site verification and pre-installation checks that are run in headless browser, via
+browserless.io. These files live under the `/tracker/installation-support/` director and are meant to provide Plausible
+installation support - checking the site for what technologies to recommend and verifying whether Plausible has been
+installed correctly. Please see `lib/plausible/installation_support/checks/installation.ex` for the Elixir context and how
+this JS code ends up being used.
+
+While this logic could be separated from the tracker script, it's convenient for installation support to reuse the Playwright test structure and JS compilation logic without introducing yet another subdirectory with its own dependencies.
+
 ## Design goals
 
 We want to provide users a javascript suite to capture page views and activities done on the web page.

@@ -34,14 +34,14 @@ config :plausible, Plausible.Ingestion.Counters, enabled: false
 
 config :plausible, Oban, testing: :manual
 
-config :plausible, Plausible.Verification.Checks.FetchBody,
+config :plausible, Plausible.InstallationSupport.Checks.FetchBody,
   req_opts: [
-    plug: {Req.Test, Plausible.Verification.Checks.FetchBody}
+    plug: {Req.Test, Plausible.InstallationSupport.Checks.FetchBody}
   ]
 
-config :plausible, Plausible.Verification.Checks.Installation,
+config :plausible, Plausible.InstallationSupport.Checks.Installation,
   req_opts: [
-    plug: {Req.Test, Plausible.Verification.Checks.Installation}
+    plug: {Req.Test, Plausible.InstallationSupport.Checks.Installation}
   ]
 
 config :plausible, Plausible.HelpScout,

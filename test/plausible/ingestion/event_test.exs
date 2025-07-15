@@ -80,7 +80,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert_receive :telemetry_handled
   end
 
-  test "drops verification agent" do
+  test "drops installation support user agent" do
     site = new_site()
 
     payload = %{
@@ -90,7 +90,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     conn =
       build_conn(:post, "/api/events", payload)
-      |> Plug.Conn.put_req_header("user-agent", Plausible.Verification.user_agent())
+      |> Plug.Conn.put_req_header("user-agent", Plausible.InstallationSupport.user_agent())
 
     assert {:ok, request} = Request.build(conn)
 

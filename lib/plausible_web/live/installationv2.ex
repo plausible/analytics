@@ -3,8 +3,8 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   User assistance module around Plausible installation instructions/onboarding
   """
   alias PlausibleWeb.Flows
+  alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
   use PlausibleWeb, :live_view
-  alias Plausible.Verification.{Checks, State}
 
   def mount(
         %{"domain" => domain} = params,
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       connected?(socket) and flow == Flows.provisioning() and !params["type"]
 
     if detect_installation_type? do
-      Checks.run("https://#{site.domain}", site.domain,
+      LegacyVerification.Checks.run("https://#{site.domain}", site.domain,
         checks: [
           Checks.FetchBody,
           Checks.ScanBody
@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
      )}
   end
 
-  def handle_info({:verification_end, %State{} = state}, socket) do
+  def handle_info({:all_checks_done, %State{} = state}, socket) do
     installation_type =
       case state.diagnostics do
         %{wordpress_likely?: true} -> "wordpress"
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
      )}
   end
 
-  def handle_info({:verification_check_start, _}, socket) do
+  def handle_info({:check_start, _}, socket) do
     {:noreply, socket}
   end
 

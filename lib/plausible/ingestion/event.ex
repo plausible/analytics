@@ -21,7 +21,7 @@ defmodule Plausible.Ingestion.Event do
             salts: nil,
             changeset: nil
 
-  @verification_user_agent Plausible.Verification.user_agent()
+  @verification_user_agent Plausible.InstallationSupport.user_agent()
 
   @type drop_reason() ::
           :bot

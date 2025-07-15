@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.Installation do
   User assistance module around Plausible installation instructions/onboarding
   """
   use PlausibleWeb, :live_view
-  alias Plausible.Verification.{Checks, State}
+  alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
 
   @script_extension_params %{
     "outbound_links" => "outbound-links",
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Live.Installation do
         end)
 
       if connected?(socket) and is_nil(installation_type) do
-        Checks.run("https://#{domain}", domain,
+        LegacyVerification.Checks.run("https://#{domain}", domain,
           checks: [
             Checks.FetchBody,
             Checks.ScanBody
@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Live.Installation do
     end
   end
 
-  def handle_info({:verification_end, %State{} = state}, socket) do
+  def handle_info({:all_checks_done, %State{} = state}, socket) do
     installation_type =
       case state.diagnostics do
         %{wordpress_likely?: true} -> "wordpress"
