@@ -21,6 +21,10 @@ defmodule Plausible.InstallationSupport do
       Path.join(endpoint, "function?token=#{token}&stealth")
     end
   else
+    def browserless_function_api_endpoint() do
+      "Browserless API should not be called on Community Edition"
+    end
+
     def user_agent() do
       "Plausible Community Edition"
     end
