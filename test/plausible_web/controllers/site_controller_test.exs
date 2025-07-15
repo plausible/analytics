@@ -1935,6 +1935,15 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert site.domain == new_domain
       assert site.domain_changed_from == original_domain
     end
+
+    test "change_domain redirects to v2 when scriptv2 flag is enabled", %{conn: conn, site: site} do
+      FunWithFlags.enable(:scriptv2, for_actor: site)
+
+      conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
+
+      assert redirected_to(conn) ==
+               Routes.site_path(conn, :change_domain_v2, site.domain)
+    end
   end
 
   describe "reset stats" do

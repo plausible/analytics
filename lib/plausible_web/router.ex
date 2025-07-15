@@ -624,6 +624,12 @@ defmodule PlausibleWeb.Router do
             } do
         live "/:domain/verification", Verification, :verification, as: :site
       end
+
+      scope assigns: %{
+              dogfood_page_path: "/:website/change-domain-v2"
+            } do
+        live "/:domain/change-domain-v2", ChangeDomainV2, :change_domain_v2, as: :site
+      end
     end
 
     get "/:domain/settings", SiteController, :settings

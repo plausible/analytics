@@ -747,12 +747,18 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def change_domain(conn, _params) do
-    changeset = Plausible.Site.update_changeset(conn.assigns.site)
+    if FunWithFlags.enabled?(:scriptv2, for: conn.assigns.site) do
+      redirect(conn,
+        to: Routes.site_path(conn, :change_domain_v2, conn.assigns.site.domain)
+      )
+    else
+      changeset = Plausible.Site.update_changeset(conn.assigns.site)
 
-    render(conn, "change_domain.html",
-      skip_plausible_tracking: true,
-      changeset: changeset
-    )
+      render(conn, "change_domain.html",
+        skip_plausible_tracking: true,
+        changeset: changeset
+      )
+    end
   end
 
   def change_domain_submit(conn, %{"site" => %{"domain" => new_domain}}) do
