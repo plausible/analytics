@@ -1,5 +1,20 @@
 import { runThrottledCheck } from "./run-check"
 
+export async function plausibleFunctionCheckV2(log) {
+  log('Checking for Plausible function...')
+  const plausibleFound = await waitForPlausibleFunctionV2()
+    
+  if (plausibleFound) {
+    log('Plausible function found. Executing test event...')
+    const callbackResult = await testPlausibleCallback(log)
+    log(`Test event callback response: ${callbackResult.status}`)
+    return { plausibleInstalled: true, callbackStatus: callbackResult.status }
+  } else {
+    log('Plausible function not found')
+    return { plausibleInstalled: false}
+  }
+}
+
 export async function plausibleFunctionCheck(log) {
   log('Checking for Plausible function...')
   const plausibleFound = await waitForPlausibleFunction()
@@ -13,6 +28,14 @@ export async function plausibleFunctionCheck(log) {
     log('Plausible function not found')
     return { plausibleInstalled: false}
   }
+}
+async function waitForPlausibleFunctionV2() {
+  const checkFn = (opts) => {
+    if (window.plausible?.l === true) { return true }
+    if (opts.timeout) { return false }
+    return 'continue'
+  }
+  return await runThrottledCheck(checkFn, {timeout: 5000, interval: 100})
 }
 
 async function waitForPlausibleFunction() {

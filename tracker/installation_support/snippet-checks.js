@@ -1,5 +1,13 @@
 import { runThrottledCheck } from "./run-check"
 
+export async function waitForBootstrappers(log) {
+  log('Starting bootstrapper detection...')
+
+  const initScripts = await getPlausibleInitScripts()
+  log(`Final bootstrapper count: ${initScripts.length}`)
+  return initScripts
+}
+
 export async function waitForSnippetsV1(log) {
   log('Starting snippet detection...')
 
@@ -40,6 +48,31 @@ function countSnippets() {
     all: headSnippets.length + bodySnippets.length
   }
 }
+
+async function getPlausibleInitScripts() {
+  return await runThrottledCheck((opts) => {
+    const bootstrappers = Array.from(document.querySelectorAll('script')).filter(script => script.textContent?.includes('plausible.init('))
+
+    if (bootstrappers.length > 0 || opts.timeout) {
+      return bootstrappers
+    }
+
+    return 'continue'
+  }, {timeout: 5000, interval: 100})
+}
+
+// from script calling 'plausible.init(', extract all injected script node src attribute values
+// handles double quoted src attributes only
+export function getPlausibleInitScriptSrcs(script) {
+  return Array.from(script.textContent.matchAll(/\.src=\s*"([^"]+)"/g, (m) => m[0]))
+}
+
+// from script calling 'plausible.init(', extract all domain values
+// handles double quoted domain values only
+export function getPlausibleInitScriptDomains(script) {
+  return Array.from(script.textContent.matchAll(/\domain:\s*"([^"]+)"/g, (m) => m[0]))
+}
+
 
 async function waitForFirstSnippet() {
   const checkFn = (opts) => {

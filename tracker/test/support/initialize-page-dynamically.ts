@@ -78,7 +78,7 @@ export async function initializePageDynamically(
         typeof options.scriptConfig === 'string'
           ? options.scriptConfig
           : getConfiguredPlausibleWebSnippet(options.scriptConfig)
-      ).replace('<body></body>', `<body>${options.bodyContent}</body>`)
+      ).replace('<body></body>', `<body>${options.bodyContent ?? ''}</body>`)
     }
 
     await route.fulfill({
