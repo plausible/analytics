@@ -33,15 +33,8 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     ~H"""
     <.focus_box>
       <:title>Change your website domain</:title>
-
       <:subtitle>
-        If you are using the Wordpress plugin, NPM module, or Events API, you must also update the tracking
-        <code>domain</code>
-        to match the updated domain. See
-        <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
-          documentation
-        </.styled_link>
-        for details.
+        If you have changed the domain name of your site and would like your new domain name to be displayed in your Plausible dashboard, you can do so here. You won't lose any of your historical stats in this process.
       </:subtitle>
 
       <:footer>
@@ -64,10 +57,22 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
           label="Domain"
         />
 
-        <.button type="submit" class="mt-4 w-full">
+      <.button type="submit" class="mt-4 w-full">
           Change Domain
         </.button>
+
+        <.notice class="mt-4" title="Additional Steps May Be Required">
+        If you are using the Wordpress plugin, NPM module, or Events API for tracking, you must also update the tracking
+        <code>domain</code>
+        to match the updated domain. See
+        <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+          documentation
+        </.styled_link>
+        for details.
+        </.notice>
+
       </.form>
+
     </.focus_box>
     """
   end
