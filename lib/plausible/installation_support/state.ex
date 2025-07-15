@@ -12,10 +12,7 @@ defmodule Plausible.InstallationSupport.State do
             assigns: %{},
             diagnostics: %{}
 
-  @type diagnostics_type ::
-          Plausible.InstallationSupport.LegacyVerification.Diagnostics.t()
-          | Plausible.InstallationSupport.Verification.Diagnostics.t()
-          | Plausible.InstallationSupport.Detection.Diagnostics.t()
+  @type diagnostics_type :: Plausible.InstallationSupport.LegacyVerification.Diagnostics.t()
 
   @type t :: %__MODULE__{
           url: String.t() | nil,
