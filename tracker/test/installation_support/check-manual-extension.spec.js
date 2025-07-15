@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { checkManualExtension } from '../../verifier/check-manual-extension'
+import { checkManualExtension } from '../../installation_support/check-manual-extension'
 
 function mockSnippet(dataDomain) {
   return { getAttribute: _ => dataDomain }

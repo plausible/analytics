@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { checkWordPress, WORDPRESS_PLUGIN_VERSION_SELECTOR } from '../../verifier/check-wordpress'
+import { checkWordPress, WORDPRESS_PLUGIN_VERSION_SELECTOR } from '../../installation_support/check-wordpress'
 
 function mockDocument(html, hasMetaTag) {
   return {

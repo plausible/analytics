@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { checkDataDomainMismatch } from '../../verifier/check-data-domain-mismatch'
+import { checkDataDomainMismatch } from '../../installation_support/check-data-domain-mismatch'
 
 function mockSnippet(dataDomain) {
   return { getAttribute: _ => dataDomain }

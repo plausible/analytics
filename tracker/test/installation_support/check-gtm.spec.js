@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { checkGTM } from '../../verifier/check-gtm'
+import { checkGTM } from '../../installation_support/check-gtm'
 
 function mockDocument(html) {
   return {

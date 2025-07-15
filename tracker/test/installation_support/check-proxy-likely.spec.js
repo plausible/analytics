@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { checkProxyLikely } from '../../verifier/check-proxy-likely'
+import { checkProxyLikely } from '../../installation_support/check-proxy-likely'
 
 function mockSnippet(src) {
   return { getAttribute: _ => src }
