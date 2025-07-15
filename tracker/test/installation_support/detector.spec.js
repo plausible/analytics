@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { detect } from '../support/verification-playwright-wrappers'
+import { detect } from '../support/installation-support-playwright-wrappers'
 import { initializePageDynamically } from '../support/initialize-page-dynamically'
 
 test.describe('detector.js (basic diagnostics)', () => {

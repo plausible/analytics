@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import verify from '../support/verify-playwright-wrapper'
+import { verify } from '../support/installation-support-playwright-wrappers'
 import { delay } from '../support/test-utils'
 import { initializePageDynamically } from '../support/initialize-page-dynamically'
 import { compileFile } from '../../compiler'
