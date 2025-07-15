@@ -359,6 +359,7 @@ PlausibleWeb.LayoutView.html
 PlausibleWeb.Live.AuthContext.html
 PlausibleWeb.Live.CSVExport.html
 PlausibleWeb.Live.CSVImport.html
+PlausibleWeb.Live.ChangeDomainV2.html
 PlausibleWeb.Live.ChoosePlan.html
 PlausibleWeb.Live.Components.ComboBox.StaticSearch.html
 PlausibleWeb.Live.Components.ComboBox.html
@@ -509,8 +510,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-D30957B0.js
-dist/sidebar_items-6EE5C05B.js
+dist/search_data-908FA1B1.js
+dist/sidebar_items-737EBBEF.js
 index.html
 readme.html
 search.html
