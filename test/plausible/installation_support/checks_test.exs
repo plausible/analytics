@@ -8,6 +8,8 @@ defmodule Plausible.InstallationSupport.LegacyVerification.ChecksTest do
 
   @errors LegacyVerification.Errors.all()
 
+  @moduletag :capture_log
+
   describe "successful verification" do
     @normal_body """
     <html>
