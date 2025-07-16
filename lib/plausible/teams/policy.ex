@@ -22,6 +22,9 @@ defmodule Plausible.Teams.Policy do
 
   @type force_sso_mode() :: unquote(Enum.reduce(@force_sso_modes, &{:|, [], [&1, &2]}))
 
+  @derive {Plausible.Audit.Encoder,
+           only: [:force_sso, :sso_default_role, :sso_session_timeout_minutes]}
+
   embedded_schema do
     # SSO options apply to all team's integrations, should there
     # ever be more than one allowed at once.
