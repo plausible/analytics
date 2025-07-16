@@ -3,6 +3,10 @@ export function checkProxyLikely(snippets) {
 
   return snippets.some(snippet => {
     const src = snippet.getAttribute('src')
-    return src && !/^https:\/\/plausible\.io\//.test(src)
+    return !isPlausibleIoSrc(src)
   })
+}
+
+export function isPlausibleIoSrc(src) {
+  return src && /^https:\/\/plausible\.io\//.test(src)
 }
