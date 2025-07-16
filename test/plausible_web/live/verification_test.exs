@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Live.VerificationTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
+  @moduletag :capture_log
+
   setup [:create_user, :log_in, :create_site]
 
   # @verify_button ~s|button#launch-verification-button[phx-click="launch-verification"]|
