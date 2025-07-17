@@ -3633,6 +3633,69 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
            ]
   end
 
+  test "visits, visit_duration and views_per_visit calculation handles invalid session data gracefully",
+       %{
+         conn: conn,
+         site: site
+       } do
+    # NOTE: At the time of this test is added, it appears it does _not_
+    # catch the regression on MacOS (ARM), regardless if Clickhouse is run
+    # natively or from a docker container. The test still does catch
+    # that regression when ran on Linux for instance (including CI).
+
+    user_id = System.unique_integer([:positive])
+
+    populate_stats(site, [
+      build(:pageview,
+        user_id: user_id,
+        pathname: "/",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    session =
+      Plausible.IngestRepo.get_by!(Plausible.ClickhouseSessionV2,
+        site_id: site.id,
+        user_id: user_id
+      )
+
+    # The session values are manually manipulated to trigger negative values for certain metrics
+    negative1 = %{session | pageviews: 0, events: session.events + 1, sign: -1}
+    negative2 = %{session | pageviews: 0, events: session.events + 2, sign: -1}
+
+    Plausible.Session.WriteBuffer.insert([negative1, negative2])
+    Plausible.Session.WriteBuffer.flush()
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => [
+          "visits",
+          "visit_duration"
+        ],
+        "dimensions" => ["visit:exit_page"]
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => ["/"], "metrics" => [0, 0]}
+           ]
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => [
+          "views_per_visit"
+        ],
+        "dimensions" => []
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => [], "metrics" => [0]}
+           ]
+  end
+
   describe "using the returned query object in a new POST request" do
     test "yields the same results for a simple aggregate query", %{conn: conn, site: site} do
       Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
