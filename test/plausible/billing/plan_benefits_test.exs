@@ -140,6 +140,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "10+ team members",
                "600+ Stats API requests per hour",
                "Sites API",
+               "Managed Proxy",
                "5+ years of data retention",
                "Technical onboarding",
                "Priority support"
@@ -159,6 +160,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "10+ team members",
                "600+ Stats API requests per hour",
                "Sites API",
+               "Managed Proxy",
                "5+ years of data retention",
                "Technical onboarding",
                "Priority support"
@@ -177,6 +179,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "50+ sites",
                "600+ Stats API requests per hour",
                "Sites API",
+               "Managed Proxy",
                "Technical onboarding",
                "Priority support"
              ]
