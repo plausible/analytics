@@ -328,31 +328,31 @@ defmodule Plausible.Stats.SQL.Expression do
           ^condition,
           ^condition
         ),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
   def session_metric(:exit_rate, _query) do
     wrap_alias([s], %{
-      __internal_visits: fragment("toUInt32(sum(sign))")
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
   def session_metric(:visits, _query) do
     wrap_alias([s], %{
-      visits: scale_sample(fragment("sum(?)", s.sign))
+      visits: scale_sample(fragment("greatest(sum(?), 0)", s.sign))
     })
   end
 
   def session_metric(:pageviews, _query) do
     wrap_alias([s], %{
-      pageviews: scale_sample(fragment("sum(? * ?)", s.sign, s.pageviews))
+      pageviews: scale_sample(fragment("greatest(sum(? * ?), 0)", s.sign, s.pageviews))
     })
   end
 
   def session_metric(:events, _query) do
     wrap_alias([s], %{
-      events: scale_sample(fragment("sum(? * ?)", s.sign, s.events))
+      events: scale_sample(fragment("greatest(sum(? * ?), 0)", s.sign, s.events))
     })
   end
 
@@ -365,8 +365,8 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:visit_duration, _query) do
     wrap_alias([], %{
       visit_duration:
-        fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+        fragment("toUInt32(greatest(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0), 0))"),
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
@@ -374,12 +374,12 @@ defmodule Plausible.Stats.SQL.Expression do
     wrap_alias([s], %{
       views_per_visit:
         fragment(
-          "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
+          "greatest(ifNotFinite(round(sum(? * ?) / sum(?), 2), 0), 0)",
           s.sign,
           s.pageviews,
           s.sign
         ),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
