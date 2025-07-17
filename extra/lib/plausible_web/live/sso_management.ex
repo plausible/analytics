@@ -26,7 +26,10 @@ defmodule PlausibleWeb.Live.SSOManagement do
     ~H"""
     <.flash_messages flash={@flash} />
 
-    <.tile :if={@mode != :manage} docs="sso">
+    <.tile
+      :if={@mode != :manage}
+      docs={if @mode in [:domain_setup, :domain_verify], do: "sso#sso-domains", else: "sso"}
+    >
       <:title>
         <a id="sso-config">Single Sign-On</a>
       </:title>
@@ -73,7 +76,10 @@ defmodule PlausibleWeb.Live.SSOManagement do
   def init_view(assigns) do
     ~H"""
     <form id="sso-init" for={} phx-submit="init-sso">
-      <p class="text-sm">Click below to start setting up Single Sign-On for your team.</p>
+      <p class="text-sm">
+        Single Sign-On (SSO) enables team members to sign in without having to register an account. For more details,
+        <.styled_link href="https://plausible.io/docs/sso">see our documentation</.styled_link>.
+      </p>
 
       <.button type="submit">Start Configuring SSO</.button>
     </form>
@@ -87,24 +93,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
         Use the following parameters when configuring your Identity Provider of choice:
       </p>
 
+      <.input_with_clipboard
+        id="sp-acs-url"
+        name="sp-acs-url"
+        label="ACS URL / Single Sign-On URL / Reply URL"
+        value={saml_acs_url(@integration)}
+      />
+
       <.form id="sso-sp-config" for={} class="flex-col space-y-4">
         <.input_with_clipboard
           id="sp-entity-id"
           name="sp-entity-id"
-          label="Entity ID"
+          label="Entity ID / Audience URI / Identifier"
           value={SSO.SAMLConfig.entity_id(@integration)}
-        />
-
-        <.input_with_clipboard
-          id="sp-acs-url"
-          name="sp-acs-url"
-          label="ACS URL"
-          value={saml_acs_url(@integration)}
         />
       </.form>
 
       <div class="flex-col space-y-3">
-        <p class="text-sm">Following attribute mappings must be setup at Identity Provider:</p>
+        <p class="text-sm">Following attribute mappings must be set up at Identity Provider:</p>
 
         <ul role="list" class="list-disc leading-6 text-sm ml-8">
           <li :for={param <- ["email", "first_name", "last_name"]}>
@@ -136,11 +142,19 @@ defmodule PlausibleWeb.Live.SSOManagement do
         class="flex-col space-y-4"
         phx-submit="update-integration"
       >
-        <.input field={f[:idp_signin_url]} label="Sign-in URL" placeholder="<URL>" />
+        <.input
+          field={f[:idp_signin_url]}
+          label="SSO URL / Sign-on URL / Login URL"
+          placeholder="<URL>"
+        />
 
-        <.input field={f[:idp_entity_id]} label="Entity ID" placeholder="<Entity ID>" />
+        <.input
+          field={f[:idp_entity_id]}
+          label="Entity ID / Issuer / Identifier"
+          placeholder="<Entity ID>"
+        />
 
-        <.input field={f[:idp_cert_pem]} type="textarea" label="Certificate in PEM format" />
+        <.input field={f[:idp_cert_pem]} type="textarea" label="Signing Certificate in PEM format" />
 
         <.button type="submit">Save</.button>
       </.form>
@@ -214,7 +228,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           :if={@domain.status in [Status.in_progress(), Status.unverified(), Status.verified()]}
           type="submit"
         >
-          Run verification now
+          Run Verification Now
         </.button>
 
         <.button :if={@domain.status == Status.pending()} type="submit">Continue</.button>
@@ -240,17 +254,17 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
         <form id="sso-sp-config" for={} class="flex-col space-y-4">
           <.input_with_clipboard
-            id="sp-entity-id"
-            name="sp-entity-id"
-            label="Entity ID"
-            value={SSO.SAMLConfig.entity_id(@integration)}
+            id="sp-acs-url"
+            name="sp-acs-url"
+            label="ACS URL / Single Sign-On URL / Reply URL"
+            value={saml_acs_url(@integration)}
           />
 
           <.input_with_clipboard
-            id="sp-acs-url"
-            name="sp-acs-url"
-            label="ACS URL"
-            value={saml_acs_url(@integration)}
+            id="sp-entity-id"
+            name="sp-entity-id"
+            label="Entity ID / Audience URI / Identifier"
+            value={SSO.SAMLConfig.entity_id(@integration)}
           />
         </form>
 
@@ -273,21 +287,21 @@ defmodule PlausibleWeb.Live.SSOManagement do
             <.input
               field={f[:idp_signin_url]}
               value={@integration.config.idp_signin_url}
-              label="Sign-in URL"
+              label="SSO URL / Sign-on URL / Login URL"
               readonly={true}
             />
 
             <.input
               field={f[:idp_entity_id]}
               value={@integration.config.idp_entity_id}
-              label="Entity ID"
+              label="Entity ID / Issuer / Identifier"
               readonly={true}
             />
 
             <.input
               field={f[:idp_cert_pem]}
               type="textarea"
-              label="Certificate in PEM format"
+              label="Signing Certificate in PEM format"
               value={@integration.config.idp_cert_pem}
               readonly={true}
             />
@@ -300,7 +314,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       </div>
     </.tile>
 
-    <.tile docs="sso">
+    <.tile docs="sso#sso-domains">
       <:title>
         <a id="sso-domains-config">SSO Domains</a>
       </:title>
@@ -368,7 +382,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       </div>
     </.tile>
 
-    <.tile docs="sso">
+    <.tile docs="sso#sso-policy">
       <:title>
         <a id="sso-policy-config">SSO Policy</a>
       </:title>
@@ -670,7 +684,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           {false, "you must be logged in via SSO"}
 
         {{:error, :no_integration}, _} ->
-          {false, "you must first setup Single Sign-on"}
+          {false, "you must first setup Single Sign-On"}
 
         {{:error, :no_domain}, _} ->
           {false, "you must add a domain"}
@@ -678,8 +692,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
         {{:error, :no_verified_domain}, _} ->
           {false, "you must verify a domain"}
 
-        {{:error, :owner_mfa_disabled}, _} ->
-          {false, "all Owners must have MFA enabled"}
+        {{:error, :owner_2fa_disabled}, _} ->
+          {false, "all Owners must have 2FA enabled"}
 
         {{:error, :no_sso_user}, _} ->
           {false, "at least one SSO user must log in successfully"}

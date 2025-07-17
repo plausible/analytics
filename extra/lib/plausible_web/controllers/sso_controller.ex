@@ -29,23 +29,32 @@ defmodule PlausibleWeb.SSOController do
   end
 
   def login(conn, %{"email" => email} = params) do
-    case SSO.Domains.lookup(email) do
-      {:ok, %{sso_integration: integration}} ->
-        redirect(conn,
-          to:
-            Routes.sso_path(
-              conn,
-              :saml_signin,
-              integration.identifier,
-              email: email,
-              return_to: params["return_to"]
-            )
-        )
-
+    with :ok <- Auth.rate_limit(:login_ip, conn),
+         {:ok, %{sso_integration: integration}} <- SSO.Domains.lookup(email) do
+      redirect(conn,
+        to:
+          Routes.sso_path(
+            conn,
+            :saml_signin,
+            integration.identifier,
+            email: email,
+            return_to: params["return_to"]
+          )
+      )
+    else
       {:error, :not_found} ->
         conn
         |> put_flash(:login_error, "Wrong email.")
         |> redirect(to: Routes.sso_path(conn, :login_form))
+
+      {:error, {:rate_limit, _}} ->
+        Auth.log_failed_login_attempt("too many login attempts for #{email}")
+
+        render_error(
+          conn,
+          429,
+          "Too many login attempts. Wait a minute before trying again."
+        )
     end
   end
 

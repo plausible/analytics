@@ -315,7 +315,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
           "The team has to have at least one owner"
         )
 
-      {{:error, :mfa_disabled}, _} ->
+      {{:error, :disabled_2fa}, _} ->
         socket
         |> put_live_flash(
           :error,

@@ -183,7 +183,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
           new_identity(collaborator.name, collaborator.email)
           |> Plausible.Auth.SSO.provision_user()
 
-        assert {:error, :mfa_disabled} = UpdateRole.update(team, collaborator.id, "owner", user)
+        assert {:error, :disabled_2fa} = UpdateRole.update(team, collaborator.id, "owner", user)
       end
     end
   end

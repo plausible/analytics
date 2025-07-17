@@ -134,7 +134,7 @@ defmodule Plausible.Auth.SSO do
              :no_integration
              | :no_domain
              | :no_verified_domain
-             | :owner_mfa_disabled
+             | :owner_2fa_disabled
              | :no_sso_user}
   def set_force_sso(team, mode) do
     with :ok <- check_force_sso(team, mode) do
@@ -153,14 +153,14 @@ defmodule Plausible.Auth.SSO do
              :no_integration
              | :no_domain
              | :no_verified_domain
-             | :owner_mfa_disabled
+             | :owner_2fa_disabled
              | :no_sso_user}
   def check_force_sso(_team, :none), do: :ok
 
   def check_force_sso(team, :all_but_owners) do
     with :ok <- check_integration_configured(team),
          :ok <- check_sso_user_present(team) do
-      check_owners_mfa_enabled(team)
+      check_owners_2fa_enabled(team)
     end
   end
 
@@ -300,8 +300,8 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp check_owners_mfa_enabled(team) do
-    disabled_mfa_count =
+  defp check_owners_2fa_enabled(team) do
+    disabled_2fa_count =
       Repo.aggregate(
         from(
           tm in Teams.Membership,
@@ -313,10 +313,10 @@ defmodule Plausible.Auth.SSO do
         :count
       )
 
-    if disabled_mfa_count == 0 do
+    if disabled_2fa_count == 0 do
       :ok
     else
-      {:error, :owner_mfa_disabled}
+      {:error, :owner_2fa_disabled}
     end
   end
 
