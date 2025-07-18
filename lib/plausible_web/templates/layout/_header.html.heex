@@ -67,7 +67,7 @@
                   </:button>
                   <:menu>
                     <.dropdown_item>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Signed in as</div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400">Angemeldet als</div>
                       <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
                         {@conn.assigns[:current_user].email}
                       </p>
@@ -81,7 +81,7 @@
                     />
                     <.dropdown_divider />
                     <.dropdown_item href={Routes.settings_path(@conn, :index)}>
-                      Account Settings
+                      Account Einstellungen
                     </.dropdown_item>
 
                     <div :if={@my_team && @my_team.id == @current_team.id}>
@@ -99,7 +99,7 @@
                         href={Routes.settings_path(@conn, :team_general)}
                       >
                         <span class="flex-1">
-                          Team Settings
+                          Team Einstellungen
                         </span>
                       </.dropdown_item>
                       <.dropdown_divider />
@@ -139,7 +139,7 @@
                     </.dropdown_item>
                     Ende deaktivierte Menüpunkte --%>
 
-                    <.dropdown_item href="/logout">Log Out</.dropdown_item>
+                    <.dropdown_item href="/logout">Abmelden</.dropdown_item>
                   </:menu>
                 </.dropdown>
               </li>

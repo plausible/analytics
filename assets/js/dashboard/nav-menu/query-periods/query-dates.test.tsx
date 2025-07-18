@@ -27,19 +27,19 @@ test('if no period is stored, loads with default value of "Last 28 days", all ex
   expect(screen.getByTestId('datemenu')).toBeVisible()
   expect(screen.getAllByRole('link').map((el) => el.textContent)).toEqual(
     [
-      ['Today', 'D'],
-      ['Yesterday', 'E'],
-      ['Realtime', 'R'],
-      ['Last 7 Days', 'W'],
-      ['Last 28 Days', 'F'],
-      ['Last 91 Days', 'N'],
-      ['Month to Date', 'M'],
-      ['Last Month', 'P'],
-      ['Year to Date', 'Y'],
-      ['Last 12 Months', 'L'],
-      ['All time', 'A'],
-      ['Custom Range', 'C'],
-      ['Compare', 'X']
+      ['Heute', 'D'],
+      ['Gestern', 'E'],
+      ['Echtzeit', 'R'],
+      ['Letzte 7 Tage', 'W'],
+      ['Letzte 28 Tage', 'F'],
+      ['Letzte 91 Tage', 'N'],
+      ['Monat bis heute', 'M'],
+      ['Letzter Monat', 'P'],
+      ['Jahr bis heute', 'Y'],
+      ['Letzte 12 Monate', 'L'],
+      ['Alle Zeiten', 'A'],
+      ['Zeitraum', 'C'],
+      ['Vergleichen', 'X']
     ].map((a) => a.join(''))
   )
 })

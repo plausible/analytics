@@ -331,7 +331,7 @@ export default function ListReport<
         style={{ minHeight: `${MIN_HEIGHT}px` }}
       >
         <div className="mx-auto font-medium text-gray-500 dark:text-gray-400">
-          No data yet
+          Noch keine Daten
         </div>
       </div>
     )

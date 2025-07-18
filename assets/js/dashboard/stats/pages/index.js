@@ -147,9 +147,9 @@ function TopPages({ afterFetchData }) {
 }
 
 const labelFor = {
-  pages: 'Top Pages',
-  'entry-pages': 'Entry Pages',
-  'exit-pages': 'Exit Pages'
+  pages: 'Top Seiten',
+  'entry-pages': 'Eingangsseiten',
+  'exit-pages': 'Ausgangsseiten'
 }
 
 export default function Pages() {

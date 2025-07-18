@@ -9,7 +9,7 @@ import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { referrersDrilldownRoute } from '../../router'
 
-const NO_REFERRER = 'Direct / None'
+const NO_REFERRER = 'Direkt / Keine'
 
 export default function Referrers({ source }) {
   const { query } = useQueryContext()

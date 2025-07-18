@@ -41,12 +41,11 @@ export default function CurrentVisitors({
         info={
           <div>
             <p className="whitespace-nowrap text-small">
-              Last updated{' '}
+              Zuletzt aktualisiert vor{' '}
               <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp} />s
-              ago
             </p>
             <p className="whitespace-nowrap font-normal text-xs">
-              Click to view realtime dashboard
+              Klicke, um die Echtzeit-Statistiken zu sehen
             </p>
           </div>
         }

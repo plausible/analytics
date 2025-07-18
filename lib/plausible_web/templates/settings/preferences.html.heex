@@ -1,10 +1,10 @@
 <.settings_tiles>
   <.tile :if={Plausible.Users.type(@current_user) == :standard}>
     <:title>
-      <a id="update-name">Your Name</a>
+      <a id="update-name">Dein Name</a>
     </:title>
     <:subtitle>
-      Change the name associated with your account
+      Ändere den Namen, der mit deinem Konto verknüpft ist
     </:subtitle>
     <.form
       :let={f}
@@ -15,17 +15,17 @@
       <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
 
       <.button type="submit">
-        Change Name
+        Name Ändern
       </.button>
     </.form>
   </.tile>
 
   <.tile :if={Plausible.Users.type(@current_user) == :sso}>
     <:title>
-      <a id="view-name">Your Name</a>
+      <a id="view-name">Dein Name</a>
     </:title>
     <:subtitle>
-      The name associated with your account
+      Der Name der mit deinem Konto verknüpft ist
     </:subtitle>
     <.form :let={f} for={@name_changeset}>
       <.input type="text" field={f[:name]} disabled={true} label="Name" width="w-1/2" />
@@ -34,10 +34,10 @@
 
   <.tile docs="dashboard-appearance">
     <:title>
-      <a id="update-theme">Dashboard Appearance</a>
+      <a id="update-theme">Dashboard Darstellung</a>
     </:title>
     <:subtitle>
-      Set your visual preferences
+      Stelle deine visuellen Einstellungen ein
     </:subtitle>
     <.form
       :let={f}

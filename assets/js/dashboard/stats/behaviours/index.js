@@ -230,7 +230,7 @@ export default function Behaviours({ importedDataInView }) {
   function noDataYet() {
     return (
       <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
-        No data yet
+        Noch keine Daten
       </div>
     )
   }

@@ -91,7 +91,7 @@ function ReferrerDrilldownModal() {
   }, [])
 
   const getExternalLinkURL = useCallback((listItem) => {
-    if (listItem.name !== 'Direct / None') {
+    if (listItem.name !== 'Direkt / Keine') {
       return '//' + listItem.name
     }
   }, [])

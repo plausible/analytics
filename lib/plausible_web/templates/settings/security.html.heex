@@ -4,7 +4,7 @@
       <a id="update-email">Email Address</a>
     </:title>
     <:subtitle>
-      Change the address associated with your account
+      Ändere die mit deinem Konto verknüpfte Adresse
     </:subtitle>
     <.form
       :let={f}
@@ -16,34 +16,34 @@
         type="text"
         name="user[current_email]"
         value={f.data.email}
-        label="Current Email"
+        label="Aktuelle Email"
         width="w-1/2"
         disabled
       />
 
-      <.input type="email" field={f[:email]} label="New E-mail" width="w-1/2" />
+      <.input type="email" field={f[:email]} label="Neue E-mail" width="w-1/2" />
 
-      <.input type="password" field={f[:password]} label="Account Password" width="w-1/2" />
+      <.input type="password" field={f[:password]} label="Account Passwort" width="w-1/2" />
 
       <.button type="submit">
-        Change Email
+        Email Ändern
       </.button>
     </.form>
   </.tile>
 
   <.tile :if={Plausible.Users.type(@current_user) == :sso}>
     <:title>
-      <a id="view-email">Email Address</a>
+      <a id="view-email">Email-Adresse</a>
     </:title>
     <:subtitle>
-      Address associated with your account
+      Email, die mit deinem Account verknüpft ist
     </:subtitle>
     <.form :let={f} for={@email_changeset}>
       <.input
         type="text"
         name="user[current_email]"
         value={f.data.email}
-        label="Current Email"
+        label="Aktuelle Email"
         width="w-1/2"
         disabled
       />
@@ -52,10 +52,10 @@
 
   <.tile :if={Plausible.Users.type(@current_user) == :standard} docs="reset-password">
     <:title>
-      <a id="update-password">Password</a>
+      <a id="update-password">Passwort</a>
     </:title>
     <:subtitle>
-      Change your password
+      Ändere dein Passwort
     </:subtitle>
     <.form
       :let={f}
@@ -67,7 +67,7 @@
         type="password"
         max_one_error
         field={f[:old_password]}
-        label="Old Password"
+        label="Altes Passwort"
         width="w-1/2"
       />
 
@@ -75,7 +75,7 @@
         type="password"
         max_one_error
         field={f[:password]}
-        label="New Password"
+        label="Neues Passwort"
         width="w-1/2"
       />
 
@@ -84,13 +84,13 @@
         max_one_error
         autocomplete="new-password"
         field={f[:password_confirmation]}
-        label="Confirm New Password"
+        label="Neues Passwort bestätigen"
         width="w-1/2"
       />
 
       <div :if={@totp_enabled?} class="mt-2">
         <.label for={f[:two_factor_code].id} class="mb-2">
-          Verify with 2FA Code
+          "2FA Code bestätigen"
         </.label>
         <PlausibleWeb.Components.TwoFactor.verify_2fa_input
           form={f}
@@ -100,7 +100,7 @@
       </div>
 
       <.button type="submit">
-        Change Password
+        Passwort ändern
       </.button>
     </.form>
   </.tile>
@@ -110,7 +110,7 @@
       <a id="update-2fa">Two-Factor Authentication (2FA)</a>
     </:title>
     <:subtitle>
-      Two-Factor Authentication protects your account by adding an extra security step when you log in
+      Die Zwei-Faktor-Authentifizierung schützt dein Konto durch einen zusätzlichen Sicherheitsschritt bei der Anmeldung
     </:subtitle>
 
     <div x-data="{disable2FAOpen: false, regenerate2FAOpen: false}">
@@ -121,7 +121,7 @@
           theme="danger"
           mt?={false}
         >
-          Disable 2FA
+          2FA deaktivieren
         </.button>
 
         <p class="mt-2 text-gray-600 text-sm dark:text-gray-400">
@@ -131,7 +131,7 @@
             x-on:click="regenerate2FAOpen = true; $refs.regenerate2FAPassword.value = ''"
             class="underline text-indigo-600"
           >
-            Generate new
+            Neuen generieren
           </a>
         </p>
       </div>
@@ -143,7 +143,7 @@
           method="post"
         >
           <.button type="submit" mt?={false}>
-            Enable 2FA
+            2FA aktivieren
           </.button>
         </.form>
       </div>
@@ -160,12 +160,12 @@
         </:icon>
         <:buttons>
           <.button type="submit" class="w-full sm:w-auto">
-            Disable 2FA
+            2FA deaktivieren
           </.button>
         </:buttons>
 
         <div class="text-sm mt-2">
-          Once disabled, verification codes from the authenticator application and current recovery codes will become invalid. 2FA will have to be setup from the start.
+          Nach der Deaktivierung werden Bestätigungscodes aus der Authenticator-App und aktuelle Wiederherstellungscodes ungültig. 2FA muss von Grund auf neu eingerichtet werden.
         </div>
 
         <div class="text-sm mt-2">
@@ -178,7 +178,7 @@
             id="disable_2fa_password"
             name="password"
             value=""
-            placeholder="Enter password"
+            placeholder="Passwort eingeben"
             x-ref="disable2FAPassword"
           />
         </div>
@@ -203,22 +203,22 @@
             class="w-full sm:w-auto [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
           >
             <span class="label-enabled pointer-events-none">
-              Generate New Codes
+              Neue Codes generieren
             </span>
 
             <span class="label-disabled">
               <.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
-              Generating Codes
+              Codes werden generiert
             </span>
           </.button>
         </:buttons>
 
         <div class="text-sm mt-2">
-          If you generate new codes, the old ones will become invalid.
+          Wenn du neue Codes generierst, werden die alten ungültig.
         </div>
 
         <div class="text-sm mt-2">
-          Enter your password to continue.
+          Gib dein Passwort ein um fortzufahren.
         </div>
 
         <div class="mt-3 w-full">
@@ -227,7 +227,7 @@
             id="regenerate_2fa_password"
             name="password"
             value=""
-            placeholder="Enter password"
+            placeholder="Passwort eingeben"
             x-ref="regenerate2FAPassword"
           />
         </div>
@@ -240,19 +240,19 @@
       <a id="user-sessions">Login Management</a>
     </:title>
     <:subtitle>
-      Log out of your account on other devices. Note that logged-in sessions automatically expire after 14 days of inactivity
+      Melde dich von deinem Konto auf anderen Geräten ab. Beachte, dass angemeldete Sitzungen automatisch nach 14 Tagen Inaktivität ablaufen
     </:subtitle>
 
     <.table rows={@user_sessions}>
       <:thead>
-        <.th>Device</.th>
-        <.th hide_on_mobile>Last seen</.th>
+        <.th>Gerät</.th>
+        <.th hide_on_mobile>Zuletzt gesehen</.th>
         <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={session}>
         <.td truncate max_width="max-w-40">{session.device}</.td>
         <.td hide_on_mobile>{Plausible.Auth.UserSessions.last_used_humanize(session)}</.td>
-        <.td :if={@current_user_session.id == session.id} actions>Current session</.td>
+        <.td :if={@current_user_session.id == session.id} actions>Aktuelle Sitzung</.td>
         <.td :if={@current_user_session.id != session.id} actions>
           <.delete_button
             href={Routes.settings_path(@conn, :delete_session, session.id)}

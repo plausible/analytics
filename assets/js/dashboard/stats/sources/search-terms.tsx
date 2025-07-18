@@ -36,16 +36,7 @@ function ErrorMessage({ code }: { code: ErrorCode }): JSX.Element {
     return (
       <div>
         No search terms were found for this period. Please adjust or extend your
-        time range. Check{' '}
-        <a
-          href="https://plausible.io/docs/google-search-console-integration#i-dont-see-google-search-query-data-in-my-dashboard"
-          target="_blank"
-          rel="noreferrer"
-          className="hover:underline text-indigo-700 dark:text-indigo-500"
-        >
-          our documentation
-        </a>{' '}
-        for more details.
+        time range.
       </div>
     )
   } else {
@@ -162,7 +153,7 @@ export function SearchTerms() {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 ">
           <div className="mt-44 mx-auto font-medium text-gray-500 dark:text-gray-400">
-            No data yet
+            Noch keine Daten
           </div>
         </div>
       )
