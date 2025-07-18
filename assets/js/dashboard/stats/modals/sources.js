@@ -15,7 +15,7 @@ import { SortDirection } from '../../hooks/use-order-by'
 const VIEWS = {
   sources: {
     info: {
-      title: 'Top Sources',
+      title: 'Top Quellen',
       dimension: 'source',
       endpoint: '/sources',
       dimensionLabel: 'Source',

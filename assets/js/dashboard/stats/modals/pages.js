@@ -17,7 +17,7 @@ function PagesModal() {
   const site = useSiteContext()
 
   const reportInfo = {
-    title: 'Top Pages',
+    title: 'Top Seiten',
     dimension: 'page',
     endpoint: url.apiPath(site, '/pages'),
     dimensionLabel: 'Page url',
