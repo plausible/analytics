@@ -435,7 +435,7 @@ export default function Devices() {
     <div>
       <div className="flex justify-between w-full">
         <div className="flex gap-x-1">
-          <h3 className="font-bold dark:text-gray-100">Devices</h3>
+          <h3 className="font-bold dark:text-gray-100">Geräte</h3>
           <ImportedQueryUnsupportedWarning
             loading={loading}
             skipImportedReason={skipImportedReason}
@@ -445,7 +445,7 @@ export default function Devices() {
           {[
             { label: 'Browser', value: 'browser' },
             { label: 'OS', value: 'os' },
-            { label: 'Size', value: 'size' }
+            { label: 'Größe', value: 'size' }
           ].map(({ label, value }) => (
             <TabButton
               key={value}

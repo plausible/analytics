@@ -115,7 +115,7 @@ const LoadMore = ({
       <SmallLoadingSpinner />
     ) : (
       <button onClick={onClick} type="button" className="button">
-        Load more
+        Mehr laden
       </button>
     )}
   </div>

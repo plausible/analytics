@@ -137,9 +137,9 @@ function Cities({ query, site, afterFetchData }) {
 }
 
 const labelFor = {
-  countries: 'Countries',
-  regions: 'Regions',
-  cities: 'Cities'
+  countries: 'Länder',
+  regions: 'Regionen',
+  cities: 'Städte'
 }
 
 class Locations extends React.Component {
@@ -251,7 +251,7 @@ class Locations extends React.Component {
         <div className="w-full flex justify-between">
           <div className="flex gap-x-1">
             <h3 className="font-bold dark:text-gray-100">
-              {labelFor[this.state.mode] || 'Locations'}
+              {labelFor[this.state.mode] || 'Standorte'}
             </h3>
             <ImportedQueryUnsupportedWarning
               loading={this.state.loading}
@@ -260,10 +260,10 @@ class Locations extends React.Component {
           </div>
           <TabWrapper>
             {[
-              { label: 'Map', value: 'map' },
-              { label: 'Countries', value: 'countries' },
-              { label: 'Regions', value: 'regions' },
-              { label: 'Cities', value: 'cities' }
+              { label: 'Karte', value: 'map' },
+              { label: 'Länder', value: 'countries' },
+              { label: 'Regionen', value: 'regions' },
+              { label: 'Städte', value: 'cities' }
             ].map(({ value, label }) => (
               <TabButton
                 key={value}

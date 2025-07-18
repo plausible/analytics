@@ -192,7 +192,7 @@ export default function Pages() {
       <div className="w-full flex justify-between">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">
-            {labelFor[mode] || 'Page Visits'}
+            {labelFor[mode] || 'Seitenaufrufe'}
           </h3>
           <ImportedQueryUnsupportedWarning
             loading={loading}
@@ -201,9 +201,9 @@ export default function Pages() {
         </div>
         <TabWrapper>
           {[
-            { label: 'Top Pages', value: 'pages' },
-            { label: 'Entry Pages', value: 'entry-pages' },
-            { label: 'Exit Pages', value: 'exit-pages' }
+            { label: 'Top Seiten', value: 'pages' },
+            { label: 'Eingangsseiten', value: 'entry-pages' },
+            { label: 'Ausgangsseiten', value: 'exit-pages' }
           ].map(({ value, label }) => (
             <TabButton
               active={mode === value}

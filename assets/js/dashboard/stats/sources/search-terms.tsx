@@ -187,7 +187,7 @@ export function SearchTerms() {
 
   return (
     <div className="flex flex-col h-full">
-      <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
+      <h3 className="font-bold dark:text-gray-100">Suchbegriffe</h3>
       <div className="relative flex-grow">
         {loading && (
           <div className="absolute inset-0 flex justify-center items-center">

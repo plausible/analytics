@@ -26,22 +26,22 @@ import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
 
 const UTM_TAGS = {
   utm_medium: {
-    title: 'UTM Mediums',
+    title: 'UTM Medien',
     label: 'Medium',
     endpoint: '/utm_mediums'
   },
   utm_source: {
-    title: 'UTM Sources',
+    title: 'UTM Quellen',
     label: 'Source',
     endpoint: '/utm_sources'
   },
   utm_campaign: {
-    title: 'UTM Campaigns',
+    title: 'UTM Kampagnen',
     label: 'Campaign',
     endpoint: '/utm_campaigns'
   },
   utm_content: {
-    title: 'UTM Contents',
+    title: 'UTM Inhalte',
     label: 'Content',
     endpoint: '/utm_contents'
   },
@@ -177,8 +177,8 @@ function UTMSources({ tab, afterFetchData }) {
 }
 
 const labelFor = {
-  channels: 'Top Channels',
-  all: 'Top Sources'
+  channels: 'Top Kanäle',
+  all: 'Top Quellen'
 }
 
 for (const [key, utm_tag] of Object.entries(UTM_TAGS)) {
@@ -260,8 +260,8 @@ export default function SourceList() {
         </div>
         <TabWrapper>
           {[
-            { value: 'channels', label: 'Channels' },
-            { value: 'all', label: 'Sources' }
+            { value: 'channels', label: 'Kanäle' },
+            { value: 'all', label: 'Quellen' }
           ].map(({ value, label }) => (
             <TabButton
               key={value}
@@ -282,7 +282,7 @@ export default function SourceList() {
               selected: currentTab === value
             }))}
           >
-            {UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].title : 'Campaigns'}
+            {UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].title : 'Kampagnen'}
           </DropdownTabButton>
         </TabWrapper>
       </div>
