@@ -416,7 +416,7 @@ defmodule PlausibleWeb.Api.StatsController do
       [
         top_stats_entry(results, "Eindeutige Besucher", :visitors),
         top_stats_entry(results, "Gesamte Besuche", :visits),
-        top_stats_entry(results, "Gesamte Seitenaufrufe", :pageviews),
+        top_stats_entry(results, "Seitenaufrufe", :pageviews),
         top_stats_entry(results, "Aufrufe pro Besuch", :views_per_visit),
         top_stats_entry(results, "Absprungrate", :bounce_rate),
         top_stats_entry(results, "Besuchsdauer", :visit_duration),
