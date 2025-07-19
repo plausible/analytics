@@ -147,12 +147,12 @@ export default function Behaviours({ importedDataInView }) {
       return (
         <FeatureSetupNotice
           feature={CONVERSIONS}
-          title={'Measure how often visitors complete specific actions'}
+          title={'Miss, wie oft Besucher bestimmte Aktionen durchführen'}
           info={
-            'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.'
+            'Mit Goals kannst du Registrierungen, Button-Klicks, Formular-Eingaben, externe Link-Klicks, Datei-Downloads, 404-Fehlerseiten und mehr tracken.'
           }
           callToAction={{
-            action: 'Set up goals',
+            action: 'Goals einrichten',
             link: `/${encodeURIComponent(site.domain)}/settings/goals`
           }}
           onHideAction={onHideAction(CONVERSIONS)}
@@ -204,7 +204,7 @@ export default function Behaviours({ importedDataInView }) {
 
       if (site.propsAvailable) {
         callToAction = {
-          action: 'Set up props',
+          action: 'Properties einrichten',
           link: `/${encodeURIComponent(site.domain)}/settings/properties`
         }
       } else {
@@ -214,9 +214,9 @@ export default function Behaviours({ importedDataInView }) {
       return (
         <FeatureSetupNotice
           feature={PROPS}
-          title={'Send custom data to create your own metrics'}
+          title={'Sende benutzerdefinierte Daten um deine eigenen Metriken zu erstellen'}
           info={
-            "You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don't track automatically."
+            'Du kannst benutzerdefinierte Eigenschaften an Seitenaufrufe oder Events anhängen. Das ermöglicht es dir, eigene Metriken zu erstellen und Statistiken zu analysieren, die wir nicht automatisch tracken.'
           }
           callToAction={callToAction}
           onHideAction={onHideAction(PROPS)}

@@ -16,7 +16,7 @@ export function FeatureSetupNotice({
   const requestHideSection = () => {
     if (
       window.confirm(
-        `Are you sure you want to hide ${sectionTitle}? You can make it visible again in your site settings later.`
+        `Bist du sicher, dass du ${sectionTitle} ausblenden möchtest? Du kannst es später in den Website-Einstellungen wieder sichtbar machen.`
       )
     ) {
       api
@@ -63,7 +63,7 @@ export function FeatureSetupNotice({
         onClick={requestHideSection}
         className="inline-block px-2 sm:px-4 py-2 border border-gray-300 dark:border-gray-500 leading-5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition ease-in-out duration-150"
       >
-        Hide this report
+        Diesen Bericht ausblenden
       </button>
     )
   }
