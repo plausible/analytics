@@ -11,14 +11,14 @@ defmodule Plausible.TeamsTest do
 
   describe "name/1" do
     test "returns default name when there's no team" do
-      assert Teams.name(nil) == "My Personal Sites"
+      assert Teams.name(nil) == "Meine Websites"
     end
 
     test "returns default name when team setup is not completed yet" do
       user = new_user(team: [setup_complete: false, name: "Foo"])
       team = team_of(user)
 
-      assert Teams.name(team) == "My Personal Sites"
+      assert Teams.name(team) == "Meine Websites"
     end
 
     test "returns team name for a setup team" do
@@ -30,14 +30,14 @@ defmodule Plausible.TeamsTest do
   end
 
   describe "get_or_create/1" do
-    test "creates 'My Personal Sites' if user is a member of no teams" do
+    test "creates 'Meine Websites' if user is a member of no teams" do
       today = Date.utc_today()
       user = new_user()
       user_id = user.id
 
       assert {:ok, team} = Teams.get_or_create(user)
 
-      assert team.name == "My Personal Sites"
+      assert team.name == "Meine Websites"
       assert Date.compare(team.trial_expiry_date, today) == :gt
 
       assert [
@@ -70,7 +70,7 @@ defmodule Plausible.TeamsTest do
 
       assert team.id == existing_team.id
       assert Date.compare(team.trial_expiry_date, ~D[2020-04-01])
-      assert team.name == "My Personal Sites"
+      assert team.name == "Meine Websites"
 
       assert [
                %{user_id: ^user_id, role: :owner, is_autocreated: true}
@@ -98,7 +98,7 @@ defmodule Plausible.TeamsTest do
                |> Enum.sort_by(& &1.id)
     end
 
-    test "creates 'My Personal Sites' if user is a guest on another team" do
+    test "creates 'Meine Websites' if user is a guest on another team" do
       user = new_user()
       user_id = user.id
       site = new_site()
@@ -108,7 +108,7 @@ defmodule Plausible.TeamsTest do
       assert {:ok, team} = Teams.get_or_create(user)
 
       assert team.id != existing_team.id
-      assert team.name == "My Personal Sites"
+      assert team.name == "Meine Websites"
 
       assert [%{user_id: ^user_id, role: :owner, is_autocreated: true}] =
                team
@@ -116,7 +116,7 @@ defmodule Plausible.TeamsTest do
                |> Map.fetch!(:team_memberships)
     end
 
-    test "creates 'My Personal Sites' if user is a non-owner member on existing teams" do
+    test "creates 'Meine Websites' if user is a non-owner member on existing teams" do
       user = new_user()
       user_id = user.id
       site1 = new_site()
@@ -207,7 +207,7 @@ defmodule Plausible.TeamsTest do
       assert {:error, :no_team} = Teams.get_by_owner(user)
     end
 
-    test "returns existing 'My Personal Sites' if user already owns one" do
+    test "returns existing 'Meine Websites' if user already owns one" do
       user = new_user(trial_expiry_date: ~D[2020-04-01])
       user_id = user.id
       existing_team = team_of(user)
@@ -216,7 +216,7 @@ defmodule Plausible.TeamsTest do
 
       assert team.id == existing_team.id
       assert Date.compare(team.trial_expiry_date, ~D[2020-04-01])
-      assert team.name == "My Personal Sites"
+      assert team.name == "Meine Websites"
 
       assert [
                %{user_id: ^user_id, role: :owner, is_autocreated: true}

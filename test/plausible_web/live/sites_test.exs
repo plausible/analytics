@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, _lv, html} = live(conn, "/sites")
 
       text = text(html)
-      assert text =~ "My Personal Sites"
+      assert text =~ "Meine Websites"
       assert text =~ "You don't have any sites yet"
       refute text =~ "You currently have no personal sites"
       refute text =~ "Go to your team"
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, _lv, html} = live(conn, "/sites")
       text = text(html)
 
-      assert text =~ "My Personal Sites"
+      assert text =~ "Meine Websites"
       refute text =~ "You don't have any sites yet"
       assert text =~ "You currently have no personal sites"
       assert text =~ "Go to your team"
@@ -68,10 +68,10 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, _lv, html} = live(conn, "/sites")
 
       assert text_of_element(html, "#invitation-#{invitation1.invitation_id}") =~
-               "G.I. Joe has invited you to join the \"My Personal Sites\" as viewer member."
+               "G.I. Joe has invited you to join the \"Meine Websites\" as viewer member."
 
       assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
-               "G.I. Jane has invited you to join the \"My Personal Sites\" as editor member."
+               "G.I. Jane has invited you to join the \"Meine Websites\" as editor member."
 
       assert [_] =
                find(

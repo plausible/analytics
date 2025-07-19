@@ -274,7 +274,7 @@ export const getDatePeriodGroups = ({
   const groups: LinkItem[][] = [
     [
       [
-        ['Today', 'D'],
+        ['Heute', 'D'],
         {
           search: (s) => ({
             ...s,
@@ -290,7 +290,7 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Yesterday', 'E'],
+        ['Gestern', 'E'],
         {
           search: (s) => ({
             ...s,
@@ -306,7 +306,7 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Realtime', 'R'],
+        ['Echtzeit', 'R'],
         {
           search: (s) => ({
             ...s,
@@ -321,7 +321,7 @@ export const getDatePeriodGroups = ({
     ],
     [
       [
-        ['Last 7 Days', 'W'],
+        ['Letzte 7 Tage', 'W'],
         {
           search: (s) => ({
             ...s,
@@ -334,7 +334,7 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last 28 Days', 'F'],
+        ['Letzte 28 Tage', 'F'],
         {
           search: (s) => ({
             ...s,
@@ -347,7 +347,7 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last 30 Days', 'T'],
+        ['Letzte 30 Tage', 'T'],
         {
           hidden: true,
           search: (s) => ({
@@ -361,7 +361,7 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last 91 Days', 'N'],
+        ['Letzte 91 Tage', 'N'],
         {
           search: (s) => ({
             ...s,
@@ -376,7 +376,7 @@ export const getDatePeriodGroups = ({
     ],
     [
       [
-        ['Month to Date', 'M'],
+        ['Monat bis Heute', 'M'],
         {
           search: (s) => ({
             ...s,
@@ -391,7 +391,7 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last Month', 'P'],
+        ['Letzter Monat', 'P'],
         {
           search: (s) => ({
             ...s,
@@ -409,7 +409,7 @@ export const getDatePeriodGroups = ({
     ],
     [
       [
-        ['Year to Date', 'Y'],
+        ['Jahr bis Heute', 'Y'],
         {
           search: (s) => ({
             ...s,
@@ -423,7 +423,7 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last 6 months', 'S'],
+        ['Letzte 6 Monate', 'S'],
         {
           hidden: true,
           search: (s) => ({
@@ -453,7 +453,7 @@ export const getDatePeriodGroups = ({
 
   const lastGroup: LinkItem[] = [
     [
-      ['All time', 'A'],
+      ['Gesamte Zeit', 'A'],
       {
         search: (s) => ({
           ...s,
@@ -601,47 +601,47 @@ export function getCurrentPeriodDisplayName({
 }) {
   if (query.period === 'day') {
     if (isToday(site, query.date)) {
-      return 'Today'
+      return 'Heute'
     }
     return formatDay(query.date)
   }
   if (query.period === '7d') {
-    return 'Last 7 days'
+    return 'Letzte 7 Tage'
   }
   if (query.period === '28d') {
-    return 'Last 28 days'
+    return 'Letzte 28 Tage'
   }
   if (query.period === '30d') {
-    return 'Last 30 days'
+    return 'Letzte 30 Tage'
   }
   if (query.period === '91d') {
-    return 'Last 91 days'
+    return 'Letzte 91 Tage'
   }
   if (query.period === 'month') {
     if (isThisMonth(site, query.date)) {
-      return 'Month to Date'
+      return 'Monat bis Heute'
     }
     return formatMonthYYYY(query.date)
   }
   if (query.period === '6mo') {
-    return 'Last 6 months'
+    return 'Letzte 6 Monate'
   }
   if (query.period === '12mo') {
-    return 'Last 12 months'
+    return 'Letzte 12 Monate'
   }
   if (query.period === 'year') {
     if (isThisYear(site, query.date)) {
-      return 'Year to Date'
+      return 'Jahr bis Heute'
     }
     return formatYear(query.date)
   }
   if (query.period === 'all') {
-    return 'All time'
+    return 'Gesamte Zeit'
   }
   if (query.period === 'custom') {
     return formatDateRange(site, query.from, query.to)
   }
-  return 'Realtime'
+  return 'Echtzeit'
 }
 
 export function getCurrentComparisonPeriodDisplayName({

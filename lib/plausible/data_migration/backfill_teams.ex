@@ -656,7 +656,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
     team_data =
       %{
         identifier: Ecto.UUID.generate() |> Ecto.UUID.dump!(),
-        name: "My Personal Sites",
+        name: "Meine Websites",
         trial_expiry_date: trial_expiry_date,
         accept_traffic_until: Date.add(trial_expiry_date, 14),
         hourly_api_request_limit: 1_000_000,

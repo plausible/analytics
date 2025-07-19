@@ -14,7 +14,7 @@ defmodule Plausible.Teams do
   @accept_traffic_until_free ~D[2135-01-01]
 
   @spec default_name() :: String.t()
-  def default_name(), do: "My Personal Sites"
+  def default_name(), do: "Meine Websites"
 
   @spec name(nil | Teams.Team.t()) :: String.t()
   def name(nil), do: default_name()
@@ -136,7 +136,7 @@ defmodule Plausible.Teams do
   @doc """
   Get or create user's team.
 
-  If the user has no non-guest membership yet, an implicit "My Personal Sites" team is
+  If the user has no non-guest membership yet, an implicit "Meine Websites" team is
   created with them as an owner.
 
   If the user already has an owner membership in an existing team,

@@ -160,7 +160,7 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
         assert html = html_response(conn, 200)
         assert html =~ "/cs/users/user/#{user.id}"
         assert html =~ "Some user notes"
-        assert html =~ "My Personal Sites"
+        assert html =~ "Meine Websites"
         assert html =~ "HS Integration Test Team"
       end
 
@@ -190,7 +190,7 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
 
         assert html = html_response(conn, 200)
         refute html =~ "HS Integration Test Team"
-        refute html =~ "My Personal Sites"
+        refute html =~ "Meine Websites"
         assert html =~ "Some user notes"
       end
 
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
 
         assert html = html_response(conn, 200)
         assert html =~ "HS Integration Test Team"
-        refute html =~ "My Personal Sites"
+        refute html =~ "Meine Websites"
         assert html =~ "Some user notes"
       end
 

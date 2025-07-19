@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     setup [:create_user, :log_in, :create_team]
 
     test "renames the team on first render", %{conn: conn, team: team} do
-      assert team.name == "My Personal Sites"
+      assert team.name == "Meine Websites"
       {:ok, _lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
 
     test "renames even if team already has non-default name", %{conn: conn, team: team} do
-      assert team.name == "My Personal Sites"
+      assert team.name == "Meine Websites"
       Repo.update!(Teams.Team.name_changeset(team, %{name: "Foo"}))
       {:ok, _lv, html} = live(conn, @url)
 
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       _ = render(lv)
     end
 
-    test "setting team name to 'My Personal Sites' is reserved", %{
+    test "setting team name to 'Meine Websites' is reserved", %{
       conn: conn,
       team: team,
       user: user
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       type_into_input(lv, "team[name]", "Team Name 1")
       _ = render(lv)
-      type_into_input(lv, "team[name]", "My Personal Sites")
+      type_into_input(lv, "team[name]", "Meine Websites")
       _ = render(lv)
       assert Repo.reload!(team).name == "Team Name 1"
     end
