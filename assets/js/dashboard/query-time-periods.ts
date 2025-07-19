@@ -482,7 +482,7 @@ export const getCompareLinkItem = ({
   onEvent: () => void
 }): LinkItem => [
   [
-    isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare',
+    isComparisonEnabled(query.comparison) ? 'Vergleich deaktivieren' : 'Vergleichen',
     'X'
   ],
   {
