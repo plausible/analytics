@@ -26,7 +26,7 @@ defimpl Plausible.Audit.Encoder, for: Ecto.Changeset do
         %{}
 
       _ ->
-        %{before: data, after: changes}
+        %{before: Map.take(data, Map.keys(changes)), after: changes}
     end
   end
 end

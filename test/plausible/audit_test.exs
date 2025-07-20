@@ -173,7 +173,7 @@ defmodule Plausible.AuditTest do
 
       entry = Entry.new("update", struct)
       entry = Entry.include_change(entry, changeset)
-      assert entry.changes.change == %{after: %{name: "baz"}, before: %{id: 1, name: "bar"}}
+      assert entry.changes.change == %{after: %{name: "baz"}, before: %{name: "bar"}}
     end
   end
 
