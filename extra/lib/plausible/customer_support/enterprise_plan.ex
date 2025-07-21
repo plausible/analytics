@@ -24,8 +24,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
     sites_rate =
       sites_rate(sites_limit)
 
-    team_members_rate =
-      team_members_rate(team_members_limit)
+    team_members_rate = team_members_rate(team_members_limit)
 
     api_calls_rate =
       api_calls_rate(api_calls_limit)
@@ -71,13 +70,20 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def sites_rate(n) when n <= 50, do: 0
   def sites_rate(n), do: n * 0.1
 
-  def team_members_rate(n) when n > 10, do: (n - 10) * 5
+  def team_members_rate(n) when n > 10, do: (n - 10) * 15
   def team_members_rate(_), do: 0
 
   def api_calls_rate(n) when n <= 600, do: 0
   def api_calls_rate(n) when n > 600, do: round(n / 1_000) * 100
 
-  def features_rate(f) do
-    if "sites_api" in f, do: 99, else: 0
+  @feature_rates %{
+    "sites_api" => 99,
+    "sso" => 299
+  }
+
+  def features_rate(features) do
+    features
+    |> Enum.map(&Map.get(@feature_rates, &1, 0))
+    |> Enum.sum()
   end
 end
