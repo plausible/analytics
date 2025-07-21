@@ -277,12 +277,21 @@ defmodule Plausible.AuditTest do
 
   test "delete_with_audit!/2" do
     user = new_user()
+    user_id = user.id
     assert %Plausible.Auth.User{} = Repo.delete_with_audit!(user, "user_delete")
 
     assert [
              %Plausible.Audit.Entry{
                name: "user_delete",
-               change: %{}
+               change: %{
+                 "email" => "email-0@example.com",
+                 "email_verified" => true,
+                 "id" => ^user_id,
+                 "last_team_identifier" => nil,
+                 "name" => "Jane Smith",
+                 "previous_email" => nil,
+                 "totp_enabled" => false
+               }
              }
            ] = Audit.list_entries(entity: "Plausible.Auth.User", entity_id: "#{user.id}")
   end
