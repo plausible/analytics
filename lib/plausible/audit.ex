@@ -1,4 +1,8 @@
 defmodule Plausible.Audit do
+  @moduledoc """
+  Primary persistent Audit Entry interface
+  """
+
   import Ecto.Query
 
   defdelegate encode(term, opts \\ []), to: Plausible.Audit.Encoder

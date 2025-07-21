@@ -1,4 +1,8 @@
 defmodule Plausible.Audit.LiveContext do
+  @moduledoc """
+  LiveView `on_mount` callback to provide audit context
+  """
+
   defmacro __using__(_) do
     quote do
       on_mount Plausible.Audit.LiveContext
