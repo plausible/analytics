@@ -31,7 +31,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
         assert {:ok, sso_domain} = SSO.Domains.add(integration, domain)
 
-        assert audited_event("sso_domain_added",
+        assert audited_entry("sso_domain_added",
                  team_id: integration.team_id,
                  entity_id: "#{sso_domain.id}"
                )
@@ -119,7 +119,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
         verified_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        assert audited_event("sso_domain_verification_success",
+        assert audited_entry("sso_domain_verification_success",
                  team_id: integration.team_id,
                  entity_id: "#{verified_domain.id}"
                )
@@ -156,7 +156,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         assert {:ok, sso_domain} = SSO.Domains.start_verification(domain)
         assert sso_domain.status == Status.in_progress()
 
-        assert audited_event("sso_domain_verification_started",
+        assert audited_entry("sso_domain_verification_started",
                  team_id: integration.team_id,
                  entity_id: "#{sso_domain.id}"
                )
@@ -186,7 +186,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         assert :ok = SSO.Domains.cancel_verification(domain)
         assert Repo.reload!(sso_domain).status == Status.unverified()
 
-        assert audited_event("sso_domain_verification_cancelled",
+        assert audited_entry("sso_domain_verification_cancelled",
                  team_id: integration.team_id,
                  entity_id: "#{sso_domain.id}"
                )

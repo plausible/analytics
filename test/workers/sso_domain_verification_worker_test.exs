@@ -89,7 +89,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
 
         {:ok, domain} = SSO.Domains.get(domain)
 
-        assert audited_event("sso_domain_verification_success",
+        assert audited_entry("sso_domain_verification_success",
                  team_id: team.id,
                  entity_id: "#{domain.id}"
                )
@@ -115,7 +115,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
 
         {:ok, domain} = SSO.Domains.get(domain)
 
-        assert audited_event("sso_domain_verification_failure",
+        assert audited_entry("sso_domain_verification_failure",
                  team_id: team.id,
                  entity_id: "#{domain.id}"
                )

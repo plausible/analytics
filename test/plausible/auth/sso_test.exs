@@ -20,7 +20,7 @@ defmodule Plausible.Auth.SSOTest do
         assert is_binary(integration.identifier)
         assert %SSO.SAMLConfig{} = integration.config
 
-        assert audited_event("saml_integration_initiated",
+        assert audited_entry("saml_integration_initiated",
                  team_id: team.id,
                  entity_id: "#{integration.id}"
                )
@@ -90,7 +90,7 @@ defmodule Plausible.Auth.SSOTest do
         assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
                  X509.Certificate.from_pem(@cert_pem)
 
-        assert audited_event("sso_integration_updated",
+        assert audited_entry("sso_integration_updated",
                  team_id: team.id,
                  entity_id: "#{integration.id}"
                )
@@ -305,7 +305,7 @@ defmodule Plausible.Auth.SSOTest do
         assert user.last_sso_login
         assert_team_membership(user, team, :viewer)
 
-        assert audited_event("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
+        assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
       end
 
       test "does not provision a user from identity when identity integration does not match", %{
@@ -350,7 +350,7 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.email_verified
         assert sso_user.last_sso_login
 
-        assert audited_event("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
+        assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
       end
 
       test "provisions SSO user from existing user with personal team", %{
@@ -406,7 +406,7 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.sso_domain_id == sso_domain.id
         assert sso_user.last_sso_login
 
-        assert audited_event("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
+        assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
       end
 
       test "does not provision user without matching setup integration", %{
@@ -568,7 +568,7 @@ defmodule Plausible.Auth.SSOTest do
         refute updated_user.sso_integration_id
         refute updated_user.sso_domain_id
 
-        assert audited_event("sso_user_deprovioned",
+        assert audited_entry("sso_user_deprovioned",
                  team_id: team.id,
                  entity_id: "#{updated_user.id}"
                )
@@ -606,7 +606,7 @@ defmodule Plausible.Auth.SSOTest do
         assert team.policy.sso_default_role == :editor
         assert team.policy.sso_session_timeout_minutes == 600
 
-        assert audited_event("sso_policy_updated",
+        assert audited_entry("sso_policy_updated",
                  team_id: team.id,
                  entity_id: "#{team.id}"
                )
@@ -773,7 +773,7 @@ defmodule Plausible.Auth.SSOTest do
         assert updated_team.id == team.id
         assert updated_team.policy.force_sso == :all_but_owners
 
-        assert audited_event("sso_forced", team_id: team.id, entity_id: "#{team.id}")
+        assert audited_entry("sso_forced", team_id: team.id, entity_id: "#{team.id}")
       end
 
       test "returns error when conditions not met" do
@@ -914,7 +914,7 @@ defmodule Plausible.Auth.SSOTest do
         refute Repo.reload(integration)
         refute Repo.reload(sso_domain)
 
-        assert audited_event("sso_integration_removed",
+        assert audited_entry("sso_integration_removed",
                  team_id: team.id,
                  entity_id: "#{integration.id}"
                )
@@ -999,17 +999,17 @@ defmodule Plausible.Auth.SSOTest do
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain1})
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain2})
 
-        assert audited_event("sso_domain_verification_cancelled",
+        assert audited_entry("sso_domain_verification_cancelled",
                  team_id: team.id,
                  entity_id: "#{d1.id}"
                )
 
-        assert audited_event("sso_domain_verification_cancelled",
+        assert audited_entry("sso_domain_verification_cancelled",
                  team_id: team.id,
                  entity_id: "#{d2.id}"
                )
 
-        assert audited_event("sso_integration_removed",
+        assert audited_entry("sso_integration_removed",
                  team_id: team.id,
                  entity_id: "#{integration.id}"
                )
@@ -1035,12 +1035,12 @@ defmodule Plausible.Auth.SSOTest do
         refute Repo.reload(integration)
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
 
-        assert audited_event("sso_domain_verification_cancelled",
+        assert audited_entry("sso_domain_verification_cancelled",
                  team_id: team.id,
                  entity_id: "#{domain.id}"
                )
 
-        assert audited_event("sso_integration_removed",
+        assert audited_entry("sso_integration_removed",
                  team_id: team.id,
                  entity_id: "#{integration.id}"
                )

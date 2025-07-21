@@ -409,8 +409,8 @@ defmodule Plausible.Teams.Test do
     |> Map.fetch!(:subscription)
   end
 
-  def audited_event(event_name, attrs \\ []) do
-    attrs = Keyword.put(attrs, :name, event_name)
+  def audited_entry(name, attrs \\ []) do
+    attrs = Keyword.put(attrs, :name, name)
 
     case Plausible.Audit.list_entries(attrs) do
       [_] ->
