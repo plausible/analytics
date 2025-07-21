@@ -132,6 +132,7 @@ defmodule Plausible.AuditTest do
       assert cs.changes.meta == %{name: "bar"}
       assert cs.changes.user_id == 42
       assert cs.changes.team_id == 7
+      assert cs.changes.actor_type == "user"
       assert is_struct(cs.changes.datetime, NaiveDateTime)
     end
 
@@ -151,6 +152,7 @@ defmodule Plausible.AuditTest do
       assert is_nil(cs.changes.team_id)
       assert cs.data.user_id == 0
       assert cs.data.team_id == 0
+      assert cs.data.actor_type == "system"
     end
 
     test "new/3 with struct and params" do

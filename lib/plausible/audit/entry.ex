@@ -1,4 +1,8 @@
 defmodule Plausible.Audit.Entry do
+  @moduledoc """
+  Persistent Audit Entry schema 
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -24,6 +28,7 @@ defmodule Plausible.Audit.Entry do
     field :user_id, :integer, default: 0
     field :team_id, :integer, default: 0
     field :datetime, :naive_datetime_usec
+    field :actor_type, :string, default: "system"
   end
 
   def changeset(name, params) do
@@ -33,14 +38,15 @@ defmodule Plausible.Audit.Entry do
       Map.merge(
         %{
           team_id: context[:current_team] && context.current_team.id,
-          user_id: context[:current_user] && context.current_user.id
+          user_id: context[:current_user] && context.current_user.id,
+          actor_type: if(context[:current_user], do: "user", else: "system")
         },
         params
       )
 
     %__MODULE__{name: name}
-    |> cast(params, [:entity, :entity_id, :meta, :user_id, :team_id])
-    |> validate_required([:name, :entity, :entity_id])
+    |> cast(params, [:entity, :entity_id, :meta, :user_id, :team_id, :actor_type])
+    |> validate_required([:name, :entity, :entity_id, :actor_type])
     |> put_change(:datetime, NaiveDateTime.utc_now())
   end
 
