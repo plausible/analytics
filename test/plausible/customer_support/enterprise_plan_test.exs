@@ -18,7 +18,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
             ["sites_api"]
           )
 
-        assert result == Decimal.new("1038.00")
+        assert result == Decimal.new("1238.00")
       end
 
       test "calculates cost for business plan with monthly billing, SSO enabled and extra members" do
@@ -60,7 +60,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
             []
           )
 
-        assert result == Decimal.new("94.00")
+        assert result == Decimal.new("144.00")
       end
 
       test "calculates cost for business plan with yearly billing" do
@@ -74,7 +74,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
             ["sites_api"]
           )
 
-        assert result == Decimal.new("10380.00")
+        assert result == Decimal.new("12380.00")
       end
     end
 
@@ -111,10 +111,10 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
 
     describe "team_members_rate/1" do
       test "calculates rate based on number of team members" do
-        assert EnterprisePlan.team_members_rate(5, 5) == 0
-        assert EnterprisePlan.team_members_rate(10, 5) == 0
-        assert EnterprisePlan.team_members_rate(15, 5) == 25
-        assert EnterprisePlan.team_members_rate(20, 5) == 50
+        assert EnterprisePlan.team_members_rate(5) == 0
+        assert EnterprisePlan.team_members_rate(10) == 0
+        assert EnterprisePlan.team_members_rate(15) == 75
+        assert EnterprisePlan.team_members_rate(20) == 150
       end
     end
 

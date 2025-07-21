@@ -24,10 +24,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
     sites_rate =
       sites_rate(sites_limit)
 
-    team_member_unit_rate = team_member_unit_rate(features)
-
-    team_members_rate =
-      team_members_rate(team_members_limit, team_member_unit_rate)
+    team_members_rate = team_members_rate(team_members_limit)
 
     api_calls_rate =
       api_calls_rate(api_calls_limit)
@@ -73,12 +70,8 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def sites_rate(n) when n <= 50, do: 0
   def sites_rate(n), do: n * 0.1
 
-  def team_member_unit_rate(f) do
-    if "sso" in f, do: 15, else: 5
-  end
-
-  def team_members_rate(n, rate_per_member) when n > 10, do: (n - 10) * rate_per_member
-  def team_members_rate(_, _), do: 0
+  def team_members_rate(n) when n > 10, do: (n - 10) * 15
+  def team_members_rate(_), do: 0
 
   def api_calls_rate(n) when n <= 600, do: 0
   def api_calls_rate(n) when n > 600, do: round(n / 1_000) * 100
