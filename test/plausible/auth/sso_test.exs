@@ -406,7 +406,10 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.sso_domain_id == sso_domain.id
         assert sso_user.last_sso_login
 
-        assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
+        assert audited_entries(2, "sso_user_provisioned",
+                 team_id: team.id,
+                 entity_id: "#{sso_user.id}"
+               )
       end
 
       test "does not provision user without matching setup integration", %{
@@ -1027,7 +1030,7 @@ defmodule Plausible.Auth.SSOTest do
         identity = new_identity("Test User", "test@" <> domain, integration)
         {:ok, _, _, _} = SSO.provision_user(identity)
 
-        {:ok, _} = SSO.Domains.start_verification(domain)
+        {:ok, sso_domain} = SSO.Domains.start_verification(domain)
         assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
 
         assert :ok = SSO.remove_integration(integration, force_deprovision?: true)
@@ -1037,7 +1040,7 @@ defmodule Plausible.Auth.SSOTest do
 
         assert audited_entry("sso_domain_verification_cancelled",
                  team_id: team.id,
-                 entity_id: "#{domain.id}"
+                 entity_id: "#{sso_domain.id}"
                )
 
         assert audited_entry("sso_integration_removed",
