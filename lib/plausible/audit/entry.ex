@@ -59,6 +59,13 @@ defmodule Plausible.Audit.Entry do
     |> put_change(:change, Plausible.Audit.encode(related_changeset))
   end
 
+  def include_change(audit_entry, %{__struct__: _} = struct) do
+    # inserts hardly ever preload associations, so raising on not loaded is not useful
+    audit_entry
+    |> change()
+    |> put_change(:change, Plausible.Audit.encode(struct, raise_on_not_loaded?: false))
+  end
+
   def persist!(entry) do
     Plausible.Repo.insert!(entry)
   end

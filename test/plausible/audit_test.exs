@@ -175,7 +175,7 @@ defmodule Plausible.AuditTest do
 
       entry = Entry.new("update", struct)
       entry = Entry.include_change(entry, changeset)
-      assert entry.changes.change == %{after: %{name: "baz"}, before: %{name: "bar"}}
+      assert entry.changes.change == %{after: %{name: "baz"}, before: %{name: "bar", id: 1}}
     end
   end
 
@@ -231,13 +231,24 @@ defmodule Plausible.AuditTest do
         password_confirmation: "very-secret-and-very-long-123"
       })
 
-    {:ok, %Plausible.Auth.User{name: "Jane Doe"} = user} =
+    {:ok, %Plausible.Auth.User{id: user_id, name: "Jane Doe"} = user} =
       Repo.insert_with_audit(changeset, "user_insert")
+
+    entity_id = to_string(user_id)
 
     assert [
              %Plausible.Audit.Entry{
                name: "user_insert",
-               change: %{}
+               entity_id: ^entity_id,
+               change: %{
+                 "email" => "jane@example.com",
+                 "email_verified" => false,
+                 "id" => ^user_id,
+                 "last_team_identifier" => nil,
+                 "name" => "Jane Doe",
+                 "previous_email" => nil,
+                 "totp_enabled" => false
+               }
              }
            ] = Audit.list_entries(entity: "Plausible.Auth.User", entity_id: "#{user.id}")
   end

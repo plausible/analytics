@@ -1,7 +1,7 @@
 defmodule Plausible.Audit do
   import Ecto.Query
 
-  defdelegate encode(term), to: Plausible.Audit.Encoder
+  defdelegate encode(term, opts \\ []), to: Plausible.Audit.Encoder
   defdelegate set_context(term), to: Plausible.Audit.Entry
 
   def list_entries(attrs) do

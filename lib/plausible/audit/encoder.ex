@@ -3,17 +3,17 @@ defmodule Plausible.Audit.EncoderError do
 end
 
 defprotocol Plausible.Audit.Encoder do
-  def encode(x)
+  def encode(x, opts \\ [])
 end
 
 defimpl Plausible.Audit.Encoder, for: Ecto.Changeset do
-  def encode(changeset) do
+  def encode(changeset, opts) do
     changes =
       Enum.reduce(changeset.changes, %{}, fn {k, v}, acc ->
-        Map.put(acc, k, Plausible.Audit.Encoder.encode(v))
+        Map.put(acc, k, Plausible.Audit.Encoder.encode(v, opts))
       end)
 
-    data = Plausible.Audit.Encoder.encode(changeset.data)
+    data = Plausible.Audit.Encoder.encode(changeset.data, opts)
 
     case {map_size(data), map_size(changes)} do
       {n, 0} when n > 0 ->
@@ -26,18 +26,19 @@ defimpl Plausible.Audit.Encoder, for: Ecto.Changeset do
         %{}
 
       _ ->
-        %{before: Map.take(data, Map.keys(changes)), after: changes}
+        %{before: data, after: changes}
     end
   end
 end
 
 defimpl Plausible.Audit.Encoder, for: Map do
-  def encode(x) do
+  def encode(x, opts) do
     {allow_not_loaded, data} = Map.pop(x, :__allow_not_loaded__)
+    raise_on_not_loaded? = Keyword.get(opts, :raise_on_not_loaded?, true)
 
     Enum.reduce(data, %{}, fn
       {k, %Ecto.Association.NotLoaded{}}, acc ->
-        if k in allow_not_loaded do
+        if k in allow_not_loaded or not raise_on_not_loaded? do
           acc
         else
           raise Plausible.Audit.EncoderError,
@@ -52,22 +53,22 @@ defimpl Plausible.Audit.Encoder, for: Map do
 end
 
 defimpl Plausible.Audit.Encoder, for: [Integer, BitString, Float] do
-  def encode(x), do: x
+  def encode(x, _opts), do: x
 end
 
 defimpl Plausible.Audit.Encoder, for: [DateTime, Date, NaiveDateTime, Time] do
-  def encode(x), do: to_string(x)
+  def encode(x, _opts), do: to_string(x)
 end
 
 defimpl Plausible.Audit.Encoder, for: [Atom] do
-  def encode(nil), do: nil
-  def encode(true), do: true
-  def encode(false), do: false
-  def encode(x), do: Atom.to_string(x)
+  def encode(nil, _opts), do: nil
+  def encode(true, _opts), do: true
+  def encode(false, _opts), do: false
+  def encode(x, _opts), do: Atom.to_string(x)
 end
 
 defimpl Plausible.Audit.Encoder, for: List do
-  def encode(x), do: Enum.map(x, &Plausible.Audit.Encoder.encode/1)
+  def encode(x, _opts), do: Enum.map(x, &Plausible.Audit.Encoder.encode/1)
 end
 
 defimpl Plausible.Audit.Encoder, for: Any do
@@ -108,12 +109,12 @@ defimpl Plausible.Audit.Encoder, for: Any do
 
     quote do
       defimpl Plausible.Audit.Encoder, for: unquote(module) do
-        def encode(struct) do
-          Plausible.Audit.Encoder.encode(unquote(extractor))
+        def encode(struct, opts) do
+          Plausible.Audit.Encoder.encode(unquote(extractor), opts)
         end
       end
     end
   end
 
-  def encode(_), do: raise("Implement me")
+  def encode(_, _), do: raise("Implement me")
 end

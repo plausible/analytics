@@ -76,6 +76,7 @@ defmodule Plausible.Repo do
   defp audit_insert(entry_name, result, params) do
     entry_name
     |> Plausible.Audit.Entry.new(result, params)
+    |> Plausible.Audit.Entry.include_change(result)
     |> Plausible.Audit.Entry.persist!()
   end
 end
