@@ -1,6 +1,8 @@
 defmodule Plausible.AuditTest do
   use Plausible.DataCase
 
+  @moduletag :ee_only
+
   use Plausible.Teams.Test
 
   alias Plausible.Audit
