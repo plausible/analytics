@@ -60,7 +60,7 @@ defmodule Plausible.Auth.SSO.Domain do
 
   @spec verified_changeset(t(), verification_method(), NaiveDateTime.t()) ::
           Ecto.Changeset.t()
-  def verified_changeset(sso_domain, method, now) do
+  def verified_changeset(sso_domain, method, now \\ NaiveDateTime.utc_now(:second)) do
     sso_domain
     |> change()
     |> put_change(:verified_via, method)
@@ -68,8 +68,12 @@ defmodule Plausible.Auth.SSO.Domain do
     |> put_change(:status, Status.verified())
   end
 
-  @spec unverified_changeset(t(), NaiveDateTime.t(), atom()) :: Ecto.Changeset.t()
-  def unverified_changeset(sso_domain, now, status \\ Status.in_progress()) do
+  @spec unverified_changeset(t(), atom(), NaiveDateTime.t()) :: Ecto.Changeset.t()
+  def unverified_changeset(
+        sso_domain,
+        status \\ Status.in_progress(),
+        now \\ NaiveDateTime.utc_now(:second)
+      ) do
     sso_domain
     |> change()
     |> put_change(:verified_via, nil)

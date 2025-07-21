@@ -29,12 +29,19 @@ defmodule Plausible.Audit.Entry do
   def changeset(name, params) do
     context = get_context()
 
+    params =
+      Map.merge(
+        %{
+          team_id: context[:current_team] && context.current_team.id,
+          user_id: context[:current_user] && context.current_user.id
+        },
+        params
+      )
+
     %__MODULE__{name: name}
-    |> cast(params, [:entity, :entity_id, :meta])
+    |> cast(params, [:entity, :entity_id, :meta, :user_id, :team_id])
     |> validate_required([:name, :entity, :entity_id])
     |> put_change(:datetime, NaiveDateTime.utc_now())
-    |> put_change(:team_id, context[:current_team] && context.current_team.id)
-    |> put_change(:user_id, context[:current_user] && context.current_user.id)
   end
 
   def new(name, %{__struct__: struct, id: id}, params \\ %{}) do

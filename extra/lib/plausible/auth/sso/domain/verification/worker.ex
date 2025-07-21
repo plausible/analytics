@@ -89,7 +89,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
   defp verification_failure(domain) do
     with {:ok, sso_domain} <- SSO.Domains.get(domain) do
       sso_domain
-      |> SSO.Domains.mark_unverified!(Status.unverified())
+      |> SSO.Domains.mark_verification_failure!()
       |> send_failure_notification()
     end
 

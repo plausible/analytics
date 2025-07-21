@@ -408,4 +408,16 @@ defmodule Plausible.Teams.Test do
     |> Plausible.Teams.with_subscription()
     |> Map.fetch!(:subscription)
   end
+
+  def audited_event(event_name, attrs \\ []) do
+    attrs = Keyword.put(attrs, :name, event_name)
+
+    case Plausible.Audit.list_entries(attrs) do
+      [_] ->
+        true
+
+      _ ->
+        raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
+    end
+  end
 end
