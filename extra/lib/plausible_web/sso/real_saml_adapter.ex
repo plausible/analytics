@@ -94,6 +94,7 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
       identity =
         %SSO.Identity{
           id: assertion.name_id,
+          integration_id: integration.identifier,
           name: name_from_attributes(attributes),
           email: attributes.email,
           expires_at: expires_at

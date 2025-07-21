@@ -121,11 +121,15 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
     describe "SSO user" do
       setup [:create_user, :create_team, :setup_sso, :provision_sso_user]
 
-      test "updates an SSO member's role by user id", %{team: team, user: user} do
+      test "updates an SSO member's role by user id", %{
+        team: team,
+        user: user,
+        sso_integration: integration
+      } do
         collaborator = add_member(team, role: :viewer)
 
         {:ok, _, _, collaborator} =
-          new_identity(collaborator.name, collaborator.email)
+          new_identity(collaborator.name, collaborator.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
         assert {:ok, _} = UpdateRole.update(team, collaborator.id, "editor", user)
@@ -135,12 +139,13 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
 
       test "updates an SSO member's role to owner when no Force SSO set", %{
         team: team,
+        sso_integration: integration,
         user: user
       } do
         collaborator = add_member(team, role: :viewer)
 
         {:ok, _, _, collaborator} =
-          new_identity(collaborator.name, collaborator.email)
+          new_identity(collaborator.name, collaborator.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
         assert {:ok, _} = UpdateRole.update(team, collaborator.id, "owner", user)
@@ -151,6 +156,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
       test "updates an SSO member's role with Force SSO to Owner provided they have 2FA enabled",
            %{
              team: team,
+             sso_integration: integration,
              user: user
            } do
         {:ok, user, _} = Plausible.Auth.TOTP.initiate(user)
@@ -159,7 +165,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
         collaborator = add_member(team, role: :viewer)
 
         {:ok, _, _, collaborator} =
-          new_identity(collaborator.name, collaborator.email)
+          new_identity(collaborator.name, collaborator.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
         {:ok, collaborator, _} = Plausible.Auth.TOTP.initiate(collaborator)
@@ -172,6 +178,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
 
       test "does not update SSO member's role to Owner if they don't have 2FA enabled", %{
         team: team,
+        sso_integration: integration,
         user: user
       } do
         {:ok, user, _} = Plausible.Auth.TOTP.initiate(user)
@@ -180,7 +187,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
         collaborator = add_member(team, role: :viewer)
 
         {:ok, _, _, collaborator} =
-          new_identity(collaborator.name, collaborator.email)
+          new_identity(collaborator.name, collaborator.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
         assert {:error, :disabled_2fa} = UpdateRole.update(team, collaborator.id, "owner", user)

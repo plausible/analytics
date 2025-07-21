@@ -387,24 +387,27 @@ defmodule PlausibleWeb.SSOControllerTest do
         {:ok, conn: conn}
       end
 
-      test "lists SSO sessions", %{conn: conn, domain: domain} do
+      test "lists SSO sessions", %{conn: conn, domain: domain, integration: integration} do
         now = NaiveDateTime.utc_now(:second)
 
         %{user: user1} =
-          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}}
+          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}, sso_integration: integration}
           |> setup_do(&provision_sso_user/1)
 
         Auth.UserSessions.create!(user1, "Device 1", now: NaiveDateTime.shift(now, hour: -3))
 
         %{user: user2} =
-          %{user: %{name: "Grace Holmes", email: "grace@" <> domain}}
+          %{
+            user: %{name: "Grace Holmes", email: "grace@" <> domain},
+            sso_integration: integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         Auth.UserSessions.create!(user2, "Device 2")
         Auth.UserSessions.create!(user2, "Device 3", now: NaiveDateTime.shift(now, hour: -6))
 
         %{user: user3} =
-          %{user: %{name: "Kate Loselet", email: "kate@" <> domain}}
+          %{user: %{name: "Kate Loselet", email: "kate@" <> domain}, sso_integration: integration}
           |> setup_do(&provision_sso_user/1)
 
         Auth.UserSessions.create!(user3, "Device 4", now: NaiveDateTime.shift(now, hour: -2))
@@ -444,9 +447,13 @@ defmodule PlausibleWeb.SSOControllerTest do
         {:ok, conn: conn}
       end
 
-      test "revokes session and redirects back to sessions list", %{conn: conn, domain: domain} do
+      test "revokes session and redirects back to sessions list", %{
+        conn: conn,
+        domain: domain,
+        integration: integration
+      } do
         %{user: user} =
-          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}}
+          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}, sso_integration: integration}
           |> setup_do(&provision_sso_user/1)
 
         session = Auth.UserSessions.create!(user, "Unknown")

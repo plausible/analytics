@@ -129,10 +129,13 @@ defmodule Plausible.SitesTest do
                  Sites.create(user, params, team)
       end
 
-      test "does not allow creating a site in SSO user's personal team", %{team: team} do
+      test "does not allow creating a site in SSO user's personal team", %{
+        team: team,
+        sso_integration: integration
+      } do
         user = add_member(team, role: :editor)
         {:ok, personal_team} = Plausible.Teams.get_or_create(user)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
         {:ok, _, _, user} = Plausible.Auth.SSO.provision_user(identity)
 
         params = %{"domain" => "example.com", "timezone" => "Europe/London"}

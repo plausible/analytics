@@ -241,7 +241,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         team: team,
         user: user
       } do
-        setup_integration(team, "org.example.com")
+        integration = setup_integration(team, "org.example.com")
         {_lv, html} = get_lv(conn)
 
         assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
@@ -249,7 +249,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         {:ok, user, _} = Auth.TOTP.initiate(user)
         {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-        identity = new_identity("Lance Wurst", "lance@org.example.com")
+        identity = new_identity("Lance Wurst", "lance@org.example.com", integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         {_lv, html} = get_lv(conn)
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         team: team,
         user: user
       } do
-        setup_integration(team, "example.com")
+        integration = setup_integration(team, "example.com")
         {_lv, html} = get_lv(conn)
 
         assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
@@ -271,7 +271,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         {:ok, user, _} = Auth.TOTP.initiate(user)
         {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
         {:ok, _, _, user} = SSO.provision_user(identity)
 
         {:ok, conn: conn} = log_in(%{conn: conn, user: user})
@@ -293,12 +293,14 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        {:ok, _integration} =
+        {:ok, integration} =
           SSO.update_integration(integration, %{
             idp_signin_url: "https://#{domain}",
             idp_entity_id: "some-entity",
             idp_cert_pem: @cert_pem
           })
+
+        integration
       end
 
       defp get_lv(conn) do

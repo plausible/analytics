@@ -612,7 +612,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
         _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(owner.name, owner.email)
+        identity = new_identity(owner.name, owner.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
 
         conn = post(conn, "/login", email: owner.email, password: "password")
@@ -636,7 +636,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
         _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(member.name, member.email)
+        identity = new_identity(member.name, member.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
 
         conn = post(conn, "/login", email: member.email, password: "password")
@@ -660,7 +660,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
         _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(member.name, member.email)
+        identity = new_identity(member.name, member.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
 
         conn = post(conn, "/login", email: member.email, password: "password")

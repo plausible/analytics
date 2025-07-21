@@ -331,15 +331,21 @@ defmodule Plausible.Auth.SSO do
   end
 
   defp find_user_with_fallback(identity) do
-    with {:error, :not_found} <- find_by_identity(identity) do
-      find_by_email(identity.email)
+    with {:ok, integration} <- get_integration(identity.integration_id),
+         {:error, :not_found} <- find_by_identity(identity, integration) do
+      find_by_email(identity.email, integration)
     end
   end
 
-  defp find_by_identity(identity) do
-    if user = Repo.get_by(Auth.User, sso_identity_id: identity.id, type: :sso) do
+  defp find_by_identity(identity, integration) do
+    if user =
+         Repo.get_by(Auth.User,
+           sso_integration_id: integration.id,
+           sso_identity_id: identity.id,
+           type: :sso
+         ) do
       with {:ok, sso_domain} <- SSO.Domains.lookup(identity.email),
-           :ok <- check_domain_integration_match(sso_domain, user) do
+           :ok <- check_domain_integration_match(sso_domain, integration) do
         user = Repo.preload(user, sso_integration: :team)
 
         {:ok, user.type, user, user.sso_integration, sso_domain}
@@ -349,9 +355,10 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp find_by_email(email) do
-    with {:ok, sso_domain} <- SSO.Domains.lookup(email) do
-      case find_by_email(sso_domain.sso_integration.team, email) do
+  defp find_by_email(email, integration) do
+    with {:ok, sso_domain} <- SSO.Domains.lookup(email),
+         :ok <- check_domain_integration_match(sso_domain, integration) do
+      case find_in_team_by_email(sso_domain.sso_integration.team, email) do
         {:ok, user} ->
           {:ok, user.type, user, sso_domain.sso_integration, sso_domain}
 
@@ -361,7 +368,7 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp find_by_email(team, email) do
+  defp find_in_team_by_email(team, email) do
     result =
       Repo.one(
         from(
@@ -380,8 +387,8 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp check_domain_integration_match(sso_domain, user) do
-    if sso_domain.sso_integration_id == user.sso_integration_id do
+  defp check_domain_integration_match(sso_domain, integration) do
+    if sso_domain.sso_integration_id == integration.id do
       :ok
     else
       {:error, :not_found}
