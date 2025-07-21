@@ -79,17 +79,3 @@ defmodule Plausible.Audit.Entry do
   defp to_str(x) when is_atom(x), do: inspect(x)
   defp to_str(x), do: to_string(x)
 end
-
-defimpl String.Chars, for: Plausible.Audit.Entry do
-  def to_string(entry) do
-    [
-      "[#{entry.datetime}] #{entry.name} on #{entry.entity}:#{entry.entity_id} by User:#{inspect(entry.user_id)} (Team:#{inspect(entry.team_id)})",
-      "\n",
-      if(map_size(entry.change) > 0,
-        do: [inspect(entry.change), "\n"],
-        else: ""
-      ),
-      "---"
-    ]
-  end
-end
