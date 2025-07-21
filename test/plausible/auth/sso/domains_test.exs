@@ -30,7 +30,11 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         domain = generate_domain()
 
         assert {:ok, sso_domain} = SSO.Domains.add(integration, domain)
-        assert audited_event("sso_domain_added", team_id: integration.team_id)
+
+        assert audited_event("sso_domain_added",
+                 team_id: integration.team_id,
+                 entity_id: "#{sso_domain.id}"
+               )
 
         assert sso_domain.domain == domain
         assert is_binary(sso_domain.identifier)
@@ -114,7 +118,11 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
 
         verified_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
-        assert audited_event("sso_domain_verification_success", team_id: integration.team_id)
+
+        assert audited_event("sso_domain_verification_success",
+                 team_id: integration.team_id,
+                 entity_id: "#{verified_domain.id}"
+               )
 
         assert verified_domain.id == sso_domain.id
         assert verified_domain.verified_via == :dns_txt
@@ -147,7 +155,11 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         {:ok, _} = SSO.Domains.add(integration, domain)
         assert {:ok, sso_domain} = SSO.Domains.start_verification(domain)
         assert sso_domain.status == Status.in_progress()
-        assert audited_event("sso_domain_verification_started", team_id: integration.team_id)
+
+        assert audited_event("sso_domain_verification_started",
+                 team_id: integration.team_id,
+                 entity_id: "#{sso_domain.id}"
+               )
       end
 
       test "enqueues background work", %{integration: integration} do
@@ -173,7 +185,11 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         assert {:ok, sso_domain} = SSO.Domains.start_verification(domain)
         assert :ok = SSO.Domains.cancel_verification(domain)
         assert Repo.reload!(sso_domain).status == Status.unverified()
-        assert audited_event("sso_domain_verification_cancelled", team_id: integration.team_id)
+
+        assert audited_event("sso_domain_verification_cancelled",
+                 team_id: integration.team_id,
+                 entity_id: "#{sso_domain.id}"
+               )
       end
     end
 

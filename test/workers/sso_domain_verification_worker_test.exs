@@ -87,7 +87,12 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
           subject: "Your SSO domain #{domain} is ready!"
         )
 
-        assert audited_event("sso_domain_verification_success", team_id: team.id)
+        {:ok, domain} = SSO.Domains.get(domain)
+
+        assert audited_event("sso_domain_verification_success",
+                 team_id: team.id,
+                 entity_id: "#{domain.id}"
+               )
       end
 
       test "domain is marked as unverified when max snoozes exhausted", %{
@@ -107,7 +112,13 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
                  )
 
         assert_email_delivered_with(subject: "SSO domain #{domain} verification failure")
-        assert audited_event("sso_domain_verification_failure", team_id: team.id)
+
+        {:ok, domain} = SSO.Domains.get(domain)
+
+        assert audited_event("sso_domain_verification_failure",
+                 team_id: team.id,
+                 entity_id: "#{domain.id}"
+               )
       end
     end
   end
