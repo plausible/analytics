@@ -121,8 +121,8 @@ defmodule Plausible.TestUtils do
       {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
     end
 
-    def provision_sso_user(%{user: user}) do
-      identity = new_identity(user.name, user.email)
+    def provision_sso_user(%{user: user, sso_integration: integration}) do
+      identity = new_identity(user.name, user.email, integration)
       {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
       {:ok, user: sso_user}
@@ -360,9 +360,10 @@ defmodule Plausible.TestUtils do
   end
 
   on_ee do
-    def new_identity(name, email, id \\ Ecto.UUID.generate()) do
+    def new_identity(name, email, integration, id \\ Ecto.UUID.generate()) do
       %Plausible.Auth.SSO.Identity{
         id: id,
+        integration_id: integration.identifier,
         name: name,
         email: email,
         expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)

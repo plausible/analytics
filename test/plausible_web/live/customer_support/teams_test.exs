@@ -584,6 +584,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         {:ok, :standard, team, user} =
           SSO.provision_user(%SSO.Identity{
             id: Ecto.UUID.generate(),
+            integration_id: integration.identifier,
             name: user.name,
             email: user.email,
             expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)

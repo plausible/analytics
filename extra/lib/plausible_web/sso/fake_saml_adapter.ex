@@ -32,6 +32,7 @@ defmodule PlausibleWeb.SSO.FakeSAMLAdapter do
           if user = Repo.get_by(Auth.User, email: params["email"]) do
             %SSO.Identity{
               id: user.sso_identity_id || Ecto.UUID.generate(),
+              integration_id: integration.identifier,
               name: user.name,
               email: user.email,
               expires_at: expires_at
@@ -39,6 +40,7 @@ defmodule PlausibleWeb.SSO.FakeSAMLAdapter do
           else
             %SSO.Identity{
               id: Ecto.UUID.generate(),
+              integration_id: integration.identifier,
               name: name_from_email(params["email"]),
               email: params["email"],
               expires_at: expires_at

@@ -65,7 +65,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
            %{
              conn: conn,
              team: team,
-             user: user
+             user: user,
+             sso_integration: integration
            } do
         {:ok, user, _} = Plausible.Auth.TOTP.initiate(user)
         {:ok, _user, _} = Plausible.Auth.TOTP.enable(user, :skip_verify)
@@ -73,11 +74,11 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         member = add_member(team, role: :viewer)
 
         {:ok, _, _, _member} =
-          new_identity(member.name, member.email)
+          new_identity(member.name, member.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
         {:ok, _, _, user} =
-          new_identity(user.name, user.email)
+          new_identity(user.name, user.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
         {:ok, conn: conn} = log_in(%{conn: conn, user: user})

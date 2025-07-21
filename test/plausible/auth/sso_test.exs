@@ -279,7 +279,7 @@ defmodule Plausible.Auth.SSOTest do
         sso_domain: sso_domain,
         team: team
       } do
-        identity = new_identity("Jane Sculley", "jane@" <> domain)
+        identity = new_identity("Jane Sculley", "jane@" <> domain, integration)
 
         assert {:ok, :identity, matched_team, user} = SSO.provision_user(identity)
 
@@ -309,7 +309,7 @@ defmodule Plausible.Auth.SSOTest do
         another_team_site = new_site()
         add_guest(another_team_site, user: user, role: :editor)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:ok, :standard, matched_team, sso_user} = SSO.provision_user(identity)
 
@@ -339,7 +339,7 @@ defmodule Plausible.Auth.SSOTest do
         another_team_site = new_site()
         add_guest(another_team_site, user: user, role: :editor)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:ok, :standard, matched_team, sso_user} = SSO.provision_user(identity)
 
@@ -363,7 +363,7 @@ defmodule Plausible.Auth.SSOTest do
       } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         add_member(team, user: user, role: :editor)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
         {:ok, :standard, _team, user} = SSO.provision_user(identity)
 
         assert {:ok, :sso, matched_team, sso_user} = SSO.provision_user(identity)
@@ -379,47 +379,58 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.last_sso_login
       end
 
-      test "does not provision user without matching setup integration", %{team: team} do
+      test "does not provision user without matching setup integration", %{
+        integration: integration,
+        team: team
+      } do
         # rogue e-mail
-        identity = new_identity("Rodney Williams", "rodney@example.com")
+        identity = new_identity("Rodney Williams", "rodney@example.com", integration)
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
 
         # member without setup domain
         user = new_user(email: "jane@example.com", name: "Jane Sculley")
         add_member(team, user: user, role: :editor)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
       end
 
-      test "does not provision non-member even if e-mail matches domain", %{domain: domain} do
+      test "does not provision non-member even if e-mail matches domain", %{
+        integration: integration,
+        domain: domain
+      } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         another_team = new_site().team
         add_member(another_team, user: user, role: :editor)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
       end
 
-      test "does not provision guest member", %{team: team, domain: domain} do
+      test "does not provision guest member", %{
+        team: team,
+        domain: domain,
+        integration: integration
+      } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         site = new_site(team: team)
         add_guest(site, user: user, role: :editor)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
       end
 
       test "does not provision when user is member of more than one team", %{
         domain: domain,
-        team: team
+        team: team,
+        integration: integration
       } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         add_member(team, user: user, role: :editor)
         another_team = new_site().team |> Plausible.Teams.complete_setup()
         add_member(another_team, user: user, role: :viewer)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :multiple_memberships, matched_team, matched_user} =
                  SSO.provision_user(identity)
@@ -430,14 +441,15 @@ defmodule Plausible.Auth.SSOTest do
 
       test "does not provision from existing user with personal team with subscription", %{
         team: team,
-        domain: domain
+        domain: domain,
+        integration: integration
       } do
         user =
           new_user(email: "jane@" <> domain, name: "Jane Sculley") |> subscribe_to_growth_plan()
 
         add_member(team, user: user, role: :editor)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :active_personal_team, matched_team, matched_user} =
                  SSO.provision_user(identity)
@@ -448,7 +460,8 @@ defmodule Plausible.Auth.SSOTest do
 
       test "does not provision from existing user with personal team with site", %{
         team: team,
-        domain: domain
+        domain: domain,
+        integration: integration
       } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
 
@@ -456,7 +469,7 @@ defmodule Plausible.Auth.SSOTest do
 
         add_member(team, user: user, role: :editor)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :active_personal_team, matched_team, matched_user} =
                  SSO.provision_user(identity)
@@ -467,7 +480,8 @@ defmodule Plausible.Auth.SSOTest do
 
       test "does not provision new SSO user from identity when team is over members limit", %{
         domain: domain,
-        team: team
+        team: team,
+        integration: integration
       } do
         insert(:growth_subscription, team: team)
 
@@ -475,15 +489,16 @@ defmodule Plausible.Auth.SSOTest do
         add_member(team, role: :viewer)
         add_member(team, role: :viewer)
 
-        identity = new_identity("Jane Sculley", "jane@" <> domain)
+        identity = new_identity("Jane Sculley", "jane@" <> domain, integration)
 
         assert {:error, :over_limit} = SSO.provision_user(identity)
       end
 
       test "does not provision existing SSO user when email domain is not allowlisted", %{
-        domain: domain
+        domain: domain,
+        integration: integration
       } do
-        identity = new_identity("Jane Sculley", "jane@" <> domain)
+        identity = new_identity("Jane Sculley", "jane@" <> domain, integration)
 
         assert {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
@@ -491,6 +506,7 @@ defmodule Plausible.Auth.SSOTest do
           new_identity(
             "Jane Sculley on New Email",
             "jane@new.example.com",
+            integration,
             sso_user.sso_identity_id
           )
 
@@ -507,7 +523,7 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity("Clarence Fortridge", "clarence@" <> domain)
+        identity = new_identity("Clarence Fortridge", "clarence@" <> domain, integration)
         {:ok, _, _, user} = SSO.provision_user(identity)
 
         user = Repo.reload!(user)
@@ -598,7 +614,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         assert :ok = SSO.check_force_sso(team, :all_but_owners)
@@ -623,7 +639,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Carrie Mower", "lance@" <> domain)
+        identity = new_identity("Carrie Mower", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         assert {:error, :owner_2fa_disabled} = SSO.check_force_sso(team, :all_but_owners)
@@ -709,7 +725,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         assert {:ok, updated_team} = SSO.set_force_sso(team, :all_but_owners)
@@ -739,7 +755,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         {:ok, team} = SSO.set_force_sso(team, :all_but_owners)
@@ -767,7 +783,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         # SSO user deprovisioned
@@ -792,7 +808,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         # Force SSO enabled
@@ -820,7 +836,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         integration = Repo.reload!(integration)
@@ -844,7 +860,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         # SSO user deprovisioned
@@ -872,7 +888,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         integration = Repo.reload!(integration)
@@ -897,7 +913,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Carrie Mower", "carrie@" <> domain)
+        identity = new_identity("Carrie Mower", "carrie@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         integration = Repo.reload!(integration)
@@ -946,7 +962,7 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity("Test User", "test@" <> domain)
+        identity = new_identity("Test User", "test@" <> domain, integration)
         {:ok, _, _, _} = SSO.provision_user(identity)
 
         {:ok, _} = SSO.Domains.start_verification(domain)
@@ -980,8 +996,12 @@ defmodule Plausible.Auth.SSOTest do
          domain: domain}
       end
 
-      test "returns ok for user who is already of type SSO", %{domain: domain, team: team} do
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+      test "returns ok for user who is already of type SSO", %{
+        domain: domain,
+        team: team,
+        integration: integration
+      } do
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         assert :ok = SSO.check_ready_to_provision(sso_user, team)

@@ -244,7 +244,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         other_domain = generate_domain()
         {:ok, other_sso_domain} = SSO.Domains.add(integration, other_domain)
         _other_sso_domain = SSO.Domains.verify(other_sso_domain, skip_checks?: true)
-        other_identity = new_identity("Mary Goodwill", "mary@" <> other_domain)
+        other_identity = new_identity("Mary Goodwill", "mary@" <> other_domain, integration)
         {:ok, _, _, _other_sso_user} = SSO.provision_user(other_identity)
         {:ok, _team} = SSO.set_force_sso(team, :all_but_owners)
 
@@ -254,11 +254,12 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "returns error when force SSO enabled and SSO users only present on current domain", %{
         team: team,
+        integration: integration,
         domain: domain,
         sso_domain: sso_domain
       } do
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
-        identity = new_identity("Claude Leferge", "claude@" <> domain)
+        identity = new_identity("Claude Leferge", "claude@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
         {:ok, _team} = SSO.set_force_sso(team, :all_but_owners)
 
@@ -268,10 +269,11 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "returns error when SSO users present on current domain", %{
         domain: domain,
+        integration: integration,
         sso_domain: sso_domain
       } do
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
-        identity = new_identity("Claude Leferge", "claude@" <> domain)
+        identity = new_identity("Claude Leferge", "claude@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         sso_domain = Repo.reload!(sso_domain)
@@ -293,11 +295,12 @@ defmodule Plausible.Auth.SSO.DomainsTest do
       end
 
       test "fails to remove the domain whenSSO users present on it", %{
+        integration: integration,
         domain: domain,
         sso_domain: sso_domain
       } do
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
-        identity = new_identity("Claude Leferge", "claude@" <> domain)
+        identity = new_identity("Claude Leferge", "claude@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         assert {:error, :sso_users_present} = SSO.Domains.remove(sso_domain)
@@ -305,11 +308,12 @@ defmodule Plausible.Auth.SSO.DomainsTest do
       end
 
       test "removes the domain and deprovisions SSO users when force flag set", %{
+        integration: integration,
         domain: domain,
         sso_domain: sso_domain
       } do
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
-        identity = new_identity("Claude Leferge", "claude@" <> domain)
+        identity = new_identity("Claude Leferge", "claude@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         assert :ok = SSO.Domains.remove(sso_domain, force_deprovision?: true)
@@ -326,11 +330,12 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "fails to remove when force SSO enabled with SSO users only on that domain", %{
         team: team,
+        integration: integration,
         domain: domain,
         sso_domain: sso_domain
       } do
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
-        identity = new_identity("Claude Leferge", "claude@" <> domain)
+        identity = new_identity("Claude Leferge", "claude@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
         {:ok, _} = SSO.set_force_sso(team, :all_but_owners)
 

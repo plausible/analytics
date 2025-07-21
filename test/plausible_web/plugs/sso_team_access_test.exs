@@ -96,11 +96,12 @@ defmodule Plausible.Plugs.SSOTeamAccessTest do
       test "redirects to notice for SSO team with force SSO", %{
         conn: conn,
         team: team,
-        user: user
+        user: user,
+        sso_integration: integration
       } do
         {:ok, user, _} = Auth.TOTP.initiate(user)
         {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
-        identity = new_identity("Woozy Wooster", "woozy@example.com")
+        identity = new_identity("Woozy Wooster", "woozy@example.com", integration)
         Auth.SSO.provision_user(identity)
         {:ok, _team} = Auth.SSO.set_force_sso(team, :all_but_owners)
 
@@ -117,14 +118,15 @@ defmodule Plausible.Plugs.SSOTeamAccessTest do
       test "redirects to issue notice for SSO team with force SSO and user in invalid state", %{
         conn: conn,
         team: team,
-        user: user
+        user: user,
+        sso_integration: integration
       } do
         another_team = new_site().team |> Plausible.Teams.complete_setup()
         add_member(another_team, user: user, role: :viewer)
 
         {:ok, user, _} = Auth.TOTP.initiate(user)
         {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
-        identity = new_identity("Woozy Wooster", "woozy@example.com")
+        identity = new_identity("Woozy Wooster", "woozy@example.com", integration)
         Auth.SSO.provision_user(identity)
         {:ok, _team} = Auth.SSO.set_force_sso(team, :all_but_owners)
 
