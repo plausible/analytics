@@ -296,6 +296,20 @@ defmodule Plausible.Auth.SSOTest do
         assert_team_membership(user, team, :viewer)
       end
 
+      test "does not provision a user from identity when identity integration does not match", %{
+        domain: domain
+      } do
+        other_team = new_site().team
+        other_integration = SSO.initiate_saml_integration(other_team)
+        other_domain = "other-example-#{Enum.random(1..10_000)}.com"
+        {:ok, other_sso_domain} = SSO.Domains.add(other_integration, other_domain)
+        _other_sso_domain = SSO.Domains.verify(other_sso_domain, skip_checks?: true)
+
+        identity = new_identity("Jane Sculley", "jane@" <> domain, other_integration)
+
+        assert {:error, :integration_not_found} = SSO.provision_user(identity)
+      end
+
       test "provisions SSO user from existing user", %{
         integration: integration,
         team: team,
