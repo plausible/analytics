@@ -35,12 +35,14 @@ function init(overrides) {
     window.plausible = track
     window.plausible.init = init
     window.plausible.l = true
+    window.plausible.v2 = COMPILE_PLAUSIBLE_WEB
   }
 
   // Bind to window to be detectable by the verifier tool
   // This is done in a 'safe' way to avoid breaking the page if window is frozen or running without window
   if (COMPILE_PLAUSIBLE_NPM && config.bindToWindow && typeof window !== 'undefined') {
     window.plausible = track
+    window.plausible.v2 = true
   }
 }
 
