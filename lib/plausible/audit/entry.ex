@@ -2,7 +2,6 @@ defmodule Plausible.Audit.Entry do
   use Ecto.Schema
   import Ecto.Changeset
 
-  # TODO: binary id
   @type t :: %__MODULE__{
           name: String.t(),
           entity: String.t(),
@@ -14,6 +13,7 @@ defmodule Plausible.Audit.Entry do
           datetime: NaiveDateTime.t()
         }
 
+  @primary_key {:id, :binary_id, autogenerate: true}
   schema "audit_entries" do
     field :name, :string
     field :entity, :string
