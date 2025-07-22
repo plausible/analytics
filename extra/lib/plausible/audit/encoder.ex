@@ -106,7 +106,12 @@ defimpl Plausible.Audit.Encoder, for: Any do
           )
 
         true ->
-          quote(do: :maps.remove(:__struct__, struct))
+          quote(
+            do:
+              struct
+              |> Map.delete(:__struct__)
+              |> Map.put(:__allow_not_loaded__, unquote(allow_not_loaded))
+          )
       end
 
     quote do
