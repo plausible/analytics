@@ -47,7 +47,7 @@ defimpl Plausible.Audit.Encoder, for: Map do
         end
 
       {k, v}, acc ->
-        Map.put(acc, k, Plausible.Audit.Encoder.encode(v))
+        Map.put(acc, k, Plausible.Audit.Encoder.encode(v, opts))
     end)
   end
 end
@@ -68,7 +68,9 @@ defimpl Plausible.Audit.Encoder, for: [Atom] do
 end
 
 defimpl Plausible.Audit.Encoder, for: List do
-  def encode(x, _opts), do: Enum.map(x, &Plausible.Audit.Encoder.encode/1)
+  def encode(x, opts) do
+    Enum.map(x, &Plausible.Audit.Encoder.encode(&1, opts))
+  end
 end
 
 defimpl Plausible.Audit.Encoder, for: Any do
