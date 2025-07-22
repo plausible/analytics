@@ -25,7 +25,7 @@ defmodule Mix.Tasks.DownloadCountryDatabase do
     res =
       case res.status_code do
         404 ->
-          Logger.info("Got 404 for #{this_month_url}, trying #{last_month_url}")
+          Logger.warning("Got 404 for #{this_month_url}, trying #{last_month_url}")
           HTTPoison.get!(last_month_url)
 
         _ ->

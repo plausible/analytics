@@ -35,7 +35,7 @@ defmodule Plausible.Session.Transfer do
 
   @impl true
   def init(nil) do
-    Logger.info(
+    Logger.notice(
       "Session transfer: ignoring, no socket base path configured (make sure ENABLE_SESSION_TRANSFER/PERSISTENT_CACHE_DIR are set)"
     )
 
@@ -65,7 +65,7 @@ defmodule Plausible.Session.Transfer do
          _until = fn ->
            result = :counters.get(given_counter, 1) > 0
 
-           Logger.info(
+           Logger.notice(
              "Session transfer delayed shut down. Checking if session takeover happened?: #{result}"
            )
 
@@ -84,7 +84,7 @@ defmodule Plausible.Session.Transfer do
   """
   def attempted?(transfer_sup \\ __MODULE__) do
     result = not replica_alive?(transfer_sup)
-    Logger.info("Session transfer attempted?: #{result}")
+    Logger.notice("Session transfer attempted?: #{result}")
     result
   end
 
@@ -102,7 +102,9 @@ defmodule Plausible.Session.Transfer do
   end
 
   defp handle_replica(request, parent, given_counter) do
-    Logger.info("Session transfer message received at #{node()}: #{inspect(request, limit: 10)}")
+    Logger.notice(
+      "Session transfer message received at #{node()}: #{inspect(request, limit: 10)}"
+    )
 
     case request do
       {@cmd_list_cache_names, session_version} ->
@@ -132,19 +134,19 @@ defmodule Plausible.Session.Transfer do
   end
 
   defp request_takeover(sock) do
-    Logger.info("Session transfer: requesting takeover at #{node()}")
+    Logger.notice("Session transfer: requesting takeover at #{node()}")
 
     with {:ok, names} <- TinySock.call(sock, {@cmd_list_cache_names, session_version()}) do
       tasks = Enum.map(names, fn name -> Task.async(fn -> takeover_cache(sock, name) end) end)
       Task.await_many(tasks, :timer.seconds(10))
     end
   after
-    Logger.info("Session transfer: marking takeover as done at #{node()}")
+    Logger.notice("Session transfer: marking takeover as done at #{node()}")
     TinySock.call(sock, @cmd_takeover_done)
   end
 
   defp takeover_cache(sock, cache) do
-    Logger.info("Session transfer: requesting cache #{cache} dump at #{node()}")
+    Logger.notice("Session transfer: requesting cache #{cache} dump at #{node()}")
 
     with {:ok, records} <- TinySock.call(sock, {@cmd_dump_cache, cache}) do
       Enum.each(records, fn record ->
@@ -152,7 +154,7 @@ defmodule Plausible.Session.Transfer do
         Cache.Adapter.put(:sessions, key, session)
       end)
 
-      Logger.info("Session transfer: restored cache #{cache} at #{node()}")
+      Logger.notice("Session transfer: restored cache #{cache} at #{node()}")
     end
   end
 
