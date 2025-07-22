@@ -472,6 +472,7 @@ defmodule PlausibleWeb.Router do
     post "/team/leave", SettingsController, :leave_team
 
     on_ee do
+      get "/sso/info", SSOController, :cta
       get "/sso/general", SSOController, :sso_settings
       get "/sso/sessions", SSOController, :team_sessions
       delete "/sso/sessions/:session_id", SSOController, :delete_session

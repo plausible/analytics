@@ -133,6 +133,16 @@ defmodule PlausibleWeb.LayoutView do
               ]
             }
           ),
+          if(
+            Plausible.sso_enabled?() and
+              Plausible.Billing.Feature.SSO.check_availability(current_team) != :ok,
+            do: %{
+              key: "Single Sign-On",
+              value: "sso/info",
+              icon: :cloud,
+              badge: :new
+            }
+          ),
           if(current_team_role == :owner,
             do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
           )

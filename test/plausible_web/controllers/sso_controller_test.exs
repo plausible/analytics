@@ -38,7 +38,8 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On"
+        assert html =~ "/settings/sso/general"
+        refute html =~ "/settings/sso/info"
       end
 
       test "sso team settings item is hidden when there's no SSO plan feature", %{conn: conn} do
@@ -51,7 +52,8 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        refute html =~ "Single Sign-On"
+        refute html =~ "/settings/sso/general"
+        assert html =~ "/settings/sso/info"
       end
     end
 

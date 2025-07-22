@@ -60,11 +60,12 @@ defmodule PlausibleWeb.Components.Layout do
   def settings_sidebar(assigns) do
     ~H"""
     <.settings_top_tab
-      :for={%{key: key, value: value, icon: icon} <- @options}
+      :for={%{key: key, value: value, icon: icon} = opts <- @options}
       selected_fn={@selected_fn}
       prefix={@prefix}
       icon={icon}
       text={key}
+      badge={opts[:badge]}
       value={value}
     />
     """
@@ -74,6 +75,7 @@ defmodule PlausibleWeb.Components.Layout do
   attr(:prefix, :string, default: "")
   attr(:icon, :any, default: nil)
   attr(:text, :string, required: true)
+  attr(:badge, :any, default: nil)
   attr(:value, :any, default: nil)
 
   defp settings_top_tab(assigns) do
@@ -84,6 +86,7 @@ defmodule PlausibleWeb.Components.Layout do
         prefix={@prefix}
         icon={@icon}
         text={@text}
+        badge={@badge}
         value={@value}
       />
     <% else %>
@@ -91,11 +94,12 @@ defmodule PlausibleWeb.Components.Layout do
 
       <div class="ml-6">
         <.settings_tab
-          :for={%{key: key, value: value} <- @value}
+          :for={%{key: key, value: value} = opts <- @value}
           selected_fn={@selected_fn}
           prefix={@prefix}
           icon={nil}
           text={key}
+          badge={opts[:badge]}
           value={value}
           submenu?={true}
         />
@@ -110,6 +114,7 @@ defmodule PlausibleWeb.Components.Layout do
   attr(:icon, :any, default: nil)
   attr(:submenu?, :boolean, default: false)
   attr(:text, :string, required: true)
+  attr(:badge, :any, default: nil)
 
   defp settings_tab(assigns) do
     current_tab? = assigns[:selected_fn] != nil and assigns.selected_fn.(assigns[:value])
@@ -133,6 +138,7 @@ defmodule PlausibleWeb.Components.Layout do
         class={["h-4 w-4 mr-2", @current_tab? && "stroke-2"]}
       />
       {@text}
+      <.settings_badge type={@badge} />
       <Heroicons.chevron_down
         :if={is_nil(@value)}
         class="h-3 w-3 ml-2 text-gray-400 dark:text-gray-500"
@@ -140,6 +146,16 @@ defmodule PlausibleWeb.Components.Layout do
     </a>
     """
   end
+
+  defp settings_badge(%{type: :new} = assigns) do
+    ~H"""
+    <span class="inline-block ml-2 bg-indigo-700 text-gray-100 text-xs p-1 rounded">
+      NEW
+    </span>
+    """
+  end
+
+  defp settings_badge(assigns), do: ~H""
 
   defp theme_preference(%{theme: theme}) when not is_nil(theme), do: theme
 
