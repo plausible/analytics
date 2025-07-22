@@ -60,4 +60,18 @@ test.describe('NPM package', () => {
       await callInit(page, DEFAULT_CONFIG, 'window')
     }).rejects.toThrow("plausible.init() can only be called once")
   })
+
+  test('binds to window by default', async ({ page }) => {
+    await openPage(page, {}, { skipPlausibleInit: true })
+    await callInit(page, DEFAULT_CONFIG, 'window')
+    await page.waitForFunction('window.plausible !== undefined')
+  })
+
+  test('does not bind to window if bindToWindow is false', async ({ page }) => {
+    await openPage(page, {}, { skipPlausibleInit: true })
+    await callInit(page, { ...DEFAULT_CONFIG, bindToWindow: false }, 'window')
+    await expect(
+      page.waitForFunction(() => window.plausible !== undefined, undefined, { timeout: 1000 }),
+    ).rejects.toThrow('page.waitForFunction: Timeout 1000ms exceeded.')
+  })
 })
