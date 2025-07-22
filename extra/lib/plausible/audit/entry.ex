@@ -28,7 +28,7 @@ defmodule Plausible.Audit.Entry do
     field :user_id, :integer, default: 0
     field :team_id, :integer, default: 0
     field :datetime, :naive_datetime_usec
-    field :actor_type, :string, default: "system"
+    field :actor_type, Ecto.Enum, default: :system, values: [:system, :user]
   end
 
   def changeset(name, params) do
