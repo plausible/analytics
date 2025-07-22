@@ -60,7 +60,7 @@ defimpl Plausible.Audit.Encoder, for: [DateTime, Date, NaiveDateTime, Time] do
   def encode(x, _opts), do: to_string(x)
 end
 
-defimpl Plausible.Audit.Encoder, for: [Atom] do
+defimpl Plausible.Audit.Encoder, for: Atom do
   def encode(nil, _opts), do: nil
   def encode(true, _opts), do: true
   def encode(false, _opts), do: false
