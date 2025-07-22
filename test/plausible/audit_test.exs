@@ -168,13 +168,6 @@ defmodule Plausible.AuditTest do
         assert cs.changes.meta == %{x: 1}
       end
 
-      test "name/4 with binary entity and entity_id" do
-        cs = Entry.name("name", "Bar", "99", %{meta: %{a: 1}})
-        assert cs.changes.entity == "Bar"
-        assert cs.changes.entity_id == "99"
-        assert cs.changes.meta == %{a: 1}
-      end
-
       test "include_change/2 encodes changeset" do
         struct = %TestSchema{id: 1, name: "bar"}
         changeset = Ecto.Changeset.change(struct, name: "baz")

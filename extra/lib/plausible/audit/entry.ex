@@ -54,11 +54,6 @@ defmodule Plausible.Audit.Entry do
     changeset(name, Map.merge(%{entity: to_str(struct), entity_id: to_str(id)}, params))
   end
 
-  def name(name, entity, entity_id, params \\ %{})
-      when is_binary(entity) and is_binary(entity_id) do
-    changeset(name, Map.merge(%{entity: entity, entity_id: entity_id}, params))
-  end
-
   def include_change(audit_entry, %Ecto.Changeset{} = related_changeset) do
     audit_entry
     |> change()
