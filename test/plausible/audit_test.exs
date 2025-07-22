@@ -281,6 +281,7 @@ defmodule Plausible.AuditTest do
 
     test "delete_with_audit!/2" do
       user = new_user()
+      user_email = user.email
       user_id = user.id
       assert %Plausible.Auth.User{} = Repo.delete_with_audit!(user, "user_delete")
 
@@ -288,7 +289,7 @@ defmodule Plausible.AuditTest do
                %Plausible.Audit.Entry{
                  name: "user_delete",
                  change: %{
-                   "email" => "email-0@example.com",
+                   "email" => ^user_email,
                    "email_verified" => true,
                    "id" => ^user_id,
                    "last_team_identifier" => nil,
