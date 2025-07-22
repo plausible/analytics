@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Bind the `track` function into `window.plausible`. This makes it possible for the Plausible verification agent to verify a successful installation. Can be disabled setting the `bindToWindow` config option to `false`.
+
 ## [0.3.2] - 2025-07-14
 
 - "Form: Submission" event payload does not need to contain props.path any more: it is saved to be the same as the pathname of the event
