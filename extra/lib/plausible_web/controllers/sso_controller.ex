@@ -90,6 +90,10 @@ defmodule PlausibleWeb.SSOController do
     conn |> send_resp(200, "OK")
   end
 
+  def cta(conn, _params) do
+    render(conn, :cta, layout: {PlausibleWeb.LayoutView, :settings})
+  end
+
   def sso_settings(conn, _params) do
     if Plausible.Teams.setup?(conn.assigns.current_team) and Plausible.sso_enabled?() and
          Plausible.Billing.Feature.SSO.check_availability(conn.assigns.current_team) == :ok do
