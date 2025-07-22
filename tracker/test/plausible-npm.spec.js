@@ -80,9 +80,8 @@ test.describe('NPM package', () => {
   test('does not bind to window if bindToWindow is false', async ({ page }) => {
     await openPage(page, {}, { skipPlausibleInit: true })
     await callInit(page, { ...DEFAULT_CONFIG, bindToWindow: false }, 'window')
-    await doesNotResolveWithin(
-      page.waitForFunction('window.plausible !== undefined'),
-      1000
-    )
+    await expect(
+      page.waitForFunction(() => window.plausible !== undefined, undefined, { timeout: 1000 }),
+    ).rejects.toThrow('page.waitForFunction: Timeout 1000ms exceeded.')
   })
 })
