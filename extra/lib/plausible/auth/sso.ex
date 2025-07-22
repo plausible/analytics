@@ -148,7 +148,7 @@ defmodule Plausible.Auth.SSO do
       team
       |> Ecto.Changeset.change()
       |> Ecto.Changeset.put_embed(:policy, policy_changeset)
-      |> Repo.update_with_audit("sso_forced", %{team_id: team.id})
+      |> Repo.update_with_audit("sso_force_mode_changed", %{team_id: team.id})
     end
   end
 

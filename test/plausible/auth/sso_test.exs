@@ -776,7 +776,7 @@ defmodule Plausible.Auth.SSOTest do
         assert updated_team.id == team.id
         assert updated_team.policy.force_sso == :all_but_owners
 
-        assert audited_entry("sso_forced", team_id: team.id, entity_id: "#{team.id}")
+        assert audited_entry("sso_force_mode_changed", team_id: team.id, entity_id: "#{team.id}")
       end
 
       test "returns error when conditions not met" do
