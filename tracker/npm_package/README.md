@@ -54,7 +54,7 @@ See also [plausible.d.ts](https://github.com/plausible/analytics/blob/master/tra
 | `logging` | Whether to log on ignored events. | `true` |
 | `customProperties` | Object or function that returns custom properties for a given event. | `{}` |
 | `transformRequest` | Function that allows transforming or ignoring requests | |
-| `bindToWindow` | Binds `track` to `window.plausible` after init. This is used by verification tool to detect whether plausible is installed | `true` |
+| `bindToWindow` | Binds `track` to `window.plausible` which is used by Plausible installation verification tool to detect whether Plausible has been installed correctly. If `bindToWindow` is set to false, the installation verification tool won't be able to automatically detect it on your site.  | `true` |
 
 #### Using `customProperties`
 

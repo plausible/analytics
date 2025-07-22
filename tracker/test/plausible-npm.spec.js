@@ -6,7 +6,6 @@ Config is set at init(), as we expect consumers to do in production.
 import { test, expect } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import { testPlausibleConfiguration, callInit } from './shared-configuration-tests'
-import { delay } from './support/test-utils'
 
 const DEFAULT_CONFIG = {
   domain: 'example.com',
@@ -21,15 +20,6 @@ async function openPage(page, config, options = {}) {
   if (!options.skipPlausibleInit) {
     await callInit(page, { ...DEFAULT_CONFIG, ...config }, 'window')
   }
-}
-
-function doesNotResolveWithin(promise, timeout) {
-  return Promise.race([
-    promise.then(() => {
-      throw new Error('Unexpected promise resolution')
-    }),
-    delay(timeout)
-  ])
 }
 
 test.describe('NPM package', () => {
