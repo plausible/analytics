@@ -21,20 +21,22 @@ defmodule Plausible.Teams.Team do
   @trial_accept_traffic_until_offset_days 14
   @subscription_accept_traffic_until_offset_days 30
 
-  @derive {Plausible.Audit.Encoder,
-           only: [
-             :id,
-             :identifier,
-             :name,
-             :trial_expiry_date,
-             :accept_traffic_until,
-             :allow_next_upgrade_override,
-             :locked,
-             :setup_complete,
-             :setup_at,
-             :hourly_api_request_limit,
-             :policy
-           ]}
+  on_ee do
+    @derive {Plausible.Audit.Encoder,
+             only: [
+               :id,
+               :identifier,
+               :name,
+               :trial_expiry_date,
+               :accept_traffic_until,
+               :allow_next_upgrade_override,
+               :locked,
+               :setup_complete,
+               :setup_at,
+               :hourly_api_request_limit,
+               :policy
+             ]}
+  end
 
   schema "teams" do
     field :identifier, Ecto.UUID

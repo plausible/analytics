@@ -409,27 +409,29 @@ defmodule Plausible.Teams.Test do
     |> Map.fetch!(:subscription)
   end
 
-  def audited_entry(name, attrs \\ []) do
-    attrs = Keyword.put(attrs, :name, name)
+  on_ee do
+    def audited_entry(name, attrs \\ []) do
+      attrs = Keyword.put(attrs, :name, name)
 
-    case Plausible.Audit.list_entries(attrs) do
-      [_] ->
-        true
+      case Plausible.Audit.list_entries(attrs) do
+        [_] ->
+          true
 
-      _ ->
-        raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
+        _ ->
+          raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
+      end
     end
-  end
 
-  def audited_entries(length, name, attrs \\ []) do
-    attrs = Keyword.put(attrs, :name, name)
+    def audited_entries(length, name, attrs \\ []) do
+      attrs = Keyword.put(attrs, :name, name)
 
-    case Plausible.Audit.list_entries(attrs) do
-      l when is_list(l) and length(l) == length ->
-        true
+      case Plausible.Audit.list_entries(attrs) do
+        l when is_list(l) and length(l) == length ->
+          true
 
-      _ ->
-        raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
+        _ ->
+          raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
+      end
     end
   end
 end
