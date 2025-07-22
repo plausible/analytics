@@ -878,7 +878,7 @@ defmodule PlausibleWeb.Components.Generic do
               x-ref="filter_text"
               phx-debounce={200}
               autocomoplete="off"
-              x-on:keydown.prevent.slash.window="$refs.filter_text.focus(); $refs.filter_text.select();"
+              x-on:keydown.slash.window="if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return; $refs.filter_text.focus(); $refs.filter_text.select();" 
               x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter?.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
               value={@filter_text}
               x-on:focus={"$refs.filter_text.placeholder = '#{@placeholder}';"}
