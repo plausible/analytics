@@ -17,7 +17,7 @@ defmodule Plausible.Auth.SSO.Domains do
   def add(integration, domain) do
     changeset = SSO.Domain.create_changeset(integration, domain)
 
-    Repo.insert(changeset)
+    Repo.insert_with_audit(changeset, "sso_domain_added", %{team_id: integration.team_id})
   end
 
   @spec start_verification(String.t()) :: SSO.Domain.t()
@@ -25,7 +25,14 @@ defmodule Plausible.Auth.SSO.Domains do
     {:ok, result} =
       Repo.transaction(fn ->
         with {:ok, sso_domain} <- get(domain) do
-          sso_domain = mark_unverified!(sso_domain, Status.in_progress())
+          sso_domain =
+            sso_domain
+            |> SSO.Domain.unverified_changeset(Status.in_progress())
+            |> Repo.update_with_audit!(
+              "sso_domain_verification_started",
+              %{team_id: sso_domain.sso_integration.team_id}
+            )
+
           {:ok, _} = Verification.Worker.enqueue(domain)
           {:ok, sso_domain}
         end
@@ -39,7 +46,11 @@ defmodule Plausible.Auth.SSO.Domains do
     {:ok, :ok} =
       Repo.transaction(fn ->
         with {:ok, sso_domain} <- get(domain) do
-          mark_unverified!(sso_domain, Status.unverified())
+          sso_domain
+          |> SSO.Domain.unverified_changeset(Status.unverified())
+          |> Repo.update_with_audit("sso_domain_verification_cancelled", %{
+            team_id: sso_domain.sso_integration.team_id
+          })
         end
 
         :ok = Verification.Worker.cancel(domain)
@@ -66,7 +77,9 @@ defmodule Plausible.Auth.SSO.Domains do
           mark_verified!(sso_domain, step, now)
 
         {:error, :unverified} ->
-          mark_unverified!(sso_domain, :in_progress, now)
+          sso_domain
+          |> SSO.Domain.unverified_changeset(Status.in_progress(), now)
+          |> Repo.update!()
       end
     end
   end
@@ -175,14 +188,18 @@ defmodule Plausible.Auth.SSO.Domains do
   def mark_verified!(sso_domain, method, now \\ NaiveDateTime.utc_now(:second)) do
     sso_domain
     |> SSO.Domain.verified_changeset(method, now)
-    |> Repo.update!()
+    |> Repo.update_with_audit!("sso_domain_verification_success", %{
+      team_id: sso_domain.sso_integration.team_id
+    })
   end
 
-  @spec mark_unverified!(SSO.Domain.t(), atom(), NaiveDateTime.t()) :: SSO.Domain.t()
-  def mark_unverified!(sso_domain, status, now \\ NaiveDateTime.utc_now(:second)) do
+  @spec mark_verification_failure!(SSO.Domain.t()) :: SSO.Domain.t()
+  def mark_verification_failure!(sso_domain) do
     sso_domain
-    |> SSO.Domain.unverified_changeset(now, status)
-    |> Repo.update!()
+    |> SSO.Domain.unverified_changeset(Status.unverified())
+    |> Repo.update_with_audit!("sso_domain_verification_failure", %{
+      team_id: sso_domain.sso_integration.team_id
+    })
   end
 
   defp users_by_domain(sso_domain) do

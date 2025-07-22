@@ -11,6 +11,7 @@ defmodule Plausible.Auth.SSO.Domain do
   recorded.
   """
 
+  use Plausible
   use Ecto.Schema
 
   import Ecto.Changeset
@@ -26,6 +27,12 @@ defmodule Plausible.Auth.SSO.Domain do
   def verification_methods(), do: @verification_methods
 
   use Plausible.Auth.SSO.Domain.Status
+
+  on_ee do
+    @derive {Plausible.Audit.Encoder,
+             only: [:id, :identifier, :domain, :verified_via, :status, :sso_integration],
+             allow_not_loaded: [:sso_integration]}
+  end
 
   schema "sso_domains" do
     field :identifier, Ecto.UUID
@@ -56,7 +63,7 @@ defmodule Plausible.Auth.SSO.Domain do
 
   @spec verified_changeset(t(), verification_method(), NaiveDateTime.t()) ::
           Ecto.Changeset.t()
-  def verified_changeset(sso_domain, method, now) do
+  def verified_changeset(sso_domain, method, now \\ NaiveDateTime.utc_now(:second)) do
     sso_domain
     |> change()
     |> put_change(:verified_via, method)
@@ -64,8 +71,12 @@ defmodule Plausible.Auth.SSO.Domain do
     |> put_change(:status, Status.verified())
   end
 
-  @spec unverified_changeset(t(), NaiveDateTime.t(), atom()) :: Ecto.Changeset.t()
-  def unverified_changeset(sso_domain, now, status \\ Status.in_progress()) do
+  @spec unverified_changeset(t(), atom(), NaiveDateTime.t()) :: Ecto.Changeset.t()
+  def unverified_changeset(
+        sso_domain,
+        status \\ Status.in_progress(),
+        now \\ NaiveDateTime.utc_now(:second)
+      ) do
     sso_domain
     |> change()
     |> put_change(:verified_via, nil)

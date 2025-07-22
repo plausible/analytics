@@ -10,6 +10,7 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   from IdP again.
   """
 
+  use Plausible
   use Ecto.Schema
 
   alias Plausible.Auth.SSO
@@ -20,6 +21,11 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
 
   @fields [:idp_signin_url, :idp_entity_id, :idp_cert_pem, :idp_metadata]
   @required_fields @fields -- [:idp_metadata]
+
+  on_ee do
+    @derive {Plausible.Audit.Encoder,
+             only: [:id, :idp_signin_url, :idp_entity_id, :idp_cert_pem, :idp_metadata]}
+  end
 
   embedded_schema do
     field :idp_signin_url, :string

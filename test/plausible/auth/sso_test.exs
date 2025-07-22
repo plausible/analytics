@@ -19,6 +19,11 @@ defmodule Plausible.Auth.SSOTest do
         assert integration.team_id == team.id
         assert is_binary(integration.identifier)
         assert %SSO.SAMLConfig{} = integration.config
+
+        assert audited_entry("saml_integration_initiated",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
 
       test "does nothing if integration is already initiated" do
@@ -84,6 +89,11 @@ defmodule Plausible.Auth.SSOTest do
 
         assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
                  X509.Certificate.from_pem(@cert_pem)
+
+        assert audited_entry("sso_integration_updated",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
 
       test "updates integration with whitespace around PEM" do
@@ -294,6 +304,8 @@ defmodule Plausible.Auth.SSOTest do
         assert user.email_verified
         assert user.last_sso_login
         assert_team_membership(user, team, :viewer)
+
+        assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
       end
 
       test "does not provision a user from identity when identity integration does not match", %{
@@ -337,6 +349,8 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.sso_domain_id == sso_domain.id
         assert sso_user.email_verified
         assert sso_user.last_sso_login
+
+        assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
       end
 
       test "provisions SSO user from existing user with personal team", %{
@@ -391,6 +405,11 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.sso_integration_id == integration.id
         assert sso_user.sso_domain_id == sso_domain.id
         assert sso_user.last_sso_login
+
+        assert audited_entries(2, "sso_user_provisioned",
+                 team_id: team.id,
+                 entity_id: "#{sso_user.id}"
+               )
       end
 
       test "does not provision user without matching setup integration", %{
@@ -551,6 +570,11 @@ defmodule Plausible.Auth.SSOTest do
         refute updated_user.sso_identity_id
         refute updated_user.sso_integration_id
         refute updated_user.sso_domain_id
+
+        assert audited_entry("sso_user_deprovioned",
+                 team_id: team.id,
+                 entity_id: "#{updated_user.id}"
+               )
       end
 
       test "handles standard user gracefully without revoking existing sessions" do
@@ -584,6 +608,11 @@ defmodule Plausible.Auth.SSOTest do
 
         assert team.policy.sso_default_role == :editor
         assert team.policy.sso_session_timeout_minutes == 600
+
+        assert audited_entry("sso_policy_updated",
+                 team_id: team.id,
+                 entity_id: "#{team.id}"
+               )
       end
 
       test "accepts single attributes leaving others as they are" do
@@ -746,6 +775,8 @@ defmodule Plausible.Auth.SSOTest do
 
         assert updated_team.id == team.id
         assert updated_team.policy.force_sso == :all_but_owners
+
+        assert audited_entry("sso_force_mode_changed", team_id: team.id, entity_id: "#{team.id}")
       end
 
       test "returns error when conditions not met" do
@@ -885,6 +916,11 @@ defmodule Plausible.Auth.SSOTest do
         assert :ok = SSO.remove_integration(integration)
         refute Repo.reload(integration)
         refute Repo.reload(sso_domain)
+
+        assert audited_entry("sso_integration_removed",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
 
       test "returns error when conditions not met" do
@@ -951,8 +987,8 @@ defmodule Plausible.Auth.SSOTest do
         domain1 = "example-#{Enum.random(1..10_000)}.com"
         domain2 = "test-#{Enum.random(1..10_000)}.com"
 
-        {:ok, _} = SSO.Domains.add(integration, domain1)
-        {:ok, _} = SSO.Domains.add(integration, domain2)
+        {:ok, d1} = SSO.Domains.add(integration, domain1)
+        {:ok, d2} = SSO.Domains.add(integration, domain2)
 
         {:ok, _} = SSO.Domains.start_verification(domain1)
         {:ok, _} = SSO.Domains.start_verification(domain2)
@@ -965,6 +1001,21 @@ defmodule Plausible.Auth.SSOTest do
         refute Repo.reload(integration)
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain1})
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain2})
+
+        assert audited_entry("sso_domain_verification_cancelled",
+                 team_id: team.id,
+                 entity_id: "#{d1.id}"
+               )
+
+        assert audited_entry("sso_domain_verification_cancelled",
+                 team_id: team.id,
+                 entity_id: "#{d2.id}"
+               )
+
+        assert audited_entry("sso_integration_removed",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
 
       test "cancels verification jobs when integration is force removed with SSO users" do
@@ -979,13 +1030,23 @@ defmodule Plausible.Auth.SSOTest do
         identity = new_identity("Test User", "test@" <> domain, integration)
         {:ok, _, _, _} = SSO.provision_user(identity)
 
-        {:ok, _} = SSO.Domains.start_verification(domain)
+        {:ok, sso_domain} = SSO.Domains.start_verification(domain)
         assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
 
         assert :ok = SSO.remove_integration(integration, force_deprovision?: true)
 
         refute Repo.reload(integration)
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
+
+        assert audited_entry("sso_domain_verification_cancelled",
+                 team_id: team.id,
+                 entity_id: "#{sso_domain.id}"
+               )
+
+        assert audited_entry("sso_integration_removed",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
     end
 

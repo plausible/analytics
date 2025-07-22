@@ -4,6 +4,7 @@ defmodule Plausible.Teams.Policy do
   """
 
   use Ecto.Schema
+  use Plausible
 
   import Ecto.Changeset
 
@@ -21,6 +22,11 @@ defmodule Plausible.Teams.Policy do
   @type sso_member_role() :: unquote(Enum.reduce(@sso_member_roles, &{:|, [], [&1, &2]}))
 
   @type force_sso_mode() :: unquote(Enum.reduce(@force_sso_modes, &{:|, [], [&1, &2]}))
+
+  on_ee do
+    @derive {Plausible.Audit.Encoder,
+             only: [:force_sso, :sso_default_role, :sso_session_timeout_minutes]}
+  end
 
   embedded_schema do
     # SSO options apply to all team's integrations, should there
