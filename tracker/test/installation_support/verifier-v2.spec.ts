@@ -218,7 +218,6 @@ test.describe('installed plausible web variant', () => {
       }
     })
   })
-
 })
 
 test.describe('installed plausible esm variant', () => {
@@ -430,7 +429,9 @@ test.describe('installed plausible esm variant', () => {
         plausibleVersion: 24,
         plausibleVariant: 'npm',
         testEvent: {
-          callbackResult: { error: expect.any(Error) },
+          callbackResult: {
+            error: expect.objectContaining({ message: 'Failed to fetch' })
+          },
           url: 'invalid:/plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com/foobar',
