@@ -1,5 +1,3 @@
-import { checkWordPress } from './check-wordpress'
-import { checkGTM } from './check-gtm'
 import { checkCookieBanner } from './check-cookie-banner'
 
 /**
@@ -21,12 +19,14 @@ async function verifyPlausibleInstallation({
 
   const disallowedByCsp = checkDisallowedByCSP(responseHeaders)
 
-  const { stopRecording, getEventRequest } = startRecordingEventRequests()
+  const { stopRecording, getInterceptedFetch } = startRecordingEventFetchCalls()
 
   const {
     plausibleIsInitialized,
     plausibleIsOnWindow,
-    testEventCallback,
+    plausibleVersion,
+    plausibleVariant,
+    testEvent,
     error: testPlausibleFunctionError
   } = await testPlausibleFunction({
     timeoutMs
@@ -40,18 +40,19 @@ async function verifyPlausibleInstallation({
 
   stopRecording()
 
-  const testEventRequest = getEventRequest('verification-agent-test')
+  const interceptedTestEvent = getInterceptedFetch('verification-agent-test')
 
-  if (!testEventRequest) {
-    log(`Could not find recorded test event request`)
+  if (!interceptedTestEvent) {
+    log(`No test event request was among intercepted requests`)
   }
 
   const diagnostics = {
+    disallowedByCsp,
     plausibleIsOnWindow,
     plausibleIsInitialized,
-    disallowedByCsp,
-    testEventCallbackResult,
-    testEventRequest: testEventRequest?.request,
+    plausibleVersion,
+    plausibleVariant,
+    testEvent: {...testEvent, url: interceptedTestEvent?.request?.url, normalizedBody: testEventRequest?.request?.normalizedBody, responseStatus: testEventRequest?.response?.status},
     cookieBannerLikely: checkCookieBanner()
   }
 
@@ -88,18 +89,17 @@ function getNormalizedPlausibleEventBody(fetchOptions) {
   } catch (e) {}
 }
 
-function startRecordingEventRequests() {
-  const eventRequests = new Map()
+function startRecordingEventFetchCalls() {
+  const interceptions = new Map()
 
   const originalFetch = window.fetch
   window.fetch = function (url, options = {}) {
-    console.log('fetch', url, options)
     let identifier = null
 
     const normalizedEventBody = getNormalizedPlausibleEventBody(options)
     if (normalizedEventBody) {
       identifier = normalizedEventBody.name
-      eventRequests.set(identifier, {
+      interceptions.set(identifier, {
         request: { url, normalizedBody: normalizedEventBody }
       })
     }
@@ -107,7 +107,7 @@ function startRecordingEventRequests() {
     return originalFetch
       .apply(this, arguments)
       .then(async (response) => {
-        const eventRequest = eventRequests.get(identifier)
+        const eventRequest = interceptions.get(identifier)
         if (eventRequest) {
           const responseClone = response.clone()
           const body = await responseClone.text()
@@ -116,7 +116,7 @@ function startRecordingEventRequests() {
         return response
       })
       .catch((error) => {
-        const eventRequest = eventRequests.get(identifier)
+        const eventRequest = interceptions.get(identifier)
         if (eventRequest) {
           eventRequest.error = {
             message: error?.message || 'Unknown error during fetch'
@@ -126,7 +126,7 @@ function startRecordingEventRequests() {
       })
   }
   return {
-    getEventRequest: (identifier) => eventRequests.get(identifier),
+    getInterceptedFetch: (identifier) => interceptions.get(identifier),
     stopRecording: () => {
       window.fetch = originalFetch
     }
@@ -155,7 +155,7 @@ async function testPlausibleFunction({ timeoutMs }) {
     let plausibleIsInitialized = isPlausibleInitialized()
     let plausibleVersion = getPlausibleVersion()
     let plausibleVariant = getPlausibleVariant()
-    let testEventCallback = {}
+    let testEvent = {}
 
     let resolved = false
 
@@ -164,14 +164,16 @@ async function testPlausibleFunction({ timeoutMs }) {
       _resolve({
         plausibleIsInitialized,
         plausibleIsOnWindow,
-        testEventCallback,
+        plausibleVersion,
+        plausibleVariant,
+        testEvent,
         ...additionalData
       })
     }
 
     const timeout = setTimeout(() => {
       resolve({
-        error: 'Test event timeout exceeded'
+        error: 'Test Plausible function timeout exceeded'
       })
     }, timeoutMs)
 
@@ -194,7 +196,7 @@ async function testPlausibleFunction({ timeoutMs }) {
         if (resolved) return
         clearTimeout(timeout)
         resolve({
-          testEventCallback: {result: testEventCallbackResult},
+          testEvent: {callbackResult: testEventCallbackResult},
         })
       }
     })

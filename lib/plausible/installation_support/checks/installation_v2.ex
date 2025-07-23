@@ -86,9 +86,11 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         state,
         # TODO pull from state
         selected_installation_type: :wordpress,
-        allowed_by_csp: data["allowedByCsp"],
+        disallowed_by_csp: data["disallowedByCsp"],
         plausible_is_on_window: data["plausibleIsOnWindow"],
         plausible_is_initialized: data["plausibleIsInitialized"],
+        plausible_version: data["plausibleVersion"],
+        plausible_variant: data["plausibleVariant"],
         cache_bust_something: data["cacheBustSomething"],
         test_event_request: data["testEventRequest"],
         test_event_callback_result: data["testEventCallbackResult"],

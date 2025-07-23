@@ -9,6 +9,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
             disallowed_by_csp: nil,
             plausible_is_on_window: nil,
             plausible_is_initialized: nil,
+            plausible_version: nil,
+            plausible_variant: nil,
             # TODO
             cache_bust_something: nil,
             # from u and d values, derive if proxy and domain match
