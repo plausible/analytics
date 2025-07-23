@@ -4,6 +4,8 @@ import { initializePageDynamically } from '../support/initialize-page-dynamicall
 import { mockManyRequests } from '../support/mock-many-requests'
 import { LOCAL_SERVER_ADDR } from '../support/server'
 
+const CSP_HOSTS_TO_CHECK = ['plausible.io']
+
 test.describe('installed plausible web variant', () => {
   test('using provided snippet', async ({ page }, { testId }) => {
     await mockManyRequests({
@@ -32,7 +34,8 @@ test.describe('installed plausible web variant', () => {
     const result = await executeVerifyV2(page, {
       responseHeaders: {},
       debug: true,
-      timeoutMs: 1000
+      timeoutMs: 1000,
+      cspHostsToCheck: CSP_HOSTS_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -41,15 +44,20 @@ test.describe('installed plausible web variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        testEventCallbackResult: { status: 202 },
-        testEventRequest: {
+        plausibleVersion: 24,
+        plausibleVariant: 'web',
+        testEvent: {
+          callbackResult: { status: 202 },
           url: 'https://plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
             version: 24
-          }
-        }
+          },
+          responseStatus: 202,
+          error: undefined
+        },
+        cookieBannerLikely: false
       }
     })
   })
@@ -84,7 +92,8 @@ test.describe('installed plausible web variant', () => {
     const result = await executeVerifyV2(page, {
       responseHeaders: {},
       debug: true,
-      timeoutMs: 1000
+      timeoutMs: 1000,
+      cspHostsToCheck: CSP_HOSTS_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -93,15 +102,20 @@ test.describe('installed plausible web variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        testEventCallbackResult: undefined,
-        testEventRequest: {
+        plausibleVersion: 24,
+        plausibleVariant: 'web',
+        testEvent: {
+          callbackResult: undefined,
           url: 'https://plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
             version: 24
-          }
-        }
+          },
+          responseStatus: undefined,
+          error: undefined
+        },
+        cookieBannerLikely: false
       }
     })
   })
@@ -135,7 +149,8 @@ test.describe('installed plausible web variant', () => {
     const result = await executeVerifyV2(page, {
       responseHeaders: {},
       debug: true,
-      timeoutMs: 1000
+      timeoutMs: 1000,
+      cspHostsToCheck: CSP_HOSTS_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -144,211 +159,289 @@ test.describe('installed plausible web variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        testEventCallbackResult: { status: 400 },
-        testEventRequest: {
+        plausibleVersion: 24,
+        plausibleVariant: 'web',
+        testEvent: {
+          callbackResult: { status: 400 },
           url: 'https://plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
             version: 24
-          }
-        }
+          },
+          responseStatus: 400,
+          error: undefined
+        },
+        cookieBannerLikely: false
       }
     })
   })
+
+  test('using provided snippet and captureOnLocalhost: false', async ({
+    page
+  }, { testId }) => {
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: {
+        domain: 'example.com/foobar',
+        endpoint: 'https://plausible.io/api/event',
+        captureOnLocalhost: false
+      },
+      bodyContent: ''
+    })
+
+    await page.goto(url)
+
+    const result = await executeVerifyV2(page, {
+      responseHeaders: {},
+      debug: true,
+      timeoutMs: 1000,
+      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+    })
+
+    expect(result).toEqual({
+      data: {
+        completed: true,
+        plausibleIsInitialized: true,
+        plausibleIsOnWindow: true,
+        disallowedByCsp: false,
+        plausibleVersion: 24,
+        plausibleVariant: 'web',
+        testEvent: {
+          callbackResult: undefined,
+          url: undefined,
+          normalizedBody: undefined,
+          responseStatus: undefined,
+          error: undefined
+        },
+        cookieBannerLikely: false
+      }
+    })
+  })
+
 })
 
 test.describe('installed plausible esm variant', () => {
-
-
-test('using <script type="module"> tag', async ({
-  page
-}, { testId }) => {
-  await mockManyRequests({
-    page,
-    path: `https://plausible.io/api/event`,
-    awaitedRequestCount: 1,
-    fulfill: {
-      status: 202,
-      contentType: 'text/plain',
-      body: 'ok'
-    }
-  })
-
-  const { url } = await initializePageDynamically(page, {
-    testId,
-    scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
-      {
-        domain: 'example.com',
-        endpoint: `https://plausible.io/api/event`,
-        captureOnLocalhost: true
+  test('using <script type="module"> tag', async ({ page }, { testId }) => {
+    await mockManyRequests({
+      page,
+      path: `https://plausible.io/api/event`,
+      awaitedRequestCount: 1,
+      fulfill: {
+        status: 202,
+        contentType: 'text/plain',
+        body: 'ok'
       }
-    )})</script>`,
-    bodyContent: ''
-  })
+    })
 
-  await page.goto(url)
-
-  const result = await executeVerifyV2(page, {
-    responseHeaders: {},
-    debug: true,
-    timeoutMs: 1000
-  })
-
-  expect(result).toEqual({
-    data: {
-      completed: true,
-      plausibleIsInitialized: true,
-      plausibleIsOnWindow: true,
-      disallowedByCsp: false,
-      testEventCallbackResult: { status: 202 },
-      testEventRequest: {
-        url: 'https://plausible.io/api/event',
-        normalizedBody: {
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
+        {
           domain: 'example.com',
-          name: 'verification-agent-test',
-          version: 24
+          endpoint: `https://plausible.io/api/event`,
+          captureOnLocalhost: true
         }
+      )})</script>`,
+      bodyContent: ''
+    })
+
+    await page.goto(url)
+
+    const result = await executeVerifyV2(page, {
+      responseHeaders: {},
+      debug: true,
+      timeoutMs: 1000,
+      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+    })
+
+    expect(result).toEqual({
+      data: {
+        completed: true,
+        plausibleIsInitialized: true,
+        plausibleIsOnWindow: true,
+        disallowedByCsp: false,
+        plausibleVersion: 24,
+        plausibleVariant: 'npm',
+        testEvent: {
+          callbackResult: { status: 202 },
+          url: 'https://plausible.io/api/event',
+          normalizedBody: {
+            domain: 'example.com',
+            name: 'verification-agent-test',
+            version: 24
+          },
+          responseStatus: 202,
+          error: undefined
+        },
+        cookieBannerLikely: false
       }
-    }
-  })
-})
-
-test('using <script type="module"> tag and endpoint: "/events"', async ({
-  page
-}, { testId }) => {
-  await mockManyRequests({
-    page,
-    path: `${LOCAL_SERVER_ADDR}/events`,
-    awaitedRequestCount: 1,
-    fulfill: {
-      status: 202,
-      contentType: 'text/plain',
-      body: 'ok'
-    }
+    })
   })
 
-  const { url } = await initializePageDynamically(page, {
-    testId,
-    scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
-      {
-        domain: 'example.com',
-        endpoint: `/events`,
-        captureOnLocalhost: true
+  test('using <script type="module"> tag and endpoint: "/events"', async ({
+    page
+  }, { testId }) => {
+    await mockManyRequests({
+      page,
+      path: `${LOCAL_SERVER_ADDR}/events`,
+      awaitedRequestCount: 1,
+      fulfill: {
+        status: 202,
+        contentType: 'text/plain',
+        body: 'ok'
       }
-    )})</script>`,
-    bodyContent: ''
-  })
+    })
 
-  await page.goto(url)
-
-  const result = await executeVerifyV2(page, {
-    responseHeaders: {},
-    debug: true,
-    timeoutMs: 1000
-  })
-
-  expect(result).toEqual({
-    data: {
-      completed: true,
-      plausibleIsInitialized: true,
-      plausibleIsOnWindow: true,
-      disallowedByCsp: false,
-      testEventCallbackResult: { status: 202 },
-      testEventRequest: {
-        url: '/events',
-        normalizedBody: {
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
+        {
           domain: 'example.com',
-          name: 'verification-agent-test',
-          version: 24
+          endpoint: `/events`,
+          captureOnLocalhost: true
         }
+      )})</script>`,
+      bodyContent: ''
+    })
+
+    await page.goto(url)
+
+    const result = await executeVerifyV2(page, {
+      responseHeaders: {},
+      debug: true,
+      timeoutMs: 1000,
+      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+    })
+
+    expect(result).toEqual({
+      data: {
+        completed: true,
+        plausibleIsInitialized: true,
+        plausibleIsOnWindow: true,
+        disallowedByCsp: false,
+        plausibleVersion: 24,
+        plausibleVariant: 'npm',
+        testEvent: {
+          callbackResult: { status: 202 },
+          url: '/events',
+          normalizedBody: {
+            domain: 'example.com',
+            name: 'verification-agent-test',
+            version: 24
+          },
+          responseStatus: 202,
+          error: undefined
+        },
+        cookieBannerLikely: false
       }
-    }
-  })
-})
-
-test('using <script type="module"> tag and endpoint: "https://example.com/events"', async ({
-  page
-}, { testId }) => {
-
-  const { url } = await initializePageDynamically(page, {
-    testId,
-    scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
-      {
-        domain: 'example.com',
-        endpoint: `https://example.com/events`,
-        captureOnLocalhost: true
-      }
-    )})</script>`,
-    bodyContent: ''
+    })
   })
 
-  await mockManyRequests({
-    page,
-    path: `https://example.com/events`,
-    awaitedRequestCount: 1,
-    fulfill: {
-      status: 500,
-      contentType: 'text/plain',
-      body: 'Unknown error'
-    }
-  })
-
-  await page.goto(url)
-
-  const result = await executeVerifyV2(page, {
-    responseHeaders: {},
-    debug: true,
-    timeoutMs: 1000
-  })
-
-  expect(result).toEqual({
-    data: {
-      completed: true,
-      plausibleIsInitialized: true,
-      plausibleIsOnWindow: true,
-      disallowedByCsp: false,
-      testEventCallbackResult: { status: 500 },
-      testEventRequest: {
-        url: 'https://example.com/events',
-        normalizedBody: {
+  test('using <script type="module"> tag and endpoint: "https://example.com/events"', async ({
+    page
+  }, { testId }) => {
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
+        {
           domain: 'example.com',
-          name: 'verification-agent-test',
-          version: 24
+          endpoint: `https://example.com/events`,
+          captureOnLocalhost: true
         }
+      )})</script>`,
+      bodyContent: ''
+    })
+
+    await mockManyRequests({
+      page,
+      path: `https://example.com/events`,
+      awaitedRequestCount: 1,
+      fulfill: {
+        status: 500,
+        contentType: 'text/plain',
+        body: 'Unknown error'
       }
-    }
-  })
-})
+    })
 
-test('using <script type="module"> tag and captureOnLocalhost: false', async ({ page }, { testId }) => {
-  const { url } = await initializePageDynamically(page, {
-    testId,
-    scriptConfig: {
-      domain: 'example.com/foobar',
-      endpoint: 'https://plausible.io/api/event',
-      captureOnLocalhost: false
-    },
-    bodyContent: ''
+    await page.goto(url)
+
+    const result = await executeVerifyV2(page, {
+      responseHeaders: {},
+      debug: true,
+      timeoutMs: 1000,
+      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+    })
+
+    expect(result).toEqual({
+      data: {
+        completed: true,
+        plausibleIsInitialized: true,
+        plausibleIsOnWindow: true,
+        disallowedByCsp: false,
+        plausibleVersion: 24,
+        plausibleVariant: 'npm',
+        testEvent: {
+          callbackResult: { status: 500 },
+          url: 'https://example.com/events',
+          normalizedBody: {
+            domain: 'example.com',
+            name: 'verification-agent-test',
+            version: 24
+          },
+          responseStatus: 500,
+          error: undefined
+        },
+        cookieBannerLikely: false
+      }
+    })
   })
 
-  await page.goto(url)
+  test('using <script type="module"> tag and invalid endpoint: "invalid:/plausible.io/api/event"', async ({
+    page
+  }, { testId }) => {
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
+        {
+          domain: 'example.com/foobar',
+          endpoint: 'invalid:/plausible.io/api/event',
+          captureOnLocalhost: true
+        }
+      )})</script>`,
+      bodyContent: ''
+    })
 
-  const result = await executeVerifyV2(page, {
-    responseHeaders: {},
-    debug: true,
-    timeoutMs: 1000
-  })
+    await page.goto(url)
 
-  expect(result).toEqual({
-    data: {
-      completed: true,
-      plausibleIsInitialized: true,
-      plausibleIsOnWindow: true,
-      disallowedByCsp: false,
-      testEventCallbackResult: undefined,
-      testEventRequest: undefined
-    }
+    const result = await executeVerifyV2(page, {
+      responseHeaders: {},
+      debug: true,
+      timeoutMs: 1000,
+      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+    })
+
+    expect(result).toEqual({
+      data: {
+        completed: true,
+        plausibleIsInitialized: true,
+        plausibleIsOnWindow: true,
+        disallowedByCsp: false,
+        plausibleVersion: 24,
+        plausibleVariant: 'npm',
+        testEvent: {
+          callbackResult: { error: expect.any(Error) },
+          url: 'invalid:/plausible.io/api/event',
+          normalizedBody: {
+            domain: 'example.com/foobar',
+            name: 'verification-agent-test',
+            version: 24
+          },
+          responseStatus: undefined,
+          error: { message: 'Failed to fetch' }
+        },
+        cookieBannerLikely: false
+      }
+    })
   })
-})
 })

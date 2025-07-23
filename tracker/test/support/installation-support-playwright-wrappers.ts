@@ -16,6 +16,7 @@ type VerifyV2Args = {
   debug: boolean
   responseHeaders: Record<string, string>
   timeoutMs: number
+  cspHostsToCheck: string[]
 }
 
 type VerifyV2CompletedResult = {
@@ -23,9 +24,13 @@ type VerifyV2CompletedResult = {
     completed: true
     plausibleIsInitialized: boolean
     plausibleIsOnWindow: boolean
+    plausibleVersion: string
+    plausibleVariant: string
     disallowedByCsp: boolean
-    testEventCallbackResult: any
-    testEventRequest: any
+    testEvent: {
+      callbackResult?: any
+      request?: any
+    }
   }
 }
 
@@ -37,7 +42,7 @@ export type VerifyV2Result = VerifyV2CompletedResult | VerifyV2ErrorResult
 
 export async function executeVerifyV2(
   page: Page,
-  { debug, responseHeaders, timeoutMs }: VerifyV2Args
+  { debug, responseHeaders, timeoutMs, cspHostsToCheck }: VerifyV2Args
 ) {
   const verifierCode = (await compileFile(VERIFIER_V2_JS_VARIANT, {
     returnCode: true
@@ -47,14 +52,15 @@ export async function executeVerifyV2(
     await page.evaluate(verifierCode)
 
     return await page.evaluate(
-      async ({ responseHeaders, debug, timeoutMs }) => {
+      async ({ responseHeaders, debug, timeoutMs, cspHostsToCheck }) => {
         return await (window as any).verifyPlausibleInstallation({
           responseHeaders,
           debug,
-          timeoutMs
+          timeoutMs,
+          cspHostsToCheck
         })
       },
-      { responseHeaders, debug, timeoutMs }
+      { responseHeaders, debug, timeoutMs, cspHostsToCheck }
     )
   } catch (error) {
     return {

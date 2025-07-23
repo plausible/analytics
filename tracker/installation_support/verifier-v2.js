@@ -1,4 +1,5 @@
 import { checkCookieBanner } from './check-cookie-banner'
+import { checkDisallowedByCSP } from './check-disallowed-by-csp'
 
 /**
  * @param {Object} params
@@ -11,13 +12,14 @@ import { checkCookieBanner } from './check-cookie-banner'
 async function verifyPlausibleInstallation({
   timeoutMs,
   responseHeaders,
-  debug
+  debug,
+  cspHostsToCheck
 }) {
   function log(message) {
     if (debug) console.log('[VERIFICATION v2]', message)
   }
 
-  const disallowedByCsp = checkDisallowedByCSP(responseHeaders)
+  const disallowedByCsp = checkDisallowedByCSP(responseHeaders, cspHostsToCheck)
 
   const { stopRecording, getInterceptedFetch } = startRecordingEventFetchCalls()
 
@@ -52,7 +54,7 @@ async function verifyPlausibleInstallation({
     plausibleIsInitialized,
     plausibleVersion,
     plausibleVariant,
-    testEvent: {...testEvent, url: interceptedTestEvent?.request?.url, normalizedBody: testEventRequest?.request?.normalizedBody, responseStatus: testEventRequest?.response?.status},
+    testEvent: {...testEvent, url: interceptedTestEvent?.request?.url, normalizedBody: interceptedTestEvent?.request?.normalizedBody, responseStatus: interceptedTestEvent?.response?.status, error: interceptedTestEvent?.error},
     cookieBannerLikely: checkCookieBanner()
   }
 
@@ -201,11 +203,6 @@ async function testPlausibleFunction({ timeoutMs }) {
       }
     })
   })
-}
-
-function checkDisallowedByCSP(responseHeaders) {
-  // TODO: Implement CSP check
-  return false
 }
 
 window.verifyPlausibleInstallation = verifyPlausibleInstallation

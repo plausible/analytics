@@ -21,12 +21,13 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         #{@verifier_code}
       });
 
-      return await page.evaluate(async ({ responseHeaders, debug, timeoutMs }) => {
-        return await window.verifyPlausibleInstallation({ responseHeaders, debug, timeoutMs });
+      return await page.evaluate(async ({ responseHeaders, debug, timeoutMs, cspHostsToCheck }) => {
+        return await window.verifyPlausibleInstallation({ responseHeaders, debug, timeoutMs, cspHostsToCheck });
       }, {
         timeoutMs: context.timeoutMs,
         responseHeaders: response.headers(),
-        debug: context.debug
+        debug: context.debug,
+        cspHostsToCheck: context.cspHostsToCheck
       });
     } catch (error) {
       return { data: { completed: false, error: error?.message ?? JSON.stringify(error) } }
@@ -51,6 +52,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         JSON.encode!(%{
           code: @puppeteer_wrapper_code,
           context: %{
+            cspHostsToCheck: [PlausibleWeb.Endpoint.host()],
             timeoutMs: @function_check_timeout,
             url: Plausible.InstallationSupport.URL.bust_url(url),
             userAgent: Plausible.InstallationSupport.user_agent(),
