@@ -53,7 +53,7 @@ defmodule Plausible.Workers.PurgeCDNCache do
 
     case Req.post("https://api.bunny.net/pullzone/#{pullzone_id}/purgeCache", options) do
       {:ok, %{status: 204}} ->
-        Logger.info("Successfully purged CDN cache for tracker script #{id}")
+        Logger.notice("Successfully purged CDN cache for tracker script #{id}")
         {:ok, :success}
 
       {:ok, %{status: status}} ->

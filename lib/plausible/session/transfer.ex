@@ -74,7 +74,7 @@ defmodule Plausible.Session.Transfer do
         shutdown: :timer.seconds(15)
       )
 
-    Logger.info("Session transfer init: #{base_path}")
+    Logger.notice("Session transfer init: #{base_path}")
     Supervisor.init([replica, primary, alive], strategy: :one_for_one)
   end
 

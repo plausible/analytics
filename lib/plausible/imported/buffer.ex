@@ -55,7 +55,7 @@ defmodule Plausible.Imported.Buffer do
   end
 
   def handle_call({:insert_many, table_name, records}, _from, %{buffers: buffers} = state) do
-    Logger.info("Import: Adding #{length(records)} to #{table_name} buffer")
+    Logger.notice("Import: Adding #{length(records)} to #{table_name} buffer")
 
     new_buffer = Map.get(buffers, table_name, []) ++ records
     new_state = put_in(state.buffers[table_name], new_buffer)
@@ -91,7 +91,7 @@ defmodule Plausible.Imported.Buffer do
     # sleep call slows down the flushing
     Process.sleep(flush_interval)
 
-    Logger.info("Import: Flushing #{length(records)} from #{table_name} buffer")
+    Logger.notice("Import: Flushing #{length(records)} from #{table_name} buffer")
     insert_all(table_name, records)
   end
 

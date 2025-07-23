@@ -23,7 +23,7 @@ defmodule Plausible.Workers.SetLegacyTimeOnPageCutoff do
     to_update = small_sites ++ large_sites
 
     if length(to_update) > 0 do
-      Logger.info(
+      Logger.notice(
         "Setting legacy_time_on_page_cutoff for #{length(to_update)} sites (#{length(small_sites)} small, #{length(large_sites)} large)"
       )
 
@@ -36,7 +36,7 @@ defmodule Plausible.Workers.SetLegacyTimeOnPageCutoff do
           set: [legacy_time_on_page_cutoff: cutoff_date]
         )
 
-      Logger.info("Successfully set legacy_time_on_page_cutoff=#{cutoff_date} for #{count} sites")
+      Logger.notice("Successfully set legacy_time_on_page_cutoff=#{cutoff_date} for #{count} sites")
     else
       Logger.debug("No sites legacy_time_on_page_cutoff needs updating")
     end

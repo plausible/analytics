@@ -161,7 +161,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp add_filter(table, _query, filter) do
-    Logger.info("Unable to process garbage filter. No results are returned",
+    Logger.notice("Unable to process garbage filter. No results are returned",
       table: table,
       filter: filter
     )

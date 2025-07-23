@@ -19,6 +19,6 @@ defmodule Mix.Tasks.CancelSubscription do
     |> Subscription.changeset(%{status: Subscription.Status.deleted()})
     |> Repo.update!()
 
-    Logger.info("Successfully set the subscription status to #{Subscription.Status.deleted()}")
+    Logger.notice("Successfully set the subscription status to #{Subscription.Status.deleted()}")
   end
 end

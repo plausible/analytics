@@ -19,7 +19,7 @@ defmodule Mix.Tasks.DownloadCountryDatabase do
     last_month = last_month |> Date.to_iso8601() |> binary_part(0, 7)
     this_month_url = "https://download.db-ip.com/free/dbip-country-lite-#{this_month}.mmdb.gz"
     last_month_url = "https://download.db-ip.com/free/dbip-country-lite-#{last_month}.mmdb.gz"
-    Logger.info("Downloading #{this_month_url}")
+    Logger.notice("Downloading #{this_month_url}")
     res = HTTPoison.get!(this_month_url)
 
     res =
@@ -35,7 +35,7 @@ defmodule Mix.Tasks.DownloadCountryDatabase do
     if res.status_code == 200 do
       File.mkdir("priv/geodb")
       File.write!("priv/geodb/dbip-country.mmdb.gz", res.body)
-      Logger.info("Downloaded and saved the database successfully")
+      Logger.notice("Downloaded and saved the database successfully")
     else
       Logger.error("Unable to download and save the database. Response: #{inspect(res)}")
     end

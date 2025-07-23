@@ -50,7 +50,7 @@ defmodule Plausible.Cache.Warmer do
     force_start? = Keyword.get(opts, :force_start?, false)
 
     if Plausible.Cache.enabled?() or force_start? do
-      Logger.info(
+      Logger.notice(
         "#{__MODULE__} initializing #{inspect(warmer_fn)} #{cache_name} with interval #{interval}..."
       )
 
@@ -69,7 +69,7 @@ defmodule Plausible.Cache.Warmer do
     cache_name = Keyword.fetch!(opts, :cache_name)
     warmer_fn = Keyword.fetch!(opts, :warmer_fn)
 
-    Logger.info("#{__MODULE__} running #{inspect(warmer_fn)} on #{cache_name}...")
+    Logger.notice("#{__MODULE__} running #{inspect(warmer_fn)} on #{cache_name}...")
 
     warmer_fn.(opts)
 
