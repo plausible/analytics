@@ -107,26 +107,22 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
 
       PlausibleWeb.UserAuth.log_in_user(conn, identity, cookie.return_to)
     else
+      {:error, :not_found} ->
+        login_error(conn, cookie, "Wrong email")
+
       {:error, reason} ->
         with {:ok, integration} <- SSO.get_integration(integration_id) do
           "sso_login_failure"
           |> Plausible.Audit.Entry.new(integration, %{team_id: integration.team.id})
           |> Plausible.Audit.Entry.include_change(%{
-            error: error_by_reason(reason)
+            error: inspect(reason)
           })
           |> Plausible.Audit.Entry.persist!()
         end
 
-        conn
-        |> Phoenix.Controller.put_flash(:login_error, error_by_reason(reason))
-        |> Phoenix.Controller.redirect(
-          to: Routes.sso_path(conn, :login_form, return_to: cookie.return_to)
-        )
+        login_error(conn, cookie, "Authentication failed (reason: #{inspect(reason)})")
     end
   end
-
-  defp error_by_reason(:not_found), do: "Wrong email."
-  defp error_by_reason(reason), do: "Authentication failed (reason: #{inspect(reason)})."
 
   defp convert_pem_cert(cert) do
     case X509.Certificate.from_pem(cert) do
@@ -228,6 +224,14 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
       encrypt: true,
       max_age: @cookie_seconds,
       same_site: "None"
+    )
+  end
+
+  defp login_error(conn, cookie, login_error) do
+    conn
+    |> Phoenix.Controller.put_flash(:login_error, login_error)
+    |> Phoenix.Controller.redirect(
+      to: Routes.sso_path(conn, :login_form, return_to: cookie.return_to)
     )
   end
 end

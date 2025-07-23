@@ -351,7 +351,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email"
       end
 
       test "redirects with error on mismatch of RelayState", %{
@@ -368,12 +368,12 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :invalid_relay_state)."
+                 "Authentication failed (reason: :invalid_relay_state)"
 
         assert audited_entry("sso_login_failure",
                  team_id: integration.team_id,
                  change: %{
-                   "error" => "Authentication failed (reason: :invalid_relay_state)."
+                   "error" => ":invalid_relay_state"
                  }
                )
       end
@@ -389,12 +389,12 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :invalid_relay_state)."
+                 "Authentication failed (reason: :invalid_relay_state)"
 
         assert audited_entry("sso_login_failure",
                  team_id: integration.team_id,
                  change: %{
-                   "error" => "Authentication failed (reason: :invalid_relay_state)."
+                   "error" => ":invalid_relay_state"
                  }
                )
       end
@@ -414,12 +414,12 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :base64_decoding_failed)."
+                 "Authentication failed (reason: :base64_decoding_failed)"
 
         assert audited_entry("sso_login_failure",
                  team_id: integration.team_id,
                  change: %{
-                   "error" => "Authentication failed (reason: :base64_decoding_failed)."
+                   "error" => ":base64_decoding_failed"
                  }
                )
       end
@@ -447,12 +447,12 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :malformed_certificate)."
+                 "Authentication failed (reason: :malformed_certificate)"
 
         assert audited_entry("sso_login_failure",
                  team_id: integration.team_id,
                  change: %{
-                   "error" => "Authentication failed (reason: :malformed_certificate)."
+                   "error" => ":malformed_certificate"
                  }
                )
       end
@@ -474,12 +474,12 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :digest_verification_failed)."
+                 "Authentication failed (reason: :digest_verification_failed)"
 
         assert audited_entry("sso_login_failure",
                  team_id: integration.team_id,
                  change: %{
-                   "error" => "Authentication failed (reason: :digest_verification_failed)."
+                   "error" => ":digest_verification_failed"
                  }
                )
       end
@@ -499,12 +499,12 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :missing_email_attribute)."
+                 "Authentication failed (reason: :missing_email_attribute)"
 
         assert audited_entry("sso_login_failure",
                  team_id: integration.team_id,
                  change: %{
-                   "error" => "Authentication failed (reason: :missing_email_attribute)."
+                   "error" => ":missing_email_attribute"
                  }
                )
       end
@@ -524,12 +524,12 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :invalid_email_attribute)."
+                 "Authentication failed (reason: :invalid_email_attribute)"
 
         assert audited_entry("sso_login_failure",
                  team_id: integration.team_id,
                  change: %{
-                   "error" => "Authentication failed (reason: :invalid_email_attribute)."
+                   "error" => ":invalid_email_attribute"
                  }
                )
       end
@@ -549,12 +549,12 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :missing_name_attributes)."
+                 "Authentication failed (reason: :missing_name_attributes)"
 
         assert audited_entry("sso_login_failure",
                  team_id: integration.team_id,
                  change: %{
-                   "error" => "Authentication failed (reason: :missing_name_attributes)."
+                   "error" => ":missing_name_attributes"
                  }
                )
       end
