@@ -677,7 +677,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         text = lv |> render() |> text()
 
-        assert text =~ "(deleted?) (deleted?)"
+        assert text =~ "(N/A) (N/A)"
       end
     end
   end

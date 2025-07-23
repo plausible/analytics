@@ -1231,7 +1231,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   defp audit_user(%{user: nil} = assigns) do
     ~H"""
-    (deleted?)
+    (N/A)
     """
   end
 
