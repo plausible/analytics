@@ -336,7 +336,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             <.input_with_clipboard
               id="audit-entry-identifier"
               name="audit-entry-identifier"
-              label="Audit Entry Identifer"
+              label="Audit Entry Identifier"
               value={@revealed_audit_entry_id}
             />
             <div class="relative">
