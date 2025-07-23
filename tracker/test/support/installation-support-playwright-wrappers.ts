@@ -1,6 +1,7 @@
 import { compileFile } from '../../compiler/index.js'
 import variantsFile from '../../compiler/variants.json' with { type: 'json' }
 import { Page } from '@playwright/test'
+import { VerifyV2Args, VerifyV2Result } from './types'
 
 const VERIFIER_V1_JS_VARIANT = variantsFile.manualVariants.find(
   (variant) => variant.name === 'verifier-v1.js'
@@ -12,38 +13,10 @@ const DETECTOR_JS_VARIANT = variantsFile.manualVariants.find(
   (variant) => variant.name === 'detector.js'
 )
 
-type VerifyV2Args = {
-  debug: boolean
-  responseHeaders: Record<string, string>
-  timeoutMs: number
-  cspHostsToCheck: string[]
-}
-
-type VerifyV2CompletedResult = {
-  data: {
-    completed: true
-    plausibleIsInitialized: boolean
-    plausibleIsOnWindow: boolean
-    plausibleVersion: string
-    plausibleVariant: string
-    disallowedByCsp: boolean
-    testEvent: {
-      callbackResult?: any
-      request?: any
-    }
-  }
-}
-
-type VerifyV2ErrorResult = {
-  data: { completed: false; error: string }
-}
-
-export type VerifyV2Result = VerifyV2CompletedResult | VerifyV2ErrorResult
-
 export async function executeVerifyV2(
   page: Page,
   { debug, responseHeaders, timeoutMs, cspHostsToCheck }: VerifyV2Args
-) {
+): Promise<VerifyV2Result> {
   const verifierCode = (await compileFile(VERIFIER_V2_JS_VARIANT, {
     returnCode: true
   })) as string

@@ -1,12 +1,12 @@
+/** @typedef {import('../test/support/types').VerifyV2Args} VerifyV2Args */
+/** @typedef {import('../test/support/types').VerifyV2Result} VerifyV2Result */
 import { checkCookieBanner } from './check-cookie-banner'
 import { checkDisallowedByCSP } from './check-disallowed-by-csp'
 
 /**
- * @param {Object} params
- * @param {Record<string, string>} params.responseHeaders
- * @param {boolean} params.debug
- * @param {number} params.timeoutMs
- * @returns {Promise<{data: {completed: boolean, plausibleIsInitialized: boolean, plausibleIsOnWindow: boolean, disallowedByCsp: boolean, testEventCallbackResult: any, testEventRequest: any}}}>}
+ * Function that verifies if Plausible is installed correctly.
+ * @param {VerifyV2Args}
+ * @returns {Promise<VerifyV2Result>}
  */
 
 async function verifyPlausibleInstallation({
