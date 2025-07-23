@@ -100,9 +100,23 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
           expires_at: expires_at
         }
 
+      "sso_login_success"
+      |> Plausible.Audit.Entry.new(identity, %{team_id: integration.team.id})
+      |> Plausible.Audit.Entry.include_change(identity)
+      |> Plausible.Audit.Entry.persist!()
+
       PlausibleWeb.UserAuth.log_in_user(conn, identity, cookie.return_to)
     else
       {:error, reason} ->
+        with {:ok, integration} <- SSO.get_integration(integration_id) do
+          "sso_login_failure"
+          |> Plausible.Audit.Entry.new(integration, %{team_id: integration.team.id})
+          |> Plausible.Audit.Entry.include_change(%{
+            error: error_by_reason(reason)
+          })
+          |> Plausible.Audit.Entry.persist!()
+        end
+
         conn
         |> Phoenix.Controller.put_flash(:login_error, error_by_reason(reason))
         |> Phoenix.Controller.redirect(
