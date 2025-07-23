@@ -37,7 +37,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     deleted_sites = get_deleted_sites_with_clickhouse_data()
 
     if not Enum.empty?(deleted_sites) do
-      Logger.info(
+      Logger.notice(
         "Clearing ClickHouse data for the following #{length(deleted_sites)} sites which have been deleted: #{inspect(deleted_sites)}"
       )
 
