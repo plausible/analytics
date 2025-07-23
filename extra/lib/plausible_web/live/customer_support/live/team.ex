@@ -52,7 +52,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
         meta =
           if entry.user_id && entry.user_id > 0 do
-            user = Plausible.Repo.get!(Plausible.Auth.User, entry.user_id)
+            user = Plausible.Repo.get(Plausible.Auth.User, entry.user_id)
             Map.put(meta, :user, user)
           else
             meta
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
         meta =
           if entry.entity == "Plausible.Auth.User" do
-            user = Plausible.Repo.get!(Plausible.Auth.User, String.to_integer(entry.entity_id))
+            user = Plausible.Repo.get(Plausible.Auth.User, String.to_integer(entry.entity_id))
             Map.put(meta, :entity, user)
           else
             meta
@@ -1228,6 +1228,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   attr :user, Plausible.Auth.User
+
+  defp audit_user(%{user: nil} = assigns) do
+    ~H"""
+    (N/A)
+    """
+  end
 
   defp audit_user(assigns) do
     ~H"""

@@ -658,6 +658,27 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text_of_element(html, ~s|textarea|) ==
                  "{ &amp;quot;foo&amp;quot;: &amp;quot;bar&amp;quot; }"
       end
+
+      test "shows audit entries when user id does not exists", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        %Plausible.Audit.Entry{
+          name: "Reveal Test",
+          entity: "Plausible.Auth.User",
+          entity_id: "666111",
+          team_id: team.id,
+          datetime: NaiveDateTime.utc_now(),
+          user_id: 666_111,
+          actor_type: :user
+        }
+        |> Plausible.Repo.insert!()
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :audit))
+
+        text = lv |> render() |> text()
+
+        assert text =~ "(N/A) (N/A)"
+      end
     end
   end
 end
