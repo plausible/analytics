@@ -155,7 +155,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       <.label class="mb-2" for={@id}>{@label}</.label>
       <textarea
         id={@id}
-        rows="6"
+        rows={@rest[:rows] || "6"}
         name={@name}
         class="block w-full textarea border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
         {@rest}
