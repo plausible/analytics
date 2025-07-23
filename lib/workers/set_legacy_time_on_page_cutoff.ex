@@ -36,7 +36,9 @@ defmodule Plausible.Workers.SetLegacyTimeOnPageCutoff do
           set: [legacy_time_on_page_cutoff: cutoff_date]
         )
 
-      Logger.notice("Successfully set legacy_time_on_page_cutoff=#{cutoff_date} for #{count} sites")
+      Logger.notice(
+        "Successfully set legacy_time_on_page_cutoff=#{cutoff_date} for #{count} sites"
+      )
     else
       Logger.debug("No sites legacy_time_on_page_cutoff needs updating")
     end
