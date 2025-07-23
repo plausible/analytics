@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "10+ sites"
         assert enterprise_box =~ "600+ Stats API requests per hour"
         assert enterprise_box =~ "Sites API access for"
-        assert enterprise_box =~ "Technical onboarding"
+        assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
 
         assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
@@ -519,7 +519,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "10+ sites"
         assert enterprise_box =~ "600+ Stats API requests per hour"
         assert enterprise_box =~ "Sites API access for"
-        assert enterprise_box =~ "Technical onboarding"
+        assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
         assert enterprise_box =~ "5+ years of data retention"
 
@@ -935,7 +935,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "50+ sites"
         assert enterprise_box =~ "600+ Stats API requests per hour"
         assert enterprise_box =~ "Sites API access for"
-        assert enterprise_box =~ "Technical onboarding"
+        assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
 
         refute enterprise_box =~ "team members"
@@ -1184,7 +1184,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "50+ sites"
         assert enterprise_box =~ "600+ Stats API requests per hour"
         assert enterprise_box =~ "Sites API access for"
-        assert enterprise_box =~ "Technical onboarding"
+        assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
 
         assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~

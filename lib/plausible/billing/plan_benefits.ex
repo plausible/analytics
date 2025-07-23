@@ -96,9 +96,9 @@ defmodule Plausible.Billing.PlanBenefits do
       team_members,
       "600+ Stats API requests per hour",
       "Sites API",
+      "Single Sign-On (SSO)",
       "Managed Proxy",
       data_retention,
-      "Technical onboarding",
       "Priority support"
     ]
     |> Enum.filter(& &1)
