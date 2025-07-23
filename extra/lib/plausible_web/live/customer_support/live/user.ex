@@ -44,7 +44,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
           </div>
           <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
             <p class="text-xl font-bold sm:text-2xl">
-              {@user.name}
+              <div class="flex items-center gap-x-2">
+                {@user.name}
+                <span :if={@user.type == :sso} class="bg-green-700 text-gray-100 text-xs p-1 rounded">
+                  SSO
+                </span>
+              </div>
             </p>
             <p class="text-sm font-medium">
               <span>{@user.email}</span>

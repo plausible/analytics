@@ -128,6 +128,7 @@ defmodule Plausible.Auth.SSO.Domains do
   @spec remove(SSO.Domain.t(), Keyword.t()) ::
           :ok | {:error, :force_sso_enabled | :sso_users_present}
   def remove(sso_domain, opts \\ []) do
+    sso_domain = Repo.preload(sso_domain, :sso_integration)
     force_deprovision? = Keyword.get(opts, :force_deprovision?, false)
 
     check = check_can_remove(sso_domain)
@@ -136,7 +137,10 @@ defmodule Plausible.Auth.SSO.Domains do
       {:ok, _} ->
         {:ok, :ok} =
           Repo.transaction(fn ->
-            Repo.delete!(sso_domain)
+            Repo.delete_with_audit!(sso_domain, "sso_domain_removed", %{
+              team_id: sso_domain.sso_integration.team_id
+            })
+
             :ok = cancel_verification(sso_domain.domain)
           end)
 
@@ -147,7 +151,11 @@ defmodule Plausible.Auth.SSO.Domains do
           Repo.transaction(fn ->
             domain_users = users_by_domain(sso_domain)
             Enum.each(domain_users, &SSO.deprovision_user!/1)
-            Repo.delete!(sso_domain)
+
+            Repo.delete_with_audit!(sso_domain, "sso_domain_removed", %{
+              team_id: sso_domain.sso_integration.team_id
+            })
+
             cancel_verification(sso_domain.domain)
           end)
 

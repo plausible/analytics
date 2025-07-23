@@ -250,12 +250,6 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         {:ok, domain: domain, sso_domain: sso_domain}
       end
 
-      test "returns ok when all conditions met", %{sso_domain: sso_domain} do
-        assert :ok = SSO.Domains.remove(sso_domain)
-
-        refute Repo.reload(sso_domain)
-      end
-
       test "returns ok when force SSO enabled and SSO users on other domains present", %{
         team: team,
         integration: integration,
@@ -312,6 +306,8 @@ defmodule Plausible.Auth.SSO.DomainsTest do
       test "removes the domain if conditions met", %{sso_domain: sso_domain} do
         assert :ok = SSO.Domains.remove(sso_domain)
         refute Repo.reload(sso_domain)
+
+        assert audited_entry("sso_domain_removed", team_id: sso_domain.sso_integration.team_id)
       end
 
       test "fails to remove the domain whenSSO users present on it", %{
@@ -346,6 +342,8 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         refute sso_user.sso_identity_id
         refute sso_user.sso_integration_id
         refute sso_user.sso_domain_id
+
+        assert audited_entry("sso_domain_removed", team_id: sso_domain.sso_integration.team_id)
       end
 
       test "fails to remove when force SSO enabled with SSO users only on that domain", %{

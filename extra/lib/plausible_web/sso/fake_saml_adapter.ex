@@ -47,6 +47,11 @@ defmodule PlausibleWeb.SSO.FakeSAMLAdapter do
             }
           end
 
+        "sso_login_success"
+        |> Plausible.Audit.Entry.new(identity, %{team_id: integration.team.id})
+        |> Plausible.Audit.Entry.include_change(identity)
+        |> Plausible.Audit.Entry.persist!()
+
         PlausibleWeb.UserAuth.log_in_user(conn, identity, params["return_to"])
 
       {:error, :not_found} ->

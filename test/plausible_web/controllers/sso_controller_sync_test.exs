@@ -331,6 +331,11 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         assert NaiveDateTime.compare(user_session.timeout_at, timeout_threshold_lower) == :gt
         assert NaiveDateTime.compare(user_session.timeout_at, timeout_threshold_upper) == :lt
+
+        assert entry = audited_entry("sso_login_success", team_id: integration.team_id)
+        assert entry.change["email"] == "user@plausible.test"
+        assert entry.change["name"] == "Jane Smith"
+        assert entry.change["integration_id"] == integration.identifier
       end
 
       test "redirects with error when no matching integration found", %{
@@ -346,7 +351,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email"
       end
 
       test "redirects with error on mismatch of RelayState", %{
@@ -363,7 +368,14 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :invalid_relay_state)."
+                 "Authentication failed (reason: :invalid_relay_state)"
+
+        assert audited_entry("sso_login_failure",
+                 team_id: integration.team_id,
+                 change: %{
+                   "error" => ":invalid_relay_state"
+                 }
+               )
       end
 
       test "redirects with error on missing relay state", %{
@@ -377,7 +389,14 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :invalid_relay_state)."
+                 "Authentication failed (reason: :invalid_relay_state)"
+
+        assert audited_entry("sso_login_failure",
+                 team_id: integration.team_id,
+                 change: %{
+                   "error" => ":invalid_relay_state"
+                 }
+               )
       end
 
       test "redirects with error on malformed assertion", %{
@@ -395,7 +414,14 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :base64_decoding_failed)."
+                 "Authentication failed (reason: :base64_decoding_failed)"
+
+        assert audited_entry("sso_login_failure",
+                 team_id: integration.team_id,
+                 change: %{
+                   "error" => ":base64_decoding_failed"
+                 }
+               )
       end
 
       test "redirects with error on malformed certificate in config (should not happen)", %{
@@ -421,7 +447,14 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :malformed_certificate)."
+                 "Authentication failed (reason: :malformed_certificate)"
+
+        assert audited_entry("sso_login_failure",
+                 team_id: integration.team_id,
+                 change: %{
+                   "error" => ":malformed_certificate"
+                 }
+               )
       end
 
       test "redirects with error on mismatched certificate in config", %{
@@ -441,7 +474,14 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :digest_verification_failed)."
+                 "Authentication failed (reason: :digest_verification_failed)"
+
+        assert audited_entry("sso_login_failure",
+                 team_id: integration.team_id,
+                 change: %{
+                   "error" => ":digest_verification_failed"
+                 }
+               )
       end
 
       test "redirects with error on missing email attribute in assertion", %{
@@ -459,7 +499,14 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :missing_email_attribute)."
+                 "Authentication failed (reason: :missing_email_attribute)"
+
+        assert audited_entry("sso_login_failure",
+                 team_id: integration.team_id,
+                 change: %{
+                   "error" => ":missing_email_attribute"
+                 }
+               )
       end
 
       test "redirects with error on invalid email attribute in assertion", %{
@@ -477,7 +524,14 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :invalid_email_attribute)."
+                 "Authentication failed (reason: :invalid_email_attribute)"
+
+        assert audited_entry("sso_login_failure",
+                 team_id: integration.team_id,
+                 change: %{
+                   "error" => ":invalid_email_attribute"
+                 }
+               )
       end
 
       test "redirects with error on missing name attributes in assertion", %{
@@ -495,7 +549,14 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
-                 "Authentication failed (reason: :missing_name_attributes)."
+                 "Authentication failed (reason: :missing_name_attributes)"
+
+        assert audited_entry("sso_login_failure",
+                 team_id: integration.team_id,
+                 change: %{
+                   "error" => ":missing_name_attributes"
+                 }
+               )
       end
     end
 

@@ -67,6 +67,13 @@ defmodule Plausible.Audit.Entry do
     |> put_change(:change, Plausible.Audit.encode(struct, raise_on_not_loaded?: false))
   end
 
+  def include_change(audit_entry, map) when is_map(map) do
+    # sometimes a hand-crafted map is passed; we don't need to encode then
+    audit_entry
+    |> change()
+    |> put_change(:change, map)
+  end
+
   def persist!(entry) do
     Plausible.Repo.insert!(entry)
   end

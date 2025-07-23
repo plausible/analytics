@@ -616,5 +616,48 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert to == "/cs/teams/team/#{team.id}"
       end
     end
+
+    describe "audit" do
+      setup [:create_user, :log_in, :create_site]
+
+      setup %{user: user} do
+        patch_env(:super_admin_user_ids, [user.id])
+      end
+
+      test "audit tab is present", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+        assert element_exists?(html, ~s|a[href="?tab=audit"]|)
+      end
+
+      test "shows audit entries", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        entry =
+          %Plausible.Audit.Entry{
+            name: "Reveal Test",
+            entity: "Plausible.Teams.Team",
+            entity_id: to_string(team.id),
+            change: %{"foo" => "bar"},
+            team_id: team.id,
+            datetime: NaiveDateTime.utc_now()
+          }
+          |> Plausible.Repo.insert!()
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :audit))
+
+        html = render(lv)
+
+        assert html =~ "Reveal Test"
+
+        html =
+          lv
+          |> element(~s|button[phx-click="reveal-audit-entry"][phx-value-id="#{entry.id}"]|)
+          |> render_click()
+
+        assert text_of_element(html, ~s|textarea|) ==
+                 "{ &amp;quot;foo&amp;quot;: &amp;quot;bar&amp;quot; }"
+      end
+    end
   end
 end

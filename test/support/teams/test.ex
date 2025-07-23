@@ -414,8 +414,8 @@ defmodule Plausible.Teams.Test do
       attrs = Keyword.put(attrs, :name, name)
 
       case Plausible.Audit.list_entries(attrs) do
-        [_] ->
-          true
+        [entry] ->
+          entry
 
         _ ->
           raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
@@ -426,8 +426,8 @@ defmodule Plausible.Teams.Test do
       attrs = Keyword.put(attrs, :name, name)
 
       case Plausible.Audit.list_entries(attrs) do
-        l when is_list(l) and length(l) == length ->
-          true
+        entries when is_list(entries) and length(entries) == length ->
+          entries
 
         _ ->
           raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."

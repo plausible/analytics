@@ -176,6 +176,14 @@ defmodule Plausible.AuditTest do
         entry = Entry.include_change(entry, changeset)
         assert entry.changes.change == %{after: %{name: "baz"}, before: %{name: "bar", id: 1}}
       end
+
+      test "include_change/2 accepts raw map" do
+        struct = %TestSchema{id: 1, name: "bar"}
+
+        entry = Entry.new("update", struct)
+        entry = Entry.include_change(entry, %{foo: :bar})
+        assert entry.changes.change == %{foo: :bar}
+      end
     end
 
     describe "Repo integration" do

@@ -43,6 +43,36 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     {:ok, assign(socket, tab: "sso")}
   end
 
+  def update(%{tab: "audit"}, %{assigns: %{team: team}} = socket) do
+    audit_entries = Plausible.Audit.list_entries(team_id: team.id)
+
+    audit_entries =
+      Enum.map(audit_entries, fn entry ->
+        meta = entry.meta
+
+        meta =
+          if entry.user_id && entry.user_id > 0 do
+            user = Plausible.Repo.get!(Plausible.Auth.User, entry.user_id)
+            Map.put(meta, :user, user)
+          else
+            meta
+          end
+
+        meta =
+          if entry.entity == "Plausible.Auth.User" do
+            user = Plausible.Repo.get!(Plausible.Auth.User, String.to_integer(entry.entity_id))
+            Map.put(meta, :entity, user)
+          else
+            meta
+          end
+
+        Map.put(entry, :meta, meta)
+      end)
+
+    {:ok,
+     assign(socket, tab: "audit", audit_entries: audit_entries, revealed_audit_entry_id: nil)}
+  end
+
   def update(%{tab: "sites"}, %{assigns: %{team: team}} = socket) do
     sites = Teams.owned_sites(team, 100)
     sites_count = Teams.owned_sites_count(team)
@@ -179,6 +209,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.tab to="billing" tab={@tab}>
                 Billing
               </.tab>
+              <.tab to="audit" tab={@tab}>
+                Audit
+              </.tab>
             </nav>
           </div>
         </div>
@@ -289,6 +322,87 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                   phx-target={@myself}
                   class="text-sm text-red-600"
                   data-confirm={"Are you sure you want to remove domain '#{sso_domain.domain}'? All SSO users will be deprovisioned and logged out."}
+                />
+              </.td>
+            </:tbody>
+          </.table>
+        </div>
+
+        <div :if={@tab == "audit"} class="mt-4 mb-4 text-gray-900 dark:text-gray-400 relative">
+          <div :if={Enum.empty?(@audit_entries)} class="flex justify-center items-center">
+            No audit logs yet
+          </div>
+          <div :if={@revealed_audit_entry_id}>
+            <.input_with_clipboard
+              id="audit-entry-identifier"
+              name="audit-entry-identifier"
+              label="Audit Entry Identifier"
+              value={@revealed_audit_entry_id}
+            />
+            <div class="relative">
+              <.input
+                rows="16"
+                type="textarea"
+                id="audit-entry-change"
+                name="audit-entry-change"
+                value={
+                  Jason.encode!(
+                    Enum.find(@audit_entries, &(&1.id == @revealed_audit_entry_id)).change,
+                    pretty: true
+                  )
+                }
+              >
+              </.input>
+              <.styled_link
+                class="text-sm float-right"
+                onclick="var textarea = document.getElementById('audit-entry-change'); textarea.focus(); textarea.select(); document.execCommand('copy');"
+                href="#"
+              >
+                <div class="flex items-center absolute top-4 right-4 text-xs gap-x-1">
+                  <Heroicons.document_duplicate class="h-4 w-4 text-indigo-700" /> COPY
+                </div>
+              </.styled_link>
+
+              <.styled_link
+                phx-click="reveal-audit-entry"
+                phx-target={@myself}
+                class="float-right pt-4 text-sm"
+              >
+                &larr; Return
+              </.styled_link>
+            </div>
+          </div>
+          <.table :if={is_nil(@revealed_audit_entry_id)} rows={@audit_entries}>
+            <:thead>
+              <.th invisible></.th>
+              <.th invisible></.th>
+              <.th>Name</.th>
+              <.th>Entity</.th>
+              <.th>Actor</.th>
+              <.th invisible>Actions</.th>
+            </:thead>
+            <:tbody :let={entry}>
+              <.td>{Calendar.strftime(entry.datetime, "%Y-%m-%d")}</.td>
+              <.td>{Calendar.strftime(entry.datetime, "%H:%M:%S")}</.td>
+              <.td class="font-mono">{entry.name}</.td>
+              <.td truncate>
+                <.audit_entity entry={entry} />
+              </.td>
+              <.td :if={entry.actor_type == :system}>
+                <div class="flex items-center gap-x-1">
+                  <Heroicons.cog_6_tooth class="size-4" /> SYSTEM
+                </div>
+              </.td>
+              <.td :if={entry.actor_type == :user} truncate>
+                <.audit_user user={entry.meta.user} />
+              </.td>
+
+              <.td actions>
+                <.edit_button
+                  phx-click="reveal-audit-entry"
+                  icon={:magnifying_glass_plus}
+                  phx-value-id={entry.id}
+                  phx-target={@myself}
                 />
               </.td>
             </:tbody>
@@ -651,6 +765,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       </div>
     </div>
     """
+  end
+
+  def handle_event("reveal-audit-entry", %{"id" => id}, socket) do
+    {:noreply, assign(socket, revealed_audit_entry_id: id)}
+  end
+
+  def handle_event("reveal-audit-entry", _, socket) do
+    {:noreply, assign(socket, revealed_audit_entry_id: nil)}
   end
 
   def handle_event("show-plan-form", _, socket) do
@@ -1091,5 +1213,41 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       |> Enum.into(%{})
 
     assign(socket, team_layout: team_layout, session_counts: session_counts, tab: "members")
+  end
+
+  attr :entry, Plausible.Audit.Entry
+
+  defp audit_entity(assigns) do
+    ~H"""
+    <%= if @entry.entity == "Plausible.Auth.User" do %>
+      <.audit_user user={@entry.meta.entity} />
+    <% else %>
+      {@entry.entity |> String.split(".") |> List.last()} #{String.slice(@entry.entity_id, 0, 8)}
+    <% end %>
+    """
+  end
+
+  attr :user, Plausible.Auth.User
+
+  defp audit_user(assigns) do
+    ~H"""
+    <div class="flex items-center gap-x-1">
+      <img
+        class="w-4"
+        src={
+          Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{
+            email: @user.email
+          })
+        }
+      />
+
+      <.styled_link
+        patch={"/cs/users/user/#{@user.id}"}
+        class="cursor-pointer flex block items-center"
+      >
+        {@user.name}
+      </.styled_link>
+    </div>
+    """
   end
 end
