@@ -3,13 +3,13 @@ import { config, location, document } from './config'
 export function init(track) {
   var lastPage;
 
-  function page(isSPANavigation) {
+  function page(isSPANavigation, options) {
     if (!(COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting))) {
       if (isSPANavigation && lastPage === location.pathname) return;
     }
 
     lastPage = location.pathname
-    track('pageview')
+    track('pageview', options)
   }
 
   var onSPANavigation = function () { page(true) }
@@ -43,7 +43,8 @@ export function init(track) {
   window.addEventListener('pageshow', function (event) {
     if (event.persisted) {
       // Page was restored from bfcache - track a pageview
-      page();
+      page(false, {referrer:sessionStorage.getItem('plausible-referrer')});
     }
+    sessionStorage.setItem('plausible-referrer', window.location.href);
   })
 }
