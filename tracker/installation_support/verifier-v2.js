@@ -4,7 +4,6 @@ import { checkCookieBanner } from './check-cookie-banner'
 
 /**
  * @param {Object} params
- * @param {string} params.expectedDomain
  * @param {Record<string, string>} params.responseHeaders
  * @param {boolean} params.debug
  * @param {number} params.timeoutMs
@@ -13,7 +12,6 @@ import { checkCookieBanner } from './check-cookie-banner'
 
 async function verifyPlausibleInstallation({
   timeoutMs,
-  expectedDomain,
   responseHeaders,
   debug
 }) {
@@ -28,7 +26,7 @@ async function verifyPlausibleInstallation({
   const {
     plausibleIsInitialized,
     plausibleIsOnWindow,
-    testEventCallbackResult,
+    testEventCallback,
     error: testPlausibleFunctionError
   } = await testPlausibleFunction({
     timeoutMs
@@ -143,10 +141,22 @@ function isPlausibleInitialized() {
   return window.plausible?.l
 }
 
+function getPlausibleVersion() {
+  return window.plausible?.v
+}
+
+function getPlausibleVariant() {
+  return window.plausible?.s
+}
+
 async function testPlausibleFunction({ timeoutMs }) {
   return new Promise(async (_resolve) => {
     let plausibleIsOnWindow = isPlausibleOnWindow()
     let plausibleIsInitialized = isPlausibleInitialized()
+    let plausibleVersion = getPlausibleVersion()
+    let plausibleVariant = getPlausibleVariant()
+    let testEventCallback = {}
+
     let resolved = false
 
     function resolve(additionalData) {
@@ -154,6 +164,7 @@ async function testPlausibleFunction({ timeoutMs }) {
       _resolve({
         plausibleIsInitialized,
         plausibleIsOnWindow,
+        testEventCallback,
         ...additionalData
       })
     }
@@ -173,6 +184,8 @@ async function testPlausibleFunction({ timeoutMs }) {
     while (!plausibleIsInitialized) {
       if (isPlausibleInitialized()) {
         plausibleIsInitialized = true
+        plausibleVersion = getPlausibleVersion()
+        plausibleVariant = getPlausibleVariant()
       }
     }
 
@@ -181,7 +194,7 @@ async function testPlausibleFunction({ timeoutMs }) {
         if (resolved) return
         clearTimeout(timeout)
         resolve({
-          testEventCallbackResult
+          testEventCallback: {result: testEventCallbackResult},
         })
       }
     })
