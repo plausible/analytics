@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Live.LegacyChoosePlanTest do
       assert enterprise_box =~ "50+ sites"
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
-      assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "Single Sign-On (SSO)"
 
       assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
                "https://plausible.io/white-label-web-analytics"
@@ -429,7 +429,7 @@ defmodule PlausibleWeb.Live.LegacyChoosePlanTest do
       assert enterprise_box =~ "50+ sites"
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
-      assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "Single Sign-On (SSO)"
       assert enterprise_box =~ "5+ years of data retention"
 
       assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
@@ -788,7 +788,7 @@ defmodule PlausibleWeb.Live.LegacyChoosePlanTest do
       assert enterprise_box =~ "50+ sites"
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
-      assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "Single Sign-On (SSO)"
 
       refute enterprise_box =~ "team members"
 
@@ -1050,7 +1050,7 @@ defmodule PlausibleWeb.Live.LegacyChoosePlanTest do
       assert enterprise_box =~ "50+ sites"
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
-      assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "Single Sign-On (SSO)"
 
       assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
                "https://plausible.io/white-label-web-analytics"

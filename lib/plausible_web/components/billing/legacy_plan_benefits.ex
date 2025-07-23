@@ -93,8 +93,8 @@ defmodule PlausibleWeb.Components.Billing.LegacyPlanBenefits do
       "50+ sites",
       "600+ Stats API requests per hour",
       &sites_api_benefit/1,
-      data_retention,
-      "Technical onboarding"
+      "Single Sign-On (SSO)",
+      data_retention
     ]
     |> Enum.filter(& &1)
   end
