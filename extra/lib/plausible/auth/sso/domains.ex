@@ -128,6 +128,7 @@ defmodule Plausible.Auth.SSO.Domains do
   @spec remove(SSO.Domain.t(), Keyword.t()) ::
           :ok | {:error, :force_sso_enabled | :sso_users_present}
   def remove(sso_domain, opts \\ []) do
+    sso_domain = Repo.preload(sso_domain, :sso_integration)
     force_deprovision? = Keyword.get(opts, :force_deprovision?, false)
 
     check = check_can_remove(sso_domain)
