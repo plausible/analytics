@@ -30,7 +30,14 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         cspHostsToCheck: context.cspHostsToCheck
       });
     } catch (error) {
-      return { data: { completed: false, error: error?.message ?? JSON.stringify(error) } }
+      return {
+        data: {
+          completed: false,
+          error: {
+            message: error?.message ?? JSON.stringify(error),
+          }
+        }
+      }
     }
   }
   """

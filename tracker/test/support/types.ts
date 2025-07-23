@@ -31,7 +31,7 @@ export type VerifyV2Result = {
         testEvent: {
           callbackResult?: any
           responseStatus?: number
-          error?: { 
+          error?: {
             message: string
           }
           url?: string
@@ -43,5 +43,5 @@ export type VerifyV2Result = {
           cookieBannerLikely: boolean
         }
       }
-    | { completed: false; error: string }
+    | { completed: false; error: { message: string } }
 }

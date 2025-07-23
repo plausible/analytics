@@ -37,7 +37,12 @@ export async function executeVerifyV2(
     )
   } catch (error) {
     return {
-      data: { completed: false, error: error?.message ?? JSON.stringify(error) }
+      data: {
+        completed: false,
+        error: {
+          message: error?.message ?? JSON.stringify(error)
+        }
+      }
     }
   }
 }
