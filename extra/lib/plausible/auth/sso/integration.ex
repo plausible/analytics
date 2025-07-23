@@ -10,7 +10,6 @@ defmodule Plausible.Auth.SSO.Integration do
   when configuring external services like IdPs.
   """
 
-  use Plausible
   use Ecto.Schema
 
   import Ecto.Changeset
@@ -21,9 +20,7 @@ defmodule Plausible.Auth.SSO.Integration do
 
   @type t() :: %__MODULE__{}
 
-  on_ee do
-    @derive {Plausible.Audit.Encoder, only: [:id, :identifier]}
-  end
+  @derive {Plausible.Audit.Encoder, only: [:id, :identifier]}
 
   schema "sso_integrations" do
     field :identifier, Ecto.UUID

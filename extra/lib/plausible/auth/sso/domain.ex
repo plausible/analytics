@@ -11,7 +11,6 @@ defmodule Plausible.Auth.SSO.Domain do
   recorded.
   """
 
-  use Plausible
   use Ecto.Schema
 
   import Ecto.Changeset
@@ -28,11 +27,9 @@ defmodule Plausible.Auth.SSO.Domain do
 
   use Plausible.Auth.SSO.Domain.Status
 
-  on_ee do
-    @derive {Plausible.Audit.Encoder,
-             only: [:id, :identifier, :domain, :verified_via, :status, :sso_integration],
-             allow_not_loaded: [:sso_integration]}
-  end
+  @derive {Plausible.Audit.Encoder,
+           only: [:id, :identifier, :domain, :verified_via, :status, :sso_integration],
+           allow_not_loaded: [:sso_integration]}
 
   schema "sso_domains" do
     field :identifier, Ecto.UUID
