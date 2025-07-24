@@ -10,6 +10,8 @@ defmodule Plausible.Ingestion.Event do
   alias Plausible.ClickhouseEventV2
   alias Plausible.Site.GateKeeper
 
+  require Logger
+
   defstruct domain: nil,
             site: nil,
             clickhouse_event_attrs: %{},
@@ -392,6 +394,8 @@ defmodule Plausible.Ingestion.Event do
         event.salts.previous
       )
 
+    persist_event(event.clickhouse_event, event.clickhouse_session_attrs, previous_user_id)
+
     session_result =
       Plausible.Session.CacheStore.on_event(
         event.clickhouse_event,
@@ -413,6 +417,42 @@ defmodule Plausible.Ingestion.Event do
           | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
         }
     end
+  end
+
+  defp persist_event(event, session_attrs, previous_user_id) do
+    site_id = event.site_id
+    current_user_id = event.user_id
+
+    url = "http://localhost:8001/event"
+
+    headers = [
+      {"x-site-id", site_id},
+      {"x-current-user-id", current_user_id},
+      {"x-previous-user-id", previous_user_id}
+    ]
+
+    payload =
+      {event, session_attrs}
+      |> :erlang.term_to_binary()
+      |> Base.encode64(padding: false)
+
+    result =
+      case Req.post(url, body: payload, headers: headers) do
+        {:ok, %{body: "ok"}} ->
+          :ok
+
+        {:ok, resp} ->
+          {:error, resp.body}
+
+        {:error, error} ->
+          {:error, error}
+      end
+
+    Logger.warning(
+      "Persisting event for (#{site_id};#{current_user_id},#{previous_user_id}): #{inspect(result)}"
+    )
+
+    result
   end
 
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event, _context) do
