@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { verify } from '../support/installation-support-playwright-wrappers'
+import { verifyV1 } from '../support/installation-support-playwright-wrappers'
 import { delay } from '../support/test-utils'
 import { initializePageDynamically } from '../support/initialize-page-dynamically'
 import { compileFile } from '../../compiler'
@@ -29,7 +29,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.snippetsFoundInHead).toBe(1)
@@ -72,7 +72,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.snippetsFoundInHead).toBe(1)
@@ -87,7 +87,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       scriptConfig: ''
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.plausibleInstalled).toBe(false)
     expect(result.data.callbackStatus).toBe(0)
@@ -104,7 +104,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       response: `<body><script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script></body>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.snippetsFoundInHead).toBe(0)
@@ -121,7 +121,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       response: `<head><script defer data-domain="example.org,example.com,example.net" src="/tracker/js/plausible.local.js"></script></head>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: "example.com"})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: "example.com"})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.snippetsFoundInHead).toBe(1)
@@ -138,7 +138,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       response: `<head><script defer data-domain="example.org,example.com,example.net" src="/tracker/js/plausible.local.js"></script></head>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: "example.typo"})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: "example.typo"})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.snippetsFoundInHead).toBe(1)
@@ -178,7 +178,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.proxyLikely).toBe(false)
   })
@@ -201,7 +201,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: "example.com"})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: "example.com"})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.snippetsFoundInHead).toBe(2)
@@ -218,7 +218,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       scriptConfig: `<script defer data-domain="wrong.com" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: 'right.com'})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: 'right.com'})
 
     expect(result.data.dataDomainMismatch).toBe(true)
   })
@@ -231,7 +231,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       scriptConfig: `<script defer data-domain="www.right.com" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: 'right.com'})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: 'right.com'})
 
     expect(result.data.dataDomainMismatch).toBe(false)
   })
@@ -249,7 +249,7 @@ test.describe('v1 verifier (window.plausible)', () => {
       scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.callbackStatus).toBe(404)
@@ -263,7 +263,7 @@ test.describe('v1 verifier (window.plausible)', () => {
       scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.callbackStatus).toBe(0)
@@ -279,7 +279,7 @@ test.describe('v1 verifier (window.plausible)', () => {
       scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.plausibleInstalled).toBe(true)
     expect(result.data.callbackStatus).toBe(-1)
@@ -300,7 +300,7 @@ test.describe('v1 verifier (WordPress detection)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.wordpressPlugin).toBe(true)
     expect(result.data.wordpressLikely).toBe(true)
@@ -321,7 +321,7 @@ test.describe('v1 verifier (WordPress detection)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.wordpressPlugin).toBe(false)
     expect(result.data.wordpressLikely).toBe(true)
@@ -353,7 +353,7 @@ test.describe('v1 verifier (GTM detection)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.gtmLikely).toBe(true)
   })
@@ -392,7 +392,7 @@ test.describe('v1 verifier (cookieBanner detection)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.cookieBannerLikely).toBe(true)
   })
@@ -417,7 +417,7 @@ test.describe('v1 verifier (manualScriptExtension detection)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.manualScriptExtension).toBe(true)
   })
@@ -447,7 +447,7 @@ test.describe('v1 verifier (unknownAttributes detection)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.unknownAttributes).toBe(false)
   })
@@ -466,7 +466,7 @@ test.describe('v1 verifier (unknownAttributes detection)', () => {
       `
     })
 
-    const result = await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(result.data.unknownAttributes).toBe(true)
   })
@@ -484,7 +484,7 @@ test.describe('v1 verifier (logging)', () => {
       scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
+    await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
 
     expect(logs.find(str => str.includes('Starting snippet detection'))).toContain('[Plausible Verification] Starting snippet detection')
     expect(logs.find(str => str.includes('Checking for Plausible function'))).toContain('[Plausible Verification] Checking for Plausible function')
@@ -501,7 +501,7 @@ test.describe('v1 verifier (logging)', () => {
       scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
-    await verify(page, {url: url, expectedDataDomain: SOME_DOMAIN})
+    await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
 
     expect(logs.length).toBe(0)
   })
