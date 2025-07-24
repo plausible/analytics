@@ -3,6 +3,7 @@ import { executeVerifyV2 } from '../support/installation-support-playwright-wrap
 import { initializePageDynamically } from '../support/initialize-page-dynamically'
 import { mockManyRequests } from '../support/mock-many-requests'
 import { LOCAL_SERVER_ADDR } from '../support/server'
+import { tracker_script_version as version } from '../support/test-utils'
 
 const CSP_HOSTS_TO_CHECK = ['plausible.io']
 
@@ -44,7 +45,7 @@ test.describe('installed plausible web variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        plausibleVersion: 24,
+        plausibleVersion: version,
         plausibleVariant: 'web',
         testEvent: {
           callbackResult: { status: 202 },
@@ -52,7 +53,7 @@ test.describe('installed plausible web variant', () => {
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
-            version: 24
+            version
           },
           responseStatus: 202,
           error: undefined
@@ -102,7 +103,7 @@ test.describe('installed plausible web variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        plausibleVersion: 24,
+        plausibleVersion: version,
         plausibleVariant: 'web',
         testEvent: {
           callbackResult: undefined,
@@ -110,7 +111,7 @@ test.describe('installed plausible web variant', () => {
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
-            version: 24
+            version
           },
           responseStatus: undefined,
           error: undefined
@@ -159,7 +160,7 @@ test.describe('installed plausible web variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        plausibleVersion: 24,
+        plausibleVersion: version,
         plausibleVariant: 'web',
         testEvent: {
           callbackResult: { status: 400 },
@@ -167,7 +168,7 @@ test.describe('installed plausible web variant', () => {
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
-            version: 24
+            version
           },
           responseStatus: 400,
           error: undefined
@@ -205,7 +206,7 @@ test.describe('installed plausible web variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        plausibleVersion: 24,
+        plausibleVersion: version,
         plausibleVariant: 'web',
         testEvent: {
           callbackResult: undefined,
@@ -260,7 +261,7 @@ test.describe('installed plausible esm variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        plausibleVersion: 24,
+        plausibleVersion: version,
         plausibleVariant: 'npm',
         testEvent: {
           callbackResult: { status: 202 },
@@ -268,7 +269,7 @@ test.describe('installed plausible esm variant', () => {
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
-            version: 24
+            version
           },
           responseStatus: 202,
           error: undefined
@@ -319,7 +320,7 @@ test.describe('installed plausible esm variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        plausibleVersion: 24,
+        plausibleVersion: version,
         plausibleVariant: 'npm',
         testEvent: {
           callbackResult: { status: 202 },
@@ -327,7 +328,7 @@ test.describe('installed plausible esm variant', () => {
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
-            version: 24
+            version
           },
           responseStatus: 202,
           error: undefined
@@ -378,7 +379,7 @@ test.describe('installed plausible esm variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        plausibleVersion: 24,
+        plausibleVersion: version,
         plausibleVariant: 'npm',
         testEvent: {
           callbackResult: { status: 500 },
@@ -386,7 +387,7 @@ test.describe('installed plausible esm variant', () => {
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
-            version: 24
+            version
           },
           responseStatus: 500,
           error: undefined
@@ -426,7 +427,7 @@ test.describe('installed plausible esm variant', () => {
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
-        plausibleVersion: 24,
+        plausibleVersion: version,
         plausibleVariant: 'npm',
         testEvent: {
           callbackResult: {
@@ -436,7 +437,7 @@ test.describe('installed plausible esm variant', () => {
           normalizedBody: {
             domain: 'example.com/foobar',
             name: 'verification-agent-test',
-            version: 24
+            version
           },
           responseStatus: undefined,
           error: { message: 'Failed to fetch' }
