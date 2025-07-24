@@ -21,6 +21,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   alias Plausible.InstallationSupport.Result
 
   defmodule Error do
+    @moduledoc """
+    Error that has compile-time enforced checks for the attributes.
+    """
+
     @enforce_keys [:message, :recommendation]
     defstruct [:message, :recommendation, :url]
 

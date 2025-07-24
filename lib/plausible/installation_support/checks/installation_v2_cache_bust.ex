@@ -1,4 +1,9 @@
 defmodule Plausible.InstallationSupport.Checks.InstallationV2CacheBust do
+  @moduledoc """
+  If the installation v2 check can not be interpreted as successful, we try to bust the cache by adding a query parameter to the URL.
+  If only after this we get a successful result, the recommendation to the user should be that they should clear the website cache
+  """
+
   require Logger
   alias Plausible.InstallationSupport
   use Plausible.InstallationSupport.Check

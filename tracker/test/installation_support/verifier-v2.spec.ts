@@ -48,7 +48,7 @@ test.describe('installed plausible web variant', () => {
         plausibleVariant: 'web',
         testEvent: {
           callbackResult: { status: 202 },
-          url: 'https://plausible.io/api/event',
+          requestUrl: 'https://plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
@@ -106,7 +106,7 @@ test.describe('installed plausible web variant', () => {
         plausibleVariant: 'web',
         testEvent: {
           callbackResult: undefined,
-          url: 'https://plausible.io/api/event',
+          requestUrl: 'https://plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
@@ -163,7 +163,7 @@ test.describe('installed plausible web variant', () => {
         plausibleVariant: 'web',
         testEvent: {
           callbackResult: { status: 400 },
-          url: 'https://plausible.io/api/event',
+          requestUrl: 'https://plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
@@ -209,7 +209,7 @@ test.describe('installed plausible web variant', () => {
         plausibleVariant: 'web',
         testEvent: {
           callbackResult: undefined,
-          url: undefined,
+          requestUrl: undefined,
           normalizedBody: undefined,
           responseStatus: undefined,
           error: undefined
@@ -264,7 +264,7 @@ test.describe('installed plausible esm variant', () => {
         plausibleVariant: 'npm',
         testEvent: {
           callbackResult: { status: 202 },
-          url: 'https://plausible.io/api/event',
+          requestUrl: 'https://plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
@@ -323,7 +323,7 @@ test.describe('installed plausible esm variant', () => {
         plausibleVariant: 'npm',
         testEvent: {
           callbackResult: { status: 202 },
-          url: '/events',
+          requestUrl: '/events',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
@@ -382,7 +382,7 @@ test.describe('installed plausible esm variant', () => {
         plausibleVariant: 'npm',
         testEvent: {
           callbackResult: { status: 500 },
-          url: 'https://example.com/events',
+          requestUrl: 'https://example.com/events',
           normalizedBody: {
             domain: 'example.com',
             name: 'verification-agent-test',
@@ -432,7 +432,7 @@ test.describe('installed plausible esm variant', () => {
           callbackResult: {
             error: expect.objectContaining({ message: 'Failed to fetch' })
           },
-          url: 'invalid:/plausible.io/api/event',
+          requestUrl: 'invalid:/plausible.io/api/event',
           normalizedBody: {
             domain: 'example.com/foobar',
             name: 'verification-agent-test',
