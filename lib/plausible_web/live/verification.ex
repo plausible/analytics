@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Live.Verification do
   use Plausible
   use PlausibleWeb, :live_view
 
-  alias Plausible.InstallationSupport.{State, LegacyVerification}
+  alias Plausible.InstallationSupport.{State, LegacyVerification, Verification}
 
   @component PlausibleWeb.Live.Components.Verification
   @slowdown_for_frequent_checking :timer.seconds(5)
@@ -131,12 +131,24 @@ defmodule PlausibleWeb.Live.Verification do
         {:deny, _} -> :timer.sleep(@slowdown_for_frequent_checking)
       end
 
+      url_to_verify = "https://#{socket.assigns.domain}"
+      domain = socket.assigns.domain
+      installation_type = socket.assigns.installation_type
+
       {:ok, pid} =
-        LegacyVerification.Checks.run(
-          "https://#{socket.assigns.domain}",
-          socket.assigns.domain,
-          report_to: report_to,
-          slowdown: socket.assigns.slowdown
+        if(FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site),
+          do:
+            Verification.Checks.run(url_to_verify, domain, installation_type,
+              report_to: report_to,
+              slowdown: socket.assigns.slowdown
+            ),
+          else:
+            LegacyVerification.Checks.run(
+              url_to_verify,
+              domain,
+              report_to: report_to,
+              slowdown: socket.assigns.slowdown
+            )
         )
 
       {:noreply, assign(socket, checks_pid: pid, attempts: socket.assigns.attempts + 1)}
@@ -152,7 +164,7 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_info({:all_checks_done, %State{} = state}, socket) do
-    interpretation = LegacyVerification.Checks.interpret_diagnostics(state)
+    interpretation = if(FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site), do: Verification.Checks.interpret_diagnostics(state), else: LegacyVerification.Checks.interpret_diagnostics(state))
 
     if not socket.assigns.has_pageviews? do
       schedule_pageviews_check(socket)

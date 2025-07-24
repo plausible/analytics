@@ -13,7 +13,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
     Checks.InstallationV2
   ]
 
-  def run(url, data_domain, opts \\ []) do
+  def run(url, data_domain, installation_type, opts \\ []) do
     checks = Keyword.get(opts, :checks, @checks)
     report_to = Keyword.get(opts, :report_to, self())
     async? = Keyword.get(opts, :async?, true)
@@ -24,7 +24,9 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
         url: url,
         data_domain: data_domain,
         report_to: report_to,
-        diagnostics: %Verification.Diagnostics{}
+        diagnostics: %Verification.Diagnostics{
+          selected_installation_type: installation_type
+        }
       }
 
     CheckRunner.run(init_state, checks,
@@ -37,6 +39,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
   def interpret_diagnostics(%State{} = state) do
     Verification.Diagnostics.interpret(
       state.diagnostics,
+      state.data_domain,
       state.url
     )
   end

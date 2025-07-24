@@ -93,26 +93,22 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
     if completed do
       put_diagnostics(
         state,
-        # TODO pull from state
-        selected_installation_type: :wordpress,
         disallowed_by_csp: data["disallowedByCsp"],
         plausible_is_on_window: data["plausibleIsOnWindow"],
         plausible_is_initialized: data["plausibleIsInitialized"],
         plausible_version: data["plausibleVersion"],
         plausible_variant: data["plausibleVariant"],
-        cache_bust_something: data["cacheBustSomething"],
-        test_event_request: data["testEventRequest"],
-        test_event_callback_result: data["testEventCallbackResult"],
+        test_event: data["testEvent"],
         cookie_banner_likely: data["cookieBannerLikely"],
         service_error: nil
       )
     else
       warn(
         state,
-        "Browserless function returned with completed: false and error: #{inspect(data["error"])}"
+        "Browserless function returned with completed: false, error.message: #{inspect(data["error"]["message"])}"
       )
 
-      put_diagnostics(state, service_error: data["error"])
+      put_diagnostics(state, service_error: data["error"]["message"])
     end
   end
 

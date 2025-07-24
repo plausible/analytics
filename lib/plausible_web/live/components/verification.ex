@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   use Plausible
 
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias Plausible.InstallationSupport.{State, LegacyVerification}
+  alias Plausible.InstallationSupport.{State, Result}
 
   import PlausibleWeb.Components.Generic
 
@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr(:finished?, :boolean, default: false)
   attr(:success?, :boolean, default: false)
   attr(:verification_state, State, default: nil)
-  attr(:interpretation, LegacyVerification.Diagnostics.Result, default: nil)
+  attr(:interpretation, Result, default: nil)
   attr(:attempts, :integer, default: 0)
   attr(:flow, :string, default: "")
   attr(:installation_type, :string, default: nil)
@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
               <.focus_list>
                 <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
                   <span class="text-sm">
-                    {Phoenix.Naming.humanize(diag)}: <span class="font-mono">{value}</span>
+                    {Phoenix.Naming.humanize(diag)}: <span class="font-mono">{to_string_value(value)}</span>
                   </span>
                 </:item>
               </.focus_list>
@@ -157,4 +157,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
     </div>
     """
   end
+
+  defp to_string_value(value) when is_binary(value), do: value
+  defp to_string_value(value), do: inspect(value)
 end

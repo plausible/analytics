@@ -3,45 +3,113 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   Module responsible for translating diagnostics to user-friendly errors and recommendations.
   """
   require Logger
-  @errors Plausible.InstallationSupport.Verification.Errors.all()
 
+  # in this struct, nil means indeterminate
   defstruct selected_installation_type: nil,
             disallowed_by_csp: nil,
             plausible_is_on_window: nil,
             plausible_is_initialized: nil,
             plausible_version: nil,
             plausible_variant: nil,
-            # TODO
-            cache_bust_something: nil,
-            # from u and d values, derive if proxy and domain match
-            test_event_request: nil,
-            # overlap with test_evenrt_request, needed? maybe derive if window.plausible function signature has callback implemented like we expect
-            test_event_callback_result: nil,
-            # actually cookie_banner_blocking_plausible_likely :)
+            diagnostics_are_from_cache_bust: nil,
+            test_event: nil,
             cookie_banner_likely: nil,
             service_error: nil
 
   @type t :: %__MODULE__{}
 
-  defmodule Result do
-    @moduledoc """
-    Diagnostics interpretation result.
-    """
-    defstruct ok?: false, errors: [], recommendations: []
-    @type t :: %__MODULE__{}
-  end
+  alias Plausible.InstallationSupport.Result
 
-  @spec interpret(t(), String.t()) :: Result.t()
+  @supported_variants ["web", "npm"]
+
+  @error_unexpected_domain %{
+    message: "Plausible test event is not for this site",
+    recommendation:
+      "Please check that the snippet on your site matches the installation instructions exactly",
+    url:
+      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+  }
+  @spec interpret(t(), String.t(), String.t()) :: Result.t()
   def interpret(
         %__MODULE__{
+          plausible_is_on_window: true,
+          plausible_is_initialized: true,
+          plausible_variant: plausible_variant,
+          diagnostics_are_from_cache_bust: false,
+          test_event: %{
+            "requestUrl" => request_url,
+            "normalizedBody" => %{
+              "domain" => domain
+            },
+            "responseStatus" => response_status,
+            "error" => nil
+          },
           service_error: nil
-        },
-        _url
-      ) do
-    %Result{ok?: true}
+        } = diagnostics,
+        data_domain,
+        url
+      )
+      when response_status in [200, 202] do
+    domain_is_expected? = domain == data_domain
+
+    tracker_version_2? = plausible_variant in @supported_variants
+    tracker_legacy? = is_nil(plausible_variant)
+
+    request_targets_plausible_api? =
+      String.starts_with?(request_url, "#{PlausibleWeb.Endpoint.url()}/api/event") or
+        String.starts_with?(request_url, "https://plausible.io/api/event") # in all envs, we want to succeed with verification of live websites
+
+    request_targets_local_proxy? = String.starts_with?(request_url, "/")
+
+    cond do
+      (tracker_version_2? or tracker_legacy?) and
+        (request_targets_plausible_api? or request_targets_local_proxy?) and
+          domain_is_expected? ->
+        success()
+
+      (tracker_version_2? or tracker_legacy?) and
+        (request_targets_plausible_api? or request_targets_local_proxy?) and
+          not domain_is_expected? ->
+        error(@error_unexpected_domain)
+
+      true ->
+        interpret(diagnostics, data_domain, url)
+    end
   end
 
-  def interpret(%__MODULE__{service_error: _service_error} = diagnostics, url) do
+  @error_csp_disallowed %{
+    message: "We encountered an issue with your site's CSP",
+    recommendation:
+      "Please add plausible.io domain specifically to the allowed list of domains in your Content Security Policy (CSP)",
+    url:
+      "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
+  }
+  def interpret(
+        %__MODULE__{
+          plausible_is_on_window: true,
+          plausible_is_initialized: true,
+          diagnostics_are_from_cache_bust: false,
+          test_event: %{
+            "requestUrl" => _request_url,
+            "error" => %{message: _error_message}
+          },
+          disallowed_by_csp: true,
+          service_error: nil
+        },
+        _data_domain,
+        _url
+      ) do
+    error(@error_csp_disallowed)
+  end
+
+  @unknown_error %{
+    message: "Your Plausible integration is not working",
+    recommendation:
+      "Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
+    url:
+      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+  }
+  def interpret(%__MODULE__{service_error: _service_error} = diagnostics, _data_domain, url) do
     cond do
       true ->
         Sentry.capture_message("Unhandled case for site verification",
@@ -52,11 +120,19 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
           }
         )
 
-        %Result{
-          ok?: false,
-          errors: [@errors.unknown.message],
-          recommendations: [@errors.unknown.recommendation]
-        }
+        error(@unknown_error)
     end
+  end
+
+  defp success do
+    %Result{ok?: true}
+  end
+
+  defp error(error) do
+    %Result{
+      ok?: false,
+      errors: [error.message],
+      recommendations: [%{text: error.recommendation, url: error.url}]
+    }
   end
 end
