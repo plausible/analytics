@@ -10,9 +10,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
+    @endpoint PlausibleWeb.InternalEndpoint
+    alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
+
     defp open_site(id, opts \\ []) do
-      Routes.customer_support_resource_path(
-        PlausibleWeb.Endpoint,
+      InternalRoutes.customer_support_resource_path(
+        PlausibleWeb.InternalEndpoint,
         :details,
         :sites,
         :site,
