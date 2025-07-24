@@ -28,6 +28,7 @@ export type VerifyV2Result = {
         plausibleVersion: number
         plausibleVariant?: string
         disallowedByCsp: boolean
+        cookieBannerLikely: boolean
         testEvent: {
           callbackResult?: any
           responseStatus?: number
@@ -40,7 +41,6 @@ export type VerifyV2Result = {
             name: string
             version?: number
           }
-          cookieBannerLikely: boolean
         }
       }
     | { completed: false; error: { message: string } }
