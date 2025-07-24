@@ -15,13 +15,13 @@ export async function plausibleFunctionCheck(log) {
   }
 }
 
-async function waitForPlausibleFunction() {
+export async function waitForPlausibleFunction(timeout = 5000) {
   const checkFn = (opts) => {
     if (window.plausible) { return true }
     if (opts.timeout) { return false }
     return 'continue'
   }
-  return await runThrottledCheck(checkFn, {timeout: 5000, interval: 100})
+  return await runThrottledCheck(checkFn, {timeout: timeout, interval: 100})
 }
 
 function testPlausibleCallback(log) {

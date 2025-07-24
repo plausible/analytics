@@ -34,10 +34,13 @@ defmodule PlausibleWeb.Dogfood do
         env in ["dev", "ce_dev"] ->
           # By default we're not letting the app track itself on localhost.
           # The requested script will be `s-.js` and it will respond with 404.
-          # If you wish to track the app itself, uncomment the following line
+          # If you wish to track the app itself, uncomment the following code
           # and replace the site_id if necessary (1 stands for dummy.site).
 
-          # PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(1).id
+          # Plausible.Repo.get(Plausible.Site, 1)
+          # |> PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!()
+          # |> Map.get(:id)
+
           ""
 
         env in ["test", "ce_test"] ->

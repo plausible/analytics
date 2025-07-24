@@ -1,4 +1,4 @@
-import { waitForSnippetsV1 } from "./snippet-checks"
+import { waitForPlausibleFunction } from "./plausible-function-check"
 import { checkWordPress } from "./check-wordpress"
 import { checkGTM } from "./check-gtm"
 
@@ -7,21 +7,22 @@ window.scanPageBeforePlausibleInstallation = async function(detectV1, debug) {
     if (debug) console.log('[Plausible Verification]', message)
   }
 
+  let v1Detected = null
+
+  if (detectV1) {
+    log('Waiting for Plausible function...')
+    const plausibleFound = await waitForPlausibleFunction(3000)
+    log(`plausibleFound: ${plausibleFound}`)
+    v1Detected = plausibleFound && typeof window.plausible.s === 'undefined'
+    log(`v1Detected: ${v1Detected}`)
+  }
+
   const {wordpressPlugin, wordpressLikely} = checkWordPress(document)
   log(`wordpressPlugin: ${wordpressPlugin}`)
   log(`wordpressLikely: ${wordpressLikely}`)
 
   const gtmLikely = checkGTM(document)
   log(`gtmLikely: ${gtmLikely}`)
-
-  // Cannot implement yet: we should detect the WP plugin version here and
-  // decide `v1Detected` based on that. For now we assume WP plugin is v1.
-  let v1Detected = wordpressPlugin
-
-  if (!v1Detected && detectV1) {
-    const snippetData = await waitForSnippetsV1(log)
-    v1Detected = snippetData.counts.all > 0
-  }
 
   return {
     data: {
