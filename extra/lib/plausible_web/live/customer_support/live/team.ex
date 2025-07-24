@@ -12,7 +12,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   require Plausible.Billing.Subscription.Status
 
-  import Ecto.Query
+  import Ecto.Query, only: [from: 2]
 
   def update(%{resource_id: resource_id}, socket) do
     team = Resource.Team.get(resource_id)
@@ -43,11 +43,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     {:ok, assign(socket, tab: "sso")}
   end
 
-  def update(%{tab: "audit"}, %{assigns: %{team: team}} = socket) do
-    audit_entries = Plausible.Audit.list_entries(team_id: team.id)
+  def update(%{tab: "audit"} = params, %{assigns: %{team: team}} = socket) do
+    pagination_params = Map.take(params, ["after", "before"])
 
-    audit_entries =
-      Enum.map(audit_entries, fn entry ->
+    audit_page = Plausible.Audit.list_entries_paginated([team_id: team.id], pagination_params)
+
+    entries =
+      Enum.map(audit_page.entries, fn entry ->
         meta = entry.meta
 
         meta =
@@ -69,8 +71,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         Map.put(entry, :meta, meta)
       end)
 
-    {:ok,
-     assign(socket, tab: "audit", audit_entries: audit_entries, revealed_audit_entry_id: nil)}
+    audit_page = %{audit_page | entries: entries}
+
+    {:ok, assign(socket, tab: "audit", audit_page: audit_page, revealed_audit_entry_id: nil)}
   end
 
   def update(%{tab: "sites"}, %{assigns: %{team: team}} = socket) do
@@ -329,7 +332,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         </div>
 
         <div :if={@tab == "audit"} class="mt-4 mb-4 text-gray-900 dark:text-gray-400 relative">
-          <div :if={Enum.empty?(@audit_entries)} class="flex justify-center items-center">
+          <div :if={@audit_page.entries == []} class="flex justify-center items-center">
             No audit logs yet
           </div>
           <div :if={@revealed_audit_entry_id}>
@@ -347,7 +350,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 name="audit-entry-change"
                 value={
                   Jason.encode!(
-                    Enum.find(@audit_entries, &(&1.id == @revealed_audit_entry_id)).change,
+                    Enum.find(@audit_page.entries, &(&1.id == @revealed_audit_entry_id)).change,
                     pretty: true
                   )
                 }
@@ -372,7 +375,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               </.styled_link>
             </div>
           </div>
-          <.table :if={is_nil(@revealed_audit_entry_id)} rows={@audit_entries}>
+          <.table :if={is_nil(@revealed_audit_entry_id)} rows={@audit_page.entries}>
             <:thead>
               <.th invisible></.th>
               <.th invisible></.th>
@@ -407,8 +410,36 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               </.td>
             </:tbody>
           </.table>
+          <div
+            :if={
+              is_nil(@revealed_audit_entry_id) &&
+                (@audit_page.metadata.before || @audit_page.metadata.after)
+            }
+            class="flex justify-between items-center mt-4"
+          >
+            <.button
+              :if={@audit_page.metadata.before}
+              id="prev-page"
+              phx-click="paginate-audit"
+              phx-value-before={@audit_page.metadata.before}
+              phx-target={@myself}
+              theme="bright"
+            >
+              &larr; Prev
+            </.button>
+            <div></div>
+            <.button
+              :if={@audit_page.metadata.after}
+              id="next-page"
+              phx-click="paginate-audit"
+              phx-value-after={@audit_page.metadata.after}
+              phx-target={@myself}
+              theme="bright"
+            >
+              Next &rarr;
+            </.button>
+          </div>
         </div>
-
         <div :if={@tab == "billing"} class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
           <h1 class="text-xs font-semibold">Usage</h1>
           <.table rows={monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)}>
@@ -773,6 +804,17 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def handle_event("reveal-audit-entry", _, socket) do
     {:noreply, assign(socket, revealed_audit_entry_id: nil)}
+  end
+
+  def handle_event("paginate-audit", params, socket) do
+    pagination_params = Map.take(params, ["after", "before"])
+    update_params = %{tab: "audit"} |> Map.merge(pagination_params)
+    {:ok, new_socket} = update(update_params, socket)
+
+    {:noreply,
+     push_patch(new_socket,
+       to: "/cs?" <> URI.encode_query(update_params)
+     )}
   end
 
   def handle_event("show-plan-form", _, socket) do

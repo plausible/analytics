@@ -679,6 +679,42 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert text =~ "(N/A) (N/A)"
       end
+
+      test "paginates audit entries", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        now = NaiveDateTime.utc_now()
+
+        for i <- 1..30 do
+          %Plausible.Audit.Entry{
+            name: "Entry (#{i})",
+            entity: "Plausible.Teams.Team",
+            entity_id: to_string(team.id),
+            team_id: team.id,
+            datetime: NaiveDateTime.shift(now, second: i)
+          }
+          |> Plausible.Repo.insert!()
+        end
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :audit))
+        text = lv |> render() |> text()
+
+        for i <- 11..30, do: refute(text =~ "Entry (#{i})")
+        for i <- 1..10, do: assert(text =~ "Entry (#{i})")
+
+        lv |> element("button#next-page") |> render_click()
+        text = lv |> render() |> text()
+
+        for i <- 11..20, do: assert(text =~ "Entry (#{i})")
+        for i <- 1..10, do: refute(text =~ "Entry (#{i})")
+        for i <- 21..30, do: refute(text =~ "Entry (#{i})")
+
+        lv |> element("button#prev-page") |> render_click()
+        text = lv |> render() |> text()
+
+        for i <- 11..30, do: refute(text =~ "Entry (#{i})")
+        for i <- 1..10, do: assert(text =~ "Entry (#{i})")
+      end
     end
   end
 end
