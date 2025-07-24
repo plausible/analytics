@@ -9,8 +9,20 @@ defmodule Plausible.Audit do
   defdelegate set_context(term), to: Plausible.Audit.Entry
 
   def list_entries(attrs) do
-    Plausible.Repo.all(
-      from ae in Plausible.Audit.Entry, where: ^attrs, order_by: [asc: :datetime]
-    )
+    attrs
+    |> entries_query()
+    |> Plausible.Repo.all()
+  end
+
+  def list_entries_paginated(attrs, params \\ %{}) do
+    attrs
+    |> entries_query()
+    |> Plausible.Pagination.paginate(params, cursor_fields: [{:datetime, :asc}])
+  end
+
+  defp entries_query(attrs) do
+    from ae in Plausible.Audit.Entry,
+      where: ^attrs,
+      order_by: [asc: :datetime]
   end
 end
