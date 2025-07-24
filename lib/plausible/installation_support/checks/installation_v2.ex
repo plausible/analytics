@@ -79,7 +79,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         handle_browserless_response(state, body, status)
 
       {:error, %{reason: reason}} ->
-        warn(state, "Browserless request error: #{inspect(reason)}")
+        Logger.warning(warning_message("Browserless request error: #{inspect(reason)}", state))
 
         put_diagnostics(state, service_error: reason)
     end
@@ -103,9 +103,11 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         service_error: nil
       )
     else
-      warn(
-        state,
-        "Browserless function returned with completed: false, error.message: #{inspect(data["error"]["message"])}"
+      Logger.warning(
+        warning_message(
+          "Browserless function returned with completed: false, error.message: #{inspect(data["error"]["message"])}",
+          state
+        )
       )
 
       put_diagnostics(state, service_error: data["error"]["message"])
@@ -114,12 +116,12 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
 
   defp handle_browserless_response(state, _body, status) do
     error = "Unhandled browserless response with status: #{status}"
-    warn(state, error)
+    Logger.warning(warning_message(error, state))
 
     put_diagnostics(state, service_error: error)
   end
 
-  defp warn(state, message) do
-    Logger.warning("[VERIFICATION v2] #{message} (data_domain='#{state.data_domain}')")
+  defp warning_message(message, state) do
+    "[VERIFICATION v2] #{message} (data_domain='#{state.data_domain}')"
   end
 end

@@ -164,7 +164,11 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_info({:all_checks_done, %State{} = state}, socket) do
-    interpretation = if(FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site), do: Verification.Checks.interpret_diagnostics(state), else: LegacyVerification.Checks.interpret_diagnostics(state))
+    interpretation =
+      if(FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site),
+        do: Verification.Checks.interpret_diagnostics(state),
+        else: LegacyVerification.Checks.interpret_diagnostics(state)
+      )
 
     if not socket.assigns.has_pageviews? do
       schedule_pageviews_check(socket)

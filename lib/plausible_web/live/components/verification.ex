@@ -146,7 +146,8 @@ defmodule PlausibleWeb.Live.Components.Verification do
               <.focus_list>
                 <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
                   <span class="text-sm">
-                    {Phoenix.Naming.humanize(diag)}: <span class="font-mono">{to_string_value(value)}</span>
+                    {Phoenix.Naming.humanize(diag)}:
+                    <span class="font-mono">{to_string_value(value)}</span>
                   </span>
                 </:item>
               </.focus_list>
