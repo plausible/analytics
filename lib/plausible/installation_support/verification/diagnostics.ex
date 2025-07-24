@@ -60,14 +60,12 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
           plausible_is_on_window: true,
           plausible_is_initialized: true,
           plausible_variant: plausible_variant,
-          diagnostics_are_from_cache_bust: false,
           test_event: %{
             "requestUrl" => request_url,
             "normalizedBody" => %{
               "domain" => domain
             },
-            "responseStatus" => response_status,
-            "error" => nil
+            "responseStatus" => response_status
           },
           service_error: nil
         } = diagnostics,
@@ -114,7 +112,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         %__MODULE__{
           plausible_is_on_window: true,
           plausible_is_initialized: true,
-          diagnostics_are_from_cache_bust: false,
           test_event: %{
             "requestUrl" => _request_url,
             "error" => %{message: _error_message}
@@ -136,18 +133,15 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                  })
   def interpret(%__MODULE__{service_error: _service_error} = diagnostics, _data_domain, url) do
-    cond do
-      true ->
-        Sentry.capture_message("Unhandled case for site verification",
-          extra: %{
-            message: inspect(diagnostics),
-            url: url,
-            hash: :erlang.phash2(diagnostics)
-          }
-        )
+    Sentry.capture_message("Unhandled case for site verification",
+      extra: %{
+        message: inspect(diagnostics),
+        url: url,
+        hash: :erlang.phash2(diagnostics)
+      }
+    )
 
-        error(@unknown_error)
-    end
+    error(@unknown_error)
   end
 
   defp success do

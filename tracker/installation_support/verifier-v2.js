@@ -54,7 +54,13 @@ async function verifyPlausibleInstallation({
     plausibleIsInitialized,
     plausibleVersion,
     plausibleVariant,
-    testEvent: {...testEvent, url: interceptedTestEvent?.request?.url, normalizedBody: interceptedTestEvent?.request?.normalizedBody, responseStatus: interceptedTestEvent?.response?.status, error: interceptedTestEvent?.error},
+    testEvent: {
+      ...testEvent,
+      requestUrl: interceptedTestEvent?.request?.url,
+      normalizedBody: interceptedTestEvent?.request?.normalizedBody,
+      responseStatus: interceptedTestEvent?.response?.status,
+      error: interceptedTestEvent?.error
+    },
     cookieBannerLikely: checkCookieBanner()
   }
 
@@ -198,7 +204,7 @@ async function testPlausibleFunction({ timeoutMs }) {
         if (resolved) return
         clearTimeout(timeout)
         resolve({
-          testEvent: {callbackResult: testEventCallbackResult},
+          testEvent: { callbackResult: testEventCallbackResult }
         })
       }
     })

@@ -1,6 +1,6 @@
 /**
  * Checks if the CSP policy disallows the given hosts/domains or subdomains.
- * @param {Record<string, string>} responseHeaders
+ * @param {Record<string, string>} responseHeaders - Response headers with keys normalized to lowercase like { "x-foo": "bar" }
  * @param {string[]} hostsToCheck - Array of domains/hosts to check. Must be provided.
  * @returns {boolean}
  */

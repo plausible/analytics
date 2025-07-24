@@ -30,12 +30,27 @@ export type VerifyV2Result = {
         disallowedByCsp: boolean
         cookieBannerLikely: boolean
         testEvent: {
+          /**
+           * window.plausible (track) callback
+           */
           callbackResult?: any
+          /**
+           * intercepted fetch response status
+           */
           responseStatus?: number
+          /**
+           * error caught during intercepted fetch
+           */
           error?: {
             message: string
           }
-          url?: string
+          /**
+           * intercepted fetch request url
+           */
+          requestUrl?: string
+          /**
+           * intercepted fetch request body normalized
+           */
           normalizedBody?: {
             domain: string
             name: string

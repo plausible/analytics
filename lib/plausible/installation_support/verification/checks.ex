@@ -10,7 +10,8 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
   require Logger
 
   @checks [
-    Checks.InstallationV2
+    Checks.InstallationV2,
+    Checks.InstallationV2CacheBust
   ]
 
   def run(url, data_domain, installation_type, opts \\ []) do
