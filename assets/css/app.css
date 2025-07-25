@@ -270,17 +270,6 @@ iframe[hidden] {
   @apply cursor-default bg-gray-100 dark:bg-gray-300 pointer-events-none;
 }
 
-#chartjs-tooltip {
-  background-color: rgba(25 30 56);
-  position: absolute;
-  font-size: 14px;
-  font-style: normal;
-  padding: 10px 12px;
-  pointer-events: none;
-  border-radius: 5px;
-  z-index: 100;
-}
-
 /* This class is used for styling embedded dashboards. Do not remove. */
 /* stylelint-disable */
 /* prettier-ignore */
