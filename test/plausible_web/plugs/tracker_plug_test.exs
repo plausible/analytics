@@ -42,7 +42,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
           :installation
         )
 
-      response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
+      response = get(conn, "/t/#{tracker_script_configuration.id}.js") |> response(200)
 
       assert String.contains?(response, "!function(){var")
       assert String.contains?(response, "domain:\"#{site.domain}\"")
@@ -62,14 +62,14 @@ defmodule PlausibleWeb.TrackerPlugTest do
           :installation
         )
 
-      response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
+      response = get(conn, "/t/#{tracker_script_configuration.id}.js") |> response(200)
 
       assert String.contains?(response, "window.plausible")
     end
 
     test "returns 404 for unknown site", %{conn: conn} do
       conn
-      |> get("/js/s-a14125a2-000-000-0000-000000000000.js")
+      |> get("/t/a14125a2-000-000-0000-000000000000.js")
       |> response(404)
     end
   end
