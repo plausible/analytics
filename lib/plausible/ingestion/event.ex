@@ -396,27 +396,28 @@ defmodule Plausible.Ingestion.Event do
 
     persist_event(event.clickhouse_event, event.clickhouse_session_attrs, previous_user_id)
 
-    session_result =
-      Plausible.Session.CacheStore.on_event(
-        event.clickhouse_event,
-        event.clickhouse_session_attrs,
-        previous_user_id,
-        buffer_insert: write_buffer_insert
-      )
-
-    case session_result do
-      {:ok, :no_session_for_engagement} ->
-        drop(event, :no_session_for_engagement)
-
-      {:error, :timeout} ->
-        drop(event, :lock_timeout)
-
-      {:ok, session} ->
-        %{
-          event
-          | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
-        }
-    end
+    # session_result =
+    #   Plausible.Session.CacheStore.on_event(
+    #     event.clickhouse_event,
+    #     event.clickhouse_session_attrs,
+    #     previous_user_id,
+    #     buffer_insert: write_buffer_insert
+    #   )
+    #
+    # case session_result do
+    #   {:ok, :no_session_for_engagement} ->
+    #     drop(event, :no_session_for_engagement)
+    #
+    #   {:error, :timeout} ->
+    #     drop(event, :lock_timeout)
+    #
+    #   {:ok, session} ->
+    #     %{
+    #       event
+    #       | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
+    #     }
+    # end
+    event
   end
 
   defp persist_event(event, session_attrs, previous_user_id) do
@@ -456,8 +457,8 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event, _context) do
-    {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
-    emit_telemetry_buffered(event)
+    # {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
+    # emit_telemetry_buffered(event)
     event
   end
 
