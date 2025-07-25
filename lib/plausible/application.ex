@@ -212,6 +212,11 @@ defmodule Plausible.Application do
       "https://icons.duckduckgo.com",
       Config.Reader.merge(default_opts, conn_opts: [transport_opts: [timeout: 15_000]])
     )
+    |> Map.put("http://localhost:8001",
+      protocol: :http2,
+      count: 200,
+      conn_opts: [transport_opts: [timeout: 5_000]]
+    )
     |> maybe_add_sentry_pool(default_opts)
     |> maybe_add_paddle_pool(default_opts)
     |> maybe_add_google_pools(default_opts)

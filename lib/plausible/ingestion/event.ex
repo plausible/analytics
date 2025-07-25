@@ -438,7 +438,7 @@ defmodule Plausible.Ingestion.Event do
       |> Base.encode64(padding: false)
 
     result =
-      case Req.post(url, body: payload, headers: headers) do
+      case Req.post(url, finch: Plausible.Finch, body: payload, headers: headers) do
         {:ok, %{body: "ok"}} ->
           :ok
 
