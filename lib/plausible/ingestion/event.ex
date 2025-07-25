@@ -443,15 +443,19 @@ defmodule Plausible.Ingestion.Event do
           :ok
 
         {:ok, resp} ->
+          Logger.warning(
+            "Persisting event for (#{site_id};#{current_user_id},#{previous_user_id}) failed: #{inspect(resp.body)}"
+          )
+
           {:error, resp.body}
 
         {:error, error} ->
+          Logger.warning(
+            "Persisting event for (#{site_id};#{current_user_id},#{previous_user_id}) failed: #{inspect(error)}"
+          )
+
           {:error, error}
       end
-
-    Logger.warning(
-      "Persisting event for (#{site_id};#{current_user_id},#{previous_user_id}): #{inspect(result)}"
-    )
 
     result
   end
