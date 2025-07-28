@@ -339,7 +339,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           <div :if={Enum.empty?(@audit_page.entries)} class="flex justify-center items-center">
             No audit logs yet
           </div>
-          <div :if={@revealed_audit_entry_id}>
+          <div
+            :if={@revealed_audit_entry_id}
+            phx-target={@myself}
+            phx-window-keydown="reveal-audit-entry"
+            phx-key="escape"
+          >
             <.input_with_clipboard
               id="audit-entry-identifier"
               name="audit-entry-identifier"
@@ -376,6 +381,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 class="float-right pt-4 text-sm"
               >
                 &larr; Return
+                <kbd class="rounded border border-gray-200 dark:border-gray-600 px-2 font-mono font-normal text-xs text-gray-400">
+                  ESC
+                </kbd>
               </.styled_link>
             </div>
           </div>
