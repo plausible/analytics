@@ -17,7 +17,7 @@ export async function plausibleFunctionCheck(log) {
 
 export async function waitForPlausibleFunction(timeout = 5000) {
   const checkFn = (opts) => {
-    if (window.plausible) { return true }
+    if (window.plausible?.l) { return true }
     if (opts.timeout) { return false }
     return 'continue'
   }
