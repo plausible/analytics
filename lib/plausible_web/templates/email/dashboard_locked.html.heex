@@ -12,7 +12,7 @@ During the last billing cycle ({PlausibleWeb.TextHelpers.format_date_range(
 <%= if @suggested_volume == :enterprise do %>
   Your usage exceeds our standard plans, so please reply back to this email for a tailored quote.
 <% else %>
-  <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>Click here to upgrade your subscription</a>. We recommend you upgrade to the {@suggested_volume}/mo plan. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
+  <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>Click here to upgrade your subscription</a>. We recommend you upgrade to the {@suggested_volume} pageviews/month plan. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
   <br /><br />
   If your usage decreases in the future, you can switch to a lower plan at any time. Any credit balance will automatically apply to future payments.
 <% end %>
