@@ -1,10 +1,11 @@
 defmodule Plausible.InstallationSupport.Checks.Installation do
   require Logger
 
-  @external_resource "priv/tracker/installation_support/verifier-v1.js"
+  @verifier_code_path "priv/tracker/installation_support/verifier-v1.js"
+  @external_resource @verifier_code_path
 
   # On CI, the file might not be present for static checks so we default to empty string
-  @verifier_code (case File.read(Application.app_dir(:plausible, @external_resource)) do
+  @verifier_code (case File.read(Application.app_dir(:plausible, @verifier_code_path)) do
                     {:ok, content} -> content
                     {:error, _} -> ""
                   end)

@@ -14,10 +14,11 @@ defmodule Plausible.InstallationSupport.Detection do
   require Logger
   alias Plausible.InstallationSupport
 
-  @external_resource "priv/tracker/installation_support/detector.js"
+  @detector_code_path "priv/tracker/installation_support/detector.js"
+  @external_resource @detector_code_path
 
   # On CI, the file might not be present for static checks so we default to empty string
-  @detector_code (case File.read(Application.app_dir(:plausible, @external_resource)) do
+  @detector_code (case File.read(Application.app_dir(:plausible, @detector_code_path)) do
                     {:ok, content} -> content
                     {:error, _} -> ""
                   end)
