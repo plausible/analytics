@@ -8,12 +8,35 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
   @verifier_code File.read!(path)
   @external_resource "priv/tracker/installation_support/verifier-v1.js"
 
-  # Puppeteer wrapper function that executes the vanilla JS verifier code
+  # Puppeteer wrapper function that executes the vanilla JS verifier code.
+
+  # ### TRICKY (NOT TESTED): Handling client side JS navigation.
+
+  # We've seen numerous cases where client JS navigates or refreshes the
+  # page after load. Any such JS behaviour destroys the Puppeteer page
+  # context, meaning that our verifier execution gets interrupted and we
+  # end up in the `catch` clause.
+
+  # To make our best effort verifying these sites, we retry (up to twice)
+  # running the verifier again if we encounter this specific error.
+
+  # Important: On retries, we work with the client-modified page context
+  # instead of calling `page.goto(context.url)` again (which would most
+  # likely result in another interruptive navigation).
+
+  # Unfortunately, as things stand today, we cannot test this without
+  # spinning up a real Browserless instance or bringing in a bunch of
+  # test deps for Puppeteer.
   @puppeteer_wrapper_code """
   export default async function({ page, context }) {
-    try {
+    const MAX_RETRIES = 2
+
+    async function attemptVerification(isFirstAttempt) {
       await page.setUserAgent(context.userAgent);
-      await page.goto(context.url);
+
+      if (isFirstAttempt) {
+        await page.goto(context.url);
+      }
 
       await page.evaluate(() => {
         #{@verifier_code}
@@ -22,9 +45,24 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
       return await page.evaluate(async (expectedDataDomain, debug) => {
         return await window.verifyPlausibleInstallation(expectedDataDomain, debug);
       }, context.expectedDataDomain, context.debug);
-    } catch (error) {
-      const msg = error.message ? error.message : JSON.stringify(error)
-      return {data: {completed: false, error: msg}}
+    }
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const isFirstAttempt = attempt === 0
+        return await attemptVerification(isFirstAttempt)
+      } catch (error) {
+        const shouldRetry = typeof error.message === 'string' && error.message.toLowerCase().includes('execution context')
+
+        if (shouldRetry && attempt <= MAX_RETRIES) {
+          // Brief delay before retry
+          await new Promise(resolve => setTimeout(resolve, 500))
+          continue
+        }
+
+        const msg = error.message ? error.message : JSON.stringify(error)
+        return {data: {completed: false, error: msg}}
+      }
     }
   }
   """
