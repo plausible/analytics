@@ -14,12 +14,13 @@ defmodule Plausible.InstallationSupport.Detection do
   require Logger
   alias Plausible.InstallationSupport
 
-  path = Application.app_dir(:plausible, "priv/tracker/installation_support/detector.js")
-  # On CI, the file might not be present for static checks so we create an empty one
-  File.touch!(path)
-
-  @detector_code File.read!(path)
   @external_resource "priv/tracker/installation_support/detector.js"
+
+  # On CI, the file might not be present for static checks so we default to empty string
+  @detector_code (case File.read(Application.app_dir(:plausible, @external_resource)) do
+                    {:ok, content} -> content
+                    {:error, _} -> ""
+                  end)
 
   # Puppeteer wrapper function that executes the vanilla JS verifier code
   @puppeteer_wrapper_code """
