@@ -15,7 +15,7 @@ const DETECTOR_JS_VARIANT = variantsFile.manualVariants.find(
 
 export async function executeVerifyV2(
   page: Page,
-  { debug, responseHeaders, timeoutMs, cspHostsToCheck }: VerifyV2Args
+  { debug, responseHeaders, timeoutMs, cspHostToCheck }: VerifyV2Args
 ): Promise<VerifyV2Result> {
   const verifierCode = (await compileFile(VERIFIER_V2_JS_VARIANT, {
     returnCode: true
@@ -25,15 +25,15 @@ export async function executeVerifyV2(
     await page.evaluate(verifierCode)
 
     return await page.evaluate(
-      async ({ responseHeaders, debug, timeoutMs, cspHostsToCheck }) => {
+      async ({ responseHeaders, debug, timeoutMs, cspHostToCheck }) => {
         return await (window as any).verifyPlausibleInstallation({
           responseHeaders,
           debug,
           timeoutMs,
-          cspHostsToCheck
+          cspHostToCheck
         })
       },
-      { responseHeaders, debug, timeoutMs, cspHostsToCheck }
+      { responseHeaders, debug, timeoutMs, cspHostToCheck }
     )
   } catch (error) {
     return {

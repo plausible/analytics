@@ -16,7 +16,7 @@ export type VerifyV2Args = {
   debug: boolean
   responseHeaders: Record<string, string>
   timeoutMs: number
-  cspHostsToCheck: string[]
+  cspHostToCheck: string
 }
 
 export type VerifyV2Result = {

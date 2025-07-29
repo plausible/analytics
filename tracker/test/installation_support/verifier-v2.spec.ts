@@ -5,7 +5,7 @@ import { mockManyRequests } from '../support/mock-many-requests'
 import { LOCAL_SERVER_ADDR } from '../support/server'
 import { tracker_script_version as version } from '../support/test-utils'
 
-const CSP_HOSTS_TO_CHECK = ['plausible.io']
+const CSP_HOST_TO_CHECK = 'plausible.io'
 
 test.describe('installed plausible web variant', () => {
   test('using provided snippet', async ({ page }, { testId }) => {
@@ -36,7 +36,7 @@ test.describe('installed plausible web variant', () => {
       responseHeaders: {},
       debug: true,
       timeoutMs: 1000,
-      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+      cspHostToCheck: CSP_HOST_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -94,7 +94,7 @@ test.describe('installed plausible web variant', () => {
       responseHeaders: {},
       debug: true,
       timeoutMs: 1000,
-      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+      cspHostToCheck: CSP_HOST_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -151,7 +151,7 @@ test.describe('installed plausible web variant', () => {
       responseHeaders: {},
       debug: true,
       timeoutMs: 1000,
-      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+      cspHostToCheck: CSP_HOST_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -197,7 +197,7 @@ test.describe('installed plausible web variant', () => {
       responseHeaders: {},
       debug: true,
       timeoutMs: 1000,
-      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+      cspHostToCheck: CSP_HOST_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -252,7 +252,7 @@ test.describe('installed plausible esm variant', () => {
       responseHeaders: {},
       debug: true,
       timeoutMs: 1000,
-      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+      cspHostToCheck: CSP_HOST_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -311,7 +311,7 @@ test.describe('installed plausible esm variant', () => {
       responseHeaders: {},
       debug: true,
       timeoutMs: 1000,
-      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+      cspHostToCheck: CSP_HOST_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -370,7 +370,7 @@ test.describe('installed plausible esm variant', () => {
       responseHeaders: {},
       debug: true,
       timeoutMs: 1000,
-      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+      cspHostToCheck: CSP_HOST_TO_CHECK
     })
 
     expect(result).toEqual({
@@ -418,7 +418,7 @@ test.describe('installed plausible esm variant', () => {
       responseHeaders: {},
       debug: true,
       timeoutMs: 1000,
-      cspHostsToCheck: CSP_HOSTS_TO_CHECK
+      cspHostToCheck: CSP_HOST_TO_CHECK
     })
 
     expect(result).toEqual({
