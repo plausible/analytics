@@ -9,7 +9,7 @@ In the last month, your account has used {PlausibleWeb.AuthView.delimit_integer(
 <%= if @suggested_volume == :enterprise do %>
   This is more than our standard plans, so please reply back to this email to get a quote for your volume.
 <% else %>
-  Based on that we recommend you select a {@suggested_volume}/mo plan. <br /><br />
+  Based on that we recommend you select a {@suggested_volume} pageviews/month plan. <br /><br />
   <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>
     Upgrade now
   </a>

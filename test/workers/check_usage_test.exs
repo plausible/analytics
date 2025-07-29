@@ -319,7 +319,7 @@ defmodule Plausible.Workers.CheckUsageTest do
           html_body: html_body
         })
 
-        assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
+        assert html_body =~ "We recommend you upgrade to the 100k pageviews/month plan"
       end
 
       test "clears grace period when plan is applicable again", %{user: user} do
