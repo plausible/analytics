@@ -65,7 +65,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
           plausible_is_initialized: true,
           plausible_variant: plausible_variant,
           test_event: %{
-            "requestUrl" => request_url,
             "normalizedBody" => %{
               "domain" => domain
             },
@@ -82,21 +81,12 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     tracker_is_version_2? = plausible_variant in @supported_variants
     tracker_is_maybe_legacy? = is_nil(plausible_variant)
 
-    # in all envs, we want to succeed with verification of live websites
-    request_targets_plausible_api? =
-      String.starts_with?(request_url, "#{PlausibleWeb.Endpoint.url()}/api/event") or
-        String.starts_with?(request_url, "https://plausible.io/api/event")
-
-    request_targets_local_proxy? = String.starts_with?(request_url, "/")
-
     cond do
       (tracker_is_version_2? or tracker_is_maybe_legacy?) and
-        (request_targets_plausible_api? or request_targets_local_proxy?) and
           domain_is_expected? ->
         success()
 
       (tracker_is_version_2? or tracker_is_maybe_legacy?) and
-        (request_targets_plausible_api? or request_targets_local_proxy?) and
           not domain_is_expected? ->
         error(@error_unexpected_domain)
 
@@ -148,7 +138,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     error(@unknown_error)
   end
 
-  defp success do
+  defp success() do
     %Result{ok?: true}
   end
 
