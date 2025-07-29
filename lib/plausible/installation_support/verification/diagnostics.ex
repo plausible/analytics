@@ -108,20 +108,15 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   end
 
   @error_csp_disallowed Error.new!(%{
-                          message: "We encountered an issue with your site's CSP",
+                          message:
+                            "We encountered an issue with your site's Content Security Policy (CSP)",
                           recommendation:
-                            "Please add plausible.io domain specifically to the allowed list of domains in your Content Security Policy (CSP)",
+                            "Please add plausible.io domain specifically to the allowed list of domains in your site's CSP",
                           url:
                             "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
                         })
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
-          test_event: %{
-            "requestUrl" => _request_url,
-            "error" => %{message: _error_message}
-          },
           disallowed_by_csp: true,
           service_error: nil
         },
@@ -131,7 +126,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     error(@error_csp_disallowed)
   end
 
-  def interpret(%__MODULE__{} = diagnostics, _expected_domain, url), do: unknown_error(diagnostics, url)
+  def interpret(%__MODULE__{} = diagnostics, _expected_domain, url),
+    do: unknown_error(diagnostics, url)
 
   defp success() do
     %Result{ok?: true}
@@ -146,20 +142,20 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   end
 
   @unknown_error Error.new!(%{
-    message: "Your Plausible integration is not working",
-    recommendation:
-      "Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
-    url:
-      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-  })
+                   message: "Your Plausible integration is not working",
+                   recommendation:
+                     "Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
+                   url:
+                     "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                 })
   defp unknown_error(diagnostics, url) do
     Sentry.capture_message("Unhandled case for site verification",
-    extra: %{
-      message: inspect(diagnostics),
-      url: url,
-      hash: :erlang.phash2(diagnostics)
-    }
-  )
+      extra: %{
+        message: inspect(diagnostics),
+        url: url,
+        hash: :erlang.phash2(diagnostics)
+      }
+    )
 
     error(@unknown_error)
   end
