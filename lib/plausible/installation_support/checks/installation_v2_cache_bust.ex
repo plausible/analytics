@@ -1,7 +1,14 @@
 defmodule Plausible.InstallationSupport.Checks.InstallationV2CacheBust do
   @moduledoc """
-  If the installation v2 check can not be interpreted as successful, we try to bust the cache by adding a query parameter to the URL.
-  If only after this we get a successful result, the recommendation to the user should be that they should clear the website cache
+  If the output of previous checks can not be interpreted as successful,
+  as a last resort, we try to bust the cache of the site under test by adding a query parameter to the URL,
+  and running InstallationV2 again.
+
+  Whatever the result from the rerun, that is what we use to interpret the installation.
+
+  The idea is to make sure that any issues we detect will be about the latest version of their website.
+
+  We also want to avoid reporting a successful installation if it took a special cache-busting action to make it work.
   """
 
   require Logger
@@ -20,13 +27,13 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2CacheBust do
       url_that_maybe_busts_cache =
         Plausible.InstallationSupport.URL.bust_url(url)
 
-      state2 =
+      state_after_cache_bust =
         Plausible.InstallationSupport.Checks.InstallationV2.perform(%{
           state
           | url: url_that_maybe_busts_cache
         })
 
-      put_diagnostics(state2, diagnostics_are_from_cache_bust: true)
+      put_diagnostics(state_after_cache_bust, diagnostics_are_from_cache_bust: true)
     end
   end
 end

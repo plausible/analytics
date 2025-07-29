@@ -58,6 +58,13 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                              url:
                                "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                            })
+  @error_succeeds_only_after_cache_bust Error.new!(%{
+                                          message: "We detected an issue with your site's cache",
+                                          recommendation:
+                                            "Please clear the cache for your site to ensure that your visitors will load the latest version of your site that has Plausible correctly installed",
+                                          url:
+                                            "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
+                                        })
   @spec interpret(t(), String.t(), String.t()) :: Result.t()
   def interpret(
         %__MODULE__{
@@ -70,7 +77,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
             },
             "responseStatus" => response_status
           },
-          service_error: nil
+          service_error: nil,
+          diagnostics_are_from_cache_bust: diagnostics_are_from_cache_bust
         } = diagnostics,
         expected_domain,
         url
@@ -82,6 +90,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     tracker_is_maybe_legacy? = is_nil(plausible_variant)
 
     cond do
+      (tracker_is_version_2? or tracker_is_maybe_legacy?) and
+        domain_is_expected? and diagnostics_are_from_cache_bust ->
+        error(@error_succeeds_only_after_cache_bust)
+
       (tracker_is_version_2? or tracker_is_maybe_legacy?) and
           domain_is_expected? ->
         success()
