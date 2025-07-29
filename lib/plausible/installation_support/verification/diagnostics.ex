@@ -103,7 +103,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         error(@error_unexpected_domain)
 
       true ->
-        interpret(diagnostics, expected_domain, url)
+        unknown_error(diagnostics, url)
     end
   end
 
@@ -131,24 +131,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     error(@error_csp_disallowed)
   end
 
-  @unknown_error Error.new!(%{
-                   message: "Your Plausible integration is not working",
-                   recommendation:
-                     "Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
-                   url:
-                     "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                 })
-  def interpret(%__MODULE__{} = diagnostics, _expected_domain, url) do
-    Sentry.capture_message("Unhandled case for site verification",
-      extra: %{
-        message: inspect(diagnostics),
-        url: url,
-        hash: :erlang.phash2(diagnostics)
-      }
-    )
-
-    error(@unknown_error)
-  end
+  def interpret(%__MODULE__{} = diagnostics, _expected_domain, url), do: unknown_error(diagnostics, url)
 
   defp success() do
     %Result{ok?: true}
@@ -160,5 +143,24 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       errors: [error.message],
       recommendations: [%{text: error.recommendation, url: error.url}]
     }
+  end
+
+  @unknown_error Error.new!(%{
+    message: "Your Plausible integration is not working",
+    recommendation:
+      "Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
+    url:
+      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+  })
+  defp unknown_error(diagnostics, url) do
+    Sentry.capture_message("Unhandled case for site verification",
+    extra: %{
+      message: inspect(diagnostics),
+      url: url,
+      hash: :erlang.phash2(diagnostics)
+    }
+  )
+
+    error(@unknown_error)
   end
 end
