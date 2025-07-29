@@ -1,20 +1,43 @@
 defmodule Plausible.InstallationSupport.Checks.Installation do
   require Logger
 
-  path = Application.app_dir(:plausible, "priv/tracker/installation_support/verifier-v1.js")
-  # On CI, the file might not be present for static checks so we create an empty one
-  File.touch!(path)
+  @verifier_code_path "priv/tracker/installation_support/verifier-v1.js"
+  @external_resource @verifier_code_path
 
-  @verifier_code File.read!(path)
-  @external_resource "priv/tracker/installation_support/verifier-v1.js"
+  # On CI, the file might not be present for static checks so we default to empty string
+  @verifier_code (case File.read(Application.app_dir(:plausible, @verifier_code_path)) do
+                    {:ok, content} -> content
+                    {:error, _} -> ""
+                  end)
 
-  # Puppeteer wrapper function that executes the vanilla JS verifier code
+  # Puppeteer wrapper function that executes the vanilla JS verifier code.
+
+  # ### NO AUTOMATIC TEST COVERAGE
+
+  # Unfortunately, as things stand today, this Puppeteer wrapper logic
+  # cannot be tested without spinning up a real Browserless instance or
+  # bringing in a bunch of test deps for Puppeteer. Therefore, take extra
+  # care when changing this and make sure to run manual tests on local
+  # browserless (`make browserless`) before releasing an update.
+
+  # ### TRICKY: Handling client side JS navigation.
+
+  # We've seen numerous cases where client JS navigates or refreshes the
+  # page after load. Any such JS behaviour destroys the Puppeteer page
+  # context, meaning that our verifier execution gets interrupted and we
+  # end up in the `catch` clause.
+
+  # To make our best effort verifying these sites, we retry (up to twice)
+  # running the verifier again if we encounter this specific error.
+
+  # Important: On retries, we work with the client-modified page context
+  # instead of calling `page.goto(context.url)` again (which would most
+  # likely result in another interruptive navigation).
   @puppeteer_wrapper_code """
   export default async function({ page, context }) {
-    try {
-      await page.setUserAgent(context.userAgent);
-      await page.goto(context.url);
+    const MAX_RETRIES = 2
 
+    async function attemptVerification() {
       await page.evaluate(() => {
         #{@verifier_code}
       });
@@ -22,6 +45,27 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
       return await page.evaluate(async (expectedDataDomain, debug) => {
         return await window.verifyPlausibleInstallation(expectedDataDomain, debug);
       }, context.expectedDataDomain, context.debug);
+    }
+
+    try {
+      await page.setUserAgent(context.userAgent);
+      await page.goto(context.url);
+
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          return await attemptVerification()
+        } catch (error) {
+          const shouldRetry = typeof error?.message === 'string' && error.message.toLowerCase().includes('execution context')
+
+          if (shouldRetry && attempt <= MAX_RETRIES) {
+            // Brief delay before retry
+            await new Promise(resolve => setTimeout(resolve, 500))
+            continue
+          }
+
+          throw error
+        }
+      }
     } catch (error) {
       const msg = error.message ? error.message : JSON.stringify(error)
       return {data: {completed: false, error: msg}}
