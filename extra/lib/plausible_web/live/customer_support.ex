@@ -132,9 +132,12 @@ defmodule PlausibleWeb.Live.CustomerSupport do
 
     id = String.to_integer(id)
 
+    tab_params = Map.drop(p, ["id", "resource", "tab"])
+
     send_update(self(), mod.component(),
       id: "#{mod.type()}-#{id}",
-      tab: p["tab"]
+      tab: p["tab"],
+      tab_params: tab_params
     )
 
     {:noreply, assign(socket, type: type, current: mod, id: id)}
