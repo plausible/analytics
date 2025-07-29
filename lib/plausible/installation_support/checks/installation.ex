@@ -10,7 +10,15 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
 
   # Puppeteer wrapper function that executes the vanilla JS verifier code.
 
-  # ### TRICKY (NOT TESTED): Handling client side JS navigation.
+  # ### NO AUTOMATIC TEST COVERAGE
+
+  # Unfortunately, as things stand today, this Puppeteer wrapper logic
+  # cannot be tested without spinning up a real Browserless instance or
+  # bringing in a bunch of test deps for Puppeteer. Therefore, take extra
+  # care when changing this and make sure to run manual tests on local
+  # browserless (`make browserless`) before releasing an update.
+
+  # ### TRICKY: Handling client side JS navigation.
 
   # We've seen numerous cases where client JS navigates or refreshes the
   # page after load. Any such JS behaviour destroys the Puppeteer page
@@ -23,10 +31,6 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
   # Important: On retries, we work with the client-modified page context
   # instead of calling `page.goto(context.url)` again (which would most
   # likely result in another interruptive navigation).
-
-  # Unfortunately, as things stand today, we cannot test this without
-  # spinning up a real Browserless instance or bringing in a bunch of
-  # test deps for Puppeteer.
   @puppeteer_wrapper_code """
   export default async function({ page, context }) {
     const MAX_RETRIES = 2
