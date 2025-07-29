@@ -73,11 +73,11 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
           },
           service_error: nil
         } = diagnostics,
-        data_domain,
+        expected_domain,
         url
       )
       when response_status in [200, 202] do
-    domain_is_expected? = domain == data_domain
+    domain_is_expected? = domain == expected_domain
 
     tracker_is_version_2? = plausible_variant in @supported_variants
     tracker_is_maybe_legacy? = is_nil(plausible_variant)
@@ -101,7 +101,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         error(@error_unexpected_domain)
 
       true ->
-        interpret(diagnostics, data_domain, url)
+        interpret(diagnostics, expected_domain, url)
     end
   end
 
@@ -123,7 +123,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
           disallowed_by_csp: true,
           service_error: nil
         },
-        _data_domain,
+        _expected_domain,
         _url
       ) do
     error(@error_csp_disallowed)
@@ -136,7 +136,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                    url:
                      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                  })
-  def interpret(%__MODULE__{} = diagnostics, _data_domain, url) do
+  def interpret(%__MODULE__{} = diagnostics, _expected_domain, url) do
     Sentry.capture_message("Unhandled case for site verification",
       extra: %{
         message: inspect(diagnostics),
