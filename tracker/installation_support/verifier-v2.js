@@ -13,13 +13,13 @@ async function verifyPlausibleInstallation({
   timeoutMs,
   responseHeaders,
   debug,
-  cspHostsToCheck
+  cspHostToCheck
 }) {
   function log(message) {
     if (debug) console.log('[VERIFICATION v2]', message)
   }
 
-  const disallowedByCsp = checkDisallowedByCSP(responseHeaders, cspHostsToCheck)
+  const disallowedByCsp = checkDisallowedByCSP(responseHeaders, cspHostToCheck)
 
   const { stopRecording, getInterceptedFetch } = startRecordingEventFetchCalls()
 
@@ -189,6 +189,7 @@ async function testPlausibleFunction({ timeoutMs }) {
       if (isPlausibleOnWindow()) {
         plausibleIsOnWindow = true
       }
+      await delay(10)
     }
 
     while (!plausibleIsInitialized) {
@@ -197,6 +198,7 @@ async function testPlausibleFunction({ timeoutMs }) {
         plausibleVersion = getPlausibleVersion()
         plausibleVariant = getPlausibleVariant()
       }
+      await delay(10)
     }
 
     window.plausible('verification-agent-test', {
@@ -209,6 +211,10 @@ async function testPlausibleFunction({ timeoutMs }) {
       }
     })
   })
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 window.verifyPlausibleInstallation = verifyPlausibleInstallation
