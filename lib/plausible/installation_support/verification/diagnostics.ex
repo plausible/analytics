@@ -136,7 +136,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                    url:
                      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                  })
-  def interpret(%__MODULE__{service_error: _service_error} = diagnostics, _data_domain, url) do
+  def interpret(%__MODULE__{} = diagnostics, _data_domain, url) do
     Sentry.capture_message("Unhandled case for site verification",
       extra: %{
         message: inspect(diagnostics),
