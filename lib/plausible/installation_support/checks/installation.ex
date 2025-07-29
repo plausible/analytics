@@ -31,13 +31,7 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
   export default async function({ page, context }) {
     const MAX_RETRIES = 2
 
-    async function attemptVerification(isFirstAttempt) {
-      await page.setUserAgent(context.userAgent);
-
-      if (isFirstAttempt) {
-        await page.goto(context.url);
-      }
-
+    async function attemptVerification() {
       await page.evaluate(() => {
         #{@verifier_code}
       });
@@ -47,22 +41,28 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
       }, context.expectedDataDomain, context.debug);
     }
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const isFirstAttempt = attempt === 0
-        return await attemptVerification(isFirstAttempt)
-      } catch (error) {
-        const shouldRetry = typeof error.message === 'string' && error.message.toLowerCase().includes('execution context')
+    try {
+      await page.setUserAgent(context.userAgent);
+      await page.goto(context.url);
 
-        if (shouldRetry && attempt <= MAX_RETRIES) {
-          // Brief delay before retry
-          await new Promise(resolve => setTimeout(resolve, 500))
-          continue
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          return await attemptVerification()
+        } catch (error) {
+          const shouldRetry = typeof error?.message === 'string' && error.message.toLowerCase().includes('execution context')
+
+          if (shouldRetry && attempt <= MAX_RETRIES) {
+            // Brief delay before retry
+            await new Promise(resolve => setTimeout(resolve, 500))
+            continue
+          }
+
+          throw error
         }
-
-        const msg = error.message ? error.message : JSON.stringify(error)
-        return {data: {completed: false, error: msg}}
       }
+    } catch (error) {
+      const msg = error.message ? error.message : JSON.stringify(error)
+      return {data: {completed: false, error: msg}}
     }
   }
   """
