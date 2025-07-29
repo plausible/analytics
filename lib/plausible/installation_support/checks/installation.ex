@@ -150,6 +150,13 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
 
         put_diagnostics(state, plausible_installed?: false, service_error: status)
 
+      {:ok, %{status: status, body: body}} ->
+        Logger.warning(
+          "[VERIFICATION] Unexpected Browserless response (data_domain='#{data_domain}'): status=#{status}, body=#{inspect(body)}"
+        )
+
+        put_diagnostics(state, plausible_installed?: false, service_error: status)
+
       {:error, %{reason: reason}} ->
         Logger.warning(
           "[VERIFICATION] Browserless request error (data_domain='#{data_domain}'): #{inspect(reason)}"
