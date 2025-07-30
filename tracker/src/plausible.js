@@ -1,18 +1,20 @@
 import { init as initEngagementTracking } from './engagement'
-import { init as initConfig, config } from './config'
+import { init as initConfig, getOptionsWithDefaults, config } from './config'
 import { init as initCustomEvents, DEFAULT_FILE_TYPES } from './custom-events'
 import { init as initAutocapture } from './autocapture'
 import { track } from './track'
 
 function init(overrides) {
-  initConfig(overrides || {})
+  const options = getOptionsWithDefaults(overrides || {})
 
   if (COMPILE_PLAUSIBLE_WEB && window.plausible && window.plausible.l) {
-    if (config.logging) {
+    if (options.logging) {
       console.warn('Plausible analytics script was already initialized, skipping init')
     }
     return
   }
+
+  initConfig(options)
 
   initEngagementTracking()
 
