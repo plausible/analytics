@@ -31,6 +31,42 @@ test.beforeEach(async ({ page }) => {
     })
 })
 
+for (const mode of ['web', 'esm']) {
+  test(`tagged events tracking is always on (${mode})`, async ({ page }, {
+    testId
+  }) => {
+    const config = { ...DEFAULT_CONFIG }
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: switchByMode(
+        {
+          web: { ...DEFAULT_CONFIG },
+          esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
+            config
+          )})</script>`
+        },
+        mode
+      ),
+      bodyContent: `<a class="plausible-event-name=Purchase plausible-event-discounted=true plausible-revenue-currency=EUR plausible-revenue-amount=13.32" href="https://example.com/target">Purchase</a>`
+    })
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await page.goto(url)
+        await page.click('a')
+      },
+      expectedRequests: [
+        {
+          n: 'Purchase',
+          p: { discounted: 'true', url: 'https://example.com/target' },
+          $: { currency: 'EUR', amount: '13.32' }
+        }
+      ],
+      shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+    })
+    await expect(page.getByText('mocked page')).toBeVisible()
+  })
+}
+
 for (const mode of ['legacy', 'web']) {
   test.describe(`tagged events feature legacy/v2 parity (${mode})`, () => {
     test('tracks link click and child of link click when link is tagged (using plausible-event-... double dash syntax)', async ({

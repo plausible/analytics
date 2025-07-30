@@ -42,21 +42,62 @@ const RESPONSE_BODY_TEMPLATE = `
 
 const PLAUSIBLE_WEB_SNIPPET = compileWebSnippet()
 
-function getConfiguredPlausibleWebSnippet({
-  autoCapturePageviews,
-  ...injectedScriptConfig
+export function serializeWithFunctions(obj: Record<string, any>): string {
+  const functions: Record<string, string> = {}
+  let counter = 0
+
+  const jsonString = JSON.stringify(obj, (_key, value) => {
+    if (typeof value === 'function') {
+      const placeholder = `__FUNCTION_${counter++}__`
+      functions[placeholder] = value.toString()
+      return placeholder
+    }
+    return value
+  })
+
+  // Replace placeholders with actual function strings
+  let result = jsonString
+  for (const [placeholder, funcString] of Object.entries(functions)) {
+    result = result.replace(`"${placeholder}"`, funcString)
+  }
+
+  return result
+}
+
+export function getConfiguredPlausibleWebSnippet({
+  hashBasedRouting,
+  outboundLinks,
+  fileDownloads,
+  formSubmissions,
+  domain,
+  endpoint,
+  ...initOverrideOptions
 }: ScriptConfig): string {
+  const injectedScriptConfig = {
+    domain,
+    endpoint,
+    hashBasedRouting,
+    outboundLinks,
+    fileDownloads,
+    formSubmissions
+  }
   const snippet = PLAUSIBLE_WEB_SNIPPET.replace(
     '<%= plausible_script_url %>',
     `/tracker/js/plausible-web.js?script_config=${encodeURIComponent(
       JSON.stringify(injectedScriptConfig)
     )}`
   )
-  // This option, if provided, must be lifted to script init(overrides) overrides, otherwise it is ignored. It was not meant to be injected.
-  if (autoCapturePageviews !== undefined) {
+
+  if (
+    Object.entries(initOverrideOptions).some(
+      ([_key, value]) => value !== undefined
+    )
+  ) {
+    const serializedOptions = serializeWithFunctions(initOverrideOptions)
+
     return snippet.replace(
       'plausible.init()',
-      `plausible.init({"autoCapturePageviews":${JSON.stringify(autoCapturePageviews)}})`
+      `plausible.init(${serializedOptions})`
     )
   }
   return snippet

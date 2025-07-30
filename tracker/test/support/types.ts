@@ -5,6 +5,9 @@ export type Options = {
   formSubmissions: boolean
   captureOnLocalhost: boolean
   autoCapturePageviews: boolean
+  customProperties: Record<string, any> | ((eventName: string) => Record<string, any>)
+  transformRequest: (payload: unknown) => unknown,
+  logging: boolean
 }
 
 export type ScriptConfig = {

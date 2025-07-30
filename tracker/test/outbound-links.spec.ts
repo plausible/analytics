@@ -19,6 +19,104 @@ const DEFAULT_CONFIG: ScriptConfig = {
   captureOnLocalhost: true
 }
 
+for (const mode of ['web', 'esm']) {
+  test.describe(`respects "outboundLinks" v2 config option (${mode})`, () => {
+    test('does not track outbound links when "outboundLinks: false"', async ({
+      page
+    }, { testId }) => {
+      const outboundUrl = 'https://other.example.com/target'
+      const outboundMock = await mockManyRequests({
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        },
+        awaitedRequestCount: 1
+      })
+      const config = { ...DEFAULT_CONFIG, outboundLinks: false }
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: config,
+            esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
+              config
+            )})</script>`
+          },
+          mode
+        ),
+        bodyContent: `<a href="${outboundUrl}">➡️</a>`
+      })
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await page.goto(url)
+          await page.click('a')
+        },
+        expectedRequests: [
+          {
+            n: 'pageview',
+            d: DEFAULT_CONFIG.domain,
+            u: `${LOCAL_SERVER_ADDR}${url}`
+          }
+        ],
+        refutedRequests: [{ n: 'Outbound Link: Click' }],
+        shouldIgnoreRequest: isEngagementEvent
+      })
+      await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
+    })
+
+    test('tracks outbound links when "outboundLinks: true"', async ({ page }, {
+      testId
+    }) => {
+      const outboundUrl = 'https://other.example.com/target'
+      const outboundMock = await mockManyRequests({
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        },
+        awaitedRequestCount: 1
+      })
+      const config = { ...DEFAULT_CONFIG, outboundLinks: true }
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: config,
+            esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
+              config
+            )})</script>`
+          },
+          mode
+        ),
+        bodyContent: `<a href="${outboundUrl}">➡️</a>`
+      })
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await page.goto(url)
+          await page.click('a')
+        },
+        expectedRequests: [
+          {
+            n: 'pageview',
+            d: DEFAULT_CONFIG.domain,
+            u: `${LOCAL_SERVER_ADDR}${url}`
+          },
+          { n: 'Outbound Link: Click', p: { url: outboundUrl } }
+        ],
+        shouldIgnoreRequest: isEngagementEvent
+      })
+      await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
+    })
+  })
+}
+
 for (const mode of ['legacy', 'web'])
   test.describe(`outbound links feature legacy/v2 parity (${mode})`, () => {
     for (const { clickName, click, skip } of [
