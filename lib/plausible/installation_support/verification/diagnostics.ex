@@ -49,8 +49,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     end
   end
 
-  @supported_variants ["web", "npm"]
-
   @error_unexpected_domain Error.new!(%{
                              message: "Plausible test event is not for this site",
                              recommendation:
@@ -70,7 +68,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         %__MODULE__{
           plausible_is_on_window: true,
           plausible_is_initialized: true,
-          plausible_variant: plausible_variant,
           test_event: %{
             "normalizedBody" => %{
               "domain" => domain
@@ -86,20 +83,14 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       when response_status in [200, 202] do
     domain_is_expected? = domain == expected_domain
 
-    tracker_is_version_2? = plausible_variant in @supported_variants
-    tracker_is_maybe_legacy? = is_nil(plausible_variant)
-
     cond do
-      (tracker_is_version_2? or tracker_is_maybe_legacy?) and
-        domain_is_expected? and diagnostics_are_from_cache_bust ->
+      domain_is_expected? and diagnostics_are_from_cache_bust ->
         error(@error_succeeds_only_after_cache_bust)
 
-      (tracker_is_version_2? or tracker_is_maybe_legacy?) and
-          domain_is_expected? ->
+      domain_is_expected? ->
         success()
 
-      (tracker_is_version_2? or tracker_is_maybe_legacy?) and
-          not domain_is_expected? ->
+      not domain_is_expected? ->
         error(@error_unexpected_domain)
 
       true ->
@@ -149,7 +140,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                  })
   defp unknown_error(diagnostics, url) do
-    Sentry.capture_message("Unhandled case for site verification",
+    Sentry.capture_message("Unhandled case for site verification (v2)",
       extra: %{
         message: inspect(diagnostics),
         url: url,
