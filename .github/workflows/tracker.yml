@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'tracker/**'
+      - "tracker/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,15 +14,68 @@ jobs:
   test:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 23.2.0
-    - name: Install dependencies
-      run: npm --prefix ./tracker ci
-    - name: Install Playwright Browsers
-      working-directory: ./tracker
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npm --prefix ./tracker test
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 23.2.0
+          cache: 'npm'
+          cache-dependency-path: tracker/package-lock.json
+      - name: Install dependencies
+        run: npm --prefix ./tracker ci
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/ms-playwright-github
+          key: playwright-${{ runner.os }}-${{ hashFiles('tracker/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - name: Install Playwright system dependencies
+        working-directory: ./tracker
+        run: npx playwright install-deps
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ./tracker
+        run: npx playwright install
+      - name: Run Playwright tests
+        run: npm --prefix ./tracker test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
+      - name: Upload blob report to GitHub Actions Artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: tracker/blob-report
+          retention-days: 1
+  merge-sharded-test-report:
+    if: ${{ !cancelled() }}
+    needs: [test]
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 23.2.0
+          cache: 'npm'
+          cache-dependency-path: tracker/package-lock.json
+      - name: Install dependencies
+        run: npm --prefix ./tracker ci
+
+      - name: Download blob reports from GitHub Actions Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge into list report
+        working-directory: ./tracker
+        run: npx playwright merge-reports --reporter list ../all-blob-reports
