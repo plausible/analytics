@@ -26,61 +26,18 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
     socket =
       if connected?(socket) do
-        socket
-        |> assign_async(
+        assign_async(
+          socket,
           [
             :recommended_installation_type,
             :installation_type,
             :tracker_script_configuration_form,
             :v1_detected
           ],
-          fn ->
-            {recommended_installation_type, v1_detected} =
-              get_recommended_installation_type(flow, "https://#{site.domain}")
-
-            tracker_script_configuration =
-              PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
-                outbound_links: true,
-                form_submissions: true,
-                file_downloads: true,
-                installation_type: recommended_installation_type
-              })
-
-            selected_installation_type =
-              cond do
-                params["type"] in ["manual", "wordpress", "gtm", "npm"] ->
-                  params["type"]
-
-                flow == Flows.review() and
-                    not is_nil(tracker_script_configuration.installation_type) ->
-                  Atom.to_string(tracker_script_configuration.installation_type)
-
-                true ->
-                  recommended_installation_type
-              end
-
-            {:ok,
-             %{
-               recommended_installation_type: recommended_installation_type,
-               v1_detected: v1_detected,
-               installation_type: selected_installation_type,
-               tracker_script_configuration_form:
-                 to_form(
-                   Plausible.Site.TrackerScriptConfiguration.installation_changeset(
-                     tracker_script_configuration,
-                     %{}
-                   )
-                 )
-             }}
-          end
+          fn -> initialize_installation_data(flow, site, params) end
         )
       else
-        assign(socket,
-          recommended_installation_type: AsyncResult.loading(),
-          v1_detected: AsyncResult.loading(),
-          installation_type: AsyncResult.loading(),
-          tracker_script_configuration_form: AsyncResult.loading()
-        )
+        assign_loading_states(socket)
       end
 
     {:ok,
@@ -548,6 +505,55 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       />
     </svg>
     """
+  end
+
+  defp initialize_installation_data(flow, site, params) do
+    {recommended_installation_type, v1_detected} =
+      get_recommended_installation_type(flow, "https://#{site.domain}")
+
+    tracker_script_configuration =
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+        outbound_links: true,
+        form_submissions: true,
+        file_downloads: true,
+        installation_type: recommended_installation_type
+      })
+
+    selected_installation_type =
+      cond do
+        params["type"] in ["manual", "wordpress", "gtm", "npm"] ->
+          params["type"]
+
+        flow == Flows.review() and
+            not is_nil(tracker_script_configuration.installation_type) ->
+          Atom.to_string(tracker_script_configuration.installation_type)
+
+        true ->
+          recommended_installation_type
+      end
+
+    {:ok,
+     %{
+       recommended_installation_type: recommended_installation_type,
+       v1_detected: v1_detected,
+       installation_type: selected_installation_type,
+       tracker_script_configuration_form:
+         to_form(
+           Plausible.Site.TrackerScriptConfiguration.installation_changeset(
+             tracker_script_configuration,
+             %{}
+           )
+         )
+     }}
+  end
+
+  defp assign_loading_states(socket) do
+    assign(socket,
+      recommended_installation_type: AsyncResult.loading(),
+      v1_detected: AsyncResult.loading(),
+      installation_type: AsyncResult.loading(),
+      tracker_script_configuration_form: AsyncResult.loading()
+    )
   end
 
   defp get_installation_type(params, tracker_script_configuration) do
