@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-A815E4E3.js"></script>
+    <script src="dist/sidebar_items-9BEC5998.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -1451,6 +1451,27 @@ and runs verifier script via the <a href="https://docs.browserless.io/HTTP-APIs/
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.InstallationV2.html" translate="no">Plausible.InstallationSupport.Checks.InstallationV2</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
+and runs verifier script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.InstallationV2CacheBust.html" translate="no">Plausible.InstallationSupport.Checks.InstallationV2CacheBust</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>If the output of previous checks can not be interpreted as successful,
+as a last resort, we try to bust the cache of the site under test by adding a query parameter to the URL,
+and running InstallationV2 again.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.InstallationSupport.Checks.ScanBody.html" translate="no">Plausible.InstallationSupport.Checks.ScanBody</a>
 
   </div>
@@ -1509,20 +1530,20 @@ is wrapped with some CDN/caching layer.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.LegacyVerification.Diagnostics.Result.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Diagnostics.Result</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Diagnostics interpretation result.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Plausible.InstallationSupport.LegacyVerification.Errors.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Errors</a>
 
   </div>
 
     <div class="summary-synopsis"><p>A go-to definition of all legacy verification errors</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Result.html" translate="no">Plausible.InstallationSupport.Result</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Diagnostics interpretation result.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1541,6 +1562,33 @@ is wrapped with some CDN/caching layer.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>URL utilities for installation support, including cache busting functionality.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Verification.Checks.html" translate="no">Plausible.InstallationSupport.Verification.Checks</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Checks that are performed during tracker script installation verification.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Verification.Diagnostics.html" translate="no">Plausible.InstallationSupport.Verification.Diagnostics</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Module responsible for translating diagnostics to user-friendly errors and recommendations.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Verification.Diagnostics.Error.html" translate="no">Plausible.InstallationSupport.Verification.Diagnostics.Error</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Error that has compile-time enforced checks for the attributes.</p></div>
 
 </div>
 <div class="summary-row">
