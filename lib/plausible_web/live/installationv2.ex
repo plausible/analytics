@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           ],
           fn ->
             {recommended_installation_type, v1_detected} =
-              get_recommended_installation_type(flow, "http://localhost:6123")
+              get_recommended_installation_type(flow, "https://#{site.domain}")
 
             tracker_script_configuration =
               PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           </div>
 
           <div :if={
-            @v1_detected.result and @recommended_installation_type.result == "manual" and
+            @v1_detected.result == true and @recommended_installation_type.result == "manual" and
               @installation_type.result == "manual"
           }>
             <.notice class="mt-4" theme={:yellow}>

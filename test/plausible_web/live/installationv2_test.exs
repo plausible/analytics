@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
+  import Plausible.Teams.Test
 
   alias Plausible.Site.TrackerScriptConfiguration
 
@@ -14,58 +15,16 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
   end
 
   describe "GET /:domain/installationv2" do
-    test "static installation screen renders", %{conn: conn, site: site} do
+    test "static installation screen renders with spinner", %{conn: conn, site: site} do
       resp = get(conn, "/#{site.domain}/installationv2") |> html_response(200)
 
-      assert resp =~ "Script"
-      assert resp =~ "WordPress"
-      assert resp =~ "Tag Manager"
-      assert resp =~ "NPM"
-    end
-
-    test "static installation screen renders for flow=review", %{conn: conn, site: site} do
-      resp =
-        conn
-        |> get("/#{site.domain}/installationv2?flow=review")
-        |> html_response(200)
-
-      assert resp =~ "Verify your installation"
-    end
-
-    test "renders pre-determined installation type: manual", %{conn: conn, site: site} do
-      resp =
-        conn |> get("/#{site.domain}/installationv2?type=manual") |> html_response(200)
-
-      assert resp =~ "Script installation"
-    end
-
-    test "renders pre-determined installation type: WordPress", %{conn: conn, site: site} do
-      resp =
-        conn
-        |> get("/#{site.domain}/installationv2?type=wordpress")
-        |> html_response(200)
-
-      assert resp =~ "WordPress installation"
-    end
-
-    test "renders pre-determined installation type: GTM", %{conn: conn, site: site} do
-      resp =
-        conn |> get("/#{site.domain}/installationv2?type=gtm") |> html_response(200)
-
-      assert resp =~ "Tag Manager installation"
-    end
-
-    test "renders pre-determined installation type: NPM", %{conn: conn, site: site} do
-      resp =
-        conn |> get("/#{site.domain}/installationv2?type=npm") |> html_response(200)
-
-      assert resp =~ "NPM installation"
+      assert resp =~ "animate-spin"
     end
   end
 
   describe "LiveView" do
     test "detects installation type when mounted", %{conn: conn, site: site} do
-      stub_fetch_body(200, "wp-content")
+      stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site)
 
@@ -73,7 +32,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
                html = render(lv)
 
                {
-                 text(html) =~ "WordPress installation",
+                 text(html) =~ "Verify WordPress installation",
                  html
                }
              end)
@@ -85,7 +44,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
-      stub_fetch_body(200, "wp-content")
+      stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site, "?type=gtm")
 
@@ -93,7 +52,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
                html = render(lv)
 
                {
-                 text(html) =~ "Tag Manager installation",
+                 text(html) =~ "Verify Tag Manager installation",
                  html
                }
              end)
@@ -102,11 +61,12 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "allows switching between installation tabs", %{conn: conn, site: site} do
+      stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
       assert eventually(fn ->
                html = render(lv)
-               {html =~ "Script installation", html}
+               {html =~ "Verify Script installation", html}
              end)
 
       lv
@@ -114,29 +74,30 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       |> render_click()
 
       html = render(lv)
-      assert html =~ "WordPress installation"
+      assert html =~ "Verify WordPress installation"
 
       lv
       |> element("a[href*=\"type=gtm\"]")
       |> render_click()
 
       html = render(lv)
-      assert html =~ "Tag Manager installation"
+      assert html =~ "Verify Tag Manager installation"
 
       lv
       |> element("a[href*=\"type=npm\"]")
       |> render_click()
 
       html = render(lv)
-      assert html =~ "NPM installation"
+      assert html =~ "Verify NPM installation"
     end
 
     test "manual installation shows optional measurements", %{conn: conn, site: site} do
+      stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
       assert eventually(fn ->
                html = render(lv)
-               {html =~ "Script installation", html}
+               {html =~ "Verify Script installation", html}
              end)
 
       html = render(lv)
@@ -147,11 +108,12 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "manual installation shows advanced options in disclosure", %{conn: conn, site: site} do
+      stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
       assert eventually(fn ->
                html = render(lv)
-               {html =~ "Script installation", html}
+               {html =~ "Verify Script installation", html}
              end)
 
       html = render(lv)
@@ -168,11 +130,12 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
+      stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
       assert eventually(fn ->
                html = render(lv)
-               {html =~ "Script installation", html}
+               {html =~ "Verify Script installation", html}
              end)
 
       config = TrackerScriptConfiguration |> Plausible.Repo.get_by!(site_id: site.id)
@@ -198,11 +161,12 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "submitting form redirects to verification", %{conn: conn, site: site} do
+      stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
       assert eventually(fn ->
                html = render(lv)
-               {html =~ "Start collecting data", html}
+               {html =~ "Verify Script installation", html}
              end)
 
       lv
@@ -226,7 +190,13 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
+      stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify Script installation", html}
+             end)
 
       lv
       |> element("form[phx-submit='submit']")
@@ -243,7 +213,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "detected WordPress installation shows special message", %{conn: conn, site: site} do
-      stub_fetch_body(200, "wp-content")
+      stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site)
 
@@ -258,13 +228,13 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "detected GTM installation shows special message", %{conn: conn, site: site} do
-      stub_fetch_body(200, "googletagmanager.com/gtm.js")
+      stub_detection_gtm()
 
       {lv, _} = get_lv(conn, site)
 
       assert eventually(fn ->
                html = render(lv)
-               {html =~ "Tag Manager installation", html}
+               {html =~ "Verify Tag Manager installation", html}
              end)
 
       assert eventually(fn ->
@@ -276,17 +246,222 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
                }
              end)
     end
+
+    test "shows v1 detection warning for manual installation", %{conn: conn, site: site} do
+      stub_detection_manual_with_v1()
+
+      {lv, _} = get_lv(conn, site, "?type=manual")
+
+      assert eventually(fn ->
+               html = render(lv)
+
+               {
+                 text(html) =~
+                   "Your website is running an outdated version of the tracking script",
+                 html
+               }
+             end)
+    end
+
+    test "does not show v1 detection warning for non-manual installation", %{
+      conn: conn,
+      site: site
+    } do
+      stub_detection_wordpress_with_v1()
+
+      {lv, _} = get_lv(conn, site, "?type=wordpress")
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify WordPress installation", html}
+             end)
+
+      html = render(lv)
+      refute text(html) =~ "Your website is running an outdated version of the tracking script"
+    end
+
+    test "falls back to manual installation when detection fails", %{conn: conn, site: site} do
+      stub_detection_error()
+
+      ExUnit.CaptureLog.capture_log(fn ->
+        {lv, _} = get_lv(conn, site)
+
+        assert eventually(fn ->
+                 html = render(lv)
+                 # Should default to manual installation when detection returns {:error, _}
+                 {html =~ "Verify Script installation", html}
+               end)
+      end)
+    end
   end
 
-  defp stub_fetch_body(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.InstallationSupport.Checks.FetchBody, f)
+  describe "Authorization" do
+    test "requires site access permissions", %{conn: conn} do
+      other_user = insert(:user)
+      other_site = new_site(owner: other_user)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        get_lv(conn, other_site)
+      end
+    end
+
+    test "allows viewer access to installation page", %{conn: conn, user: user} do
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site)
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify Script installation", html}
+             end)
+    end
+
+    test "allows editor access to installation page", %{conn: conn, user: user} do
+      site = new_site()
+      add_guest(site, user: user, role: :editor)
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site)
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify Script installation", html}
+             end)
+    end
   end
 
-  defp stub_fetch_body(status, body) do
-    stub_fetch_body(fn conn ->
+  describe "URL Parameter Handling" do
+    test "falls back to manual installation when invalid installation type parameter supplied", %{
+      conn: conn,
+      site: site
+    } do
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?type=invalid")
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify Script installation", html}
+             end)
+    end
+
+    test "falls back to provisioning flow when invalid flow parameter supplied", %{
+      conn: conn,
+      site: site
+    } do
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?flow=invalid")
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify Script installation", html}
+             end)
+    end
+  end
+
+  describe "Detection Result Combinations" do
+    test "When GTM + Wordpress detected, GTM takes precedence", %{conn: conn, site: site} do
+      stub_detection_result(%{
+        "v1Detected" => false,
+        "gtmLikely" => true,
+        "wordpressLikely" => true,
+        "wordpressPlugin" => false
+      })
+
+      {lv, _} = get_lv(conn, site)
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify Tag Manager installation", html}
+             end)
+    end
+  end
+
+  describe "Legacy Installations" do
+    test "uses detected type in review flow when installation_type is nil", %{
+      conn: conn,
+      site: site
+    } do
+      _config =
+        PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+          installation_type: nil,
+          outbound_links: true,
+          file_downloads: false,
+          form_submissions: true
+        })
+
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site, "?flow=review")
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify WordPress installation", html}
+             end)
+    end
+  end
+
+  defp stub_detection_manual do
+    stub_detection_result(%{
+      "v1Detected" => false,
+      "gtmLikely" => false,
+      "wordpressLikely" => false,
+      "wordpressPlugin" => false
+    })
+  end
+
+  defp stub_detection_wordpress do
+    stub_detection_result(%{
+      "v1Detected" => false,
+      "gtmLikely" => false,
+      "wordpressLikely" => true,
+      "wordpressPlugin" => false
+    })
+  end
+
+  defp stub_detection_gtm do
+    stub_detection_result(%{
+      "v1Detected" => false,
+      "gtmLikely" => true,
+      "wordpressLikely" => false,
+      "wordpressPlugin" => false
+    })
+  end
+
+  defp stub_detection_manual_with_v1 do
+    stub_detection_result(%{
+      "v1Detected" => true,
+      "gtmLikely" => false,
+      "wordpressLikely" => false,
+      "wordpressPlugin" => false
+    })
+  end
+
+  defp stub_detection_wordpress_with_v1 do
+    stub_detection_result(%{
+      "v1Detected" => true,
+      "gtmLikely" => false,
+      "wordpressLikely" => true,
+      "wordpressPlugin" => false
+    })
+  end
+
+  defp stub_detection_result(js_data) do
+    Req.Test.stub(:global, fn conn ->
       conn
-      |> put_resp_content_type("text/html")
-      |> send_resp(status, body)
+      |> put_resp_content_type("application/json")
+      |> send_resp(200, Jason.encode!(%{"data" => Map.put(js_data, "completed", true)}))
+    end)
+  end
+
+  defp stub_detection_error do
+    Req.Test.stub(:global, fn conn ->
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(200, Jason.encode!(%{"data" => %{"error" => "Simulated browser error"}}))
     end)
   end
 
