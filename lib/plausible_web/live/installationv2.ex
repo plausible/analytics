@@ -3,8 +3,10 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   User assistance module around Plausible installation instructions/onboarding
   """
   alias PlausibleWeb.Flows
-  alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
+  alias Phoenix.LiveView.AsyncResult
+  alias Plausible.InstallationSupport.Detection
   use PlausibleWeb, :live_view
+  require Logger
 
   def mount(
         %{"domain" => domain} = params,
@@ -20,73 +22,48 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         :viewer
       ])
 
-    tracker_script_configuration =
-      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
-        outbound_links: true,
-        form_submissions: true,
-        file_downloads: true,
-        installation_type: :manual
-      })
-
     flow = params["flow"] || Flows.provisioning()
 
-    detect_installation_type? =
-      connected?(socket) and flow == Flows.provisioning() and !params["type"]
-
-    if detect_installation_type? do
-      LegacyVerification.Checks.run("https://#{site.domain}", site.domain,
-        checks: [
-          Checks.FetchBody,
-          Checks.ScanBody
-        ],
-        report_to: self(),
-        async?: true,
-        slowdown: 0
-      )
-    end
+    socket =
+      if connected?(socket) do
+        assign_async(
+          socket,
+          [
+            :recommended_installation_type,
+            :installation_type,
+            :tracker_script_configuration_form,
+            :v1_detected
+          ],
+          fn -> initialize_installation_data(flow, site, params) end
+        )
+      else
+        assign_loading_states(socket)
+      end
 
     {:ok,
      assign(socket,
        site: site,
-       tracker_script_configuration_form:
-         to_form(
-           Plausible.Site.TrackerScriptConfiguration.installation_changeset(
-             tracker_script_configuration,
-             %{}
-           )
-         ),
-       flow: params["flow"] || "provisioning",
-       detect_installation_type?: detect_installation_type?,
-       installation_type: get_installation_type(params, tracker_script_configuration),
-       recommended_installation_type: nil
+       flow: flow
      )}
-  end
-
-  def handle_info({:all_checks_done, %State{} = state}, socket) do
-    installation_type =
-      case state.diagnostics do
-        %{wordpress_likely?: true} -> "wordpress"
-        %{gtm_likely?: true} -> "gtm"
-        _ -> "manual"
-      end
-
-    {:noreply,
-     assign(socket,
-       installation_type: installation_type,
-       recommended_installation_type: installation_type
-     )}
-  end
-
-  def handle_info({:check_start, _}, socket) do
-    {:noreply, socket}
   end
 
   def handle_params(params, _url, socket) do
-    {:noreply,
-     assign(socket,
-       installation_type:
-         get_installation_type(params, socket.assigns.tracker_script_configuration_form.data)
-     )}
+    socket =
+      if socket.assigns.recommended_installation_type.result do
+        assign(socket,
+          installation_type: %AsyncResult{
+            result:
+              get_installation_type(
+                params,
+                socket.assigns.tracker_script_configuration_form.result.data
+              )
+          }
+        )
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   def render(assigns) do
@@ -95,69 +72,99 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Install Plausible" />
 
       <.focus_box>
-        <div class="flex flex-row gap-2 bg-gray-100 rounded-md p-1">
-          <.tab patch={"?type=manual&flow=#{@flow}"} selected={@installation_type == "manual"}>
-            <.script_icon /> Script
-          </.tab>
-          <.tab patch={"?type=wordpress&flow=#{@flow}"} selected={@installation_type == "wordpress"}>
-            <.wordpress_icon /> WordPress
-          </.tab>
-          <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type == "gtm"}>
-            <.tag_manager_icon /> Tag Manager
-          </.tab>
-          <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type == "npm"}>
-            <.npm_icon /> NPM
-          </.tab>
-        </div>
+        <.async_result :let={recommended_installation_type} assign={@recommended_installation_type}>
+          <:loading>
+            <div class="flex items-center justify-center py-8">
+              <.spinner class="w-6 h-6" />
+            </div>
+          </:loading>
 
-        <div
-          :if={@detect_installation_type? and is_nil(@recommended_installation_type)}
-          class="flex items-center justify-center py-8"
-        >
-          <.spinner class="w-6 h-6" />
-        </div>
+          <div class="flex flex-row gap-2 bg-gray-100 rounded-md p-1">
+            <.tab
+              patch={"?type=manual&flow=#{@flow}"}
+              selected={@installation_type.result == "manual"}
+            >
+              <.script_icon /> Script
+            </.tab>
+            <.tab
+              patch={"?type=wordpress&flow=#{@flow}"}
+              selected={@installation_type.result == "wordpress"}
+            >
+              <.wordpress_icon /> WordPress
+            </.tab>
+            <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type.result == "gtm"}>
+              <.tag_manager_icon /> Tag Manager
+            </.tab>
+            <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type.result == "npm"}>
+              <.npm_icon /> NPM
+            </.tab>
+          </div>
 
-        <.form
-          :if={
-            not @detect_installation_type? or
-              (@detect_installation_type? and not is_nil(@recommended_installation_type))
-          }
-          for={@tracker_script_configuration_form}
-          phx-submit="submit"
-          class="mt-4"
-        >
-          <.input
-            type="hidden"
-            field={@tracker_script_configuration_form[:installation_type]}
-            value={@installation_type}
-          />
-          <.manual_instructions
-            :if={@installation_type == "manual"}
-            tracker_script_configuration_form={@tracker_script_configuration_form}
-          />
+          <div :if={
+            @v1_detected.result == true and @recommended_installation_type.result == "manual" and
+              @installation_type.result == "manual"
+          }>
+            <.notice class="mt-4" theme={:yellow}>
+              Your website is running an outdated version of the tracking script. Please
+              <.styled_link new_tab href="https://plausible.io/docs">update</.styled_link>
+              your tracking script before continuing
+            </.notice>
+          </div>
 
-          <.wordpress_instructions
-            :if={@installation_type == "wordpress"}
-            flow={@flow}
-            recommended_installation_type={@recommended_installation_type}
-          />
-          <.gtm_instructions
-            :if={@installation_type == "gtm"}
-            recommended_installation_type={@recommended_installation_type}
-          />
-          <.npm_instructions :if={@installation_type == "npm"} />
+          <.form for={@tracker_script_configuration_form.result} phx-submit="submit" class="mt-4">
+            <.input
+              type="hidden"
+              field={@tracker_script_configuration_form.result[:installation_type]}
+              value={@installation_type.result}
+            />
+            <.manual_instructions
+              :if={@installation_type.result == "manual"}
+              tracker_script_configuration_form={@tracker_script_configuration_form.result}
+            />
 
-          <.button type="submit" class="w-full mt-8">
-            <%= if @flow == PlausibleWeb.Flows.review() do %>
-              Verify your installation
-            <% else %>
-              Start collecting data
-            <% end %>
-          </.button>
-        </.form>
+            <.wordpress_instructions
+              :if={@installation_type.result == "wordpress"}
+              flow={@flow}
+              recommended_installation_type={recommended_installation_type}
+            />
+            <.gtm_instructions
+              :if={@installation_type.result == "gtm"}
+              recommended_installation_type={recommended_installation_type}
+            />
+            <.npm_instructions :if={@installation_type.result == "npm"} />
+
+            <.button type="submit" class="w-full mt-8">
+              {verify_cta(@installation_type.result)}
+            </.button>
+          </.form>
+        </.async_result>
       </.focus_box>
     </div>
     """
+  end
+
+  defp verify_cta("manual"), do: "Verify Script installation"
+  defp verify_cta("wordpress"), do: "Verify WordPress installation"
+  defp verify_cta("gtm"), do: "Verify Tag Manager installation"
+  defp verify_cta("npm"), do: "Verify NPM installation"
+
+  defp get_recommended_installation_type(flow, url) do
+    case Detection.perform(url, detect_v1?: flow == Flows.review()) do
+      {:ok, result} ->
+        Logger.debug("Detection result: #{inspect(result)}")
+
+        type =
+          case result do
+            %{gtm_likely: true} -> "gtm"
+            %{wordpress_likely: true} -> "wordpress"
+            _ -> "manual"
+          end
+
+        {type, result.v1_detected}
+
+      _ ->
+        {"manual", false}
+    end
   end
 
   attr :tracker_script_configuration_form, :map, required: true
@@ -498,6 +505,55 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       />
     </svg>
     """
+  end
+
+  defp initialize_installation_data(flow, site, params) do
+    {recommended_installation_type, v1_detected} =
+      get_recommended_installation_type(flow, "https://#{site.domain}")
+
+    tracker_script_configuration =
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+        outbound_links: true,
+        form_submissions: true,
+        file_downloads: true,
+        installation_type: recommended_installation_type
+      })
+
+    selected_installation_type =
+      cond do
+        params["type"] in ["manual", "wordpress", "gtm", "npm"] ->
+          params["type"]
+
+        flow == Flows.review() and
+            not is_nil(tracker_script_configuration.installation_type) ->
+          Atom.to_string(tracker_script_configuration.installation_type)
+
+        true ->
+          recommended_installation_type
+      end
+
+    {:ok,
+     %{
+       recommended_installation_type: recommended_installation_type,
+       v1_detected: v1_detected,
+       installation_type: selected_installation_type,
+       tracker_script_configuration_form:
+         to_form(
+           Plausible.Site.TrackerScriptConfiguration.installation_changeset(
+             tracker_script_configuration,
+             %{}
+           )
+         )
+     }}
+  end
+
+  defp assign_loading_states(socket) do
+    assign(socket,
+      recommended_installation_type: AsyncResult.loading(),
+      v1_detected: AsyncResult.loading(),
+      installation_type: AsyncResult.loading(),
+      tracker_script_configuration_form: AsyncResult.loading()
+    )
   end
 
   defp get_installation_type(params, tracker_script_configuration) do
