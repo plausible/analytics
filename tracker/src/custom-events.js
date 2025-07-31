@@ -19,20 +19,23 @@ function isLink(element) {
   return element && element.tagName && element.tagName.toLowerCase() === 'a'
 }
 
-function shouldFollowLink(event, link) {
+function shouldInterceptNavigation(event, link) {
   // If default has been prevented by an external script, Plausible should not intercept navigation.
-  if (event.defaultPrevented) { return false }
+  if (event.defaultPrevented) return false;
+  var target = link.target;
+  // If the link directs to open the link in a different context, or we're not sure, do not intercept navigation
+  if (target && (typeof target !== 'string' || !target.match(/^_(self|parent|top)$/i))) return false;
+  // If the click is not a regular click (e.g. ctrl, meta, shift, or not a click event), do not intercept navigation
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.type !== 'click') return false;
 
-  var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
-  var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
-  return targetsCurrentWindow && isRegularClick
+  return true;
 }
 
 function handleLinkClickEvent(event) {
   if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
 
   var link = getLinkEl(event.target)
-  var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
+  var hrefWithoutQuery = link && typeof link.href === 'string' && link.href.split('?')[0]
 
   if (COMPILE_TAGGED_EVENTS) {
     if (isElementOrParentTagged(link, 0)) {
@@ -57,7 +60,7 @@ function handleLinkClickEvent(event) {
 
 function sendLinkClickEvent(event, link, eventAttrs) {
   // In some legacy variants, this block delays opening the link up to 5 seconds,
-  // or until analytics request finishes, otherwise navigation prevents the analytics event from being sent.
+  // or until analytics request finishes, otherwise navigation could prevent the analytics event from being sent.
   if (COMPILE_COMPAT) {
   var followedLink = false
 
@@ -68,7 +71,7 @@ function sendLinkClickEvent(event, link, eventAttrs) {
     }
   }
 
-  if (shouldFollowLink(event, link)) {
+  if (shouldInterceptNavigation(event, link)) {
     var attrs = { props: eventAttrs.props, callback: followLink }
     if (COMPILE_REVENUE) {
       attrs.revenue = eventAttrs.revenue
@@ -93,7 +96,7 @@ function sendLinkClickEvent(event, link, eventAttrs) {
 }
 
 function isOutboundLink(link) {
-  return link && link.href && link.host && link.host !== location.host
+  return link && typeof link.href === 'string' && link.host && link.host !== location.host
 }
 
 function isDownloadToTrack(url) {
@@ -205,7 +208,7 @@ export function init() {
       if (!eventAttrs.name) { return }
 
       // In some legacy variants, this block delays submitting the form for up to 5 seconds,
-      // or until analytics request finishes, otherwise form-related navigation can prevent the analytics event from being sent.
+      // or until analytics request finishes, otherwise form-related navigation could prevent the analytics event from being sent.
       if (COMPILE_COMPAT) {
       event.preventDefault()
       var formSubmitted = false

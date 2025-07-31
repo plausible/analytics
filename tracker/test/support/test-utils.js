@@ -14,6 +14,7 @@ export const tracker_script_version = packageJson.tracker_script_version
  * @param {Function} args.action - A function that returns a promise. The function is called
  *  without arguments, and is `await`ed. This is the action that should or should not trigger
  *  Plausible requests on the page.
+ * @param {string} [args.pathToMock] - The path to create the route at and mock the response for.
  * @param {Array} [args.expectedRequests] - A list of partial JSON payloads that get matched
  *  against the bodies of event requests made. An `expectedRequest` is considered as having
  *  occurred if all of its key-value pairs are found from the JSON body of an event request
