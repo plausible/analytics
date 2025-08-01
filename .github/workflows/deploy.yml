@@ -1,4 +1,3 @@
-
 name: Deploy Analytics Application
 
 on:
@@ -36,6 +35,7 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
         
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -46,16 +46,23 @@ jobs:
       run: |
         # Install Node.js dependencies if package.json exists
         if [ -f "package.json" ]; then
-          npm ci
+          echo "Installing Node.js dependencies..."
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
         fi
         
         # Install Python dependencies if requirements.txt exists
         if [ -f "requirements.txt" ]; then
+          echo "Installing Python dependencies..."
           pip install -r requirements.txt
         fi
         
         # Install PHP dependencies if composer.json exists
         if [ -f "composer.json" ]; then
+          echo "Installing PHP dependencies..."
           composer install --no-dev --optimize-autoloader
         fi
         
@@ -63,16 +70,19 @@ jobs:
       run: |
         # Run Node.js tests
         if [ -f "package.json" ] && npm run | grep -q "test"; then
+          echo "Running Node.js tests..."
           npm test
         fi
         
         # Run Python tests
         if [ -f "pytest.ini" ] || [ -f "setup.py" ]; then
+          echo "Running Python tests..."
           python -m pytest
         fi
         
         # Run PHP tests
         if [ -f "phpunit.xml" ]; then
+          echo "Running PHP tests..."
           vendor/bin/phpunit
         fi
         
@@ -80,11 +90,13 @@ jobs:
       run: |
         # Build Node.js application
         if [ -f "package.json" ] && npm run | grep -q "build"; then
+          echo "Building Node.js application..."
           npm run build
         fi
         
         # Build Python application
         if [ -f "setup.py" ]; then
+          echo "Building Python application..."
           python setup.py build
         fi
         
