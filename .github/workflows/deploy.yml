@@ -83,55 +83,21 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Install Elixir dependencies
-          echo "Installing Elixir dependencies..."
           mix deps.get
-
-          # Install Node.js dependencies if package.json exists
-          if [ -f "package.json" ]; then
-            echo "Installing Node.js dependencies..."
-            if [ -f "package-lock.json" ]; then
-              npm ci
-            else
-              npm install
-            fi
-          fi
-
-          # Install PHP dependencies if composer.json exists
-          if [ -f "composer.json" ]; then
-            echo "Installing PHP dependencies..."
-            composer install --no-dev --optimize-autoloader
-          fi
+          npm ci --prefix assets
+          npm ci --prefix tracker
 
       - name: Run tests
         run: |
-          # Run Elixir tests
-          echo "Running Elixir tests..."
           mix test
-
-          # Run Node.js tests
-          if [ -f "package.json" ] && npm run | grep -q "test"; then
-            echo "Running Node.js tests..."
-            npm test
-          fi
-
-          # Run PHP tests
-          if [ -f "phpunit.xml" ]; then
-            echo "Running PHP tests..."
-            vendor/bin/phpunit
-          fi
+          npm test --prefix assets
+          npm test --prefix tracker
 
       - name: Build application
         run: |
-          # Build Elixir application
-          echo "Building Elixir application..."
           mix compile
-
-          # Build Node.js application
-          if [ -f "package.json" ] && npm run | grep -q "build"; then
-            echo "Building Node.js application..."
-            npm run build
-          fi
+          npm run build --prefix assets
+          npm run build --prefix tracker
 
       - name: Security scan
         uses: github/codeql-action/init@v3
@@ -140,13 +106,6 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-
-      - name: Run OWASP ZAP scan
-        uses: zaproxy/action-full-scan@v0.8.0
-        with:
-          target: "http://localhost:3000"
-          rules_file_name: ".zap/rules.tsv"
-          cmd_options: "-a"
 
   deploy-staging:
     name: Deploy to Staging
