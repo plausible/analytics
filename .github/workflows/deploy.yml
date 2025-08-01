@@ -1,0 +1,210 @@
+
+name: Deploy Analytics Application
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  VPS_HOST: ${{ secrets.VPS_HOST }}
+  VPS_USER: ${{ secrets.VPS_USER }}
+  VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+
+jobs:
+  test:
+    name: Test Application
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        # Install Node.js dependencies if package.json exists
+        if [ -f "package.json" ]; then
+          npm ci
+        fi
+        
+        # Install Python dependencies if requirements.txt exists
+        if [ -f "requirements.txt" ]; then
+          pip install -r requirements.txt
+        fi
+        
+        # Install PHP dependencies if composer.json exists
+        if [ -f "composer.json" ]; then
+          composer install --no-dev --optimize-autoloader
+        fi
+        
+    - name: Run tests
+      run: |
+        # Run Node.js tests
+        if [ -f "package.json" ] && npm run | grep -q "test"; then
+          npm test
+        fi
+        
+        # Run Python tests
+        if [ -f "pytest.ini" ] || [ -f "setup.py" ]; then
+          python -m pytest
+        fi
+        
+        # Run PHP tests
+        if [ -f "phpunit.xml" ]; then
+          vendor/bin/phpunit
+        fi
+        
+    - name: Build application
+      run: |
+        # Build Node.js application
+        if [ -f "package.json" ] && npm run | grep -q "build"; then
+          npm run build
+        fi
+        
+        # Build Python application
+        if [ -f "setup.py" ]; then
+          python setup.py build
+        fi
+        
+    - name: Security scan
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript, python
+        
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      
+    - name: Run OWASP ZAP scan
+      uses: zaproxy/action-full-scan@v0.8.0
+      with:
+        target: 'http://localhost:3000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to staging server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ env.VPS_HOST }}
+        username: ${{ env.VPS_USER }}
+        key: ${{ env.VPS_SSH_KEY }}
+        script: |
+          cd /home/deploy
+          ./deploy.sh develop
+          
+    - name: Health check staging
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ env.VPS_HOST }}
+        username: ${{ env.VPS_USER }}
+        key: ${{ env.VPS_SSH_KEY }}
+        script: |
+          curl -f http://localhost/health || exit 1
+
+  deploy-production:
+    name: Deploy to Production
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to production server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ env.VPS_HOST }}
+        username: ${{ env.VPS_USER }}
+        key: ${{ env.VPS_SSH_KEY }}
+        script: |
+          cd /home/deploy
+          ./deploy.sh main
+          
+    - name: Health check production
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ env.VPS_HOST }}
+        username: ${{ env.VPS_USER }}
+        key: ${{ env.VPS_SSH_KEY }}
+        script: |
+          curl -f https://analytics.yourdomain.com/health || exit 1
+          
+    - name: Notify deployment success
+      if: success()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        channel: '#deployments'
+        text: 'Analytics application deployed successfully to production!'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        
+    - name: Notify deployment failure
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        channel: '#deployments'
+        text: 'Analytics application deployment failed!'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: failure() && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Rollback to previous version
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ env.VPS_HOST }}
+        username: ${{ env.VPS_USER }}
+        key: ${{ env.VPS_SSH_KEY }}
+        script: |
+          cd /var/www/analytics
+          if [ -L "current" ]; then
+            PREVIOUS=$(readlink -f current)
+            if [ -d "releases" ]; then
+              LATEST_RELEASE=$(ls -t releases | head -n 1)
+              if [ -n "$LATEST_RELEASE" ]; then
+                sudo rm -f current
+                sudo ln -sf "releases/$LATEST_RELEASE" current
+                sudo systemctl reload nginx
+                echo "Rolled back to: $LATEST_RELEASE"
+              fi
+            fi
+          fi 
