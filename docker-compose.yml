@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  plausible:
+    image: plausible/analytics:latest
+    container_name: plausible
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://plausible:plausible@postgres:5432/plausible
+      - CLICKHOUSE_DATABASE_URL=http://clickhouse:8123/plausible?user=default&password=
+    depends_on:
+      - postgres
+      - clickhouse
+    volumes:
+      - plausible-data:/var/lib/plausible
+    command: sh -c "/app/bin/plausible eval 'Plausible.Release.migrate' && /entrypoint.sh run"
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: plausible-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=plausible
+      - POSTGRES_USER=plausible
+      - POSTGRES_PASSWORD=plausible
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8-alpine
+    container_name: plausible-clickhouse
+    restart: unless-stopped
+    environment:
+      - CLICKHOUSE_DB=plausible
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+
+volumes:
+  plausible-data:
+  postgres-data:
+  clickhouse-data: 

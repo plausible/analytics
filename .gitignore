@@ -97,3 +97,13 @@ plausible-report.xml
 # Docker volumes
 .clickhouse_db_vol*
 plausible_db*
+
+# Deployment-specific files (server-specific)
+nginx-*.conf
+setup-*.sh
+add-ssl.sh
+DNS_SETUP.md
+
+# Environment files
+.env*
+!.env.example
