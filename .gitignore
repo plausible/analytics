@@ -84,7 +84,109 @@ plausible-report.xml
 /priv/plts/*.plt
 /priv/plts/*.plt.hash
 
+# =============================================================================
+# SENSITIVE FILES AND INFORMATION
+# =============================================================================
+
+# Environment files (all variations)
 .env
+.env.*
+!.env.example
+!.env.template
+
+# Production environment files
+env.production
+env.staging
+env.local
+env.development
+
+# Secret keys and credentials
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.csr
+*.srl
+*.pem
+*.key
+*.pub
+*.priv
+
+# SSH keys and configuration
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.ppk
+ssh_config
+ssh_known_hosts
+
+# Database files and dumps
+*.sql
+*.dump
+*.backup
+*.bak
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+backup_*
+*_backup.*
+*.backup.*
+
+# Log files with sensitive information
+*.log
+logs/
+log/
+
+# Certificate files
+certificates/
+certs/
+ssl/
+*.crt
+*.cert
+*.pem
+*.key
+*.csr
+*.srl
+
+# API keys and tokens
+api_keys.txt
+tokens.txt
+secrets.txt
+credentials.txt
+*.secret
+
+# Configuration files with sensitive data
+config/secrets.exs
+config/prod.secret.exs
+config/dev.secret.exs
+config/test.secret.exs
+config/*.secret.exs
+
+# Docker secrets
+docker-secrets/
+secrets/
+.dockerignore
+
+# Deployment and server-specific files
+deploy.sh
+deploy-*.sh
+setup-*.sh
+add-ssl.sh
+nginx-*.conf
+DNS_SETUP.md
+DEPLOYMENT.md
+DEPLOYMENT_SUMMARY.md
+SECURITY_CHECKLIST.md
+SECURITY_SUMMARY.md
+
+# Backup directories
+backups/
+backup/
+/home/deploy/
 
 # Geolocation databases
 /priv/geodb/*.mmdb
@@ -104,6 +206,135 @@ setup-*.sh
 add-ssl.sh
 DNS_SETUP.md
 
-# Environment files
-.env*
-!.env.example
+# Temporary and cache files
+*.tmp
+*.temp
+*.cache
+.cache/
+tmp/
+temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Session and lock files
+*.session
+*.lock
+.lock
+
+# Coverage and test reports
+coverage/
+*.coverage
+*.lcov
+test-results/
+reports/
+
+# Build artifacts
+dist/
+build/
+out/
+target/
+
+# Package manager files
+package-lock.json
+yarn.lock
+mix.lock
+
+# Local development files
+.local/
+local/
+dev/
+development/
+
+# Monitoring and analytics files
+monitoring/
+analytics/
+stats/
+metrics/
+
+# Security scan results
+security-scan/
+vulnerability-report/
+*.security
+*.vuln
+
+# Backup and archive files
+*.tar
+*.tar.gz
+*.zip
+*.rar
+*.7z
+*.bz2
+*.gz
+
+# Database migration files with sensitive data
+priv/repo/migrations/*_sensitive_*.exs
+priv/repo/migrations/*_secret_*.exs
+
+# Application-specific sensitive files
+priv/static/uploads/
+uploads/
+user_uploads/
+media/
+files/
+
+# Cache and session files
+priv/cache/
+priv/sessions/
+sessions/
+cache/
+
+# SSL and security files
+ssl/
+security/
+certs/
+certificates/
+*.pem
+*.key
+*.crt
+*.csr
+*.srl
+*.p12
+*.pfx
+
+# Monitoring and logging with sensitive data
+monitoring/
+logs/
+*.log
+log/
+
+# Configuration backups
+config.backup
+config.bak
+*.config.backup
+*.config.bak
+
+# Environment backups
+.env.backup
+.env.bak
+env.backup
+env.bak
+
+# Deployment logs
+deploy.log
+deployment.log
+*.deploy.log
+
+# Health check and monitoring files
+health-check.log
+monitoring.log
+*.health.log
+*.monitor.log

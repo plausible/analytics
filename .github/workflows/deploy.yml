@@ -25,7 +25,7 @@ on:
           - "false"
 
 env:
-  CACHE_VERSION: v15
+  CACHE_VERSION: v16
 
 jobs:
   test:
@@ -40,6 +40,8 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: plausible_test
+          POSTGRES_USER: plausible
           options: >-
             --health-cmd pg_isready
             --health-interval 10s
@@ -50,6 +52,7 @@ jobs:
         ports:
           - 8123:8123
         env:
+          CLICKHOUSE_DB: plausible
           options: >-
             --health-cmd nc -zw3 localhost 8124
             --health-interval 10s
@@ -152,8 +155,29 @@ jobs:
       - name: Health check staging
         run: |
           ssh -i ~/.ssh/github_deploy -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            curl -f http://localhost/health || exit 1
+            sleep 30
+            curl -f http://localhost:8000/ || exit 1
           EOF
+
+      - name: Notify staging deployment success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: "#deployments"
+          text: "Analytics application deployed successfully to staging!"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify staging deployment failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: "#deployments"
+          text: "Analytics application deployment to staging failed!"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   deploy-production:
     name: Deploy to Production
@@ -186,7 +210,8 @@ jobs:
       - name: Health check production
         run: |
           ssh -i ~/.ssh/github_deploy -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            curl -f https://analytics.yourdomain.com/health || exit 1
+            sleep 30
+            curl -f http://localhost:8000/ || exit 1
           EOF
 
       - name: Notify deployment success
