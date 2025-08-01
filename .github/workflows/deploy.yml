@@ -15,11 +15,20 @@ on:
         options:
           - production
           - staging
+      run_tests:
+        description: "Run tests before deployment"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 env:
   VPS_HOST: ${{ secrets.VPS_HOST }}
   VPS_USER: ${{ secrets.VPS_USER }}
   VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+  CACHE_VERSION: v15
 
 jobs:
   test:
@@ -53,6 +62,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: marocchino/tool-versions-action@v1
         id: versions
@@ -69,35 +80,42 @@ jobs:
             tracker/node_modules
             priv/tracker/js
             priv/tracker/verifier
-          key: test-v15-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          key: ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            test-v15-${{ github.head_ref || github.ref }}-
-            test-v15-refs/heads/master-
+            ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
+            ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: ${{ steps.versions.outputs.nodejs }}
           cache: "npm"
           cache-dependency-path: "**/package-lock.json"
 
       - name: Install dependencies
         run: |
-          mix deps.get
+          mix deps.get --only $MIX_ENV
           npm ci --prefix assets
           npm ci --prefix tracker
 
-      - name: Run tests
+      - name: Build tracker
         run: |
-          mix test
-          npm test --prefix assets
-          npm test --prefix tracker
+          npm run deploy --prefix tracker
 
-      - name: Build application
+      - name: Compile Elixir
         run: |
-          mix compile
-          npm run build --prefix assets
-          npm run build --prefix tracker
+          mix compile --warnings-as-errors --all-warnings
+
+      - name: Setup database
+        run: |
+          mix do ecto.create, ecto.migrate
+          mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
+
+      - name: Run tests
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_tests != 'false' }}
+        run: |
+          mix test --max-failures 1 --warnings-as-errors
+          npm test --prefix assets
 
       - name: Security scan
         uses: github/codeql-action/init@v3
@@ -185,30 +203,3 @@ jobs:
           text: "Analytics application deployment failed!"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-  rollback:
-    name: Rollback Deployment
-    runs-on: ubuntu-latest
-    if: failure() && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Rollback to previous version
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.VPS_HOST }}
-          username: ${{ env.VPS_USER }}
-          key: ${{ env.VPS_SSH_KEY }}
-          script: |
-            cd /var/www/analytics
-            if [ -L "current" ]; then
-              PREVIOUS=$(readlink -f current)
-              if [ -d "releases" ]; then
-                LATEST_RELEASE=$(ls -t releases | head -n 1)
-                if [ -n "$LATEST_RELEASE" ]; then
-                  sudo rm -f current
-                  sudo ln -sf "releases/$LATEST_RELEASE" current
-                  sudo systemctl reload nginx
-                  echo "Rolled back to: $LATEST_RELEASE"
-                fi
-              fi
-            fi
