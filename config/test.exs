@@ -49,4 +49,9 @@ config :plausible, Plausible.HelpScout,
     plug: {Req.Test, Plausible.HelpScout}
   ]
 
+config :plausible, Plausible.InstallationSupport.Detection,
+  req_opts: [
+    plug: {Req.Test, :global}
+  ]
+
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
