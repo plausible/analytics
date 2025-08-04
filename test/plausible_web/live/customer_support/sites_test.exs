@@ -11,14 +11,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
     import Plausible.Test.Support.HTML
 
     defp open_site(id, opts \\ []) do
-      Routes.customer_support_resource_path(
-        PlausibleWeb.Endpoint,
-        :details,
-        :sites,
-        :site,
-        id,
-        opts
-      )
+      query_string = if opts == [], do: "", else: "?" <> URI.encode_query(opts)
+      "/cs/sites/site/#{id}#{query_string}"
     end
 
     describe "overview" do
@@ -35,10 +29,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
 
         assert element_exists?(
                  html,
-                 ~s|a[href$="#{URI.encode_www_form(site.domain)}/settings/general"]|
+                 ~s|a[href$="#{site.domain}/settings/general"]|
                )
 
-        assert element_exists?(html, ~s|a[href$="#{URI.encode_www_form(site.domain)}/"]|)
+        assert element_exists?(html, ~s|a[href="/#{site.domain}"]|)
       end
 
       test "404", %{conn: conn} do
