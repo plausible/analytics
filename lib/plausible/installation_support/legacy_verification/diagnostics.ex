@@ -25,14 +25,7 @@ defmodule Plausible.InstallationSupport.LegacyVerification.Diagnostics do
 
   @type t :: %__MODULE__{}
 
-  defmodule Result do
-    @moduledoc """
-    Diagnostics interpretation result.
-    """
-    defstruct ok?: false, errors: [], recommendations: []
-    @type t :: %__MODULE__{}
-  end
-
+  alias Plausible.InstallationSupport.Result
   @spec interpret(t(), String.t()) :: Result.t()
   def interpret(
         %__MODULE__{
