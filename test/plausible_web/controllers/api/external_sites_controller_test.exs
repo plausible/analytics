@@ -113,10 +113,68 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "timezone" => "Europe/Tallinn"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
-               }
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
+      end
+
+      test "can create a site with a specific tracker script configuration", %{conn: conn} do
+        any_tracker_script_configuration = %{
+          "installation_type" => "wordpress",
+          "track_404_pages" => false,
+          "hash_based_routing" => false,
+          "outbound_links" => false,
+          "file_downloads" => true,
+          "revenue_tracking" => false,
+          "tagged_events" => false,
+          "form_submissions" => true,
+          "pageview_props" => false
+        }
+
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn",
+            "tracker_script_configuration" => any_tracker_script_configuration
+          })
+
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => "wordpress",
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => true,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => true,
+                             "pageview_props" => false
+                           })
+                       }) = response
       end
 
       test "can't create site in a team where not permitted to", %{conn: conn, user: user} do
@@ -150,10 +208,26 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "timezone" => "Europe/Tallinn"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
-               }
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
 
         assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == team.id
       end
@@ -175,10 +249,26 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "timezone" => "Europe/Tallinn"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
-               }
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
 
         assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == another_team.id
       end
@@ -201,10 +291,10 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "domain" => "some-site.domain"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Etc/UTC"
-               }
+        response = json_response(conn, 200)
+        assert response["domain"] == "some-site.domain"
+        assert response["timezone"] == "Etc/UTC"
+        assert response["tracker_script_configuration"]
       end
 
       test "domain is required", %{conn: conn} do
@@ -231,6 +321,86 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           assert %{"error" => error} = json_response(conn, 400)
           assert error =~ "domain: must not contain URI reserved characters"
         end)
+      end
+
+      test "validates tracker script configuration if it's not nil, serializing the first error",
+           %{conn: conn} do
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn",
+            "tracker_script_configuration" => %{
+              "installation_type" => "an invalid value",
+              "track_404_pages" => "an invalid value"
+            }
+          })
+
+        assert json_response(conn, 400) == %{
+                 "error" => "tracker_script_configuration.installation_type: is invalid"
+               }
+
+        conn2 =
+          post(conn, "/api/v1/sites", %{
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn",
+            "tracker_script_configuration" => %{
+              "installation_type" => "wordpress",
+              "track_404_pages" => "an invalid value"
+            }
+          })
+
+        assert json_response(conn2, 400) == %{
+                 "error" => "tracker_script_configuration.track_404_pages: is invalid"
+               }
+      end
+
+      test "creating the site and creating the tracker script configuration are run as a transaction: if creating the tracker script configuration fails, the site is not inserted",
+           %{conn: conn} do
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn",
+            "tracker_script_configuration" => %{
+              "installation_type" => "an invalid value"
+            }
+          })
+
+        assert json_response(conn, 400) == %{
+                 "error" => "tracker_script_configuration.installation_type: is invalid"
+               }
+
+        assert Repo.get_by(Plausible.Site, domain: "some-site.domain") == nil
+
+        # try again with a valid tracker script configuration
+        conn2 =
+          post(conn, "/api/v1/sites", %{
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn",
+            "tracker_script_configuration" => %{
+              "installation_type" => "manual"
+            }
+          })
+
+        response = json_response(conn2, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => "manual",
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
       end
 
       test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
@@ -1227,11 +1397,26 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         conn = get(conn, "/api/v1/sites/" <> site.domain)
 
-        assert json_response(conn, 200) == %{
-                 "domain" => site.domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => ["logged_in", "author"]
-               }
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => ^site.domain,
+                         "timezone" => ^site.timezone,
+                         "custom_properties" => ["logged_in", "author"],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
       end
 
       test "get a site by old site_id after domain change", %{conn: conn, site: site} do
@@ -1242,11 +1427,26 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         conn = get(conn, "/api/v1/sites/" <> old_domain)
 
-        assert json_response(conn, 200) == %{
-                 "domain" => new_domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => []
-               }
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => ^new_domain,
+                         "timezone" => ^site.timezone,
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
       end
 
       test "get a site for user with read-only scope", %{conn: conn, user: user, site: site} do
@@ -1257,11 +1457,26 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
           |> get("/api/v1/sites/" <> site.domain)
 
-        assert json_response(conn, 200) == %{
-                 "domain" => site.domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => []
-               }
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => ^site.domain,
+                         "timezone" => ^site.timezone,
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
       end
 
       test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
@@ -1462,15 +1677,126 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "domain" => "new.example.com"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "new.example.com",
-                 "timezone" => "UTC"
-               }
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "new.example.com",
+                         "timezone" => "UTC",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
 
         site = Repo.reload!(site)
 
         assert site.domain == "new.example.com"
         assert site.domain_changed_from == old_domain
+      end
+
+      test "can change tracker script configuration (merging updated keys with previous configuration)",
+           %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/#{site.domain}", %{
+            "tracker_script_configuration" => %{
+              "form_submissions" => true
+            }
+          })
+
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => ^site.domain,
+                         "timezone" => "UTC",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => true,
+                             "pageview_props" => false
+                           })
+                       }) = response
+      end
+
+      test "can change domain name and tracker script configuration together (merging updated keys with previous configuration)",
+           %{conn: conn, site: site} do
+        old_domain = site.domain
+        assert old_domain != "new.example.com"
+
+        conn =
+          put(conn, "/api/v1/sites/#{site.domain}", %{
+            "domain" => "new.example.com",
+            "tracker_script_configuration" => %{
+              "form_submissions" => true
+            }
+          })
+
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "new.example.com",
+                         "timezone" => "UTC",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => true,
+                             "pageview_props" => false
+                           })
+                       }) = response
+
+        site = Repo.reload!(site)
+
+        assert site.domain == "new.example.com"
+        assert site.domain_changed_from == old_domain
+      end
+
+      test "domain name change and tracker script configuration update are run as a transaction: if updating the configuration fails, the domain change is rolled back",
+           %{conn: conn, site: site} do
+        old_domain = site.domain
+        assert old_domain != "new.example.com"
+
+        conn =
+          put(conn, "/api/v1/sites/#{site.domain}", %{
+            "domain" => "new.example.com",
+            "tracker_script_configuration" => %{
+              "installation_type" => "an invalid value",
+              "form_submissions" => true
+            }
+          })
+
+        assert json_response(conn, 400) == %{
+                 "error" => "tracker_script_configuration.installation_type: is invalid"
+               }
+
+        site = Repo.reload!(site)
+
+        assert site.domain == old_domain
+        assert site.domain_changed_from == nil
       end
 
       test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
@@ -1487,11 +1813,33 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "domain" => "new.example.com"
           })
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        assert json_response(conn, 404) == %{
+                 "error" => "Site could not be found"
+               }
       end
 
-      test "can't make a no-op change", %{conn: conn, site: site} do
+      test "fails when neither 'domain' nor 'tracker_script_configuration' is provided", %{
+        conn: conn,
+        site: site
+      } do
+        conn =
+          put(conn, "/api/v1/sites/#{site.domain}", %{"foo" => "bar"})
+
+        assert json_response(conn, 400) == %{
+                 "error" =>
+                   "Payload must contain at least one of the parameters 'domain', 'tracker_script_configuration'."
+               }
+      end
+
+      test "fails when domain parameter is invalid", %{conn: conn, site: site} do
+        conn = put(conn, "/api/v1/sites/#{site.domain}", %{"domain" => 123})
+
+        assert json_response(conn, 400) == %{
+                 "error" => "domain: is invalid"
+               }
+      end
+
+      test "can't make a no-op domain change", %{conn: conn, site: site} do
         conn =
           put(conn, "/api/v1/sites/#{site.domain}", %{
             "domain" => site.domain
@@ -1502,11 +1850,19 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                }
       end
 
-      test "domain parameter is required", %{conn: conn, site: site} do
-        conn = put(conn, "/api/v1/sites/#{site.domain}", %{})
+      test "fails when tracker script configuration parameter is invalid", %{
+        conn: conn,
+        site: site
+      } do
+        conn =
+          put(conn, "/api/v1/sites/#{site.domain}", %{
+            "tracker_script_configuration" => %{
+              "form_submissions" => "an invalid value"
+            }
+          })
 
         assert json_response(conn, 400) == %{
-                 "error" => "domain: can't be blank"
+                 "error" => "tracker_script_configuration.form_submissions: is invalid"
                }
       end
     end

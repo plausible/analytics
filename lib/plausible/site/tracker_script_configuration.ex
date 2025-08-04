@@ -6,6 +6,19 @@ defmodule Plausible.Site.TrackerScriptConfiguration do
   import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :installation_type,
+             :track_404_pages,
+             :hash_based_routing,
+             :outbound_links,
+             :file_downloads,
+             :revenue_tracking,
+             :tagged_events,
+             :form_submissions,
+             :pageview_props
+           ]}
 
   @primary_key {:id, Plausible.Ecto.Types.Nanoid, autogenerate: true}
   schema "tracker_script_configuration" do
