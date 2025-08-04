@@ -106,11 +106,9 @@ defmodule Plausible.HelpScout do
           end)
 
         user_link =
-          Routes.customer_support_resource_url(
+          Routes.customer_support_user_url(
             PlausibleWeb.Endpoint,
-            :details,
-            :users,
-            :user,
+            :show,
             user.id
           )
 
@@ -136,19 +134,15 @@ defmodule Plausible.HelpScout do
 
         status_link =
           if team do
-            Routes.customer_support_resource_url(
+            Routes.customer_support_team_url(
               PlausibleWeb.Endpoint,
-              :details,
-              :teams,
-              :team,
+              :show,
               team.id
             )
           else
-            Routes.customer_support_resource_url(
+            Routes.customer_support_user_url(
               PlausibleWeb.Endpoint,
-              :details,
-              :users,
-              :user,
+              :show,
               user.id
             )
           end
