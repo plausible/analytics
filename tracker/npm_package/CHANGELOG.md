@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix issue with a second init() call changing the config option unexpectedly.
+
 ## [0.3.5] - 2025-08-04
 
 - Fix issue with link tracking features (tagged events, file downloads, outbound links) causing errors on the page when clicking on `a` tags within `svg` tags.
