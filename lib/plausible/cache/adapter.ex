@@ -54,6 +54,16 @@ defmodule Plausible.Cache.Adapter do
     :exit, _ -> nil
   end
 
+  @spec wipe(atom()) :: :ok
+  def wipe(cache_name) do
+    cache_name
+    |> get_names()
+    |> Enum.map(&ConCache.ets/1)
+    |> Enum.each(fn table ->
+      true = :ets.delete_all_objects(table)
+    end)
+  end
+
   @spec get(atom(), any()) :: any()
   def get(cache_name, key) do
     full_cache_name = get_name(cache_name, key)

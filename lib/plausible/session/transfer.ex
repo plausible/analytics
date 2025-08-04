@@ -109,6 +109,7 @@ defmodule Plausible.Session.Transfer do
     case request do
       {@cmd_list_cache_names, session_version} ->
         if session_version == session_version() and attempted?(parent) do
+          # NOTE: block ingest here
           Cache.Adapter.get_names(:sessions)
         else
           []
@@ -118,6 +119,9 @@ defmodule Plausible.Session.Transfer do
         Cache.Adapter.cache2list(cache)
 
       @cmd_takeover_done ->
+        # NOTE: unblock ingest here
+        # Wipe the cache after transfer is complete to avoid making the transferred cache stale
+        Cache.Adapter.wipe(:sessions)
         :counters.add(given_counter, 1, 1)
     end
   end
