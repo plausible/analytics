@@ -1,6 +1,7 @@
 defmodule Plausible.CustomerSupport.Resource.Site do
   @moduledoc false
-  use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Site
+  use Plausible.CustomerSupport.Resource
+  alias Plausible.Repo
 
   @impl true
   def search(input, opts \\ [])
@@ -18,7 +19,7 @@ defmodule Plausible.CustomerSupport.Resource.Site do
         limit: ^limit,
         preload: [team: {t, owners: o}]
 
-    Plausible.Repo.all(q)
+    Repo.all(q)
   end
 
   def search(input, opts) do
@@ -41,13 +42,13 @@ defmodule Plausible.CustomerSupport.Resource.Site do
         limit: ^limit,
         preload: [team: {t, owners: o}]
 
-    Plausible.Repo.all(q)
+    Repo.all(q)
   end
 
   @impl true
   def get(id) do
     Plausible.Site
-    |> Plausible.Repo.get!(id)
-    |> Plausible.Repo.preload(:team)
+    |> Repo.get!(id)
+    |> Repo.preload(:team)
   end
 end
