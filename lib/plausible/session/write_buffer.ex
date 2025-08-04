@@ -40,4 +40,12 @@ defmodule Plausible.Session.WriteBuffer do
   def flush do
     Plausible.Ingestion.WriteBuffer.flush(__MODULE__)
   end
+
+  def lock(timeout) do
+    Plausible.Ingestion.WriteBuffer.lock(__MODULE__, timeout)
+  end
+
+  def unlock() do
+    Plausible.Ingestion.WriteBuffer.unlock(__MODULE__)
+  end
 end
