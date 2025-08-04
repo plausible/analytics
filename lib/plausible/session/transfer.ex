@@ -18,6 +18,10 @@ defmodule Plausible.Session.Transfer do
   @cmd_dump_cache :get
   @cmd_takeover_done :done
 
+  # Timeout must at least account waiting for writebuffer flush to get
+  # picked up from the queue and processed.
+  @lock_acquire_timeout :timer.seconds(15_000)
+
   def telemetry_event, do: [:plausible, :sessions, :takeover]
 
   @doc """
@@ -109,8 +113,21 @@ defmodule Plausible.Session.Transfer do
     case request do
       {@cmd_list_cache_names, session_version} ->
         if session_version == session_version() and attempted?(parent) do
-          # NOTE: block ingest here
-          Cache.Adapter.get_names(:sessions)
+          # Blocking ingest before transfer
+          locks_acquired? =
+            [
+              Task.async(fn -> Plausible.Event.WriteBuffer.lock(@lock_acquire_timeout) end),
+              Task.async(fn -> Plausible.Session.WriteBuffer.lock(@lock_acquire_timeout) end)
+            ]
+            # timeouts are managed by WriteBuffer.lock/1 calls instead
+            |> Task.await_many(:infinity)
+            |> Enum.all?(&(&1 == :ok))
+
+          if locks_acquired? do
+            Cache.Adapter.get_names(:sessions)
+          else
+            []
+          end
         else
           []
         end
@@ -119,9 +136,11 @@ defmodule Plausible.Session.Transfer do
         Cache.Adapter.cache2list(cache)
 
       @cmd_takeover_done ->
-        # NOTE: unblock ingest here
         # Wipe the cache after transfer is complete to avoid making the transferred cache stale
         Cache.Adapter.wipe(:sessions)
+        # Unblock ingest after trasnsfer is done
+        Plausible.Event.WriteBuffer.unlock()
+        Plausible.Session.WriteBuffer.unlock()
         :counters.add(given_counter, 1, 1)
     end
   end

@@ -54,6 +54,8 @@ defmodule Plausible.Ingestion.WriteBuffer do
   def lock(name, locker \\ self(), timeout) do
     true = :ets.insert(name, {:state, %{locker: locker}})
 
+    flush(name)
+
     receive do
       {:locked, ^name} -> :ok
     after
