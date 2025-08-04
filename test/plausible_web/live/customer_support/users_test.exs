@@ -9,14 +9,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
     import Plausible.Test.Support.HTML
 
     defp open_user(id, qs \\ []) do
-      Routes.customer_support_resource_path(
-        PlausibleWeb.Endpoint,
-        :details,
-        :users,
-        :user,
-        id,
-        qs
-      )
+      query_string = if qs == [], do: "", else: "?" <> URI.encode_query(qs)
+      "/cs/users/user/#{id}#{query_string}"
     end
 
     describe "overview" do
@@ -36,7 +30,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         assert text_of_attr(uid, "value") == "#{user.id}"
 
         team = team_of(user)
-        assert [_] = find(html, ~s|a[href="/cs/teams/team/#{team.id}"]|)
+        assert [_] = find(html, ~s|a[href="/cs/teams/#{team.id}"]|)
       end
 
       test "404", %{conn: conn} do

@@ -109,8 +109,11 @@ defmodule PlausibleWeb.Router do
       pipe_through [:browser, :csrf, :app_layout, :flags]
 
       live "/cs", CustomerSupport, :index, as: :customer_support
+      live "/cs/teams/team/:id", CustomerSupport.Team, :show, as: :customer_support_team
+      live "/cs/users/user/:id", CustomerSupport.User, :show, as: :customer_support_user
+      live "/cs/sites/site/:id", CustomerSupport.Site, :show, as: :customer_support_site
 
-      live "/cs/:any/:resource/:id", CustomerSupport, :details, as: :customer_support_resource
+      # live "/cs/:any/:resource/:id", CustomerSupport, :details, as: :customer_support_resource
     end
   end
 
