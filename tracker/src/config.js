@@ -20,32 +20,41 @@ function defaultEndpoint() {
   }
 }
 
-export function init(overrides) {
+export function getOptionsWithDefaults(initOptions) {
+  if (COMPILE_PLAUSIBLE_WEB) {
+    return Object.assign(initOptions, {
+      autoCapturePageviews: initOptions.autoCapturePageviews !== false,
+      logging: initOptions.logging !== false,
+    })
+  }
+  if (COMPILE_PLAUSIBLE_NPM) {
+    return Object.assign(initOptions, {
+      autoCapturePageviews: initOptions.autoCapturePageviews !== false,
+      logging: initOptions.logging !== false,
+      bindToWindow: initOptions.bindToWindow !== false,
+    })
+  }
+}
+
+export function init(options) {
   if (COMPILE_PLAUSIBLE_WEB) {
     // This will be dynamically replaced by a config json object in the script serving endpoint
     config = "<%= @config_js %>"
-    Object.assign(config, overrides, {
-      // Explicitly set domain before any overrides are applied as `plausible-web` does not support overriding it
+    Object.assign(config, options, {
+      // Explicitly set domain after other options are applied as `plausible-web` does not support overriding it, except by transformRequest
       domain: config.domain,
-      // Configuration which defaults to `true`
-      autoCapturePageviews: overrides.autoCapturePageviews !== false,
-      logging: overrides.logging !== false
     })
   } else if (COMPILE_PLAUSIBLE_NPM) {
     if (config.isInitialized) {
       throw new Error('plausible.init() can only be called once')
     }
-    if (!overrides || !overrides.domain) {
+    if (!options || !options.domain) {
       throw new Error('plausible.init(): domain argument is required')
     }
-    if (!overrides.endpoint) {
-      overrides.endpoint = 'https://plausible.io/api/event'
+    if (!options.endpoint) {
+      options.endpoint = 'https://plausible.io/api/event'
     }
-    Object.assign(config, overrides, {
-      autoCapturePageviews: overrides.autoCapturePageviews !== false,
-      logging: overrides.logging !== false,
-      bindToWindow: overrides.bindToWindow !== false
-    })
+    Object.assign(config, options)
     config.isInitialized = true
   } else {
     // Legacy variant

@@ -85,11 +85,11 @@ test('handles double-initialization of the script with a console.warn', async ({
 
   await expectPlausibleInAction(page, {
     action: () => page.click('button'),
-    expectedRequests: [{ n: 'Purchase', p: { init: 2 } }] // bug or maybe feature: expected to be { init: 1 }
+    expectedRequests: [{ n: 'Purchase', p: { init: 1 } }]
   })
 })
 
-test('if there are two snippets on the page, the second one that loads interacts with the first one, no warning is emitted', async ({ page }, {
+test('if there are two snippets on the page, one wins, no warning is emitted', async ({ page }, {
   testId
 }) => {
   const config = { ...DEFAULT_CONFIG }
