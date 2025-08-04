@@ -74,4 +74,3 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
     end
   end
 end
-
