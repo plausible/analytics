@@ -37,7 +37,7 @@
               }>
                 <.styled_link
                   class="text-sm mr-6"
-                  href={"/cs/sites/site/#{@conn.assigns.site.id}"}
+                  href={Routes.customer_support_site_path(@conn, :show, @conn.assigns.site.id)}
                   new_tab={true}
                 >
                   CS

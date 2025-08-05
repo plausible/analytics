@@ -11,8 +11,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
     import Plausible.Test.Support.HTML
 
     defp open_site(id, opts \\ []) do
-      query_string = if opts == [], do: "", else: "?" <> URI.encode_query(opts)
-      "/cs/sites/site/#{id}#{query_string}"
+      Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, id, opts)
     end
 
     describe "overview" do

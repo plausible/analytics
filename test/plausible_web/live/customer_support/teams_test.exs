@@ -13,8 +13,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     require Plausible.Billing.Subscription.Status
 
     defp open_team(id, qs \\ []) do
-      query_string = if qs == [], do: "", else: "?" <> URI.encode_query(qs)
-      "/cs/teams/team/#{id}#{query_string}"
+      Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id, qs)
     end
 
     describe "overview" do
@@ -636,7 +635,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert {:error, {:live_redirect, %{to: to}}} =
                  lv |> element("button#remove-sso-integration") |> render_click()
 
-        assert to == "/cs/teams/team/#{team.id}"
+        assert to == Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)
       end
     end
 
