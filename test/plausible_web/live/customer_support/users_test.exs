@@ -38,6 +38,51 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
           {:ok, _lv, _html} = live(conn, open_user(9999))
         end
       end
+
+      test "delete user", %{conn: conn, user: user} do
+        {:ok, lv, _html} = live(conn, open_user(user.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-user"]|)
+        |> render_click()
+
+        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+
+        refute Plausible.Repo.get(Plausible.Auth.User, user.id)
+      end
+
+      test "delete user with active subscription", %{conn: conn, user: user} do
+        user |> subscribe_to_growth_plan()
+
+        {:ok, lv, _html} = live(conn, open_user(user.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-user"]|)
+        |> render_click()
+
+        text = lv |> render() |> text()
+
+        assert text =~ "Cannot delete user with active subscription"
+
+        assert Plausible.Repo.get(Plausible.Auth.User, user.id)
+      end
+
+      test "delete user when they're sole team owner", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        Plausible.Teams.complete_setup(site.team)
+
+        {:ok, lv, _html} = live(conn, open_user(user.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-user"]|)
+        |> render_click()
+
+        text = lv |> render() |> text()
+
+        assert text =~ "Failed to delete user: :is_only_team_owner"
+
+        assert Plausible.Repo.get(Plausible.Auth.User, user.id)
+      end
     end
 
     describe "keys" do

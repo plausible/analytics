@@ -54,16 +54,15 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
 
     case Plausible.Auth.delete_user(user) do
       {:ok, _} ->
-        send(self(), {:success, "User deleted successfully"})
-        send(self(), {:navigate, Routes.customer_support_path(socket, :index), nil})
+        send(self(), {:navigate, Routes.customer_support_path(socket, :index), "User deleted"})
         {:noreply, socket}
 
-      {:error, :subscription_active} ->
+      {:error, :active_subscription} ->
         send(self(), {:error, "Cannot delete user with active subscription"})
         {:noreply, socket}
 
-      {:error, _} ->
-        send(self(), {:error, "Failed to delete user"})
+      {:error, reason} ->
+        send(self(), {:error, "Failed to delete user: #{inspect(reason)}"})
         {:noreply, socket}
     end
   end

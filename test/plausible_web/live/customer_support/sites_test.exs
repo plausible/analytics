@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
         |> element(~s|button[phx-click="delete-site"]|)
         |> render_click()
 
-        assert_redirected(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
 
         refute Plausible.Sites.get_by_domain(site.domain)
       end
