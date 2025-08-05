@@ -415,7 +415,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   end
 
   def handle_event("submit", %{"tracker_script_configuration" => params}, socket) do
-    PlausibleWeb.Tracker.update_script_configuration(
+    PlausibleWeb.Tracker.update_script_configuration!(
       socket.assigns.site,
       params,
       :installation

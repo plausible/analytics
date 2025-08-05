@@ -36,7 +36,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
       site = new_site()
 
       tracker_script_configuration =
-        Tracker.update_script_configuration(
+        Tracker.update_script_configuration!(
           site,
           Map.put(@example_config, :site_id, site.id),
           :installation
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
       site = new_site()
 
       tracker_script_configuration =
-        Tracker.update_script_configuration(
+        Tracker.update_script_configuration!(
           site,
           Map.put(@example_config, :site_id, site.id),
           :installation

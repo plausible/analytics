@@ -116,31 +116,21 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     team = conn.assigns.current_team || Teams.get(params["team_id"])
 
     case Repo.transact(fn ->
-           case Sites.create(user, params, team) do
-             {:ok, %{site: site}} ->
-               try do
-                 tracker_script_configuration =
-                   PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(
-                     site,
-                     if(params["tracker_script_configuration"],
-                       do: params["tracker_script_configuration"],
-                       else: %{}
-                     )
-                   )
-
-                 {:ok,
-                  struct(site,
-                    tracker_script_configuration: tracker_script_configuration
-                  )}
-               rescue
-                 error in [Ecto.InvalidChangesetError] ->
-                   # Ecto.InvalidChangesetError
-                   {:error, {:tracker_script_configuration_invalid, error.changeset}}
-               end
-
-             # Translates to transact error format
+           with {:ok, %{site: site}} <- Sites.create(user, params, team),
+                {:ok, tracker_script_configuration} <-
+                  get_or_create_config(site, params["tracker_script_configuration"] || %{}) do
+             {:ok,
+              struct(site,
+                tracker_script_configuration: tracker_script_configuration
+              )}
+           else
+             # Translates Multi error format to Repo.transact error format
              {:error, step_id, output, context} ->
                {:error, {step_id, output, context}}
+
+             # already in Repo.transact error format
+             {:error, reason} ->
+               {:error, reason}
            end
          end) do
       {:ok, site} ->
@@ -168,15 +158,15 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           error: "You must select a team with 'team_id' parameter."
         })
 
-      {:error, {_, %Ecto.Changeset{} = changeset, _}} ->
-        conn
-        |> put_status(400)
-        |> json(serialize_errors(changeset))
-
       {:error, {:tracker_script_configuration_invalid, %Ecto.Changeset{} = changeset}} ->
         conn
         |> put_status(400)
         |> json(serialize_errors(changeset, "tracker_script_configuration."))
+
+      {:error, {_, %Ecto.Changeset{} = changeset, _}} ->
+        conn
+        |> put_status(400)
+        |> json(serialize_errors(changeset))
     end
   end
 
@@ -233,7 +223,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           "Payload must contain at least one of the parameters 'domain', 'tracker_script_configuration'."
         )
 
-      {:error, %Ecto.Changeset{} = changeset} ->
+      {:error, {:domain_change_invalid, %Ecto.Changeset{} = changeset}} ->
         conn
         |> put_status(400)
         |> json(serialize_errors(changeset))
@@ -259,32 +249,27 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     Repo.transact(fn ->
       with {:ok, site} <-
              if(params["domain"],
-               do: Plausible.Site.Domain.change(site, params["domain"]),
+               do: change_domain(site, params["domain"]),
                else: {:ok, site}
+             ),
+           {:ok, tracker_script_configuration} <-
+             if(params["tracker_script_configuration"],
+               do: update_config(site, params["tracker_script_configuration"]),
+               else: get_or_create_config(site, %{})
              ) do
-        if params["tracker_script_configuration"] do
-          try do
-            tracker_script_configuration =
-              PlausibleWeb.Tracker.update_script_configuration(
-                site,
-                params["tracker_script_configuration"],
-                :installation
-              )
-
-            {:ok, struct(site, tracker_script_configuration: tracker_script_configuration)}
-          rescue
-            error in [Ecto.InvalidChangesetError] ->
-              {:error, {:tracker_script_configuration_invalid, error.changeset}}
-          end
-        else
-          {:ok,
-           struct(site,
-             tracker_script_configuration:
-               PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{})
-           )}
-        end
+        {:ok, struct(site, tracker_script_configuration: tracker_script_configuration)}
       end
     end)
+  end
+
+  defp change_domain(site, domain) do
+    case Plausible.Site.Domain.change(site, domain) do
+      {:ok, site} ->
+        {:ok, site}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, {:domain_change_invalid, changeset}}
+    end
   end
 
   def find_or_create_guest(conn, params) do
@@ -506,6 +491,26 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
       _ ->
         {:missing, key}
+    end
+  end
+
+  defp get_or_create_config(site, params) do
+    case PlausibleWeb.Tracker.get_or_create_tracker_script_configuration(site, params) do
+      {:ok, tracker_script_configuration} ->
+        {:ok, tracker_script_configuration}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, {:tracker_script_configuration_invalid, changeset}}
+    end
+  end
+
+  defp update_config(site, params) do
+    case PlausibleWeb.Tracker.update_script_configuration(site, params, :installation) do
+      {:ok, tracker_script_configuration} ->
+        {:ok, tracker_script_configuration}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, {:tracker_script_configuration_invalid, changeset}}
     end
   end
 

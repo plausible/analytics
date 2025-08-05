@@ -67,7 +67,7 @@ defmodule PlausibleWeb.TrackerTest do
 
       assert tracker_script_configuration.installation_type == :manual
 
-      Tracker.update_script_configuration(
+      Tracker.update_script_configuration!(
         site,
         %{installation_type: :wordpress, outbound_links: true},
         :installation
@@ -86,7 +86,7 @@ defmodule PlausibleWeb.TrackerTest do
         tracker_script_configuration =
           Tracker.get_or_create_tracker_script_configuration!(site)
 
-        Tracker.update_script_configuration(
+        Tracker.update_script_configuration!(
           site,
           %{installation_type: :wordpress, outbound_links: true},
           :installation
@@ -104,7 +104,11 @@ defmodule PlausibleWeb.TrackerTest do
         tracker_script_configuration =
           Tracker.get_or_create_tracker_script_configuration!(site)
 
-        Tracker.update_script_configuration(site, %{installation_type: :wordpress}, :installation)
+        Tracker.update_script_configuration!(
+          site,
+          %{installation_type: :wordpress},
+          :installation
+        )
 
         refute_enqueued(
           worker: Plausible.Workers.PurgeCDNCache,
@@ -132,7 +136,7 @@ defmodule PlausibleWeb.TrackerTest do
     end
 
     def create_config(site) do
-      Tracker.update_script_configuration(
+      Tracker.update_script_configuration!(
         site,
         Map.put(@example_config, :site_id, site.id),
         :installation

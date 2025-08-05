@@ -42,56 +42,65 @@ defmodule PlausibleWeb.Tracker do
     }
   end
 
+  defp purge_cache!(config_id) do
+    Plausible.Workers.PurgeCDNCache.new(
+      %{id: config_id},
+      # See PurgeCDNCache.ex for more details
+      schedule_in: 10,
+      replace: [scheduled: [:scheduled_at]]
+    )
+    |> Oban.insert!()
+  end
+
   def update_script_configuration(site, config_update, changeset_type) do
-    {:ok, updated_config} =
-      Repo.transaction(fn ->
-        original_config = get_or_create_tracker_script_configuration!(site)
-        changeset = changeset(original_config, config_update, changeset_type)
-
-        updated_config = Repo.update!(changeset)
-
+    Repo.transact(fn ->
+      with {:ok, original_config} <- get_or_create_tracker_script_configuration(site),
+           changeset <- changeset(original_config, config_update, changeset_type),
+           {:ok, updated_config} <-
+             Repo.update(changeset) do
         sync_goals(site, original_config, updated_config)
 
         on_ee do
-          if Map.keys(changeset.changes) != [:installation_type] do
-            Plausible.Workers.PurgeCDNCache.new(
-              %{id: updated_config.id},
-              # See PurgeCDNCache.ex for more details
-              schedule_in: 10,
-              replace: [scheduled: [:scheduled_at]]
-            )
-            |> Oban.insert!()
+          # some situations don't warrant a cache purge
+          if changeset.changes != [:installation_type] do
+            purge_cache!(updated_config.id)
           end
         end
 
-        updated_config
-      end)
+        {:ok, updated_config}
+      end
+    end)
+  end
 
+  def update_script_configuration!(site, config_update, changeset_type) do
+    {:ok, updated_config} = update_script_configuration(site, config_update, changeset_type)
     updated_config
   end
 
-  def get_or_create_tracker_script_configuration!(site, params \\ %{}) do
+  def get_or_create_tracker_script_configuration(site, params \\ %{}) do
     configuration = Repo.get_by(TrackerScriptConfiguration, site_id: site.id)
 
     if configuration do
-      configuration
+      {:ok, configuration}
     else
-      {:ok, created_config} =
-        Repo.transaction(fn ->
-          created_config =
-            TrackerScriptConfiguration.installation_changeset(
-              %TrackerScriptConfiguration{site_id: site.id},
-              params
-            )
-            |> Repo.insert!()
-
+      Repo.transact(fn ->
+        with {:ok, created_config} <-
+               Repo.insert(
+                 TrackerScriptConfiguration.installation_changeset(
+                   %TrackerScriptConfiguration{site_id: site.id},
+                   params
+                 )
+               ) do
           sync_goals(site, %{}, created_config)
-
-          created_config
-        end)
-
-      created_config
+          {:ok, created_config}
+        end
+      end)
     end
+  end
+
+  def get_or_create_tracker_script_configuration!(site, params \\ %{}) do
+    {:ok, config} = get_or_create_tracker_script_configuration(site, params)
+    config
   end
 
   # Sync plausible goals with the updated script config

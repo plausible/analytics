@@ -505,7 +505,7 @@ defmodule PlausibleWeb.Live.Installation do
         "installation_type" => socket.assigns.installation_type
       })
 
-    PlausibleWeb.Tracker.update_script_configuration(
+    PlausibleWeb.Tracker.update_script_configuration!(
       socket.assigns.site,
       tracker_script_config_update,
       :installation
