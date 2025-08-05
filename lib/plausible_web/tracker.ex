@@ -42,15 +42,6 @@ defmodule PlausibleWeb.Tracker do
     }
   end
 
-  defp purge_cache!(config_id) do
-    Plausible.Workers.PurgeCDNCache.new(
-      %{id: config_id},
-      # See PurgeCDNCache.ex for more details
-      schedule_in: 10,
-      replace: [scheduled: [:scheduled_at]]
-    )
-    |> Oban.insert!()
-  end
 
   def update_script_configuration(site, config_update, changeset_type) do
     Repo.transact(fn ->
@@ -71,6 +62,19 @@ defmodule PlausibleWeb.Tracker do
       end
     end)
   end
+
+  on_ee do
+    defp purge_cache!(config_id) do
+      Plausible.Workers.PurgeCDNCache.new(
+        %{id: config_id},
+        # See PurgeCDNCache.ex for more details
+        schedule_in: 10,
+        replace: [scheduled: [:scheduled_at]]
+      )
+      |> Oban.insert!()
+    end
+  end
+
 
   def update_script_configuration!(site, config_update, changeset_type) do
     {:ok, updated_config} = update_script_configuration(site, config_update, changeset_type)
