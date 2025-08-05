@@ -116,29 +116,31 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     team = conn.assigns.current_team || Teams.get(params["team_id"])
 
     case Repo.transact(fn ->
-           with {:ok, %{site: site}} <- Sites.create(user, params, team) do
-             try do
-               tracker_script_configuration =
-                 PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(
-                   site,
-                   if(params["tracker_script_configuration"],
-                     do: params["tracker_script_configuration"],
-                     else: %{}
+           case Sites.create(user, params, team) do
+             {:ok, %{site: site}} ->
+               try do
+                 tracker_script_configuration =
+                   PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(
+                     site,
+                     if(params["tracker_script_configuration"],
+                       do: params["tracker_script_configuration"],
+                       else: %{}
+                     )
                    )
-                 )
 
-               {:ok,
-                struct(site,
-                  tracker_script_configuration: tracker_script_configuration
-                )}
-             rescue
-               error in [Ecto.InvalidChangesetError] ->
-                 # Ecto.InvalidChangesetError
-                 {:error, {:tracker_script_configuration_invalid, error.changeset}}
-             end
-           else
+                 {:ok,
+                  struct(site,
+                    tracker_script_configuration: tracker_script_configuration
+                  )}
+               rescue
+                 error in [Ecto.InvalidChangesetError] ->
+                   # Ecto.InvalidChangesetError
+                   {:error, {:tracker_script_configuration_invalid, error.changeset}}
+               end
+
              # Translates to transact error format
-             {:error, step_id, output, context} -> {:error, {step_id, output, context}}
+             {:error, step_id, output, context} ->
+               {:error, {step_id, output, context}}
            end
          end) do
       {:ok, site} ->
