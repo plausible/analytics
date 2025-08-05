@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     case Repo.transact(fn ->
            with {:ok, %{site: site}} <- Sites.create(user, params, team),
                 {:ok, tracker_script_configuration} <-
-                  get_or_create_config(site, params["tracker_script_configuration"] || %{}) do
+                  get_or_create_config(site, params["tracker_script_configuration"] || %{}, user) do
              {:ok,
               struct(site,
                 tracker_script_configuration: tracker_script_configuration
@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
            end
          end) do
       {:ok, site} ->
-        json(conn, get_site_response(site))
+        json(conn, get_site_response(site, user))
 
       {:error, {_, {:over_limit, limit}, _}} ->
         conn
@@ -174,18 +174,18 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
 
-    case find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
-      {:ok, site} ->
-        tracker_script_configuration =
-          PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{})
+    with {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]),
+         {:ok, tracker_script_configuration} <- get_or_create_config(site, %{}, user) do
+      site = struct(site, tracker_script_configuration: tracker_script_configuration)
 
-        json(
-          conn,
-          get_site_response(
-            struct(site, tracker_script_configuration: tracker_script_configuration)
-          )
+      json(
+        conn,
+        get_site_response(
+          site,
+          user
         )
-
+      )
+    else
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
     end
@@ -211,8 +211,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     with {:ok, params} <- validate_update_payload(params),
          {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
-         {:ok, site} <- do_update_site(site, params) do
-      json(conn, get_site_response(site))
+         {:ok, site} <- do_update_site(site, params, user) do
+      json(conn, get_site_response(site, user))
     else
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
@@ -245,7 +245,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  defp do_update_site(site, params) do
+  defp do_update_site(site, params, user) do
     Repo.transact(fn ->
       with {:ok, site} <-
              if(params["domain"],
@@ -254,8 +254,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
              ),
            {:ok, tracker_script_configuration} <-
              if(params["tracker_script_configuration"],
-               do: update_config(site, params["tracker_script_configuration"]),
-               else: get_or_create_config(site, %{})
+               do: update_config(site, params["tracker_script_configuration"], user),
+               else: get_or_create_config(site, %{}, user)
              ) do
         {:ok, struct(site, tracker_script_configuration: tracker_script_configuration)}
       end
@@ -494,8 +494,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  defp get_or_create_config(site, params) do
-    if FunWithFlags.enabled?(:scriptv2, for: site) do
+  defp get_or_create_config(site, params, user) do
+    if scriptv2?(site, user) do
       case PlausibleWeb.Tracker.get_or_create_tracker_script_configuration(site, params) do
         {:ok, tracker_script_configuration} ->
           {:ok, tracker_script_configuration}
@@ -508,8 +508,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  defp update_config(site, params) do
-    if FunWithFlags.enabled?(:scriptv2, for: site) do
+  defp update_config(site, params, user) do
+    if scriptv2?(site, user) do
       case PlausibleWeb.Tracker.update_script_configuration(site, params, :installation) do
         {:ok, tracker_script_configuration} ->
           {:ok, tracker_script_configuration}
@@ -526,15 +526,20 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     site |> Map.take([:domain, :timezone])
   end
 
-  defp get_site_response(site) do
+  defp get_site_response(site, user) do
     serializable_properties =
-      if(FunWithFlags.enabled?(:scriptv2, for: site),
+      if(scriptv2?(site, user),
         do: [:domain, :timezone, :tracker_script_configuration],
         else: [:domain, :timezone]
       )
 
     site
     |> Map.take(serializable_properties)
-    |> Map.put(:custom_properties, site.allowed_event_props || []) # remapped to `custom_properties`
+    # remap to `custom_properties`
+    |> Map.put(:custom_properties, site.allowed_event_props || [])
+  end
+
+  defp scriptv2?(site, user) do
+    FunWithFlags.enabled?(:scriptv2, for: site) or FunWithFlags.enabled?(:scriptv2, for: user)
   end
 end

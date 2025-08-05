@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
     setup :create_user
 
     setup %{conn: conn, user: user} do
-      FunWithFlags.enable(:scriptv2)
+      FunWithFlags.enable(:scriptv2, for_actor: user)
       api_key = insert(:api_key, user: user, scopes: ["sites:provision:*"])
       conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
       {:ok, api_key: api_key, conn: conn}
