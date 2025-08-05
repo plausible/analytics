@@ -51,8 +51,7 @@ defmodule PlausibleWeb.Tracker do
         sync_goals(site, original_config, updated_config)
 
         on_ee do
-          # some situations don't warrant a cache purge
-          if changeset.changes != [:installation_type] do
+          if should_purge_cache?(changeset) do
             purge_cache!(updated_config.id)
           end
         end
@@ -63,6 +62,10 @@ defmodule PlausibleWeb.Tracker do
   end
 
   on_ee do
+    defp should_purge_cache?(changeset) do
+      Map.keys(changeset.changes) != [:installation_type]
+    end
+
     defp purge_cache!(config_id) do
       Plausible.Workers.PurgeCDNCache.new(
         %{id: config_id},
