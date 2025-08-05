@@ -20,7 +20,7 @@ defmodule Plausible.Session.Transfer do
 
   # Timeout must at least account waiting for writebuffer flush to get
   # picked up from the queue and processed.
-  @lock_acquire_timeout :timer.seconds(15_000)
+  @lock_acquire_timeout :timer.seconds(5)
 
   def telemetry_event, do: [:plausible, :sessions, :takeover]
 
