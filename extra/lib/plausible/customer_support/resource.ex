@@ -1,6 +1,6 @@
 defmodule Plausible.CustomerSupport.Resource do
   @moduledoc """
-  Generic behaviour for CS resources and their components
+  Generic behaviour for CS resources
   """
   defstruct [:id, :type, :module, :object, :path]
 
