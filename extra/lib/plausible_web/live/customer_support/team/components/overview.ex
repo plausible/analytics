@@ -3,6 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   Team overview component - handles team basic info, trial dates, notes
   """
   use PlausibleWeb, :live_component
+  import PlausibleWeb.CustomerSupport.Live
 
   def update(%{team: team}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
@@ -49,11 +50,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
 
     case Plausible.Repo.update(changeset) do
       {:ok, team} ->
-        send(self(), {:success, "Team saved"})
+        success("Team saved")
         {:noreply, assign(socket, team: team, form: to_form(changeset))}
 
       {:error, changeset} ->
-        send(self(), {:error, "Error saving team: #{inspect(changeset.errors)}"})
+        failure("Error saving team: #{inspect(changeset.errors)}")
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
@@ -61,14 +62,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   def handle_event("delete-team", _params, socket) do
     case Plausible.Teams.delete(socket.assigns.team) do
       {:ok, :deleted} ->
-        send(self(), {:navigate, Routes.customer_support_path(socket, :index), "Team deleted"})
+        navigate_with_success(Routes.customer_support_path(socket, :index), "Team deleted")
         {:noreply, socket}
 
       {:error, :active_subscription} ->
-        send(
-          self(),
-          {:error, "The team has an active subscription which must be canceled first."}
-        )
+        failure("The team has an active subscription which must be canceled first.")
 
         {:noreply, socket}
     end

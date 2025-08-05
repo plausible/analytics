@@ -6,6 +6,7 @@ defmodule PlausibleWeb.CustomerSupport.Live do
   - Standard mount/3 and handle_info/2 implementations
   - Tab navigation components and routing utilities  
   - Common aliases and imports for Customer Support LiveViews
+  - Convenience API for flashes and redirects
   """
 
   defmacro __using__(_opts) do
@@ -41,6 +42,21 @@ defmodule PlausibleWeb.CustomerSupport.Live do
 
       defoverridable mount: 3, handle_info: 2, handle_params: 3
     end
+  end
+
+  @spec success(String.t()) :: :ok
+  def success(msg)  do
+    send(self(), {:success, msg})
+  end
+
+  @spec failure(String.t()) :: :ok
+  def failure(msg)  do
+    send(self(), {:error, msg})
+  end
+
+  @spec navigate_with_success(String.t(), String.t()) :: :ok
+  def navigate_with_success(path, msg) do
+    send(self(), {:navigate, path, msg})
   end
 
   use Phoenix.Component

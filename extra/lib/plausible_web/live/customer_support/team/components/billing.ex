@@ -3,6 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   Team billing component - handles subscription and custom plans
   """
   use PlausibleWeb, :live_component
+  import PlausibleWeb.CustomerSupport.Live
 
   alias Plausible.Billing.EnterprisePlan
   alias Plausible.Billing.Plans
@@ -274,7 +275,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
 
     case Plausible.Repo.insert(changeset) do
       {:ok, _plan} ->
-        send(self(), {:success, "Plan saved"})
+        success("Plan saved")
         plans = get_plans(socket.assigns.team.id)
 
         {:noreply,
@@ -286,7 +287,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
          )}
 
       {:error, changeset} ->
-        send(self(), {:error, "Error saving plan: #{inspect(changeset.errors)}"})
+        failure("Error saving plan: #{inspect(changeset.errors)}")
         {:noreply, assign(socket, plan_form: to_form(changeset))}
     end
   end
@@ -297,7 +298,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
 
     case Plausible.Repo.update(changeset) do
       {:ok, _plan} ->
-        send(self(), {:success, "Plan updated"})
+        success("Plan updated")
         plans = get_plans(socket.assigns.team.id)
 
         {:noreply,
@@ -309,7 +310,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
          )}
 
       {:error, changeset} ->
-        send(self(), {:error, "Error updating plan: #{inspect(changeset.errors)}"})
+        failure("Error updating plan: #{inspect(changeset.errors)}")
         {:noreply, assign(socket, plan_form: to_form(changeset))}
     end
   end

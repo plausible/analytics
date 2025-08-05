@@ -3,6 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   Team members component - handles team member management
   """
   use PlausibleWeb, :live_component
+  import PlausibleWeb.CustomerSupport.Live
   alias Plausible.Teams
 
   def update(%{team: team}, socket) do
@@ -74,7 +75,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
     |> Plausible.Auth.find_user_by()
     |> Plausible.Auth.SSO.deprovision_user!()
 
-    send(self(), {:success, "SSO user deprovisioned"})
+    success("SSO user deprovisioned")
     {:noreply, refresh_members(socket, socket.assigns.team)}
   end
 

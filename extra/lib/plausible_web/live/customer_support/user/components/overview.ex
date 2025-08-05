@@ -3,6 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
   User overview component - handles user settings, team memberships, and user management
   """
   use PlausibleWeb, :live_component
+  import PlausibleWeb.CustomerSupport.Live
 
   def update(%{user: user}, socket) do
     form = user |> Plausible.Auth.User.changeset() |> to_form()
@@ -54,15 +55,15 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
 
     case Plausible.Auth.delete_user(user) do
       {:ok, _} ->
-        send(self(), {:navigate, Routes.customer_support_path(socket, :index), "User deleted"})
+        navigate_with_success(Routes.customer_support_path(socket, :index), "User deleted")
         {:noreply, socket}
 
       {:error, :active_subscription} ->
-        send(self(), {:error, "Cannot delete user with active subscription"})
+        failure("Cannot delete user with active subscription")
         {:noreply, socket}
 
       {:error, reason} ->
-        send(self(), {:error, "Failed to delete user: #{inspect(reason)}"})
+        failure("Failed to delete user: #{inspect(reason)}")
         {:noreply, socket}
     end
   end
@@ -73,12 +74,12 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
     case Plausible.Auth.User.changeset(user, params) |> Plausible.Repo.update() do
       {:ok, updated_user} ->
         form = updated_user |> Plausible.Auth.User.changeset() |> to_form()
-        send(self(), {:success, "User updated successfully"})
+        success("User updated successfully")
         {:noreply, assign(socket, user: updated_user, form: form)}
 
       {:error, changeset} ->
         form = changeset |> to_form()
-        send(self(), {:error, "Failed to update user"})
+        failure("Failed to update user")
         {:noreply, assign(socket, form: form)}
     end
   end

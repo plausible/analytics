@@ -3,6 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.RescueZone do
   Site rescue zone component - handles site transfer functionality
   """
   use PlausibleWeb, :live_component
+  import PlausibleWeb.CustomerSupport.Live
   import PlausibleWeb.Components.Generic
   import Ecto.Query
   alias Plausible.Repo
@@ -62,11 +63,11 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.RescueZone do
            :owner
          ) do
       {:ok, _transfer} ->
-        send(self(), {:success, "Transfer e-mail sent!"})
+        success("Transfer e-mail sent!")
         {:noreply, socket}
 
       error ->
-        send(self(), {:error, "Transfer failed: #{inspect(error)}"})
+        failure("Transfer failed: #{inspect(error)}")
         {:noreply, socket}
     end
   end

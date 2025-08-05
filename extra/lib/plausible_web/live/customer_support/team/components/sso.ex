@@ -3,6 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
   Team SSO component - handles SSO integration management
   """
   use PlausibleWeb, :live_component
+  import PlausibleWeb.CustomerSupport.Live
   alias Plausible.Auth.SSO
 
   def update(%{team: team}, socket) do
@@ -84,7 +85,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
         to: Routes.customer_support_team_path(socket, :show, socket.assigns.team.id)
       )
 
-    send(self(), {:success, "SSO integration removed"})
+    success("SSO integration removed")
 
     {:noreply, socket}
   end
@@ -93,7 +94,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
     domain = Enum.find(socket.assigns.sso_integration.sso_domains, &(&1.identifier == i))
     :ok = SSO.Domains.remove(domain, force_deprovision?: true)
 
-    send(self(), {:success, "SSO domain removed"})
+    success("SSO domain removed")
 
     {:noreply, assign(socket, sso_integration: get_sso_integration(socket.assigns.team))}
   end
