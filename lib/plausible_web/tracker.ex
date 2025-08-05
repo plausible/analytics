@@ -42,7 +42,6 @@ defmodule PlausibleWeb.Tracker do
     }
   end
 
-
   def update_script_configuration(site, config_update, changeset_type) do
     Repo.transact(fn ->
       with {:ok, original_config} <- get_or_create_tracker_script_configuration(site),
@@ -74,7 +73,6 @@ defmodule PlausibleWeb.Tracker do
       |> Oban.insert!()
     end
   end
-
 
   def update_script_configuration!(site, config_update, changeset_type) do
     {:ok, updated_config} = update_script_configuration(site, config_update, changeset_type)
