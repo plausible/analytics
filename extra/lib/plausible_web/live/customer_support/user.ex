@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.User do
 
       {:noreply, handle_tab_change_for(socket, tab, params, :user, &tab_component/1)}
     else
-      {:noreply, redirect(socket, to: "/cs")}
+      {:noreply, redirect(socket, to: Routes.customer_support_path(socket, :index))}
     end
   end
 

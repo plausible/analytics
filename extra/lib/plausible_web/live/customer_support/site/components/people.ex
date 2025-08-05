@@ -3,7 +3,6 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.People do
   Site people component - handles site memberships and invitations
   """
   use PlausibleWeb, :live_component
-  import PlausibleWeb.Components.Generic
 
   def update(%{site: site}, socket) do
     people = Plausible.Sites.list_people(site)
@@ -32,7 +31,10 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.People do
         </:thead>
         <:tbody :let={{kind, person, role}}>
           <.td :if={kind == :membership}>
-            <.styled_link class="flex items-center" patch={"/cs/users/#{person.id}"}>
+            <.styled_link
+              class="flex items-center"
+              patch={Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, person.id)}
+            >
               <img
                 src={Plausible.Auth.User.profile_img_url(person)}
                 class="w-4 rounded-full bg-gray-300 mr-2"
@@ -44,7 +46,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.People do
           <.td :if={kind == :invitation}>
             <div class="flex items-center">
               <img
-                src={Plausible.Auth.User.profile_img_url(person)}
+                src={Plausible.Auth.User.profile_img_url("hum")}
                 class="w-4 rounded-full bg-gray-300 mr-2"
               />
               {person}

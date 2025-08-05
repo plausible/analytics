@@ -3,8 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   Team members component - handles team member management
   """
   use PlausibleWeb, :live_component
-  alias Plausible.Teams.Management.Layout
-  import PlausibleWeb.Components.Generic
+  alias Plausible.Teams
 
   def update(%{team: team}, socket) do
     {:ok, refresh_members(socket, team)}
@@ -13,7 +12,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   def render(assigns) do
     ~H"""
     <div class="mt-2">
-      <.table rows={Layout.sorted_for_display(@team_layout)}>
+      <.table rows={Teams.Management.Layout.sorted_for_display(@team_layout)}>
         <:thead>
           <.th>User</.th>
           <.th>Sessions</.th>
@@ -24,7 +23,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
           <.td truncate>
             <div :if={member.id != 0}>
               <.styled_link
-                patch={"/cs/users/user/#{member.id}"}
+                patch={Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, member.id)}
                 class="cursor-pointer flex block items-center"
               >
                 <img
@@ -80,7 +79,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   end
 
   defp refresh_members(socket, team) do
-    team_layout = Layout.init(team)
+    team_layout = Teams.Management.Layout.init(team)
 
     session_counts =
       team_layout

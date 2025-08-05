@@ -3,7 +3,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
   Team audit component - handles audit log viewing
   """
   use PlausibleWeb, :live_component
-  import PlausibleWeb.Components.Generic
 
   def update(%{team: team, tab_params: tab_params}, socket) do
     pagination_params = get_pagination_params(tab_params)
@@ -169,7 +168,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
 
     {:noreply,
      push_patch(socket,
-       to: "/cs/teams/team/#{team.id}?" <> URI.encode_query(query_params)
+       to: Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id, query_params)
      )}
   end
 
@@ -230,7 +229,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
       />
 
       <.styled_link
-        patch={"/cs/users/user/#{@user.id}"}
+        patch={Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, @user.id)}
         class="cursor-pointer flex block items-center"
       >
         {@user.name}

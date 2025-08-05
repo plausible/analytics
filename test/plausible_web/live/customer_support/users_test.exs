@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         assert text_of_attr(uid, "value") == "#{user.id}"
 
         team = team_of(user)
-        assert [_] = find(html, ~s|a[href="/cs/teams/#{team.id}"]|)
+        assert [_] = find(html, ~s|a[href="/cs/teams/team/#{team.id}"]|)
       end
 
       test "404", %{conn: conn} do

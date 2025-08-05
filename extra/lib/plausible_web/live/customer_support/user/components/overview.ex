@@ -3,7 +3,6 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
   User overview component - handles user settings, team memberships, and user management
   """
   use PlausibleWeb, :live_component
-  import PlausibleWeb.Components.Generic
 
   def update(%{user: user}, socket) do
     form = user |> Plausible.Auth.User.changeset() |> to_form()
@@ -20,7 +19,9 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
         </:thead>
         <:tbody :let={membership}>
           <.td>
-            <.styled_link patch={"/cs/teams/#{membership.team.id}"}>
+            <.styled_link patch={
+              Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, membership.team.id)
+            }>
               {membership.team.name}
             </.styled_link>
           </.td>
@@ -54,7 +55,7 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
     case Plausible.Auth.delete_user(user) do
       {:ok, _} ->
         send(self(), {:success, "User deleted successfully"})
-        send(self(), {:navigate, "/cs", nil})
+        send(self(), {:navigate, Routes.customer_support_path(socket, :index), nil})
         {:noreply, socket}
 
       {:error, :subscription_active} ->

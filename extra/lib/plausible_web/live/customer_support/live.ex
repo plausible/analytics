@@ -15,6 +15,8 @@ defmodule PlausibleWeb.CustomerSupport.Live do
       alias Plausible.CustomerSupport.Resource
       alias PlausibleWeb.CustomerSupport.Components.Layout
       import PlausibleWeb.CustomerSupport.Live
+      import PlausibleWeb.Components.Generic
+      alias PlausibleWeb.Router.Helpers, as: Routes
 
       def mount(_params, _session, socket) do
         {:ok, socket}

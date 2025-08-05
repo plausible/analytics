@@ -7,8 +7,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.Site do
   """
   use PlausibleWeb.CustomerSupport.Live
 
-  import PlausibleWeb.Components.Generic
-
   alias PlausibleWeb.CustomerSupport.Site.Components.{
     Overview,
     People,
@@ -33,7 +31,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Site do
 
       {:noreply, handle_tab_change_for(socket, tab, params, :site, &tab_component/1)}
     else
-      {:noreply, redirect(socket, to: "/cs")}
+      {:noreply, redirect(socket, to: Routes.customer_support_path(socket, :index))}
     end
   end
 
@@ -84,7 +82,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.Site do
         </p>
         <p class="text-sm font-medium">
           Team:
-          <.styled_link patch={"/cs/teams/#{@site.team.id}"}>
+          <.styled_link patch={
+            Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, @site.team.id)
+          }>
             {@site.team.name}
           </.styled_link>
         </p>

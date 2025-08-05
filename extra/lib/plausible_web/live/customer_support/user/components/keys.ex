@@ -3,7 +3,6 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Keys do
   User API keys component - handles displaying user's API keys
   """
   use PlausibleWeb, :live_component
-  import PlausibleWeb.Components.Generic
   import Ecto.Query
   alias Plausible.Repo
 
@@ -25,7 +24,9 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Keys do
         <:tbody :let={api_key}>
           <.td :if={is_nil(api_key.team)}>N/A</.td>
           <.td :if={api_key.team}>
-            <.styled_link patch={"/cs/teams/#{api_key.team.id}"}>
+            <.styled_link patch={
+              Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, api_key.team.id)
+            }>
               {api_key.team.name}
             </.styled_link>
           </.td>

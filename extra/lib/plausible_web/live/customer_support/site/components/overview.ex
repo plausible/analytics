@@ -3,7 +3,6 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
   Site overview component - handles site settings and management
   """
   use PlausibleWeb, :live_component
-  import PlausibleWeb.Components.Generic
 
   def update(%{site: site}, socket) do
     changeset = Plausible.Site.crm_changeset(site, %{})
@@ -94,7 +93,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
     case Plausible.Site.Removal.run(site) do
       :ok ->
         send(self(), {:success, "Site deletion process started"})
-        send(self(), {:navigate, "/cs", nil})
+        send(self(), {:navigate, Routes.customer_support_path(socket, :index)})
         {:noreply, socket}
 
       {:error, _} ->

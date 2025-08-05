@@ -4,8 +4,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
   """
   use PlausibleWeb, :live_component
   alias Plausible.Teams
-  alias PlausibleWeb.Router.Helpers, as: Routes
-  import PlausibleWeb.Components.Generic
 
   def update(%{team: team}, socket) do
     sites = Teams.owned_sites(team, 100)
@@ -37,7 +35,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
                 class="w-4 h-4 flex-shrink-0 mt-px mr-2"
               />
               <.styled_link
-                patch={"/cs/sites/site/#{site.id}"}
+                patch={Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, site.id)}
                 class="cursor-pointer flex block items-center"
               >
                 {site.domain}

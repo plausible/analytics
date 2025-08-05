@@ -607,7 +607,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert {:error, {:live_redirect, %{to: to}}} =
                  lv |> element("button#remove-sso-integration") |> render_click()
 
-        assert to == "/cs/teams/#{team.id}"
+        assert to == "/cs/teams/team/#{team.id}"
       end
     end
 

@@ -4,7 +4,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
   """
   use PlausibleWeb, :live_component
   alias Plausible.Auth.SSO
-  import PlausibleWeb.Components.Generic
 
   def update(%{team: team}, socket) do
     sso_integration = get_sso_integration(team)
@@ -81,7 +80,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
     socket =
       socket
       |> assign(sso_integration: nil)
-      |> push_navigate(to: "/cs/teams/#{socket.assigns.team.id}")
+      |> push_navigate(
+        to: Routes.customer_support_team_path(socket, :show, socket.assigns.team.id)
+      )
 
     send(self(), {:success, "SSO integration removed"})
 
