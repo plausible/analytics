@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:error, :no_changes} ->
         H.bad_request(
           conn,
-          "Payload must contain at least one of the parameters 'domain', 'tracker_script_configuration'."
+          "Payload must contain at least one of the parameters 'domain', 'tracker_script_configuration'"
         )
 
       {:error, {:domain_change_invalid, %Ecto.Changeset{} = changeset}} ->
@@ -495,22 +495,30 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   defp get_or_create_config(site, params) do
-    case PlausibleWeb.Tracker.get_or_create_tracker_script_configuration(site, params) do
-      {:ok, tracker_script_configuration} ->
-        {:ok, tracker_script_configuration}
+    if FunWithFlags.enabled?(:scriptv2, for: site) do
+      case PlausibleWeb.Tracker.get_or_create_tracker_script_configuration(site, params) do
+        {:ok, tracker_script_configuration} ->
+          {:ok, tracker_script_configuration}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:error, {:tracker_script_configuration_invalid, changeset}}
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:error, {:tracker_script_configuration_invalid, changeset}}
+      end
+    else
+      {:ok, %{}}
     end
   end
 
   defp update_config(site, params) do
-    case PlausibleWeb.Tracker.update_script_configuration(site, params, :installation) do
-      {:ok, tracker_script_configuration} ->
-        {:ok, tracker_script_configuration}
+    if FunWithFlags.enabled?(:scriptv2, for: site) do
+      case PlausibleWeb.Tracker.update_script_configuration(site, params, :installation) do
+        {:ok, tracker_script_configuration} ->
+          {:ok, tracker_script_configuration}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:error, {:tracker_script_configuration_invalid, changeset}}
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:error, {:tracker_script_configuration_invalid, changeset}}
+      end
+    else
+      {:ok, %{}}
     end
   end
 
@@ -519,8 +527,14 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   defp get_site_response(site) do
+    serializable_properties =
+      if(FunWithFlags.enabled?(:scriptv2, for: site),
+        do: [:domain, :timezone, :tracker_script_configuration],
+        else: [:domain, :timezone]
+      )
+
     site
-    |> Map.take([:domain, :timezone, :tracker_script_configuration])
-    |> Map.put(:custom_properties, site.allowed_event_props || [])
+    |> Map.take(serializable_properties)
+    |> Map.put(:custom_properties, site.allowed_event_props || []) # remapped to `custom_properties`
   end
 end
