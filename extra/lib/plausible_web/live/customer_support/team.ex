@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         |> assign(:team, team)
         |> assign(:tab, tab)
 
-      {:noreply, handle_tab_change_for(socket, tab, params, :team, &tab_component/1)}
+      {:noreply, go_to_tab(socket, tab, params, :team, tab_component(tab))}
     else
       {:noreply, redirect(socket, to: Routes.customer_support_path(socket, :index))}
     end

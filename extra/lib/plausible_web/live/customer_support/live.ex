@@ -98,7 +98,7 @@ defmodule PlausibleWeb.CustomerSupport.Live do
     """
   end
 
-  def handle_tab_change_for(socket, tab, params, resource_key, tab_component_fn) do
+  def go_to_tab(socket, tab, params, resource_key, component) do
     tab_params = Map.drop(params, ["id", "tab"])
     resource = Map.get(socket.assigns, resource_key)
 
@@ -110,7 +110,7 @@ defmodule PlausibleWeb.CustomerSupport.Live do
 
     update_params = Keyword.put(update_params, resource_key, resource)
 
-    send_update(tab_component_fn.(tab), update_params)
+    send_update(component, update_params)
 
     socket
   end
