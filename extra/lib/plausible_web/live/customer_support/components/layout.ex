@@ -20,6 +20,12 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
       <div class="container pt-6">
         <.header filter_text={@filter_text} />
 
+        <div class="py-4">
+          <.styled_link class="text-sm" onclick="window.history.go(-1); return false;">
+            &larr; Go back
+          </.styled_link>
+        </div>
+
         <.search_bar :if={@show_search} filter_text={@filter_text}>
           {render_slot(@filter_actions)}
         </.search_bar>
@@ -28,6 +34,12 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
 
         <div class="mt-4">
           {render_slot(@inner_block)}
+        </div>
+
+        <div class="py-4">
+          <.styled_link class="text-sm" onclick="window.history.go(-1); return false;">
+            &larr; Go back
+          </.styled_link>
         </div>
       </div>
     </div>
