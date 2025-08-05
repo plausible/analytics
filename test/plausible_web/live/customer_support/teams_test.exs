@@ -30,6 +30,35 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ team.name
       end
 
+      test "delete team", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-team"]|)
+        |> render_click()
+
+        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+
+        refute Plausible.Repo.get(Plausible.Teams.Team, team.id)
+      end
+
+      test "delete team with active subscription", %{conn: conn, user: user} do
+        user = subscribe_to_growth_plan(user)
+        team = team_of(user)
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-team"]|)
+        |> render_click()
+
+        text = lv |> render() |> text()
+
+        assert text =~ "The team has an active subscription which must be canceled first"
+
+        assert Plausible.Repo.get(Plausible.Teams.Team, team.id)
+      end
+
       test "grace period handling", %{conn: conn, user: user} do
         team = team_of(user)
         {:ok, _, html} = live(conn, open_team(team.id))
