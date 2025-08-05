@@ -120,8 +120,7 @@ defmodule Plausible.Session.Transfer do
       @cmd_takeover_done ->
         # Wipe the cache after transfer is complete to avoid making the transferred cache stale
         Cache.Adapter.wipe(:sessions)
-        # Unblock ingest after trasnsfer is done
-        Plausible.Event.WriteBuffer.unlock()
+        # Unblock ingest after transfer is done
         Plausible.Session.WriteBuffer.unlock()
         :counters.add(given_counter, 1, 1)
     end
@@ -130,19 +129,12 @@ defmodule Plausible.Session.Transfer do
   defp list_cache_names(session_version, parent) do
     if session_version == session_version() and attempted?(parent) do
       # Blocking ingest before transfer
-      locks_acquired? =
-        [
-          Task.async(fn -> Plausible.Event.WriteBuffer.lock(@lock_acquire_timeout) end),
-          Task.async(fn -> Plausible.Session.WriteBuffer.lock(@lock_acquire_timeout) end)
-        ]
-        # timeouts are managed by WriteBuffer.lock/1 calls instead
-        |> Task.await_many(:infinity)
-        |> Enum.all?(&(&1 == :ok))
+      case Plausible.Session.WriteBuffer.lock(@lock_acquire_timeout) do
+        :ok ->
+          Cache.Adapter.get_names(:sessions)
 
-      if locks_acquired? do
-        Cache.Adapter.get_names(:sessions)
-      else
-        []
+        _ ->
+          []
       end
     else
       []

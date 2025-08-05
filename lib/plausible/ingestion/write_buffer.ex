@@ -5,9 +5,6 @@ defmodule Plausible.Ingestion.WriteBuffer do
 
   alias Plausible.IngestRepo
 
-  @lock_timeout :timer.seconds(3)
-  @lock_interval 100
-
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: Keyword.fetch!(opts, :name))
   end
@@ -20,54 +17,39 @@ defmodule Plausible.Ingestion.WriteBuffer do
     GenServer.call(server, :flush, :infinity)
   end
 
+  def flush_async(server) do
+    GenServer.cast(server, :flush)
+  end
+
   @impl true
   def init(opts) do
     name = Keyword.fetch!(opts, :name)
     buffer = opts[:buffer] || []
     max_buffer_size = opts[:max_buffer_size] || default_max_buffer_size()
     flush_interval_ms = opts[:flush_interval_ms] || default_flush_interval_ms()
-    lock_timeout_ms = opts[:lock_timeouts_ms] || @lock_timeout
-    lock_interval_ms = opts[:lock_interval_ms] || @lock_interval
+    on_init = Keyword.get(opts, :on_init, fn _opts -> %{} end)
 
     Process.flag(:trap_exit, true)
     timer = Process.send_after(self(), :tick, flush_interval_ms)
 
-    ^name = :ets.new(name, [:named_table, :set, :public])
+    extra_state = on_init.(opts)
 
     {:ok,
-     %{
-       buffer: buffer,
-       timer: timer,
-       name: name,
-       insert_sql: Keyword.fetch!(opts, :insert_sql),
-       insert_opts: Keyword.fetch!(opts, :insert_opts),
-       header: Keyword.fetch!(opts, :header),
-       buffer_size: IO.iodata_length(buffer),
-       max_buffer_size: max_buffer_size,
-       flush_interval_ms: flush_interval_ms,
-       lock_timeout_ms: lock_timeout_ms,
-       lock_interval_ms: lock_interval_ms
-     }}
-  end
-
-  @spec lock(atom(), pid(), pos_integer()) :: :ok | {:error, :timeout}
-  def lock(name, locker \\ self(), timeout) do
-    true = :ets.insert(name, {:state, %{locker: locker}})
-
-    flush(name)
-
-    receive do
-      {:locked, ^name} -> :ok
-    after
-      timeout -> {:error, :timeout}
-    end
-  end
-
-  @spec unlock(atom()) :: :ok
-  def unlock(name) do
-    true = :ets.insert(name, {:state, %{locker: nil}})
-
-    :ok
+     Map.merge(
+       %{
+         buffer: buffer,
+         timer: timer,
+         name: name,
+         insert_sql: Keyword.fetch!(opts, :insert_sql),
+         insert_opts: Keyword.fetch!(opts, :insert_opts),
+         on_flush: Keyword.get(opts, :on_flush, fn _result, state -> state end),
+         header: Keyword.fetch!(opts, :header),
+         buffer_size: IO.iodata_length(buffer),
+         max_buffer_size: max_buffer_size,
+         flush_interval_ms: flush_interval_ms
+       },
+       extra_state
+     )}
   end
 
   @impl true
@@ -87,6 +69,14 @@ defmodule Plausible.Ingestion.WriteBuffer do
     else
       {:noreply, state}
     end
+  end
+
+  def handle_cast(:flush, state) do
+    %{timer: timer, flush_interval_ms: flush_interval_ms} = state
+    Process.cancel_timer(timer)
+    do_flush(state)
+    new_timer = Process.send_after(self(), :tick, flush_interval_ms)
+    {:noreply, %{state | buffer: [], buffer_size: 0, timer: new_timer}}
   end
 
   @impl true
@@ -118,44 +108,18 @@ defmodule Plausible.Ingestion.WriteBuffer do
       insert_opts: insert_opts,
       insert_sql: insert_sql,
       header: header,
-      name: name
+      name: name,
+      on_flush: on_flush
     } = state
 
     case buffer do
       [] ->
-        nil
+        on_flush.(:empty, state)
 
       _not_empty ->
         Logger.notice("Flushing #{buffer_size} byte(s) RowBinary from #{name}")
         IngestRepo.query!(insert_sql, [header | buffer], insert_opts)
-    end
-
-    case :ets.lookup(state.name, :state) do
-      [state: %{locker: pid}] when is_pid(pid) ->
-        send(pid, {:locked, state.name})
-        now = System.monotonic_time()
-        lock_loop(state.name, now, state.lock_timeout_ms, state.lock_interval_ms)
-
-      _ ->
-        :ignore
-    end
-  end
-
-  defp lock_loop(name, start, lock_timeout, lock_interval) do
-    now = System.monotonic_time()
-
-    if now - start <= lock_timeout do
-      Process.sleep(lock_interval)
-
-      case :ets.lookup(name, :state) do
-        [state: %{locker: pid}] when is_pid(pid) ->
-          lock_loop(name, start, lock_timeout, lock_interval)
-
-        _ ->
-          :pass
-      end
-    else
-      unlock(name)
+        on_flush.(:success, state)
     end
   end
 
