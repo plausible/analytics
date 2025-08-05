@@ -1,7 +1,12 @@
 defmodule Plausible.CustomerSupport.Resource.Site do
   @moduledoc false
-  use Plausible.CustomerSupport.Resource
+  use Plausible.CustomerSupport.Resource, type: "site"
   alias Plausible.Repo
+
+  @impl true
+  def path(id) do
+    Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, id)
+  end
 
   @impl true
   def search(input, opts \\ [])

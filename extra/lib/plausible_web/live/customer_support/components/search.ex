@@ -24,7 +24,7 @@ defmodule PlausibleWeb.CustomerSupport.Components.Search do
     <div>
       <ul :if={@results != []} class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <li :for={r <- @results} class="group relative">
-          <.link patch={resource_path(r)} data-test-type={r.type} data-test-id={r.id}>
+          <.link patch={r.path} data-test-type={r.type} data-test-id={r.id}>
             <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
               <div class="text-gray-800 dark:text-gray-500 w-full flex items-center justify-between space-x-4">
                 <.render_result resource={r} />
@@ -112,17 +112,5 @@ defmodule PlausibleWeb.CustomerSupport.Components.Search do
 
   defp maybe_focus_search(input) do
     {@resources, input, limit: 30}
-  end
-
-  defp resource_path(%{type: "team", id: id}) do
-    Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id)
-  end
-
-  defp resource_path(%{type: "user", id: id}) do
-    Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, id)
-  end
-
-  defp resource_path(%{type: "site", id: id}) do
-    Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, id)
   end
 end

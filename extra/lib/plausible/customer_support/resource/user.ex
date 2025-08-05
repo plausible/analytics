@@ -1,7 +1,12 @@
 defmodule Plausible.CustomerSupport.Resource.User do
   @moduledoc false
-  use Plausible.CustomerSupport.Resource
+  use Plausible.CustomerSupport.Resource, type: "user"
   alias Plausible.Repo
+
+  @impl true
+  def path(id) do
+    Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, id)
+  end
 
   @impl true
   def get(id) do

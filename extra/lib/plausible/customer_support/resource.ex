@@ -2,7 +2,7 @@ defmodule Plausible.CustomerSupport.Resource do
   @moduledoc """
   Generic behaviour for CS resources and their components
   """
-  defstruct [:id, :type, :module, :object]
+  defstruct [:id, :type, :module, :object, :path]
 
   @type schema() :: map()
 
@@ -15,43 +15,34 @@ defmodule Plausible.CustomerSupport.Resource do
 
   @callback search(String.t(), Keyword.t()) :: list(schema())
   @callback get(pos_integer()) :: schema()
-  @callback type() :: String.t()
+  @callback path(any()) :: String.t()
   @callback dump(schema()) :: t()
 
-  defmacro __using__(_opts) do
+  defmacro __using__(type: type) do
     quote do
       @behaviour Plausible.CustomerSupport.Resource
       alias Plausible.CustomerSupport.Resource
+      alias PlausibleWeb.Router.Helpers, as: Routes
 
       import Ecto.Query
       alias Plausible.Repo
 
       @impl true
       def dump(schema) do
-        Resource.new(__MODULE__, schema)
+        new(__MODULE__, schema)
       end
 
       defoverridable dump: 1
 
-      @impl true
-      def type do
-        __MODULE__
-        |> Module.split()
-        |> Enum.reverse()
-        |> hd()
-        |> String.downcase()
+      def new(module, schema) do
+        %Resource{
+          id: schema.id,
+          type: unquote(type),
+          path: module.path(schema.id),
+          module: module,
+          object: schema
+        }
       end
-
-      defoverridable type: 0
     end
-  end
-
-  def new(module, schema) do
-    %__MODULE__{
-      id: schema.id,
-      type: module.type(),
-      module: module,
-      object: schema
-    }
   end
 end

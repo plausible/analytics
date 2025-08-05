@@ -1,8 +1,13 @@
 defmodule Plausible.CustomerSupport.Resource.Team do
   @moduledoc false
-  use Plausible.CustomerSupport.Resource
+  use Plausible.CustomerSupport.Resource, type: "team"
   alias Plausible.Teams
   alias Plausible.Repo
+
+  @impl true
+  def path(id) do
+    Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id)
+  end
 
   @impl true
   def search(input, opts \\ [])
