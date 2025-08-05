@@ -112,8 +112,6 @@ defmodule PlausibleWeb.Router do
       live "/cs/teams/team/:id", CustomerSupport.Team, :show, as: :customer_support_team
       live "/cs/users/user/:id", CustomerSupport.User, :show, as: :customer_support_user
       live "/cs/sites/site/:id", CustomerSupport.Site, :show, as: :customer_support_site
-
-      # live "/cs/:any/:resource/:id", CustomerSupport, :details, as: :customer_support_resource
     end
   end
 
