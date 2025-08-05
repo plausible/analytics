@@ -112,25 +112,7 @@ defmodule Plausible.Session.Transfer do
 
     case request do
       {@cmd_list_cache_names, session_version} ->
-        if session_version == session_version() and attempted?(parent) do
-          # Blocking ingest before transfer
-          locks_acquired? =
-            [
-              Task.async(fn -> Plausible.Event.WriteBuffer.lock(@lock_acquire_timeout) end),
-              Task.async(fn -> Plausible.Session.WriteBuffer.lock(@lock_acquire_timeout) end)
-            ]
-            # timeouts are managed by WriteBuffer.lock/1 calls instead
-            |> Task.await_many(:infinity)
-            |> Enum.all?(&(&1 == :ok))
-
-          if locks_acquired? do
-            Cache.Adapter.get_names(:sessions)
-          else
-            []
-          end
-        else
-          []
-        end
+        list_cache_names(session_version, parent)
 
       {@cmd_dump_cache, cache} ->
         Cache.Adapter.cache2list(cache)
@@ -142,6 +124,28 @@ defmodule Plausible.Session.Transfer do
         Plausible.Event.WriteBuffer.unlock()
         Plausible.Session.WriteBuffer.unlock()
         :counters.add(given_counter, 1, 1)
+    end
+  end
+
+  defp list_cache_names(session_version, parent) do
+    if session_version == session_version() and attempted?(parent) do
+      # Blocking ingest before transfer
+      locks_acquired? =
+        [
+          Task.async(fn -> Plausible.Event.WriteBuffer.lock(@lock_acquire_timeout) end),
+          Task.async(fn -> Plausible.Session.WriteBuffer.lock(@lock_acquire_timeout) end)
+        ]
+        # timeouts are managed by WriteBuffer.lock/1 calls instead
+        |> Task.await_many(:infinity)
+        |> Enum.all?(&(&1 == :ok))
+
+      if locks_acquired? do
+        Cache.Adapter.get_names(:sessions)
+      else
+        []
+      end
+    else
+      []
     end
   end
 
