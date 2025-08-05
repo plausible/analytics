@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Live.CustomerSupport do
   @moduledoc """
-  Customer Support UI Router
-  Routes teams to dedicated live view, handles other resources inline
+  Customer Support home page (search)
   """
   use PlausibleWeb, :live_view
 
