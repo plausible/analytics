@@ -45,12 +45,12 @@ defmodule PlausibleWeb.CustomerSupport.Live do
   end
 
   @spec success(String.t()) :: :ok
-  def success(msg)  do
+  def success(msg) do
     send(self(), {:success, msg})
   end
 
   @spec failure(String.t()) :: :ok
-  def failure(msg)  do
+  def failure(msg) do
     send(self(), {:error, msg})
   end
 
