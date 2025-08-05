@@ -46,7 +46,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.People do
           <.td :if={kind == :invitation}>
             <div class="flex items-center">
               <img
-                src={Plausible.Auth.User.profile_img_url("hum")}
+                src={Plausible.Auth.User.profile_img_url(person)}
                 class="w-4 rounded-full bg-gray-300 mr-2"
               />
               {person}
