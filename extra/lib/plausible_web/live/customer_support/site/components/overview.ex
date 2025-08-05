@@ -90,15 +90,8 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
   def handle_event("delete-site", _, socket) do
     site = socket.assigns.site
 
-    case Plausible.Site.Removal.run(site) do
-      :ok ->
-        send(self(), {:success, "Site deletion process started"})
-        send(self(), {:navigate, Routes.customer_support_path(socket, :index)})
-        {:noreply, socket}
-
-      {:error, _} ->
-        send(self(), {:error, "Failed to delete site"})
-        {:noreply, socket}
-    end
+    {:ok, _} = Plausible.Site.Removal.run(site)
+    send(self(), {:navigate, Routes.customer_support_path(socket, :index), "Site deleted"})
+    {:noreply, socket}
   end
 end

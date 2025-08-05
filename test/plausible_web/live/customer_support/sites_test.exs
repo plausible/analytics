@@ -40,6 +40,18 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
           {:ok, _lv, _html} = live(conn, open_site(9999))
         end
       end
+
+      test "delete site", %{conn: conn, site: site} do
+        {:ok, lv, _html} = live(conn, open_site(site.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-site"]|)
+        |> render_click()
+
+        assert_redirected(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+
+        refute Plausible.Sites.get_by_domain(site.domain)
+      end
     end
 
     describe "rescue zone" do
