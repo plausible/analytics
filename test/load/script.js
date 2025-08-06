@@ -1,13 +1,15 @@
 import http from "k6/http";
 import { check } from "k6";
 
-const PAYLOAD = JSON.stringify({
-  n: "pageview",
-  u: "http://dummy.site/some-page",
-  d: "dummy.site",
-  r: null,
-  w: 1666,
-});
+function payload(pages) {
+  return JSON.stringify({
+    n: "pageview",
+    u: pages[Math.floor(Math.random() * pages.length)],
+    d: "dummy2.site",
+    r: null,
+    w: 1666,
+  });
+}
 
 function newParams() {
   const ip =
@@ -29,24 +31,60 @@ function newParams() {
   };
 }
 
+function getClient(clients) {
+  return clients[Math.floor(Math.random() * clients.length)];
+}
+
+function getClientSliding(clients, start, runtime, windowSize) {
+  const now = Date.now();
+  const delta = windowSize + Math.floor((now - start) / 1000);
+  const timeline = runtime + 2 * windowSize;
+
+  const lowerBound = Math.max(delta - windowSize, 0);
+  const upperBound = Math.min(lowerBound + 2 * windowSize, timeline);
+
+  const lowerIndex = Math.floor((lowerBound / timeline) * clients.length);
+  const upperIndex = Math.floor((upperBound / timeline) * clients.length);
+  const indexWindow = upperIndex - lowerIndex;
+
+  return clients[lowerIndex + Math.floor(Math.random() * indexWindow)];
+}
+
+export function setup() {
+  const start = Date.now();
+
+  const clients = Array(2000)
+    .fill(0)
+    .map((_) => newParams());
+
+  const pages = Array(100)
+    .fill(0)
+    .map((_, i) => `http://dummy.site/some-page-${i}`);
+
+  return { clients: clients, pages: pages, start: start };
+}
+
 export const options = {
   scenarios: {
     constant_rps: {
       executor: "constant-arrival-rate",
-      rate: 12000,
+      rate: 50,
       timeUnit: "1s",
-      duration: "15m",
-      preAllocatedVUs: 10000,
+      duration: "10m",
+      preAllocatedVUs: 0,
       maxVUs: 30000,
     },
   },
 };
 
-export default function () {
+export default function (data) {
+  // const client = getClient(data.clients);
+  const client = getClientSliding(data.clients, data.start, 600, 60);
+
   const res = http.post(
-    "http://localhost:8000/api/event",
-    PAYLOAD,
-    newParams(),
+    "http://localhost:4000/api/event",
+    payload(data.pages),
+    client,
   );
 
   check(res, {
