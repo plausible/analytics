@@ -136,7 +136,9 @@ defmodule PlausibleWeb.Live.Verification do
       installation_type = socket.assigns.installation_type
 
       {:ok, pid} =
-        if(FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site),
+        if(
+          FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site) or
+            FunWithFlags.enabled?(:scriptv2, for: socket.assigns.current_user),
           do:
             Verification.Checks.run(url_to_verify, domain, installation_type,
               report_to: report_to,
