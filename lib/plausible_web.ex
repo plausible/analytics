@@ -18,6 +18,7 @@ defmodule PlausibleWeb do
       end
 
       alias PlausibleWeb.Router.Helpers, as: Routes
+      alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
       alias Phoenix.LiveView.JS
 
       import PlausibleWeb.Components.Generic
@@ -32,6 +33,7 @@ defmodule PlausibleWeb do
       import PlausibleWeb.Live.Components.Form
       alias Phoenix.LiveView.JS
       alias PlausibleWeb.Router.Helpers, as: Routes
+      alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
     end
   end
 
@@ -42,6 +44,7 @@ defmodule PlausibleWeb do
       import PlausibleWeb.Live.Components.Form
       alias Phoenix.LiveView.JS
       alias PlausibleWeb.Router.Helpers, as: Routes
+      alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
     end
   end
 
@@ -52,6 +55,7 @@ defmodule PlausibleWeb do
       import Plug.Conn
       import PlausibleWeb.ControllerHelpers
       alias PlausibleWeb.Router.Helpers, as: Routes
+      alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
     end
   end
 
@@ -69,6 +73,7 @@ defmodule PlausibleWeb do
       import PlausibleWeb.Components.Generic
       import PlausibleWeb.Live.Components.Form
       alias PlausibleWeb.Router.Helpers, as: Routes
+      alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
     end
   end
 
