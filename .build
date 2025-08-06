@@ -391,6 +391,8 @@ PlausibleWeb.Live.GoalSettings.List.html
 PlausibleWeb.Live.GoalSettings.html
 PlausibleWeb.Live.ImportsExportsSettings.html
 PlausibleWeb.Live.Installation.html
+PlausibleWeb.Live.InstallationV2.Icons.html
+PlausibleWeb.Live.InstallationV2.Instructions.html
 PlausibleWeb.Live.InstallationV2.html
 PlausibleWeb.Live.LegacyChoosePlan.html
 PlausibleWeb.Live.Plugins.API.Settings.html
@@ -522,8 +524,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-19DDC48E.js
-dist/sidebar_items-F4FA29F4.js
+dist/search_data-3EBCA1E4.js
+dist/sidebar_items-0FE7B72A.js
 index.html
 readme.html
 search.html
