@@ -141,6 +141,23 @@ end
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE_BYTES", "100000")
   |> Integer.parse()
 
+# Timeout must at least account waiting for writebuffer flush to get
+# picked up from the queue and processed.
+{ch_session_lock_acquire_timeout_ms, ""} =
+  config_dir
+  |> get_var_from_path_or_env("CLICKHOUSE_SESSION_LOCK_ACQUIRE_TIMEOUT_MS", "5000")
+  |> Integer.parse()
+
+{ch_session_lock_timeout_ms, ""} =
+  config_dir
+  |> get_var_from_path_or_env("CLICKHOUSE_SESSION_LOCK_TIMEOUT_MS", "3000")
+  |> Integer.parse()
+
+{ch_session_lock_interval_ms, ""} =
+  config_dir
+  |> get_var_from_path_or_env("CLICKHOUSE_SESSION_LOCK_INTERVAL_MS", "100")
+  |> Integer.parse()
+
 # Can be generated  with `Base.encode64(:crypto.strong_rand_bytes(32))` from
 # iex shell or `openssl rand -base64 32` from command line.
 totp_vault_key =
@@ -648,6 +665,11 @@ config :plausible, Plausible.ImportDeletionRepo,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
   pool_size: 1
+
+config :plausible, Plausible.Session.WriteBuffer,
+  lock_acquire_timeout_ms: ch_session_lock_acquire_timeout_ms,
+  lock_timeout_ms: ch_session_lock_timeout_ms,
+  lock_interval_ms: ch_session_lock_interval_ms
 
 config :ex_money,
   open_exchange_rates_app_id: get_var_from_path_or_env(config_dir, "OPEN_EXCHANGE_RATES_APP_ID"),

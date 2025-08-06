@@ -18,10 +18,6 @@ defmodule Plausible.Session.Transfer do
   @cmd_dump_cache :get
   @cmd_takeover_done :done
 
-  # Timeout must at least account waiting for writebuffer flush to get
-  # picked up from the queue and processed.
-  @lock_acquire_timeout :timer.seconds(5)
-
   def telemetry_event, do: [:plausible, :sessions, :takeover]
 
   @doc """
@@ -129,7 +125,7 @@ defmodule Plausible.Session.Transfer do
   defp list_cache_names(session_version, parent) do
     if session_version == session_version() and attempted?(parent) do
       # Blocking ingest before transfer
-      case Plausible.Session.WriteBuffer.lock(@lock_acquire_timeout) do
+      case Plausible.Session.WriteBuffer.lock() do
         :ok ->
           Cache.Adapter.get_names(:sessions)
 

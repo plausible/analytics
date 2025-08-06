@@ -1,9 +1,6 @@
 defmodule Plausible.Session.WriteBuffer do
   @moduledoc false
 
-  @lock_timeout :timer.seconds(3)
-  @lock_interval 100
-
   %{
     header: header,
     insert_sql: insert_sql,
@@ -53,8 +50,8 @@ defmodule Plausible.Session.WriteBuffer do
     ^name = :ets.new(name, [:named_table, :set, :public])
 
     %{
-      lock_timeout_ms: opts[:lock_timeouts_ms] || @lock_timeout,
-      lock_interval_ms: opts[:lock_interval_ms] || @lock_interval
+      lock_timeout_ms: opts[:lock_timeouts_ms] || default_lock_timeout_ms(),
+      lock_interval_ms: opts[:lock_interval_ms] || default_lock_interval_ms()
     }
   end
 
@@ -73,7 +70,9 @@ defmodule Plausible.Session.WriteBuffer do
     state
   end
 
-  def lock(locker \\ self(), timeout) do
+  def lock(timeout \\ nil) do
+    locker = self()
+    timeout = timeout || default_lock_acquire_timeout_ms()
     name = __MODULE__
 
     true = :ets.insert(name, {:state, %{locker: locker}})
@@ -112,5 +111,17 @@ defmodule Plausible.Session.WriteBuffer do
       Plausible.Cache.Adapter.wipe(:sessions)
       unlock()
     end
+  end
+
+  defp default_lock_acquire_timeout_ms do
+    Keyword.fetch!(Application.get_env(:plausible, __MODULE__), :lock_acquire_timeout_ms)
+  end
+
+  defp default_lock_timeout_ms do
+    Keyword.fetch!(Application.get_env(:plausible, __MODULE__), :lock_timeout_ms)
+  end
+
+  defp default_lock_interval_ms do
+    Keyword.fetch!(Application.get_env(:plausible, __MODULE__), :lock_interval_ms)
   end
 end
