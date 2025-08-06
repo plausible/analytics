@@ -14,27 +14,45 @@ const DETECTOR_JS_VARIANT = variantsFile.manualVariants.find(
 )
 
 export async function executeVerifyV2(
-  page: Page,
-  { debug, responseHeaders, timeoutMs, cspHostToCheck }: VerifyV2Args
+    page: Page,
+    { responseHeaders, maxAttempts, timeoutBetweenAttemptsMs, ...functionContext }: VerifyV2Args & { maxAttempts: number, timeoutBetweenAttemptsMs: number }
 ): Promise<VerifyV2Result> {
   const verifierCode = (await compileFile(VERIFIER_V2_JS_VARIANT, {
     returnCode: true
   })) as string
 
   try {
-    await page.evaluate(verifierCode)
+    async function verify() {
+      await page.evaluate(verifierCode) // injects window.verifyPlausibleInstallation
+      return await page.evaluate(
+        (c) => {return (window as any).verifyPlausibleInstallation(c)},
+        {...functionContext, responseHeaders}
+      );
+    }
 
-    return await page.evaluate(
-      async ({ responseHeaders, debug, timeoutMs, cspHostToCheck }) => {
-        return await (window as any).verifyPlausibleInstallation({
-          responseHeaders,
-          debug,
-          timeoutMs,
-          cspHostToCheck
-        })
-      },
-      { responseHeaders, debug, timeoutMs, cspHostToCheck }
-    )
+    let lastError;
+    for (let attempts = 1; attempts <= maxAttempts; attempts++) {
+      try {
+        const output = await verify();
+        return {
+          data: {
+            ...output.data,
+            attempts
+          },
+        };
+      } catch (error) {
+        lastError = error;
+        if (
+          typeof error?.message === "string" &&
+          error.message.toLowerCase().includes("execution context")
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, timeoutBetweenAttemptsMs));
+          continue;
+        }
+        throw error
+      }
+    }
+    throw lastError;
   } catch (error) {
     return {
       data: {
