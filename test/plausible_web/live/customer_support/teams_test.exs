@@ -13,14 +13,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     require Plausible.Billing.Subscription.Status
 
     defp open_team(id, qs \\ []) do
-      Routes.customer_support_resource_path(
-        PlausibleWeb.Endpoint,
-        :details,
-        :teams,
-        :team,
-        id,
-        qs
-      )
+      Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id, qs)
     end
 
     describe "overview" do
@@ -34,6 +27,35 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         team = team_of(user)
         {:ok, _lv, html} = live(conn, open_team(team.id))
         assert text(html) =~ team.name
+      end
+
+      test "delete team", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-team"]|)
+        |> render_click()
+
+        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+
+        refute Plausible.Repo.get(Plausible.Teams.Team, team.id)
+      end
+
+      test "delete team with active subscription", %{conn: conn, user: user} do
+        user = subscribe_to_growth_plan(user)
+        team = team_of(user)
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-team"]|)
+        |> render_click()
+
+        text = lv |> render() |> text()
+
+        assert text =~ "The team has an active subscription which must be canceled first"
+
+        assert Plausible.Repo.get(Plausible.Teams.Team, team.id)
       end
 
       test "grace period handling", %{conn: conn, user: user} do
@@ -613,7 +635,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert {:error, {:live_redirect, %{to: to}}} =
                  lv |> element("button#remove-sso-integration") |> render_click()
 
-        assert to == "/cs/teams/team/#{team.id}"
+        assert to == Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)
       end
     end
 

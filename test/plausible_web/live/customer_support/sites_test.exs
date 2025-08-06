@@ -11,14 +11,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
     import Plausible.Test.Support.HTML
 
     defp open_site(id, opts \\ []) do
-      Routes.customer_support_resource_path(
-        PlausibleWeb.Endpoint,
-        :details,
-        :sites,
-        :site,
-        id,
-        opts
-      )
+      Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, id, opts)
     end
 
     describe "overview" do
@@ -35,16 +28,28 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
 
         assert element_exists?(
                  html,
-                 ~s|a[href$="#{URI.encode_www_form(site.domain)}/settings/general"]|
+                 ~s|a[href$="#{site.domain}/settings/general"]|
                )
 
-        assert element_exists?(html, ~s|a[href$="#{URI.encode_www_form(site.domain)}/"]|)
+        assert element_exists?(html, ~s|a[href="/#{site.domain}"]|)
       end
 
       test "404", %{conn: conn} do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_site(9999))
         end
+      end
+
+      test "delete site", %{conn: conn, site: site} do
+        {:ok, lv, _html} = live(conn, open_site(site.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-site"]|)
+        |> render_click()
+
+        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+
+        refute Plausible.Sites.get_by_domain(site.domain)
       end
     end
 

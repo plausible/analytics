@@ -1,8 +1,8 @@
 defmodule Plausible.CustomerSupport.Resource do
   @moduledoc """
-  Generic behaviour for CS resources and their components
+  Generic behaviour for CS resources
   """
-  defstruct [:id, :type, :module, :object]
+  defstruct [:id, :type, :module, :object, :path]
 
   @type schema() :: map()
 
@@ -15,75 +15,34 @@ defmodule Plausible.CustomerSupport.Resource do
 
   @callback search(String.t(), Keyword.t()) :: list(schema())
   @callback get(pos_integer()) :: schema()
-  @callback component() :: module()
-  @callback type() :: String.t()
+  @callback path(any()) :: String.t()
   @callback dump(schema()) :: t()
 
-  defmodule Component do
-    @moduledoc false
-    @callback render_result(assigns :: Phoenix.LiveView.Socket.assigns()) ::
-                Phoenix.LiveView.Rendered.t()
-  end
-
-  defmacro __using__(:component) do
-    quote do
-      use PlausibleWeb, :live_component
-      alias Plausible.CustomerSupport.Resource
-      import PlausibleWeb.CustomerSupport.Live.Shared
-
-      @behaviour Plausible.CustomerSupport.Resource.Component
-
-      def success(socket, msg) do
-        send(socket.root_pid, {:success, msg})
-        socket
-      end
-
-      def failure(socket, msg) do
-        send(socket.root_pid, {:failure, msg})
-        socket
-      end
-    end
-  end
-
-  defmacro __using__(component: component) do
+  defmacro __using__(type: type) do
     quote do
       @behaviour Plausible.CustomerSupport.Resource
       alias Plausible.CustomerSupport.Resource
+      alias PlausibleWeb.Router.Helpers, as: Routes
 
       import Ecto.Query
       alias Plausible.Repo
 
       @impl true
       def dump(schema) do
-        Resource.new(__MODULE__, schema)
+        new(__MODULE__, schema)
       end
 
       defoverridable dump: 1
 
-      @impl true
-      def type do
-        __MODULE__
-        |> Module.split()
-        |> Enum.reverse()
-        |> hd()
-        |> String.downcase()
+      def new(module, schema) do
+        %Resource{
+          id: schema.id,
+          type: unquote(type),
+          path: module.path(schema.id),
+          module: module,
+          object: schema
+        }
       end
-
-      defoverridable type: 0
-
-      @impl true
-      def component, do: unquote(component)
-
-      defoverridable component: 0
     end
-  end
-
-  def new(module, schema) do
-    %__MODULE__{
-      id: schema.id,
-      type: module.type(),
-      module: module,
-      object: schema
-    }
   end
 end

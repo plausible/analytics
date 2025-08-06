@@ -1,11 +1,17 @@
 defmodule Plausible.CustomerSupport.Resource.User do
   @moduledoc false
-  use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.User
+  use Plausible.CustomerSupport.Resource, type: "user"
+  alias Plausible.Repo
+
+  @impl true
+  def path(id) do
+    Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, id)
+  end
 
   @impl true
   def get(id) do
-    Plausible.Repo.get!(Plausible.Auth.User, id)
-    |> Plausible.Repo.preload(team_memberships: :team)
+    Repo.get!(Plausible.Auth.User, id)
+    |> Repo.preload(team_memberships: :team)
   end
 
   @impl true
@@ -22,7 +28,7 @@ defmodule Plausible.CustomerSupport.Resource.User do
         preload: [:owned_teams],
         limit: ^limit
 
-    Plausible.Repo.all(q)
+    Repo.all(q)
   end
 
   def search(input, opts) do
@@ -39,6 +45,6 @@ defmodule Plausible.CustomerSupport.Resource.User do
         preload: [:owned_teams],
         limit: ^limit
 
-    Plausible.Repo.all(q)
+    Repo.all(q)
   end
 end

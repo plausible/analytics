@@ -128,13 +128,11 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
       assert [link] = find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
 
       assert text_of_attr(link, "href") ==
-               Routes.customer_support_resource_path(
+               apply(Routes, :"customer_support_#{type}_path", [
                  PlausibleWeb.Endpoint,
-                 :details,
-                 "#{type}s",
-                 type,
+                 :show,
                  id
-               )
+               ])
     end
 
     defp refute_search_result(doc, type, id) do
