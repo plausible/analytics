@@ -236,6 +236,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
 
   defp render_snippet(tracker_script_configuration) do
     """
+    <!-- Plausible Analytics -->
     <script>
     window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)},window.plausible.init=function(i){window.plausible.o=i||{}};var script=document.createElement("script");script.type="text/javascript",script.defer=!0,script.src="#{tracker_url(tracker_script_configuration)}";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(script,r);
     plausible.init()
