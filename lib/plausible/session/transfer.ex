@@ -43,6 +43,10 @@ defmodule Plausible.Session.Transfer do
   end
 
   def init(base_path) do
+    session_lock_enabled? =
+      Application.fetch_env!(:plausible, Plausible.Session.WriteBuffer)
+      |> Keyword.fetch!(:lock_enabled)
+
     File.mkdir_p!(base_path)
 
     replica =
@@ -57,7 +61,9 @@ defmodule Plausible.Session.Transfer do
     primary =
       {TinySock,
        base_path: base_path,
-       handler: fn message -> handle_replica(message, parent, given_counter) end}
+       handler: fn message ->
+         handle_replica(message, parent, given_counter, session_lock_enabled?)
+       end}
 
     alive =
       Supervisor.child_spec(
@@ -101,28 +107,31 @@ defmodule Plausible.Session.Transfer do
     }
   end
 
-  defp handle_replica(request, parent, given_counter) do
+  defp handle_replica(request, parent, given_counter, session_lock_enabled?) do
     Logger.notice(
       "Session transfer message received at #{node()}: #{inspect(request, limit: 10)}"
     )
 
     case request do
       {@cmd_list_cache_names, session_version} ->
-        list_cache_names(session_version, parent)
+        list_cache_names(session_version, parent, session_lock_enabled?)
 
       {@cmd_dump_cache, cache} ->
         Cache.Adapter.cache2list(cache)
 
       @cmd_takeover_done ->
-        # Wipe the cache after transfer is complete to avoid making the transferred cache stale
-        Cache.Adapter.wipe(:sessions)
-        # Unblock ingest after transfer is done
-        Plausible.Session.WriteBuffer.unlock()
+        if session_lock_enabled? do
+          # Wipe the cache after transfer is complete to avoid making the transferred cache stale
+          Cache.Adapter.wipe(:sessions)
+          # Unblock ingest after transfer is done
+          Plausible.Session.WriteBuffer.unlock()
+        end
+
         :counters.add(given_counter, 1, 1)
     end
   end
 
-  defp list_cache_names(session_version, parent) do
+  defp list_cache_names(session_version, parent, true = _session_cache_enabled?) do
     if session_version == session_version() and attempted?(parent) do
       # Blocking ingest before transfer
       case Plausible.Session.WriteBuffer.lock() do
@@ -132,6 +141,14 @@ defmodule Plausible.Session.Transfer do
         _ ->
           []
       end
+    else
+      []
+    end
+  end
+
+  defp list_cache_names(session_version, parent, false = _session_cache_enabled?) do
+    if session_version == session_version() and attempted?(parent) do
+      Cache.Adapter.get_names(:sessions)
     else
       []
     end

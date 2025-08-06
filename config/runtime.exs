@@ -141,6 +141,9 @@ end
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE_BYTES", "100000")
   |> Integer.parse()
 
+ch_session_lock_enabled =
+  get_bool_from_path_or_env(config_dir, "CLICKHOUSE_SESSION_LOCK_ENABLED", false)
+
 # Timeout must at least account waiting for writebuffer flush to get
 # picked up from the queue and processed.
 {ch_session_lock_acquire_timeout_ms, ""} =
@@ -667,6 +670,7 @@ config :plausible, Plausible.ImportDeletionRepo,
   pool_size: 1
 
 config :plausible, Plausible.Session.WriteBuffer,
+  lock_enabled: ch_session_lock_enabled,
   lock_acquire_timeout_ms: ch_session_lock_acquire_timeout_ms,
   lock_timeout_ms: ch_session_lock_timeout_ms,
   lock_interval_ms: ch_session_lock_interval_ms
