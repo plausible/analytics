@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-0FE7B72A.js"></script>
+    <script src="dist/sidebar_items-51F0C6E7.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,7 +138,7 @@ Pages
 
 
     <section id="moduledoc">
-<p>Generic behaviour for CS resources and their components</p>
+<p>Generic behaviour for CS resources</p>
     </section>
 
 </div>
@@ -179,14 +179,6 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:component/0" data-no-tooltip translate="no">component()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#c:dump/1" data-no-tooltip translate="no">dump(schema)</a>
 
       </div>
@@ -203,29 +195,15 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#c:path/1" data-no-tooltip translate="no">path(any)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#c:search/2" data-no-tooltip translate="no">search(t, t)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#c:type/0" data-no-tooltip translate="no">type()</a>
-
-      </div>
-
-    </div>
-
-</div>
-<div class="summary-functions summary">
-  <h2>
-    <a href="#functions">Functions</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#new/2" data-no-tooltip translate="no">new(module, schema)</a>
 
       </div>
 
@@ -293,6 +271,7 @@ Pages
   id: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(),
   module: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
   object: <a href="#t:schema/0">schema</a>(),
+  path: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   type: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()
 }</pre>
 
@@ -313,32 +292,6 @@ Pages
       <span class="text">Callbacks</span>
     </h1>
     <div class="callbacks-list">
-<section class="detail" id="c:component/0">
-
-  <div class="detail-header">
-    <a href="#c:component/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">component()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/customer_support/resource.ex#L18" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@callback</span> component() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="c:dump/1">
 
   <div class="detail-header">
@@ -347,7 +300,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">dump(schema)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/customer_support/resource.ex#L20" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/customer_support/resource.ex#L19" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -391,6 +344,32 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="c:path/1">
+
+  <div class="detail-header">
+    <a href="#c:path/1" class="detail-link" data-no-tooltip aria-label="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">path(any)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/customer_support/resource.ex#L18" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> path(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="c:search/2">
 
   <div class="detail-header">
@@ -413,64 +392,6 @@ Pages
           <pre translate="no"><span class="attribute">@callback</span> search(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: [<a href="#t:schema/0">schema</a>()]</pre>
 
       </div>
-
-
-  </section>
-</section>
-<section class="detail" id="c:type/0">
-
-  <div class="detail-header">
-    <a href="#c:type/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">type()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/customer_support/resource.ex#L19" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@callback</span> type() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
-
-  <section id="functions" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#functions">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Functions</span>
-    </h1>
-    <div class="functions-list">
-<section class="detail" id="new/2">
-
-  <div class="detail-header">
-    <a href="#new/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">new(module, schema)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/customer_support/resource.ex#L81" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
 
 
   </section>
