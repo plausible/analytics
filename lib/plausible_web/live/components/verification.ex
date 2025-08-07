@@ -127,33 +127,34 @@ defmodule PlausibleWeb.Live.Components.Verification do
               </.styled_link>
             </:item>
           </.focus_list>
-          <div
-            :if={@verification_state && @super_admin? && @finished?}
-            class="flex flex-col dark:text-gray-200 mt-4 pt-4 border-t border-gray-300 dark:border-gray-700"
-            x-data="{ showDiagnostics: false }"
-            id="super-admin-report"
-          >
-            <p class="text-sm">
-              <a
-                href="#"
-                @click.prevent="showDiagnostics = !showDiagnostics"
-                class="bg-yellow-100 dark:text-gray-800"
-              >
-                As a super-admin, you're eligible to see diagnostics details. Click to expand.
-              </a>
-            </p>
-            <div x-show="showDiagnostics" x-cloak>
-              <.focus_list>
-                <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
-                  <span class="text-sm">
-                    {Phoenix.Naming.humanize(diag)}:
-                    <span class="font-mono">{to_string_value(value)}</span>
-                  </span>
-                </:item>
-              </.focus_list>
-            </div>
-          </div>
         </:footer>
+      </.focus_box>
+      <.focus_box :if={not is_nil(@verification_state) && @super_admin? && @finished?}>
+        <div
+          class="flex flex-col dark:text-gray-200"
+          x-data="{ showDiagnostics: false }"
+          id="super-admin-report"
+        >
+          <p class="text-sm">
+            <a
+              href="#"
+              @click.prevent="showDiagnostics = !showDiagnostics"
+              class="bg-yellow-100 dark:text-gray-800"
+            >
+              As a super-admin, you're eligible to see diagnostics details. Click to expand.
+            </a>
+          </p>
+          <div x-show="showDiagnostics" x-cloak>
+            <.focus_list>
+              <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
+                <span class="text-sm">
+                  {Phoenix.Naming.humanize(diag)}:
+                  <span class="font-mono">{to_string_value(value)}</span>
+                </span>
+              </:item>
+            </.focus_list>
+          </div>
+        </div>
       </.focus_box>
     </div>
     """

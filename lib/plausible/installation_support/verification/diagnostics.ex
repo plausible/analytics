@@ -14,7 +14,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
             diagnostics_are_from_cache_bust: nil,
             test_event: nil,
             cookie_banner_likely: nil,
-            service_error: nil
+            service_error: nil,
+            attempts: nil
 
   @type t :: %__MODULE__{}
 

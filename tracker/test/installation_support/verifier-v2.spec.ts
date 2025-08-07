@@ -5,7 +5,14 @@ import { mockManyRequests } from '../support/mock-many-requests'
 import { LOCAL_SERVER_ADDR } from '../support/server'
 import { tracker_script_version as version } from '../support/test-utils'
 
-const CSP_HOST_TO_CHECK = 'plausible.io'
+const DEFAULT_VERIFICATION_OPTIONS = {
+  responseHeaders: {},
+  debug: true,
+  timeoutMs: 1000,
+  cspHostToCheck: 'plausible.io',
+  maxAttempts: 2,
+  timeoutBetweenAttemptsMs: 500
+}
 
 test.describe('installed plausible web variant', () => {
   test('using provided snippet', async ({ page }, { testId }) => {
@@ -32,15 +39,11 @@ test.describe('installed plausible web variant', () => {
 
     await page.goto(url)
 
-    const result = await executeVerifyV2(page, {
-      responseHeaders: {},
-      debug: true,
-      timeoutMs: 1000,
-      cspHostToCheck: CSP_HOST_TO_CHECK
-    })
+    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
 
     expect(result).toEqual({
       data: {
+        attempts: 1,
         completed: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
@@ -66,6 +69,8 @@ test.describe('installed plausible web variant', () => {
   test('using provided snippet and the events endpoint responds slower than the timeout', async ({
     page
   }, { testId }) => {
+    const responseDelayMs = 2000
+    const timeoutMs = 1000
     await mockManyRequests({
       page,
       path: `https://plausible.io/api/event`,
@@ -75,7 +80,7 @@ test.describe('installed plausible web variant', () => {
         contentType: 'text/plain',
         body: 'ok'
       },
-      responseDelay: 2000
+      responseDelay: responseDelayMs
     })
 
     const { url } = await initializePageDynamically(page, {
@@ -91,14 +96,13 @@ test.describe('installed plausible web variant', () => {
     await page.goto(url)
 
     const result = await executeVerifyV2(page, {
-      responseHeaders: {},
-      debug: true,
-      timeoutMs: 1000,
-      cspHostToCheck: CSP_HOST_TO_CHECK
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      timeoutMs
     })
 
     expect(result).toEqual({
       data: {
+        attempts: 1,
         completed: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
@@ -147,15 +151,11 @@ test.describe('installed plausible web variant', () => {
 
     await page.goto(url)
 
-    const result = await executeVerifyV2(page, {
-      responseHeaders: {},
-      debug: true,
-      timeoutMs: 1000,
-      cspHostToCheck: CSP_HOST_TO_CHECK
-    })
+    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
 
     expect(result).toEqual({
       data: {
+        attempts: 1,
         completed: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
@@ -193,15 +193,11 @@ test.describe('installed plausible web variant', () => {
 
     await page.goto(url)
 
-    const result = await executeVerifyV2(page, {
-      responseHeaders: {},
-      debug: true,
-      timeoutMs: 1000,
-      cspHostToCheck: CSP_HOST_TO_CHECK
-    })
+    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
 
     expect(result).toEqual({
       data: {
+        attempts: 1,
         completed: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
@@ -216,6 +212,125 @@ test.describe('installed plausible web variant', () => {
           error: undefined
         },
         cookieBannerLikely: false
+      }
+    })
+  })
+
+  test('there is a JS navigation immediately on page load to a page with the provided snippet', async ({
+    page
+  }, { testId }) => {
+    const { url: urlBeta } = await initializePageDynamically(page, {
+      path: '/beta',
+      testId,
+      scriptConfig: {
+        domain: 'example.com/beta',
+        endpoint: 'https://plausible.io/api/event',
+        captureOnLocalhost: true
+      },
+      bodyContent: 'beta'
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: '', // no tracker on initial page
+      bodyContent: 'alfa'
+    })
+
+    await page.goto(url)
+    await expect(page.getByText('alfa')).toBeVisible()
+
+    const [result, _] = await Promise.all([
+      executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS),
+      page.evaluate(
+        ({ targetUrl }) =>
+          setTimeout(() => (window.location.href = targetUrl), 250),
+        { targetUrl: urlBeta }
+      )
+    ])
+    await expect(page.getByText('beta')).toBeVisible()
+
+    expect(result).toEqual({
+      data: {
+        attempts: 2,
+        completed: true,
+        plausibleIsInitialized: true,
+        plausibleIsOnWindow: true,
+        disallowedByCsp: false,
+        plausibleVersion: version,
+        plausibleVariant: 'web',
+        testEvent: {
+          callbackResult: { status: 202 },
+          requestUrl: 'https://plausible.io/api/event',
+          normalizedBody: {
+            domain: 'example.com/beta',
+            name: 'verification-agent-test',
+            version
+          },
+          responseStatus: 202,
+          error: undefined
+        },
+        cookieBannerLikely: false
+      }
+    })
+  })
+
+  test('there are more than maxAttempts JS navigations', async ({ page }, {
+    testId
+  }) => {
+    const timeoutBetweenAttemptsMs = 100
+    const maxAttempts = 2
+
+    const { url: urlGamma } = await initializePageDynamically(page, {
+      path: '/gamma',
+      testId,
+      scriptConfig: {
+        domain: 'example.com/gamma',
+        endpoint: 'https://plausible.io/api/event',
+        captureOnLocalhost: true
+      },
+      bodyContent: 'gamma'
+    })
+
+    const { url: urlBeta } = await initializePageDynamically(page, {
+      path: '/beta',
+      testId,
+      scriptConfig: '', // no tracker
+      bodyContent: `
+      <script>setTimeout(() => window.location.href = "${urlGamma}", ${
+        timeoutBetweenAttemptsMs + 250
+      })</script>`
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: '', // no tracker
+      bodyContent: 'alfa'
+    })
+
+    await page.goto(url)
+    await expect(page.getByText('alfa')).toBeVisible()
+
+    const [result] = await Promise.all([
+      executeVerifyV2(page, {
+        ...DEFAULT_VERIFICATION_OPTIONS,
+        timeoutBetweenAttemptsMs,
+        maxAttempts
+      }),
+      page.evaluate(
+        (url) => setTimeout(() => (window.location.href = url), 250),
+        urlBeta
+      )
+    ])
+
+    await expect(page.getByText('gamma')).toBeVisible()
+
+    expect(result).toEqual({
+      data: {
+        completed: false,
+        error: {
+          message:
+            'page.evaluate: Execution context was destroyed, most likely because of a navigation.'
+        }
       }
     })
   })
@@ -248,15 +363,11 @@ test.describe('installed plausible esm variant', () => {
 
     await page.goto(url)
 
-    const result = await executeVerifyV2(page, {
-      responseHeaders: {},
-      debug: true,
-      timeoutMs: 1000,
-      cspHostToCheck: CSP_HOST_TO_CHECK
-    })
+    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
 
     expect(result).toEqual({
       data: {
+        attempts: 1,
         completed: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
@@ -307,15 +418,11 @@ test.describe('installed plausible esm variant', () => {
 
     await page.goto(url)
 
-    const result = await executeVerifyV2(page, {
-      responseHeaders: {},
-      debug: true,
-      timeoutMs: 1000,
-      cspHostToCheck: CSP_HOST_TO_CHECK
-    })
+    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
 
     expect(result).toEqual({
       data: {
+        attempts: 1,
         completed: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
@@ -366,15 +473,11 @@ test.describe('installed plausible esm variant', () => {
 
     await page.goto(url)
 
-    const result = await executeVerifyV2(page, {
-      responseHeaders: {},
-      debug: true,
-      timeoutMs: 1000,
-      cspHostToCheck: CSP_HOST_TO_CHECK
-    })
+    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
 
     expect(result).toEqual({
       data: {
+        attempts: 1,
         completed: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
@@ -414,15 +517,11 @@ test.describe('installed plausible esm variant', () => {
 
     await page.goto(url)
 
-    const result = await executeVerifyV2(page, {
-      responseHeaders: {},
-      debug: true,
-      timeoutMs: 1000,
-      cspHostToCheck: CSP_HOST_TO_CHECK
-    })
+    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
 
     expect(result).toEqual({
       data: {
+        attempts: 1,
         completed: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,

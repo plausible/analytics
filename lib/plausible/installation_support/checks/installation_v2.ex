@@ -1,40 +1,73 @@
 defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   require Logger
 
-  path = Application.app_dir(:plausible, "priv/tracker/installation_support/verifier-v2.js")
-  # On CI, the file might not be present for static checks so we create an empty one
-  File.touch!(path)
+  @verifier_code_path "priv/tracker/installation_support/verifier-v2.js"
+  @external_resource @verifier_code_path
 
-  @verifier_code File.read!(path)
-  @external_resource "priv/tracker/installation_support/verifier-v2.js"
+  # On CI, the file might not be present for static checks so we default to empty string
+  @verifier_code (case File.read(Application.app_dir(:plausible, @verifier_code_path)) do
+                    {:ok, content} -> content
+                    {:error, _} -> ""
+                  end)
 
-  @function_check_timeout 10_000
+  # To support browserless API being unavailable or overloaded, we retry the endpoint call if it doesn't return a successful response
+  @max_retries 2
+
+  # We define a timeout for the browserless endpoint call to avoid waiting too long for a response
+  @endpoint_timeout_ms 10_000
+
+  # This timeout determines how long we wait for window.plausible to be initialized on the page, including sending the test event
+  @plausible_window_check_timeout_ms 4_000
+
+  # To handle navigation that happens immediately on the page, we attempt to verify the installation multiple times _within a single browserless endpoint call_
+  @max_attempts 2
+  @timeout_between_attempts_ms 500
 
   # Puppeteer wrapper function that executes the vanilla JS verifier code
   @puppeteer_wrapper_code """
-  export default async function({ page, context }) {
+  export default async function({ page, context: { url, userAgent, maxAttempts, timeoutBetweenAttemptsMs, ...functionContext } }) {
     try {
-      await page.setUserAgent(context.userAgent);
-      const response = await page.goto(context.url);
+      await page.setUserAgent(userAgent)
+      const response = await page.goto(url)
+      const responseHeaders = response.headers()
 
-      await page.evaluate(() => {
-        #{@verifier_code}
-      });
+      async function verify() {
+        await page.evaluate(() => {#{@verifier_code}}) // injects window.verifyPlausibleInstallation
+        return await page.evaluate(
+          (c) => window.verifyPlausibleInstallation(c),
+          { ...functionContext, responseHeaders }
+        );
+      }
 
-      return await page.evaluate(async ({ responseHeaders, debug, timeoutMs, cspHostToCheck }) => {
-        return await window.verifyPlausibleInstallation({ responseHeaders, debug, timeoutMs, cspHostToCheck });
-      }, {
-        timeoutMs: context.timeoutMs,
-        responseHeaders: response.headers(),
-        debug: context.debug,
-        cspHostToCheck: context.cspHostToCheck
-      });
+      let lastError;
+      for (let attempts = 1; attempts <= maxAttempts; attempts++) {
+        try {
+          const output = await verify();
+          return {
+            data: {
+              ...output.data,
+              attempts
+            },
+          };
+        } catch (error) {
+          lastError = error;
+          if (
+            typeof error?.message === "string" &&
+            error.message.toLowerCase().includes("execution context")
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, timeoutBetweenAttemptsMs));
+            continue;
+          }
+          throw error
+        }
+      }
+      throw lastError;
     } catch (error) {
       return {
         data: {
           completed: false,
           error: {
-            message: error?.message ?? JSON.stringify(error),
+            message: error?.message ?? JSON.stringify(error)
           }
         }
       }
@@ -59,16 +92,19 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         JSON.encode!(%{
           code: @puppeteer_wrapper_code,
           context: %{
+            maxAttempts: @max_attempts,
+            timeoutMs: @plausible_window_check_timeout_ms,
+            timeoutBetweenAttemptsMs: @timeout_between_attempts_ms,
             cspHostToCheck: PlausibleWeb.Endpoint.host(),
-            timeoutMs: @function_check_timeout,
             url: Plausible.InstallationSupport.URL.bust_url(url),
             userAgent: Plausible.InstallationSupport.user_agent(),
             debug: Application.get_env(:plausible, :environment) == "dev"
           }
         }),
+      params: %{timeout: @endpoint_timeout_ms},
       retry: :transient,
       retry_log_level: :warning,
-      max_retries: 2
+      max_retries: @max_retries
     ]
 
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
@@ -100,6 +136,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         plausible_variant: data["plausibleVariant"],
         test_event: data["testEvent"],
         cookie_banner_likely: data["cookieBannerLikely"],
+        attempts: data["attempts"],
         service_error: nil
       )
     else
