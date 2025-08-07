@@ -67,7 +67,8 @@ defmodule PlausibleWeb.TrackerPlugTest do
       assert String.contains?(response, "window.plausible")
     end
 
-    test "returns the script requested with the legacy s- prefix, even if the id has been prefixed with pa- in the database", %{conn: conn} do
+    test "returns the script requested with the legacy s- prefix, even if the id has been prefixed with pa- in the database",
+         %{conn: conn} do
       site = new_site()
 
       tracker_script_configuration =
@@ -80,7 +81,10 @@ defmodule PlausibleWeb.TrackerPlugTest do
       assert String.starts_with?(tracker_script_configuration.id, "pa-")
 
       response =
-        get(conn, "/js/s-#{String.replace_leading(tracker_script_configuration.id, "pa-", "")}.js")
+        get(
+          conn,
+          "/js/s-#{String.replace_leading(tracker_script_configuration.id, "pa-", "")}.js"
+        )
         |> response(200)
 
       assert String.contains?(response, "!function(){var")
