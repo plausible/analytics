@@ -631,6 +631,7 @@ defmodule PlausibleWeb.Router do
               dogfood_page_path: "/:website/change-domain-v2"
             } do
         live "/:domain/change-domain-v2", ChangeDomainV2, :change_domain_v2, as: :site
+        live "/:domain/change-domain-v2/success", ChangeDomainV2, :success, as: :site
       end
     end
 

@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
 
   alias Plausible.Site
   alias PlausibleWeb.Router.Helpers, as: Routes
+  alias PlausibleWeb.Live.ChangeDomainV2.Form
 
   def mount(
         %{"domain" => domain},
@@ -25,11 +26,23 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
      assign(socket,
        site: site,
        changeset: changeset,
-       domain: domain
+       updated_site: nil
      )}
   end
 
-  def render(assigns) do
+  def handle_params(_params, _url, socket) do
+    {:noreply, socket}
+  end
+
+  def render(%{live_action: :change_domain_v2} = assigns) do
+    render_form_step(assigns)
+  end
+
+  def render(%{live_action: :success} = assigns) do
+    render_success_step(assigns)
+  end
+
+  defp render_form_step(assigns) do
     ~H"""
     <.focus_box>
       <:title>Change your website domain</:title>
@@ -48,20 +61,46 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         </.focus_list>
       </:footer>
 
-      <.form :let={f} for={@changeset} phx-submit="submit">
-        <.input
-          help_text="Just the naked domain or subdomain without 'www', 'https' etc."
-          type="text"
-          placeholder="example.com"
-          field={f[:domain]}
-          label="Domain"
-        />
+      <.live_component module={Form} id="change-domain-form" site={@site} changeset={@changeset} />
+    </.focus_box>
+    """
+  end
 
-        <.button type="submit" class="mt-4 w-full">
-          Change Domain
-        </.button>
+  defp render_success_step(assigns) do
+    ~H"""
+    <.focus_box>
+      <:title>Domain Changed Successfully</:title>
+      <:subtitle>
+        Your website domain has been successfully updated.
+      </:subtitle>
 
-        <.notice class="mt-4" title="Additional Steps May Be Required">
+      <:footer>
+        <.focus_list>
+          <:item>
+            <.styled_link href={
+              Routes.site_path(@socket, :settings_general, (@updated_site || @site).domain)
+            }>
+              Go to Site Settings
+            </.styled_link>
+          </:item>
+        </.focus_list>
+      </:footer>
+
+      <div class="text-center py-8">
+        <div class="text-green-600 text-6xl mb-4">✓</div>
+        <h2 class="text-2xl font-semibold text-gray-900 mb-2">Success!</h2>
+        <%= if @updated_site do %>
+          <p class="text-gray-600 mb-6">
+            Your website domain has been updated from
+            <strong>{@updated_site.domain_changed_from || "previous domain"}</strong>
+            to <strong><%= @updated_site.domain %></strong>.
+          </p>
+        <% else %>
+          <p class="text-gray-600 mb-6">
+            Your website domain has been successfully changed.
+          </p>
+        <% end %>
+        <.notice class="mb-6" title="Don't Forget!">
           If you are using the Wordpress plugin, NPM module, or Events API for tracking, you must also update the tracking
           <code>domain</code>
           to match the updated domain. See
@@ -70,21 +109,15 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
           </.styled_link>
           for details.
         </.notice>
-      </.form>
+      </div>
     </.focus_box>
     """
   end
 
-  def handle_event("submit", %{"site" => %{"domain" => new_domain}}, socket) do
-    case Site.Domain.change(socket.assigns.site, new_domain) do
-      {:ok, updated_site} ->
-        {:noreply,
-         socket
-         |> put_flash(:success, "Website domain changed successfully")
-         |> push_navigate(to: Routes.site_path(socket, :settings_general, updated_site.domain))}
-
-      {:error, changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
-    end
+  def handle_info({:domain_changed, updated_site}, socket) do
+    {:noreply,
+     socket
+     |> assign(updated_site: updated_site)
+     |> push_patch(to: Routes.site_path(socket, :success, updated_site.domain))}
   end
 end
