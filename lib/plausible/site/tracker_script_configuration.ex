@@ -20,7 +20,7 @@ defmodule Plausible.Site.TrackerScriptConfiguration do
              :pageview_props
            ]}
 
-  @primary_key {:id, Plausible.Ecto.Types.Nanoid, autogenerate: true}
+  @primary_key {:id, Plausible.Ecto.Types.TrackerScriptNanoid, autogenerate: true}
   schema "tracker_script_configuration" do
     field :installation_type, Ecto.Enum, values: [:manual, :wordpress, :gtm, nil]
 

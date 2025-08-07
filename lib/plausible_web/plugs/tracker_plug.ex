@@ -42,8 +42,16 @@ defmodule PlausibleWeb.TrackerPlug do
     case conn.request_path do
       "/js/s-" <> path ->
         if String.ends_with?(path, ".js") do
-          tag = String.replace_trailing(path, ".js", "")
-          request_tracker_script(tag, conn)
+          id = String.replace_trailing(path, ".js", "")
+          request_tracker_script(id, conn)
+        else
+          conn
+        end
+
+      "/js/pa-" <> path ->
+        if String.ends_with?(path, ".js") do
+          id = String.replace_trailing(path, ".js", "")
+          request_tracker_script("pa-" <> id, conn)
         else
           conn
         end
@@ -61,47 +69,61 @@ defmodule PlausibleWeb.TrackerPlug do
 
   def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
-  defp request_tracker_script(tag, conn) do
-    script_tag = get_plausible_web_script_tag(tag)
+  # at this point, id might be both with and without the `pa-` prefix
+  defp request_tracker_script(id, conn) do
+    case get_plausible_web_script(id) do
+      {:ok, script_tag} ->
+        :telemetry.execute(
+          telemetry_event(:v2),
+          %{},
+          %{status: 200}
+        )
 
-    if script_tag do
-      :telemetry.execute(
-        telemetry_event(:v2),
-        %{},
-        %{status: 200}
-      )
+        conn
+        |> put_resp_header("content-type", "application/javascript")
+        |> put_resp_header("x-content-type-options", "nosniff")
+        |> put_resp_header("cross-origin-resource-policy", "cross-origin")
+        |> put_resp_header("access-control-allow-origin", "*")
+        |> put_resp_header("cache-control", "public, max-age=60, no-transform")
+        # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
+        # specific tracker scripts from the CDN cache.
+        |> put_resp_header("cdn-tag", "tracker_script::#{id}")
+        |> send_resp(200, script_tag)
+        |> halt()
 
-      conn
-      |> put_resp_header("content-type", "application/javascript")
-      |> put_resp_header("x-content-type-options", "nosniff")
-      |> put_resp_header("cross-origin-resource-policy", "cross-origin")
-      |> put_resp_header("access-control-allow-origin", "*")
-      |> put_resp_header("cache-control", "public, max-age=60, no-transform")
-      # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
-      # specific tracker scripts from the CDN cache.
-      |> put_resp_header("cdn-tag", "tracker_script::#{tag}")
-      |> send_resp(200, script_tag)
-      |> halt()
-    else
-      :telemetry.execute(
-        telemetry_event(:v2),
-        %{},
-        %{status: 404}
-      )
+      {:error, :not_found} ->
+        :telemetry.execute(
+          telemetry_event(:v2),
+          %{},
+          %{status: 404}
+        )
 
-      conn
-      |> send_resp(404, "Not found")
-      |> halt()
+        conn
+        |> send_resp(404, "Not found")
+        |> halt()
     end
   end
 
-  defp get_plausible_web_script_tag(tag) do
-    on_ee do
-      # On cloud, we generate the script always on the fly relying on CDN caching
-      PlausibleWeb.TrackerScriptCache.get_from_source(tag)
+  # at this point, id can be both with and without the `pa-` prefix
+  defp get_plausible_web_script(id) do
+    script =
+      on_ee do
+        # On cloud, we generate the script always on the fly relying on CDN caching
+        PlausibleWeb.TrackerScriptCache.get_from_source(id)
+      else
+        # On self-hosted, we have a pre-warmed cache for the script
+        PlausibleWeb.TrackerScriptCache.get(id)
+      end
+
+    if script do
+      {:ok, script}
     else
-      # On self-hosted, we have a pre-warmed cache for the script
-      PlausibleWeb.TrackerScriptCache.get(tag)
+      if not String.starts_with?(id, "pa-") do
+        # maybe the script been migrated to the new format already
+        get_plausible_web_script("pa-" <> id)
+      else
+        {:error, :not_found}
+      end
     end
   end
 

@@ -91,6 +91,22 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       assert html =~ "Verify NPM installation"
     end
 
+    test "manual installations has script snippet with expected ID", %{conn: conn, site: site} do
+      stub_detection_manual()
+      {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify Script installation", html}
+             end)
+
+      html = render(lv)
+      config = Plausible.Repo.get_by!(TrackerScriptConfiguration, site_id: site.id)
+      assert html =~ "Privacy-friendly analytics by Plausible"
+      assert html =~ "https://plausible.io/js/#{config.id}.js"
+      assert html =~ "defer=!0"
+    end
+
     test "manual installation shows optional measurements", %{conn: conn, site: site} do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
