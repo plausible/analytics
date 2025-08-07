@@ -50,13 +50,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     end
   end
 
-  @error_unexpected_domain Error.new!(%{
-                             message: "Plausible test event is not for this site",
-                             recommendation:
-                               "Please check that the snippet on your site matches the installation instructions exactly",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                           })
   @error_succeeds_only_after_cache_bust Error.new!(%{
                                           message: "We detected an issue with your site's cache",
                                           recommendation:
@@ -64,6 +57,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                           url:
                                             "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
                                         })
+
   @spec interpret(t(), String.t(), String.t()) :: Result.t()
   def interpret(
         %__MODULE__{
@@ -76,26 +70,95 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
             "responseStatus" => response_status
           },
           service_error: nil,
-          diagnostics_are_from_cache_bust: diagnostics_are_from_cache_bust
-        } = diagnostics,
+          diagnostics_are_from_cache_bust: true
+        },
         expected_domain,
-        url
+        _url
       )
-      when response_status in [200, 202] do
-    domain_is_expected? = domain == expected_domain
+      when response_status in [200, 202] and
+             domain == expected_domain,
+      do: error(@error_succeeds_only_after_cache_bust)
 
-    cond do
-      domain_is_expected? and diagnostics_are_from_cache_bust ->
-        error(@error_succeeds_only_after_cache_bust)
+  def interpret(
+        %__MODULE__{
+          plausible_is_on_window: true,
+          plausible_is_initialized: true,
+          test_event: %{
+            "normalizedBody" => %{
+              "domain" => domain
+            },
+            "responseStatus" => response_status
+          },
+          service_error: nil
+        },
+        expected_domain,
+        _url
+      )
+      when response_status in [200, 202] and
+             domain == expected_domain,
+      do: success()
 
-      domain_is_expected? ->
-        success()
+  @error_unexpected_domain Error.new!(%{
+                             message: "Plausible test event is not for this site",
+                             recommendation:
+                               "Please check that the snippet on your site matches the installation instructions exactly",
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                           })
+  def interpret(
+        %__MODULE__{
+          plausible_is_on_window: true,
+          plausible_is_initialized: true,
+          test_event: %{
+            "normalizedBody" => %{
+              "domain" => domain
+            },
+            "responseStatus" => response_status
+          },
+          service_error: nil
+        },
+        expected_domain,
+        _url
+      )
+      when response_status in [200, 202] and
+             domain != expected_domain,
+      do: error(@error_unexpected_domain)
 
-      not domain_is_expected? ->
-        error(@error_unexpected_domain)
+  @error_proxy_network_error Error.new!(%{
+                               message:
+                                 "We got an unexpected response from the proxy you are using for Plausible",
+                               recommendation:
+                                 "Please check that you've configured the proxied /event route correctly",
+                               url: "https://plausible.io/docs/proxy/introduction"
+                             })
+  @error_plausible_network_error Error.new!(%{
+                                   message: "We couldn't verify your website",
+                                   recommendation:
+                                     "Please try verifying again in a few minutes, or verify your installation manually",
+                                   url:
+                                     "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                                 })
 
-      true ->
-        unknown_error(diagnostics, url)
+  def interpret(
+        %__MODULE__{
+          plausible_is_on_window: true,
+          plausible_is_initialized: true,
+          test_event: %{
+            "requestUrl" => request_url,
+            "responseStatus" => response_status
+          },
+          service_error: nil
+        },
+        _expected_domain,
+        _url
+      )
+      when response_status not in [200, 202] and is_binary(request_url) do
+    proxying? = not String.starts_with?(request_url, PlausibleWeb.Endpoint.url())
+
+    if proxying? do
+      error(@error_proxy_network_error)
+    else
+      error(@error_plausible_network_error)
     end
   end
 
@@ -114,9 +177,26 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         },
         _expected_domain,
         _url
-      ) do
-    error(@error_csp_disallowed)
-  end
+      ),
+      do: error(@error_csp_disallowed)
+
+  @error_gtm_selected_maybe_cookie_banner Error.new!(%{
+                                            message: "We couldn't verify your website",
+                                            recommendation:
+                                              "A cookie consent banner may be stopping Plausible from loading on your site. If that is intentional, you'll need to verify that Plausible works manually",
+                                            url:
+                                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                                          })
+  def interpret(
+        %__MODULE__{
+          selected_installation_type: "gtm",
+          cookie_banner_likely: true,
+          service_error: nil
+        },
+        _expected_domain,
+        _url
+      ),
+      do: error(@error_gtm_selected_maybe_cookie_banner)
 
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, url),
     do: unknown_error(diagnostics, url)

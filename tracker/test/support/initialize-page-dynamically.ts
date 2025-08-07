@@ -7,6 +7,7 @@ interface SharedOptions {
   testId: string
   /** optional path to append to the dynamic page URL */
   path?: string
+  headers?: Record<string, string>
 }
 
 interface TemplatedResponse {
@@ -124,7 +125,8 @@ export async function initializePageDynamically(
 
     await route.fulfill({
       body: responseBody,
-      contentType: 'text/html'
+      contentType: 'text/html',
+      headers: options.headers
     })
   })
   return { url }
