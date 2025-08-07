@@ -142,7 +142,7 @@ end
   |> Integer.parse()
 
 ch_session_lock_enabled =
-  get_bool_from_path_or_env(config_dir, "CLICKHOUSE_SESSION_LOCK_ENABLED", true)
+  get_bool_from_path_or_env(config_dir, "CLICKHOUSE_SESSION_LOCK_ENABLED", false)
 
 # Timeout must at least account waiting for writebuffer flush to get
 # picked up from the queue and processed.
