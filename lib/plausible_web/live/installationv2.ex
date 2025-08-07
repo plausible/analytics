@@ -210,6 +210,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         outbound_links: true,
         form_submissions: true,
         file_downloads: true,
+        track_404_pages: true,
         installation_type: recommended_installation_type
       })
 

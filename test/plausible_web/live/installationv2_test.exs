@@ -186,6 +186,32 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       )
     end
 
+    test "404 goal gets created regardless of user options", %{conn: conn, site: site} do
+      stub_detection_manual()
+      {lv, _html} = get_lv(conn, site, "?type=manual")
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Verify Script installation", html}
+             end)
+
+      # Test with all options disabled
+      lv
+      |> element("form[phx-submit='submit']")
+      |> render_submit(%{
+        "tracker_script_configuration" => %{
+          "installation_type" => "manual",
+          "outbound_links" => "false",
+          "file_downloads" => "false",
+          "form_submissions" => "false"
+        }
+      })
+
+      # 404 goal should still be created
+      goals = Plausible.Goals.for_site(site)
+      assert Enum.any?(goals, &(&1.event_name == "404"))
+    end
+
     test "submitting form with review flow redirects to verification with flow param", %{
       conn: conn,
       site: site
