@@ -4,6 +4,14 @@ defmodule PlausibleWeb.Live.ChangeDomainV2.Form do
   """
   use PlausibleWeb, :live_component
 
+  alias Plausible.Site
+
+  def update(assigns, socket) do
+    changeset = Site.update_changeset(assigns.site)
+
+    {:ok, assign(socket, Map.put(assigns, :changeset, changeset))}
+  end
+
   def render(assigns) do
     ~H"""
     <div>
@@ -19,16 +27,6 @@ defmodule PlausibleWeb.Live.ChangeDomainV2.Form do
         <.button type="submit" class="mt-4 w-full">
           Change Domain
         </.button>
-
-        <.notice class="mt-4" title="Additional Steps May Be Required">
-          If you are using the Wordpress plugin, NPM module, or Events API for tracking, you must also update the tracking
-          <code>domain</code>
-          to match the updated domain. See
-          <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
-            documentation
-          </.styled_link>
-          for details.
-        </.notice>
       </.form>
     </div>
     """

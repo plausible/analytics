@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
   """
   use PlausibleWeb, :live_view
 
-  alias Plausible.Site
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias PlausibleWeb.Live.ChangeDomainV2.Form
 
@@ -20,13 +19,9 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         :super_admin
       ])
 
-    changeset = Site.update_changeset(site)
-
     {:ok,
      assign(socket,
-       site: site,
-       changeset: changeset,
-       updated_site: nil
+       site: site
      )}
   end
 
@@ -61,7 +56,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         </.focus_list>
       </:footer>
 
-      <.live_component module={Form} id="change-domain-form" site={@site} changeset={@changeset} />
+      <.live_component module={Form} id="change-domain-form" site={@site} />
     </.focus_box>
     """
   end
@@ -77,30 +72,21 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
       <:footer>
         <.focus_list>
           <:item>
-            <.styled_link href={
-              Routes.site_path(@socket, :settings_general, (@updated_site || @site).domain)
-            }>
+            <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
               Go to Site Settings
             </.styled_link>
           </:item>
         </.focus_list>
       </:footer>
 
-      <div class="text-center py-8">
+      <div class="py-8">
         <div class="text-green-600 text-6xl mb-4">✓</div>
         <h2 class="text-2xl font-semibold text-gray-900 mb-2">Success!</h2>
-        <%= if @updated_site do %>
-          <p class="text-gray-600 mb-6">
-            Your website domain has been updated from
-            <strong>{@updated_site.domain_changed_from || "previous domain"}</strong>
-            to <strong><%= @updated_site.domain %></strong>.
-          </p>
-        <% else %>
-          <p class="text-gray-600 mb-6">
-            Your website domain has been successfully changed.
-          </p>
-        <% end %>
-        <.notice class="mb-6" title="Don't Forget!">
+        <p class="text-gray-600 mb-6">
+          Your website domain has been updated from <strong>{@site.domain_changed_from}</strong>
+          to <strong><%= @site.domain %></strong>.
+        </p>
+        <.notice class="mt-4" title="Additional Steps May Be Required">
           If you are using the Wordpress plugin, NPM module, or Events API for tracking, you must also update the tracking
           <code>domain</code>
           to match the updated domain. See
@@ -117,7 +103,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
   def handle_info({:domain_changed, updated_site}, socket) do
     {:noreply,
      socket
-     |> assign(updated_site: updated_site)
+     |> assign(site: updated_site)
      |> push_patch(to: Routes.site_path(socket, :success, updated_site.domain))}
   end
 end
