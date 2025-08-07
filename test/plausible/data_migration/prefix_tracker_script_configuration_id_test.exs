@@ -36,7 +36,7 @@ defmodule Plausible.DataMigration.PrefixTrackerScriptConfigurationIdTest do
     test "handles mixed configurations correctly" do
       # Mix of old and new format configurations
       _config1 = create_tracker_config("alpha")
-      _config2 = create_tracker_config("pa-beta")
+      config2 = create_tracker_config("pa-beta")
       _config3 = create_tracker_config("gamma")
       _config4 = create_tracker_config("delta")
       _config5 = create_tracker_config("epsilon")
@@ -60,11 +60,11 @@ defmodule Plausible.DataMigration.PrefixTrackerScriptConfigurationIdTest do
 
       assert length(updated_configs) == 4
       # Verify the one with pa- prefix was not changed
-      assert Repo.get_by(TrackerScriptConfiguration, id: "pa-beta")
+      assert Repo.get_by(TrackerScriptConfiguration, id: "pa-beta") == config2
     end
 
     test "is idempotent - can be run multiple times safely" do
-      _config = create_tracker_config("alpha")
+      config = create_tracker_config("alpha")
 
       # Run migration first time
       output1 =
@@ -75,6 +75,10 @@ defmodule Plausible.DataMigration.PrefixTrackerScriptConfigurationIdTest do
       assert output1 =~ "Found 1 total tracker configurations to process"
       assert output1 =~ "Processing batch 1 (1-1 of 1)"
 
+      # Verify only the ID changed
+      assert Repo.get_by(TrackerScriptConfiguration, id: "pa-alpha") ==
+               struct(config, id: "pa-alpha")
+
       # Run migration second time
       output2 =
         capture_io(fn ->
@@ -84,8 +88,9 @@ defmodule Plausible.DataMigration.PrefixTrackerScriptConfigurationIdTest do
       assert output2 =~ "Found 0 total tracker configurations to process"
       assert output2 =~ "Migration completed!"
 
-      # Verify configuration still has the prefix
-      assert Repo.get_by(TrackerScriptConfiguration, id: "pa-alpha")
+      # Verify configuration didn't change further
+      assert Repo.get_by(TrackerScriptConfiguration, id: "pa-alpha") ==
+               struct(config, id: "pa-alpha")
     end
   end
 
