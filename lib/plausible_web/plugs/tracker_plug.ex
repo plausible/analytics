@@ -69,26 +69,43 @@ defmodule PlausibleWeb.TrackerPlug do
 
   def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
+  @max_requests_per_minute_per_ip 30
+  defp check_rate_for_accessing_dynamic_tracker_script(conn) do
+    case Plausible.RateLimit.check_rate(
+           "tracker_script_#{inspect(conn.remote_ip)}",
+           to_timeout(minute: 1),
+           @max_requests_per_minute_per_ip
+         ) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:error, :rate_limit}
+    end
+  end
+
   # at this point, id might be both with and without the `pa-` prefix
   defp request_tracker_script(id, conn) do
-    case get_plausible_web_script_tag(id) do
-      {:ok, script_tag} ->
-        :telemetry.execute(
-          telemetry_event(:v2),
-          %{},
-          %{status: 200}
-        )
+    with :ok <- check_rate_for_accessing_dynamic_tracker_script(conn),
+         {:ok, script} <- get_plausible_web_script_tag(id) do
+      :telemetry.execute(
+        telemetry_event(:v2),
+        %{},
+        %{status: 200}
+      )
 
+      conn
+      |> put_resp_header("content-type", "application/javascript")
+      |> put_resp_header("x-content-type-options", "nosniff")
+      |> put_resp_header("cross-origin-resource-policy", "cross-origin")
+      |> put_resp_header("access-control-allow-origin", "*")
+      |> put_resp_header("cache-control", "public, max-age=60, no-transform")
+      # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
+      # specific tracker scripts from the CDN cache.
+      |> put_resp_header("cdn-tag", "tracker_script::#{id}")
+      |> send_resp(200, script)
+      |> halt()
+    else
+      {:error, :rate_limit} ->
         conn
-        |> put_resp_header("content-type", "application/javascript")
-        |> put_resp_header("x-content-type-options", "nosniff")
-        |> put_resp_header("cross-origin-resource-policy", "cross-origin")
-        |> put_resp_header("access-control-allow-origin", "*")
-        |> put_resp_header("cache-control", "public, max-age=60, no-transform")
-        # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
-        # specific tracker scripts from the CDN cache.
-        |> put_resp_header("cdn-tag", "tracker_script::#{id}")
-        |> send_resp(200, script_tag)
+        |> send_resp(429, "Too many requests from this IP address")
         |> halt()
 
       {:error, :not_found} ->
