@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfiguration do
     update_params = Map.put(update_params, "site_id", site.id)
 
     updated_config =
-      PlausibleWeb.Tracker.update_script_configuration(site, update_params, :plugins_api)
+      PlausibleWeb.Tracker.update_script_configuration!(site, update_params, :plugins_api)
 
     conn
     |> put_view(Views.TrackerScriptConfiguration)

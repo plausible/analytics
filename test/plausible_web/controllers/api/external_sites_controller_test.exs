@@ -115,7 +115,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert json_response(conn, 200) == %{
                  "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
+                 "timezone" => "Europe/Tallinn",
+                 "custom_properties" => []
                }
       end
 
@@ -152,7 +153,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert json_response(conn, 200) == %{
                  "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
+                 "timezone" => "Europe/Tallinn",
+                 "custom_properties" => []
                }
 
         assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == team.id
@@ -177,7 +179,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert json_response(conn, 200) == %{
                  "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
+                 "timezone" => "Europe/Tallinn",
+                 "custom_properties" => []
                }
 
         assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == another_team.id
@@ -203,7 +206,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert json_response(conn, 200) == %{
                  "domain" => "some-site.domain",
-                 "timezone" => "Etc/UTC"
+                 "timezone" => "Etc/UTC",
+                 "custom_properties" => []
                }
       end
 
@@ -1464,7 +1468,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert json_response(conn, 200) == %{
                  "domain" => "new.example.com",
-                 "timezone" => "UTC"
+                 "timezone" => "UTC",
+                 "custom_properties" => []
                }
 
         site = Repo.reload!(site)
@@ -1506,7 +1511,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn = put(conn, "/api/v1/sites/#{site.domain}", %{})
 
         assert json_response(conn, 400) == %{
-                 "error" => "domain: can't be blank"
+                 "error" =>
+                   "Payload must contain at least one of the parameters 'domain', 'tracker_script_configuration'"
                }
       end
     end
