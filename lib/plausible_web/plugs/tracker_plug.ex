@@ -69,27 +69,28 @@ defmodule PlausibleWeb.TrackerPlug do
 
   def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
+  # at this point, id might be both with and without the `pa-` prefix
   defp request_tracker_script(id, conn) do
-    with {:ok, script_tag} <-
-           get_plausible_web_script_tag(id) do
-      :telemetry.execute(
-        telemetry_event(:v2),
-        %{},
-        %{status: 200}
-      )
+    case get_plausible_web_script_tag(id) do
+      {:ok, script_tag} ->
+        :telemetry.execute(
+          telemetry_event(:v2),
+          %{},
+          %{status: 200}
+        )
 
-      conn
-      |> put_resp_header("content-type", "application/javascript")
-      |> put_resp_header("x-content-type-options", "nosniff")
-      |> put_resp_header("cross-origin-resource-policy", "cross-origin")
-      |> put_resp_header("access-control-allow-origin", "*")
-      |> put_resp_header("cache-control", "public, max-age=60, no-transform")
-      # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
-      # specific tracker scripts from the CDN cache.
-      |> put_resp_header("cdn-tag", "tracker_script::#{id}")
-      |> send_resp(200, script_tag)
-      |> halt()
-    else
+        conn
+        |> put_resp_header("content-type", "application/javascript")
+        |> put_resp_header("x-content-type-options", "nosniff")
+        |> put_resp_header("cross-origin-resource-policy", "cross-origin")
+        |> put_resp_header("access-control-allow-origin", "*")
+        |> put_resp_header("cache-control", "public, max-age=60, no-transform")
+        # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
+        # specific tracker scripts from the CDN cache.
+        |> put_resp_header("cdn-tag", "tracker_script::#{id}")
+        |> send_resp(200, script_tag)
+        |> halt()
+
       {:error, :not_found} ->
         :telemetry.execute(
           telemetry_event(:v2),
@@ -103,6 +104,7 @@ defmodule PlausibleWeb.TrackerPlug do
     end
   end
 
+  # at this point, id can be both with and without the `pa-` prefix
   defp get_plausible_web_script_tag(id) do
     tag =
       on_ee do
