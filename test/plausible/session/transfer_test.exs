@@ -12,10 +12,17 @@ defmodule Plausible.Session.TransferTest do
 
     Enum.each(1..250, fn _ -> process_event(old, build(:event, name: "pageview")) end)
 
+    :ok = :peer.call(old, Plausible.Session.WriteBuffer, :flush, [])
+    :ok = :peer.call(old, Plausible.Event.WriteBuffer, :flush, [])
+
+    old_sessions_sorted = all_sessions_sorted(old)
+
     new = start_another_plausible(tmp_dir)
+
     await_transfer(new)
 
-    assert all_sessions_sorted(new) == all_sessions_sorted(old)
+    assert all_sessions_sorted(old) == []
+    assert all_sessions_sorted(new) == old_sessions_sorted
   end
 
   defp start_another_plausible(tmp_dir) do
