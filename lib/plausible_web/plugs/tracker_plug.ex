@@ -71,7 +71,7 @@ defmodule PlausibleWeb.TrackerPlug do
 
   # at this point, id might be both with and without the `pa-` prefix
   defp request_tracker_script(id, conn) do
-    case get_plausible_web_script_tag(id) do
+    case get_plausible_web_script(id) do
       {:ok, script_tag} ->
         :telemetry.execute(
           telemetry_event(:v2),
@@ -105,8 +105,8 @@ defmodule PlausibleWeb.TrackerPlug do
   end
 
   # at this point, id can be both with and without the `pa-` prefix
-  defp get_plausible_web_script_tag(id) do
-    tag =
+  defp get_plausible_web_script(id) do
+    script =
       on_ee do
         # On cloud, we generate the script always on the fly relying on CDN caching
         PlausibleWeb.TrackerScriptCache.get_from_source(id)
@@ -115,12 +115,12 @@ defmodule PlausibleWeb.TrackerPlug do
         PlausibleWeb.TrackerScriptCache.get(id)
       end
 
-    if tag do
-      {:ok, tag}
+    if script do
+      {:ok, script}
     else
       if not String.starts_with?(id, "pa-") do
         # maybe the script been migrated to the new format already
-        get_plausible_web_script_tag("pa-" <> id)
+        get_plausible_web_script("pa-" <> id)
       else
         {:error, :not_found}
       end
