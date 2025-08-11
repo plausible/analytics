@@ -67,36 +67,9 @@ defmodule PlausibleWeb.TrackerPlugTest do
       assert String.contains?(response, "window.plausible")
     end
 
-    test "returns the script requested with the legacy s- prefix, even if the id has been prefixed with pa- in the database",
-         %{conn: conn} do
-      site = new_site()
-
-      tracker_script_configuration =
-        Tracker.update_script_configuration!(
-          site,
-          Map.put(@example_config, :site_id, site.id),
-          :installation
-        )
-
-      assert String.starts_with?(tracker_script_configuration.id, "pa-")
-
-      response =
-        get(
-          conn,
-          "/js/s-#{String.replace_leading(tracker_script_configuration.id, "pa-", "")}.js"
-        )
-        |> response(200)
-
-      assert String.contains?(response, "!function(){var")
-      assert String.contains?(response, "domain:\"#{site.domain}\"")
-      assert String.contains?(response, "formSubmissions:!0")
-      refute String.contains?(response, "outboundLinks:!0")
-      refute String.contains?(response, "fileDownloads:!0")
-    end
-
     test "returns 404 for unknown site", %{conn: conn} do
       conn
-      |> get("/js/s-a14125a2-000-000-0000-000000000000.js")
+      |> get("/js/pa-a14125a2-000-000-0000-000000000000.js")
       |> response(404)
     end
   end
