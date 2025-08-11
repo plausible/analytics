@@ -1,5 +1,5 @@
 {
-  "name": "macobo-test-tracker",
+  "name": "@plausible-analytics/tracker",
   "version": "0.3.6",
   "description": "Plausible Analytics official frontend tracking library",
   "scripts": {

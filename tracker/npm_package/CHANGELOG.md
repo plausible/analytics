@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Move package under `@plausible-analytics/tracker`
+
 ## [0.3.6] - 2025-08-04
 
 - Fix issue with a second init() call changing the config option unexpectedly.

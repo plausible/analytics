@@ -1,6 +1,6 @@
 # Plausible Analytics tracker
 
-[![NPM](https://flat.badgen.net/npm/v/macobo-test-tracker)](https://www.npmjs.com/package/macobo-test-tracker)
+[![NPM](https://flat.badgen.net/npm/v/@plausible-analytics/tracker)](https://www.npmjs.com/package/@plausible-analytics/tracker)
 [![MIT License](https://img.shields.io/badge/License-MIT-red.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 **Notice:** This library is currently under development and will be released as an official library later this year.
@@ -22,7 +22,7 @@ Add [Plausible Analytics](https://plausible.io/) to your website.
 With npm:
 
 ```bash
-npm install macobo-test-tracker
+npm install @plausible-analytics/tracker
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ npm install macobo-test-tracker
 To begin tracking events, you must initialize the tracker:
 
 ```javascript
-import { init } from 'macobo-test-tracker'
+import { init } from '@plausible-analytics/tracker'
 
 init({
   domain: 'my-app.com'
@@ -81,7 +81,7 @@ init({
 To track a custom event, call `track` and give it the name of the event. Custom properties can be passed as a second argument:
 
 ```javascript
-import { track } from 'macobo-test-tracker'
+import { track } from '@plausible-analytics/tracker'
 
 track('signup', { props: { tier: "startup" } })
 ```
@@ -97,7 +97,7 @@ track('autoplay', { interactive: false })
 To track an event with revenue information, do:
 
 ```javascript
-import { track } from 'macobo-test-tracker'
+import { track } from '@plausible-analytics/tracker'
 
 track('Purchase', { revenue: { amount: 15.99, currency: 'USD' } })
 ```
@@ -109,7 +109,7 @@ More information can be found in [ecommerce revenue tracking docs](https://plaus
 When calling `track`, you can pass in a custom callback.
 
 ```javascript
-import { track } from 'macobo-test-tracker'
+import { track } from '@plausible-analytics/tracker'
 
 track('some-event', {
   callback: (result) => {
