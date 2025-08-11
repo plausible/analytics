@@ -6,6 +6,8 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
 
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias PlausibleWeb.Live.ChangeDomainV2.Form
+  alias Plausible.InstallationSupport.Detection
+  alias Phoenix.LiveView.AsyncResult
 
   def mount(
         %{"domain" => domain},
@@ -21,11 +23,26 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
 
     {:ok,
      assign(socket,
-       site: site
+       site: site,
+       detection_result: AsyncResult.loading()
      )}
   end
 
   def handle_params(_params, _url, socket) do
+    socket =
+      if socket.assigns.live_action == :success and connected?(socket) do
+        site_domain = socket.assigns.site.domain
+
+        assign_async(socket, :detection_result, fn ->
+          case Detection.perform("https://#{site_domain}", detect_v1?: true) do
+            {:ok, result} -> {:ok, %{detection_result: result}}
+            e -> e
+          end
+        end)
+      else
+        socket
+      end
+
     {:noreply, socket}
   end
 
@@ -66,7 +83,9 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     <.focus_box>
       <:title>Domain Changed Successfully</:title>
       <:subtitle>
-        Your website domain has been successfully updated.
+        Your website domain has been successfully updated from
+        <strong>{@site.domain_changed_from}</strong>
+        to <strong><%= @site.domain %></strong>.
       </:subtitle>
 
       <:footer>
@@ -79,24 +98,56 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         </.focus_list>
       </:footer>
 
-      <div class="py-8">
-        <div class="text-green-600 text-6xl mb-4">✓</div>
-        <h2 class="text-2xl font-semibold text-gray-900 mb-2">Success!</h2>
-        <p class="text-gray-600 mb-6">
-          Your website domain has been updated from <strong>{@site.domain_changed_from}</strong>
-          to <strong><%= @site.domain %></strong>.
-        </p>
-        <.notice class="mt-4" title="Additional Steps May Be Required">
-          If you are using the Wordpress plugin, NPM module, or Events API for tracking, you must also update the tracking
-          <code>domain</code>
-          to match the updated domain. See
-          <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
-            documentation
-          </.styled_link>
-          for details.
-        </.notice>
-      </div>
+      <.async_result :let={detection_result} assign={@detection_result}>
+        <:loading>
+          <div class="flex items-center">
+            <.spinner class="w-4 h-4 mr-2" />
+            <span class="text-sm text-gray-600">Checking your new domain...</span>
+          </div>
+        </:loading>
+
+        <:failed>
+          <.generic_notice />
+        </:failed>
+
+        <.wordpress_plugin_notice :if={
+          detection_result && detection_result.v1_detected && detection_result.wordpress_plugin
+        } />
+        <.generic_notice :if={
+          detection_result && detection_result.v1_detected && !detection_result.wordpress_plugin
+        } />
+      </.async_result>
     </.focus_box>
+    """
+  end
+
+  defp wordpress_plugin_notice(assigns) do
+    ~H"""
+    <.notice class="mt-4" title="Additional Steps Required">
+      To guarantee continuous tracking, you <i>must</i>
+      also update the site <code>domain</code>
+      in your Plausible Wordpress Plugin settings within 72 hours
+      to match the updated domain. See
+      <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+        documentation
+      </.styled_link>
+      for details.
+    </.notice>
+    """
+  end
+
+  defp generic_notice(assigns) do
+    ~H"""
+    <.notice class="mt-4" title="Additional Steps Required">
+      To guarantee continuous tracking, you <i>must</i>
+      also update the site <code>domain</code>
+      of your Plausible Installation within 72 hours
+      to match the updated domain. See
+      <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+        documentation
+      </.styled_link>
+      for details.
+    </.notice>
     """
   end
 
