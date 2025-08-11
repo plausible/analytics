@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
 
       assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Domain Changed Successfully"
       assert html =~ original_domain
       assert html =~ new_domain
@@ -149,7 +149,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
 
       assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "<i>must</i>"
       assert html =~ "also update the site"
       assert html =~ "Plausible Wordpress Plugin settings"
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
 
       assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "<i>must</i>"
       assert html =~ "also update the site"
       assert html =~ "Plausible Installation"
@@ -201,7 +201,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
 
       assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       refute html =~ "Additional Steps Required"
       refute html =~ "<i>must</i>"
       refute html =~ "also update the site"
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
 
         assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
 
-        html = render_async(lv)
+        html = render_async(lv, 500)
         assert html =~ "Additional Steps Required"
         assert html =~ "<i>must</i>"
         assert html =~ "also update the site"
