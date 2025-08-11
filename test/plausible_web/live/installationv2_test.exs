@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert text(html) =~ "Verify WordPress installation"
     end
 
@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?type=gtm")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert text(html) =~ "Verify Tag Manager installation"
     end
 
@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
 
       lv
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
       assert html =~ "Optional measurements"
       assert html =~ "Outbound links"
@@ -89,7 +89,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
       assert html =~ "Advanced options"
       assert html =~ "Manual tagging"
@@ -106,7 +106,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
 
       config = TrackerScriptConfiguration |> Plausible.Repo.get_by!(site_id: site.id)
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
 
       lv
@@ -159,7 +159,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
 
       # Test with all options disabled
@@ -186,7 +186,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
 
       lv
@@ -208,7 +208,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert text(html) =~ "We've detected your website is using WordPress"
     end
 
@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Tag Manager installation"
       assert text(html) =~ "We've detected your website is using Google Tag Manager"
     end
@@ -227,7 +227,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?type=manual")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert text(html) =~ "Your website is running an outdated version of the tracking script"
     end
 
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?type=wordpress")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify WordPress installation"
       refute text(html) =~ "Your website is running an outdated version of the tracking script"
     end
@@ -250,7 +250,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       ExUnit.CaptureLog.capture_log(fn ->
         {lv, _} = get_lv(conn, site)
 
-        html = render_async(lv)
+        html = render_async(lv, 500)
         # Should default to manual installation when detection returns {:error, _}
         assert html =~ "Verify Script installation"
       end)
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
     end
 
@@ -285,7 +285,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
     end
   end
@@ -299,7 +299,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?type=invalid")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
     end
 
@@ -311,7 +311,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?flow=invalid")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Script installation"
     end
   end
@@ -327,7 +327,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify Tag Manager installation"
     end
   end
@@ -349,7 +349,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?flow=review")
 
-      html = render_async(lv)
+      html = render_async(lv, 500)
       assert html =~ "Verify WordPress installation"
     end
   end
