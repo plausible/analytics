@@ -34,10 +34,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         site_domain = socket.assigns.site.domain
 
         assign_async(socket, :detection_result, fn ->
-          case Detection.perform("https://#{site_domain}", detect_v1?: true) do
-            {:ok, result} -> {:ok, %{detection_result: result}}
-            e -> e
-          end
+          run_detection("https://#{site_domain}")
         end)
       else
         socket
@@ -156,5 +153,12 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
      socket
      |> assign(site: updated_site)
      |> push_patch(to: Routes.site_path(socket, :success, updated_site.domain))}
+  end
+
+  defp run_detection(url) do
+    case Detection.perform(url, detect_v1?: true) do
+      {:ok, result} -> {:ok, %{detection_result: result}}
+      e -> e
+    end
   end
 end
