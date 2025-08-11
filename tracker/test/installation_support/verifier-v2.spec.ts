@@ -37,9 +37,13 @@ test.describe('installed plausible web variant', () => {
       bodyContent: ''
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
 
     expect(result).toEqual({
       data: {
@@ -93,10 +97,12 @@ test.describe('installed plausible web variant', () => {
       bodyContent: ''
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
 
     const result = await executeVerifyV2(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders,
       timeoutMs
     })
 
@@ -149,9 +155,13 @@ test.describe('installed plausible web variant', () => {
       bodyContent: ''
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
 
     expect(result).toEqual({
       data: {
@@ -191,9 +201,13 @@ test.describe('installed plausible web variant', () => {
       bodyContent: ''
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
 
     expect(result).toEqual({
       data: {
@@ -236,11 +250,16 @@ test.describe('installed plausible web variant', () => {
       bodyContent: 'alfa'
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
+
     await expect(page.getByText('alfa')).toBeVisible()
 
     const [result, _] = await Promise.all([
-      executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS),
+      executeVerifyV2(page, {
+        ...DEFAULT_VERIFICATION_OPTIONS,
+        responseHeaders
+      }),
       page.evaluate(
         ({ targetUrl }) =>
           setTimeout(() => (window.location.href = targetUrl), 250),
@@ -307,14 +326,17 @@ test.describe('installed plausible web variant', () => {
       bodyContent: 'alfa'
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
+
     await expect(page.getByText('alfa')).toBeVisible()
 
     const [result] = await Promise.all([
       executeVerifyV2(page, {
         ...DEFAULT_VERIFICATION_OPTIONS,
         timeoutBetweenAttemptsMs,
-        maxAttempts
+        maxAttempts,
+        responseHeaders
       }),
       page.evaluate(
         (url) => setTimeout(() => (window.location.href = url), 250),
@@ -331,6 +353,187 @@ test.describe('installed plausible web variant', () => {
           message:
             'page.evaluate: Execution context was destroyed, most likely because of a navigation.'
         }
+      }
+    })
+  })
+
+  test('using provided snippet but disallowed by CSP', async ({ page }, {
+    testId
+  }) => {
+    await mockManyRequests({
+      page,
+      path: `https://plausible.io/api/event`,
+      awaitedRequestCount: 1,
+      fulfill: {
+        status: 202,
+        contentType: 'text/plain',
+        body: 'ok'
+      }
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: {
+        domain: 'example.com',
+        endpoint: `https://plausible.io/api/event`,
+        captureOnLocalhost: true
+      },
+      bodyContent: '',
+      headers: {
+        'content-security-policy': "default-src 'self'; img-src 'self'"
+      }
+    })
+
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
+
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
+
+    expect(result).toEqual({
+      data: {
+        attempts: 1,
+        completed: true,
+        disallowedByCsp: true,
+        plausibleIsOnWindow: false,
+        plausibleIsInitialized: undefined,
+        plausibleVersion: undefined,
+        plausibleVariant: undefined,
+        testEvent: {
+          error: undefined,
+          normalizedBody: undefined,
+          requestUrl: undefined,
+          responseStatus: undefined
+        },
+        cookieBannerLikely: false
+      }
+    })
+  })
+
+  test(`using provided snippet and there is a strict CSP without 'unsafe-inline'`, async ({
+    page
+  }, { testId }) => {
+    const endpoint = `${LOCAL_SERVER_ADDR}/api/event`
+    const cspHostToCheck = LOCAL_SERVER_ADDR.replace('http://', '')
+    const headers = {
+      // 'unsafe-inline' is needed to allow the bootstrapper snippet to be executed
+      'content-security-policy': `default-src 'self'; script-src ${cspHostToCheck}; connect-src ${cspHostToCheck}`
+    }
+
+    await mockManyRequests({
+      page,
+      path: endpoint,
+      awaitedRequestCount: 1,
+      fulfill: {
+        status: 202,
+        contentType: 'text/plain',
+        body: 'ok'
+      }
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: {
+        endpoint,
+        domain: 'example.com',
+        captureOnLocalhost: true
+      },
+      bodyContent: '',
+      headers
+    })
+
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
+
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      cspHostToCheck,
+      responseHeaders
+    })
+
+    expect(result).toEqual({
+      data: {
+        attempts: 1,
+        completed: true,
+        disallowedByCsp: false, // scripts from our domain are allowed, but the inline sourceless snippet can't run because 'unsafe-inline' is not present in the CSP
+        plausibleIsOnWindow: false,
+        plausibleIsInitialized: undefined,
+        plausibleVersion: undefined,
+        plausibleVariant: undefined,
+        testEvent: {
+          error: undefined,
+          normalizedBody: undefined,
+          requestUrl: undefined,
+          responseStatus: undefined
+        },
+        cookieBannerLikely: false
+      }
+    })
+  })
+
+  test(`using provided snippet and there is a strict CSP with 'unsafe-inline'`, async ({
+    page
+  }, { testId }) => {
+    const endpoint = `${LOCAL_SERVER_ADDR}/api/event`
+    const cspHostToCheck = LOCAL_SERVER_ADDR.replace('http://', '')
+    const headers = {
+      // 'unsafe-inline' is needed to allow the bootstrapper snippet to be executed
+      'content-security-policy': `default-src 'self'; script-src 'unsafe-inline' ${cspHostToCheck}; connect-src ${cspHostToCheck}`
+    }
+
+    await mockManyRequests({
+      page,
+      path: endpoint,
+      awaitedRequestCount: 1,
+      fulfill: {
+        status: 202,
+        contentType: 'text/plain',
+        body: 'ok'
+      }
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: {
+        endpoint,
+        domain: 'example.com',
+        captureOnLocalhost: true
+      },
+      bodyContent: '',
+      headers
+    })
+
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
+
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      cspHostToCheck,
+      responseHeaders
+    })
+
+    expect(result).toEqual({
+      data: {
+        attempts: 1,
+        completed: true,
+        disallowedByCsp: false,
+        plausibleIsOnWindow: true,
+        plausibleIsInitialized: true,
+        plausibleVersion: version,
+        plausibleVariant: 'web',
+        testEvent: {
+          callbackResult: { status: 202 },
+          requestUrl: `${LOCAL_SERVER_ADDR}/api/event`,
+          normalizedBody: {
+            domain: 'example.com',
+            name: 'verification-agent-test',
+            version
+          },
+          responseStatus: 202
+        },
+        cookieBannerLikely: false
       }
     })
   })
@@ -361,9 +564,13 @@ test.describe('installed plausible esm variant', () => {
       bodyContent: ''
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
 
     expect(result).toEqual({
       data: {
@@ -416,9 +623,13 @@ test.describe('installed plausible esm variant', () => {
       bodyContent: ''
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
 
     expect(result).toEqual({
       data: {
@@ -471,9 +682,13 @@ test.describe('installed plausible esm variant', () => {
       }
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
 
     expect(result).toEqual({
       data: {
@@ -515,9 +730,13 @@ test.describe('installed plausible esm variant', () => {
       bodyContent: ''
     })
 
-    await page.goto(url)
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, DEFAULT_VERIFICATION_OPTIONS)
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
 
     expect(result).toEqual({
       data: {
