@@ -28,16 +28,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      assert eventually(fn ->
-               html = render(lv)
-
-               {
-                 text(html) =~ "Verify WordPress installation",
-                 html
-               }
-             end)
-
-      _ = render(lv)
+      html = render_async(lv)
+      assert text(html) =~ "Verify WordPress installation"
     end
 
     test "When ?type URL parameter is supplied, detected type is unused", %{
@@ -48,26 +40,16 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?type=gtm")
 
-      assert eventually(fn ->
-               html = render(lv)
-
-               {
-                 text(html) =~ "Verify Tag Manager installation",
-                 html
-               }
-             end)
-
-      _ = render(lv)
+      html = render_async(lv)
+      assert text(html) =~ "Verify Tag Manager installation"
     end
 
     test "allows switching between installation tabs", %{conn: conn, site: site} do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
 
       lv
       |> element("a[href*=\"type=wordpress\"]")
@@ -95,12 +77,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
-
-      html = render(lv)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
       assert html =~ "Optional measurements"
       assert html =~ "Outbound links"
       assert html =~ "File downloads"
@@ -111,14 +89,9 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
-
-      html = render(lv)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
       assert html =~ "Advanced options"
-
       assert html =~ "Manual tagging"
       assert html =~ "404 error pages"
       assert html =~ "Hashed page paths"
@@ -133,10 +106,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
 
       config = TrackerScriptConfiguration |> Plausible.Repo.get_by!(site_id: site.id)
       assert config.outbound_links == true
@@ -164,10 +135,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
 
       lv
       |> element("form[phx-submit='submit']")
@@ -190,10 +159,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
 
       # Test with all options disabled
       lv
@@ -219,10 +186,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
 
       lv
       |> element("form[phx-submit='submit']")
@@ -243,14 +208,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      assert eventually(fn ->
-               html = render(lv)
-
-               {
-                 text(html) =~ "We've detected your website is using WordPress",
-                 html
-               }
-             end)
+      html = render_async(lv)
+      assert text(html) =~ "We've detected your website is using WordPress"
     end
 
     test "detected GTM installation shows special message", %{conn: conn, site: site} do
@@ -258,19 +217,9 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Tag Manager installation", html}
-             end)
-
-      assert eventually(fn ->
-               html = render(lv)
-
-               {
-                 text(html) =~ "We've detected your website is using Google Tag Manager",
-                 html
-               }
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Tag Manager installation"
+      assert text(html) =~ "We've detected your website is using Google Tag Manager"
     end
 
     test "shows v1 detection warning for manual installation", %{conn: conn, site: site} do
@@ -278,15 +227,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?type=manual")
 
-      assert eventually(fn ->
-               html = render(lv)
-
-               {
-                 text(html) =~
-                   "Your website is running an outdated version of the tracking script",
-                 html
-               }
-             end)
+      html = render_async(lv)
+      assert text(html) =~ "Your website is running an outdated version of the tracking script"
     end
 
     test "does not show v1 detection warning for non-manual installation", %{
@@ -297,12 +239,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?type=wordpress")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify WordPress installation", html}
-             end)
-
-      html = render(lv)
+      html = render_async(lv)
+      assert html =~ "Verify WordPress installation"
       refute text(html) =~ "Your website is running an outdated version of the tracking script"
     end
 
@@ -312,11 +250,9 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       ExUnit.CaptureLog.capture_log(fn ->
         {lv, _} = get_lv(conn, site)
 
-        assert eventually(fn ->
-                 html = render(lv)
-                 # Should default to manual installation when detection returns {:error, _}
-                 {html =~ "Verify Script installation", html}
-               end)
+        html = render_async(lv)
+        # Should default to manual installation when detection returns {:error, _}
+        assert html =~ "Verify Script installation"
       end)
     end
   end
@@ -338,10 +274,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
     end
 
     test "allows editor access to installation page", %{conn: conn, user: user} do
@@ -351,10 +285,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
     end
   end
 
@@ -367,10 +299,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?type=invalid")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
     end
 
     test "falls back to provisioning flow when invalid flow parameter supplied", %{
@@ -381,10 +311,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?flow=invalid")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Script installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Script installation"
     end
   end
 
@@ -399,10 +327,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site)
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify Tag Manager installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify Tag Manager installation"
     end
   end
 
@@ -423,10 +349,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       {lv, _} = get_lv(conn, site, "?flow=review")
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ "Verify WordPress installation", html}
-             end)
+      html = render_async(lv)
+      assert html =~ "Verify WordPress installation"
     end
   end
 
