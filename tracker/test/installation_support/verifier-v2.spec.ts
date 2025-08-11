@@ -419,7 +419,7 @@ test.describe('installed plausible web variant', () => {
     const cspHostToCheck = LOCAL_SERVER_ADDR.replace('http://', '')
     const headers = {
       // 'unsafe-inline' is needed to allow the bootstrapper snippet to be executed
-      'content-security-policy': `default-src 'self'; script-src ${cspHostToCheck} unsafe; connect-src ${cspHostToCheck}`
+      'content-security-policy': `default-src 'self'; script-src ${cspHostToCheck}; connect-src ${cspHostToCheck}`
     }
 
     await mockManyRequests({
@@ -480,7 +480,7 @@ test.describe('installed plausible web variant', () => {
     const cspHostToCheck = LOCAL_SERVER_ADDR.replace('http://', '')
     const headers = {
       // 'unsafe-inline' is needed to allow the bootstrapper snippet to be executed
-      'content-security-policy': `default-src 'self'; script-src 'unsafe-inline' ${cspHostToCheck} unsafe; connect-src ${cspHostToCheck}`
+      'content-security-policy': `default-src 'self'; script-src 'unsafe-inline' ${cspHostToCheck}; connect-src ${cspHostToCheck}`
     }
 
     await mockManyRequests({
