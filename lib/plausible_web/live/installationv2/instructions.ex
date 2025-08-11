@@ -245,6 +245,10 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
   end
 
   defp tracker_url(tracker_script_configuration) do
-    "https://plausible.io/js/s-#{tracker_script_configuration.id}.js"
+    if String.starts_with?(tracker_script_configuration.id, "pa-") do
+      "https://plausible.io/js/#{tracker_script_configuration.id}.js"
+    else
+      "https://plausible.io/js/s-#{tracker_script_configuration.id}.js"
+    end
   end
 end
