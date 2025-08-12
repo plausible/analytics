@@ -3,8 +3,6 @@
 [![NPM](https://flat.badgen.net/npm/v/@plausible-analytics/tracker)](https://www.npmjs.com/package/@plausible-analytics/tracker)
 [![MIT License](https://img.shields.io/badge/License-MIT-red.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-**Notice:** This library is currently under development and will be released as an official library later this year.
-
 Add [Plausible Analytics](https://plausible.io/) to your website.
 
 ## Features
