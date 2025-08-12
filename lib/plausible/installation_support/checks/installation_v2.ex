@@ -1,4 +1,9 @@
 defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
+  @moduledoc """
+  Calls the browserless.io service (local instance can be spawned with `make browserless`)
+  and runs verifier script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
+  """
+
   require Logger
 
   @verifier_code_path "priv/tracker/installation_support/verifier-v2.js"
@@ -75,10 +80,6 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   }
   """
 
-  @moduledoc """
-  Calls the browserless.io service (local instance can be spawned with `make browserless`)
-  and runs verifier script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
-  """
   use Plausible.InstallationSupport.Check
 
   @impl true

@@ -10,6 +10,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
   require Logger
 
   @checks [
+    Checks.Url,
     Checks.InstallationV2,
     Checks.InstallationV2CacheBust
   ]
