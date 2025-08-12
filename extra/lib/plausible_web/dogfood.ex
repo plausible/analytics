@@ -20,20 +20,20 @@ defmodule PlausibleWeb.Dogfood do
     tracker_script_config_id =
       cond do
         env == "prod" and selfhost? ->
-          "V5OUguy5m04s95qHnmGbH"
+          "pa-V5OUguy5m04s95qHnmGbH"
 
         env == "prod" and assigns[:embedded] ->
-          "Qo3A7Ksnbn-wYQWMijuR3"
+          "pa-Qo3A7Ksnbn-wYQWMijuR3"
 
         env == "prod" ->
-          "6_srOGVV9SLMWJ1ZpUAbG"
+          "pa-6_srOGVV9SLMWJ1ZpUAbG"
 
         env == "staging" ->
-          "egYOCIzzYzPL9v6GHLc-7"
+          "pa-egYOCIzzYzPL9v6GHLc-7"
 
         env in ["dev", "ce_dev"] ->
           # By default we're not letting the app track itself on localhost.
-          # The requested script will be `s-.js` and it will respond with 404.
+          # The requested script will be `.js` and the server will respond with 404.
           # If you wish to track the app itself, uncomment the following code
           # and replace the site_id if necessary (1 stands for dummy.site).
 
@@ -41,13 +41,13 @@ defmodule PlausibleWeb.Dogfood do
           # |> PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!()
           # |> Map.get(:id)
 
-          ""
+          "pa-invalid-script-id"
 
         env in ["test", "ce_test"] ->
           ""
       end
 
-    "#{PlausibleWeb.Endpoint.url()}/js/s-#{tracker_script_config_id}.js"
+    "#{PlausibleWeb.Endpoint.url()}/js/#{tracker_script_config_id}.js"
   end
 
   # TRICKY: The React dashboard uses history-based SPA navigation
