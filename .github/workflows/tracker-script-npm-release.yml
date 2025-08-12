@@ -69,7 +69,7 @@ jobs:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"content": "<h1>🚀 New tracker script version has been released to NPM!</h1>"}'
+          data: '{"content": "<h1>🚀 New tracker script version has been released to <a href=\"https://www.npmjs.com/package/@plausible-analytics/tracker\">NPM</a>!</h1>"}'
 
       - name: Notify team on failure
         if: ${{ failure() }}
