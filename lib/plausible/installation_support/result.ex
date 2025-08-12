@@ -3,11 +3,16 @@ defmodule Plausible.InstallationSupport.Result do
   Diagnostics interpretation result.
 
   ## Example
-  ok?: false
+  ok?: false,
+  data: nil,
   errors: [error.message],
   recommendations: [%{text: error.recommendation, url: error.url}]
 
+  ok?: true,
+  data: %{},
+  errors: [],
+  recommendations: []
   """
-  defstruct ok?: false, errors: [], recommendations: []
+  defstruct ok?: false, errors: [], recommendations: [], data: nil
   @type t :: %__MODULE__{}
 end
