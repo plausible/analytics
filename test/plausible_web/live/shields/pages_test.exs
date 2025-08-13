@@ -166,6 +166,57 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
                "This rule might be redundant because the following rules may match first:\n\n/test/*"
     end
 
+    test "debug - check combo box behavior", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post1", timestamp: Date.add(Date.utc_today(), -3)),
+        build(:pageview, pathname: "/blog/post2", timestamp: Date.add(Date.utc_today(), -3))
+      ])
+
+      opt1_selector = "li#dropdown-page_rule_page_path-modalseq0-option-1"
+      opt2_selector = "li#dropdown-page_rule_page_path-modalseq0-option-2"
+
+      lv = get_liveview(conn, site)
+
+      type_into_combo(lv, "page_rule_page_path-modalseq0", "blog")
+      html = lv |> render()
+
+      assert text_of_element(html, opt1_selector) == "/blog/post1"
+      assert text_of_element(html, opt2_selector) == "/blog/post2"
+
+      lv
+      |> element("form")
+      |> render_submit(%{
+        "page_rule[page_path]" => "/blog/post2"
+      })
+
+      type_into_combo(lv, "page_rule_page_path-modalseq0", "blog")
+      html = lv |> render()
+
+      assert text_of_element(html, opt1_selector) == "/blog/post1"
+      refute element_exists?(html, opt2_selector)
+
+      lv
+      |> element("form")
+      |> render_submit(%{
+        "page_rule[page_path]" => "/blog/post1"
+      })
+
+      type_into_combo(lv, "page_rule_page_path-modalseq0", "blog")
+      html = lv |> render()
+
+      refute element_exists?(html, opt1_selector)
+      refute element_exists?(html, opt2_selector)
+    end
+
+    defp type_into_combo(lv, id, text) do
+      lv
+      |> element("input##{id}")
+      |> render_change(%{
+        "_target" => ["display-#{id}"],
+        "display-#{id}" => "#{text}"
+      })
+    end
+
     defp get_liveview(conn, site) do
       conn = assign(conn, :live_module, PlausibleWeb.Live.Shields)
       {:ok, lv, _html} = live(conn, "/#{site.domain}/settings/shields/pages")
