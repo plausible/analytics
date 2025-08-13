@@ -30,13 +30,13 @@ defmodule PlausibleWeb.CustomerSupport.Components.SearchResult do
         <span
           :if={@resource.object.subscription}
           class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
-          >
+        >
           $
         </span>
       </div>
 
       <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />
-    <div class="text-sm truncate">
+      <div class="text-sm truncate">
         Team identifier:
         <code class="font-mono">{@resource.object.identifier |> String.slice(0, 8)}</code>
         <br />
