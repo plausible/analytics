@@ -86,6 +86,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         get(conn, "/api/stats/#{site.domain}/suggestions/source?period=month&date=2019-01-01")
 
       assert json_response(conn, 200) == [
+               %{"label" => "Direct / None", "value" => "Direct / None"},
                %{"label" => "Bing", "value" => "Bing"},
                %{"label" => "10words", "value" => "10words"}
              ]
@@ -1158,10 +1159,18 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
             "/api/stats/#{site.domain}/suggestions/source?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
           )
 
-        assert json_response(conn, 200) == [
-                 %{"value" => "Google", "label" => "Google"},
-                 %{"value" => "Bing", "label" => "Bing"}
-               ]
+        if unquote(label) == "with filter" do
+          assert json_response(conn, 200) == [
+                   %{"value" => "Google", "label" => "Google"},
+                   %{"value" => "Bing", "label" => "Bing"}
+                 ]
+        else
+          assert json_response(conn, 200) == [
+                   %{"value" => "Direct / None", "label" => "Direct / None"},
+                   %{"value" => "Google", "label" => "Google"},
+                   %{"value" => "Bing", "label" => "Bing"}
+                 ]
+        end
       end
 
       test "merges channel suggestions from native and imported data #{label}", %{

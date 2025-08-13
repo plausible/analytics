@@ -218,23 +218,33 @@ defmodule Plausible.Stats.FilterSuggestions do
         query_sessions(query)
       end
 
-    from(e in base_q,
-      where: fragment("? ilike ?", field(e, ^filter_name), ^filter_query),
-      select: field(e, ^filter_name),
-      group_by: ^filter_name,
-      order_by: [desc: fragment("count(*)")]
-    )
-    |> apply_additional_filters(filter_name, site)
-    |> Imported.merge_imported_filter_suggestions(
-      site,
-      query,
-      filter_name,
-      filter_query
-    )
-    |> limit(25)
-    |> ClickhouseRepo.all()
-    |> Enum.filter(fn suggestion -> suggestion != "" end)
-    |> wrap_suggestions()
+    suggestions =
+      from(e in base_q,
+        where: fragment("? ilike ?", field(e, ^filter_name), ^filter_query),
+        select: field(e, ^filter_name),
+        group_by: ^filter_name,
+        order_by: [desc: fragment("count(*)")]
+      )
+      |> apply_additional_filters(filter_name, site)
+      |> Imported.merge_imported_filter_suggestions(
+        site,
+        query,
+        filter_name,
+        filter_query
+      )
+      |> limit(25)
+      |> ClickhouseRepo.all()
+      |> Enum.filter(fn suggestion -> suggestion != "" end)
+
+    suggestions =
+      if filter_name == :referrer_source and
+           String.contains?(String.downcase("Direct / None"), String.downcase(filter_search)) do
+        ["Direct / None" | suggestions]
+      else
+        suggestions
+      end
+
+    wrap_suggestions(suggestions)
   end
 
   def custom_prop_value_filter_suggestions(_site, query, prop_key, filter_search) do
@@ -283,6 +293,6 @@ defmodule Plausible.Stats.FilterSuggestions do
   defp apply_additional_filters(q, _, _), do: q
 
   defp wrap_suggestions(list) do
-    Enum.map(list, fn val -> %{value: val, label: val} end)
+    list |> Enum.uniq() |> Enum.map(fn val -> %{value: val, label: val} end)
   end
 end
