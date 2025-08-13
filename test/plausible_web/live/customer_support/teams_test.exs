@@ -25,8 +25,15 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
       test "renders", %{conn: conn, user: user} do
         team = team_of(user)
+        new_site(owner: user)
+        add_member(team, role: :editor)
+
         {:ok, _lv, html} = live(conn, open_team(team.id))
-        assert text(html) =~ team.name
+        text = text(html)
+
+        assert text =~ team.name
+        assert text =~ "Sites (2/10)"
+        assert text =~ "Members (1/10)"
       end
 
       test "delete team", %{conn: conn, user: user} do

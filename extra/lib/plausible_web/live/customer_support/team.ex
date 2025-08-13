@@ -62,11 +62,23 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   end
 
   def render(assigns) do
+    team = assigns.team
+
+    usage = Plausible.Teams.Billing.quota_usage(team, with_features: true)
+
+    limits = %{
+      monthly_pageviews: Plausible.Teams.Billing.monthly_pageview_limit(team),
+      sites: Plausible.Teams.Billing.site_limit(team),
+      team_members: Plausible.Teams.Billing.team_member_limit(team)
+    }
+
+    assigns = assign(assigns, usage: usage, limits: limits)
+
     ~H"""
     <Layout.layout show_search={false} flash={@flash}>
       <.team_header team={@team} />
-      <.team_tab_navigation team={@team} tab={@tab} />
-      <.team_stats team={@team} />
+      <.team_tab_navigation team={@team} tab={@tab} limits={@limits} usage={@usage} />
+      <.subscription_bar team={@team} />
 
       <.live_component
         module={tab_component(@tab)}
@@ -121,8 +133,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     <.tab_navigation tab={@tab}>
       <:tabs>
         <.tab to="overview" tab={@tab}>Overview</.tab>
-        <.tab to="members" tab={@tab}>Members</.tab>
-        <.tab to="sites" tab={@tab}>Sites</.tab>
+        <.tab to="members" tab={@tab}>
+          Members ({number_format(@usage.team_members)}/{number_format(@limits.team_members)})
+        </.tab>
+        <.tab to="sites" tab={@tab}>
+          Sites ({number_format(@usage.sites)}/{number_format(@limits.sites)})
+        </.tab>
         <.tab :if={has_sso_integration?(@team)} to="sso" tab={@tab}>SSO</.tab>
         <.tab to="billing" tab={@tab}>Billing</.tab>
         <.tab to="audit" tab={@tab}>Audit</.tab>
@@ -131,18 +147,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     """
   end
 
-  defp team_stats(assigns) do
-    team = assigns.team
-    usage = Plausible.Teams.Billing.quota_usage(team, with_features: true)
-
-    limits = %{
-      monthly_pageviews: Plausible.Teams.Billing.monthly_pageview_limit(team),
-      sites: Plausible.Teams.Billing.site_limit(team),
-      team_members: Plausible.Teams.Billing.team_member_limit(team)
-    }
-
-    assigns = assign(assigns, usage: usage, limits: limits)
-
+  defp subscription_bar(assigns) do
     ~H"""
     <div class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-850 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600">
       <div class="px-6 py-5 text-center text-sm font-medium">
@@ -354,4 +359,14 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
       socket
     end
   end
+
+  defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
+    "unlimited"
+  end
+
+  defp number_format(number) when is_integer(number) do
+    Cldr.Number.to_string!(number)
+  end
+
+  defp number_format(other), do: other
 end
