@@ -1374,6 +1374,48 @@ defmodule PlausibleWeb.SettingsControllerTest do
       refute html =~ "Team Settings"
     end
 
+    test "does not render invoices when no subscription present (no team assigned)", %{conn: conn} do
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      refute html =~ Routes.settings_path(conn, :invoices)
+    end
+
+    test "does render invoices when subscription present (no team assigned)", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_growth_plan(user)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      assert html =~ Routes.settings_path(conn, :invoices)
+    end
+
+    test "does not render invoices when no subscription (team set up)", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      refute html =~ Routes.settings_path(conn, :invoices)
+    end
+
+    test "does render invoices when subscription present (team assigned)", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_growth_plan(user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      assert html =~ Routes.settings_path(conn, :invoices)
+    end
+
     test "renders team settings, when team assigned and set up", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       team = Plausible.Teams.complete_setup(team)
