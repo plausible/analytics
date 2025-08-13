@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
 
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias PlausibleWeb.Live.ChangeDomainV2.Form
-  alias Plausible.InstallationSupport.Detection
+  alias Plausible.InstallationSupport.{Detection, Result}
   alias Phoenix.LiveView.AsyncResult
 
   def mount(
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         site_domain = socket.assigns.site.domain
 
         assign_async(socket, :detection_result, fn ->
-          run_detection("https://#{site_domain}")
+          run_detection(site_domain)
         end)
       else
         socket
@@ -155,10 +155,34 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
      |> push_patch(to: Routes.site_path(socket, :success, updated_site.domain))}
   end
 
-  defp run_detection(url) do
-    case Detection.perform(url, detect_v1?: true) do
-      {:ok, result} -> {:ok, %{detection_result: result}}
-      e -> e
+  defp run_detection(domain) do
+    url_to_detect = nil
+
+    case url_to_detect
+         |> Detection.Checks.run(domain,
+           detect_v1?: true,
+           report_to: nil,
+           async?: false,
+           slowdown: 0
+         )
+         |> Detection.Checks.interpret_diagnostics() do
+      %Result{
+        ok?: true,
+        data: %{
+          v1_detected: v1_detected,
+          wordpress_plugin: wordpress_plugin
+        }
+      } ->
+        {:ok,
+         %{
+           detection_result: %{
+             v1_detected: v1_detected,
+             wordpress_plugin: wordpress_plugin
+           }
+         }}
+
+      %Result{ok?: false, errors: errors} ->
+        List.first(errors)
     end
   end
 end
