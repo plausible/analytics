@@ -67,6 +67,29 @@ export default function Funnel({ funnelName, tabs }) {
     }
   }, [])
 
+  const repositionFunnelTooltip = (e) => {
+    const tooltipEl = document.getElementById('chartjs-tooltip-funnel')
+    if (tooltipEl && window.innerWidth >= 768) {
+      if (e.clientX > 0.66 * window.innerWidth) {
+        tooltipEl.style.right =
+          window.innerWidth - e.clientX + window.pageXOffset + 'px'
+        tooltipEl.style.left = null
+      } else {
+        tooltipEl.style.right = null
+        tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
+      }
+      tooltipEl.style.top = e.clientY + window.pageYOffset + 'px'
+      tooltipEl.style.opacity = 1
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener('mousemove', repositionFunnelTooltip)
+    return () => {
+      window.removeEventListener('mousemove', repositionFunnelTooltip)
+    }
+  }, [])
+
   const isDarkMode = () => {
     return document.querySelector('html').classList.contains('dark') || false
   }

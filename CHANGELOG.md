@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 - Make clicking Compare / Disable Comparison in period picker menu close the menu
 - Do not log page views for hidden pages (prerendered pages and new tabs), until pages are viewed
+- Fix funnel tooltips occasionally showing up on the main graph
 
 ## v3.0.0 - 2025-04-11
 
