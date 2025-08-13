@@ -14,7 +14,34 @@ defmodule PlausibleWeb.Tracker do
   @plausible_main_script File.read!(path)
   @external_resource "priv/tracker/js/plausible-web.js"
 
-  def plausible_main_script_tag(tracker_script_configuration) do
+  def get_plausible_main_script(id, cache_opts \\ []) do
+    on_ee do
+      # On cloud:
+      # 1. Check if tracker script ID is in the cache
+      # 2. If it is, generate the script on the fly
+      #
+      # Note that EE is relying on CDN caching the script
+      if PlausibleWeb.TrackerScriptCache.get(id, cache_opts) do
+        PlausibleWeb.TrackerScriptCache.get_from_source(id, force_get_script: true)
+      end
+    else
+      # On self-hosted, we have a pre-warmed cache for the script
+      PlausibleWeb.TrackerScriptCache.get(id, cache_opts)
+    end
+  end
+
+  # Exposed for testing
+  def plausible_main_config(tracker_script_configuration) do
+    %{
+      domain: tracker_script_configuration.site.domain,
+      endpoint: tracker_ingestion_endpoint(),
+      outboundLinks: tracker_script_configuration.outbound_links,
+      fileDownloads: tracker_script_configuration.file_downloads,
+      formSubmissions: tracker_script_configuration.form_submissions
+    }
+  end
+
+  def build_script(%TrackerScriptConfiguration{} = tracker_script_configuration) do
     config_js_content =
       tracker_script_configuration
       |> plausible_main_config()
@@ -30,16 +57,6 @@ defmodule PlausibleWeb.Tracker do
 
     @plausible_main_script
     |> String.replace("\"<%= @config_js %>\"", "{#{config_js_content}}")
-  end
-
-  def plausible_main_config(tracker_script_configuration) do
-    %{
-      domain: tracker_script_configuration.site.domain,
-      endpoint: tracker_ingestion_endpoint(),
-      outboundLinks: tracker_script_configuration.outbound_links,
-      fileDownloads: tracker_script_configuration.file_downloads,
-      formSubmissions: tracker_script_configuration.form_submissions
-    }
   end
 
   def update_script_configuration(site, config_update, changeset_type) do

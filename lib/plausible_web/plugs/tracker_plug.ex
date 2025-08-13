@@ -62,8 +62,8 @@ defmodule PlausibleWeb.TrackerPlug do
   def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
   defp request_tracker_script(id, conn) do
-    case get_plausible_web_script(id) do
-      {:ok, script_tag} ->
+    case PlausibleWeb.Tracker.get_plausible_main_script(id) do
+      script_tag when is_binary(script_tag) ->
         :telemetry.execute(
           telemetry_event(:v2),
           %{},
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.TrackerPlug do
         |> send_resp(200, script_tag)
         |> halt()
 
-      {:error, :not_found} ->
+      nil ->
         :telemetry.execute(
           telemetry_event(:v2),
           %{},
@@ -92,23 +92,6 @@ defmodule PlausibleWeb.TrackerPlug do
         conn
         |> send_resp(404, "Not found")
         |> halt()
-    end
-  end
-
-  defp get_plausible_web_script(id) do
-    script =
-      on_ee do
-        # On cloud, we generate the script always on the fly relying on CDN caching
-        PlausibleWeb.TrackerScriptCache.get_from_source(id)
-      else
-        # On self-hosted, we have a pre-warmed cache for the script
-        PlausibleWeb.TrackerScriptCache.get(id)
-      end
-
-    if script do
-      {:ok, script}
-    else
-      {:error, :not_found}
     end
   end
 
