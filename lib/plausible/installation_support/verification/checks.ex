@@ -16,7 +16,6 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
   ]
 
   def run(url, data_domain, installation_type, opts \\ []) do
-    checks = Keyword.get(opts, :checks, @checks)
     report_to = Keyword.get(opts, :report_to, self())
     async? = Keyword.get(opts, :async?, true)
     slowdown = Keyword.get(opts, :slowdown, 500)
@@ -31,7 +30,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
         }
       }
 
-    CheckRunner.run(init_state, checks,
+    CheckRunner.run(init_state, @checks,
       async?: async?,
       report_to: report_to,
       slowdown: slowdown

@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
   import Plausible.Teams.Test
+  import Mox
 
   alias Plausible.Site.TrackerScriptConfiguration
 
@@ -24,6 +25,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
   describe "LiveView" do
     test "detects installation type when mounted", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site)
@@ -36,6 +38,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site, "?type=gtm")
@@ -45,6 +48,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "allows switching between installation tabs", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
@@ -74,6 +78,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "manual installations has script snippet with expected ID", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
@@ -90,6 +95,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "manual installation shows optional measurements", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
@@ -102,6 +108,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "manual installation shows advanced options in disclosure", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
@@ -119,6 +126,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
@@ -148,6 +156,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "submitting form redirects to verification", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
@@ -172,6 +181,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "404 goal gets created regardless of user options", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
@@ -199,6 +209,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
@@ -220,6 +231,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "detected WordPress installation shows special message", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site)
@@ -229,6 +241,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "detected GTM installation shows special message", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_gtm()
 
       {lv, _} = get_lv(conn, site)
@@ -239,6 +252,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     test "shows v1 detection warning for manual installation", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual_with_v1()
 
       {lv, _} = get_lv(conn, site, "?type=manual")
@@ -251,6 +265,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_wordpress_with_v1()
 
       {lv, _} = get_lv(conn, site, "?type=wordpress")
@@ -260,7 +275,28 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       refute text(html) =~ "Your website is running an outdated version of the tracking script"
     end
 
-    test "falls back to manual installation when detection fails", %{conn: conn, site: site} do
+    test "falls back to manual installation when detection fails at dns check level", %{
+      conn: conn,
+      site: site
+    } do
+      stub_dns_lookup_a_records(site.domain, [])
+
+      ExUnit.CaptureLog.capture_log(fn ->
+        {lv, _} = get_lv(conn, site)
+
+        assert eventually(fn ->
+                 html = render(lv)
+                 # Should default to manual installation when detection returns {:error, _}
+                 {html =~ "Verify Script installation", html}
+               end)
+      end)
+    end
+
+    test "falls back to manual installation when dns succeeds but detection fails", %{
+      conn: conn,
+      site: site
+    } do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_error()
 
       ExUnit.CaptureLog.capture_log(fn ->
@@ -286,6 +322,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     test "allows viewer access to installation page", %{conn: conn, user: user} do
       site = new_site()
       add_guest(site, user: user, role: :viewer)
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
 
       {lv, _} = get_lv(conn, site)
@@ -297,6 +334,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     test "allows editor access to installation page", %{conn: conn, user: user} do
       site = new_site()
       add_guest(site, user: user, role: :editor)
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
 
       {lv, _} = get_lv(conn, site)
@@ -311,6 +349,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
 
       {lv, _} = get_lv(conn, site, "?type=invalid")
@@ -323,6 +362,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_manual()
 
       {lv, _} = get_lv(conn, site, "?flow=invalid")
@@ -334,6 +374,8 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
   describe "Detection Result Combinations" do
     test "When GTM + Wordpress detected, GTM takes precedence", %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
+
       stub_detection_result(%{
         "v1Detected" => false,
         "gtmLikely" => true,
@@ -361,6 +403,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
           form_submissions: true
         })
 
+      stub_dns_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site, "?flow=review")
@@ -427,7 +470,10 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     Req.Test.stub(:global, fn conn ->
       conn
       |> put_resp_content_type("application/json")
-      |> send_resp(200, Jason.encode!(%{"data" => %{"error" => "Simulated browser error"}}))
+      |> send_resp(
+        200,
+        Jason.encode!(%{"data" => %{"error" => %{"message" => "Simulated browser error"}}})
+      )
     end)
   end
 
@@ -435,5 +481,14 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     {:ok, lv, html} = live(conn, "/#{site.domain}/installationv2#{qs}")
 
     {lv, html}
+  end
+
+  defp stub_dns_lookup_a_records(domain, a_records \\ [{192, 168, 1, 1}]) do
+    lookup_domain = to_charlist(domain)
+
+    Plausible.DnsLookup.Mock
+    |> expect(:lookup, fn ^lookup_domain, _type, _record, _opts, _timeout ->
+      a_records
+    end)
   end
 end

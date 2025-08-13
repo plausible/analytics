@@ -67,7 +67,7 @@ defmodule Plausible.InstallationSupport.Checks.Url do
     lookup_timeout = 1_000
     resolve_timeout = 1_000
 
-    case :inet_res.lookup(
+    case Plausible.DnsLookup.impl().lookup(
            to_charlist(domain),
            :in,
            :a,

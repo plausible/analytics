@@ -44,8 +44,14 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
         return await window.scanPageBeforePlausibleInstallation(detectV1, debug);
       }, context.detectV1, context.debug);
     } catch (error) {
-      const msg = error.message ? error.message : JSON.stringify(error)
-      return {data: {completed: false, error: msg}}
+      return {
+        data: {
+          completed: false,
+          error: {
+            message: error?.message ?? JSON.stringify(error)
+          }
+        }
+      }
     }
   }
   """
