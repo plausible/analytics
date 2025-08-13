@@ -36,6 +36,21 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text =~ "Members (1/10)"
       end
 
+      test "renders unlimited limits", %{conn: conn, user: user} do
+        owner = new_user(team: [inserted_at: ~N[2021-01-01 00:00:00]])
+        subscribe_to_enterprise_plan(owner, team_member_limit: :unlimited)
+        team = team_of(owner)
+        add_member(team, user: user, role: :editor)
+        new_site(owner: owner)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+        text = text(html)
+
+        assert text =~ team.name
+        assert text =~ "Sites (1/unlimited)"
+        assert text =~ "Members (1/unlimited)"
+      end
+
       test "delete team", %{conn: conn, user: user} do
         team = team_of(user)
         {:ok, lv, _html} = live(conn, open_team(team.id))
