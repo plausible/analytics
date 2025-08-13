@@ -123,15 +123,13 @@ defmodule PlausibleWeb.Live.Verification do
     if is_pid(socket.assigns.checks_pid) and Process.alive?(socket.assigns.checks_pid) do
       {:noreply, socket}
     else
-      if Application.get_env(:plausible, :environment) != "dev" do
-        case Plausible.RateLimit.check_rate(
-               "site_verification_#{socket.assigns.domain}",
-               :timer.minutes(60),
-               3
-             ) do
-          {:allow, _} -> :ok
-          {:deny, _} -> :timer.sleep(@slowdown_for_frequent_checking)
-        end
+      case Plausible.RateLimit.check_rate(
+             "site_verification_#{socket.assigns.domain}",
+             :timer.minutes(60),
+             3
+           ) do
+        {:allow, _} -> :ok
+        {:deny, _} -> :timer.sleep(@slowdown_for_frequent_checking)
       end
 
       domain = socket.assigns.domain

@@ -27,7 +27,6 @@ config :plausible,
   http_impl: Plausible.HTTPClient.Mock
 
 config :plausible,
-  session_timeout: 0,
   dns_lookup_impl: Plausible.DnsLookup.Mock
 
 config :plausible, Plausible.Cache, enabled: false
