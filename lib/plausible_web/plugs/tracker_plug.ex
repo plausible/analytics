@@ -40,14 +40,6 @@ defmodule PlausibleWeb.TrackerPlug do
 
   def call(conn, files_available: files_available) do
     case conn.request_path do
-      "/js/s-" <> path ->
-        if String.ends_with?(path, ".js") do
-          id = String.replace_trailing(path, ".js", "")
-          request_tracker_script(id, conn)
-        else
-          conn
-        end
-
       "/js/pa-" <> path ->
         if String.ends_with?(path, ".js") do
           id = String.replace_trailing(path, ".js", "")
@@ -69,7 +61,6 @@ defmodule PlausibleWeb.TrackerPlug do
 
   def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
-  # at this point, id might be both with and without the `pa-` prefix
   defp request_tracker_script(id, conn) do
     case get_plausible_web_script(id) do
       {:ok, script_tag} ->
@@ -104,7 +95,6 @@ defmodule PlausibleWeb.TrackerPlug do
     end
   end
 
-  # at this point, id can be both with and without the `pa-` prefix
   defp get_plausible_web_script(id) do
     script =
       on_ee do
@@ -118,12 +108,7 @@ defmodule PlausibleWeb.TrackerPlug do
     if script do
       {:ok, script}
     else
-      if not String.starts_with?(id, "pa-") do
-        # maybe the script been migrated to the new format already
-        get_plausible_web_script("pa-" <> id)
-      else
-        {:error, :not_found}
-      end
+      {:error, :not_found}
     end
   end
 
