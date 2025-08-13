@@ -4,8 +4,10 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
   """
   use PlausibleWeb, :live_view
 
-  alias Plausible.Site
   alias PlausibleWeb.Router.Helpers, as: Routes
+  alias PlausibleWeb.Live.ChangeDomainV2.Form
+  alias Plausible.InstallationSupport.Detection
+  alias Phoenix.LiveView.AsyncResult
 
   def mount(
         %{"domain" => domain},
@@ -19,17 +21,37 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         :super_admin
       ])
 
-    changeset = Site.update_changeset(site)
-
     {:ok,
      assign(socket,
        site: site,
-       changeset: changeset,
-       domain: domain
+       detection_result: AsyncResult.loading()
      )}
   end
 
-  def render(assigns) do
+  def handle_params(_params, _url, socket) do
+    socket =
+      if socket.assigns.live_action == :success and connected?(socket) do
+        site_domain = socket.assigns.site.domain
+
+        assign_async(socket, :detection_result, fn ->
+          run_detection("https://#{site_domain}")
+        end)
+      else
+        socket
+      end
+
+    {:noreply, socket}
+  end
+
+  def render(%{live_action: :change_domain_v2} = assigns) do
+    render_form_step(assigns)
+  end
+
+  def render(%{live_action: :success} = assigns) do
+    render_success_step(assigns)
+  end
+
+  defp render_form_step(assigns) do
     ~H"""
     <.focus_box>
       <:title>Change your website domain</:title>
@@ -48,43 +70,95 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         </.focus_list>
       </:footer>
 
-      <.form :let={f} for={@changeset} phx-submit="submit">
-        <.input
-          help_text="Just the naked domain or subdomain without 'www', 'https' etc."
-          type="text"
-          placeholder="example.com"
-          field={f[:domain]}
-          label="Domain"
-        />
-
-        <.button type="submit" class="mt-4 w-full">
-          Change Domain
-        </.button>
-
-        <.notice class="mt-4" title="Additional Steps May Be Required">
-          If you are using the Wordpress plugin, NPM module, or Events API for tracking, you must also update the tracking
-          <code>domain</code>
-          to match the updated domain. See
-          <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
-            documentation
-          </.styled_link>
-          for details.
-        </.notice>
-      </.form>
+      <.live_component module={Form} id="change-domain-form" site={@site} />
     </.focus_box>
     """
   end
 
-  def handle_event("submit", %{"site" => %{"domain" => new_domain}}, socket) do
-    case Site.Domain.change(socket.assigns.site, new_domain) do
-      {:ok, updated_site} ->
-        {:noreply,
-         socket
-         |> put_flash(:success, "Website domain changed successfully")
-         |> push_navigate(to: Routes.site_path(socket, :settings_general, updated_site.domain))}
+  defp render_success_step(assigns) do
+    ~H"""
+    <.focus_box>
+      <:title>Domain Changed Successfully</:title>
+      <:subtitle>
+        Your website domain has been successfully updated from
+        <strong>{@site.domain_changed_from}</strong>
+        to <strong><%= @site.domain %></strong>.
+      </:subtitle>
 
-      {:error, changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+      <:footer>
+        <.focus_list>
+          <:item>
+            <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
+              Go to Site Settings
+            </.styled_link>
+          </:item>
+        </.focus_list>
+      </:footer>
+
+      <.async_result :let={detection_result} assign={@detection_result}>
+        <:loading>
+          <div class="flex items-center">
+            <.spinner class="w-4 h-4 mr-2" />
+            <span class="text-sm text-gray-600">Checking your new domain...</span>
+          </div>
+        </:loading>
+
+        <:failed>
+          <.generic_notice />
+        </:failed>
+
+        <.wordpress_plugin_notice :if={
+          detection_result && detection_result.v1_detected && detection_result.wordpress_plugin
+        } />
+        <.generic_notice :if={
+          detection_result && detection_result.v1_detected && !detection_result.wordpress_plugin
+        } />
+      </.async_result>
+    </.focus_box>
+    """
+  end
+
+  defp wordpress_plugin_notice(assigns) do
+    ~H"""
+    <.notice class="mt-4" title="Additional Steps Required">
+      To guarantee continuous tracking, you <i>must</i>
+      also update the site <code>domain</code>
+      in your Plausible Wordpress Plugin settings within 72 hours
+      to match the updated domain. See
+      <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+        documentation
+      </.styled_link>
+      for details.
+    </.notice>
+    """
+  end
+
+  defp generic_notice(assigns) do
+    ~H"""
+    <.notice class="mt-4" title="Additional Steps Required">
+      To guarantee continuous tracking, you <i>must</i>
+      also update the site <code>domain</code>
+      of your Plausible Installation within 72 hours
+      to match the updated domain. See
+      <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+        documentation
+      </.styled_link>
+      for details.
+    </.notice>
+    """
+  end
+
+  def handle_info({:domain_changed, updated_site}, socket) do
+    {:noreply,
+     socket
+     |> assign(site: updated_site)
+     |> push_patch(to: Routes.site_path(socket, :success, updated_site.domain))}
+  end
+
+  defp run_detection(url) do
+    case Detection.perform(url, detect_v1?: true) do
+      {:ok, result} -> {:ok, %{detection_result: result}}
+      e -> e
     end
   end
 end
