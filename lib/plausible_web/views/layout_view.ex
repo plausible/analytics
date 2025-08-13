@@ -85,6 +85,7 @@ defmodule PlausibleWeb.LayoutView do
     current_team = conn.assigns[:current_team]
     current_team_role = conn.assigns[:current_team_role]
 
+    # NOTE: Subscription will still exist if it has expired or cancelled
     subscription? = !!(conn.assigns[:current_team] && conn.assigns.current_team.subscription)
 
     options = %{
