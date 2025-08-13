@@ -1,7 +1,7 @@
 defmodule Plausible.InstallationSupport.Checks.UrlTest do
   @moduledoc """
   Tests for URL check that is used in detection and verification checks pipelines
-  to fail fast on non-existant domains.
+  to fail fast on non-existent domains.
   """
   use Plausible.DataCase, async: true
   import Mox
