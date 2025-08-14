@@ -3,21 +3,18 @@ export default function FunnelTooltip(palette, funnel) {
     const tooltipModel = context.tooltip
     const dataIndex = tooltipModel.dataPoints[0].dataIndex
     const offset = document.getElementById('funnel').getBoundingClientRect()
-    let tooltipEl = document.getElementById('chartjs-tooltip')
+    let tooltipEl = document.getElementById('chartjs-tooltip-funnel')
 
     if (!tooltipEl) {
       tooltipEl = document.createElement('div')
-      tooltipEl.id = 'chartjs-tooltip'
+      tooltipEl.id = 'chartjs-tooltip-funnel'
+      tooltipEl.className = 'chartjs-tooltip'
       tooltipEl.style.display = 'none'
       tooltipEl.style.opacity = 0
       document.body.appendChild(tooltipEl)
     }
 
-    if (tooltipEl && offset && window.innerWidth < 768) {
-      tooltipEl.style.top =
-        offset.y + offset.height + window.scrollY + 15 + 'px'
-      tooltipEl.style.left = offset.x + 'px'
-      tooltipEl.style.right = null
+    if (tooltipEl && offset) {
       tooltipEl.style.opacity = 1
     }
 
