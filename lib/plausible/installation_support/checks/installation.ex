@@ -1,5 +1,6 @@
 defmodule Plausible.InstallationSupport.Checks.Installation do
   require Logger
+  alias Plausible.InstallationSupport.BrowserlessConfig
 
   @verifier_code_path "priv/tracker/installation_support/verifier-v1.js"
   @external_resource @verifier_code_path
@@ -134,7 +135,7 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
     opts = Keyword.merge(opts, extra_opts)
 
-    case Req.post(Plausible.InstallationSupport.browserless_function_api_endpoint(), opts) do
+    case Req.post(BrowserlessConfig.browserless_function_api_endpoint(), opts) do
       {:ok, %{status: 200, body: %{"data" => %{"completed" => true} = js_data}}} ->
         emit_telemetry_and_log(state.diagnostics, js_data, data_domain)
 

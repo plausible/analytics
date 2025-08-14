@@ -937,7 +937,7 @@ config :plausible, Plausible.PromEx,
   grafana: :disabled,
   metrics_server: :disabled
 
-config :plausible, Plausible.InstallationSupport,
+config :plausible, Plausible.InstallationSupport.BrowserlessConfig,
   token: get_var_from_path_or_env(config_dir, "BROWSERLESS_TOKEN", "dummy_token"),
   endpoint: get_var_from_path_or_env(config_dir, "BROWSERLESS_ENDPOINT", "http://0.0.0.0:3000")
 

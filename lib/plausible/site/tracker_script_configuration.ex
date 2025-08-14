@@ -22,7 +22,7 @@ defmodule Plausible.Site.TrackerScriptConfiguration do
 
   @primary_key {:id, Plausible.Ecto.Types.TrackerScriptNanoid, autogenerate: true}
   schema "tracker_script_configuration" do
-    field :installation_type, Ecto.Enum, values: [:manual, :wordpress, :gtm, nil]
+    field :installation_type, Ecto.Enum, values: [:manual, :wordpress, :gtm, :npm, nil]
 
     field :track_404_pages, :boolean, default: false
     field :hash_based_routing, :boolean, default: false

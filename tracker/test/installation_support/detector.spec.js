@@ -15,7 +15,7 @@ test.describe('detector.js (tech recognition)', () => {
       `
     })
 
-    const result = await detect(page, {url: url, detectV1: false})
+    const result = await detect(page, {url: url, detectV1: false, timeoutMs: 1000})
 
     expect(result.data.v1Detected).toBe(null)
   })
@@ -34,7 +34,7 @@ test.describe('detector.js (tech recognition)', () => {
       `
     })
 
-    const result = await detect(page, {url: url, detectV1: false})
+    const result = await detect(page, {url: url, detectV1: false, timeoutMs: 1000})
 
     expect(result.data.wordpressPlugin).toBe(true)
     expect(result.data.wordpressLikely).toBe(true)
@@ -47,7 +47,7 @@ test.describe('detector.js (tech recognition)', () => {
       response: '<html><head></head></html>'
     })
 
-    const result = await detect(page, {url: url, detectV1: false})
+    const result = await detect(page, {url: url, detectV1: false, timeoutMs: 1000})
 
     expect(result.data.wordpressPlugin).toBe(false)
     expect(result.data.wordpressLikely).toBe(false)
@@ -71,7 +71,7 @@ test.describe('detector.js (v1 detection)', () => {
       `
     })
 
-    const result = await detect(page, {url: url, detectV1: true})
+    const result = await detect(page, {url: url, detectV1: true, timeoutMs: 1000})
 
     expect(result.data.v1Detected).toBe(true)
     expect(result.data.wordpressPlugin).toBe(true)
@@ -85,7 +85,7 @@ test.describe('detector.js (v1 detection)', () => {
       response: '<html><head></head></html>'
     })
 
-    const result = await detect(page, {url: url, detectV1: true})
+    const result = await detect(page, {url: url, detectV1: true, timeoutMs: 1000})
 
     expect(result.data.v1Detected).toBe(false)
     expect(result.data.wordpressPlugin).toBe(false)
@@ -102,7 +102,7 @@ test.describe('detector.js (v1 detection)', () => {
       }
     })
 
-    const result = await detect(page, {url: url, detectV1: true})
+    const result = await detect(page, {url: url, detectV1: true, timeoutMs: 1000})
 
     expect(result.data.v1Detected).toBe(false)
   })

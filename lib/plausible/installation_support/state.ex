@@ -10,18 +10,21 @@ defmodule Plausible.InstallationSupport.State do
             data_domain: nil,
             report_to: nil,
             assigns: %{},
-            diagnostics: %{}
+            diagnostics: %{},
+            skip_further_checks?: false
 
   @type diagnostics_type ::
           Plausible.InstallationSupport.LegacyVerification.Diagnostics.t()
           | Plausible.InstallationSupport.Verification.Diagnostics.t()
+          | Plausible.InstallationSupport.Detection.Diagnostics.t()
 
   @type t :: %__MODULE__{
           url: String.t() | nil,
           data_domain: String.t() | nil,
           report_to: pid() | nil,
           assigns: map(),
-          diagnostics: diagnostics_type()
+          diagnostics: diagnostics_type(),
+          skip_further_checks?: boolean()
         }
 
   def assign(%__MODULE__{} = state, assigns) do

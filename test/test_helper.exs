@@ -4,6 +4,11 @@ end
 
 {:ok, _} = Application.ensure_all_started(:ex_machina)
 Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
+
+Mox.defmock(Plausible.DnsLookup.Mock,
+  for: Plausible.DnsLookupInterface
+)
+
 Application.ensure_all_started(:double)
 
 FunWithFlags.enable(:channels)

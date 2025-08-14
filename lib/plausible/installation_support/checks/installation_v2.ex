@@ -1,5 +1,12 @@
 defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
+  @moduledoc """
+  Calls the browserless.io service (local instance can be spawned with `make browserless`)
+  and runs verifier script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
+  """
+
   require Logger
+  use Plausible.InstallationSupport.Check
+  alias Plausible.InstallationSupport.BrowserlessConfig
 
   @verifier_code_path "priv/tracker/installation_support/verifier-v2.js"
   @external_resource @verifier_code_path
@@ -9,19 +16,6 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
                     {:ok, content} -> content
                     {:error, _} -> ""
                   end)
-
-  # To support browserless API being unavailable or overloaded, we retry the endpoint call if it doesn't return a successful response
-  @max_retries 2
-
-  # We define a timeout for the browserless endpoint call to avoid waiting too long for a response
-  @endpoint_timeout_ms 10_000
-
-  # This timeout determines how long we wait for window.plausible to be initialized on the page, including sending the test event
-  @plausible_window_check_timeout_ms 4_000
-
-  # To handle navigation that happens immediately on the page, we attempt to verify the installation multiple times _within a single browserless endpoint call_
-  @max_attempts 2
-  @timeout_between_attempts_ms 500
 
   # Puppeteer wrapper function that executes the vanilla JS verifier code
   @puppeteer_wrapper_code """
@@ -75,11 +69,18 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   }
   """
 
-  @moduledoc """
-  Calls the browserless.io service (local instance can be spawned with `make browserless`)
-  and runs verifier script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
-  """
-  use Plausible.InstallationSupport.Check
+  # To support browserless API being unavailable or overloaded, we retry the endpoint call if it doesn't return a successful response
+  @max_retries 1
+
+  # We define a timeout for the browserless endpoint call to avoid waiting too long for a response
+  @endpoint_timeout_ms 10_000
+
+  # This timeout determines how long we wait for window.plausible to be initialized on the page, including sending the test event
+  @plausible_window_check_timeout_ms 4_000
+
+  # To handle navigation that happens immediately on the page, we attempt to verify the installation multiple times _within a single browserless endpoint call_
+  @max_attempts 2
+  @timeout_between_attempts_ms 500
 
   @impl true
   def report_progress_as, do: "We're verifying that your visitors are being counted correctly"
@@ -102,7 +103,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
           }
         }),
       params: %{timeout: @endpoint_timeout_ms},
-      retry: :transient,
+      retry: &BrowserlessConfig.retry_browserless_request/2,
       retry_log_level: :warning,
       max_retries: @max_retries
     ]
@@ -110,7 +111,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
     opts = Keyword.merge(opts, extra_opts)
 
-    case Req.post(Plausible.InstallationSupport.browserless_function_api_endpoint(), opts) do
+    case Req.post(BrowserlessConfig.browserless_function_api_endpoint(), opts) do
       {:ok, %{body: body, status: status}} ->
         handle_browserless_response(state, body, status)
 
@@ -129,15 +130,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
     if completed do
       put_diagnostics(
         state,
-        disallowed_by_csp: data["disallowedByCsp"],
-        plausible_is_on_window: data["plausibleIsOnWindow"],
-        plausible_is_initialized: data["plausibleIsInitialized"],
-        plausible_version: data["plausibleVersion"],
-        plausible_variant: data["plausibleVariant"],
-        test_event: data["testEvent"],
-        cookie_banner_likely: data["cookieBannerLikely"],
-        attempts: data["attempts"],
-        service_error: nil
+        parse_to_diagnostics(data)
       )
     else
       Logger.warning(
@@ -161,4 +154,17 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   defp warning_message(message, state) do
     "[VERIFICATION v2] #{message} (data_domain='#{state.data_domain}')"
   end
+
+  defp parse_to_diagnostics(data),
+    do: [
+      disallowed_by_csp: data["disallowedByCsp"],
+      plausible_is_on_window: data["plausibleIsOnWindow"],
+      plausible_is_initialized: data["plausibleIsInitialized"],
+      plausible_version: data["plausibleVersion"],
+      plausible_variant: data["plausibleVariant"],
+      test_event: data["testEvent"],
+      cookie_banner_likely: data["cookieBannerLikely"],
+      attempts: data["attempts"],
+      service_error: nil
+    ]
 end
