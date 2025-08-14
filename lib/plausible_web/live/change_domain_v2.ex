@@ -182,7 +182,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
          }}
 
       %Result{ok?: false, errors: errors} ->
-        List.first(errors)
+        {:error, List.first(errors, :unknown_reason)}
     end
   end
 end
