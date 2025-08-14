@@ -34,7 +34,20 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       assert text(html) =~ "Verify WordPress installation"
     end
 
-    test "When ?type URL parameter is supplied, detected type is unused", %{
+    test "When ?type=wordpress URL parameter is supplied, detected type is unused", %{
+      conn: conn,
+      site: site
+    } do
+      stub_dns_lookup_a_records(site.domain)
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?type=wordpress")
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Verify WordPress installation"
+    end
+
+    test "When ?type=gtm URL parameter is supplied, detected type is unused", %{
       conn: conn,
       site: site
     } do
@@ -45,6 +58,32 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       html = render_async(lv, 500)
       assert text(html) =~ "Verify Tag Manager installation"
+    end
+
+    test "When ?type=npm URL parameter is supplied, detected type is unused", %{
+      conn: conn,
+      site: site
+    } do
+      stub_dns_lookup_a_records(site.domain)
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site, "?type=npm")
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Verify NPM installation"
+    end
+
+    test "When ?type=manual URL parameter is supplied, detected type is unused", %{
+      conn: conn,
+      site: site
+    } do
+      stub_dns_lookup_a_records(site.domain)
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site, "?type=manual")
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Verify Script installation"
     end
 
     test "allows switching between installation tabs", %{conn: conn, site: site} do
@@ -155,29 +194,36 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       assert updated_config.form_submissions == true
     end
 
-    test "submitting form redirects to verification", %{conn: conn, site: site} do
-      stub_dns_lookup_a_records(site.domain)
-      stub_detection_manual()
-      {lv, _html} = get_lv(conn, site, "?type=manual")
+    for {type, expected_text} <- [
+          {"manual", "Verify Script installation"},
+          {"wordpress", "Verify WordPress installation"},
+          {"gtm", "Verify Tag Manager installation"},
+          {"npm", "Verify NPM installation"}
+        ] do
+      test "submitting form with #{type} redirects to verification", %{conn: conn, site: site} do
+        stub_dns_lookup_a_records(site.domain)
+        stub_detection_manual()
+        {lv, _html} = get_lv(conn, site, "?type=#{unquote(type)}")
 
-      html = render_async(lv, 500)
-      assert html =~ "Verify Script installation"
+        html = render_async(lv, 500)
+        assert html =~ unquote(expected_text)
 
-      lv
-      |> element("form[phx-submit='submit']")
-      |> render_submit(%{
-        "tracker_script_configuration" => %{
-          "installation_type" => "manual",
-          "outbound_links" => "true",
-          "file_downloads" => "true",
-          "form_submissions" => "true"
-        }
-      })
+        lv
+        |> element("form[phx-submit='submit']")
+        |> render_submit(%{
+          "tracker_script_configuration" => %{
+            "installation_type" => unquote(type),
+            "outbound_links" => "true",
+            "file_downloads" => "true",
+            "form_submissions" => "true"
+          }
+        })
 
-      assert_redirect(
-        lv,
-        Routes.site_path(conn, :verification, site.domain, flow: "provisioning")
-      )
+        assert_redirect(
+          lv,
+          Routes.site_path(conn, :verification, site.domain, flow: "provisioning")
+        )
+      end
     end
 
     test "404 goal gets created regardless of user options", %{conn: conn, site: site} do
