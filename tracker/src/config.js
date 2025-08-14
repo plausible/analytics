@@ -25,6 +25,7 @@ export function getOptionsWithDefaults(initOptions) {
     return Object.assign(initOptions, {
       autoCapturePageviews: initOptions.autoCapturePageviews !== false,
       logging: initOptions.logging !== false,
+      lib: initOptions.lib || 'web',
     })
   }
   if (COMPILE_PLAUSIBLE_NPM) {

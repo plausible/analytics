@@ -1,6 +1,6 @@
 import { init as initEngagementTracking } from './engagement'
 import { init as initConfig, getOptionsWithDefaults, config } from './config'
-import { init as initCustomEvents, DEFAULT_FILE_TYPES } from './custom-events'
+import { init as initCustomEvents } from './custom-events'
 import { init as initAutocapture } from './autocapture'
 import { track } from './track'
 
@@ -37,9 +37,9 @@ function init(overrides) {
     window.plausible = track
     window.plausible.init = init
     window.plausible.v = COMPILE_TRACKER_SCRIPT_VERSION
-    
+
     if (COMPILE_PLAUSIBLE_WEB) {
-      window.plausible.s = 'web'
+      window.plausible.s = config.lib
     }
 
     window.plausible.l = true
