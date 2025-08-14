@@ -1487,6 +1487,78 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/share/#{site2.domain}?auth=#{link2.slug}")
       assert html_response(conn, 200) =~ "Enter password"
     end
+
+    test "preserves query parameters during password authentication", %{conn: conn} do
+      site = new_site()
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      filters = "f=is,country,EE&l=EE,Estonia&f=is,browser,Firefox"
+
+      conn =
+        get(
+          conn,
+          "/share/#{site.domain}?auth=#{link.slug}&#{filters}"
+        )
+
+      assert html_response(conn, 200) =~ "Enter password"
+      html = html_response(conn, 200)
+
+      assert html =~ ~s(action="/share/#{link.slug}/authenticate?)
+      assert html =~ "f=is,browser,Firefox"
+      assert html =~ "f=is,country,EE"
+      assert html =~ "l=EE,Estonia"
+
+      conn =
+        post(
+          conn,
+          "/share/#{link.slug}/authenticate?#{filters}",
+          %{password: "password"}
+        )
+
+      expected_redirect =
+        "/share/#{URI.encode_www_form(site.domain)}?auth=#{link.slug}&#{filters}"
+
+      assert redirected_to(conn, 302) == expected_redirect
+
+      conn =
+        post(
+          conn,
+          "/share/#{link.slug}/authenticate?#{filters}",
+          %{password: "WRONG!"}
+        )
+
+      html = html_response(conn, 200)
+      assert html =~ "Enter password"
+      assert html =~ "Incorrect password"
+
+      assert text_of_attr(html, "form", "action") =~ "?#{filters}"
+
+      conn =
+        post(
+          conn,
+          "/share/#{link.slug}/authenticate?#{filters}",
+          %{password: "password"}
+        )
+
+      redirected_url = redirected_to(conn, 302)
+      assert redirected_url =~ filters
+
+      conn =
+        post(
+          conn,
+          "/share/#{link.slug}/authenticate?#{filters}",
+          %{password: "password"}
+        )
+
+      redirect_path = redirected_to(conn, 302)
+
+      conn = get(conn, redirect_path)
+      assert html_response(conn, 200) =~ "stats-react-container"
+      assert redirect_path =~ filters
+      assert redirect_path =~ "auth=#{link.slug}"
+    end
   end
 
   describe "dogfood tracking" do

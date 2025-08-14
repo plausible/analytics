@@ -287,6 +287,7 @@ defmodule PlausibleWeb.StatsController do
         conn
         |> render("shared_link_password.html",
           link: shared_link,
+          query_string: conn.query_string,
           dogfood_page_path: "/share/:dashboard"
         )
     end
@@ -326,12 +327,17 @@ defmodule PlausibleWeb.StatsController do
 
         conn
         |> put_resp_cookie(shared_link_cookie_name(slug), token)
-        |> redirect(to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
+        |> redirect(
+          to:
+            Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug) <>
+              qs_appendix(conn)
+        )
       else
         conn
         |> render("shared_link_password.html",
           link: shared_link,
           error: "Incorrect password. Please try again.",
+          query_string: conn.query_string,
           dogfood_page_path: "/share/:dashboard"
         )
       end
@@ -339,6 +345,13 @@ defmodule PlausibleWeb.StatsController do
       render_error(conn, 404)
     end
   end
+
+  def qs_appendix(conn)
+      when is_nil(conn.query_string) or
+             (is_binary(conn.query_string) and byte_size(conn.query_string)) == 0,
+      do: ""
+
+  def qs_appendix(conn), do: "&#{conn.query_string}"
 
   defp render_shared_link(conn, shared_link) do
     shared_links_feature_access? =
