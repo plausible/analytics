@@ -1,4 +1,4 @@
-#chartjs-tooltip {
+.chartjs-tooltip {
   background-color: rgb(25 30 56);
   position: absolute;
   font-size: 14px;

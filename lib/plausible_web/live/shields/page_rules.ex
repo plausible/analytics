@@ -125,7 +125,9 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 submit_value={f[:page_path].value}
                 display_value={f[:page_path].value || ""}
                 module={PlausibleWeb.Live.Components.ComboBox}
-                suggest_fun={fn input, options -> suggest_page_paths(input, options, @site) end}
+                suggest_fun={
+                  fn input, options -> suggest_page_paths(input, options, @site, @page_rules) end
+                }
                 id={"#{f[:page_path].id}-#{modal_unique_id}"}
                 creatable
               />
@@ -217,8 +219,15 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
     |> Calendar.strftime("%Y-%m-%d %H:%M:%S")
   end
 
-  def suggest_page_paths(input, _options, site) do
-    query = Plausible.Stats.Query.from(site, %{})
+  def suggest_page_paths(input, _options, site, page_rules) do
+    query =
+      site
+      |> Plausible.Stats.Query.from(%{})
+      |> Plausible.Stats.Query.add_filter([
+        :is_not,
+        "event:page",
+        Enum.map(page_rules, & &1.page_path)
+      ])
 
     site
     |> Plausible.Stats.filter_suggestions(query, "page", input)

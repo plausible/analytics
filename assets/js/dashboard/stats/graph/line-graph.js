@@ -157,7 +157,7 @@ class LineGraph extends React.Component {
   }
 
   repositionTooltip(e) {
-    const tooltipEl = document.getElementById('chartjs-tooltip')
+    const tooltipEl = document.getElementById('chartjs-tooltip-main')
     if (tooltipEl && window.innerWidth >= 768) {
       if (e.clientX > 0.66 * window.innerWidth) {
         tooltipEl.style.right =
@@ -181,7 +181,7 @@ class LineGraph extends React.Component {
 
   componentDidUpdate(prevProps) {
     const { graphData, darkTheme } = this.props
-    const tooltip = document.getElementById('chartjs-tooltip')
+    const tooltip = document.getElementById('chartjs-tooltip-main')
 
     if (
       graphData !== prevProps.graphData ||
@@ -213,7 +213,7 @@ class LineGraph extends React.Component {
 
   componentWillUnmount() {
     // Ensure that the tooltip doesn't hang around when we are loading more data
-    const tooltip = document.getElementById('chartjs-tooltip')
+    const tooltip = document.getElementById('chartjs-tooltip-main')
     if (tooltip) {
       tooltip.style.opacity = 0
       tooltip.style.display = 'none'

@@ -105,11 +105,12 @@ export default function GraphTooltip(graphData, metric, query) {
     const offset = document
       .getElementById('main-graph-canvas')
       .getBoundingClientRect()
-    let tooltipEl = document.getElementById('chartjs-tooltip')
+    let tooltipEl = document.getElementById('chartjs-tooltip-main')
 
     if (!tooltipEl) {
       tooltipEl = document.createElement('div')
-      tooltipEl.id = 'chartjs-tooltip'
+      tooltipEl.id = 'chartjs-tooltip-main'
+      tooltipEl.className = 'chartjs-tooltip'
       tooltipEl.style.display = 'none'
       tooltipEl.style.opacity = 0
       document.body.appendChild(tooltipEl)
