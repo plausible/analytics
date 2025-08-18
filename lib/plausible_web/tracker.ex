@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Tracker do
   @plausible_main_script File.read!(path)
   @external_resource "priv/tracker/js/plausible-web.js"
 
+  @spec get_plausible_main_script(String.t(), Keyword.t()) :: String.t() | nil
   def get_plausible_main_script(id, cache_opts \\ []) do
     on_ee do
       # On cloud:
@@ -22,7 +23,8 @@ defmodule PlausibleWeb.Tracker do
       #
       # Note that EE is relying on CDN caching the script
       if PlausibleWeb.TrackerScriptCache.get(id, cache_opts) do
-        PlausibleWeb.TrackerScriptCache.get_from_source(id, force_get_script: true)
+        get_tracker_script_configuration(id)
+        |> build_script()
       end
     else
       # On self-hosted, we have a pre-warmed cache for the script
@@ -58,6 +60,8 @@ defmodule PlausibleWeb.Tracker do
     @plausible_main_script
     |> String.replace("\"<%= @config_js %>\"", "{#{config_js_content}}")
   end
+
+  def build_script(nil), do: nil
 
   def update_script_configuration(site, config_update, changeset_type) do
     Repo.transact(fn ->
@@ -123,6 +127,19 @@ defmodule PlausibleWeb.Tracker do
   def get_or_create_tracker_script_configuration!(site, params \\ %{}) do
     {:ok, config} = get_or_create_tracker_script_configuration(site, params)
     config
+  end
+
+  on_ee do
+    import Ecto.Query
+
+    defp get_tracker_script_configuration(id) do
+      from(t in TrackerScriptConfiguration,
+        where: t.id == ^id,
+        join: s in assoc(t, :site),
+        preload: [site: s]
+      )
+      |> Plausible.Repo.one()
+    end
   end
 
   # Sync plausible goals with the updated script config

@@ -34,14 +34,14 @@ defmodule PlausibleWeb.TrackerScriptCache do
   end
 
   @impl true
-  def get_from_source(id, opts \\ []) do
+  def get_from_source(id) do
     query =
       base_db_query()
       |> where([t], t.id == ^id)
 
     case Plausible.Repo.one(query) do
       %TrackerScriptConfiguration{} = tracker_script_configuration ->
-        cache_content(tracker_script_configuration, opts)
+        cache_content(tracker_script_configuration)
 
       _ ->
         nil
@@ -59,11 +59,11 @@ defmodule PlausibleWeb.TrackerScriptCache do
     end)
   end
 
-  defp cache_content(tracker_script_configuration, opts \\ []) do
-    if ce?() or Keyword.get(opts, :force_get_script, false) do
-      PlausibleWeb.Tracker.build_script(tracker_script_configuration)
-    else
+  defp cache_content(tracker_script_configuration) do
+    if ee?() do
       true
+    else
+      PlausibleWeb.Tracker.build_script(tracker_script_configuration)
     end
   end
 end
