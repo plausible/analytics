@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
           </:item>
 
           <:item>
-            <.styled_link href="https://plausible.io/docs/google-tag-manager-template" new_tab={true}>
+            <.styled_link href="https://plausible.io/docs/google-tag-manager" new_tab={true}>
               Read our Tag Manager guide
             </.styled_link>
           </:item>
