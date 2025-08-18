@@ -115,6 +115,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
   end
 
   attr :recommended_installation_type, :string, required: true
+  attr :tracker_script_configuration_form, :map, required: true
 
   def gtm_instructions(assigns) do
     ~H"""
