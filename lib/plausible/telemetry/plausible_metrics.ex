@@ -48,6 +48,24 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           measurement: :duration
         ),
         distribution(
+          metric_prefix ++ [:cache_warmer, :tracker_script, :refresh, :all],
+          event_name: PlausibleWeb.TrackerScriptCache.telemetry_event_refresh(:all),
+          reporter_options: [
+            buckets: [500, 1000, 2000, 5000, 10_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration
+        ),
+        distribution(
+          metric_prefix ++ [:cache_warmer, :tracker_script, :refresh, :updated_recently],
+          event_name: PlausibleWeb.TrackerScriptCache.telemetry_event_refresh(:updated_recently),
+          reporter_options: [
+            buckets: [500, 1000, 2000, 5000, 10_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration
+        ),
+        distribution(
           metric_prefix ++ [:ingest, :events, :pipeline, :steps],
           event_name: Ingestion.Event.telemetry_pipeline_step_duration(),
           reporter_options: [
