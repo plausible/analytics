@@ -155,13 +155,16 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
     <.title class="mt-4">
       NPM installation
     </.title>
-    <div class="text-sm mt-4 leading-6">
-      Install and deploy the
-      <.styled_link href="https://www.npmjs.com/package/@plausible-analytics/tracker" new_tab={true}>
-        @plausible-analytics/tracker NPM package
-      </.styled_link>
-      to track pageviews and custom events.
-    </div>
+    <.focus_list>
+      <:item>
+        <.styled_link href="https://www.npmjs.com/package/@plausible-analytics/tracker" new_tab={true}>
+          Install @plausible-analytics/tracker NPM package
+        </.styled_link>
+      </:item>
+      <:item>
+        After activating our plugin, click the button below to verify your installation
+      </:item>
+    </.focus_list>
     """
   end
 
