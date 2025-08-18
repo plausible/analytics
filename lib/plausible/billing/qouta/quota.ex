@@ -82,19 +82,6 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @doc """
-  [DEPRECATED] Used in LegacyChoosePlan in order to suggest a tier
-  when `starter_tier` flag is not enabled.
-  """
-  def legacy_suggest_tier(usage, highest_growth, highest_business, owned_tier) do
-    cond do
-      not eligible_for_upgrade?(usage) -> nil
-      usage_fits_plan?(usage, highest_growth) and owned_tier != :business -> :growth
-      usage_fits_plan?(usage, highest_business) -> :business
-      true -> :custom
-    end
-  end
-
   defp usage_fits_plan?(usage, plan) do
     with :ok <- ensure_within_plan_limits(usage, plan),
          :ok <- ensure_feature_access(usage, plan) do
