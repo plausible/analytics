@@ -5,7 +5,7 @@ defmodule Plausible.Ingestion.Persistor.Remote do
 
   require Logger
 
-  def persist_event(event, session_attrs, previous_user_id, opts \\ []) do
+  def persist_event(event, session_attrs, previous_user_id, opts) do
     site_id = event.site_id
     current_user_id = event.user_id
     override_url = Keyword.get(opts, :url)

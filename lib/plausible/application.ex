@@ -236,7 +236,10 @@ defmodule Plausible.Application do
 
     persistor_conf = Application.get_env(:plausible, Plausible.Ingestion.Persistor.Remote)
 
-    if backend == Plausible.Ingestion.Persistor.Remote do
+    if backend in [
+         Plausible.Ingestion.Persistor.Remote,
+         Plausible.Ingestion.Persistor.EmbeddedWithRelay
+       ] do
       persistor_url = Keyword.fetch!(persistor_conf, :url)
       count = Keyword.fetch!(persistor_conf, :count)
       timeout_ms = Keyword.fetch!(persistor_conf, :timeout_ms)

@@ -144,6 +144,7 @@ end
 persistor_backend =
   case get_var_from_path_or_env(config_dir, "PERSISTOR_BACKEND", "embedded") do
     "embedded" -> Plausible.Ingestion.Persistor.Embedded
+    "embedded_with_relay" -> Plausible.Ingestion.Persistor.EmbeddedWithRelay
     "remote" -> Plausible.Ingestion.Persistor.Remote
   end
 

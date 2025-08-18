@@ -7,7 +7,7 @@ defmodule Plausible.Ingestion.Persistor.Embedded do
 
   require Logger
 
-  def persist_event(event, session_attrs, previous_user_id, opts \\ []) do
+  def persist_event(event, session_attrs, previous_user_id, opts) do
     session_write_buffer_insert =
       Keyword.get(opts, :session_write_buffer_insert, &Plausible.Session.WriteBuffer.insert/1)
 
