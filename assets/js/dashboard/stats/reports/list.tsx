@@ -38,7 +38,7 @@ function ExternalLink<T>({
         target="_blank"
         rel="noreferrer"
         href={dest}
-        className="w-4 h-4 hidden group-hover:block"
+        className="w-4 h-4 opacity-0 group-hover:opacity-100"
       >
         <svg
           className="inline w-full h-full ml-1 -mt-1 text-gray-600 dark:text-gray-400"
