@@ -15,7 +15,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 1
 
       - name: Checkout master for comparison
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: master
           path: master-branch
