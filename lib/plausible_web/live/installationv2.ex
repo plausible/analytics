@@ -171,7 +171,9 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   defp tab(assigns) do
     assigns =
       if assigns[:selected] do
-        assign(assigns, class: "bg-white rounded-md px-3.5 text-sm font-medium flex items-center")
+        assign(assigns,
+          class: "bg-white rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center"
+        )
       else
         assign(assigns,
           class:
