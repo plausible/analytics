@@ -36,6 +36,9 @@ defmodule Plausible.Ingestion.Event do
           | :verification_agent
           | :lock_timeout
           | :no_session_for_engagement
+          | :persist_timeout
+          | :persist_error
+          | :persist_decode_error
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -143,8 +146,7 @@ defmodule Plausible.Ingestion.Event do
       put_salts: &put_salts/2,
       put_user_id: &put_user_id/2,
       validate_clickhouse_event: &validate_clickhouse_event/2,
-      register_session: &register_session/2,
-      write_to_buffer: &write_to_buffer/2
+      register_session: &register_session/2
     ]
   end
 
@@ -381,8 +383,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp register_session(%__MODULE__{} = event, context) do
-    write_buffer_insert =
-      Keyword.get(context, :session_write_buffer_insert, &Plausible.Session.WriteBuffer.insert/1)
+    persistor_opts = Keyword.get(context, :persistor_opts, [])
 
     previous_user_id =
       generate_user_id(
@@ -392,40 +393,22 @@ defmodule Plausible.Ingestion.Event do
         event.salts.previous
       )
 
-    Plausible.Ingestion.Persistor.persist_event(
-      event.clickhouse_event,
-      event.clickhouse_session_attrs,
-      previous_user_id
-    )
+    result =
+      Plausible.Ingestion.Persistor.persist_event(
+        event.clickhouse_event,
+        event.clickhouse_session_attrs,
+        previous_user_id,
+        persistor_opts
+      )
 
-    # session_result =
-    #   Plausible.Session.CacheStore.on_event(
-    #     event.clickhouse_event,
-    #     event.clickhouse_session_attrs,
-    #     previous_user_id,
-    #     buffer_insert: write_buffer_insert
-    #   )
-    #
-    # case session_result do
-    #   {:ok, :no_session_for_engagement} ->
-    #     drop(event, :no_session_for_engagement)
-    #
-    #   {:error, :timeout} ->
-    #     drop(event, :lock_timeout)
-    #
-    #   {:ok, session} ->
-    #     %{
-    #       event
-    #       | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
-    #     }
-    # end
-    event
-  end
+    case result do
+      {:ok, persisted_event} ->
+        emit_telemetry_buffered(event)
+        %{event | clickhouse_event: persisted_event}
 
-  defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event, _context) do
-    # {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
-    # emit_telemetry_buffered(event)
-    event
+      {:error, reason} ->
+        drop(event, reason)
+    end
   end
 
   @click_id_params ["gclid", "gbraid", "wbraid", "msclkid", "fbclid", "twclid"]

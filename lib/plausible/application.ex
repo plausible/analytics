@@ -229,9 +229,14 @@ defmodule Plausible.Application do
   end
 
   defp maybe_add_persistor_pool(pool_config, default) do
-    persistor_conf = Application.get_env(:plausible, :persistor)
+    backend =
+      :plausible
+      |> Application.fetch_env!(Plausible.Ingestion.Persistor)
+      |> Keyword.fetch!(:backend)
 
-    if persistor_conf[:enabled] do
+    persistor_conf = Application.get_env(:plausible, Plausible.Ingestion.Persistor.Remote)
+
+    if backend == Plausible.Ingestion.Persistor.Remote do
       persistor_url = Keyword.fetch!(persistor_conf, :url)
       count = Keyword.fetch!(persistor_conf, :count)
       timeout_ms = Keyword.fetch!(persistor_conf, :timeout_ms)

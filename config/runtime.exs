@@ -141,7 +141,11 @@ end
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE_BYTES", "100000")
   |> Integer.parse()
 
-persistor_enabled = get_bool_from_path_or_env(config_dir, "PERSISTOR_ENABLED", false)
+persistor_backend =
+  case get_var_from_path_or_env(config_dir, "PERSISTOR_BACKEND", "embedded") do
+    "embedded" -> Plausible.Ingestion.Persistor.Embedded
+    "remote" -> Plausible.Ingestion.Persistor.Remote
+  end
 
 persistor_url = get_var_from_path_or_env(config_dir, "PERSISTOR_URL", "http://localhost:8001")
 
@@ -657,8 +661,9 @@ config :plausible, Plausible.ImportDeletionRepo,
   transport_opts: ch_transport_opts,
   pool_size: 1
 
-config :plausible, :persistor,
-  enabled: persistor_enabled,
+config :plausible, Plausible.Ingestion.Persistor, backend: persistor_backend
+
+config :plausible, Plausible.Ingestion.Persistor.Remote,
   url: persistor_url,
   count: persistor_count,
   timeout_ms: persistor_timeout_ms
