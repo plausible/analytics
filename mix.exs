@@ -69,6 +69,8 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test]},
+      {:ch,
+       git: "https://github.com/plausible/ch.git", branch: "reconnect-patch", override: true},
       {:ecto_ch, "~> 0.7.1"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
