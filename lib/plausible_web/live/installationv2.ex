@@ -126,6 +126,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
             <Instructions.gtm_instructions
               :if={@installation_type.result == "gtm"}
               recommended_installation_type={recommended_installation_type}
+              tracker_script_configuration_form={@tracker_script_configuration_form.result}
             />
             <Instructions.npm_instructions :if={@installation_type.result == "npm"} />
 

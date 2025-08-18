@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
       Once done, click the button below to verify your installation.
     </div>
 
-    <.snippet_form tracker_script_configuration={@tracker_script_configuration_form.data} />
+    <.snippet_form text={render_snippet(@tracker_script_configuration_form.data)} rows={4} />
     <.h2 class="mt-8 text-sm font-medium">Optional measurements</.h2>
     <.script_config_control
       field={@tracker_script_configuration_form[:outbound_links]}
@@ -128,16 +128,24 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
       <span :if={@recommended_installation_type != "gtm"}>
         Using Google Tag Manager? Here's how to integrate Plausible:
       </span>
-      <.focus_list>
-        <:item>
-          <.styled_link href="https://plausible.io/docs/google-tag-manager" new_tab={true}>
-            Read our Tag Manager guide
-          </.styled_link>
-        </:item>
-        <:item>
-          Paste this snippet into GTM's Custom HTML section. Once done, click the button below to verify your installation.
-        </:item>
-      </.focus_list>
+      <div class="mt-4">
+        <.focus_list>
+          <:item>
+            Copy this site's ScriptID:
+            <.snippet_form text={@tracker_script_configuration_form.data.id} rows={1} />
+          </:item>
+
+          <:item>
+            <.styled_link href="https://plausible.io/docs/google-tag-manager-template" new_tab={true}>
+              Read our Tag Manager guide
+            </.styled_link>
+          </:item>
+
+          <:item>
+            Once done, click the button below to verify your installation.
+          </:item>
+        </.focus_list>
+      </div>
     </div>
     """
   end
@@ -220,9 +228,9 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
       <textarea
         id="snippet"
         class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 "
-        rows="4"
+        rows={@rows}
         readonly
-      ><%= render_snippet(@tracker_script_configuration) %></textarea>
+      ><%= @text %></textarea>
 
       <a
         onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
