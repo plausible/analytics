@@ -52,6 +52,8 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
   function getExternalLinkUrlFactory() {
     if (prop === 'path') {
       return (listItem) => url.externalLinkForPage(site.domain, listItem.name)
+    } else if (prop === 'search_query') {
+      return null // WP Search Queries should not become external links
     } else {
       return (listItem) => listItem.name
     }
