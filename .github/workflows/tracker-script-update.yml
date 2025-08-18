@@ -131,7 +131,7 @@ jobs:
         if: >-
           ${{ (
           steps.changelog_changed.outputs.any_changed == 'false' &&
-          contains(github.event.pull_request.labels.*.name, 'tracker-release: none') ) }}
+          !contains(github.event.pull_request.labels.*.name, 'tracker-release: none') ) }}
         run: |
           echo "::error::PR changes tracker script but does not have a tracker NPM package CHANGELOG.md update."
           exit 1
