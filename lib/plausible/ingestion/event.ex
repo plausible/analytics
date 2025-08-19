@@ -393,18 +393,10 @@ defmodule Plausible.Ingestion.Event do
         event.salts.previous
       )
 
-    result =
-      Plausible.Ingestion.Persistor.persist_event(
-        event.clickhouse_event,
-        event.clickhouse_session_attrs,
-        previous_user_id,
-        persistor_opts
-      )
-
-    case result do
-      {:ok, persisted_event} ->
+    case Plausible.Ingestion.Persistor.persist_event(event, previous_user_id, persistor_opts) do
+      {:ok, event} ->
         emit_telemetry_buffered(event)
-        %{event | clickhouse_event: persisted_event}
+        event
 
       {:error, reason} ->
         drop(event, reason)

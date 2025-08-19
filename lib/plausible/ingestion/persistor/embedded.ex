@@ -7,7 +7,10 @@ defmodule Plausible.Ingestion.Persistor.Embedded do
 
   require Logger
 
-  def persist_event(event, session_attrs, previous_user_id, opts) do
+  def persist_event(ingest_event, previous_user_id, opts) do
+    event = ingest_event.clickhouse_event
+    session_attrs = ingest_event.clickhouse_session_attrs
+
     session_write_buffer_insert =
       Keyword.get(opts, :session_write_buffer_insert, &Plausible.Session.WriteBuffer.insert/1)
 
@@ -33,7 +36,7 @@ defmodule Plausible.Ingestion.Persistor.Embedded do
         event = ClickhouseEventV2.merge_session(event, session)
         {:ok, _} = event_write_buffer_insert.(event)
 
-        {:ok, event}
+        {:ok, %{ingest_event | clickhouse_event: event}}
     end
   end
 end

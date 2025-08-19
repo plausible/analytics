@@ -5,7 +5,10 @@ defmodule Plausible.Ingestion.Persistor.Remote do
 
   require Logger
 
-  def persist_event(event, session_attrs, previous_user_id, opts) do
+  def persist_event(ingest_event, previous_user_id, opts) do
+    event = ingest_event.clickhouse_event
+    session_attrs = ingest_event.clickhouse_session_attrs
+
     site_id = event.site_id
     current_user_id = event.user_id
     override_url = Keyword.get(opts, :url)
@@ -30,7 +33,7 @@ defmodule Plausible.Ingestion.Persistor.Remote do
         {:ok, %{status: 200, body: event_payload}} ->
           case decode_payload(event_payload) do
             {:ok, event} ->
-              {:ok, event}
+              {:ok, %{ingest_event | clickhouse_event: event}}
 
             {:error, decode_error} ->
               log_error(site_id, current_user_id, previous_user_id, decode_error)

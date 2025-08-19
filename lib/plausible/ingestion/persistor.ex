@@ -3,10 +3,10 @@ defmodule Plausible.Ingestion.Persistor do
   Registers and persists sessions and events.
   """
 
-  def persist_event(event, session_attrs, previous_user_id, opts) do
+  def persist_event(event, previous_user_id, opts) do
     {backend_override, opts} = Keyword.pop(opts, :backend)
 
-    backend(backend_override).persist_event(event, session_attrs, previous_user_id, opts)
+    backend(backend_override).persist_event(event, previous_user_id, opts)
   end
 
   defp backend(nil) do

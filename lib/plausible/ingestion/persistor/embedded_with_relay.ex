@@ -5,20 +5,20 @@ defmodule Plausible.Ingestion.Persistor.EmbeddedWithRelay do
 
   alias Plausible.Ingestion.Persistor
 
-  def persist_event(event, session_attrs, previous_user_id, opts) do
+  def persist_event(event, previous_user_id, opts) do
     Task.start(fn ->
       Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
         telemetry_pipeline_step_duration(),
-        fn -> do_persist_event(event, session_attrs, previous_user_id, opts) end,
+        fn -> do_persist_event(event, previous_user_id, opts) end,
         %{step: "register_session"}
       )
     end)
 
-    Persistor.Embedded.persist_event(event, session_attrs, previous_user_id, opts)
+    Persistor.Embedded.persist_event(event, previous_user_id, opts)
   end
 
-  defp do_persist_event(event, session_attrs, previous_user_id, opts) do
-    result = Persistor.Remote.persist_event(event, session_attrs, previous_user_id, opts)
+  defp do_persist_event(event, previous_user_id, opts) do
+    result = Persistor.Remote.persist_event(event, previous_user_id, opts)
 
     case result do
       {:ok, event} ->
