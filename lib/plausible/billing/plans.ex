@@ -32,32 +32,30 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp starter_plans_for(subscription, legacy?) do
+  defp starter_plans_for(subscription) do
     active_plan = get_regular_plan(subscription, only_non_expired: true)
 
-    case {legacy?, active_plan} do
-      {true, _} -> []
-      {_, %Plan{kind: :growth, generation: g}} when g <= 4 -> []
-      {_, _} -> Enum.filter(plans_v5(), &(&1.kind == :starter))
+    case active_plan do
+      %Plan{kind: :growth, generation: g} when g <= 4 -> []
+      _ -> Enum.filter(plans_v5(), &(&1.kind == :starter))
     end
   end
 
-  @spec growth_plans_for(Subscription.t(), boolean()) :: [Plan.t()]
+  @spec growth_plans_for(Subscription.t()) :: [Plan.t()]
   @doc """
   Returns a list of growth plans available for the subscription to choose.
 
   As new versions of plans are introduced, subscriptions which were on old plans can
   still choose from old plans.
   """
-  def growth_plans_for(subscription, legacy? \\ false) do
+  def growth_plans_for(subscription) do
     owned_plan = get_regular_plan(subscription)
-
-    default_plans = if legacy?, do: plans_v4(), else: plans_v5()
+    latest = plans_v5()
 
     cond do
-      is_nil(owned_plan) -> default_plans
-      subscription && Subscriptions.expired?(subscription) -> default_plans
-      owned_plan.kind == :business -> default_plans
+      is_nil(owned_plan) -> latest
+      subscription && Subscriptions.expired?(subscription) -> latest
+      owned_plan.kind == :business -> latest
       owned_plan.generation == 1 -> plans_v1() |> drop_high_plans(owned_plan)
       owned_plan.generation == 2 -> plans_v2() |> drop_high_plans(owned_plan)
       owned_plan.generation == 3 -> plans_v3()
@@ -67,27 +65,24 @@ defmodule Plausible.Billing.Plans do
     |> Enum.filter(&(&1.kind == :growth))
   end
 
-  def business_plans_for(subscription, legacy? \\ false) do
+  def business_plans_for(subscription) do
     owned_plan = get_regular_plan(subscription)
-
-    default_plans = if legacy?, do: plans_v4(), else: plans_v5()
+    latest = plans_v5()
 
     cond do
-      subscription && Subscriptions.expired?(subscription) -> default_plans
+      subscription && Subscriptions.expired?(subscription) -> latest
       owned_plan && owned_plan.generation <= 3 -> plans_v3()
       owned_plan && owned_plan.generation <= 4 -> plans_v4()
-      true -> default_plans
+      true -> latest
     end
     |> Enum.filter(&(&1.kind == :business))
   end
 
   def available_plans_for(subscription, opts \\ []) do
-    legacy? = Keyword.get(opts, :legacy?, false)
-
     %{
-      starter: starter_plans_for(subscription, legacy?) |> maybe_add_prices(opts),
-      growth: growth_plans_for(subscription, legacy?) |> maybe_add_prices(opts),
-      business: business_plans_for(subscription, legacy?) |> maybe_add_prices(opts)
+      starter: starter_plans_for(subscription) |> maybe_add_prices(opts),
+      growth: growth_plans_for(subscription) |> maybe_add_prices(opts),
+      business: business_plans_for(subscription) |> maybe_add_prices(opts)
     }
   end
 

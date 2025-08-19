@@ -78,7 +78,7 @@ defmodule Plausible.Workers.ExportAnalytics do
       ch,
       fn conn ->
         conn
-        |> Exports.stream_archive(queries, format: "CSVWithNames")
+        |> Exports.stream_archive(queries, format: "CSVWithNames", timeout: :infinity)
         |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, filename)
       end,
       timeout: :infinity
