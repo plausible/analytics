@@ -86,13 +86,9 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
       </:subtitle>
 
       <:footer>
-        <.focus_list>
-          <:item>
-            <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
-              Go to Site Settings
-            </.styled_link>
-          </:item>
-        </.focus_list>
+        <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
+          ← Back to Site Settings
+        </.styled_link>
       </:footer>
 
       <.async_result :let={detection_result} assign={@detection_result}>
