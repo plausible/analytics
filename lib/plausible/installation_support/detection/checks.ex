@@ -1,6 +1,7 @@
 defmodule Plausible.InstallationSupport.Detection.Checks do
   @moduledoc """
-  Checks that are performed during tracker script installation verification.
+  Checks that are performed pre-installation, providing recommended installation
+  methods and whether v1 is used on the site.
 
   In async execution, each check notifies the caller by sending a message to it.
   """

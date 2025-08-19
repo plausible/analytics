@@ -1,7 +1,7 @@
 defmodule Plausible.InstallationSupport.Checks.Detection do
   @moduledoc """
   Calls the browserless.io service (local instance can be spawned with `make browserless`)
-  and runs verifier script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
+  and runs detector script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
 
   * v1_detected (optional - detection can take up to @plausible_window_check_timeout_ms)
   * gtm_likely
@@ -25,7 +25,7 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
                     {:error, _} -> ""
                   end)
 
-  # Puppeteer wrapper function that executes the vanilla JS verifier code
+  # Puppeteer wrapper function that executes the vanilla JS detector code
   @puppeteer_wrapper_code """
   export default async function({ page, context: { url, userAgent, ...functionContext } }) {
     try {

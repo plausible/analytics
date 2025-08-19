@@ -156,16 +156,16 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
   end
 
   defp run_detection(domain) do
-    url_to_detect = nil
+    detection_result =
+      Detection.Checks.run(nil, domain,
+        detect_v1?: true,
+        report_to: nil,
+        async?: false,
+        slowdown: 0
+      )
+      |> Detection.Checks.interpret_diagnostics()
 
-    case url_to_detect
-         |> Detection.Checks.run(domain,
-           detect_v1?: true,
-           report_to: nil,
-           async?: false,
-           slowdown: 0
-         )
-         |> Detection.Checks.interpret_diagnostics() do
+    case detection_result do
       %Result{
         ok?: true,
         data: %{

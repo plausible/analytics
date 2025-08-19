@@ -145,16 +145,16 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   defp verify_cta("npm"), do: "Verify NPM installation"
 
   defp get_recommended_installation_type(flow, site) do
-    url_to_verify = nil
+    detection_result =
+      Detection.Checks.run(nil, site.domain,
+        detect_v1?: flow == Flows.review(),
+        report_to: nil,
+        slowdown: 0,
+        async?: false
+      )
+      |> Detection.Checks.interpret_diagnostics()
 
-    case url_to_verify
-         |> Detection.Checks.run(site.domain,
-           detect_v1?: flow == Flows.review(),
-           report_to: nil,
-           slowdown: 0,
-           async?: false
-         )
-         |> Detection.Checks.interpret_diagnostics() do
+    case detection_result do
       %Result{
         ok?: true,
         data: %{suggested_technology: suggested_technology, v1_detected: v1_detected}
