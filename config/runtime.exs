@@ -148,7 +148,7 @@ persistor_backend =
     "remote" -> Plausible.Ingestion.Persistor.Remote
   end
 
-persistor_url = get_var_from_path_or_env(config_dir, "PERSISTOR_URL", "http://localhost:8001")
+persistor_url = get_var_from_path_or_env(config_dir, "PERSISTOR_URL", "http://localhost:8001/event")
 
 persistor_count = get_int_from_path_or_env(config_dir, "PERSISTOR_COUNT", 400)
 
