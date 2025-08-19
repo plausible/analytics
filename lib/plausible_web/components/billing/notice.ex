@@ -283,8 +283,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   defp lose_grandfathering_warning(%{subscription: subscription} = assigns) do
     plan = Plans.get_regular_plan(subscription, only_non_expired: true)
-    latest_generation = if FunWithFlags.enabled?(:starter_tier), do: 5, else: 4
-    loses_grandfathering? = plan && plan.generation < latest_generation
+    loses_grandfathering? = plan && plan.generation < 5
 
     assigns = assign(assigns, :loses_grandfathering?, loses_grandfathering?)
 
