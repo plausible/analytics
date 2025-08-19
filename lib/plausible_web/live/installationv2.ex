@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   """
   alias PlausibleWeb.Flows
   alias Phoenix.LiveView.AsyncResult
-  alias Plausible.InstallationSupport.Detection
+  alias Plausible.InstallationSupport.{Detection, Result}
   alias PlausibleWeb.Live.InstallationV2.Icons
   alias PlausibleWeb.Live.InstallationV2.Instructions
   use PlausibleWeb, :live_view
@@ -144,19 +144,22 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   defp verify_cta("gtm"), do: "Verify Tag Manager installation"
   defp verify_cta("npm"), do: "Verify NPM installation"
 
-  defp get_recommended_installation_type(flow, url) do
-    case Detection.perform(url, detect_v1?: flow == Flows.review()) do
-      {:ok, result} ->
-        Logger.debug("Detection result: #{inspect(result)}")
+  defp get_recommended_installation_type(flow, site) do
+    detection_result =
+      Detection.Checks.run(nil, site.domain,
+        detect_v1?: flow == Flows.review(),
+        report_to: nil,
+        slowdown: 0,
+        async?: false
+      )
+      |> Detection.Checks.interpret_diagnostics()
 
-        type =
-          case result do
-            %{gtm_likely: true} -> "gtm"
-            %{wordpress_likely: true} -> "wordpress"
-            _ -> "manual"
-          end
-
-        {type, result.v1_detected}
+    case detection_result do
+      %Result{
+        ok?: true,
+        data: %{suggested_technology: suggested_technology, v1_detected: v1_detected}
+      } ->
+        {suggested_technology, v1_detected}
 
       _ ->
         {"manual", false}
@@ -203,7 +206,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   defp initialize_installation_data(flow, site, params) do
     {recommended_installation_type, v1_detected} =
-      get_recommended_installation_type(flow, "https://#{site.domain}")
+      get_recommended_installation_type(flow, site)
 
     tracker_script_configuration =
       PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{

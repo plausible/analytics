@@ -2,7 +2,7 @@ import { waitForPlausibleFunction } from "./plausible-function-check"
 import { checkWordPress } from "./check-wordpress"
 import { checkGTM } from "./check-gtm"
 
-window.scanPageBeforePlausibleInstallation = async function(detectV1, debug) {
+window.scanPageBeforePlausibleInstallation = async function({ detectV1, debug, timeoutMs }) {
   function log(message) {
     if (debug) console.log('[Plausible Verification]', message)
   }
@@ -11,7 +11,7 @@ window.scanPageBeforePlausibleInstallation = async function(detectV1, debug) {
 
   if (detectV1) {
     log('Waiting for Plausible function...')
-    const plausibleFound = await waitForPlausibleFunction(3000)
+    const plausibleFound = await waitForPlausibleFunction(timeoutMs)
     log(`plausibleFound: ${plausibleFound}`)
     v1Detected = plausibleFound && typeof window.plausible.s === 'undefined'
     log(`v1Detected: ${v1Detected}`)

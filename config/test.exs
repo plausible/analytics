@@ -26,6 +26,9 @@ config :plausible,
   session_timeout: 0,
   http_impl: Plausible.HTTPClient.Mock
 
+config :plausible,
+  dns_lookup_impl: Plausible.DnsLookup.Mock
+
 config :plausible, Plausible.Cache, enabled: false
 
 config :ex_money, api_module: Plausible.ExchangeRateMock
@@ -49,7 +52,7 @@ config :plausible, Plausible.HelpScout,
     plug: {Req.Test, Plausible.HelpScout}
   ]
 
-config :plausible, Plausible.InstallationSupport.Detection,
+config :plausible, Plausible.InstallationSupport.Checks.Detection,
   req_opts: [
     plug: {Req.Test, :global}
   ]

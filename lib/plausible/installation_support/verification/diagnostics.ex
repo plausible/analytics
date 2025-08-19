@@ -198,6 +198,17 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       ),
       do: error(@error_gtm_selected_maybe_cookie_banner)
 
+  @error_domain_not_found Error.new!(%{
+                            message: "We couldn't verify your website",
+                            recommendation:
+                              "Please check that the domain you entered is correct and that the website is reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
+                            url:
+                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                          })
+  def interpret(%__MODULE__{service_error: service_error}, _expected_domain, _url)
+      when service_error in [:domain_not_found, :invalid_url],
+      do: error(@error_domain_not_found)
+
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, url),
     do: unknown_error(diagnostics, url)
 

@@ -3,11 +3,22 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
   import Phoenix.LiveViewTest
   import Plausible.TestUtils
   import ExUnit.CaptureLog
+  import Mox
 
   alias Plausible.Repo
 
   describe "ChangeDomainV2 LiveView" do
     setup [:create_user, :log_in, :create_site]
+
+    setup do
+      # mock all domains resolve
+      Plausible.DnsLookup.Mock
+      |> expect(:lookup, fn _domain, _type, _record, _opts, _timeout ->
+        [{192, 168, 1, 2}]
+      end)
+
+      :ok
+    end
 
     test "mounts and renders form", %{conn: conn, site: site} do
       {:ok, _lv, html} = live(conn, "/#{site.domain}/change-domain-v2")
@@ -241,7 +252,10 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
     Req.Test.stub(:global, fn conn ->
       conn
       |> put_resp_content_type("application/json")
-      |> send_resp(200, Jason.encode!(%{"data" => %{"error" => "Simulated browser error"}}))
+      |> send_resp(
+        200,
+        Jason.encode!(%{"data" => %{"error" => %{"message" => "Simulated browser error"}}})
+      )
     end)
   end
 end

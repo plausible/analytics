@@ -1,33 +1,33 @@
-defmodule Plausible.InstallationSupport.Verification.Checks do
+defmodule Plausible.InstallationSupport.Detection.Checks do
   @moduledoc """
-  Checks that are performed during tracker script installation verification.
+  Checks that are performed pre-installation, providing recommended installation
+  methods and whether v1 is used on the site.
 
   In async execution, each check notifies the caller by sending a message to it.
   """
-  alias Plausible.InstallationSupport.Verification
+  alias Plausible.InstallationSupport.Detection
   alias Plausible.InstallationSupport.{State, CheckRunner, Checks}
 
   require Logger
 
   @checks [
     Checks.Url,
-    Checks.InstallationV2,
-    Checks.InstallationV2CacheBust
+    Checks.Detection
   ]
 
-  def run(url, data_domain, installation_type, opts \\ []) do
+  def run(url, data_domain, opts \\ []) do
     report_to = Keyword.get(opts, :report_to, self())
     async? = Keyword.get(opts, :async?, true)
     slowdown = Keyword.get(opts, :slowdown, 500)
+    detect_v1? = Keyword.get(opts, :detect_v1?, false)
 
     init_state =
       %State{
         url: url,
         data_domain: data_domain,
         report_to: report_to,
-        diagnostics: %Verification.Diagnostics{
-          selected_installation_type: installation_type
-        }
+        diagnostics: %Detection.Diagnostics{},
+        assigns: %{detect_v1?: detect_v1?}
       }
 
     CheckRunner.run(init_state, @checks,
@@ -38,9 +38,8 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
   end
 
   def interpret_diagnostics(%State{} = state) do
-    Verification.Diagnostics.interpret(
+    Detection.Diagnostics.interpret(
       state.diagnostics,
-      state.data_domain,
       state.url
     )
   end

@@ -33,6 +33,7 @@ defmodule PlausibleWeb.Live.Verification do
 
     socket =
       assign(socket,
+        url_to_verify: nil,
         site: site,
         super_admin?: super_admin?,
         domain: domain,
@@ -110,12 +111,12 @@ defmodule PlausibleWeb.Live.Verification do
 
   def handle_event("launch-verification", _, socket) do
     launch_delayed(socket)
-    {:noreply, reset_component(socket)}
+    {:noreply, reset_component(socket, nil)}
   end
 
-  def handle_event("retry", _, socket) do
+  def handle_event("retry", params, socket) do
     launch_delayed(socket)
-    {:noreply, reset_component(socket)}
+    {:noreply, reset_component(socket, params["url_to_verify"])}
   end
 
   def handle_info({:start, report_to}, socket) do
@@ -131,7 +132,6 @@ defmodule PlausibleWeb.Live.Verification do
         {:deny, _} -> :timer.sleep(@slowdown_for_frequent_checking)
       end
 
-      url_to_verify = "https://#{socket.assigns.domain}"
       domain = socket.assigns.domain
       installation_type = socket.assigns.installation_type
 
@@ -140,13 +140,13 @@ defmodule PlausibleWeb.Live.Verification do
           FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site) or
             FunWithFlags.enabled?(:scriptv2, for: socket.assigns.current_user),
           do:
-            Verification.Checks.run(url_to_verify, domain, installation_type,
+            Verification.Checks.run(socket.assigns.url_to_verify, domain, installation_type,
               report_to: report_to,
               slowdown: socket.assigns.slowdown
             ),
           else:
             LegacyVerification.Checks.run(
-              url_to_verify,
+              "https://#{socket.assigns.domain}",
               domain,
               report_to: report_to,
               slowdown: socket.assigns.slowdown
@@ -157,10 +157,17 @@ defmodule PlausibleWeb.Live.Verification do
     end
   end
 
-  def handle_info({:check_start, {check, _state}}, socket) do
-    update_component(socket,
-      message: check.report_progress_as()
-    )
+  def handle_info({:check_start, {check, state}}, socket) do
+    to_update = [message: check.report_progress_as()]
+
+    to_update =
+      if is_binary(state.url) do
+        Keyword.put(to_update, :url_to_verify, state.url)
+      else
+        to_update
+      end
+
+    update_component(socket, to_update)
 
     {:noreply, socket}
   end
@@ -207,7 +214,7 @@ defmodule PlausibleWeb.Live.Verification do
     redirect(socket, to: stats_url)
   end
 
-  defp reset_component(socket) do
+  defp reset_component(socket, url_to_verify) do
     update_component(socket,
       message: "We're visiting your site to ensure that everything is working",
       finished?: false,
@@ -215,7 +222,11 @@ defmodule PlausibleWeb.Live.Verification do
       diagnostics: nil
     )
 
-    socket
+    if is_binary(url_to_verify) do
+      assign(socket, url_to_verify: url_to_verify)
+    else
+      socket
+    end
   end
 
   defp update_component(_socket, updates) do

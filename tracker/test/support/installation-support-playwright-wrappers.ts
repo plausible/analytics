@@ -88,7 +88,7 @@ export async function verifyV1(page, context) {
 }
 
 export async function detect(page, context) {
-  const { url, detectV1 } = context
+  const { url, detectV1, timeoutMs } = context
   const debug = context.debug ? true : false
 
   const detectorCode = await compileFile(DETECTOR_JS_VARIANT, {
@@ -99,12 +99,9 @@ export async function detect(page, context) {
   await page.evaluate(detectorCode)
 
   return await page.evaluate(
-    async ({ detectV1, debug }) => {
-      return await (window as any).scanPageBeforePlausibleInstallation(
-        detectV1,
-        debug
-      )
+    async (d) => {
+      return await (window as any).scanPageBeforePlausibleInstallation(d)
     },
-    { detectV1, debug }
+    { detectV1, debug, timeoutMs }
   )
 }
