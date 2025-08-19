@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.TrackerScriptCacheTest do
+  use Plausible
   use Plausible.DataCase, async: true
   use Plausible.Teams.Test
 
@@ -6,7 +7,7 @@ defmodule PlausibleWeb.TrackerScriptCacheTest do
   alias PlausibleWeb.TrackerScriptCache
 
   describe "public cache interface" do
-    test "cache caches tracker script configurations", %{test: test} do
+    test "cache caches tracker scripts by id", %{test: test} do
       {:ok, _} =
         Supervisor.start_link(
           [{TrackerScriptCache, [cache_name: test, child_id: :test_cache_tracker_script]}],
@@ -23,8 +24,13 @@ defmodule PlausibleWeb.TrackerScriptCacheTest do
 
       assert TrackerScriptCache.size(test) == 1
 
-      assert script_tag = TrackerScriptCache.get(config.id, force?: true, cache_name: test)
-      assert is_binary(script_tag)
+      assert result = TrackerScriptCache.get(config.id, force?: true, cache_name: test)
+
+      on_ee do
+        assert result == true
+      else
+        assert is_binary(result)
+      end
 
       refute TrackerScriptCache.get("nonexistent", cache_name: test, force?: true)
     end
