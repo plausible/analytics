@@ -98,6 +98,8 @@ Plausible.DataMigration.SiteImports.SiteImportSnapshot.html
 Plausible.DataMigration.SiteImports.html
 Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
+Plausible.DnsLookup.html
+Plausible.DnsLookupInterface.html
 Plausible.Ecto.EventName.html
 Plausible.Ecto.Types.CompiledRegex.html
 Plausible.Ecto.Types.Nanoid.html
@@ -148,9 +150,11 @@ Plausible.Ingestion.Event.html
 Plausible.Ingestion.Request.Revenue.html
 Plausible.Ingestion.Request.html
 Plausible.Ingestion.Source.html
+Plausible.InstallationSupport.BrowserlessConfig.html
 Plausible.InstallationSupport.Check.html
 Plausible.InstallationSupport.CheckRunner.html
 Plausible.InstallationSupport.Checks.CSP.html
+Plausible.InstallationSupport.Checks.Detection.html
 Plausible.InstallationSupport.Checks.FetchBody.html
 Plausible.InstallationSupport.Checks.Installation.html
 Plausible.InstallationSupport.Checks.InstallationV2.html
@@ -158,7 +162,9 @@ Plausible.InstallationSupport.Checks.InstallationV2CacheBust.html
 Plausible.InstallationSupport.Checks.ScanBody.html
 Plausible.InstallationSupport.Checks.Snippet.html
 Plausible.InstallationSupport.Checks.SnippetCacheBust.html
-Plausible.InstallationSupport.Detection.html
+Plausible.InstallationSupport.Checks.Url.html
+Plausible.InstallationSupport.Detection.Checks.html
+Plausible.InstallationSupport.Detection.Diagnostics.html
 Plausible.InstallationSupport.LegacyVerification.Checks.html
 Plausible.InstallationSupport.LegacyVerification.Diagnostics.html
 Plausible.InstallationSupport.LegacyVerification.Errors.html
@@ -543,8 +549,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-4BFF54C8.js
-dist/sidebar_items-F2078F70.js
+dist/search_data-237C492D.js
+dist/sidebar_items-D3E4847F.js
 index.html
 readme.html
 search.html

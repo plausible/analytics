@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-F2078F70.js"></script>
+    <script src="dist/sidebar_items-D3E4847F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -960,6 +960,26 @@ when altering it.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.DnsLookup.html" translate="no">Plausible.DnsLookup</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Thin wrapper around <a href="https://www.erlang.org/doc/apps/kernel/inet_res.html#lookup/5"><code class="inline">:inet_res.lookup/5</code></a>.
+To use, call <code class="inline">Plausible.DnsLookup.impl().lookup/5</code>,
+this allows for mocking DNS lookups in tests.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.DnsLookupInterface.html" translate="no">Plausible.DnsLookupInterface</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Behaviour module for DNS lookup operations.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.Ecto.EventName.html" translate="no">Plausible.Ecto.EventName</a>
 
   </div>
@@ -1429,6 +1449,15 @@ correctly.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.BrowserlessConfig.html" translate="no">Plausible.InstallationSupport.BrowserlessConfig</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Req options for browserless.io requests</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.InstallationSupport.Check.html" translate="no">Plausible.InstallationSupport.Check</a>
 
   </div>
@@ -1453,6 +1482,16 @@ correctly.</p></div>
 
     <div class="summary-synopsis"><p>Scans the Content Security Policy header to ensure that the Plausible domain is allowed.
 See <a href="Plausible.InstallationSupport.LegacyVerification.Checks.html"><code class="inline">Plausible.InstallationSupport.LegacyVerification.Checks</code></a> for the execution sequence.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.Detection.html" translate="no">Plausible.InstallationSupport.Checks.Detection</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
+and runs detector script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1529,12 +1568,33 @@ is wrapped with some CDN/caching layer.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Detection.html" translate="no">Plausible.InstallationSupport.Detection</a>
+    <a href="Plausible.InstallationSupport.Checks.Url.html" translate="no">Plausible.InstallationSupport.Checks.Url</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>Exposes a perform function which visits the given URL via a Browserless
-/function API call, and in a returns the following diagnostics</p></div>
+    <div class="summary-synopsis"><p>Checks if site domain has an A record.
+If not, checks if prepending <code class="inline">www.</code> helps,
+because we have specifically requested customers to register the domain with <code class="inline">www.</code> prefix.
+If not, skips all further checks.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Detection.Checks.html" translate="no">Plausible.InstallationSupport.Detection.Checks</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Checks that are performed pre-installation, providing recommended installation
+methods and whether v1 is used on the site.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Detection.Diagnostics.html" translate="no">Plausible.InstallationSupport.Detection.Diagnostics</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Module responsible for translating diagnostics to user-friendly errors and recommendations.</p></div>
 
 </div>
 <div class="summary-row">

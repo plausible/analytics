@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.InstallationSupport.Detection — Plausible v0.0.1</title>
+    <title>Plausible.InstallationSupport.Checks.Url — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-F2078F70.js"></script>
+    <script src="dist/sidebar_items-D3E4847F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -126,21 +126,22 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/installation_support/detection.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/installation_support/checks/url.ex#L1" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
-    <span translate="no">Plausible.InstallationSupport.Detection</span> 
+    <span translate="no">Plausible.InstallationSupport.Checks.Url</span> 
     <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>Exposes a perform function which visits the given URL via a Browserless
-/function API call, and in a returns the following diagnostics:</p><ul><li>v1_detected (optional - detection can take up to 3s)</li><li>gtm_likely</li><li>wordpress_likely</li><li>wordpress_plugin</li></ul><p>These diagnostics are used to determine what installation type to recommend,
-and whether to provide a notice for upgrading an existing v1 integration to v2.</p>
+<p>Checks if site domain has an A record.
+If not, checks if prepending <code class="inline">www.</code> helps,
+because we have specifically requested customers to register the domain with <code class="inline">www.</code> prefix.
+If not, skips all further checks.</p>
     </section>
 
 </div>
@@ -159,7 +160,7 @@ and whether to provide a notice for upgrading an existing v1 integration to v2.<
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#perform/2" data-no-tooltip translate="no">perform(url, opts \\ [])</a>
+        <a href="#perform_safe/1" data-no-tooltip translate="no">perform_safe(state)</a>
 
       </div>
 
@@ -178,17 +179,15 @@ and whether to provide a notice for upgrading an existing v1 integration to v2.<
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="perform/2">
-
-    <span id="perform/1"></span>
+<section class="detail" id="perform_safe/1">
 
   <div class="detail-header">
-    <a href="#perform/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#perform_safe/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">perform(url, opts \\ [])</h1>
+    <h1 class="signature" translate="no">perform_safe(state)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/installation_support/detection.ex#L47" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/installation_support/checks/url.ex#L9" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

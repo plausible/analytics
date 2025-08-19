@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-F2078F70.js"></script>
+    <script src="dist/sidebar_items-D3E4847F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,7 +138,19 @@ Pages
 
 
     <section id="moduledoc">
-<p>Diagnostics interpretation result.</p>
+<p>Diagnostics interpretation result.</p><h2 id="module-example" class="section-heading">
+  <a href="#module-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h2>
+<p>ok?: false,
+data: nil,
+errors: [error.message],
+recommendations: [%{text: error.recommendation, url: error.url}]</p><p>ok?: true,
+data: %{},
+errors: [],
+recommendations: []</p>
     </section>
 
 </div>
@@ -184,7 +196,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/installation_support/result.ex#L6" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/installation_support/result.ex#L17" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -196,6 +208,7 @@ Pages
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.InstallationSupport.Result{
+  data: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   errors: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   ok?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   recommendations: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
