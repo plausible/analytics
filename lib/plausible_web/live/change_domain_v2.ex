@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         <:loading>
           <div class="flex items-center">
             <.spinner class="w-4 h-4 mr-2" />
-            <span class="text-sm text-gray-600">Checking your new domain...</span>
+            <span class="text-sm text-gray-600 dark:text-gray-400">Checking your new domain...</span>
           </div>
         </:loading>
 
