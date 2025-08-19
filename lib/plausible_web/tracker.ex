@@ -82,6 +82,13 @@ defmodule PlausibleWeb.Tracker do
     end)
   end
 
+  def purge_tracker_script_cache(site) do
+    on_ee do
+      tracker_script_configuration = get_or_create_tracker_script_configuration!(site)
+      purge_cache!(tracker_script_configuration.id)
+    end
+  end
+
   on_ee do
     defp should_purge_cache?(changeset) do
       Map.keys(changeset.changes) != [:installation_type]
