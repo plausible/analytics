@@ -21,7 +21,11 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
       Once done, click the button below to verify your installation.
     </div>
 
-    <.snippet_form text={render_snippet(@tracker_script_configuration_form.data)} rows={4} />
+    <.snippet_form
+      text={render_snippet(@tracker_script_configuration_form.data)}
+      rows={6}
+      resizable={true}
+    />
     <.h2 class="mt-8 text-sm font-medium">Optional measurements</.h2>
     <.script_config_control
       field={@tracker_script_configuration_form[:outbound_links]}
@@ -133,7 +137,11 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
         <.focus_list>
           <:item>
             Copy this site's ScriptID:
-            <.snippet_form text={@tracker_script_configuration_form.data.id} rows={1} />
+            <.snippet_form
+              text={@tracker_script_configuration_form.data.id}
+              rows={1}
+              resizable={false}
+            />
           </:item>
 
           <:item>
@@ -231,7 +239,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
     <div class="relative">
       <textarea
         id="snippet"
-        class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 "
+        class={"w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 #{if !@resizable, do: "resize-none"}"}
         rows={@rows}
         readonly
       ><%= @text %></textarea>
