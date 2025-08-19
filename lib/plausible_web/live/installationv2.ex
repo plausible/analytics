@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
             </div>
           </:loading>
 
-          <div class="flex flex-row gap-2 bg-gray-100 rounded-md p-1">
+          <div class="flex flex-row gap-2 bg-gray-100 dark:bg-gray-900 rounded-md p-1">
             <.tab
               patch={"?type=manual&flow=#{@flow}"}
               selected={@installation_type.result == "manual"}
@@ -172,12 +172,13 @@ defmodule PlausibleWeb.Live.InstallationV2 do
     assigns =
       if assigns[:selected] do
         assign(assigns,
-          class: "bg-white rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center"
+          class:
+            "bg-white dark:bg-gray-800 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center"
         )
       else
         assign(assigns,
           class:
-            "bg-gray-100 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center cursor-pointer"
+            "bg-gray-100 dark:bg-gray-700 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center cursor-pointer"
         )
       end
 
