@@ -295,6 +295,15 @@ defmodule PlausibleWeb.Live.Sites do
           <.icon_pin :if={!@site.pinned_at} class="size-4" />
           <span :if={!@site.pinned_at}>Pin Site</span>
         </.dropdown_item>
+        <.dropdown_item
+          :if={Application.get_env(:plausible, :environment) == "dev"}
+          href={Routes.site_path(PlausibleWeb.Endpoint, :delete_site, @site.domain)}
+          method="delete"
+          class="!flex items-center gap-x-2"
+        >
+          <Heroicons.trash class="size-4 text-red-500" />
+          <span class="text-red-500">[DEV ONLY] Quick Delete</span>
+        </.dropdown_item>
       </:menu>
     </.dropdown>
     """
