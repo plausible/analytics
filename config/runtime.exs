@@ -150,7 +150,7 @@ persistor_backend =
 
 persistor_url = get_var_from_path_or_env(config_dir, "PERSISTOR_URL", "http://localhost:8001/event")
 
-persistor_count = get_int_from_path_or_env(config_dir, "PERSISTOR_COUNT", 400)
+persistor_count = get_int_from_path_or_env(config_dir, "PERSISTOR_COUNT", 200)
 
 persistor_timeout_ms = get_int_from_path_or_env(config_dir, "PERSISTOR_TIMEOUT_MS", 10_000)
 
