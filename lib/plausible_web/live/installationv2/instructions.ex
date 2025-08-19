@@ -111,7 +111,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
           </.styled_link>
         </:item>
         <:item>
-          After activating our plugin, click the button below to verify your installation
+          After activating our plugin, click the button below to verify your installation.
         </:item>
       </.focus_list>
     </div>
@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
         </.styled_link>
       </:item>
       <:item>
-        After activating our plugin, click the button below to verify your installation
+        Once done, click the button below to verify your installation.
       </:item>
     </.focus_list>
     """
