@@ -867,6 +867,21 @@ defmodule PlausibleWeb.SiteControllerTest do
                "/#{URI.encode_www_form(site.domain)}/settings/integrations"
     end
 
+    test "won't crash if associated google auth has been already deleted", %{
+      conn: conn1,
+      user: user,
+      site: site
+    } do
+      insert(:google_auth, user: user, site: site)
+      delete(conn1, "/#{site.domain}/settings/google-search")
+      conn = delete(conn1, "/#{site.domain}/settings/google-search")
+
+      refute Repo.exists?(Plausible.Site.GoogleAuth)
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/integrations"
+    end
+
     test "fails to delete associated google auth from the outside", %{
       conn: conn,
       user: user
