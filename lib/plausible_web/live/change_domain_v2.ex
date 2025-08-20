@@ -149,7 +149,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
   end
 
   def handle_info({:domain_changed, updated_site}, socket) do
-    PlausibleWeb.Tracker.purge_tracker_script_cache(updated_site)
+    PlausibleWeb.Tracker.purge_tracker_script_cache!(updated_site)
 
     {:noreply,
      socket
