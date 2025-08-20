@@ -706,6 +706,36 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert html_response(response, 429) =~ "Too many login attempts"
     end
+
+    test "malicious automated logins", %{conn: conn1} do
+      conn =
+        post(conn1, "/login", %{
+          "g-recaptcha-response" => "NwBMkEWbh",
+          "user[email]" => "some@example.com",
+          "user[name]" => "CJCtGVXVgfORdNN",
+          "user[password]" => "[Filtered]",
+          "user[password_confirmation]" => "[Filtered]",
+          "user[register_action]" => "register_form"
+        })
+
+      assert response(conn, 403)
+
+      conn =
+        conn1
+        |> put_req_header("content-type", "application/json")
+        |> post("/login", """
+          {
+          "g-recaptcha-response": "NwBMkEWbh",
+          "user[email]": "some@example.com",
+          "user[name]": "CJCtGVXVgfORdNN",
+          "user[password]": "[Filtered]",
+          "user[password_confirmation]": "[Filtered]",
+          "user[register_action]": "register_form"
+          }
+        """)
+
+      assert response(conn, 403)
+    end
   end
 
   describe "GET /password/request-reset" do
