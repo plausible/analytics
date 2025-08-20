@@ -19,51 +19,50 @@ defmodule Plausible.Ingestion.Persistor.Remote do
       {"x-previous-user-id", previous_user_id}
     ]
 
-    payload =
-      {event, session_attrs}
-      |> :erlang.term_to_binary()
-      |> Base.encode64(padding: false)
+    case Req.post(persistor_url(override_url),
+           finch: Plausible.Finch,
+           body: encode_payload(event, session_attrs),
+           headers: headers
+         ) do
+      {:ok, %{status: 200, body: event_payload}} ->
+        case decode_payload(event_payload) do
+          {:ok, event} ->
+            {:ok, %{ingest_event | clickhouse_event: event}}
 
-    result =
-      case Req.post(persistor_url(override_url),
-             finch: Plausible.Finch,
-             body: payload,
-             headers: headers
-           ) do
-        {:ok, %{status: 200, body: event_payload}} ->
-          case decode_payload(event_payload) do
-            {:ok, event} ->
-              {:ok, %{ingest_event | clickhouse_event: event}}
+          {:error, decode_error} ->
+            log_error(site_id, current_user_id, previous_user_id, decode_error)
+            {:error, :persist_decode_error}
+        end
 
-            {:error, decode_error} ->
-              log_error(site_id, current_user_id, previous_user_id, decode_error)
-              {:error, :persist_decode_error}
-          end
+      {:ok, %{body: error}} ->
+        log_error(site_id, current_user_id, previous_user_id, error)
+        {:error, decode_error(error)}
 
-        {:ok, %{body: error}} ->
-          log_error(site_id, current_user_id, previous_user_id, error)
-          {:error, decode_error(error)}
+      {:error, %{reason: :timeout}} ->
+        {:error, :persist_timeout}
 
-        {:error, %{reason: :timeout}} ->
-          {:error, :persist_timeout}
+      {:error, error} ->
+        log_error(site_id, current_user_id, previous_user_id, error)
 
-        {:error, error} ->
-          log_error(site_id, current_user_id, previous_user_id, error)
+        {:error, :persist_error}
+    end
+  end
 
-          {:error, :persist_error}
-      end
+  defp encode_payload(event, session_attrs) do
+    event_data =
+      event
+      |> Map.from_struct()
+      |> Map.delete(:__meta__)
 
-    result
+    {event_data, session_attrs}
+    |> :erlang.term_to_binary()
+    |> Base.encode64(padding: false)
   end
 
   defp decode_payload(payload) do
     case Base.decode64(payload, padding: false) do
       {:ok, data} ->
-        event_data =
-          data
-          |> :erlang.binary_to_term()
-          |> Map.drop([:__meta__, :__struct__])
-
+        event_data = :erlang.binary_to_term(data)
         event = struct(Plausible.ClickhouseEventV2, event_data)
 
         {:ok, event}
