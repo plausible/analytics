@@ -41,6 +41,16 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
 
   def interpret(
         %__MODULE__{
+          npm_likely: true,
+          service_error: nil
+        } = diagnostics,
+        _url
+      ) do
+    get_result("npm", diagnostics)
+  end
+
+  def interpret(
+        %__MODULE__{
           service_error: nil
         } = diagnostics,
         _url
@@ -78,6 +88,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
       data: %{
         v1_detected: diagnostics.v1_detected,
         wordpress_plugin: diagnostics.wordpress_plugin,
+        npm_likely: diagnostics.npm_likely,
         suggested_technology: suggested_technology
       }
     }

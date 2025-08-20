@@ -297,6 +297,21 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       assert text(html) =~ "We've detected your website is using Google Tag Manager"
     end
 
+    test "detected NPM installation shows npm tab", %{conn: conn, site: site} do
+      stub_detection_result(%{
+        "v1Detected" => false,
+        "gtmLikely" => false,
+        "npmLikely" => true,
+        "wordpressLikely" => false,
+        "wordpressPlugin" => false
+      })
+
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify NPM installation"
+    end
+
     test "shows v1 detection warning for manual installation", %{conn: conn, site: site} do
       stub_dns_lookup_a_records(site.domain)
       stub_detection_manual_with_v1()
@@ -425,6 +440,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       stub_detection_result(%{
         "v1Detected" => false,
         "gtmLikely" => true,
+        "npmLikely" => false,
         "wordpressLikely" => true,
         "wordpressPlugin" => false
       })
@@ -481,6 +497,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     stub_detection_result(%{
       "v1Detected" => false,
       "gtmLikely" => true,
+      "npmLikely" => false,
       "wordpressLikely" => false,
       "wordpressPlugin" => false
     })
@@ -490,6 +507,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     stub_detection_result(%{
       "v1Detected" => true,
       "gtmLikely" => false,
+      "npmLikely" => false,
       "wordpressLikely" => false,
       "wordpressPlugin" => false
     })
@@ -499,6 +517,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     stub_detection_result(%{
       "v1Detected" => true,
       "gtmLikely" => false,
+      "npmLikely" => false,
       "wordpressLikely" => true,
       "wordpressPlugin" => false
     })
