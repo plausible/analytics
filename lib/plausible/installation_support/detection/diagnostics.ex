@@ -9,6 +9,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
             gtm_likely: nil,
             wordpress_likely: nil,
             wordpress_plugin: nil,
+            npm_likely: nil,
             service_error: nil
 
   @type t :: %__MODULE__{}

@@ -103,15 +103,19 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
           <.generic_notice />
         </:failed>
 
-        <.wordpress_plugin_notice :if={
-          detection_result && detection_result.v1_detected && detection_result.wordpress_plugin
-        } />
-        <.generic_notice :if={
-          detection_result && detection_result.v1_detected && !detection_result.wordpress_plugin
-        } />
+        <.success_notice :if={detection_result} detection_result={detection_result} />
       </.async_result>
     </.focus_box>
     """
+  end
+
+  defp success_notice(assigns) do
+    case assigns.detection_result do
+      %{v1_detected: true, wordpress_plugin: true} -> wordpress_plugin_notice(assigns)
+      %{v1_detected: true, wordpress_plugin: false} -> generic_notice(assigns)
+      %{v1_detected: false, npm_likely: true} -> generic_notice(assigns)
+      _ -> ~H""
+    end
   end
 
   defp wordpress_plugin_notice(assigns) do
@@ -166,18 +170,9 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     case detection_result do
       %Result{
         ok?: true,
-        data: %{
-          v1_detected: v1_detected,
-          wordpress_plugin: wordpress_plugin
-        }
+        data: data
       } ->
-        {:ok,
-         %{
-           detection_result: %{
-             v1_detected: v1_detected,
-             wordpress_plugin: wordpress_plugin
-           }
-         }}
+        {:ok, %{detection_result: data}}
 
       %Result{ok?: false, errors: errors} ->
         {:error, List.first(errors, :unknown_reason)}
