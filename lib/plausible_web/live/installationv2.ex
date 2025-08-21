@@ -114,7 +114,8 @@ defmodule PlausibleWeb.Live.InstallationV2 do
               @installation_type.result == "gtm"
           }>
             <.notice class="mt-4" theme={:yellow}>
-              Your website is using an outdated version of our Google Tag Manager template. Please
+              Your website might be using an outdated version of our Google Tag Manager template.
+              If so,
               <.styled_link new_tab href="https://plausible.io/docs/gtm-update-guide.md">
                 update
               </.styled_link>
