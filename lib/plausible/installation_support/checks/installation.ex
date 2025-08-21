@@ -180,7 +180,6 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
             {:wordpress_plugin_diff, :wordpress_plugin?, "wordpressPlugin"},
             {:wordpress_likely_diff, :wordpress_likely?, "wordpressLikely"},
             {:gtm_likely_diff, :gtm_likely?, "gtmLikely"},
-            {:npm_diff, :npm?, "npm"},
             {:cookie_banner_likely_diff, :cookie_banner_likely?, "cookieBannerLikely"}
           ] do
         case {Map.get(elixir_data, elixir_diagnostic), js_data[js_diagnostic]} do
