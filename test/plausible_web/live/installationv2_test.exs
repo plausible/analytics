@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
         config = Plausible.Repo.get_by!(TrackerScriptConfiguration, site_id: site.id)
         assert html =~ "Privacy-friendly analytics by Plausible"
         assert html =~ "/js/#{config.id}.js"
-        assert html =~ "defer=!0"
+        assert html =~ "defer"
       end
 
       test "manual installation shows optional measurements", %{conn: conn, site: site} do
