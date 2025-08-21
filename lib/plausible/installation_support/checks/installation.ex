@@ -106,8 +106,6 @@ defmodule Plausible.InstallationSupport.Checks.Installation do
 
   - `data.gtmLikely` - whether or not the site uses GTM
 
-  - `data.npmLikely` - whether or not the site uses the NPM package
-
   - `data.cookieBannerLikely` - whether or not there's a cookie banner blocking Plausible
   """
   use Plausible.InstallationSupport.Check
