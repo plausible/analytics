@@ -41,7 +41,7 @@ const RESPONSE_BODY_TEMPLATE = `
 `
 
 const PLAUSIBLE_WEB_SNIPPET = `
-<script defer src="<%= plausible_script_url %>"></script>
+<script async src="<%= plausible_script_url %>"></script>
 <script>
   window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
   plausible.init()
