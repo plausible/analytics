@@ -397,7 +397,7 @@ test.describe('installed plausible web variant', () => {
         attempts: 1,
         completed: true,
         disallowedByCsp: true,
-        plausibleIsOnWindow: false,
+        plausibleIsOnWindow: true,
         plausibleIsInitialized: undefined,
         plausibleVersion: undefined,
         plausibleVariant: undefined,
@@ -458,7 +458,7 @@ test.describe('installed plausible web variant', () => {
         attempts: 1,
         completed: true,
         disallowedByCsp: false, // scripts from our domain are allowed, but the inline sourceless snippet can't run because 'unsafe-inline' is not present in the CSP
-        plausibleIsOnWindow: false,
+        plausibleIsOnWindow: true,
         plausibleIsInitialized: undefined,
         plausibleVersion: undefined,
         plausibleVariant: undefined,
