@@ -336,6 +336,10 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  def login(conn, _params) do
+    conn |> send_resp(403, "") |> halt()
+  end
+
   defp accept_team_invitation(conn, team_identifier, user, params \\ [])
 
   defp accept_team_invitation(conn, no_identifier, _user, params)
