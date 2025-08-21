@@ -86,20 +86,16 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
       </:subtitle>
 
       <:footer>
-        <.focus_list>
-          <:item>
-            <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
-              Go to Site Settings
-            </.styled_link>
-          </:item>
-        </.focus_list>
+        <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
+          ← Back to Site Settings
+        </.styled_link>
       </:footer>
 
       <.async_result :let={detection_result} assign={@detection_result}>
         <:loading>
           <div class="flex items-center">
             <.spinner class="w-4 h-4 mr-2" />
-            <span class="text-sm text-gray-600">Checking your new domain...</span>
+            <span class="text-sm text-gray-600 dark:text-gray-400">Checking your new domain...</span>
           </div>
         </:loading>
 
@@ -107,15 +103,19 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
           <.generic_notice />
         </:failed>
 
-        <.wordpress_plugin_notice :if={
-          detection_result && detection_result.v1_detected && detection_result.wordpress_plugin
-        } />
-        <.generic_notice :if={
-          detection_result && detection_result.v1_detected && !detection_result.wordpress_plugin
-        } />
+        <.success_notice :if={detection_result} detection_result={detection_result} />
       </.async_result>
     </.focus_box>
     """
+  end
+
+  defp success_notice(assigns) do
+    case assigns.detection_result do
+      %{v1_detected: true, wordpress_plugin: true} -> wordpress_plugin_notice(assigns)
+      %{v1_detected: true, wordpress_plugin: false} -> generic_notice(assigns)
+      %{v1_detected: false, npm: true} -> generic_notice(assigns)
+      _ -> ~H""
+    end
   end
 
   defp wordpress_plugin_notice(assigns) do
@@ -149,6 +149,8 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
   end
 
   def handle_info({:domain_changed, updated_site}, socket) do
+    PlausibleWeb.Tracker.purge_tracker_script_cache!(updated_site)
+
     {:noreply,
      socket
      |> assign(site: updated_site)
@@ -168,18 +170,9 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     case detection_result do
       %Result{
         ok?: true,
-        data: %{
-          v1_detected: v1_detected,
-          wordpress_plugin: wordpress_plugin
-        }
+        data: data
       } ->
-        {:ok,
-         %{
-           detection_result: %{
-             v1_detected: v1_detected,
-             wordpress_plugin: wordpress_plugin
-           }
-         }}
+        {:ok, %{detection_result: data}}
 
       %Result{ok?: false, errors: errors} ->
         {:error, List.first(errors, :unknown_reason)}

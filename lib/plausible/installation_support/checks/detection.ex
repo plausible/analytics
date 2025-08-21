@@ -139,6 +139,7 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
     do: [
       v1_detected: data["v1Detected"],
       gtm_likely: data["gtmLikely"],
+      npm: data["npm"],
       wordpress_likely: data["wordpressLikely"],
       wordpress_plugin: data["wordpressPlugin"],
       service_error: nil
