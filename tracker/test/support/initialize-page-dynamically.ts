@@ -10,7 +10,7 @@ interface SharedOptions {
 }
 
 interface TemplatedResponse {
-  /** string like `<script defer id="plausible" src="/plausible.compat.local.js"></script>` or ScriptConfig to be set to web snippet */
+  /** string like `<script async id="plausible" src="/plausible.compat.local.js"></script>` or ScriptConfig to be set to web snippet */
   scriptConfig: ScriptConfig | string
   /** vanilla HTML string, which can contain JS, will be set in the body of the page */
   bodyContent: string

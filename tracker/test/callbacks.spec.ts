@@ -55,7 +55,7 @@ for (const mode of ['web', 'esm', 'legacy']) {
           testId,
           scriptConfig: switchByMode(
             {
-              legacy: `<script data-api="${apiPath}" defer id="plausible" data-domain="${DOMAIN}" src="${
+              legacy: `<script data-api="${apiPath}" async id="plausible" data-domain="${DOMAIN}" src="${
                 captureOnLocalhost
                   ? '/tracker/js/plausible.compat.local.manual.js'
                   : '/tracker/js/plausible.compat.manual.js'

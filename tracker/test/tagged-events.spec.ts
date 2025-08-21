@@ -78,7 +78,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -121,7 +121,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -155,7 +155,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -204,7 +204,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -248,7 +248,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -283,7 +283,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -312,7 +312,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -369,7 +369,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, autoCapturePageviews: false },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.manual.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.manual.tagged-events.js"></script>'
           },
           mode
         ),
@@ -412,7 +412,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -454,7 +454,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -478,7 +478,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -561,7 +561,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       const { url } = await initializePageDynamically(page, {
         testId,
         scriptConfig:
-          '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+          '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
         bodyContent: `<a class="plausible-event-name=outbound" ${linkAttributes} href="${outboundUrl}"><h1>➡️</h1></a>`
       })
       await page.goto(url)
@@ -597,7 +597,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
       bodyContent: `<a class="plausible-event-name=Subscribe" href="${targetPage.url}">Click to subscribe</a>`
     })
     await page.goto(url)
@@ -641,7 +641,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
       bodyContent: `<a class="plausible-event-name=Subscribe" href="${targetPage.url}">Click to subscribe</a>`
     })
     await page.goto(url)
@@ -665,7 +665,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
       bodyContent: `<a class="plausible-event-key=value" href="${targetPage.url}">Click to subscribe</a>`
     })
     await page.goto(url)
@@ -690,7 +690,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
       bodyContent: `
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <a class="plausible-event-name=link+click" href="${targetPage.url}">

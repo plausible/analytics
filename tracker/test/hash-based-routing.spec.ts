@@ -97,7 +97,7 @@ test.describe('hash-based routing (legacy)', () => {
   }, { testId }) => {
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script data-domain="${DEFAULT_CONFIG.domain}" defer src="/tracker/js/plausible.hash.local.js"></script>`,
+      scriptConfig: `<script data-domain="${DEFAULT_CONFIG.domain}" async src="/tracker/js/plausible.hash.local.js"></script>`,
       bodyContent: ''
     })
 

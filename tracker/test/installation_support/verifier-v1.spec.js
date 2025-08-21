@@ -26,7 +26,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+      scriptConfig: `<script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
@@ -59,7 +59,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
           <script>
             const script = document.createElement('script')
 
-            script.defer = true
+            script.async = true
             script.dataset.domain = '${SOME_DOMAIN}'
             script.src = "/tracker/js/plausible.local.manual.js"
 
@@ -101,7 +101,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      response: `<body><script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script></body>`
+      response: `<body><script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script></body>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
@@ -118,7 +118,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      response: `<head><script defer data-domain="example.org,example.com,example.net" src="/tracker/js/plausible.local.js"></script></head>`
+      response: `<head><script async data-domain="example.org,example.com,example.net" src="/tracker/js/plausible.local.js"></script></head>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: "example.com"})
@@ -135,7 +135,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      response: `<head><script defer data-domain="example.org,example.com,example.net" src="/tracker/js/plausible.local.js"></script></head>`
+      response: `<head><script async data-domain="example.org,example.com,example.net" src="/tracker/js/plausible.local.js"></script></head>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: "example.typo"})
@@ -149,7 +149,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
 
   test('proxyLikely is false when every snippet starts with an official plausible.io URL', async ({ page }, { testId }) => {
     const prodScriptLocation = 'https://plausible.io/js/'
-    
+
     mockEventResponseSuccess(page)
 
     // We speed up the test by serving "just some script"
@@ -161,7 +161,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
         "COMPILE_PLAUSIBLE_LEGACY_VARIANT": true
       }
     }, { returnCode: true })
-    
+
     await page.context().route(`${prodScriptLocation}**`, async (route) => {
       await route.fulfill({
         status: 200,
@@ -173,8 +173,8 @@ test.describe('v1 verifier (basic diagnostics)', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       response: `
-        <head><script defer src="${prodScriptLocation + 'script.js'}" data-domain="${SOME_DOMAIN}"></script></head>
-        <body><script defer src="${prodScriptLocation + 'plausible.outbound-links.js'}" data-domain="${SOME_DOMAIN}"></script></body>
+        <head><script async src="${prodScriptLocation + 'script.js'}" data-domain="${SOME_DOMAIN}"></script></head>
+        <body><script async src="${prodScriptLocation + 'plausible.outbound-links.js'}" data-domain="${SOME_DOMAIN}"></script></body>
       `
     })
 
@@ -190,13 +190,13 @@ test.describe('v1 verifier (basic diagnostics)', () => {
       testId,
       response: `
         <head>
-        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
-        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        <script async data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        <script async data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
         </head>
         <body>
-        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
-        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
-        <script defer data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        <script async data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        <script async data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
+        <script async data-domain="example.com" src="/tracker/js/plausible.local.js"></script>
         </body>
       `
     })
@@ -215,7 +215,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-domain="wrong.com" src="/tracker/js/plausible.local.js"></script>`
+      scriptConfig: `<script async data-domain="wrong.com" src="/tracker/js/plausible.local.js"></script>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: 'right.com'})
@@ -228,7 +228,7 @@ test.describe('v1 verifier (basic diagnostics)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-domain="www.right.com" src="/tracker/js/plausible.local.js"></script>`
+      scriptConfig: `<script async data-domain="www.right.com" src="/tracker/js/plausible.local.js"></script>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: 'right.com'})
@@ -246,7 +246,7 @@ test.describe('v1 verifier (window.plausible)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+      scriptConfig: `<script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
@@ -260,7 +260,7 @@ test.describe('v1 verifier (window.plausible)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+      scriptConfig: `<script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
@@ -276,7 +276,7 @@ test.describe('v1 verifier (window.plausible)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+      scriptConfig: `<script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
     const result = await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
@@ -295,7 +295,7 @@ test.describe('v1 verifier (WordPress detection)', () => {
       response: `
         <head>
           <meta name="plausible-analytics-version" content="2.3.1">
-          <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+          <script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
         </head>
       `
     })
@@ -313,7 +313,7 @@ test.describe('v1 verifier (WordPress detection)', () => {
       testId,
       response: `
         <head>
-          <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+          <script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
         </head>
         <body>
           <script src="/wp-content/themes/mytheme/script.js"></script>
@@ -337,7 +337,7 @@ test.describe('v1 verifier (GTM detection)', () => {
       response: `
         <html>
         <head>
-          <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+          <script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
           <!-- Google Tag Manager -->
           <script>
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -377,7 +377,7 @@ test.describe('v1 verifier (cookieBanner detection)', () => {
       response: `
         <html>
           <head>
-            <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+            <script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
           </head>
           <body>
             <script>
@@ -407,11 +407,11 @@ test.describe('v1 verifier (manualScriptExtension detection)', () => {
       response: `
         <html>
           <head>
-            <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
-            <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.hash.js"></script>
+            <script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>
+            <script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.hash.js"></script>
           </head>
           <body>
-            <script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.manual.js"></script>
+            <script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.manual.js"></script>
           </body>
         </html>
       `
@@ -433,7 +433,7 @@ test.describe('v1 verifier (unknownAttributes detection)', () => {
         <html>
           <head>
             <script
-              defer
+              async
               type="text/javascript"
               data-cfasync="false"
               data-api="some"
@@ -460,7 +460,7 @@ test.describe('v1 verifier (unknownAttributes detection)', () => {
       response: `
         <html>
           <head>
-            <script defer weird="one" data-domain="${SOME_DOMAIN}" src="/tracker/js/script.js"></script>
+            <script async weird="one" data-domain="${SOME_DOMAIN}" src="/tracker/js/script.js"></script>
           </head>
         </html>
       `
@@ -481,7 +481,7 @@ test.describe('v1 verifier (logging)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+      scriptConfig: `<script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
     await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN, debug: true})
@@ -498,7 +498,7 @@ test.describe('v1 verifier (logging)', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
+      scriptConfig: `<script async data-domain="${SOME_DOMAIN}" src="/tracker/js/plausible.local.js"></script>`
     })
 
     await verifyV1(page, {url: url, expectedDataDomain: SOME_DOMAIN})
