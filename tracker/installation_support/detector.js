@@ -25,8 +25,8 @@ window.scanPageBeforePlausibleInstallation = async function({ detectV1, debug, t
   const gtmLikely = checkGTM(document)
   log(`gtmLikely: ${gtmLikely}`)
 
-  const npmLikely = checkNPM(document)
-  log(`npmLikely: ${npmLikely}`)
+  const npm = checkNPM(document)
+  log(`npm: ${npm}`)
 
   return {
     data: {
@@ -35,7 +35,7 @@ window.scanPageBeforePlausibleInstallation = async function({ detectV1, debug, t
       wordpressPlugin: wordpressPlugin,
       wordpressLikely: wordpressLikely,
       gtmLikely: gtmLikely,
-      npmLikely: npmLikely
+      npm: npm
     }
   }
 }

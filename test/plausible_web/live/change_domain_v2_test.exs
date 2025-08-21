@@ -73,7 +73,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       stub_detection_result(%{
         "v1Detected" => false,
         "gtmLikely" => false,
-        "npmLikely" => false,
+        "npm" => false,
         "wordpressLikely" => false,
         "wordpressPlugin" => false
       })
@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       stub_detection_result(%{
         "v1Detected" => false,
         "gtmLikely" => false,
-        "npmLikely" => false,
+        "npm" => false,
         "wordpressLikely" => false,
         "wordpressPlugin" => false
       })
@@ -149,7 +149,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       stub_detection_result(%{
         "v1Detected" => true,
         "gtmLikely" => false,
-        "npmLikely" => false,
+        "npm" => false,
         "wordpressLikely" => true,
         "wordpressPlugin" => true
       })
@@ -177,7 +177,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       stub_detection_result(%{
         "v1Detected" => true,
         "gtmLikely" => false,
-        "npmLikely" => false,
+        "npm" => false,
         "wordpressLikely" => false,
         "wordpressPlugin" => false
       })
@@ -203,7 +203,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       stub_detection_result(%{
         "v1Detected" => false,
         "gtmLikely" => false,
-        "npmLikely" => true,
+        "npm" => true,
         "wordpressLikely" => false,
         "wordpressPlugin" => false
       })
@@ -228,7 +228,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       stub_detection_result(%{
         "v1Detected" => false,
         "gtmLikely" => false,
-        "npmLikely" => false,
+        "npm" => false,
         "wordpressLikely" => false,
         "wordpressPlugin" => false
       })

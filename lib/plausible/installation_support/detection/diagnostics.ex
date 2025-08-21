@@ -9,7 +9,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
             gtm_likely: nil,
             wordpress_likely: nil,
             wordpress_plugin: nil,
-            npm_likely: nil,
+            npm: nil,
             service_error: nil
 
   @type t :: %__MODULE__{}
@@ -42,7 +42,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
 
   def interpret(
         %__MODULE__{
-          npm_likely: true,
+          npm: true,
           service_error: nil
         } = diagnostics,
         _url
@@ -89,7 +89,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
       data: %{
         v1_detected: diagnostics.v1_detected,
         wordpress_plugin: diagnostics.wordpress_plugin,
-        npm_likely: diagnostics.npm_likely,
+        npm: diagnostics.npm,
         suggested_technology: suggested_technology
       }
     }

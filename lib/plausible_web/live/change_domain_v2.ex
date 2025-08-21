@@ -113,7 +113,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     case assigns.detection_result do
       %{v1_detected: true, wordpress_plugin: true} -> wordpress_plugin_notice(assigns)
       %{v1_detected: true, wordpress_plugin: false} -> generic_notice(assigns)
-      %{v1_detected: false, npm_likely: true} -> generic_notice(assigns)
+      %{v1_detected: false, npm: true} -> generic_notice(assigns)
       _ -> ~H""
     end
   end

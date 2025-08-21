@@ -52,10 +52,10 @@ test.describe('detector.js (tech recognition)', () => {
     expect(result.data.wordpressPlugin).toBe(false)
     expect(result.data.wordpressLikely).toBe(false)
     expect(result.data.gtmLikely).toBe(false)
-    expect(result.data.npmLikely).toBe(false)
+    expect(result.data.npm).toBe(false)
   })
 
-  test('npmLikely is reported correctly', async ({ page }, { testId }) => {
+  test('npm is reported correctly', async ({ page }, { testId }) => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: `<script type="module">import {init} from "/tracker/js/npm_package/plausible.js"; init({domain: "abc.de"});</script>`
@@ -66,7 +66,7 @@ test.describe('detector.js (tech recognition)', () => {
     expect(result.data.wordpressPlugin).toBe(false)
     expect(result.data.wordpressLikely).toBe(false)
     expect(result.data.gtmLikely).toBe(false)
-    expect(result.data.npmLikely).toBe(true)
+    expect(result.data.npm).toBe(true)
   })
 })
 
@@ -92,7 +92,7 @@ test.describe('detector.js (v1 detection)', () => {
     expect(result.data.wordpressPlugin).toBe(true)
     expect(result.data.wordpressLikely).toBe(true)
     expect(result.data.gtmLikely).toBe(true)
-    expect(result.data.npmLikely).toBe(false)
+    expect(result.data.npm).toBe(false)
   })
 
   test('v1Detected is false when plausible function does not exist', async ({ page }, { testId }) => {
@@ -107,7 +107,7 @@ test.describe('detector.js (v1 detection)', () => {
     expect(result.data.wordpressPlugin).toBe(false)
     expect(result.data.wordpressLikely).toBe(false)
     expect(result.data.gtmLikely).toBe(false)
-    expect(result.data.npmLikely).toBe(false)
+    expect(result.data.npm).toBe(false)
   })
 
   test('v1Detected is false when v2 plausible installed', async ({ page }, { testId }) => {
