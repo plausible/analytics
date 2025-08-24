@@ -185,6 +185,29 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
     end
 
+    test "error when Browserless encounters a network error during verification" do
+      expected_domain = "example.com"
+      url_to_verify = "https://#{expected_domain}"
+
+      diagnostics = %Diagnostics{
+        plausible_is_on_window: nil,
+        plausible_is_initialized: nil,
+        service_error: "net::ERR_CONNECTION_CLOSED at https://example.com"
+      }
+
+      assert_matches %Result{
+                       ok?: false,
+                       errors: [^any(:string, ~r/.*couldn't verify your website.*/)],
+                       recommendations: [
+                         %{
+                           text: ^any(:string, ~r/.*verify your integration manually.*/),
+                           url:
+                             "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                         }
+                       ]
+                     } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
+    end
+
     test "unknown error when no specific case matches" do
       expected_domain = "example.com"
       url_to_verify = "https://#{expected_domain}"
