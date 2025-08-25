@@ -242,7 +242,8 @@ defmodule Plausible.Exports do
       filename.("imported_devices") => export_devices_q(site_id, timezone, date_range),
       filename.("imported_browsers") => export_browsers_q(site_id, timezone, date_range),
       filename.("imported_operating_systems") =>
-        export_operating_systems_q(site_id, timezone, date_range)
+        export_operating_systems_q(site_id, timezone, date_range),
+      filename.("imported_custom_props") => export_custom_props_q(site_id, timezone, date_range)
     }
   end
 
@@ -578,6 +579,30 @@ defmodule Plausible.Exports do
           ),
           :path
         ),
+        visitors(e),
+        selected_as(scale_sample(fragment("count()")), :events)
+      ]
+  end
+
+  defp export_custom_props_q(site_id, timezone, date_range) do
+    from e in sampled("events_v2"),
+      join: p in "meta.key",
+      on: true,
+      hints: "ARRAY",
+      join: v in "meta.value",
+      on: true,
+      hints: "ARRAY",
+      where: ^export_filter(site_id, date_range),
+      group_by: [
+        selected_as(:date),
+        selected_as(:property),
+        selected_as(:value)
+      ],
+      order_by: selected_as(:date),
+      select: [
+        date(e.timestamp, ^timezone),
+        selected_as(fragment("?", p), :property),
+        selected_as(fragment("?", v), :value),
         visitors(e),
         selected_as(scale_sample(fragment("count()")), :events)
       ]
