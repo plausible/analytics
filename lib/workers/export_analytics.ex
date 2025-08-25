@@ -33,7 +33,7 @@ defmodule Plausible.Workers.ExportAnalytics do
     %Date.Range{} = date_range = Exports.date_range(site.id, site.timezone)
 
     queries =
-      Exports.export_queries(site_id,
+      Exports.export_queries(site,
         date_range: date_range,
         timezone: site.timezone,
         extname: ".csv"
