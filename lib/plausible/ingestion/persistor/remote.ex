@@ -71,7 +71,7 @@ defmodule Plausible.Ingestion.Persistor.Remote do
         {:error, :invalid_web_encoding}
     end
   catch
-    _ ->
+    _, _ ->
       {:error, :invalid_payload}
   end
 

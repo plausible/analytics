@@ -6,15 +6,33 @@ defmodule Plausible.Ingestion.Persistor.EmbeddedWithRelay do
   alias Plausible.Ingestion.Persistor
 
   def persist_event(event, previous_user_id, opts) do
+    {sync?, opts} = Keyword.pop(opts, :sync?, false)
+
+    if sync? do
+      persist_remote_event_sync(event, previous_user_id, opts)
+    else
+      persist_remote_event_async(event, previous_user_id, opts)
+    end
+
+    Persistor.Embedded.persist_event(event, previous_user_id, opts)
+  end
+
+  defp persist_remote_event_async(event, previous_user_id, opts) do
     Task.start(fn ->
       Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
         telemetry_pipeline_step_duration(),
         fn -> do_persist_event(event, previous_user_id, opts) end,
-        %{step: "register_session"}
+        %{step: "remote_register_session"}
       )
     end)
+  end
 
-    Persistor.Embedded.persist_event(event, previous_user_id, opts)
+  defp persist_remote_event_sync(event, previous_user_id, opts) do
+    Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
+      telemetry_pipeline_step_duration(),
+      fn -> do_persist_event(event, previous_user_id, opts) end,
+      %{step: "remote_register_session"}
+    )
   end
 
   defp do_persist_event(event, previous_user_id, opts) do
