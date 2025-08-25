@@ -343,7 +343,7 @@ defmodule Plausible.Ingestion.EventTest do
     Task.start(fn ->
       assert {:ok, %{buffered: [_event], dropped: []}} =
                Event.build_and_buffer(first_request,
-                 session_write_buffer_insert: very_slow_buffer
+                 persistor_opts: [session_write_buffer_insert: very_slow_buffer]
                )
     end)
 
@@ -351,7 +351,7 @@ defmodule Plausible.Ingestion.EventTest do
       :slow_buffer_insert_started ->
         assert {:ok, %{buffered: [], dropped: [dropped]}} =
                  Event.build_and_buffer(second_request,
-                   session_write_buffer_insert: very_slow_buffer
+                   persistor_opts: [session_write_buffer_insert: very_slow_buffer]
                  )
 
         assert dropped.drop_reason == :lock_timeout
