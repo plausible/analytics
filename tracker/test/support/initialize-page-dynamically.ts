@@ -1,6 +1,5 @@
 import { Page } from '@playwright/test'
 import { ScriptConfig } from './types'
-import { compileWebSnippet } from '../../compiler'
 
 interface SharedOptions {
   /** unique ID that becomes part of the dynamic page URL */
@@ -41,7 +40,13 @@ const RESPONSE_BODY_TEMPLATE = `
 </html>
 `
 
-const PLAUSIBLE_WEB_SNIPPET = compileWebSnippet()
+const PLAUSIBLE_WEB_SNIPPET = `
+<script defer src="<%= plausible_script_url %>"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
+`
 
 export function serializeWithFunctions(obj: Record<string, any>): string {
   const functions: Record<string, string> = {}
