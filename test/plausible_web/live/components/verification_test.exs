@@ -6,11 +6,11 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
   alias Plausible.InstallationSupport.{State, LegacyVerification}
 
   @component PlausibleWeb.Live.Components.Verification
-  @progress ~s|#progress-indicator p#progress|
+  @progress ~s|#verification-ui p#progress|
 
-  @pulsating_circle ~s|div#progress-indicator div.pulsating-circle|
-  @check_circle ~s|div#progress-indicator #check-circle|
-  @error_circle ~s|div#progress-indicator #error-circle|
+  @pulsating_circle ~s|div#verification-ui div.pulsating-circle|
+  @check_circle ~s|div#verification-ui #check-circle|
+  @error_circle ~s|div#verification-ui #error-circle|
   @recommendations ~s|#recommendation|
   @super_admin_report ~s|#super-admin-report|
 

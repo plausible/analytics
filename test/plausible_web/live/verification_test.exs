@@ -11,9 +11,9 @@ defmodule PlausibleWeb.Live.VerificationTest do
   # @verify_button ~s|button#launch-verification-button[phx-click="launch-verification"]|
   @retry_button ~s|a[phx-click="retry"]|
   # @go_to_dashboard_button ~s|a[href$="?skip_to_dashboard=true"]|
-  @progress ~s|#progress-indicator p#progress|
-  @awaiting ~s|#progress-indicator p#awaiting|
-  @heading ~s|#progress-indicator h2|
+  @progress ~s|#verification-ui p#progress|
+  @awaiting ~s|#verification-ui p#awaiting|
+  @heading ~s|#verification-ui h2|
 
   describe "GET /:domain" do
     @tag :ee_only
