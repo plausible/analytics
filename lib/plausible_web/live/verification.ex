@@ -45,7 +45,8 @@ defmodule PlausibleWeb.Live.Verification do
         slowdown: private[:slowdown] || 500,
         flow: params["flow"] || "",
         checks_pid: nil,
-        attempts: 0
+        attempts: 0,
+        polling_pageviews?: false
       )
 
     on_ee do
@@ -198,15 +199,21 @@ defmodule PlausibleWeb.Live.Verification do
       if has_pageviews?(socket.assigns.site) do
         redirect_to_stats(socket)
       else
-        schedule_pageviews_check(socket)
+        socket
+        |> assign(polling_pageviews?: false)
+        |> schedule_pageviews_check()
       end
 
     {:noreply, socket}
   end
 
   defp schedule_pageviews_check(socket) do
-    Process.send_after(self(), :check_pageviews, socket.assigns.delay * 2)
-    socket
+    if socket.assigns.polling_pageviews? do
+      socket
+    else
+      Process.send_after(self(), :check_pageviews, socket.assigns.delay * 2)
+      assign(socket, polling_pageviews?: true)
+    end
   end
 
   defp redirect_to_stats(socket) do
