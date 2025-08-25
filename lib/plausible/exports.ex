@@ -236,8 +236,7 @@ defmodule Plausible.Exports do
       filename.("imported_pages") => export_pages_q(site, timezone, date_range),
       filename.("imported_entry_pages") => export_entry_pages_q(site, timezone, date_range),
       filename.("imported_exit_pages") => export_exit_pages_q(site, timezone, date_range),
-      filename.("imported_custom_events") =>
-        export_custom_events_q(site, timezone, date_range),
+      filename.("imported_custom_events") => export_custom_events_q(site, timezone, date_range),
       filename.("imported_locations") => export_locations_q(site, timezone, date_range),
       filename.("imported_devices") => export_devices_q(site, timezone, date_range),
       filename.("imported_browsers") => export_browsers_q(site, timezone, date_range),
@@ -585,27 +584,34 @@ defmodule Plausible.Exports do
   end
 
   defp export_custom_props_q(site, timezone, date_range) do
-    from e in sampled("events_v2"),
-      join: p in "meta.key",
-      on: true,
-      hints: "ARRAY",
-      join: v in "meta.value",
-      on: true,
-      hints: "ARRAY",
-      where: ^export_filter(site.id, date_range),
-      group_by: [
-        selected_as(:date),
-        selected_as(:property),
-        selected_as(:value)
-      ],
-      order_by: selected_as(:date),
-      select: [
-        date(e.timestamp, ^timezone),
-        selected_as(fragment("?", p), :property),
-        selected_as(fragment("?", v), :value),
-        visitors(e),
-        selected_as(scale_sample(fragment("count()")), :events)
-      ]
+    query =
+      from e in sampled("events_v2"),
+        join: p in "meta.key",
+        on: true,
+        hints: "ARRAY",
+        join: v in "meta.value",
+        on: true,
+        hints: "ARRAY",
+        where: ^export_filter(site.id, date_range),
+        group_by: [
+          selected_as(:date),
+          selected_as(:property),
+          selected_as(:value)
+        ],
+        order_by: selected_as(:date),
+        select: [
+          date(e.timestamp, ^timezone),
+          selected_as(fragment("?", p), :property),
+          selected_as(fragment("?", v), :value),
+          visitors(e),
+          selected_as(scale_sample(fragment("count()")), :events)
+        ]
+
+    if Plausible.Billing.Feature.Props.enabled?(site) do
+      query
+    else
+      where(query, [], selected_as(:property) in ^Plausible.Props.internal_keys())
+    end
   end
 
   defp export_locations_q(site, timezone, date_range) do
