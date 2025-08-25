@@ -70,6 +70,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       <.focus_box>
         <.async_result :let={recommended_installation_type} assign={@recommended_installation_type}>
           <:loading>
+            <div class="text-center text-gray-500">
+              {if(@flow == Flows.review(),
+                do: "Scanning your site to detect how Plausible is integrated...",
+                else: "Determining the simplest integration path for your website..."
+              )}
+            </div>
             <div class="flex items-center justify-center py-8">
               <.spinner class="w-6 h-6" />
             </div>
