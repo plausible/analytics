@@ -189,7 +189,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -226,7 +226,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -266,7 +266,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -301,7 +301,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -346,7 +346,7 @@ for (const mode of ['legacy', 'web']) {
               autoCapturePageviews: false
             },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.manual.js"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.manual.js"></script>'
           },
           mode
         ),
@@ -392,7 +392,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -426,7 +426,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -472,7 +472,7 @@ for (const mode of ['legacy', 'web']) {
               fileDownloads: { fileExtensions: ['iso'] }
             },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.js" file-types="iso"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.js" file-types="iso"></script>'
           },
           mode
         ),
@@ -513,7 +513,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script async src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -602,7 +602,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       const { url } = await initializePageDynamically(page, {
         testId,
         scriptConfig:
-          '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
+          '<script id="plausible" async src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
         bodyContent: `<a ${linkAttributes} href="${filePath}"><h1>📥</h1></a>`
       })
       await page.goto(url)
@@ -667,7 +667,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       const { url } = await initializePageDynamically(page, {
         testId,
         scriptConfig:
-          '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
+          '<script id="plausible" async src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
         bodyContent: `<a href="${filePath}">📥</a>`
       })
       await page.goto(url)
@@ -720,7 +720,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
+        '<script id="plausible" async src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
       bodyContent: `<a href="${filePath}">📥</a>`
     })
     await page.goto(url)

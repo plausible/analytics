@@ -6,7 +6,7 @@ test.describe('combination of hash and exclusions script extensions', () => {
   test('excludes by hash part of the URL', async ({ page }, { testId }) => {
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script defer data-exclude='/**#*/hash/**/ignored' src="/tracker/js/plausible.exclusions.hash.local.js"></script>`,
+      scriptConfig: `<script async data-exclude='/**#*/hash/**/ignored' src="/tracker/js/plausible.exclusions.hash.local.js"></script>`,
       bodyContent: ''
     })
     await expectPlausibleInAction(page, {

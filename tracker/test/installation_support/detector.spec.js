@@ -80,7 +80,7 @@ test.describe('detector.js (v1 detection)', () => {
             <link rel="icon" href="https://example.com/wp-content/uploads/favicon.ico" sizes="32x32">
             <meta name="plausible-analytics-version" content="2.3.1">
             <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-123"></script>
-            <script defer src="/tracker/js/plausible.local.manual.js" data-domain="abc.de"></script>
+            <script async src="/tracker/js/plausible.local.manual.js" data-domain="abc.de"></script>
           </head>
         </html>
       `

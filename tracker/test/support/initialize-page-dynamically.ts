@@ -10,7 +10,7 @@ interface SharedOptions {
 }
 
 interface TemplatedResponse {
-  /** string like `<script defer id="plausible" src="/plausible.compat.local.js"></script>` or ScriptConfig to be set to web snippet */
+  /** string like `<script async id="plausible" src="/plausible.compat.local.js"></script>` or ScriptConfig to be set to web snippet */
   scriptConfig: ScriptConfig | string
   /** vanilla HTML string, which can contain JS, will be set in the body of the page */
   bodyContent: string
@@ -41,7 +41,7 @@ const RESPONSE_BODY_TEMPLATE = `
 `
 
 const PLAUSIBLE_WEB_SNIPPET = `
-<script defer src="<%= plausible_script_url %>"></script>
+<script async src="<%= plausible_script_url %>"></script>
 <script>
   window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
   plausible.init()

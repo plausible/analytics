@@ -143,15 +143,15 @@ test.describe('scroll depth (engagement events)', () => {
   })
 
 
-  test('gets correct scroll depth when script has no defer', async ({ page }) => {
+  test('gets correct scroll depth when script has no async', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await page.goto('/no-defer.html')
+        await page.goto('/no-async.html')
         await hideAndShowCurrentTab(page)
       },
       expectedRequests: [
         {n: 'pageview'},
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/no-defer.html`, sd: 100}
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/no-async.html`, sd: 100}
       ],
     })
 

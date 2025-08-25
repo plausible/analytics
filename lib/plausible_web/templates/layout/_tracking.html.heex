@@ -6,7 +6,7 @@
   >
     var scriptParams = JSON.parse(document.currentScript.dataset.scriptParams)
 
-    window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)},window.plausible.init=function(i){window.plausible.o=i||{}};var script=document.createElement("script");script.type="text/javascript",script.defer=!0,script.src=scriptParams.script_url;var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(script,r);
+    window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)},window.plausible.init=function(i){window.plausible.o=i||{}};var script=document.createElement("script");script.type="text/javascript",script.async=!0,script.src=scriptParams.script_url;var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(script,r);
 
     plausible.init({
       captureOnLocalhost: scriptParams.capture_on_localhost,

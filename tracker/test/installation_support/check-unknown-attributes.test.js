@@ -13,7 +13,7 @@ test.describe('checkUnknownAttributes', () => {
       attributes: [
         { name: 'data-domain', value: 'example.com' },
         { name: 'src', value: 'https://plausible.io/js/script.js' },
-        { name: 'defer', value: '' },
+        { name: 'async', value: '' },
         { name: 'data-api', value: '/api/event' },
         { name: 'data-exclude', value: '/admin/*' },
         { name: 'data-include', value: '/blog/*' },
@@ -105,7 +105,7 @@ test.describe('checkUnknownAttributes', () => {
       attributes: [
         { name: 'data-domain', value: 'example.com' },
         { name: 'src', value: 'https://plausible.io/js/script.js' },
-        { name: 'defer', value: '' }
+        { name: 'async', value: '' }
       ]
     }
 
