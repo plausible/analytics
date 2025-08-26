@@ -123,6 +123,21 @@ defmodule PlausibleWeb.Live.Components.Verification do
       </div>
       <:footer>
         <.focus_list>
+          <:item :if={
+            @interpretation && is_map(@interpretation.data) &&
+              @interpretation.data[:offer_custom_url_input]
+          }>
+            Is your website located at a different URL?
+            <.styled_link href={
+              Routes.site_path(PlausibleWeb.Endpoint, :verification, @domain,
+                flow: @flow,
+                installation_type: @installation_type,
+                custom_url: true
+              )
+            }>
+              Click here
+            </.styled_link>
+          </:item>
           <:item :if={ee?() and @attempts >= 3}>
             <b>Need further help with your installation?</b>
             <.styled_link href="https://plausible.io/contact">

@@ -198,27 +198,38 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       ),
       do: error(@error_gtm_selected_maybe_cookie_banner)
 
-  @error_domain_not_found Error.new!(%{
-                            message: "We couldn't find your website",
-                            recommendation:
-                              "Please check that the domain you entered is correct and reachable publicly via either the naked domain, or with a \"www.\" prefix. If it's intentionally private, you'll need to verify that Plausible works manually",
-                            url:
-                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                          })
-  def interpret(%__MODULE__{service_error: service_error}, _expected_domain, _url)
-      when service_error in [:domain_not_found, :invalid_url],
-      do: error(@error_domain_not_found)
+  def interpret(%__MODULE__{service_error: service_error}, expected_domain, url)
+      when service_error in [:domain_not_found, :invalid_url] do
+    attempted_url = if url, do: url, else: "https://#{expected_domain}"
 
-  @error_browserless_network Error.new!(%{
-                               message: "We couldn't verify your website",
-                               recommendation:
-                                 "Our verification tool encountered a network error while trying to verify your website. Please verify your integration manually",
-                               url:
-                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                             })
+    %Error{
+      message: "We couldn't find your website at #{attempted_url}",
+      recommendation:
+        "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
+      url:
+        "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+    }
+    |> error()
+    |> struct!(data: %{offer_custom_url_input: true})
+  end
 
-  def interpret(%__MODULE__{service_error: "net::" <> _}, _expected_domain, _url) do
-    error(@error_browserless_network)
+  def interpret(%__MODULE__{service_error: "net::" <> _}, expected_domain, url) do
+    attempted_url =
+      if url do
+        String.split(url, "?") |> List.first()
+      else
+        "https://#{expected_domain}"
+      end
+
+    %Error{
+      message: "We couldn't verify your website at #{attempted_url}",
+      recommendation:
+        "Our verification tool encountered a network error while trying to verify your website. Please verify your integration manually",
+      url:
+        "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+    }
+    |> error()
+    |> struct!(data: %{offer_custom_url_input: true})
   end
 
   @unknown_error Error.new!(%{
