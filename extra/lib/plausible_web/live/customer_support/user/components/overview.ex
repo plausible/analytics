@@ -102,15 +102,9 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
   def handle_event("force-disable-2fa", _params, socket) do
     user = socket.assigns.user
 
-    case TOTP.force_disable(user) do
-      {:ok, updated_user} ->
-        send(self(), {:success, "2FA has been force disabled for this user"})
-        {:noreply, assign(socket, user: updated_user)}
-
-      {:error, reason} ->
-        send(self(), {:error, "Failed to disable 2FA: #{reason}"})
-        {:noreply, socket}
-    end
+    {:ok, updated_user} = TOTP.force_disable(user)
+    send(self(), {:success, "2FA has been force disabled for this user"})
+    {:noreply, assign(socket, user: updated_user)}
   end
 
   def handle_event("save-user", %{"user" => params}, socket) do
