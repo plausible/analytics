@@ -12,7 +12,6 @@
       <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
       <meta name="websocket-url" content={websocket_url()} />
     <% end %>
-    <meta name="color-scheme" content="light dark" />
     <meta name="robots" content={@conn.private.robots} />
 
     <PlausibleWeb.Components.Layout.favicon conn={@conn} />
