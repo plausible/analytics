@@ -232,14 +232,6 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   defp reset_component(socket) do
-    # When submitting a custom URL, disable custom_url_input mode
-    socket =
-      if socket.assigns.custom_url_input? do
-        assign(socket, custom_url_input?: false)
-      else
-        socket
-      end
-
     update_component(socket,
       message: "We're visiting your site to ensure that everything is working",
       finished?: false,
@@ -260,7 +252,9 @@ defmodule PlausibleWeb.Live.Verification do
   defp launch_delayed(socket, url_to_verify \\ nil) do
     socket =
       if is_binary(url_to_verify) do
-        assign(socket, url_to_verify: url_to_verify)
+        socket
+        |> assign(url_to_verify: url_to_verify)
+        |> assign(custom_url_input?: false)
       else
         socket
       end
