@@ -627,6 +627,28 @@ defmodule Plausible.Auth.SSOTest do
         assert team.policy.sso_session_timeout_minutes == 360
       end
 
+      test "handles empty policy default gracefully" do
+        team = new_site().team
+
+        Repo.update_all(
+          from(t in Teams.Team,
+            where: t.id == ^team.id,
+            update: [set: [policy: fragment("'{}'::json")]]
+          ),
+          []
+        )
+
+        team = Repo.reload!(team)
+
+        assert is_nil(team.policy.id)
+
+        assert {:ok, team} = SSO.update_policy(team, sso_default_role: "editor")
+
+        assert team.policy.id
+        assert team.policy.sso_default_role == :editor
+        assert team.policy.sso_session_timeout_minutes == 360
+      end
+
       test "returns changeset on invalid input" do
         team = new_site().team
 

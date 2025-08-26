@@ -120,7 +120,8 @@ defmodule Plausible.Auth.SSO do
           {:ok, Teams.Team.t()} | {:error, Ecto.Changeset.t()}
   def update_policy(team, attrs \\ []) do
     params = Map.new(attrs)
-    policy_changeset = Teams.Policy.update_changeset(team.policy, params)
+    policy = %{team.policy | id: Ecto.UUID.generate()}
+    policy_changeset = Teams.Policy.update_changeset(policy, params)
 
     changeset =
       team
