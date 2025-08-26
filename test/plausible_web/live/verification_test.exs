@@ -59,6 +59,28 @@ defmodule PlausibleWeb.Live.VerificationTest do
     end
 
     @tag :ee_only
+    test "from custom URL input form to verification", %{conn: conn, site: site} do
+      # Get liveview with ?custom_url=true query param
+      {:ok, lv, html} =
+        conn |> no_slowdown() |> live("/#{site.domain}/verification?custom_url=true")
+
+      verifying_installation_text = "Verifying your installation"
+
+      # Assert form is rendered instead of kicking of verification automatically
+      assert html =~ "Enter Your Custom URL"
+      assert html =~ ~s[value="https://#{site.domain}"]
+      assert html =~ ~s[placeholder="https://#{site.domain}"]
+      refute html =~ verifying_installation_text
+
+      # Submit custom URL form
+      html = lv |> element("form") |> render_submit(%{"custom_url" => "https://abc.de"})
+
+      # Should now show verification progress and hide custom URL form
+      assert html =~ verifying_installation_text
+      refute html =~ "Enter Your Custom URL"
+    end
+
+    @tag :ee_only
     test "eventually verifies installation", %{conn: conn, site: site} do
       stub_fetch_body(200, source(site.domain))
       stub_installation()

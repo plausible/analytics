@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
   import Phoenix.LiveViewTest, only: [render_component: 2]
   import Plausible.Test.Support.HTML
 
-  alias Plausible.InstallationSupport.{State, LegacyVerification}
+  alias Plausible.InstallationSupport.{State, LegacyVerification, Verification}
 
   @component PlausibleWeb.Live.Components.Verification
   @progress ~s|#verification-ui p#progress|
@@ -110,6 +110,35 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     html = render_component(@component, domain: "example.com", attempts: 3, finished?: true)
     assert html =~ "Need further help with your installation?"
     assert element_exists?(html, ~s|a[href="https://plausible.io/contact"]|)
+  end
+
+  test "renders link to verify installation at a different URL" do
+    interpretation =
+      Verification.Checks.interpret_diagnostics(%State{
+        url: "example.com",
+        diagnostics: %Verification.Diagnostics{
+          plausible_is_on_window: false,
+          plausible_is_initialized: false,
+          service_error: :domain_not_found
+        }
+      })
+
+    assert interpretation.data.offer_custom_url_input == true
+
+    expected_link_href =
+      PlausibleWeb.Router.Helpers.site_path(PlausibleWeb.Endpoint, :verification, "example.com")
+
+    html =
+      render_component(@component,
+        domain: "example.com",
+        finished?: true,
+        success?: false,
+        interpretation: interpretation
+      )
+
+    assert text_of_element(html, "#verify-custom-url-link") =~ "different URL?"
+    assert text_of_attr(html, "#verify-custom-url-link a", "href") =~ expected_link_href
+    assert text_of_attr(html, "#verify-custom-url-link a", "href") =~ "custom_url=true"
   end
 
   test "offers escape paths: settings and installation instructions on failure" do
