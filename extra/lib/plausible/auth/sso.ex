@@ -120,12 +120,11 @@ defmodule Plausible.Auth.SSO do
           {:ok, Teams.Team.t()} | {:error, Ecto.Changeset.t()}
   def update_policy(team, attrs \\ []) do
     params = Map.new(attrs)
-    policy_changeset = Teams.Policy.update_changeset(team.policy, params)
 
     changeset =
       team
-      |> Ecto.Changeset.change()
-      |> Ecto.Changeset.put_embed(:policy, policy_changeset)
+      |> Ecto.Changeset.cast(%{policy: params}, [])
+      |> Ecto.Changeset.cast_embed(:policy, with: &Teams.Policy.update_changeset/2)
 
     case Repo.update_with_audit(changeset, "sso_policy_updated", %{team_id: team.id}) do
       {:ok, integration} -> {:ok, integration}
@@ -143,11 +142,13 @@ defmodule Plausible.Auth.SSO do
              | :no_sso_user}
   def set_force_sso(team, mode) do
     with :ok <- check_force_sso(team, mode) do
-      policy_changeset = Teams.Policy.force_sso_changeset(team.policy, mode)
+      params = %{policy: %{force_sso: mode}}
 
       team
-      |> Ecto.Changeset.change()
-      |> Ecto.Changeset.put_embed(:policy, policy_changeset)
+      |> Ecto.Changeset.cast(params, [])
+      |> Ecto.Changeset.cast_embed(:policy,
+        with: &Teams.Policy.force_sso_changeset(&1, &2.force_sso)
+      )
       |> Repo.update_with_audit("sso_force_mode_changed", %{team_id: team.id})
     end
   end
