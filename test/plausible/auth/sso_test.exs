@@ -640,13 +640,19 @@ defmodule Plausible.Auth.SSOTest do
 
         team = Repo.reload!(team)
 
-        assert is_nil(team.policy.id)
-
         assert {:ok, team} = SSO.update_policy(team, sso_default_role: "editor")
 
-        assert team.policy.id
         assert team.policy.sso_default_role == :editor
         assert team.policy.sso_session_timeout_minutes == 360
+
+        team = Repo.reload!(team)
+
+        assert {:ok, team} = SSO.update_policy(team, sso_session_timeout_minutes: 200)
+
+        team = Repo.reload!(team)
+
+        assert team.policy.sso_default_role == :editor
+        assert team.policy.sso_session_timeout_minutes == 200
       end
 
       test "returns changeset on invalid input" do
@@ -774,7 +780,7 @@ defmodule Plausible.Auth.SSOTest do
       end
     end
 
-    describe "set_enforce_sso/2" do
+    describe "set_force_sso/2" do
       test "sets enforce mode to all_but_owners when conditions met" do
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
@@ -799,6 +805,50 @@ defmodule Plausible.Auth.SSOTest do
         assert updated_team.policy.force_sso == :all_but_owners
 
         assert audited_entry("sso_force_mode_changed", team_id: team.id, entity_id: "#{team.id}")
+      end
+
+      test "handles empty policy default gracefully" do
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
+        team = new_site(owner: owner).team
+
+        Repo.update_all(
+          from(t in Teams.Team,
+            where: t.id == ^team.id,
+            update: [set: [policy: fragment("'{}'::json")]]
+          ),
+          []
+        )
+
+        team = Repo.reload!(team)
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        assert {:ok, updated_team} = SSO.set_force_sso(team, :all_but_owners)
+
+        assert updated_team.id == team.id
+        assert updated_team.policy.force_sso == :all_but_owners
+
+        # Set another team policy setting to check if it remains intact
+        {:ok, team} = SSO.update_policy(updated_team, sso_default_role: "editor")
+
+        assert {:ok, updated_team} = SSO.set_force_sso(team, :none)
+
+        updated_team = Repo.reload!(updated_team)
+
+        assert updated_team.policy.force_sso == :none
+        assert updated_team.policy.sso_default_role == :editor
       end
 
       test "returns error when conditions not met" do
