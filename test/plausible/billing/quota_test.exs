@@ -590,7 +590,7 @@ defmodule Plausible.Billing.QuotaTest do
       subscribe_to_plan(user, "free_10k")
       team = team_of(user)
 
-      assert [Goals, Props, StatsAPI, SharedLinks] ==
+      assert [Props, StatsAPI, SharedLinks, Goals] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -613,7 +613,8 @@ defmodule Plausible.Billing.QuotaTest do
         assert [
                  Plausible.Billing.Feature.StatsAPI,
                  Plausible.Billing.Feature.Funnels,
-                 Plausible.Billing.Feature.SharedLinks
+                 Plausible.Billing.Feature.SharedLinks,
+                 Plausible.Billing.Feature.Goals
                ] ==
                  Plausible.Teams.Billing.allowed_features_for(team)
       end
@@ -662,7 +663,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       team = team_of(user)
 
-      assert [Plausible.Billing.Feature.StatsAPI] ==
+      assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Goals] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -677,7 +678,8 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert [
                Plausible.Billing.Feature.StatsAPI,
-               Plausible.Billing.Feature.SitesAPI
+               Plausible.Billing.Feature.SitesAPI,
+               Plausible.Billing.Feature.Goals
              ] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end

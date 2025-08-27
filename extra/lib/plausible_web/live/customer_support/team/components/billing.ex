@@ -190,7 +190,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
                 Plausible.Billing.Feature.list()
                 |> Enum.sort_by(fn item -> if item.name() == :stats_api, do: 0, else: 1 end)
             }
-            :if={not mod.free?()}
+            :if={mod not in Teams.Billing.free_features()}
             x-on:change="featureChangeCallback(event)"
             type="checkbox"
             value={mod in (f.source.changes[:features] || f.source.data.features || [])}

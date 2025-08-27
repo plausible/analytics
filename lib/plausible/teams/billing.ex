@@ -16,10 +16,15 @@ defmodule Plausible.Teams.Billing do
 
   require Plausible.Billing.Subscription.Status
 
+  # Features that are always available, regardless of team plan
+  @free_features [Goals]
+
   @limit_sites_since ~D[2021-05-05]
 
   @typep last_30_days_usage() :: %{:last_30_days => Quota.usage_cycle()}
   @typep monthly_pageview_usage() :: Quota.cycles_usage() | last_30_days_usage()
+
+  def free_features(), do: @free_features
 
   def grandfathered_team?(nil), do: false
 
@@ -621,29 +626,34 @@ defmodule Plausible.Teams.Billing do
   end
 
   def allowed_features_for(nil) do
-    [Goals]
+    @free_features
   end
 
   def allowed_features_for(team) do
     team = Teams.with_subscription(team)
 
-    case Plans.get_subscription_plan(team.subscription) do
-      %EnterprisePlan{features: features} ->
-        features
+    features =
+      case Plans.get_subscription_plan(team.subscription) do
+        %EnterprisePlan{features: features} ->
+          features
 
-      %Plan{features: features} ->
-        features
+        %Plan{features: features} ->
+          features
 
-      :free_10k ->
-        [Goals, Props, StatsAPI, SharedLinks]
+        :free_10k ->
+          [Props, StatsAPI, SharedLinks]
 
-      nil ->
-        if Teams.on_trial?(team) do
-          Feature.list() -- [SitesAPI, SSO]
-        else
-          [Goals]
-        end
-    end
+        nil ->
+          if Teams.on_trial?(team) do
+            Feature.list() -- [SitesAPI, SSO]
+          else
+            []
+          end
+      end
+
+    features
+    |> Enum.concat(@free_features)
+    |> Enum.uniq()
   end
 
   defp active_subscription_query(team) do
