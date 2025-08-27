@@ -108,8 +108,8 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp put_period(query, site, %{"period" => "month"} = params) do
     date = parse_single_date(query, params)
-    start_date = Timex.beginning_of_month(date)
-    end_date = Timex.end_of_month(date)
+    start_date = Date.beginning_of_month(date)
+    end_date = Date.end_of_month(date)
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
@@ -122,11 +122,11 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end_date =
       parse_single_date(query, params)
       |> Date.shift(month: -1)
-      |> Timex.end_of_month()
+      |> Date.end_of_month()
 
     start_date =
       Date.shift(end_date, month: -5)
-      |> Timex.beginning_of_month()
+      |> Date.beginning_of_month()
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
@@ -139,11 +139,11 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end_date =
       parse_single_date(query, params)
       |> Date.shift(month: -1)
-      |> Timex.end_of_month()
+      |> Date.end_of_month()
 
     start_date =
       Date.shift(end_date, month: -11)
-      |> Timex.beginning_of_month()
+      |> Date.beginning_of_month()
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
