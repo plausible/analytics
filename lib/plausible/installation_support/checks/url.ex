@@ -15,7 +15,7 @@ defmodule Plausible.InstallationSupport.Checks.Url do
   @spec perform(Plausible.InstallationSupport.State.t()) ::
           Plausible.InstallationSupport.State.t()
   def perform(%State{url: url} = state) when is_binary(url) do
-    with {:ok, %URI{scheme: scheme} = uri} when scheme in ["https"] <- URI.new(url),
+    with {:ok, %URI{scheme: scheme} = uri} when scheme in ["http", "https"] <- URI.new(url),
          :ok <- check_domain(uri.host) do
       stripped_url = URI.to_string(%URI{uri | query: nil, fragment: nil})
       %State{state | url: stripped_url}
