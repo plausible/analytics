@@ -14,6 +14,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
             diagnostics_are_from_cache_bust: nil,
             test_event: nil,
             cookie_banner_likely: nil,
+            response_status: nil,
             service_error: nil,
             attempts: nil
 
@@ -233,6 +234,33 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     |> struct!(data: %{offer_custom_url_input: true})
   end
 
+  @error_non_200_page_response Error.new!(%{
+                                 message:
+                                   "We could not load your website to verify the installation",
+                                 recommendation:
+                                   "Your site URL (<%= @attempted_url %>) responded with status <%= @page_response_status %>. Please make sure there are no authentication requirements, firewall/CDN rules blocking our request, or errors on your server. Alternatively, you can follow our documentation and verify your installation manually",
+                                 url:
+                                   "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               })
+
+  def interpret(
+        %__MODULE__{
+          plausible_is_on_window: plausible_is_on_window,
+          plausible_is_initialized: plausible_is_initialized,
+          response_status: page_response_status
+        },
+        _expected_domain,
+        url
+      )
+      when is_binary(url) and page_response_status != 200 and plausible_is_on_window != true and
+             plausible_is_initialized != true do
+    attempted_url = String.split(url, "?") |> List.first()
+
+    @error_non_200_page_response
+    |> error(attempted_url: attempted_url, page_response_status: page_response_status)
+    |> struct!(data: %{offer_custom_url_input: true})
+  end
+
   @unknown_error Error.new!(%{
                    message: "Your Plausible integration is not working",
                    recommendation:
@@ -240,6 +268,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                    url:
                      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                  })
+
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, url) do
     Sentry.capture_message("Unhandled case for site verification (v2)",
       extra: %{
