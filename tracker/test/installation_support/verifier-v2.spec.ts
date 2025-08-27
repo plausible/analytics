@@ -65,7 +65,13 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -126,7 +132,13 @@ test.describe('installed plausible web variant', () => {
           responseStatus: undefined,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -183,7 +195,13 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 400,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -225,7 +243,13 @@ test.describe('installed plausible web variant', () => {
           responseStatus: undefined,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -288,7 +312,13 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -407,7 +437,13 @@ test.describe('installed plausible web variant', () => {
           requestUrl: undefined,
           responseStatus: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -468,7 +504,13 @@ test.describe('installed plausible web variant', () => {
           requestUrl: undefined,
           responseStatus: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -533,7 +575,13 @@ test.describe('installed plausible web variant', () => {
           },
           responseStatus: 202
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -592,7 +640,13 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -651,7 +705,13 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -710,7 +770,13 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: 500,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
@@ -760,8 +826,76 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: undefined,
           error: { message: 'Failed to fetch' }
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: {
+          handled: false,
+          error: {
+            engineLifecycle: 'started',
+            message: 'Time allocated for cookie consent engine exceeded'
+          }
+        }
       }
     })
   })
+})
+
+test.describe('cookie banners', () => {
+  for (const { url, cookieBannerTitle, expectedcookiesConsentResult } of [
+    // {
+    //   url: 'https://visitestonia.com/en',
+    //   expectedcookiesConsentResult: { cmp: 'cookiebot' }
+    // } // this site uses cookiebot but consent-o-matic is not able to accept the cookies
+    // {
+    //   url: 'https://www.vepsalainen.com/en/ee/',
+    //   cookieBannerTitle: 'We use cookies to better your user experience',
+    //   expectedcookiesConsentResult: {
+    //     handled: true,
+    //     cmp: 'cookiebot',
+    //     clicks: expect.any(Number)
+    //   }
+    // },
+    // {
+    //   url: 'https://www.swedbank.se/en',
+    //   cookieBannerTitle: 'Our cookies, your',
+    //   expectedcookiesConsentResult: {
+    //     cmp: 'auto_NO_swedbank.se_63w',
+    //     handled: true
+    //   }
+    // },
+    // {
+    //   url: 'https://www.mohito.com/ee/et/',
+    //   cookieBannerTitle: 'Luba küpsised',
+    //   expectedcookiesConsentResult: {
+    //     cmp: 'consent-o-matic',
+    //     handled: true
+    //   }
+    // },
+    {
+      url: 'https://www.yelp.ie/dublin',
+      cookieBannerTitle: 'We use cookies to deliver',
+      expectedcookiesConsentResult: {
+        cmp: 'Onetrust',
+        handled: true
+      }
+    }
+  ]) {
+    test(`accepts cookies on ${url} (${expectedcookiesConsentResult.cmp})`, async ({
+      page
+    }) => {
+      const response = await page.goto(url)
+      const responseHeaders = response?.headers() ?? {}
+      await expect(page.getByText(cookieBannerTitle)).toBeVisible()
+
+      const result = await executeVerifyV2(page, {
+        ...DEFAULT_VERIFICATION_OPTIONS,
+        timeoutMs: 2000,
+        responseHeaders
+      })
+      await expect(page.getByText(cookieBannerTitle)).not.toBeVisible()
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          cookiesConsentResult: expectedcookiesConsentResult
+        })
+      )
+    })
+  }
 })

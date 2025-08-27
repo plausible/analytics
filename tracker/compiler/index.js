@@ -8,6 +8,7 @@ import { canSkipCompile } from './can-skip-compile.js'
 import packageJson from '../package.json' with { type: 'json' }
 import progress from 'cli-progress'
 import { spawn, Worker, Pool } from "threads"
+import json from '@rollup/plugin-json'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -110,6 +111,7 @@ export function compileWebSnippet() {
 async function bundleCode(entryPoint = 'src/plausible.js') {
   const bundle = await rollup({
     input: entryPoint,
+    plugins: [json()]
   })
 
   const { output } = await bundle.generate({ format: 'esm' })

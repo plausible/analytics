@@ -1,7 +1,9 @@
 /** @typedef {import('../test/support/types').VerifyV2Args} VerifyV2Args */
 /** @typedef {import('../test/support/types').VerifyV2Result} VerifyV2Result */
-import { checkCookieBanner } from './check-cookie-banner'
 import { checkDisallowedByCSP } from './check-disallowed-by-csp'
+import AutoConsent from '../node_modules/@duckduckgo/autoconsent/dist/autoconsent.esm.js'
+import { autoconsent } from '../node_modules/@duckduckgo/autoconsent/rules/rules.json'
+import { consentomatic } from '../node_modules/@duckduckgo/autoconsent/rules/consentomatic.json'
 
 /**
  * Function that verifies if Plausible is installed correctly.
@@ -23,16 +25,22 @@ async function verifyPlausibleInstallation({
 
   const { stopRecording, getInterceptedFetch } = startRecordingEventFetchCalls()
 
-  const {
-    plausibleIsInitialized,
-    plausibleIsOnWindow,
-    plausibleVersion,
-    plausibleVariant,
-    testEvent,
-    error: testPlausibleFunctionError
-  } = await testPlausibleFunction({
-    timeoutMs
-  })
+  const [
+    {
+      plausibleIsInitialized,
+      plausibleIsOnWindow,
+      plausibleVersion,
+      plausibleVariant,
+      testEvent,
+      error: testPlausibleFunctionError
+    },
+    cookiesConsentResult
+  ] = await Promise.all([
+    testPlausibleFunction({
+      timeoutMs
+    }),
+    handleCookieConsent({ timeoutMs: Math.max(timeoutMs - 300, 100) })
+  ])
 
   if (testPlausibleFunctionError) {
     log(
@@ -61,7 +69,7 @@ async function verifyPlausibleInstallation({
       responseStatus: interceptedTestEvent?.response?.status,
       error: interceptedTestEvent?.error
     },
-    cookieBannerLikely: checkCookieBanner()
+    cookiesConsentResult
   }
 
   log({
@@ -210,6 +218,96 @@ async function testPlausibleFunction({ timeoutMs }) {
         })
       }
     })
+  })
+}
+
+async function handleCookieConsent({ timeoutMs, debug }) {
+  return new Promise((_resolve) => {
+    let resolved = false
+
+    const resolve = (payload) => {
+      if (!resolved) {
+        resolved = true
+        _resolve(payload)
+      }
+    }
+
+    try {
+      let engineLifecycle = null
+
+      const onMessage = (message) => {
+        switch (message?.type) {
+          case 'autoconsentDone':
+            resolve({ handled: true, cmp: message.cmp })
+            break
+          case 'autoconsentError':
+            resolve({
+              handled: false,
+              error: message.details
+            })
+            break
+          case 'report':
+            if (message.state.lifecycle === 'done') {
+              resolve({ handled: true })
+            } else {
+              console.log(message)
+              engineLifecycle = message.state.lifecycle
+            }
+            break
+          case undefined:
+          default:
+            break
+        }
+      }
+
+      setTimeout(() => {
+        if (!resolved) {
+          resolve({
+            handled: false,
+            error: {
+              message: 'Time allocated for cookie consent engine exceeded',
+              engineLifecycle
+            }
+          })
+        }
+      }, timeoutMs)
+
+      const engine = new AutoConsent(
+        onMessage,
+        {
+          enabled: true,
+          autoAction: 'optIn',
+          disabledCmps: [],
+          enablePrehide: false,
+          enableCosmeticRules: false,
+          enableGeneratedRules: true,
+          enableHeuristicDetection: false,
+          detectRetries: 2,
+          isMainWorld: false,
+          prehideTimeout: 0,
+          enableFilterList: false,
+          visualTest: false,
+          logs: {
+            lifecycle: debug,
+            rulesteps: debug,
+            detectionsteps: debug,
+            evals: debug,
+            errors: debug,
+            messages: debug,
+            waits: debug
+          }
+        },
+        { autoconsent, consentomatic }
+      )
+      engineLifecycle = engine.state.lifecycle
+    } catch (e) {
+      resolve({
+        handled: false,
+        error: {
+          message: 'Error initializing cookie consent engine'
+        }
+      })
+    }
   })
 }
 

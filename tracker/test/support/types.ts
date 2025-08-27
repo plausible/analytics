@@ -5,8 +5,10 @@ export type Options = {
   formSubmissions: boolean
   captureOnLocalhost: boolean
   autoCapturePageviews: boolean
-  customProperties: Record<string, any> | ((eventName: string) => Record<string, any>)
-  transformRequest: (payload: unknown) => unknown,
+  customProperties:
+    | Record<string, any>
+    | ((eventName: string) => Record<string, any>)
+  transformRequest: (payload: unknown) => unknown
   logging: boolean
 }
 
@@ -32,6 +34,19 @@ export type VerifyV2Result = {
         plausibleVariant?: string
         disallowedByCsp: boolean
         cookieBannerLikely: boolean
+        cookiesConsentResult:
+          | {
+              handled: true
+              // this is undefined if no cmp is detected and detection retries are exhausted
+              cmp?: string
+            }
+          | {
+            handled: false,
+            error: {
+              message: string
+              engineLifecycle?: string
+            }
+          }
         testEvent: {
           /**
            * window.plausible (track) callback
