@@ -17,12 +17,12 @@ defmodule Plausible.Audit do
   def list_entries_paginated(attrs, params \\ %{}) do
     attrs
     |> entries_query()
-    |> Plausible.Pagination.paginate(params, cursor_fields: [{:datetime, :asc}])
+    |> Plausible.Pagination.paginate(params, cursor_fields: [{:datetime, :desc}])
   end
 
   defp entries_query(attrs) do
     from ae in Plausible.Audit.Entry,
       where: ^attrs,
-      order_by: [asc: :datetime]
+      order_by: [desc: :datetime]
   end
 end

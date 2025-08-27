@@ -737,7 +737,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
             entity: "Plausible.Teams.Team",
             entity_id: to_string(team.id),
             team_id: team.id,
-            datetime: NaiveDateTime.shift(now, second: i)
+            datetime: NaiveDateTime.shift(now, second: 8 - i)
           }
           |> Plausible.Repo.insert!()
         end
