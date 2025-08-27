@@ -4,12 +4,8 @@ defmodule Plausible.Stats.TimeTest do
   import Plausible.Stats.Time
   alias Plausible.Stats.DateTimeRange
 
-  require Logger
-
   describe "time_labels/1" do
     test "with time:month dimension" do
-      Logger.error("hi")
-
       assert time_labels(%{
                dimensions: ["visit:device", "time:month"],
                utc_time_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-02-01], "UTC"),
