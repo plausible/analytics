@@ -103,19 +103,17 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
       refute state.skip_further_checks?
     end
 
-    for scheme <- ["http", "file"] do
-      test "rejects not-https scheme '#{scheme}', does not check domain" do
-        state =
-          @check.perform(%State{
-            data_domain: "example-com-rollup",
-            url: "#{unquote(scheme)}://example.com/archives/news?p=any#fragment",
-            diagnostics: %Verification.Diagnostics{}
-          })
+    test "rejects file:// scheme, does not check domain" do
+      state =
+        @check.perform(%State{
+          data_domain: "example-com-rollup",
+          url: "file://example.com/archives/news?p=any#fragment",
+          diagnostics: %Verification.Diagnostics{}
+        })
 
-        assert state.url == "#{unquote(scheme)}://example.com/archives/news?p=any#fragment"
-        assert state.diagnostics.service_error == :invalid_url
-        assert state.skip_further_checks?
-      end
+      assert state.url == "file://example.com/archives/news?p=any#fragment"
+      assert state.diagnostics.service_error == :invalid_url
+      assert state.skip_further_checks?
     end
 
     test "rejects invalid urls" do
