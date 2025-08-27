@@ -173,10 +173,6 @@
     "date_range_shorthand": {
       "anyOf": [
         {
-          "const": "30m",
-          "$comment": "only :internal"
-        },
-        {
           "const": "realtime",
           "$comment": "only :internal"
         },
