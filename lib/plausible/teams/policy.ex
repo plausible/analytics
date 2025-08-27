@@ -28,6 +28,7 @@ defmodule Plausible.Teams.Policy do
              only: [:force_sso, :sso_default_role, :sso_session_timeout_minutes]}
   end
 
+  @primary_key false
   embedded_schema do
     # SSO options apply to all team's integrations, should there
     # ever be more than one allowed at once.

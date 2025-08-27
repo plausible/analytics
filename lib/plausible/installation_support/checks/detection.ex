@@ -88,9 +88,6 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
       ]
       |> Keyword.merge(Application.get_env(:plausible, __MODULE__)[:req_opts] || [])
 
-    extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
-    opts = Keyword.merge(opts, extra_opts)
-
     case Req.post(BrowserlessConfig.browserless_function_api_endpoint(), opts) do
       {:ok, %{body: body, status: status}} ->
         handle_browserless_response(state, body, status)

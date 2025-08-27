@@ -29,134 +29,175 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
   def render(assigns) do
     ~H"""
-    <div id="progress-indicator">
-      <.focus_box>
-        <div
-          :if={not @finished?}
-          class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-gray-700"
-        >
-          <div class="block pulsating-circle"></div>
-        </div>
+    <div id="verification-ui">
+      <.render_progress :if={not @finished?} message={@message} />
+      <.render_success
+        :if={@finished? and @success?}
+        awaiting_first_pageview?={@awaiting_first_pageview?}
+        domain={@domain}
+      />
+      <.render_failed
+        :if={@finished? and not @success?}
+        interpretation={@interpretation}
+        attempts={@attempts}
+        domain={@domain}
+        flow={@flow}
+        installation_type={@installation_type}
+      />
+      <.render_super_admin_diagnostics
+        :if={not is_nil(@verification_state) && @super_admin? && @finished?}
+        verification_state={@verification_state}
+      />
+    </div>
+    """
+  end
 
-        <div
-          :if={@finished? and @success?}
-          class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500"
-          id="check-circle"
-        >
-          <Heroicons.check_badge class="h-6 w-6 text-green-600 bg-green-100 dark:bg-green-500 dark:text-green-200" />
-        </div>
+  defp render_progress(assigns) do
+    ~H"""
+    <.focus_box>
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-gray-700">
+        <div class="block pulsating-circle"></div>
+      </div>
+      <div class="mt-8">
+        <.title>Verifying your installation</.title>
+        <p class="text-sm mt-4 animate-pulse" id="progress">{@message}</p>
+      </div>
+    </.focus_box>
+    """
+  end
 
-        <div
-          :if={@finished? and not @success?}
-          class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-200"
-          id="error-circle"
-        >
-          <Heroicons.exclamation_triangle class="h-6 w-6 text-red-600 bg-red-100 dark:bg-red-200 dark:text-red-800" />
-        </div>
+  defp render_success(assigns) do
+    ~H"""
+    <.focus_box>
+      <div
+        class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500"
+        id="check-circle"
+      >
+        <Heroicons.check_badge class="h-6 w-6 text-green-600 bg-green-100 dark:bg-green-500 dark:text-green-200" />
+      </div>
 
-        <div class="mt-8">
-          <.title>
-            <span :if={@finished? and @success?}>Success!</span>
-            <span :if={not @finished?}>Verifying your installation</span>
+      <div class="mt-8">
+        <.title>Success!</.title>
+        <p class="text-sm mt-4">
+          Your installation is working and visitors are being counted accurately
+        </p>
+        <p :if={@awaiting_first_pageview?} id="awaiting" class="text-sm mt-4 animate-pulse">
+          Awaiting your first pageview
+        </p>
+      </div>
+      <.button_link
+        mt?={false}
+        href={"/#{URI.encode_www_form(@domain)}?skip_to_dashboard=true"}
+        class="w-full font-bold mb-4"
+      >
+        Go to the dashboard
+      </.button_link>
+    </.focus_box>
+    """
+  end
 
-            <span :if={@finished? and not @success? and @interpretation}>
-              {List.first(@interpretation.errors)}
-            </span>
-          </.title>
-          <p :if={@finished? and @success?} id="progress" class="text-sm mt-4">
-            Your installation is working and visitors are being counted accurately
-          </p>
-          <p
-            :if={@finished? and @success? and @awaiting_first_pageview?}
-            id="awaiting"
-            class="text-sm mt-4 animate-pulse"
-          >
-            Awaiting your first pageview
-          </p>
-          <p :if={not @finished?} class="text-sm mt-4 animate-pulse" id="progress">{@message}</p>
+  defp render_failed(assigns) do
+    ~H"""
+    <.focus_box>
+      <div
+        class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-200"
+        id="error-circle"
+      >
+        <Heroicons.exclamation_triangle class="h-6 w-6 text-red-600 bg-red-100 dark:bg-red-200 dark:text-red-800" />
+      </div>
 
-          <p
-            :if={@finished? and not @success? and @interpretation}
-            class="mt-4 text-sm text-ellipsis overflow-hidden"
-            id="recommendation"
-          >
-            <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
-            <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
-              Learn more
-            </.styled_link>
-          </p>
-        </div>
+      <div :if={@interpretation} class="mt-8">
+        <.title>{List.first(@interpretation.errors)}</.title>
+        <p id="recommendation" class="mt-4 text-sm text-ellipsis overflow-hidden">
+          <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
+          <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
+            Learn more
+          </.styled_link>
+        </p>
+      </div>
 
-        <div :if={@finished?} class="mt-6">
-          <.button_link :if={not @success?} mt?={false} href="#" phx-click="retry" class="w-full">
-            Verify installation again
-          </.button_link>
-          <.button_link
-            :if={@success?}
-            mt?={false}
-            href={"/#{URI.encode_www_form(@domain)}?skip_to_dashboard=true"}
-            class="w-full font-bold mb-4"
-          >
-            Go to the dashboard
-          </.button_link>
-        </div>
-
-        <:footer :if={@finished? and not @success?}>
-          <.focus_list>
-            <:item :if={ee?() and @attempts >= 3}>
-              <b>Need further help with your installation?</b>
-              <.styled_link href="https://plausible.io/contact">
-                Contact us
-              </.styled_link>
-            </:item>
-            <:item>
-              Need to see installation instructions again?
+      <div class="mt-6">
+        <.button_link mt?={false} href="#" phx-click="retry" class="w-full">
+          Verify installation again
+        </.button_link>
+      </div>
+      <:footer>
+        <.focus_list>
+          <:item :if={
+            @interpretation && is_map(@interpretation.data) &&
+              @interpretation.data[:offer_custom_url_input]
+          }>
+            <span id="verify-custom-url-link">
+              Is your website located at a different URL?
               <.styled_link href={
-                Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
+                Routes.site_path(PlausibleWeb.Endpoint, :verification, @domain,
                   flow: @flow,
-                  installation_type: @installation_type
+                  installation_type: @installation_type,
+                  custom_url: true
                 )
               }>
                 Click here
               </.styled_link>
-            </:item>
-            <:item>
-              Run verification later and go to site settings?
-              <.styled_link href={"/#{URI.encode_www_form(@domain)}/settings/general"}>
-                Click here
-              </.styled_link>
+            </span>
+          </:item>
+          <:item :if={ee?() and @attempts >= 3}>
+            <b>Need further help with your installation?</b>
+            <.styled_link href="https://plausible.io/contact">
+              Contact us
+            </.styled_link>
+          </:item>
+          <:item>
+            Need to see installation instructions again?
+            <.styled_link href={
+              Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
+                flow: @flow,
+                installation_type: @installation_type
+              )
+            }>
+              Click here
+            </.styled_link>
+          </:item>
+          <:item>
+            Run verification later and go to site settings?
+            <.styled_link href={"/#{URI.encode_www_form(@domain)}/settings/general"}>
+              Click here
+            </.styled_link>
+          </:item>
+        </.focus_list>
+      </:footer>
+    </.focus_box>
+    """
+  end
+
+  defp render_super_admin_diagnostics(assigns) do
+    ~H"""
+    <.focus_box>
+      <div
+        class="flex flex-col dark:text-gray-200"
+        x-data="{ showDiagnostics: false }"
+        id="super-admin-report"
+      >
+        <p class="text-sm">
+          <a
+            href="#"
+            @click.prevent="showDiagnostics = !showDiagnostics"
+            class="bg-yellow-100 dark:text-gray-800"
+          >
+            As a super-admin, you're eligible to see diagnostics details. Click to expand.
+          </a>
+        </p>
+        <div x-show="showDiagnostics" x-cloak>
+          <.focus_list>
+            <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
+              <span class="text-sm">
+                {Phoenix.Naming.humanize(diag)}:
+                <span class="font-mono">{to_string_value(value)}</span>
+              </span>
             </:item>
           </.focus_list>
-        </:footer>
-      </.focus_box>
-      <.focus_box :if={not is_nil(@verification_state) && @super_admin? && @finished?}>
-        <div
-          class="flex flex-col dark:text-gray-200"
-          x-data="{ showDiagnostics: false }"
-          id="super-admin-report"
-        >
-          <p class="text-sm">
-            <a
-              href="#"
-              @click.prevent="showDiagnostics = !showDiagnostics"
-              class="bg-yellow-100 dark:text-gray-800"
-            >
-              As a super-admin, you're eligible to see diagnostics details. Click to expand.
-            </a>
-          </p>
-          <div x-show="showDiagnostics" x-cloak>
-            <.focus_list>
-              <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
-                <span class="text-sm">
-                  {Phoenix.Naming.humanize(diag)}:
-                  <span class="font-mono">{to_string_value(value)}</span>
-                </span>
-              </:item>
-            </.focus_list>
-          </div>
         </div>
-      </.focus_box>
-    </div>
+      </div>
+    </.focus_box>
     """
   end
 
