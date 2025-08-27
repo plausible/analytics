@@ -26,7 +26,8 @@ defmodule Plausible.MixProject do
         ]
       ],
       dialyzer: [
-        plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
+        plt_core_path: "priv/plts/core",
+        plt_local_path: "priv/plts/local",
         plt_add_apps: [:mix, :ex_unit]
       ]
     ]

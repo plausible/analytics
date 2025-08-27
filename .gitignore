@@ -80,9 +80,8 @@ plausible-report.xml
 *.code-workspace
 .vscode
 
-# Dializer
-/priv/plts/*.plt
-/priv/plts/*.plt.hash
+# Dialyzer
+/priv/plts
 
 .env
 

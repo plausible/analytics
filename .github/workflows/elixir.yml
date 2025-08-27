@@ -147,7 +147,7 @@ jobs:
           path: |
             deps
             _build
-            priv/plts
+            priv/plts/core
           key: static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
