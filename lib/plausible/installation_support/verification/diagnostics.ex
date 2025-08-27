@@ -213,13 +213,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     |> struct!(data: %{offer_custom_url_input: true})
   end
 
-  def interpret(%__MODULE__{service_error: "net::" <> _}, expected_domain, url) do
-    attempted_url =
-      if url do
-        String.split(url, "?") |> List.first()
-      else
-        "https://#{expected_domain}"
-      end
+  def interpret(%__MODULE__{service_error: "net::" <> _}, _expected_domain, url)
+      when is_binary(url) do
+    attempted_url = String.split(url, "?") |> List.first()
 
     %Error{
       message: "We couldn't verify your website at #{attempted_url}",
