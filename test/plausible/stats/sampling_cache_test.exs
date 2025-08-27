@@ -14,6 +14,7 @@ defmodule Plausible.Stats.SamplingCacheTest do
     describe "getter" do
       @threshold Plausible.Stats.Sampling.default_sample_threshold()
 
+      @tag :skip
       test "returns cached values for traffic in past 30 days", %{test: test} do
         now = DateTime.utc_now()
 

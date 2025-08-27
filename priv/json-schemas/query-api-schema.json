@@ -15,10 +15,6 @@
       "uniqueItems": true,
       "description": "List of metrics to query"
     },
-    "date": {
-      "type": "string",
-      "$comment": "only :internal"
-    },
     "date_range": {
       "oneOf": [
         { "$ref": "#/definitions/date_range_shorthand" },
@@ -62,53 +58,6 @@
           "type": "boolean",
           "default": false,
           "description": "If set, returns the total number of result rows rows before pagination under `meta.total_rows`"
-        },
-        "comparisons": {
-          "$comment": "only :internal",
-          "type": "object",
-          "oneOf": [
-            {
-              "properties": {
-                "mode": {
-                  "type": "string",
-                  "enum": ["previous_period", "year_over_year"]
-                },
-                "match_day_of_week": {
-                  "type": "boolean",
-                  "default": false,
-                  "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
-                }
-              },
-              "required": ["mode"],
-              "additionalProperties": false
-            },
-            {
-              "properties": {
-                "mode": {
-                  "const": "custom"
-                },
-                "match_day_of_week": {
-                  "type": "boolean",
-                  "default": false,
-                  "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
-                },
-                "date_range": {
-                  "type": "array",
-                  "additionalItems": false,
-                  "minItems": 2,
-                  "maxItems": 2,
-                  "items": {
-                    "type": "string",
-                    "format": "date"
-                  },
-                  "description": "If custom period. A list of two ISO8601 dates or timestamps to compare against.",
-                  "examples": [["2024-01-01", "2024-01-31"]]
-                }
-              },
-              "required": ["mode", "date_range"],
-              "additionalProperties": false
-            }
-          ]
         }
       }
     },

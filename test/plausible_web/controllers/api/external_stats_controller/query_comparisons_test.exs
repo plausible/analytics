@@ -120,20 +120,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
        } do
     today = ~D[2021-06-10]
 
+    Process.put(:date, Date.to_iso8601(today))
+
     make_request = fn match_day_of_week ->
       conn
+      |> put_private(:query_set_include, %{
+        comparisons: %{mode: "previous_period", match_day_of_week: match_day_of_week}
+      })
       |> post("/api/v2/query-internal-test", %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "28d",
-        "date" => Date.to_iso8601(today),
         "dimensions" => ["time"],
         "include" => %{
-          "time_labels" => true,
-          "comparisons" => %{
-            "mode" => "previous_period",
-            "match_day_of_week" => match_day_of_week
-          }
+          "time_labels" => true
         }
       })
       |> json_response(200)
@@ -185,16 +185,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
       build(:pageview, timestamp: ~N[2022-07-01 00:00:00])
     ])
 
+    Process.put(:date, "2022-07-01")
+
     conn =
-      post(conn, "/api/v2/query-internal-test", %{
+      conn
+      |> put_private(:query_set_include, %{
+        comparisons: %{mode: "year_over_year"}
+      })
+      |> post("/api/v2/query", %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "91d",
-        "date" => "2022-07-01",
         "dimensions" => ["time:day"],
         "include" => %{
-          "time_labels" => true,
-          "comparisons" => %{"mode" => "year_over_year"}
+          "time_labels" => true
         }
       })
 

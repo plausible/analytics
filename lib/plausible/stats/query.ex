@@ -35,16 +35,20 @@ defmodule Plausible.Stats.Query do
 
   @type t :: %__MODULE__{}
 
-  def build(site, schema_type, params, debug_metadata) do
-    with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params) do
+  def build(site, schema_type, params, debug_metadata, overrides \\ %{}) do
+    {now, date} = {Process.get(:now), Process.get(:date)}
+
+    with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params, now, date) do
       query =
         %__MODULE__{
-          now: DateTime.utc_now(:second),
+          now: now || DateTime.utc_now(:second),
           debug_metadata: debug_metadata,
           site_id: site.id,
           site_native_stats_start_at: site.native_stats_start_at
         }
         |> struct!(Map.to_list(query_data))
+        |> set(Map.get(overrides, :query_set, %{}))
+        |> set_include(Map.get(overrides, :query_set_include, %{}))
         |> set_time_on_page_data(site)
         |> put_comparison_utc_time_range()
         |> put_imported_opts(site)
@@ -87,7 +91,12 @@ defmodule Plausible.Stats.Query do
     end
   end
 
+  def set(query, nil) do
+    query
+  end
+
   def set(query, keywords) do
+    keywords = Keyword.new(keywords)
     new_query = struct!(query, keywords)
 
     if Keyword.has_key?(keywords, :include_imported) do
@@ -99,6 +108,10 @@ defmodule Plausible.Stats.Query do
 
   def set_include(query, key, value) do
     struct!(query, include: Map.put(query.include, key, value))
+  end
+
+  def set_include(query, kvs) when is_map(kvs) do
+    struct!(query, include: Map.merge(query.include, kvs))
   end
 
   def add_filter(query, filter) do

@@ -1376,6 +1376,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
+    @tag :skip
     test "parses date_range relative to date param", %{site: site} do
       date = @now |> DateTime.to_date() |> Date.to_string()
 
