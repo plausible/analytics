@@ -257,8 +257,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   end
 
   defp error(%Error{} = error, assigns \\ []) do
-    message = EEx.eval_string(error.message, assigns)
-    recommendation = EEx.eval_string(error.recommendation, assigns)
+    message = EEx.eval_string(error.message, assigns: assigns)
+    recommendation = EEx.eval_string(error.recommendation, assigns: assigns)
 
     %Result{
       ok?: false,
