@@ -121,6 +121,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   defp put_period(query, site, %{"period" => "6mo"} = params) do
     end_date =
       parse_single_date(query, params)
+      |> Date.shift(month: -1)
       |> Timex.end_of_month()
 
     start_date =
@@ -137,6 +138,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   defp put_period(query, site, %{"period" => "12mo"} = params) do
     end_date =
       parse_single_date(query, params)
+      |> Date.shift(month: -1)
       |> Timex.end_of_month()
 
     start_date =

@@ -850,7 +850,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
-      conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-10-20")
+      conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-11-20")
       assert_zip(conn, "6m")
     end
   end

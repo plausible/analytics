@@ -251,8 +251,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
         {:ok, DateTimeRange.new!(first, last, site.timezone)}
 
       {n, "mo"} when n > 0 and n <= 100 ->
-        last = date |> Date.end_of_month()
-        first = last |> Date.shift(month: -n + 1) |> Date.beginning_of_month()
+        last = date |> Date.shift(month: -1) |> Date.end_of_month()
+        first = date |> Date.shift(month: -n) |> Date.beginning_of_month()
         {:ok, DateTimeRange.new!(first, last, site.timezone)}
 
       _ ->

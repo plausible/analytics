@@ -72,16 +72,16 @@ defmodule Plausible.Stats.QueryTest do
   test "parses 6 month format", %{site: site} do
     q = Query.from(site, %{"period" => "6mo"}, %{}, @now)
 
-    assert q.utc_time_range.first == ~U[2023-12-01 05:00:00Z]
-    assert q.utc_time_range.last == ~U[2024-06-01 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2023-11-01 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-01 03:59:59Z]
     assert q.interval == "month"
   end
 
   test "parses 12 month format", %{site: site} do
     q = Query.from(site, %{"period" => "12mo"}, %{}, @now)
 
-    assert q.utc_time_range.first == ~U[2023-06-01 04:00:00Z]
-    assert q.utc_time_range.last == ~U[2024-06-01 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2023-05-01 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-01 03:59:59Z]
     assert q.interval == "month"
   end
 

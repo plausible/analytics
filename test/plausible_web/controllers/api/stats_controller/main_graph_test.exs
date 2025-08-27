@@ -255,10 +255,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays visitors for 6 months with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-06-30 00:00:00]),
-        build(:imported_visitors, date: ~D[2021-01-01]),
-        build(:imported_visitors, date: ~D[2021-06-30])
+        build(:pageview, timestamp: ~N[2020-12-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-05-31 00:00:00]),
+        build(:imported_visitors, date: ~D[2020-12-01]),
+        build(:imported_visitors, date: ~D[2021-05-31])
       ])
 
       conn =
@@ -277,8 +277,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays visitors for 6 months with only imported data", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:imported_visitors, date: ~D[2021-01-01]),
-        build(:imported_visitors, date: ~D[2021-06-30])
+        build(:imported_visitors, date: ~D[2020-12-01]),
+        build(:imported_visitors, date: ~D[2021-05-31])
       ])
 
       conn =
@@ -297,10 +297,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays visitors for 12 months with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-12-31 00:00:00]),
-        build(:imported_visitors, date: ~D[2021-01-01]),
-        build(:imported_visitors, date: ~D[2021-12-31])
+        build(:pageview, timestamp: ~N[2020-12-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-11-30 00:00:00]),
+        build(:imported_visitors, date: ~D[2020-12-01]),
+        build(:imported_visitors, date: ~D[2021-11-30])
       ])
 
       conn =
@@ -319,8 +319,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays visitors for 12 months with only imported data", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:imported_visitors, date: ~D[2021-01-01]),
-        build(:imported_visitors, date: ~D[2021-12-31])
+        build(:imported_visitors, date: ~D[2020-12-01]),
+        build(:imported_visitors, date: ~D[2021-11-30])
       ])
 
       conn =
@@ -848,14 +848,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       insert(:goal, site: site, event_name: "Signup")
 
       populate_stats(site, [
-        build(:event, name: "Different", timestamp: ~N[2020-01-10 00:00:00]),
+        build(:event, name: "Different", timestamp: ~N[2019-12-10 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2020-01-10 00:00:00]),
         build(:event, name: "Signup", timestamp: ~N[2020-02-10 00:00:00]),
         build(:event, name: "Signup", timestamp: ~N[2020-03-10 00:00:00]),
-        build(:event, name: "Signup", timestamp: ~N[2020-04-10 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-05-10 00:00:00]),
-        build(:event, name: "Signup", timestamp: ~N[2021-06-11 04:00:00]),
-        build(:event, name: "Signup", timestamp: ~N[2021-07-11 00:00:00]),
-        build(:event, name: "Signup", timestamp: ~N[2021-08-11 00:00:00])
+        build(:pageview, timestamp: ~N[2021-04-10 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-05-11 04:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-06-11 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-07-11 00:00:00])
       ])
 
       filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
@@ -1008,11 +1008,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays visitors for 6mo on a day scale", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-12-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-12-15 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-12-15 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-02-15 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-06-30 01:00:00])
+        build(:pageview, timestamp: ~N[2021-05-31 01:00:00])
       ])
 
       conn =
@@ -1023,7 +1023,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert Enum.count(plot) == 181
+      assert Enum.count(plot) == 182
       assert List.first(plot) == 1
       assert Enum.at(plot, 14) == 2
       assert Enum.at(plot, 45) == 1

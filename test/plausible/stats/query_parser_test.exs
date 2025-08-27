@@ -40,20 +40,20 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_3mo %DateTimeRange{
-    first: DateTime.new!(~D[2021-03-01], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
+    first: DateTime.new!(~D[2021-02-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_6mo %DateTimeRange{
-    first: DateTime.new!(~D[2020-12-01], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
+    first: DateTime.new!(~D[2020-11-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_year %DateTimeRange{
     first: DateTime.new!(~D[2021-01-01], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-12-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_12mo %DateTimeRange{
-    first: DateTime.new!(~D[2020-06-01], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
+    first: DateTime.new!(~D[2020-05-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
   }
 
   @default_include %{
