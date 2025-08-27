@@ -424,10 +424,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
 
       conn =
         conn
-        |> put_private(:query_set, %{
-          metrics: [:exit_rate]
-        })
-        |> put_private(:query_set_include, %{
+        |> Plausible.Stats.Query.Test.fix_query(%{metrics: [:exit_rate]})
+        |> Plausible.Stats.Query.Test.fix_query_include(%{
           comparisons: %{mode: "previous_period"}
         })
         |> post(

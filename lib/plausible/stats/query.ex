@@ -36,7 +36,7 @@ defmodule Plausible.Stats.Query do
   @type t :: %__MODULE__{}
 
   def build(site, schema_type, params, debug_metadata, overrides \\ %{}) do
-    {now, date} = {Process.get(:now), Process.get(:date)}
+    {now, date} = {__MODULE__.Test.get_fixed_now(), __MODULE__.Test.get_fixed_date()}
 
     with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params, now, date) do
       query =
@@ -47,8 +47,8 @@ defmodule Plausible.Stats.Query do
           site_native_stats_start_at: site.native_stats_start_at
         }
         |> struct!(Map.to_list(query_data))
-        |> set(Map.get(overrides, :query_set, %{}))
-        |> set_include(Map.get(overrides, :query_set_include, %{}))
+        |> set(__MODULE__.Test.get_fixed_query_set(overrides))
+        |> set_include(__MODULE__.Test.get_fixed_query_include(overrides))
         |> set_time_on_page_data(site)
         |> put_comparison_utc_time_range()
         |> put_imported_opts(site)

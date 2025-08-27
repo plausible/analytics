@@ -9,10 +9,13 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   def query(conn, params) do
     site = Repo.preload(conn.assigns.site, :owners)
 
-    case Query.build(site, conn.assigns.schema_type, params, debug_metadata(conn), %{
-           query_set: conn.private[:query_set],
-           query_set_include: conn.private[:query_set_include] || %{}
-         }) do
+    case Query.build(
+           site,
+           conn.assigns.schema_type,
+           params,
+           debug_metadata(conn),
+           Query.Test.get_fixed_query_overrides(conn)
+         ) do
       {:ok, query} ->
         results = Plausible.Stats.query(site, query)
         json(conn, results)

@@ -120,14 +120,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
        } do
     today = ~D[2021-06-10]
 
-    Process.put(:date, Date.to_iso8601(today))
+    Plausible.Stats.Query.Test.fix_date(Date.to_iso8601(today))
 
     make_request = fn match_day_of_week ->
       conn
-      |> put_private(:query_set_include, %{
+      |> Plausible.Stats.Query.Test.fix_query_include(%{
         comparisons: %{mode: "previous_period", match_day_of_week: match_day_of_week}
       })
-      |> post("/api/v2/query-internal-test", %{
+      |> post("/api/v2/query", %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "28d",
@@ -185,7 +185,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
       build(:pageview, timestamp: ~N[2022-07-01 00:00:00])
     ])
 
-    Process.put(:date, "2022-07-01")
+    Plausible.Stats.Query.Test.fix_date("2022-07-01")
 
     conn =
       conn
