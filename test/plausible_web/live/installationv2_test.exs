@@ -303,6 +303,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       test "detected NPM installation shows npm tab", %{conn: conn, site: site} do
         stub_dns_lookup_a_records(site.domain)
+
         stub_detection_result(%{
           "v1Detected" => false,
           "gtmLikely" => false,
