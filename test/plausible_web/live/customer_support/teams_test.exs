@@ -592,7 +592,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert element_exists?(html, ~s|a[href="?tab=sso"]|)
       end
 
-      test "sso tab displays domains", %{conn: conn, user: user} do
+      test "sso tab displays domains and policy/idp config", %{conn: conn, user: user} do
         team = team_of(user)
 
         integration = SSO.initiate_saml_integration(team)
@@ -602,10 +602,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
-        html = render(lv)
+        text = lv |> render() |> text()
 
-        assert html =~ "sso1.example.com"
-        assert html =~ "sso2.example.com"
+        assert text =~ "sso1.example.com"
+        assert text =~ "sso2.example.com"
+        assert text =~ "configured? false"
+        assert text =~ "sso_session_timeout_minutes 360"
       end
 
       test "delete domain", %{conn: conn, user: user} do
@@ -735,7 +737,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
             entity: "Plausible.Teams.Team",
             entity_id: to_string(team.id),
             team_id: team.id,
-            datetime: NaiveDateTime.shift(now, second: i)
+            datetime: NaiveDateTime.shift(now, second: 8 - i)
           }
           |> Plausible.Repo.insert!()
         end

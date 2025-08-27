@@ -13,29 +13,23 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
 
   def render(assigns) do
     ~H"""
-    <div class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
+    <div>
       <div :if={@sso_integration}>
-        <div class="flex gap-x-8 mb-4 justify-between items-start">
-          <p>
-            Configured?: <code>{SSO.Integration.configured?(@sso_integration)}</code>
-            <br /> IDP Signin URL:
-            <code>
-              {@sso_integration.config.idp_signin_url}
-            </code>
-            <br />IDP Entity ID: <code>{@sso_integration.config.idp_entity_id}</code>
-          </p>
-          <div class="ml-auto">
-            <.button
-              data-confirm="Are you sure you want to remove this SSO team integration, including all its domains and users?"
-              id="remove-sso-integration"
-              phx-click="remove-sso-integration"
-              phx-target={@myself}
-              theme="danger"
-            >
-              Remove Integration
-            </.button>
-          </div>
+        <div class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
+          <.table rows={
+            [
+              {"configured?", SSO.Integration.configured?(@sso_integration)},
+              {"IDP Sign-in URL", @sso_integration.config.idp_signin_url},
+              {"IDP Entity ID", @sso_integration.config.idp_entity_id}
+            ] ++ Enum.into(Map.from_struct(@team.policy), [])
+          }>
+            <:tbody :let={{k, v}}>
+              <.td>{k}</.td>
+              <.td>{v}</.td>
+            </:tbody>
+          </.table>
         </div>
+
         <.table rows={@sso_integration.sso_domains}>
           <:thead>
             <.th>Domain</.th>
@@ -67,6 +61,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
             </.td>
           </:tbody>
         </.table>
+
+        <div class="flex justify-end">
+          <.button
+            data-confirm="Are you sure you want to remove this SSO team integration, including all its domains and users?"
+            id="remove-sso-integration"
+            phx-click="remove-sso-integration"
+            phx-target={@myself}
+            theme="danger"
+          >
+            Remove Integration
+          </.button>
+        </div>
       </div>
       <div :if={!@sso_integration} class="text-center py-8 text-gray-500">
         <p>No SSO integration configured for this team.</p>
