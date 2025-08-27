@@ -53,6 +53,8 @@ defmodule Plausible.Google.SearchConsole.Filters do
 
   defp transform_filter(_, [_, "visit:source" | _rest]), do: :ignore
 
+  defp transform_filter(_, [_, "visit:channel" | _rest]), do: :ignore
+
   defp transform_filter(_, _filter), do: :unsupported
 
   defp property_url("sc-domain:" <> domain, page), do: "https://" <> domain <> page
