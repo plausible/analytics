@@ -55,15 +55,15 @@ defmodule Plausible.InstallationSupport.Checks.Url do
       "www.#{domain_without_path}"
     ]
     |> Enum.reduce_while({:error, :domain_not_found}, fn d, _acc ->
-      case check_domain(d) do
+      case dns_lookup(d) do
         :ok -> {:halt, {:ok, "https://" <> unsplit_domain(d, rest)}}
         {:error, :no_a_record} -> {:cont, {:error, :domain_not_found}}
       end
     end)
   end
 
-  @spec check_domain(String.t()) :: :ok | {:error, :no_a_record}
-  defp check_domain(domain) do
+  @spec dns_lookup(String.t()) :: :ok | {:error, :no_a_record}
+  defp dns_lookup(domain) do
     lookup_timeout = 1_000
     resolve_timeout = 1_000
 
@@ -81,6 +81,14 @@ defmodule Plausible.InstallationSupport.Checks.Url do
       # this may mean timeout or no DNS record
       [] ->
         {:error, :no_a_record}
+    end
+  end
+
+  defp check_domain(domain) do
+    if Application.get_env(:plausible, :environment) == "dev" and domain == "localhost" do
+      :ok
+    else
+      dns_lookup(domain)
     end
   end
 
