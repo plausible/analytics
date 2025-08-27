@@ -8,7 +8,7 @@ defmodule Plausible.Stats.TimeTest do
 
   describe "time_labels/1" do
     test "with time:month dimension" do
-      Logger.warning("hi")
+      Logger.error("hi")
 
       assert time_labels(%{
                dimensions: ["visit:device", "time:month"],
