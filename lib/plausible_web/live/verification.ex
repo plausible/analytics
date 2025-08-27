@@ -126,7 +126,12 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_event("verify-custom-url", %{"custom_url" => custom_url}, socket) do
-    socket = launch_delayed(socket, custom_url)
+    socket =
+      socket
+      |> assign(url_to_verify: custom_url)
+      |> assign(custom_url_input?: false)
+
+    launch_delayed(socket)
     {:noreply, reset_component(socket)}
   end
 
@@ -249,19 +254,8 @@ defmodule PlausibleWeb.Live.Verification do
     )
   end
 
-  defp launch_delayed(socket, url_to_verify \\ nil) do
-    socket =
-      if is_binary(url_to_verify) do
-        socket
-        |> assign(url_to_verify: url_to_verify)
-        |> assign(custom_url_input?: false)
-      else
-        socket
-      end
-
+  defp launch_delayed(socket) do
     Process.send_after(self(), {:start, socket.assigns.report_to}, socket.assigns.delay)
-
-    socket
   end
 
   defp has_pageviews?(site) do
