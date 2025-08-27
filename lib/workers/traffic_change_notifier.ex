@@ -119,15 +119,20 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp get_traffic_spike_stats(site) do
+    now = DateTime.utc_now(:second)
+
+    first_datetime = DateTime.shift(now, minute: -5)
+    last_datetime = DateTime.shift(now, second: 5)
+
     {:ok, query} =
       Query.build(
         site,
-        :internal,
+        :public,
         %{
           "site_id" => "#{site.id}",
           "metrics" => ["visitors"],
           "pagination" => %{"limit" => 3},
-          "date_range" => "realtime"
+          "date_range" => [to_string(first_datetime), to_string(last_datetime)]
         },
         %{}
       )

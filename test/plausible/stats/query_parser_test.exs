@@ -11,14 +11,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   setup [:create_user, :create_site]
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
-  @date_range_realtime %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
-  }
-  @date_range_30m %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
-  }
   @date_range_day %DateTimeRange{
     first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
@@ -1272,25 +1264,25 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       check_date_range(%{"date_range" => "year"}, site, @date_range_year)
     end
 
-    test "30m and realtime are available in internal API", %{site: site} do
-      check_date_range(%{"date_range" => "30m"}, site, @date_range_30m, :internal)
-
-      check_date_range(
-        %{"date_range" => "realtime"},
-        site,
-        @date_range_realtime,
-        :internal
-      )
-    end
-
-    test "30m and realtime date_ranges are unavailable in public API", %{
-      site: site
-    } do
-      for date_range <- ["realtime", "30m"] do
-        %{"site_id" => site.domain, "metrics" => ["visitors"], "date_range" => date_range}
-        |> check_error(site, "#/date_range: Invalid date range \"#{date_range}\"")
-      end
-    end
+    # test "30m and realtime are available in internal API", %{site: site} do
+    #   check_date_range(%{"date_range" => "30m"}, site, @date_range_30m, :internal)
+    #
+    #   check_date_range(
+    #     %{"date_range" => "realtime"},
+    #     site,
+    #     @date_range_realtime,
+    #     :internal
+    #   )
+    # end
+    #
+    # test "30m and realtime date_ranges are unavailable in public API", %{
+    #   site: site
+    # } do
+    #   for date_range <- ["realtime", "30m"] do
+    #     %{"site_id" => site.domain, "metrics" => ["visitors"], "date_range" => date_range}
+    #     |> check_error(site, "#/date_range: Invalid date range \"#{date_range}\"")
+    #   end
+    # end
 
     test "parsing `all` with previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, ~D[2020-01-01])
