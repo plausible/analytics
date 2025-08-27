@@ -17,9 +17,6 @@ defmodule Plausible.Billing.Feature do
     * `:toggle_field` - the field in the %Plausible.Site{} schema that toggles
     the feature. If `nil` or not set, toggle/2 silently returns `:ok`
 
-    * `:free` - if set to `true`, makes the `check_availability/1` function
-    always return `:ok` (no matter the user's subscription status)
-
   Functions defined by `__using__` can be overridden if needed.
   """
 
@@ -37,11 +34,6 @@ defmodule Plausible.Billing.Feature do
   Returns the %Plausible.Site{} field that toggles the feature on and off.
   """
   @callback toggle_field() :: atom()
-
-  @doc """
-  Returns whether the feature is free to use or not.
-  """
-  @callback free?() :: boolean()
 
   @doc """
   Toggles the feature on and off for a site. Returns
@@ -120,9 +112,6 @@ defmodule Plausible.Billing.Feature do
       def toggle_field, do: Keyword.get(unquote(opts), :toggle_field)
 
       @impl true
-      def free?, do: Keyword.get(unquote(opts), :free, false)
-
-      @impl true
       def enabled?(%Plausible.Site{} = site) do
         site = Plausible.Repo.preload(site, :team)
         check_availability(site.team) == :ok && !opted_out?(site)
@@ -135,10 +124,10 @@ defmodule Plausible.Billing.Feature do
 
       @impl true
       def check_availability(team_or_nil) do
-        cond do
-          free?() -> :ok
-          __MODULE__ in Plausible.Teams.Billing.allowed_features_for(team_or_nil) -> :ok
-          true -> {:error, :upgrade_required}
+        if __MODULE__ in Plausible.Teams.Billing.allowed_features_for(team_or_nil) do
+          :ok
+        else
+          {:error, :upgrade_required}
         end
       end
 
@@ -188,8 +177,7 @@ defmodule Plausible.Billing.Feature.Goals do
   use Plausible.Billing.Feature,
     name: :goals,
     display_name: "Goals",
-    toggle_field: :conversions_enabled,
-    free: true
+    toggle_field: :conversions_enabled
 end
 
 defmodule Plausible.Billing.Feature.Props do
