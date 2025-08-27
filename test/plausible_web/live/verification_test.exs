@@ -11,9 +11,9 @@ defmodule PlausibleWeb.Live.VerificationTest do
   # @verify_button ~s|button#launch-verification-button[phx-click="launch-verification"]|
   @retry_button ~s|a[phx-click="retry"]|
   # @go_to_dashboard_button ~s|a[href$="?skip_to_dashboard=true"]|
-  @progress ~s|#progress-indicator p#progress|
-  @awaiting ~s|#progress-indicator p#awaiting|
-  @heading ~s|#progress-indicator h2|
+  @progress ~s|#verification-ui p#progress|
+  @awaiting ~s|#verification-ui p#awaiting|
+  @heading ~s|#verification-ui h2|
 
   describe "GET /:domain" do
     @tag :ee_only
@@ -56,6 +56,28 @@ defmodule PlausibleWeb.Live.VerificationTest do
     test "LiveView mounts (ce)", %{conn: conn, site: site} do
       {_, html} = get_lv(conn, site)
       assert html =~ "Awaiting your first pageview …"
+    end
+
+    @tag :ee_only
+    test "from custom URL input form to verification", %{conn: conn, site: site} do
+      # Get liveview with ?custom_url=true query param
+      {:ok, lv, html} =
+        conn |> no_slowdown() |> live("/#{site.domain}/verification?custom_url=true")
+
+      verifying_installation_text = "Verifying your installation"
+
+      # Assert form is rendered instead of kicking off verification automatically
+      assert html =~ "Enter Your Custom URL"
+      assert html =~ ~s[value="https://#{site.domain}"]
+      assert html =~ ~s[placeholder="https://#{site.domain}"]
+      refute html =~ verifying_installation_text
+
+      # Submit custom URL form
+      html = lv |> element("form") |> render_submit(%{"custom_url" => "https://abc.de"})
+
+      # Should now show verification progress and hide custom URL form
+      assert html =~ verifying_installation_text
+      refute html =~ "Enter Your Custom URL"
     end
 
     @tag :ee_only

@@ -7,6 +7,8 @@ defmodule PlausibleWeb.Live.Verification do
   use Plausible
   use PlausibleWeb, :live_view
 
+  import PlausibleWeb.Components.Generic
+
   alias Plausible.InstallationSupport.{State, LegacyVerification, Verification}
 
   @component PlausibleWeb.Live.Components.Verification
@@ -30,6 +32,7 @@ defmodule PlausibleWeb.Live.Verification do
 
     super_admin? = Plausible.Auth.is_super_admin?(socket.assigns.current_user)
     has_pageviews? = has_pageviews?(site)
+    custom_url_input? = params["custom_url"] == "true"
 
     socket =
       assign(socket,
@@ -46,11 +49,12 @@ defmodule PlausibleWeb.Live.Verification do
         flow: params["flow"] || "",
         checks_pid: nil,
         attempts: 0,
-        polling_pageviews?: false
+        polling_pageviews?: false,
+        custom_url_input?: custom_url_input?
       )
 
     on_ee do
-      if connected?(socket) do
+      if connected?(socket) and not custom_url_input? do
         launch_delayed(socket)
       end
     end
@@ -75,8 +79,9 @@ defmodule PlausibleWeb.Live.Verification do
     def render(assigns) do
       ~H"""
       <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Verify installation" />
-
+      <.custom_url_form :if={@custom_url_input?} domain={@domain} />
       <.live_component
+        :if={not @custom_url_input?}
         module={@component}
         installation_type={@installation_type}
         domain={@domain}
@@ -112,12 +117,22 @@ defmodule PlausibleWeb.Live.Verification do
 
   def handle_event("launch-verification", _, socket) do
     launch_delayed(socket)
-    {:noreply, reset_component(socket, nil)}
+    {:noreply, reset_component(socket)}
   end
 
-  def handle_event("retry", params, socket) do
+  def handle_event("retry", _, socket) do
     launch_delayed(socket)
-    {:noreply, reset_component(socket, params["url_to_verify"])}
+    {:noreply, reset_component(socket)}
+  end
+
+  def handle_event("verify-custom-url", %{"custom_url" => custom_url}, socket) do
+    socket =
+      socket
+      |> assign(url_to_verify: custom_url)
+      |> assign(custom_url_input?: false)
+
+    launch_delayed(socket)
+    {:noreply, reset_component(socket)}
   end
 
   def handle_info({:start, report_to}, socket) do
@@ -221,7 +236,7 @@ defmodule PlausibleWeb.Live.Verification do
     redirect(socket, to: stats_url)
   end
 
-  defp reset_component(socket, url_to_verify) do
+  defp reset_component(socket) do
     update_component(socket,
       message: "We're visiting your site to ensure that everything is working",
       finished?: false,
@@ -229,11 +244,7 @@ defmodule PlausibleWeb.Live.Verification do
       diagnostics: nil
     )
 
-    if is_binary(url_to_verify) do
-      assign(socket, url_to_verify: url_to_verify)
-    else
-      socket
-    end
+    socket
   end
 
   defp update_component(_socket, updates) do
@@ -249,5 +260,50 @@ defmodule PlausibleWeb.Live.Verification do
 
   defp has_pageviews?(site) do
     Plausible.Stats.Clickhouse.has_pageviews?(site)
+  end
+
+  on_ee do
+    defp custom_url_form(assigns) do
+      ~H"""
+      <.focus_box>
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+          <Heroicons.globe_alt class="h-6 w-6 text-blue-600 dark:text-blue-200" />
+        </div>
+        <div class="mt-8">
+          <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+            Enter Your Custom URL
+          </h3>
+          <p class="text-sm mt-4 text-gray-600 dark:text-gray-400">
+            Please enter the URL where your website with the Plausible script is located.
+          </p>
+          <form phx-submit="verify-custom-url" class="mt-6">
+            <div class="mb-4">
+              <label
+                for="custom_url"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Website URL
+              </label>
+              <input
+                type="url"
+                name="custom_url"
+                id="custom_url"
+                required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
+                placeholder={"https://#{@domain}"}
+                value={"https://#{@domain}"}
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+            >
+              Verify Installation
+            </button>
+          </form>
+        </div>
+      </.focus_box>
+      """
+    end
   end
 end
