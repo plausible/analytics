@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       verifying_installation_text = "Verifying your installation"
 
-      # Assert form is rendered instead of kicking of verification automatically
+      # Assert form is rendered instead of kicking off verification automatically
       assert html =~ "Enter Your Custom URL"
       assert html =~ ~s[value="https://#{site.domain}"]
       assert html =~ ~s[placeholder="https://#{site.domain}"]
