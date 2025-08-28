@@ -66,7 +66,7 @@
         "trim_relative_date_range": {
           "type": "boolean",
           "default": false,
-          "description": "If set, trims future dates from current period date ranges (e.g., current month, year, day)"
+          "description": "If set and using `day`, `month` or `year` date_ranges, the query will be trimmed to the current date"
         },
         "comparisons": {
           "$comment": "only :internal",

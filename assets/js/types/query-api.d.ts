@@ -194,7 +194,7 @@ export interface QueryApiSchema {
      */
     total_rows?: boolean;
     /**
-     * If set, trims future dates from current period date ranges (e.g., current month, year, day)
+     * If set and using `day`, `month` or `year` date_ranges, the query will be trimmed to the current date
      */
     trim_relative_date_range?: boolean;
     comparisons?:
