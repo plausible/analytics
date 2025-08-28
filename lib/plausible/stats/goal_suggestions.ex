@@ -37,7 +37,16 @@ defmodule Plausible.Stats.GoalSuggestions do
 
     limit = Keyword.get(opts, :limit, 25)
 
-    params = %{"with_imported" => "true", "period" => "6mo"}
+    to_date = Date.utc_today()
+    from_date = Date.shift(to_date, month: -6)
+
+    params = %{
+      "with_imported" => "true",
+      "period" => "custom",
+      "from" => Date.to_iso8601(from_date),
+      "to" => Date.to_iso8601(to_date)
+    }
+
     query = Query.from(site, params)
 
     native_q =

@@ -403,7 +403,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         get(conn, "/api/v1/stats/aggregate", %{
           "site_id" => site.domain,
           "period" => "6mo",
-          "date" => "2021-03-01",
+          "date" => "2021-04-11",
           "metrics" => "pageviews,visitors,bounce_rate,visit_duration",
           "compare" => "previous_period"
         })
