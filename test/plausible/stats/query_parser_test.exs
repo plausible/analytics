@@ -62,24 +62,14 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     time_labels: false,
     total_rows: false,
     comparisons: nil,
-    legacy_time_on_page_cutoff: nil,
-    trim_relative_date_range: false
+    legacy_time_on_page_cutoff: nil
   }
 
   def check_success(params, site, expected_result, schema_type \\ :public) do
     assert {:ok, result} = parse(site, schema_type, params, @now)
 
     return_value = Map.take(result, [:preloaded_goals, :revenue_warning, :revenue_currencies])
-
-    result =
-      Map.drop(result, [
-        :now,
-        :input_date_range,
-        :preloaded_goals,
-        :revenue_warning,
-        :revenue_currencies
-      ])
-
+    result = Map.drop(result, [:preloaded_goals, :revenue_warning, :revenue_currencies])
     assert result == expected_result
 
     return_value
@@ -881,8 +871,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           time_labels: true,
           total_rows: true,
           comparisons: nil,
-          legacy_time_on_page_cutoff: nil,
-          trim_relative_date_range: false
+          legacy_time_on_page_cutoff: nil
         },
         pagination: %{limit: 10_000, offset: 0}
       })
@@ -947,8 +936,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports_meta: false,
             time_labels: false,
             total_rows: false,
-            legacy_time_on_page_cutoff: nil,
-            trim_relative_date_range: false
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },
@@ -980,8 +968,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports_meta: false,
             time_labels: false,
             total_rows: false,
-            legacy_time_on_page_cutoff: nil,
-            trim_relative_date_range: false
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },
@@ -1016,8 +1003,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports: false,
             time_labels: false,
             total_rows: false,
-            legacy_time_on_page_cutoff: nil,
-            trim_relative_date_range: false
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },

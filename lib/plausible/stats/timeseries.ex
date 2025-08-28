@@ -97,7 +97,7 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  defp transform_realtime_labels(results, %Query{input_date_range: "30m"}) do
+  defp transform_realtime_labels(results, %Query{period: "30m"}) do
     Enum.with_index(results)
     |> Enum.map(fn {entry, index} -> %{entry | date: -30 + index} end)
   end

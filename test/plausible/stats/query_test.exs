@@ -58,7 +58,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.utc_time_range.first == ~U[2024-05-03 16:25:00Z]
     assert q.utc_time_range.last == ~U[2024-05-03 16:30:05Z]
-    assert q.input_date_range == "realtime"
+    assert q.period == "realtime"
   end
 
   test "parses month format", %{site: site} do
@@ -98,7 +98,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.utc_time_range.first == ~U[2020-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
-    assert q.input_date_range == "all"
+    assert q.period == "all"
     assert q.interval == "month"
   end
 
@@ -116,7 +116,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
-    assert q.input_date_range == "all"
+    assert q.period == "all"
     assert q.interval == "hour"
   end
 
@@ -126,7 +126,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
-    assert q.input_date_range == "all"
+    assert q.period == "all"
     assert q.interval == "hour"
   end
 
@@ -138,7 +138,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.utc_time_range.first == ~U[2024-05-02 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
-    assert q.input_date_range == "all"
+    assert q.period == "all"
     assert q.interval == "day"
   end
 
@@ -150,7 +150,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.utc_time_range.first == ~U[2024-04-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
-    assert q.input_date_range == "all"
+    assert q.period == "all"
     assert q.interval == "month"
   end
 
@@ -162,7 +162,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.utc_time_range.first == ~U[2024-04-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
-    assert q.input_date_range == "all"
+    assert q.period == "all"
     assert q.interval == "week"
   end
 
