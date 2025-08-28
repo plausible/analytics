@@ -1502,6 +1502,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["2021-01-01"], "metrics" => [1]},
                %{"dimensions" => ["2021-01-15"], "metrics" => [1]}
              ]
+
+      assert json_response(conn, 200)["query"]["date_range"] == [
+               "2021-01-01T00:00:00+00:00",
+               "2021-01-15T23:59:59+00:00"
+             ]
     end
 
     test "shows last 6 months of visitors", %{conn: conn, site: site} do
