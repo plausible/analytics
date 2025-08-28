@@ -4,6 +4,7 @@ defmodule Plausible.Stats.Query do
   defstruct utc_time_range: nil,
             comparison_utc_time_range: nil,
             interval: nil,
+            # Only set for legacy queries
             period: nil,
             dimensions: [],
             filters: [],
@@ -39,7 +40,6 @@ defmodule Plausible.Stats.Query do
     with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params) do
       query =
         %__MODULE__{
-          now: DateTime.utc_now(:second),
           debug_metadata: debug_metadata,
           site_id: site.id,
           site_native_stats_start_at: site.native_stats_start_at

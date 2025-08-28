@@ -35,7 +35,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end
 
     with :ok <- JSONSchema.validate(schema_type, params),
-         {:ok, date} <- parse_date(site, Map.get(params, "date"), date),
+         {:ok, date, now} <- parse_date(site, Map.get(params, "date"), date, now) |> IO.inspect(label: "parse_dates"),
          {:ok, raw_time_range} <-
            parse_time_range(site, Map.get(params, "date_range"), date, now),
          utc_time_range = raw_time_range |> DateTimeRange.to_timezone("Etc/UTC"),
@@ -52,6 +52,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {preloaded_goals, revenue_warning, revenue_currencies} <-
            preload_goals_and_revenue(site, metrics, filters, dimensions),
          query = %{
+           now: now,
            metrics: metrics,
            filters: filters,
            utc_time_range: utc_time_range,
@@ -198,15 +199,15 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, []}
   end
 
-  defp parse_date(_site, date_string, _date) when is_binary(date_string) do
+  defp parse_date(site, date_string, _date, _now) when is_binary(date_string) do
     case Date.from_iso8601(date_string) do
-      {:ok, date} -> {:ok, date}
+      {:ok, date} -> {:ok, date, DateTime.new!(date, ~T[00:00:00], site.timezone)}
       _ -> {:error, "Invalid date '#{date_string}'."}
     end
   end
 
-  defp parse_date(_site, _date_string, date) do
-    {:ok, date}
+  defp parse_date(_site, _date_string, date, now) do
+    {:ok, date, now}
   end
 
   defp parse_time_range(_site, date_range, _date, now) when date_range in ["realtime", "30m"] do
