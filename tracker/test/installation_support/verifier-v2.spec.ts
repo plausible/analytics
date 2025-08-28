@@ -796,23 +796,37 @@ test.describe('installed plausible esm variant', () => {
 })
 
 test.describe('opts in on cookie banners', () => {
-  for (const { url, expectedcookiesConsentResult } of [
+  for (const { url, expectedCookiesConsentResult } of [
     {
       url: `${LOCAL_SERVER_ADDR}/cookies-onetrust.html`,
-      expectedcookiesConsentResult: {
+      expectedCookiesConsentResult: {
         cmp: 'Onetrust',
         handled: true
       }
     },
     {
       url: `${LOCAL_SERVER_ADDR}/cookies-iubenda.html`,
-      expectedcookiesConsentResult: {
+      expectedCookiesConsentResult: {
         cmp: 'iubenda',
+        handled: true
+      }
+    },
+    {
+      url: `${LOCAL_SERVER_ADDR}/cookies-cookiebot.html`,
+      expectedCookiesConsentResult: {
+        cmp: 'cookiebot',
+        handled: true
+      }
+    },
+    {
+      url: `${LOCAL_SERVER_ADDR}/cookies-quantcast.html`,
+      expectedCookiesConsentResult: {
+        cmp: 'quantcast',
         handled: true
       }
     }
   ]) {
-    test(`accepts cookies of cmp ${expectedcookiesConsentResult.cmp}`, async ({
+    test(`accepts cookies of cmp ${expectedCookiesConsentResult.cmp}`, async ({
       page
     }) => {
       const response = await page.goto(url)
@@ -826,7 +840,7 @@ test.describe('opts in on cookie banners', () => {
 
       expect(result.data).toEqual(
         expect.objectContaining({
-          cookiesConsentResult: expectedcookiesConsentResult
+          cookiesConsentResult: expectedCookiesConsentResult
         })
       )
     })

@@ -9,8 +9,18 @@
 
 // Note: these imports are using relative path syntax so rollup would bundle them
 import AutoConsent from '../node_modules/@duckduckgo/autoconsent/dist/autoconsent.esm.js'
-import compact from '../node_modules/@duckduckgo/autoconsent/rules/compact-rules.json'
+import usercentricsButton from '../node_modules/@duckduckgo/autoconsent/rules/autoconsent/usercentrics-button.json'
+import iubenda from '../node_modules/@duckduckgo/autoconsent/rules/autoconsent/iubenda.json'
+import quantcast from '../node_modules/@duckduckgo/autoconsent/rules/autoconsent/quantcast.json'
 import { consentomatic } from '../node_modules/@duckduckgo/autoconsent/rules/consentomatic.json'
+import cookiebotHandrolled from './autoconsent-rules/autoconsent/cookiebot.json'
+
+const autoconsent = [
+  usercentricsButton,
+  iubenda,
+  cookiebotHandrolled,
+  quantcast
+]
 
 export function initializeCookieConsentEngine({
   debug,
@@ -40,7 +50,7 @@ export function initializeCookieConsentEngine({
         disabledCmps: [],
         enablePrehide: false,
         enableCosmeticRules: false,
-        enableGeneratedRules: true,
+        enableGeneratedRules: false,
         enableHeuristicDetection: false,
         detectRetries: 2,
         isMainWorld: false,
@@ -57,7 +67,7 @@ export function initializeCookieConsentEngine({
           waits: debug
         }
       },
-      { compact, consentomatic }
+      { autoconsent, consentomatic }
     )
 
     return { handled: null, engineLifecycle: engine.state.lifecycle }
