@@ -14,6 +14,11 @@ const DEFAULT_VERIFICATION_OPTIONS = {
   timeoutBetweenAttemptsMs: 500
 }
 
+const incompleteCookiesConsentResult = {
+  engineLifecycle: expect.stringMatching(/started|initialized/),
+  handled: null
+}
+
 test.describe('installed plausible web variant', () => {
   test('using provided snippet', async ({ page }, { testId }) => {
     await mockManyRequests({
@@ -65,7 +70,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -126,7 +131,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: undefined,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -183,7 +188,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 400,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -225,7 +230,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: undefined,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -258,13 +263,21 @@ test.describe('installed plausible web variant', () => {
     const [result, _] = await Promise.all([
       executeVerifyV2(page, {
         ...DEFAULT_VERIFICATION_OPTIONS,
+        timeoutMs: 1500,
         responseHeaders
       }),
-      page.evaluate(
-        ({ targetUrl }) =>
-          setTimeout(() => (window.location.href = targetUrl), 250),
-        { targetUrl: urlBeta }
-      )
+      (async () => {
+        // start navigation timer only when the verifier code has been added to the page
+        await page.waitForFunction(`() => !!window.verifyPlausibleInstallation`)
+        await page.evaluate(
+          ({ targetUrl }) => {
+            setTimeout(() => {
+              window.location.href = targetUrl
+            }, 500)
+          },
+          { targetUrl: urlBeta }
+        )
+      })()
     ])
     await expect(page.getByText('beta')).toBeVisible()
 
@@ -288,7 +301,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -296,7 +309,6 @@ test.describe('installed plausible web variant', () => {
   test('there are more than maxAttempts JS navigations', async ({ page }, {
     testId
   }) => {
-    const timeoutBetweenAttemptsMs = 100
     const maxAttempts = 2
 
     const { url: urlGamma } = await initializePageDynamically(page, {
@@ -314,10 +326,7 @@ test.describe('installed plausible web variant', () => {
       path: '/beta',
       testId,
       scriptConfig: '', // no tracker
-      bodyContent: `
-      <script>setTimeout(() => window.location.href = "${urlGamma}", ${
-        timeoutBetweenAttemptsMs + 250
-      })</script>`
+      bodyContent: 'beta'
     })
 
     const { url } = await initializePageDynamically(page, {
@@ -325,7 +334,6 @@ test.describe('installed plausible web variant', () => {
       scriptConfig: '', // no tracker
       bodyContent: 'alfa'
     })
-
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
@@ -334,14 +342,35 @@ test.describe('installed plausible web variant', () => {
     const [result] = await Promise.all([
       executeVerifyV2(page, {
         ...DEFAULT_VERIFICATION_OPTIONS,
-        timeoutBetweenAttemptsMs,
+        timeoutMs: 1500,
+        timeoutBetweenAttemptsMs: 100,
         maxAttempts,
         responseHeaders
       }),
-      page.evaluate(
-        (url) => setTimeout(() => (window.location.href = url), 250),
-        urlBeta
-      )
+      (async () => {
+        // start navigation timer only when the verifier code has been added to the page
+        await page.waitForFunction(`() => !!window.verifyPlausibleInstallation`)
+        await page.evaluate(
+          ({ targetUrl }) => {
+            setTimeout(() => {
+              console.debug(`navigation 1`)
+              window.location.href = targetUrl
+            }, 500)
+          },
+          { targetUrl: urlBeta }
+        )
+        await expect(page.getByText('beta')).toBeVisible()
+        // start navigation timer only when the verifier code has been added to the page
+        await page.waitForFunction(`() => !!window.verifyPlausibleInstallation`)
+        await page.evaluate(
+          ({ targetUrl }) => {
+            setTimeout(() => {
+              window.location.href = targetUrl
+            }, 500)
+          },
+          { targetUrl: urlGamma }
+        )
+      })()
     ])
 
     await expect(page.getByText('gamma')).toBeVisible()
@@ -407,7 +436,7 @@ test.describe('installed plausible web variant', () => {
           requestUrl: undefined,
           responseStatus: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -468,7 +497,7 @@ test.describe('installed plausible web variant', () => {
           requestUrl: undefined,
           responseStatus: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -533,7 +562,7 @@ test.describe('installed plausible web variant', () => {
           },
           responseStatus: 202
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -592,7 +621,7 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -651,7 +680,7 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -710,7 +739,7 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: 500,
           error: undefined
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -760,8 +789,60 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: undefined,
           error: { message: 'Failed to fetch' }
         },
-        cookieBannerLikely: false
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
+})
+
+test.describe('opts in on cookie banners', () => {
+  for (const { url, expectedCookiesConsentResult } of [
+    {
+      url: `${LOCAL_SERVER_ADDR}/cookies-onetrust.html`,
+      expectedCookiesConsentResult: {
+        cmp: 'Onetrust',
+        handled: true
+      }
+    },
+    {
+      url: `${LOCAL_SERVER_ADDR}/cookies-iubenda.html`,
+      expectedCookiesConsentResult: {
+        cmp: 'iubenda',
+        handled: true
+      }
+    },
+    {
+      url: `${LOCAL_SERVER_ADDR}/cookies-cookiebot.html`,
+      expectedCookiesConsentResult: {
+        cmp: 'cookiebot',
+        handled: true
+      }
+    },
+    {
+      url: `${LOCAL_SERVER_ADDR}/cookies-quantcast.html`,
+      expectedCookiesConsentResult: {
+        cmp: 'quantcast',
+        handled: true
+      }
+    }
+  ]) {
+    test(`accepts cookies of cmp ${expectedCookiesConsentResult.cmp}`, async ({
+      page
+    }) => {
+      const response = await page.goto(url)
+      const responseHeaders = response?.headers() ?? {}
+
+      const result = await executeVerifyV2(page, {
+        ...DEFAULT_VERIFICATION_OPTIONS,
+        timeoutMs: 2000,
+        responseHeaders
+      })
+
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          cookiesConsentResult: expectedCookiesConsentResult
+        })
+      )
+    })
+  }
 })

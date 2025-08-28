@@ -13,7 +13,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
             plausible_variant: nil,
             diagnostics_are_from_cache_bust: nil,
             test_event: nil,
-            cookie_banner_likely: nil,
+            cookies_consent_result: nil,
             response_status: nil,
             service_error: nil,
             attempts: nil
@@ -180,24 +180,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _url
       ),
       do: error(@error_csp_disallowed)
-
-  @error_gtm_selected_maybe_cookie_banner Error.new!(%{
-                                            message: "We couldn't verify your website",
-                                            recommendation:
-                                              "A cookie consent banner may be stopping Plausible from loading on your site. If that is intentional, you'll need to verify that Plausible works manually",
-                                            url:
-                                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                                          })
-  def interpret(
-        %__MODULE__{
-          selected_installation_type: "gtm",
-          cookie_banner_likely: true,
-          service_error: nil
-        },
-        _expected_domain,
-        _url
-      ),
-      do: error(@error_gtm_selected_maybe_cookie_banner)
 
   @error_domain_not_found Error.new!(%{
                             message: "We couldn't find your website at <%= @attempted_url %>",
