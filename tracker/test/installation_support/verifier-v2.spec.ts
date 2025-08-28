@@ -14,6 +14,11 @@ const DEFAULT_VERIFICATION_OPTIONS = {
   timeoutBetweenAttemptsMs: 500
 }
 
+const incompleteCookiesConsentResult = {
+  engineLifecycle: expect.stringMatching(/started|initialized/),
+  handled: null
+}
+
 test.describe('installed plausible web variant', () => {
   test('using provided snippet', async ({ page }, { testId }) => {
     await mockManyRequests({
@@ -65,13 +70,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -132,13 +131,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: undefined,
           error: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -195,13 +188,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 400,
           error: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -243,13 +230,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: undefined,
           error: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -312,13 +293,7 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -437,13 +412,7 @@ test.describe('installed plausible web variant', () => {
           requestUrl: undefined,
           responseStatus: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -504,13 +473,7 @@ test.describe('installed plausible web variant', () => {
           requestUrl: undefined,
           responseStatus: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -576,11 +539,8 @@ test.describe('installed plausible web variant', () => {
           responseStatus: 202
         },
         cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
+          handled: null,
+          engineLifecycle: 'started'
         }
       }
     })
@@ -640,13 +600,7 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: 202,
           error: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -706,11 +660,8 @@ test.describe('installed plausible esm variant', () => {
           error: undefined
         },
         cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
+          handled: null,
+          engineLifecycle: 'started'
         }
       }
     })
@@ -770,13 +721,7 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: 500,
           error: undefined
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -826,13 +771,7 @@ test.describe('installed plausible esm variant', () => {
           responseStatus: undefined,
           error: { message: 'Failed to fetch' }
         },
-        cookiesConsentResult: {
-          handled: false,
-          error: {
-            engineLifecycle: 'started',
-            message: 'Time allocated for cookie consent engine exceeded'
-          }
-        }
+        cookiesConsentResult: incompleteCookiesConsentResult
       }
     })
   })
@@ -840,35 +779,6 @@ test.describe('installed plausible esm variant', () => {
 
 test.describe('cookie banners', () => {
   for (const { url, cookieBannerTitle, expectedcookiesConsentResult } of [
-    // {
-    //   url: 'https://visitestonia.com/en',
-    //   expectedcookiesConsentResult: { cmp: 'cookiebot' }
-    // } // this site uses cookiebot but consent-o-matic is not able to accept the cookies
-    // {
-    //   url: 'https://www.vepsalainen.com/en/ee/',
-    //   cookieBannerTitle: 'We use cookies to better your user experience',
-    //   expectedcookiesConsentResult: {
-    //     handled: true,
-    //     cmp: 'cookiebot',
-    //     clicks: expect.any(Number)
-    //   }
-    // },
-    // {
-    //   url: 'https://www.swedbank.se/en',
-    //   cookieBannerTitle: 'Our cookies, your',
-    //   expectedcookiesConsentResult: {
-    //     cmp: 'auto_NO_swedbank.se_63w',
-    //     handled: true
-    //   }
-    // },
-    // {
-    //   url: 'https://www.mohito.com/ee/et/',
-    //   cookieBannerTitle: 'Luba küpsised',
-    //   expectedcookiesConsentResult: {
-    //     cmp: 'consent-o-matic',
-    //     handled: true
-    //   }
-    // },
     {
       url: 'https://www.yelp.ie/dublin',
       cookieBannerTitle: 'We use cookies to deliver',

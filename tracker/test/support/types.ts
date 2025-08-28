@@ -24,6 +24,24 @@ export type VerifyV2Args = {
   cspHostToCheck: string
 }
 
+type ConsentResult =
+  // consented to cookies of cmp
+  | { handled: true; cmp: string }
+  // did not detect cmps, exhausted detection retries
+  | {
+      handled: true
+    }
+  // failed init or consent process
+  | {
+      handled: false
+      error: unknown
+    }
+  // none of the above, most likely didn't get to finish
+  | {
+      handled: null
+      engineLifecycle: string
+    }
+
 export type VerifyV2Result = {
   data:
     | {
@@ -34,19 +52,7 @@ export type VerifyV2Result = {
         plausibleVariant?: string
         disallowedByCsp: boolean
         cookieBannerLikely: boolean
-        cookiesConsentResult:
-          | {
-              handled: true
-              // this is undefined if no cmp is detected and detection retries are exhausted
-              cmp?: string
-            }
-          | {
-            handled: false,
-            error: {
-              message: string
-              engineLifecycle?: string
-            }
-          }
+        cookiesConsentResult: ConsentResult
         testEvent: {
           /**
            * window.plausible (track) callback
