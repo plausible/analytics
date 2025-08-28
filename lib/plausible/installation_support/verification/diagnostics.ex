@@ -227,7 +227,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   def interpret(%__MODULE__{service_error: "net::" <> _}, _expected_domain, url)
       when is_binary(url) do
-    attempted_url = String.split(url, "?") |> List.first()
+    attempted_url = shorten_url(url)
 
     @error_browserless_network
     |> error(attempted_url: attempted_url)
@@ -254,7 +254,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       )
       when is_binary(url) and page_response_status != 200 and plausible_is_on_window != true and
              plausible_is_initialized != true do
-    attempted_url = String.split(url, "?") |> List.first()
+    attempted_url = shorten_url(url)
 
     @error_non_200_page_response
     |> error(attempted_url: attempted_url, page_response_status: page_response_status)
@@ -279,6 +279,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     )
 
     error(@unknown_error)
+  end
+
+  defp shorten_url(url) do
+    String.split(url, "?") |> List.first()
   end
 
   defp success() do
