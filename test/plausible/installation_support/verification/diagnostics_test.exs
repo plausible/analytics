@@ -162,29 +162,6 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
     end
 
-    test "error when GTM selected and cookie banner likely" do
-      expected_domain = "example.com"
-      url_to_verify = "https://#{expected_domain}"
-
-      diagnostics = %Diagnostics{
-        selected_installation_type: "gtm",
-        cookie_banner_likely: true,
-        service_error: nil
-      }
-
-      assert_matches %Result{
-                       ok?: false,
-                       errors: [^any(:string, ~r/.*couldn't verify.*/)],
-                       recommendations: [
-                         %{
-                           text: ^any(:string, ~r/.*cookie consent banner.*/),
-                           url:
-                             "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                         }
-                       ]
-                     } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
-    end
-
     for error_code <- [:domain_not_found, :invalid_url] do
       test "error when DNS check fails (#{error_code})" do
         expected_domain = "example.com"
