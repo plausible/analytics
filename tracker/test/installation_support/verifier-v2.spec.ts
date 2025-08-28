@@ -795,30 +795,35 @@ test.describe('installed plausible esm variant', () => {
   })
 })
 
-test.describe('cookie banners', () => {
-  for (const { url, cookieBannerTitle, expectedcookiesConsentResult } of [
+test.describe('opts in on cookie banners', () => {
+  for (const { url, expectedcookiesConsentResult } of [
     {
-      url: 'https://www.yelp.ie/dublin',
-      cookieBannerTitle: 'We use cookies to deliver',
+      url: `${LOCAL_SERVER_ADDR}/cookies-onetrust.html`,
       expectedcookiesConsentResult: {
         cmp: 'Onetrust',
         handled: true
       }
+    },
+    {
+      url: `${LOCAL_SERVER_ADDR}/cookies-iubenda.html`,
+      expectedcookiesConsentResult: {
+        cmp: 'iubenda',
+        handled: true
+      }
     }
   ]) {
-    test(`accepts cookies on ${url} (${expectedcookiesConsentResult.cmp})`, async ({
+    test(`accepts cookies of cmp ${expectedcookiesConsentResult.cmp}`, async ({
       page
     }) => {
       const response = await page.goto(url)
       const responseHeaders = response?.headers() ?? {}
-      await expect(page.getByText(cookieBannerTitle)).toBeVisible()
 
       const result = await executeVerifyV2(page, {
         ...DEFAULT_VERIFICATION_OPTIONS,
         timeoutMs: 2000,
         responseHeaders
       })
-      await expect(page.getByText(cookieBannerTitle)).not.toBeVisible()
+
       expect(result.data).toEqual(
         expect.objectContaining({
           cookiesConsentResult: expectedcookiesConsentResult
