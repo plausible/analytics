@@ -236,9 +236,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   @error_non_200_page_response Error.new!(%{
                                  message:
-                                   "We could not load your website to verify the installation",
+                                   "We couldn't verify your website at <%= @attempted_url %>",
                                  recommendation:
-                                   "Your site URL (<%= @attempted_url %>) responded with status <%= @page_response_status %>. Please make sure there are no authentication requirements, firewall/CDN rules blocking our request, or errors on your server. Alternatively, you can follow our documentation and verify your installation manually",
+                                   "Our verification tool encountered a <%= @page_response_status %> error. Please check for anything that might be blocking it from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your integration manually.",
                                  url:
                                    "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                                })
