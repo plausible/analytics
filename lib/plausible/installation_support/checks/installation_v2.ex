@@ -23,6 +23,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
     try {
       await page.setUserAgent(userAgent)
       const response = await page.goto(url)
+      const responseStatus = response.status()
       const responseHeaders = response.headers()
 
       async function verify() {
@@ -40,7 +41,8 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
           return {
             data: {
               ...output.data,
-              attempts
+              attempts,
+              responseStatus
             },
           };
         } catch (error) {
@@ -165,6 +167,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
       test_event: data["testEvent"],
       cookie_banner_likely: data["cookieBannerLikely"],
       attempts: data["attempts"],
+      response_status: data["responseStatus"],
       service_error: nil
     ]
 end

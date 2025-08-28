@@ -242,6 +242,39 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
     end
 
+    test "error when plausible not installed and page.goto(url) response is not 200" do
+      expected_domain = "example.com"
+      url_to_verify = "https://#{expected_domain}?plausible_verification=123123123"
+
+      diagnostics = %Diagnostics{
+        plausible_is_on_window: false,
+        plausible_is_initialized: nil,
+        response_status: 403
+      }
+
+      assert_matches %Result{
+                       ok?: false,
+                       data: %{offer_custom_url_input: true},
+                       errors: [
+                         ^any(
+                           :string,
+                           ~r/.*couldn't verify your website at https:\/\/#{expected_domain}.*/
+                         )
+                       ],
+                       recommendations: [
+                         %{
+                           text:
+                             ^any(
+                               :string,
+                               ~r/403 error.*firewall.*authentication.*CDN.*verify your integration manually/
+                             ),
+                           url:
+                             "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                         }
+                       ]
+                     } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
+    end
+
     test "unknown error when no specific case matches" do
       expected_domain = "example.com"
       url_to_verify = "https://#{expected_domain}"
@@ -249,6 +282,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       diagnostics = %Diagnostics{
         plausible_is_on_window: false,
         plausible_is_initialized: false,
+        response_status: 200,
         service_error: nil
       }
 

@@ -14,6 +14,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
             diagnostics_are_from_cache_bust: nil,
             test_event: nil,
             cookie_banner_likely: nil,
+            response_status: nil,
             service_error: nil,
             attempts: nil
 
@@ -226,10 +227,37 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   def interpret(%__MODULE__{service_error: "net::" <> _}, _expected_domain, url)
       when is_binary(url) do
-    attempted_url = String.split(url, "?") |> List.first()
+    attempted_url = shorten_url(url)
 
     @error_browserless_network
     |> error(attempted_url: attempted_url)
+    |> struct!(data: %{offer_custom_url_input: true})
+  end
+
+  @error_non_200_page_response Error.new!(%{
+                                 message:
+                                   "We couldn't verify your website at <%= @attempted_url %>",
+                                 recommendation:
+                                   "Our verification tool encountered a <%= @page_response_status %> error. Please check for anything that might be blocking it from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your integration manually",
+                                 url:
+                                   "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               })
+
+  def interpret(
+        %__MODULE__{
+          plausible_is_on_window: plausible_is_on_window,
+          plausible_is_initialized: plausible_is_initialized,
+          response_status: page_response_status
+        },
+        _expected_domain,
+        url
+      )
+      when is_binary(url) and page_response_status != 200 and plausible_is_on_window != true and
+             plausible_is_initialized != true do
+    attempted_url = shorten_url(url)
+
+    @error_non_200_page_response
+    |> error(attempted_url: attempted_url, page_response_status: page_response_status)
     |> struct!(data: %{offer_custom_url_input: true})
   end
 
@@ -240,6 +268,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                    url:
                      "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                  })
+
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, url) do
     Sentry.capture_message("Unhandled case for site verification (v2)",
       extra: %{
@@ -250,6 +279,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     )
 
     error(@unknown_error)
+  end
+
+  defp shorten_url(url) do
+    String.split(url, "?") |> List.first()
   end
 
   defp success() do
