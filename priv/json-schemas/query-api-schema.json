@@ -63,6 +63,11 @@
           "default": false,
           "description": "If set, returns the total number of result rows rows before pagination under `meta.total_rows`"
         },
+        "trim_relative_date_range": {
+          "type": "boolean",
+          "default": false,
+          "description": "If set, trims future dates from current period date ranges (e.g., current month, year, day)"
+        },
         "comparisons": {
           "$comment": "only :internal",
           "type": "object",
