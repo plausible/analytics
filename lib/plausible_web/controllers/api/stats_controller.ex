@@ -282,10 +282,10 @@ defmodule PlausibleWeb.Api.StatsController do
       toplevel_goal_filter?(query)
 
     cond do
-      query.period == "30m" && goal_filter? ->
+      query.input_date_range == "30m" && goal_filter? ->
         fetch_goal_realtime_top_stats(site, query)
 
-      query.period == "30m" ->
+      query.input_date_range == "30m" ->
         fetch_realtime_top_stats(site, query)
 
       goal_filter? ->
@@ -581,7 +581,7 @@ defmodule PlausibleWeb.Api.StatsController do
         Filters.filtering_on_dimension?(query, "event:page") ->
           {:error, {:invalid_funnel_query, "pages"}}
 
-        query.period == "realtime" ->
+        query.input_date_range == "realtime" ->
           {:error, {:invalid_funnel_query, "realtime period"}}
 
         true ->

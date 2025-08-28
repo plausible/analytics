@@ -162,7 +162,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: DateTimeRange.new!(~D[2024-01-01], ~D[2024-01-31], "UTC"),
-          period: "month",
+          input_date_range: "month",
           now: now,
           timezone: "UTC",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
@@ -178,7 +178,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: DateTimeRange.new!(~D[2024-01-01], ~D[2024-12-31], "UTC"),
-          period: "year",
+          input_date_range: "year",
           now: now,
           timezone: "UTC",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
@@ -194,7 +194,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: DateTimeRange.new!(~D[2024-01-15], ~D[2024-01-15], "UTC"),
-          period: "day",
+          input_date_range: "day",
           now: now,
           timezone: "UTC",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
@@ -211,7 +211,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: original_range,
-          period: "month",
+          input_date_range: "month",
           now: now,
           timezone: "UTC",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
@@ -227,7 +227,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: original_range,
-          period: "year",
+          input_date_range: "year",
           now: now,
           timezone: "UTC",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
@@ -243,7 +243,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: original_range,
-          period: "day",
+          input_date_range: "day",
           now: now,
           timezone: "UTC",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
@@ -259,7 +259,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: original_range,
-          period: "month",
+          input_date_range: "month",
           now: now,
           timezone: "UTC",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, false)
@@ -275,7 +275,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: original_range,
-          period: "month",
+          input_date_range: "month",
           now: now,
           timezone: "UTC",
           include: QueryParser.default_include()
@@ -292,7 +292,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       result =
         perform(%{
           utc_time_range: original_range,
-          period: "7d",
+          input_date_range: "7d",
           now: now,
           timezone: "UTC",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
@@ -309,7 +309,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
           utc_time_range:
             DateTimeRange.new!(~D[2024-01-01], ~D[2024-12-31], "America/New_York")
             |> DateTimeRange.to_timezone("Etc/UTC"),
-          period: "year",
+          input_date_range: "year",
           now: now,
           timezone: "America/New_York",
           include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)

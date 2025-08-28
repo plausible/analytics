@@ -4,8 +4,7 @@ defmodule Plausible.Stats.Query do
   defstruct utc_time_range: nil,
             comparison_utc_time_range: nil,
             interval: nil,
-            # Only set for legacy queries
-            period: nil,
+            input_date_range: nil,
             dimensions: [],
             filters: [],
             sample_threshold: 20_000_000,
@@ -157,7 +156,7 @@ defmodule Plausible.Stats.Query do
     )
   end
 
-  defp get_imports_in_range(_site, %__MODULE__{period: period})
+  defp get_imports_in_range(_site, %__MODULE__{input_date_range: period})
        when period in ["realtime", "30m"] do
     []
   end
@@ -219,7 +218,6 @@ defmodule Plausible.Stats.Query do
 
     Tracer.set_attributes([
       {"plausible.query.interval", query.interval},
-      {"plausible.query.period", query.period},
       {"plausible.query.dimensions", query.dimensions |> Enum.join(";")},
       {"plausible.query.include_imported", query.include_imported},
       {"plausible.query.filter_keys", filter_dimensions},

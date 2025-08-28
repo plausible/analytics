@@ -35,7 +35,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end
 
     with :ok <- JSONSchema.validate(schema_type, params),
-         {:ok, date, now} <- parse_date(site, Map.get(params, "date"), date, now) |> IO.inspect(label: "parse_dates"),
+         {:ok, date, now} <- parse_date(site, Map.get(params, "date"), date, now),
          {:ok, raw_time_range} <-
            parse_time_range(site, Map.get(params, "date_range"), date, now),
          utc_time_range = raw_time_range |> DateTimeRange.to_timezone("Etc/UTC"),
@@ -53,6 +53,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
            preload_goals_and_revenue(site, metrics, filters, dimensions),
          query = %{
            now: now,
+           input_date_range: Map.get(params, "date_range"),
            metrics: metrics,
            filters: filters,
            utc_time_range: utc_time_range,
