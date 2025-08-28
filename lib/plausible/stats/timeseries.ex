@@ -26,6 +26,7 @@ defmodule Plausible.Stats.Timeseries do
         order_by: [{time_dimension(query), :asc}],
         remove_unavailable_revenue_metrics: true
       )
+      |> Query.set_include(:trim_relative_date_range, true)
       |> QueryOptimizer.optimize()
 
     comparison_query =
