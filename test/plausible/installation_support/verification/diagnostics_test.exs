@@ -258,7 +258,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                        errors: [
                          ^any(
                            :string,
-                           ~r/.*could not load your website.*/
+                           ~r/.*couldn't verify your website at https:\/\/#{expected_domain}.*/
                          )
                        ],
                        recommendations: [
@@ -266,7 +266,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                            text:
                              ^any(
                                :string,
-                               ~r/https:\/\/example.com.*403.*verify your installation manually/
+                               ~r/403 error.*firewall.*authentication.*CDN.*verify your integration manually/
                              ),
                            url:
                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
