@@ -608,7 +608,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         imported_site: imported_site
       }
 
-      %{site_import: site_import} =
+      %{site_import: site_import, exported_files: exported_files} =
         initial_context
         |> export_archive()
         |> assert_email_notification()
@@ -616,6 +616,16 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> unzip_archive()
         |> upload_csvs()
         |> run_import()
+
+      assert custom_props_export =
+               exported_files
+               |> Enum.find(&String.contains?(&1, "imported_custom_props_"))
+               |> File.read!()
+               |> String.split("\n")
+
+      assert ~s|"date","property","value","visitors","events"| in custom_props_export
+      assert ~s|"2024-04-01","author","Marko Saric",43,57| in custom_props_export
+      assert ~s|"2024-04-01","category","Posts",43,56| in custom_props_export
 
       assert %SiteImport{
                start_date: ~D[2024-04-01],
