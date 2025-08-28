@@ -238,7 +238,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                  message:
                                    "We couldn't verify your website at <%= @attempted_url %>",
                                  recommendation:
-                                   "Our verification tool encountered a <%= @page_response_status %> error. Please check for anything that might be blocking it from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your integration manually.",
+                                   "Our verification tool encountered a <%= @page_response_status %> error. Please check for anything that might be blocking it from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your integration manually",
                                  url:
                                    "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                                })
