@@ -133,7 +133,7 @@ defmodule Plausible.Segments.Segment do
     do:
       Plausible.Stats.Query.build(
         site,
-        :internal,
+        :public,
         %{
           "site_id" => site.domain,
           "metrics" => ["visitors"],

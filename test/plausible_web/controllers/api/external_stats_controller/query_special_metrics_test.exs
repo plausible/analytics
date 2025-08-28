@@ -423,16 +423,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
       ])
 
       conn =
-        post(
-          conn,
-          "/api/v2/query-internal-test",
+        conn
+        |> Plausible.Stats.Query.Test.fix_query(%{metrics: [:exit_rate]})
+        |> Plausible.Stats.Query.Test.fix_query_include(%{
+          comparisons: %{mode: "previous_period"}
+        })
+        |> post(
+          "/api/v2/query",
           %{
+            "metrics" => ["visitors"],
             "site_id" => site.domain,
-            "metrics" => ["exit_rate"],
             "date_range" => ["2021-01-10", "2021-01-10"],
-            "dimensions" => ["visit:exit_page"],
-            "include" => %{"comparisons" => %{"mode" => "previous_period"}},
-            "order_by" => [["exit_rate", "desc"]]
+            "dimensions" => ["visit:exit_page"]
           }
         )
 

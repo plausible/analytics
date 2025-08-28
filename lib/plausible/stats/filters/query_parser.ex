@@ -25,16 +25,24 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   def default_include(), do: @default_include
 
-  def parse(site, schema_type, params, now \\ nil) when is_map(params) do
+  def parse(site, schema_type, params, now \\ nil, date \\ nil) when is_map(params) do
     {now, date} =
-      if now do
-        {now, DateTime.shift_zone!(now, site.timezone) |> DateTime.to_date()}
-      else
-        {DateTime.utc_now(:second), today(site)}
+      case {now, date} do
+        {nil, nil} ->
+          {DateTime.utc_now(:second), today(site)}
+
+        {now, nil} when not is_nil(now) ->
+          {now, DateTime.shift_zone!(now, site.timezone) |> DateTime.to_date()}
+
+        {nil, date} when not is_nil(date) ->
+          {DateTime.utc_now(:second), date}
+
+        _ ->
+          {now, date}
       end
 
     with :ok <- JSONSchema.validate(schema_type, params),
-         {:ok, date} <- parse_date(site, Map.get(params, "date"), date),
+         {:ok, date} <- parse_date(site, date),
          {:ok, raw_time_range} <-
            parse_time_range(site, Map.get(params, "date_range"), date, now),
          utc_time_range = raw_time_range |> DateTimeRange.to_timezone("Etc/UTC"),
@@ -197,14 +205,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, []}
   end
 
-  defp parse_date(_site, date_string, _date) when is_binary(date_string) do
+  defp parse_date(_site, date_string) when is_binary(date_string) do
     case Date.from_iso8601(date_string) do
       {:ok, date} -> {:ok, date}
       _ -> {:error, "Invalid date '#{date_string}'."}
     end
   end
 
-  defp parse_date(_site, _date_string, date) do
+  defp parse_date(_site, date) do
     {:ok, date}
   end
 
