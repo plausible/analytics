@@ -55,7 +55,6 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp pipeline() do
     [
-      &trim_relative_date_range/1,
       &update_group_by_time/1,
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
@@ -230,72 +229,6 @@ defmodule Plausible.Stats.QueryOptimizer do
               cutoff: nil
             })
         )
-    end
-  end
-
-  defp trim_relative_date_range(%Query{include: %{trim_relative_date_range: true}} = query) do
-    # This is here to trim future bucket labels on the main graph
-    if should_trim_date_range?(query) do
-      trimmed_range = trim_date_range_to_now(query)
-      %Query{query | utc_time_range: trimmed_range}
-    else
-      query
-    end
-  end
-
-  defp trim_relative_date_range(query), do: query
-
-  defp should_trim_date_range?(%Query{input_date_range: "month"} = query) do
-    today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
-    date_range = Query.date_range(query)
-
-    current_month_start = Date.beginning_of_month(today)
-    current_month_end = Date.end_of_month(today)
-
-    date_range.first == current_month_start and date_range.last == current_month_end
-  end
-
-  defp should_trim_date_range?(%Query{input_date_range: "year"} = query) do
-    today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
-    date_range = Query.date_range(query)
-
-    current_year_start = Date.new!(today.year, 1, 1)
-    current_year_end = Date.new!(today.year, 12, 31)
-
-    date_range.first == current_year_start and date_range.last == current_year_end
-  end
-
-  defp should_trim_date_range?(%Query{input_date_range: "day"} = query) do
-    today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
-    date_range = Query.date_range(query)
-
-    date_range.first == today and date_range.last == today
-  end
-
-  defp should_trim_date_range?(_query), do: false
-
-  defp trim_date_range_to_now(query) do
-    if query.input_date_range == "day" do
-      time_range = query.utc_time_range |> DateTimeRange.to_timezone(query.timezone)
-
-      current_hour =
-        query.now
-        |> DateTime.shift_zone!(query.timezone)
-        |> Map.merge(%{minute: 0, second: 0})
-
-      time_range.first
-      |> DateTimeRange.new!(current_hour)
-      |> DateTimeRange.to_timezone("Etc/UTC")
-    else
-      date_range = Query.date_range(query)
-      today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
-
-      trimmed_to_date =
-        Enum.min([date_range.last, today], Date)
-
-      date_range.first
-      |> DateTimeRange.new!(trimmed_to_date, query.timezone)
-      |> DateTimeRange.to_timezone("Etc/UTC")
     end
   end
 end

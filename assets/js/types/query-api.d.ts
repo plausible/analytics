@@ -193,10 +193,6 @@ export interface QueryApiSchema {
      * If set, returns the total number of result rows rows before pagination under `meta.total_rows`
      */
     total_rows?: boolean;
-    /**
-     * If set and using `day`, `month` or `year` date_ranges, the query will be trimmed to the current date
-     */
-    trim_relative_date_range?: boolean;
     comparisons?:
       | {
           mode: "previous_period" | "year_over_year";

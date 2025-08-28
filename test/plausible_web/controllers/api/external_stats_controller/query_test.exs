@@ -1481,34 +1481,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "shows month to date with time labels trimmed", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-16 00:00:00])
-      ])
-
-      conn =
-        post(conn, "/api/v2/query-internal-test", %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "month",
-          "date" => "2021-01-15",
-          "dimensions" => ["time:day"],
-          "include" => %{"trim_relative_date_range" => true}
-        })
-
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2021-01-01"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-15"], "metrics" => [1]}
-             ]
-
-      assert json_response(conn, 200)["query"]["date_range"] == [
-               "2021-01-01T00:00:00+00:00",
-               "2021-01-15T23:59:59+00:00"
-             ]
-    end
-
     test "shows last 6 months of visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2020-08-13 00:00:00]),
