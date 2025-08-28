@@ -101,6 +101,7 @@ defmodule PlausibleWeb.Api.StatsController do
          :ok <- validate_interval_granularity(site, params, dates),
          params <- realtime_period_to_30m(params),
          query = Query.from(site, params, debug_metadata(conn)),
+         query <- Query.set_include(query, :trim_relative_date_range, true),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
       {timeseries_result, comparison_result, _meta} = Stats.timeseries(site, query, [metric])
 
