@@ -586,10 +586,7 @@ defmodule Plausible.Exports do
   defp export_custom_props_q(site, timezone, date_range) do
     query =
       from e in sampled("events_v2"),
-        join: p in "meta.key",
-        on: true,
-        hints: "ARRAY",
-        join: v in "meta.value",
+        join: pv in fragment("arrayZip(`meta.key`, `meta.value`)"),
         on: true,
         hints: "ARRAY",
         where: ^export_filter(site.id, date_range),
@@ -601,8 +598,8 @@ defmodule Plausible.Exports do
         order_by: selected_as(:date),
         select: [
           date(e.timestamp, ^timezone),
-          selected_as(fragment("?", p), :property),
-          selected_as(fragment("?", v), :value),
+          selected_as(fragment("tupleElement(?, 1)", pv), :property),
+          selected_as(fragment("tupleElement(?, 2)", pv), :value),
           visitors(e),
           selected_as(scale_sample(fragment("count()")), :events)
         ]

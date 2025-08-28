@@ -624,7 +624,6 @@ defmodule Plausible.Imported.CSVImporterTest do
                |> String.split("\n")
 
       assert ~s|"date","property","value","visitors","events"| in custom_props_export
-      assert ~s|"2024-04-01","author","Posts",43,56| in custom_props_export
       assert ~s|"2024-04-01","author","Marko Saric",43,57| in custom_props_export
       assert ~s|"2024-04-01","category","Posts",43,56| in custom_props_export
 
