@@ -495,7 +495,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   defp get_or_create_config(site, params, user) do
-    if scriptv2?(site, user) do
+    if PlausibleWeb.Tracker.scriptv2?(site, user) do
       case PlausibleWeb.Tracker.get_or_create_tracker_script_configuration(site, params) do
         {:ok, tracker_script_configuration} ->
           {:ok, tracker_script_configuration}
@@ -509,7 +509,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   defp update_config(site, params, user) do
-    if scriptv2?(site, user) do
+    if PlausibleWeb.Tracker.scriptv2?(site, user) do
       case PlausibleWeb.Tracker.update_script_configuration(site, params, :installation) do
         {:ok, tracker_script_configuration} ->
           {:ok, tracker_script_configuration}
@@ -528,7 +528,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
   defp get_site_response(site, user) do
     serializable_properties =
-      if(scriptv2?(site, user),
+      if(PlausibleWeb.Tracker.scriptv2?(site, user),
         do: [:domain, :timezone, :tracker_script_configuration],
         else: [:domain, :timezone]
       )
@@ -537,9 +537,5 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     |> Map.take(serializable_properties)
     # remap to `custom_properties`
     |> Map.put(:custom_properties, site.allowed_event_props || [])
-  end
-
-  defp scriptv2?(site, user) do
-    FunWithFlags.enabled?(:scriptv2, for: site) or FunWithFlags.enabled?(:scriptv2, for: user)
   end
 end

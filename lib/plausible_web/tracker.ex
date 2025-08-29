@@ -14,6 +14,10 @@ defmodule PlausibleWeb.Tracker do
   @plausible_main_script File.read!(path)
   @external_resource "priv/tracker/js/plausible-web.js"
 
+  def scriptv2?(site, user \\ nil) do
+    FunWithFlags.enabled?(:scriptv2, for: site) or FunWithFlags.enabled?(:scriptv2, for: user)
+  end
+
   @spec get_plausible_main_script(String.t(), Keyword.t()) :: String.t() | nil
   def get_plausible_main_script(id, cache_opts \\ []) do
     on_ee do
