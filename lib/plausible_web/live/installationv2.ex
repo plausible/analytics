@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
             >
               <Icons.wordpress_icon /> WordPress
             </.tab>
-            <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type.result == "gtm"}>
+            <.tab :if={ee?()} patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type.result == "gtm"}>
               <Icons.tag_manager_icon /> Tag Manager
             </.tab>
             <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type.result == "npm"}>
@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
               recommended_installation_type={recommended_installation_type}
             />
             <Instructions.gtm_instructions
-              :if={@installation_type.result == "gtm"}
+              :if={ee?() and @installation_type.result == "gtm"}
               recommended_installation_type={recommended_installation_type}
               tracker_script_configuration_form={@tracker_script_configuration_form.result}
             />
@@ -198,12 +198,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       if assigns[:selected] do
         assign(assigns,
           class:
-            "bg-white dark:bg-gray-800 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center"
+            "bg-white dark:bg-gray-800 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center flex-1 justify-center whitespace-nowrap"
         )
       else
         assign(assigns,
           class:
-            "bg-gray-100 dark:bg-gray-700 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center cursor-pointer"
+            "bg-gray-100 dark:bg-gray-700 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center cursor-pointer flex-1 justify-center whitespace-nowrap"
         )
       end
 
