@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           }>
             <.notice class="mt-4" theme={:yellow}>
               Your website is running an outdated version of the tracking script. Please
-              <.styled_link new_tab href="https://plausible.io/docs/script-update-guide.md">
+              <.styled_link new_tab href="https://plausible.io/docs/script-update-guide">
                 update
               </.styled_link>
               your tracking script before continuing
@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
             <.notice class="mt-4" theme={:yellow}>
               Your website might be using an outdated version of our Google Tag Manager template.
               If so,
-              <.styled_link new_tab href="https://plausible.io/docs/gtm-update-guide.md">
+              <.styled_link new_tab href="https://plausible.io/docs/script-update-guide#gtm">
                 update
               </.styled_link>
               your Google Tag Manager template before continuing
