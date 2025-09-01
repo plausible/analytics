@@ -40,7 +40,7 @@ for (const mode of ['web', 'esm']) {
       testId,
       scriptConfig: switchByMode(
         {
-          web: { ...DEFAULT_CONFIG },
+          web: config,
           esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
             config
           )})</script>`
