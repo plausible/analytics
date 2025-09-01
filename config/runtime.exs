@@ -141,6 +141,20 @@ end
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE_BYTES", "100000")
   |> Integer.parse()
 
+persistor_backend =
+  case get_var_from_path_or_env(config_dir, "PERSISTOR_BACKEND", "embedded") do
+    "embedded" -> Plausible.Ingestion.Persistor.Embedded
+    "embedded_with_relay" -> Plausible.Ingestion.Persistor.EmbeddedWithRelay
+    "remote" -> Plausible.Ingestion.Persistor.Remote
+  end
+
+persistor_url =
+  get_var_from_path_or_env(config_dir, "PERSISTOR_URL", "http://localhost:8001/event")
+
+persistor_count = get_int_from_path_or_env(config_dir, "PERSISTOR_COUNT", 200)
+
+persistor_timeout_ms = get_int_from_path_or_env(config_dir, "PERSISTOR_TIMEOUT_MS", 10_000)
+
 # Can be generated  with `Base.encode64(:crypto.strong_rand_bytes(32))` from
 # iex shell or `openssl rand -base64 32` from command line.
 totp_vault_key =
@@ -648,6 +662,13 @@ config :plausible, Plausible.ImportDeletionRepo,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
   pool_size: 1
+
+config :plausible, Plausible.Ingestion.Persistor, backend: persistor_backend
+
+config :plausible, Plausible.Ingestion.Persistor.Remote,
+  url: persistor_url,
+  count: persistor_count,
+  timeout_ms: persistor_timeout_ms
 
 config :ex_money,
   open_exchange_rates_app_id: get_var_from_path_or_env(config_dir, "OPEN_EXCHANGE_RATES_APP_ID"),

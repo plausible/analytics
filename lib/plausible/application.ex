@@ -212,6 +212,7 @@ defmodule Plausible.Application do
       "https://icons.duckduckgo.com",
       Config.Reader.merge(default_opts, conn_opts: [transport_opts: [timeout: 15_000]])
     )
+    |> maybe_add_persistor_pool(default_opts)
     |> maybe_add_sentry_pool(default_opts)
     |> maybe_add_paddle_pool(default_opts)
     |> maybe_add_google_pools(default_opts)
@@ -224,6 +225,37 @@ defmodule Plausible.Application do
 
       nil ->
         pool_config
+    end
+  end
+
+  defp maybe_add_persistor_pool(pool_config, default) do
+    backend =
+      :plausible
+      |> Application.fetch_env!(Plausible.Ingestion.Persistor)
+      |> Keyword.fetch!(:backend)
+
+    persistor_conf = Application.get_env(:plausible, Plausible.Ingestion.Persistor.Remote)
+
+    if backend in [
+         Plausible.Ingestion.Persistor.Remote,
+         Plausible.Ingestion.Persistor.EmbeddedWithRelay
+       ] do
+      persistor_url = Keyword.fetch!(persistor_conf, :url)
+      count = Keyword.fetch!(persistor_conf, :count)
+      timeout_ms = Keyword.fetch!(persistor_conf, :timeout_ms)
+
+      Map.put(
+        pool_config,
+        persistor_url,
+        Config.Reader.merge(
+          default,
+          protocol: :http2,
+          count: count,
+          conn_opts: [transport_opts: [timeout: timeout_ms]]
+        )
+      )
+    else
+      pool_config
     end
   end
 
