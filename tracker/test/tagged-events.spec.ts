@@ -434,8 +434,12 @@ for (const mode of ['legacy', 'web']) {
         action: () => page.click('circle'),
         expectedRequests: [
           {
-            n: 'link click'
-            // bug with p.url, can't assert
+            n: 'link click',
+            p: {
+              expected: { url: {} },
+              __expectation__: (actual) =>
+                actual && JSON.stringify(actual) === '{"url":{}}'
+            }
           }
         ],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
