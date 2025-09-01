@@ -165,7 +165,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
       plausible_version: data["plausibleVersion"],
       plausible_variant: data["plausibleVariant"],
       test_event: data["testEvent"],
-      cookie_banner_likely: data["cookieBannerLikely"],
+      cookies_consent_result: data["cookiesConsentResult"],
       attempts: data["attempts"],
       response_status: data["responseStatus"],
       service_error: nil

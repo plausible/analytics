@@ -1,6 +1,6 @@
 /** @typedef {import('../test/support/types').VerifyV2Args} VerifyV2Args */
 /** @typedef {import('../test/support/types').VerifyV2Result} VerifyV2Result */
-import { checkCookieBanner } from './check-cookie-banner'
+import { initializeCookieConsentEngine } from './autoconsent-to-cookies'
 import { checkDisallowedByCSP } from './check-disallowed-by-csp'
 
 /**
@@ -29,9 +29,11 @@ async function verifyPlausibleInstallation({
     plausibleVersion,
     plausibleVariant,
     testEvent,
+    cookiesConsentResult,
     error: testPlausibleFunctionError
   } = await testPlausibleFunction({
-    timeoutMs
+    timeoutMs,
+    debug
   })
 
   if (testPlausibleFunctionError) {
@@ -61,7 +63,7 @@ async function verifyPlausibleInstallation({
       responseStatus: interceptedTestEvent?.response?.status,
       error: interceptedTestEvent?.error
     },
-    cookieBannerLikely: checkCookieBanner()
+    cookiesConsentResult
   }
 
   log({
@@ -157,17 +159,21 @@ function getPlausibleVariant() {
   return window.plausible?.s
 }
 
-async function testPlausibleFunction({ timeoutMs }) {
+async function testPlausibleFunction({ timeoutMs, debug }) {
   return new Promise(async (_resolve) => {
     let plausibleIsOnWindow = isPlausibleOnWindow()
     let plausibleIsInitialized = isPlausibleInitialized()
     let plausibleVersion = getPlausibleVersion()
     let plausibleVariant = getPlausibleVariant()
     let testEvent = {}
+    let cookiesConsentResult = {
+      handled: null,
+      engineLifecycle: 'not-started'
+    }
 
     let resolved = false
 
-    function resolve(additionalData) {
+    const resolve = (overrides) => {
       resolved = true
       _resolve({
         plausibleIsInitialized,
@@ -175,7 +181,8 @@ async function testPlausibleFunction({ timeoutMs }) {
         plausibleVersion,
         plausibleVariant,
         testEvent,
-        ...additionalData
+        cookiesConsentResult,
+        ...overrides
       })
     }
 
@@ -184,6 +191,28 @@ async function testPlausibleFunction({ timeoutMs }) {
         error: 'Test Plausible function timeout exceeded'
       })
     }, timeoutMs)
+
+    cookiesConsentResult = initializeCookieConsentEngine({
+      debug,
+      onConsentDone: (cmp) => {
+        if (resolved) return
+        cookiesConsentResult = { handled: true, cmp }
+      },
+      onConsentError: (err) => {
+        if (resolved) return
+        cookiesConsentResult = { handled: false, error: err }
+      },
+      onLifecycleUpdate: (lifecycle) => {
+        if (resolved) return
+        // skips messages that might override consent success or error
+        if (cookiesConsentResult.handled !== null) return
+        if (lifecycle === 'done') {
+          cookiesConsentResult = { handled: true }
+        } else {
+          cookiesConsentResult.engineLifecycle = lifecycle
+        }
+      }
+    })
 
     while (!plausibleIsOnWindow) {
       if (isPlausibleOnWindow()) {
