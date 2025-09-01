@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Custom events can now be marked as non-interactive in events API and tracker script. Events marked as non-interactive are not counted towards bounce rate.
 - Ability to leave team via Team Settings > Leave Team
 - Properties are now included in full site exports done via Site Settings > Imports & Exports
+- Google Search Console integration settings: properties can be dynamically sought
 
 ### Removed
 

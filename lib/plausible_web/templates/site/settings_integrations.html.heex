@@ -53,14 +53,16 @@
               class="max-w-xs"
               action={"/#{URI.encode_www_form(@site.domain)}/settings/google"}
             >
-              <div class="inline-block relative w-full">
-                <.input
-                  options={domains}
-                  type="select"
-                  field={f[:property]}
-                  prompt="(Choose property)"
-                  class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:rounded-md"
-                />
+              <div class="mt-2 w-full">
+                {live_render(@conn, PlausibleWeb.Live.PlainCombo,
+                  session: %{
+                    "options" => Enum.zip(domains, domains),
+                    "prompt" => "(Choose property)",
+                    "name" => f[:property].name,
+                    "id" => f[:property].id,
+                    "selected" => f[:property].value
+                  }
+                )}
               </div>
 
               <.button type="submit">Save</.button>
