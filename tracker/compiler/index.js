@@ -12,7 +12,7 @@ import json from '@rollup/plugin-json'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const DEFAULT_GLOBALS = {
+export const DEFAULT_GLOBALS = {
   COMPILE_PLAUSIBLE_WEB: false,
   COMPILE_PLAUSIBLE_NPM: false,
   COMPILE_PLAUSIBLE_LEGACY_VARIANT: false,

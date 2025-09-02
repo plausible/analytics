@@ -6,8 +6,8 @@ export type Options = {
   captureOnLocalhost: boolean
   autoCapturePageviews: boolean
   customProperties:
-    | Record<string, any>
-    | ((eventName: string) => Record<string, any>)
+    | Record<string, unknown>
+    | ((eventName: string) => Record<string, unknown>)
   transformRequest: (payload: unknown) => unknown
   logging: boolean
 }
@@ -46,6 +46,7 @@ export type VerifyV2Result = {
   data:
     | {
         completed: true
+        attempts: number
         plausibleIsOnWindow: boolean
         plausibleIsInitialized: boolean
         plausibleVersion: number
@@ -57,7 +58,7 @@ export type VerifyV2Result = {
           /**
            * window.plausible (track) callback
            */
-          callbackResult?: any
+          callbackResult?: unknown
           /**
            * intercepted fetch response status
            */

@@ -71,7 +71,7 @@ export function initializeCookieConsentEngine({
     )
 
     return { handled: null, engineLifecycle: engine.state.lifecycle }
-  } catch (e) {
+  } catch (_error) {
     return {
       handled: false,
       error: { message: 'Error initializing cookie consent engine' }

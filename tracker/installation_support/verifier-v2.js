@@ -96,7 +96,9 @@ function getNormalizedPlausibleEventBody(fetchOptions) {
       version = body?.v || body?.version
     }
     return name && domain ? { name, domain, version } : null
-  } catch (e) {}
+  } catch (_error) {
+    // ignore error
+  }
 }
 
 function startRecordingEventFetchCalls() {
@@ -160,7 +162,10 @@ function getPlausibleVariant() {
 }
 
 async function testPlausibleFunction({ timeoutMs, debug }) {
-  return new Promise(async (_resolve) => {
+  // async executor is not a problem in this case, because it's only used for `await delay()` calls
+  // not for controlling promise resolution
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolvePromise) => {
     let plausibleIsOnWindow = isPlausibleOnWindow()
     let plausibleIsInitialized = isPlausibleInitialized()
     let plausibleVersion = getPlausibleVersion()
@@ -175,7 +180,7 @@ async function testPlausibleFunction({ timeoutMs, debug }) {
 
     const resolve = (overrides) => {
       resolved = true
-      _resolve({
+      resolvePromise({
         plausibleIsInitialized,
         plausibleIsOnWindow,
         plausibleVersion,
