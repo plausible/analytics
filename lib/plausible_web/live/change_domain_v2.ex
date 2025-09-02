@@ -13,6 +13,10 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     alias Plausible.InstallationSupport.{Detection, Result}
   end
 
+  @change_domain_docs_link "https://plausible.io/docs/change-domain-name/"
+
+  def change_domain_docs_link(), do: @change_domain_docs_link
+
   def mount(
         %{"domain" => domain},
         _session,
@@ -141,7 +145,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         also update the site <code>domain</code>
         in your Plausible Wordpress Plugin settings within 72 hours
         to match the updated domain. See
-        <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+        <.styled_link new_tab href={@change_domain_docs_link}>
           documentation
         </.styled_link>
         for details.
@@ -156,7 +160,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         also update the site <code>domain</code>
         of your Plausible Installation within 72 hours
         to match the updated domain. See
-        <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+        <.styled_link new_tab href={@change_domain_docs_link}>
           documentation
         </.styled_link>
         for details.
@@ -187,8 +191,10 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     end
   else
     defp ce_generic_notice(assigns) do
+      assigns = assign(assigns, docs_link: @change_domain_docs_link)
+
       ~H"""
-      <.notice class="mt-4" title="Additional steps may be required">
+      <.notice data-test-id="ce-generic-notice" class="mt-4" title="Additional steps may be required">
         If you're using our legacy script (i.e. your Plausible snippet includes the
         <code>data-domain</code>
         attribute), OR if you've installed Plausible using
@@ -196,7 +202,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         also update the site <code>domain</code>
         of
         your Plausible Installation within 72 hours to match the updated domain. See
-        <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+        <.styled_link new_tab href={@docs_link}>
           documentation
         </.styled_link>
         for details.
