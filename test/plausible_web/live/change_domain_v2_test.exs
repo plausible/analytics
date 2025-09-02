@@ -301,7 +301,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       end)
     end
 
-    @tag :ce_only
+    @tag :ce_build_only
     test "success page shows generic v1 notice for CE", %{
       conn: conn,
       site: site

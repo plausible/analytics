@@ -276,7 +276,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_no_emails_delivered()
     end
 
-    @tag :ce_only
+    @tag :ce_build_only
     test "allows removing any type of entry (CE)", %{
       conn: conn,
       user: user,

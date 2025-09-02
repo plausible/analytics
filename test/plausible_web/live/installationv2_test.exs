@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
   alias Plausible.Site.TrackerScriptConfiguration
 
-  @migration_guide_link "https://plausible.io/docs/script-update-guide.md"
+  @migration_guide_link "https://plausible.io/docs/script-update-guide"
 
   setup [:create_user, :log_in, :create_site]
 
@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       assert resp =~ "animate-spin"
     end
 
-    @tag :ce_only
+    @tag :ce_build_only
     test "no loading spinner, no GTM tab on CE", %{conn: conn, site: site} do
       resp = get(conn, "/#{site.domain}/installationv2") |> html_response(200)
 
@@ -142,7 +142,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       assert html =~ "Verify NPM installation"
     end
 
-    @tag :ce_only
+    @tag :ce_build_only
     test "allows switching between installation tabs (CE)", %{conn: conn, site: site} do
       {lv, _html} = get_lv(conn, site)
 
@@ -284,6 +284,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       end
     end
 
+    @tag :ce_build_only
     test "submitting the form redirects to verification (CE)", %{conn: conn, site: site} do
       {lv, _html} = get_lv(conn, site)
 
@@ -416,7 +417,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       assert element_exists?(html, "a[href='#{@migration_guide_link}']")
     end
 
-    @tag :ce_only
+    @tag :ce_build_only
     test "shows v1 migration guide link for manual instructions", %{conn: conn, site: site} do
       {lv, _} = get_lv(conn, site)
 

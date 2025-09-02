@@ -139,13 +139,15 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     end
 
     defp wordpress_plugin_notice(assigns) do
+      assigns = assign(assigns, docs_link: @change_domain_docs_link)
+
       ~H"""
       <.notice class="mt-4" title="Additional Steps Required">
         To guarantee continuous tracking, you <i>must</i>
         also update the site <code>domain</code>
         in your Plausible Wordpress Plugin settings within 72 hours
         to match the updated domain. See
-        <.styled_link new_tab href={@change_domain_docs_link}>
+        <.styled_link new_tab href={@docs_link}>
           documentation
         </.styled_link>
         for details.
@@ -154,13 +156,15 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     end
 
     defp generic_notice(assigns) do
+      assigns = assign(assigns, docs_link: @change_domain_docs_link)
+
       ~H"""
       <.notice class="mt-4" title="Additional Steps Required">
         To guarantee continuous tracking, you <i>must</i>
         also update the site <code>domain</code>
         of your Plausible Installation within 72 hours
         to match the updated domain. See
-        <.styled_link new_tab href={@change_domain_docs_link}>
+        <.styled_link new_tab href={@docs_link}>
           documentation
         </.styled_link>
         for details.

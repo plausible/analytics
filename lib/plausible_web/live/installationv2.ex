@@ -188,7 +188,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           <.focus_list>
             <:item>
               Still using the legacy snippet with the data-domain attribute? See
-              <.styled_link href="https://plausible.io/docs/script-update-guide.md">
+              <.styled_link href="https://plausible.io/docs/script-update-guide">
                 migration guide
               </.styled_link>
             </:item>
