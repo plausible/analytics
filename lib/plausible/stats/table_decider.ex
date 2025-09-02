@@ -87,44 +87,35 @@ defmodule Plausible.Stats.TableDecider do
     end
   end
 
-  def partition_metrics(metrics, query) do
-    %{
-      event: event_only_metrics,
-      session: session_only_metrics,
-      either: either_metrics,
-      other: other_metrics,
-      sample_percent: sample_percent
-    } =
-      partition(metrics, query, &metric_partitioner/2)
+  def partition_metrics(requested_metrics, query) do
+    metrics = partition(requested_metrics, query, &metric_partitioner/2)
 
-    %{event: event_only_filters, session: session_only_filters} =
+    filters =
       query.filters
       |> dimensions_used_in_filters()
       |> partition(query, &dimension_partitioner/2)
 
-    %{event: event_only_dimensions, session: session_only_dimensions} =
-      partition(query.dimensions, query, &dimension_partitioner/2)
+    dimensions = partition(query.dimensions, query, &dimension_partitioner/2)
 
     cond do
       # Only one table needs to be queried
-      empty?(event_only_metrics) && empty?(event_only_filters) && empty?(event_only_dimensions) ->
-        {[], session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
+      empty?(metrics.event) && empty?(filters.event) && empty?(dimensions.event) ->
+        {[], metrics.session ++ metrics.either ++ metrics.sample_percent, metrics.other}
 
-      empty?(session_only_metrics) && empty?(session_only_filters) &&
-          empty?(session_only_dimensions) ->
-        {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
+      empty?(metrics.session) && empty?(filters.session) && empty?(dimensions.session) ->
+        {metrics.event ++ metrics.either ++ metrics.sample_percent, [], metrics.other}
 
       # Filters and/or dimensions on both events and sessions, but only one kind of metric
-      empty?(event_only_metrics) && empty?(event_only_dimensions) ->
-        {[], session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
+      empty?(metrics.event) && empty?(dimensions.event) ->
+        {[], metrics.session ++ metrics.either ++ metrics.sample_percent, metrics.other}
 
-      empty?(session_only_metrics) && empty?(session_only_dimensions) ->
-        {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
+      empty?(metrics.session) && empty?(dimensions.session) ->
+        {metrics.event ++ metrics.either ++ metrics.sample_percent, [], metrics.other}
 
       # Default: prefer events
       true ->
-        {event_only_metrics ++ either_metrics ++ sample_percent,
-         session_only_metrics ++ sample_percent, other_metrics}
+        {metrics.event ++ metrics.either ++ metrics.sample_percent,
+         metrics.session ++ metrics.sample_percent, metrics.other}
     end
   end
 
