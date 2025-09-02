@@ -1,7 +1,6 @@
 // This file has the logic for tracking tagged events, form submissions, file downloads and outbound links.
 
-// eslint-disable-next-line no-redeclare
-import { config, scriptEl, location, document } from './config'
+import { config, scriptEl } from './config'
 import { track } from './track'
 
 export var DEFAULT_FILE_TYPES = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma', 'dmg']

@@ -1,7 +1,6 @@
 import { sendRequest } from './networking'
 import { prePageviewTrack, postPageviewTrack, onPageviewIgnored } from './engagement'
-// eslint-disable-next-line no-redeclare
-import { config, scriptEl, location, document } from './config'
+import { config, scriptEl } from './config'
 
 export function track(eventName, options) {
   if (COMPILE_PLAUSIBLE_NPM && !config.isInitialized) {
