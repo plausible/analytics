@@ -1,9 +1,12 @@
+// eslint-disable-next-line no-redeclare
 var location = window.location
+// eslint-disable-next-line no-redeclare
 var document = window.document
 
 if (COMPILE_COMPAT) {
   var scriptEl = document.getElementById('plausible')
 } else if (COMPILE_PLAUSIBLE_LEGACY_VARIANT) {
+  // eslint-disable-next-line no-redeclare
   var scriptEl = document.currentScript
 }
 

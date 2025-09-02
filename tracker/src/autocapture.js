@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-redeclare
 import { config, location, document } from './config'
 
 export function init(track) {

@@ -1,4 +1,6 @@
-// Code for tracking tagged events, form submissions, file downloads and outbound links
+// This file has the logic for tracking tagged events, form submissions, file downloads and outbound links.
+
+// eslint-disable-next-line no-redeclare
 import { config, scriptEl, location, document } from './config'
 import { track } from './track'
 
@@ -61,9 +63,9 @@ function handleLinkClickEvent(event) {
 function sendLinkClickEvent(event, link, eventAttrs) {
   // In some legacy variants, this block delays opening the link up to 5 seconds,
   // or until analytics request finishes, otherwise navigation could prevent the analytics event from being sent.
+  var attrs
   if (COMPILE_COMPAT) {
   var followedLink = false
-
   function followLink() {
     if (!followedLink) {
       followedLink = true
@@ -72,7 +74,7 @@ function sendLinkClickEvent(event, link, eventAttrs) {
   }
 
   if (shouldInterceptNavigation(event, link)) {
-    var attrs = { props: eventAttrs.props, callback: followLink }
+    attrs = { props: eventAttrs.props, callback: followLink }
     if (COMPILE_REVENUE) {
       attrs.revenue = eventAttrs.revenue
     }
@@ -80,14 +82,14 @@ function sendLinkClickEvent(event, link, eventAttrs) {
     setTimeout(followLink, 5000)
     event.preventDefault()
   } else {
-    var attrs = { props: eventAttrs.props }
+    attrs = { props: eventAttrs.props }
     if (COMPILE_REVENUE) {
       attrs.revenue = eventAttrs.revenue
     }
     track(eventAttrs.name, attrs)
   }
   } else {
-  var attrs = { props: eventAttrs.props }
+  attrs = { props: eventAttrs.props }
   if (COMPILE_REVENUE) {
     attrs.revenue = eventAttrs.revenue
   }
@@ -139,10 +141,12 @@ function getTaggedEventAttributes(htmlElement) {
   for (var i = 0; i < classList.length; i++) {
     var className = classList.item(i)
 
+    var key
+    var value
     var matchList = className.match(/plausible-event-(.+)(=|--)(.+)/)
     if (matchList) {
-      var key = matchList[1]
-      var value = matchList[3].replace(/\+/g, ' ')
+      key = matchList[1]
+      value = matchList[3].replace(/\+/g, ' ')
 
       if (key.toLowerCase() == 'name') {
         eventAttrs.name = value
@@ -154,8 +158,8 @@ function getTaggedEventAttributes(htmlElement) {
     if (COMPILE_REVENUE) {
       var revenueMatchList = className.match(/plausible-revenue-(.+)(=|--)(.+)/)
       if (revenueMatchList) {
-        var key = revenueMatchList[1]
-        var value = revenueMatchList[3]
+        key = revenueMatchList[1]
+        value = revenueMatchList[3]
         eventAttrs.revenue[key] = value
       }
     }
@@ -206,7 +210,8 @@ export function init() {
       var form = event.target
       var eventAttrs = getTaggedEventAttributes(form)
       if (!eventAttrs.name) { return }
-
+      
+      var attrs
       // In some legacy variants, this block delays submitting the form for up to 5 seconds,
       // or until analytics request finishes, otherwise form-related navigation could prevent the analytics event from being sent.
       if (COMPILE_COMPAT) {
@@ -222,13 +227,13 @@ export function init() {
 
       setTimeout(submitForm, 5000)
 
-      var attrs = { props: eventAttrs.props, callback: submitForm }
+      attrs = { props: eventAttrs.props, callback: submitForm }
       if (COMPILE_REVENUE) {
         attrs.revenue = eventAttrs.revenue
       }
       track(eventAttrs.name, attrs)
       } else {
-      var attrs = { props: eventAttrs.props }
+      attrs = { props: eventAttrs.props }
       if (COMPILE_REVENUE) {
         attrs.revenue = eventAttrs.revenue
       }
@@ -277,6 +282,7 @@ export function init() {
         }
       }
     }
+    
 
     document.addEventListener('submit', handleTaggedFormSubmitEvent)
     document.addEventListener('click', handleTaggedElementClickEvent)
