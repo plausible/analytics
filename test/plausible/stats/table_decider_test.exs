@@ -164,6 +164,29 @@ defmodule Plausible.Stats.TableDeciderTest do
                sessions: [:visitors]
              ]
     end
+
+    test "smearable metrics" do
+      assert partition_metrics(
+               [:visitors, :visits, :visit_duration, :pageviews],
+               make_query([], ["time:minute"])
+             ) == [
+               events: [:pageviews],
+               sessions: [:visit_duration],
+               sessions_smeared: [:visitors, :visits]
+             ]
+
+      assert partition_metrics([:visitors], make_query([], ["time:hour"])) == [
+               sessions_smeared: [:visitors]
+             ]
+
+      assert partition_metrics([:visitors], make_query([], ["time:day"])) == [
+               sessions: [:visitors]
+             ]
+
+      assert partition_metrics([:visitors], make_query([], [])) == [
+               sessions: [:visitors]
+             ]
+    end
   end
 
   describe "validate_no_metrics_dimensions_conflict" do
