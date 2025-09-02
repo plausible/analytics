@@ -54,39 +54,6 @@ defmodule Plausible.Stats.TableDecider do
     end
   end
 
-  @doc """
-  Returns a three-element tuple with instructions on how to join two Ecto
-  queries. The arguments (`events_query` and `sessions_query`) are `%Query{}`
-  structs that have been split by TableDecider already.
-
-  Normally we can always LEFT JOIN sessions to events, selecting `dimensions`
-  only from the events subquery. That's because:
-
-  1) session dimensions (e.g. entry_page) cannot be queried alongside event
-     metrics/dimensions, or
-
-  2) session dimensions (e.g. operating_system) are also available in the
-     events table.
-
-  The only exception is using the "time:minute" dimension where the sessions
-  subquery might return more rows than the events one. That's because we're
-  counting sessions in all time buckets they were active in.
-  """
-  def join_options(events_query, sessions_query) do
-    events_q_select_fields = events_query.metrics ++ events_query.dimensions
-    sessions_q_select_fields = sessions_query.metrics -- [:sample_percent]
-
-    if "time:minute" in events_query.dimensions do
-      {
-        :full,
-        events_q_select_fields -- ["time:minute"],
-        sessions_q_select_fields ++ ["time:minute"]
-      }
-    else
-      {:left, events_q_select_fields, sessions_q_select_fields}
-    end
-  end
-
   @type table_type() :: :events | :sessions
   @type metric() :: String.t()
 

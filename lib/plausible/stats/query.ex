@@ -28,7 +28,8 @@ defmodule Plausible.Stats.Query do
             site_id: nil,
             site_native_stats_start_at: nil,
             # Contains information to determine how to combine legacy and new time on page metrics
-            time_on_page_data: %{}
+            time_on_page_data: %{},
+            sql_join_type: :left
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}

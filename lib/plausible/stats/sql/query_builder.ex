@@ -173,18 +173,21 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   # Only one table is being queried - skip joining!
   defp join_query_results([{_table_type, _query, q}], _main_query), do: q
 
-  defp join_query_results(
-         [{:events, events_query, events_q}, {:sessions, sessions_query, sessions_q}],
-         main_query
-       ) do
-    {join_type, events_q_fields, sessions_q_fields} =
-      TableDecider.join_options(events_query, sessions_query)
+  # Multiple tables: join results based on dimensions, select metrics from each and the appropriate dimensions.
+  defp join_query_results(queries, main_query) do
+    queries
+    |> Enum.reduce(nil, fn
+      {_table_type, query, q}, nil ->
+        from(e in subquery(q))
+        |> select_join_metrics(query, query.metrics)
 
-    join(subquery(events_q), join_type, [e], s in subquery(sessions_q),
-      on: ^build_group_by_join(main_query)
-    )
-    |> select_join_fields(events_query, events_q_fields, e)
-    |> select_join_fields(sessions_query, sessions_q_fields, s)
+      {_table_type, query, q}, acc ->
+        join(acc, main_query.sql_join_type, [], s in subquery(q),
+          on: ^build_group_by_join(main_query)
+        )
+        |> select_join_metrics(query, query.metrics -- [:sample_percent])
+    end)
+    |> select_dimensions(main_query)
   end
 
   # NOTE: Old queries do their own pagination
@@ -208,8 +211,33 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   def build_group_by_join(query) do
     query.dimensions
     |> Enum.map(fn dim ->
-      dynamic([e, s], field(e, ^shortname(query, dim)) == field(s, ^shortname(query, dim)))
+      dynamic([a, ..., b], field(a, ^shortname(query, dim)) == field(b, ^shortname(query, dim)))
     end)
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
+
+  defp select_join_metrics(q, query, metrics) do
+    Enum.reduce(metrics, q, fn
+      metric, q ->
+        select_merge_as(q, [..., x], %{
+          shortname(query, metric) => field(x, ^shortname(query, metric))
+        })
+    end)
+  end
+
+  defp select_dimensions(q, query) do
+    Enum.reduce(query.dimensions, q, fn dimension, q ->
+      # We generally select dimensions from the left-most table. Only exception is time:minute where
+      # we use sessions table as sessions are considered on-going during the whole period.
+      if query.sql_join_type == :full and "time:minute" == dimension do
+        select_merge_as(q, [..., x], %{
+          shortname(query, dimension) => field(x, ^shortname(query, dimension))
+        })
+      else
+        select_merge_as(q, [x], %{
+          shortname(query, dimension) => field(x, ^shortname(query, dimension))
+        })
+      end
+    end)
   end
 end
