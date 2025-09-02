@@ -3,9 +3,7 @@ import {
   e,
   expectPlausibleInAction,
   hideAndShowCurrentTab,
-  isEngagementEvent,
   switchByMode,
-  tracker_script_version
 } from './support/test-utils'
 import { test } from '@playwright/test'
 import { ScriptConfig } from './support/types'

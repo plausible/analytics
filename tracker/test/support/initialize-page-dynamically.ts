@@ -48,7 +48,7 @@ const PLAUSIBLE_WEB_SNIPPET = `
 </script>
 `
 
-export function serializeWithFunctions(obj: Record<string, any>): string {
+export function serializeWithFunctions(obj: Record<string, unknown>): string {
   const functions: Record<string, string> = {}
   let counter = 0
 

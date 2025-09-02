@@ -324,7 +324,7 @@ for (const mode of ['legacy', 'web']) {
         return new Promise((resolve) => {
           let taggedElement
           while (!taggedElement) {
-            if ((window as any).plausible?.l !== true) {
+            if (window.plausible?.l !== true) {
               continue
             } else {
               taggedElement = document.createElement('button')

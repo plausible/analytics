@@ -1,9 +1,7 @@
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import {
   expectPlausibleInAction,
-  isEngagementEvent,
   switchByMode,
-  tracker_script_version
 } from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { ScriptConfig } from './support/types'
@@ -17,7 +15,7 @@ const DEFAULT_CONFIG: ScriptConfig = {
 
 for (const mode of ['web', 'esm']) {
   test.describe(`respects "logging" v2 config option (${mode})`, () => {
-    test('if logging is not explicitly set, it is treated as true and logs are emitted on ingored events', async ({
+    test('if logging is not explicitly set, it is treated as true and logs are emitted on ignored events', async ({
       page
     }, { testId }) => {
       const config = { ...DEFAULT_CONFIG }
@@ -50,7 +48,7 @@ for (const mode of ['web', 'esm']) {
       ])
     })
 
-    test('if logging is explicitly set to false, logs are not emitted on ingored events', async ({
+    test('if logging is explicitly set to false, logs are not emitted on ignored events', async ({
       page
     }, { testId }) => {
       const config = { ...DEFAULT_CONFIG, logging: false }

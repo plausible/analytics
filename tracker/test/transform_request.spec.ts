@@ -7,7 +7,6 @@ import {
   expectPlausibleInAction,
   hideAndShowCurrentTab,
   isEngagementEvent,
-  isPageviewEvent,
   switchByMode
 } from './support/test-utils'
 import { test } from '@playwright/test'
@@ -143,9 +142,10 @@ for (const mode of ['web', 'esm']) {
         const config = {
           ...DEFAULT_CONFIG,
           transformRequest: (payload) => {
-            const w = window as any
-            w.requestCount = (w.requestCount ?? 0) + 1
-            return { ...payload, p: { requestCount: w.requestCount } }
+            // @ts-expect-error - defines window.requestCount
+            window.requestCount = (window.requestCount ?? 0) + 1
+            // @ts-expect-error - window.requestCount is defined
+            return { ...payload, p: { requestCount: window.requestCount } }
         }
         }
   

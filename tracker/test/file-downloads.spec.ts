@@ -697,7 +697,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
     })
   }
 
-  test('if the tracking requests delays navigation for more than 5s, it navigates anyway, without waiting for the request to resolve ', async ({
+  test('if the tracking requests delays navigation for more than 5s, it navigates anyway, without waiting for the request to resolve', async ({
     page
   }, { testId }) => {
     test.setTimeout(20000)

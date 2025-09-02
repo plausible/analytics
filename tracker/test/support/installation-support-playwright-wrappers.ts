@@ -25,7 +25,8 @@ export async function executeVerifyV2(
     async function verify() {
       await page.evaluate(verifierCode) // injects window.verifyPlausibleInstallation
       return await page.evaluate(
-        (c) => {return (window as any).verifyPlausibleInstallation(c)},
+        // @ts-expect-error - window.verifyPlausibleInstallation has been injected
+        (c) => {return window.verifyPlausibleInstallation(c)},
         {...functionContext, responseHeaders}
       );
     }
@@ -78,7 +79,8 @@ export async function verifyV1(page, context) {
 
   return await page.evaluate(
     async ({ expectedDataDomain, debug }) => {
-      return await (window as any).verifyPlausibleInstallation(
+      // @ts-expect-error - window.verifyPlausibleInstallation has been injected
+      return await window.verifyPlausibleInstallation(
         expectedDataDomain,
         debug
       )
@@ -100,7 +102,8 @@ export async function detect(page, context) {
 
   return await page.evaluate(
     async (d) => {
-      return await (window as any).scanPageBeforePlausibleInstallation(d)
+      // @ts-expect-error - window.scanPageBeforePlausibleInstallation has been injected
+      return await window.scanPageBeforePlausibleInstallation(d)
     },
     { detectV1, debug, timeoutMs }
   )
