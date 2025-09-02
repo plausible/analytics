@@ -168,8 +168,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     )
   end
 
-  defp join_query_results([nil], _main_query), do: nil
-
   # Only one table is being queried - skip joining!
   defp join_query_results([{_table_type, _query, q}], _main_query), do: q
 
