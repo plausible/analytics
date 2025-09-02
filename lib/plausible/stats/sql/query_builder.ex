@@ -15,15 +15,13 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   require Plausible.Stats.SQL.Expression
 
   def build(query, site) do
-    {event_query, sessions_query} = QueryOptimizer.split(query)
-
-    event_q = build_events_query(site, event_query)
-    sessions_q = build_sessions_query(site, sessions_query)
-
-    join_query_results(
-      {event_q, event_query},
-      {sessions_q, sessions_query}
-    )
+    query
+    |> QueryOptimizer.split()
+    |> Enum.map(fn {table_type, table_query} ->
+      q = build_table_query(table_type, site, table_query)
+      {table_type, table_query, q}
+    end)
+    |> join_query_results(query)
     |> paginate(query.pagination)
     |> select_total_rows(query.include.total_rows)
   end
@@ -32,9 +30,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     Enum.reduce(query.order_by || [], q, &build_order_by(&2, query, &1))
   end
 
-  defp build_events_query(_site, %Query{metrics: []}), do: nil
-
-  defp build_events_query(site, events_query) do
+  defp build_table_query(:events, site, events_query) do
     q =
       from(
         e in "events_v2",
@@ -52,6 +48,25 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> merge_imported(site, events_query)
     |> SQL.SpecialMetrics.add(site, events_query)
     |> TimeOnPage.merge_legacy_time_on_page(events_query)
+  end
+
+  defp build_table_query(:sessions, site, sessions_query) do
+    q =
+      from(
+        e in "sessions_v2",
+        where: ^SQL.WhereBuilder.build(:sessions, sessions_query),
+        select: ^select_session_metrics(sessions_query)
+      )
+
+    on_ee do
+      q = Plausible.Stats.Sampling.add_query_hint(q, sessions_query)
+    end
+
+    q
+    |> join_events_if_needed(sessions_query)
+    |> build_group_by(:sessions, sessions_query)
+    |> merge_imported(site, sessions_query)
+    |> SQL.SpecialMetrics.add(site, sessions_query)
   end
 
   defp join_sessions_if_needed(q, query) do
@@ -77,27 +92,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     else
       q
     end
-  end
-
-  defp build_sessions_query(_site, %Query{metrics: []}), do: nil
-
-  defp build_sessions_query(site, sessions_query) do
-    q =
-      from(
-        e in "sessions_v2",
-        where: ^SQL.WhereBuilder.build(:sessions, sessions_query),
-        select: ^select_session_metrics(sessions_query)
-      )
-
-    on_ee do
-      q = Plausible.Stats.Sampling.add_query_hint(q, sessions_query)
-    end
-
-    q
-    |> join_events_if_needed(sessions_query)
-    |> build_group_by(:sessions, sessions_query)
-    |> merge_imported(site, sessions_query)
-    |> SQL.SpecialMetrics.add(site, sessions_query)
   end
 
   def join_events_if_needed(q, query) do
@@ -173,24 +167,25 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     )
   end
 
-  defp join_query_results({nil, _}, {nil, _}), do: nil
+  defp join_query_results([nil], _main_query), do: nil
 
-  defp join_query_results({events_q, events_query}, {nil, _}),
-    do: events_q |> build_order_by(events_query)
+  # Only one table is being queried - skip joining!
+  defp join_query_results([{_table_type, _query, q}], main_query),
+    do: q |> build_order_by(main_query)
 
-  defp join_query_results({nil, events_query}, {sessions_q, _}),
-    do: sessions_q |> build_order_by(events_query)
-
-  defp join_query_results({events_q, events_query}, {sessions_q, sessions_query}) do
+  defp join_query_results(
+         [{:events, events_query, events_q}, {:sessions, sessions_query, sessions_q}],
+         main_query
+       ) do
     {join_type, events_q_fields, sessions_q_fields} =
       TableDecider.join_options(events_query, sessions_query)
 
     join(subquery(events_q), join_type, [e], s in subquery(sessions_q),
-      on: ^build_group_by_join(events_query)
+      on: ^build_group_by_join(main_query)
     )
     |> select_join_fields(events_query, events_q_fields, e)
     |> select_join_fields(sessions_query, sessions_q_fields, s)
-    |> build_order_by(events_query)
+    |> build_order_by(main_query)
   end
 
   # NOTE: Old queries do their own pagination

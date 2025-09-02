@@ -87,6 +87,10 @@ defmodule Plausible.Stats.TableDecider do
     end
   end
 
+  @type table_type() :: :events | :sessions
+  @type metric() :: String.t()
+
+  @spec partition_metrics(list(metric()), Query.t()) :: list({table_type(), list(metric())})
   def partition_metrics(requested_metrics, query) do
     metrics = partition(requested_metrics, query, &metric_partitioner/2)
 
@@ -100,23 +104,26 @@ defmodule Plausible.Stats.TableDecider do
     cond do
       # Only one table needs to be queried
       empty?(metrics.event) && empty?(filters.event) && empty?(dimensions.event) ->
-        {[], metrics.session ++ metrics.either ++ metrics.sample_percent, metrics.other}
+        [sessions: metrics.session ++ metrics.either ++ metrics.sample_percent]
 
       empty?(metrics.session) && empty?(filters.session) && empty?(dimensions.session) ->
-        {metrics.event ++ metrics.either ++ metrics.sample_percent, [], metrics.other}
+        [events: metrics.event ++ metrics.either ++ metrics.sample_percent]
 
       # Filters and/or dimensions on both events and sessions, but only one kind of metric
       empty?(metrics.event) && empty?(dimensions.event) ->
-        {[], metrics.session ++ metrics.either ++ metrics.sample_percent, metrics.other}
+        [sessions: metrics.session ++ metrics.either ++ metrics.sample_percent]
 
       empty?(metrics.session) && empty?(dimensions.session) ->
-        {metrics.event ++ metrics.either ++ metrics.sample_percent, [], metrics.other}
+        [events: metrics.event ++ metrics.either ++ metrics.sample_percent]
 
       # Default: prefer events
       true ->
-        {metrics.event ++ metrics.either ++ metrics.sample_percent,
-         metrics.session ++ metrics.sample_percent, metrics.other}
+        [
+          events: metrics.event ++ metrics.either ++ metrics.sample_percent,
+          sessions: metrics.session ++ metrics.sample_percent
+        ]
     end
+    |> Enum.reject(fn {_table_type, metrics} -> empty?(metrics) end)
   end
 
   # Note: This is inaccurate when filtering but required for old backwards compatibility

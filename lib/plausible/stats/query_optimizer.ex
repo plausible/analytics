@@ -40,18 +40,12 @@ defmodule Plausible.Stats.QueryOptimizer do
   for sessions.
   """
   def split(query) do
-    {event_metrics, sessions_metrics, _other_metrics} =
-      query.metrics
-      |> Util.maybe_add_visitors_metric()
-      |> TableDecider.partition_metrics(query)
-
-    {
-      Query.set(query,
-        metrics: event_metrics,
-        include_imported: query.include_imported
-      ),
-      split_sessions_query(query, sessions_metrics)
-    }
+    query.metrics
+    |> Util.maybe_add_visitors_metric()
+    |> TableDecider.partition_metrics(query)
+    |> Enum.map(fn {table_type, metrics} ->
+      {table_type, build_split_query(table_type, metrics, query)}
+    end)
   end
 
   defp pipeline() do
@@ -162,7 +156,14 @@ defmodule Plausible.Stats.QueryOptimizer do
     Enum.find(query.dimensions, &Time.time_dimension?/1)
   end
 
-  defp split_sessions_query(query, session_metrics) do
+  defp build_split_query(:events, metrics, query) do
+    Query.set(query,
+      metrics: metrics,
+      include_imported: query.include_imported
+    )
+  end
+
+  defp build_split_query(:sessions, metrics, query) do
     dimensions =
       query.dimensions
       |> Enum.map(fn
@@ -181,7 +182,7 @@ defmodule Plausible.Stats.QueryOptimizer do
 
     Query.set(query,
       filters: filters,
-      metrics: session_metrics,
+      metrics: metrics,
       dimensions: dimensions,
       include_imported: query.include_imported
     )
