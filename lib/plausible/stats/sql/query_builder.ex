@@ -22,6 +22,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       {table_type, table_query, q}
     end)
     |> join_query_results(query)
+    |> build_order_by(query)
     |> paginate(query.pagination)
     |> select_total_rows(query.include.total_rows)
   end
@@ -170,8 +171,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   defp join_query_results([nil], _main_query), do: nil
 
   # Only one table is being queried - skip joining!
-  defp join_query_results([{_table_type, _query, q}], main_query),
-    do: q |> build_order_by(main_query)
+  defp join_query_results([{_table_type, _query, q}], _main_query), do: q
 
   defp join_query_results(
          [{:events, events_query, events_q}, {:sessions, sessions_query, sessions_q}],
@@ -185,7 +185,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     )
     |> select_join_fields(events_query, events_q_fields, e)
     |> select_join_fields(sessions_query, sessions_q_fields, s)
-    |> build_order_by(main_query)
   end
 
   # NOTE: Old queries do their own pagination
