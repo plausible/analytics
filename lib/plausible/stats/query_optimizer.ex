@@ -45,7 +45,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     |> Util.maybe_add_visitors_metric()
     |> TableDecider.partition_metrics(query)
     |> Enum.map(fn {table_type, metrics} ->
-      {table_type, build_split_query(table_type, metrics, query)}
+      build_split_query(table_type, metrics, query)
     end)
   end
 
@@ -159,10 +159,13 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp build_split_query(:events, metrics, query) do
-    Query.set(query,
-      metrics: metrics,
-      include_imported: query.include_imported
-    )
+    {
+      :events,
+      Query.set(query,
+        metrics: metrics,
+        include_imported: query.include_imported
+      )
+    }
   end
 
   defp build_split_query(:sessions, metrics, query) do
@@ -182,12 +185,21 @@ defmodule Plausible.Stats.QueryOptimizer do
         query.filters
       end
 
-    Query.set(query,
-      filters: filters,
-      metrics: metrics,
-      dimensions: dimensions,
-      include_imported: query.include_imported
-    )
+    {
+      :sessions,
+      Query.set(query,
+        filters: filters,
+        metrics: metrics,
+        dimensions: dimensions,
+        include_imported: query.include_imported
+      )
+    }
+  end
+
+  defp build_split_query(:sessions_smeared, metrics, query) do
+    {_, query} = build_split_query(:sessions, metrics, query)
+
+    {:sessions, Query.set(query, smear_session_metrics: true)}
   end
 
   on_ee do

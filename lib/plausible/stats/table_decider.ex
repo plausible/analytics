@@ -90,8 +90,30 @@ defmodule Plausible.Stats.TableDecider do
           sessions: metrics.session ++ metrics.sample_percent
         ]
     end
+    |> Enum.flat_map(&smear_session_metrics(&1, query))
     |> Enum.reject(fn {_table_type, metrics} -> empty?(metrics) end)
   end
+
+  # :TRICKY: When counting session metrics, we want to count each visit/visitor across
+  #   the length of the session, not just when events occurred or when session started.
+  #   For this reason, we smear the session metrics across the length of the session.
+  #   See `time_slots` usage in `Plausible.Stats.SQL.Expression` to understand how this is done.
+  @smearable_metrics [:visitors, :visits]
+  defp smear_session_metrics({:sessions, metrics} = value, query) do
+    if "time:minute" in query.dimensions or "time:hour" in query.dimensions do
+      # Split metrics into two groups: one with visitors and visits, and the remaining ones
+      {smearable_metrics, session_metrics} = Enum.split_with(metrics, &(&1 in @smearable_metrics))
+
+      [
+        {:sessions, session_metrics},
+        {:sessions_smeared, smearable_metrics}
+      ]
+    else
+      [value]
+    end
+  end
+
+  defp smear_session_metrics(value, _query), do: [value]
 
   # Note: This is inaccurate when filtering but required for old backwards compatibility
   defp metric_partitioner(%Query{legacy_breakdown: true}, :pageviews), do: :either
