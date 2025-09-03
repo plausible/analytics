@@ -81,7 +81,7 @@ defmodule Plausible.Stats.EmailReport do
   defp put_top_5_goals(stats, site, query) do
     period_str = if query.period == "month", do: "month", else: "7d"
 
-    {:ok, q} =
+    {:ok, query} =
       Query.build(
         site,
         :internal,
@@ -96,17 +96,8 @@ defmodule Plausible.Stats.EmailReport do
         %{}
       )
 
-    goals =
-      site
-      |> Plausible.Stats.query(q)
-      |> Map.fetch!(:results)
-      |> Enum.map(fn %{metrics: [visitors], dimensions: [goal_name]} ->
-        %{
-          goal: goal_name,
-          visitors: visitors
-        }
-      end)
+    results = Plausible.Stats.query(site, query)
 
-    Map.put(stats, :goals, goals)
+    Map.put(stats, :goals_report, goals_report)
   end
 end

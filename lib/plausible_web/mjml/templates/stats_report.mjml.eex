@@ -179,7 +179,7 @@
       </mj-group>
     </mj-section>
 
-    <%= if @stats.goals && length(@stats.goals) > 0 do %>
+    <%= if @stats.goals_report && length(@stats.goals_report.results) > 0 do %>
     <mj-section padding="0">
       <mj-column>
         <mj-divider />
@@ -191,18 +191,18 @@
         <mj-column>
           <mj-text font-weight="bold">Goal</mj-text>
 
-          <%= for goal <- @stats.goals do %>
+          <%= for %{ metrics: [visitors], dimensions: [goal_name] } <- @stats.goals_report.results do %>
             <mj-text css-class="goal-name">
-              <%= goal[:goal] %>
+              <%= goal_name %>
             </mj-text>
           <% end %>
         </mj-column>
         <mj-column>
           <mj-text font-weight="bold" align="right">Conversions</mj-text>
 
-          <%= for goal <- @stats.goals do %>
+          <%= for %{ metrics: [visitors], dimensions: [goal_name] } <- @stats.goals_report.results do %>
             <mj-text align="right" css-class="goal-conversions">
-              <%= PlausibleWeb.StatsView.large_number_format(goal[:visitors]) %>
+              <%= PlausibleWeb.StatsView.large_number_format(visitors) %>
             </mj-text>
           <% end %>
         </mj-column>
