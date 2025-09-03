@@ -179,6 +179,37 @@
       </mj-group>
     </mj-section>
 
+    <%= if @stats.goals && length(@stats.goals) > 0 do %>
+    <mj-section padding="0">
+      <mj-column>
+        <mj-divider />
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-group>
+        <mj-column>
+          <mj-text font-weight="bold">Goal</mj-text>
+
+          <%= for goal <- @stats.goals do %>
+            <mj-text css-class="goal-name">
+              <%= goal[:goal] %>
+            </mj-text>
+          <% end %>
+        </mj-column>
+        <mj-column>
+          <mj-text font-weight="bold" align="right">Conversions</mj-text>
+
+          <%= for goal <- @stats.goals do %>
+            <mj-text align="right" css-class="goal-conversions">
+              <%= PlausibleWeb.StatsView.large_number_format(goal[:visitors]) %>
+            </mj-text>
+          <% end %>
+        </mj-column>
+      </mj-group>
+    </mj-section>
+    <% end %>
+
     <%= if @login_link do %>
       <mj-section>
         <mj-column>

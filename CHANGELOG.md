@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Ability to leave team via Team Settings > Leave Team
 - Properties are now included in full site exports done via Site Settings > Imports & Exports
 - Google Search Console integration settings: properties can be dynamically sought
+- Weekly/monthly e-mail reports now contain top goal conversions
 
 ### Removed
 

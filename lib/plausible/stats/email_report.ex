@@ -1,13 +1,14 @@
 defmodule Plausible.Stats.EmailReport do
   @moduledoc """
-  This module exposes a `get/2` function that returns a map
-  of stats needed for email reports. These stats include:
+  This module exposes functions that return a map of stats needed for email reports.
+  These stats include:
 
   * Total pageviews
   * Unique visitors
   * Bounce rate
   * A list of Top 5 sources (excluding "Direct / None")
   * A list of Top 5 pages
+  * A list of Top 5 goals (when goals exist)
 
   where total pageviews, unique visitors, and bounce rate
   also include the change compared to previous period.
@@ -18,10 +19,26 @@ defmodule Plausible.Stats.EmailReport do
 
   @aggregate_metrics [:pageviews, :visitors, :bounce_rate]
 
-  def get(site, query) do
-    aggregate_and_compare(site, query)
+  def get_for_period(site, period, date) when period in ["7d", "month"] do
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        %{
+          "site_id" => "#{site.id}",
+          # metrics will be overridden in the pipeline that follows, and the build interface forces us to pass something
+          "metrics" => ["visitors"],
+          "date_range" => period,
+          "date" => date
+        },
+        %{}
+      )
+
+    site
+    |> aggregate_and_compare(query)
     |> put_top_5_pages(site, query)
     |> put_top_5_sources(site, query)
+    |> put_top_5_goals(site, query)
   end
 
   defp aggregate_and_compare(site, query) do
@@ -35,13 +52,12 @@ defmodule Plausible.Stats.EmailReport do
 
     @aggregate_metrics
     |> Enum.with_index()
-    |> Enum.map(fn {metric, idx} ->
+    |> Enum.into(%{}, fn {metric, idx} ->
       value = Enum.at(result.metrics, idx)
       change = Enum.at(result.comparison.change, idx)
 
       {metric, %{value: value, change: change}}
     end)
-    |> Enum.into(%{})
   end
 
   defp put_top_5_pages(stats, site, query) do
@@ -59,5 +75,38 @@ defmodule Plausible.Stats.EmailReport do
     %{results: sources} = Stats.breakdown(site, query, [:visitors], {5, 1})
 
     Map.put(stats, :sources, sources)
+  end
+
+  defp put_top_5_goals(stats, site, query) do
+    date_str = Date.to_iso8601(query.now)
+    period_str = if query.period == "month", do: "month", else: "7d"
+
+    {:ok, q} =
+      Query.build(
+        site,
+        :internal,
+        %{
+          "site_id" => "#{site.id}",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"],
+          "date_range" => period_str,
+          "date" => date_str,
+          "pagination" => %{"limit" => 5}
+        },
+        %{}
+      )
+
+    goals =
+      site
+      |> Plausible.Stats.query(q)
+      |> Map.fetch!(:results)
+      |> Enum.map(fn %{metrics: [visitors], dimensions: [goal_name]} ->
+        %{
+          goal: goal_name,
+          visitors: visitors
+        }
+      end)
+
+    Map.put(stats, :goals, goals)
   end
 end
