@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     alias Plausible.InstallationSupport.{Detection, Result}
   end
 
-  @change_domain_docs_link "https://plausible.io/docs/change-domain-name/"
+  @change_domain_docs_link "https://plausible.io/docs/change-domain-name"
 
   def change_domain_docs_link(), do: @change_domain_docs_link
 
@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
       assigns = assign(assigns, docs_link: @change_domain_docs_link)
 
       ~H"""
-      <.notice data-test-id="ce-generic-notice" class="mt-4" title="Additional steps may be required">
+      <.notice data-testid="ce-generic-notice" class="mt-4" title="Additional steps may be required">
         If you're using our legacy script (i.e. your Plausible snippet includes the
         <code>data-domain</code>
         attribute), OR if you've installed Plausible using
