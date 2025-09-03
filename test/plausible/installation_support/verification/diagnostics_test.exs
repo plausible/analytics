@@ -378,7 +378,12 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
           %{
             "normalizedBody" => %{"domain" => Enum.random(["example.com", nil])},
             "responseStatus" => Enum.random([200, 202, 403, 404, 500, nil]),
-            "requestUrl" => Enum.random(["https://example.com/api/event", "https://plausible.io/api/event", nil])
+            "requestUrl" =>
+              Enum.random([
+                "https://example.com/api/event",
+                "https://plausible.io/api/event",
+                nil
+              ])
           },
           nil
         ])
@@ -412,6 +417,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       )
 
     attempts = Keyword.get(opts, :attempts, Enum.random([1, 2, 3, nil]))
+
     %Diagnostics{
       selected_installation_type: selected_installation_type,
       disallowed_by_csp: disallowed_by_csp,

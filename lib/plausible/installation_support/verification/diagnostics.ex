@@ -218,7 +218,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _expected_domain,
         url
       )
-      when is_binary(url) and page_response_status not in [200, nil] and plausible_is_on_window != true and
+      when is_binary(url) and page_response_status not in [200, nil] and
+             plausible_is_on_window != true and
              plausible_is_initialized != true do
     attempted_url = shorten_url(url)
 
@@ -228,16 +229,15 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   end
 
   def interpret(
-    %__MODULE__{
-      selected_installation_type: selected_installation_type,
-      plausible_is_on_window: false,
-      service_error: nil,
-    },
-    _expected_domain,
-    _url
-  ),
-  do: error_plausible_not_found(selected_installation_type)
-
+        %__MODULE__{
+          selected_installation_type: selected_installation_type,
+          plausible_is_on_window: false,
+          service_error: nil
+        },
+        _expected_domain,
+        _url
+      ),
+      do: error_plausible_not_found(selected_installation_type)
 
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, url) do
     Sentry.capture_message("Unhandled case for site verification (v2)",
