@@ -5,6 +5,8 @@ defmodule Plausible.Ingestion.Persistor.Remote do
 
   require Logger
 
+  @max_transient_retries 3
+
   def persist_event(ingest_event, previous_user_id, opts) do
     event = ingest_event.clickhouse_event
     session_attrs = ingest_event.clickhouse_session_attrs
@@ -22,7 +24,9 @@ defmodule Plausible.Ingestion.Persistor.Remote do
     case Req.post(persistor_url(override_url),
            finch: Plausible.Finch,
            body: encode_payload(event, session_attrs),
-           headers: headers
+           headers: headers,
+           retry: &handle_transient_error/2,
+           max_retries: @max_transient_retries
          ) do
       {:ok, %{status: 200, body: event_payload}} ->
         case decode_payload(event_payload) do
@@ -47,6 +51,16 @@ defmodule Plausible.Ingestion.Persistor.Remote do
         {:error, :persist_error}
     end
   end
+
+  defp handle_transient_error(_request, %Req.HTTPError{protocol: :http2, reason: :disconnected}) do
+    true
+  end
+
+  defp handle_transient_error(_request, %Req.HTTPError{protocol: :http2, reason: :unprocessed}) do
+    true
+  end
+
+  defp handle_transient_error(_reqeust, _response), do: false
 
   defp encode_payload(event, session_attrs) do
     event_data =
