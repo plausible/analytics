@@ -25,7 +25,8 @@ defmodule Plausible.Stats.EmailReport do
         site,
         :internal,
         %{
-          "site_id" => "#{site.id}",
+          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
+          "site_id" => site.domain,
           # metrics will be overridden in the pipeline that follows, and the build interface forces us to pass something
           "metrics" => ["visitors"],
           "date_range" => period,
@@ -86,7 +87,8 @@ defmodule Plausible.Stats.EmailReport do
         site,
         :internal,
         %{
-          "site_id" => "#{site.id}",
+          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
+          "site_id" => site.domain,
           "metrics" => ["visitors"],
           "dimensions" => ["event:goal"],
           "date_range" => period_str,
