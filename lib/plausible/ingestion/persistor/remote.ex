@@ -56,6 +56,10 @@ defmodule Plausible.Ingestion.Persistor.Remote do
     true
   end
 
+  defp handle_transient_error(_request, %Req.HTTPError{protocol: :http2, reason: :unprocessed}) do
+    true
+  end
+
   defp handle_transient_error(_reqeust, _response), do: false
 
   defp encode_payload(event, session_attrs) do
