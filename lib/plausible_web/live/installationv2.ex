@@ -226,7 +226,13 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           {"manual", false}
       end
     end
+  else
+    defp detect_recommended_installation_type(_flow, _site) do
+      {"manual", false}
+    end
+  end
 
+  on_ee do
     defp outdated_script_notice(assigns) do
       ~H"""
       <div :if={
@@ -265,10 +271,6 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         installation_type: AsyncResult.loading(),
         tracker_script_configuration_form: AsyncResult.loading()
       )
-    end
-  else
-    defp detect_recommended_installation_type(_flow, _site) do
-      {"manual", false}
     end
   end
 
