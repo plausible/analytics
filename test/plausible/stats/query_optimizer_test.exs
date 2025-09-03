@@ -201,7 +201,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
         })
 
       assert result.utc_time_range.first == ~U[2024-01-15 00:00:00Z]
-      assert result.utc_time_range.last == ~U[2024-01-15 14:00:00Z]
+      assert result.utc_time_range.last == ~U[2024-01-15 14:59:59Z]
     end
 
     test "does not trim historical month periods even when flag is set" do

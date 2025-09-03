@@ -25,6 +25,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     3. Updating "time" dimension in order_by to the right granularity
     4. Updates event:hostname filters to also apply on visit level for sane results.
     5. Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.
+    6. Trims the date range to the current time if query.include.trim_relative_date_range is true.
 
   """
   def optimize(query) do
@@ -55,13 +56,13 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp pipeline() do
     [
-      &trim_relative_date_range/1,
       &update_group_by_time/1,
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
       &extend_hostname_filters_to_visit/1,
       &remove_revenue_metrics_if_unavailable/1,
-      &set_time_on_page_data/1
+      &set_time_on_page_data/1,
+      &trim_relative_date_range/1
     ]
   end
 
@@ -285,7 +286,7 @@ defmodule Plausible.Stats.QueryOptimizer do
       current_hour =
         query.now
         |> DateTime.shift_zone!(query.timezone)
-        |> Map.merge(%{minute: 0, second: 0})
+        |> Map.merge(%{minute: 59, second: 59, millisecond: 999})
 
       time_range.first
       |> DateTimeRange.new!(current_hour)
