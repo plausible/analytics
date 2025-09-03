@@ -245,6 +245,10 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp trim_relative_date_range(query), do: query
 
+  defp should_trim_date_range?(%Query{include: %{comparisons: comparison_opts}})
+       when is_map(comparison_opts),
+       do: false
+
   defp should_trim_date_range?(%Query{input_date_range: "month"} = query) do
     today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
     date_range = Query.date_range(query)
