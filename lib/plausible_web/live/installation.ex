@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Live.Installation do
         :viewer
       ])
 
-    if FunWithFlags.enabled?(:scriptv2, for: site) do
+    if PlausibleWeb.Tracker.scriptv2?(site) do
       {:ok,
        redirect(socket,
          to: Routes.site_path(socket, :installation_v2, site.domain, flow: params["flow"])

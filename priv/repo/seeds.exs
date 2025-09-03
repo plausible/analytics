@@ -66,10 +66,13 @@ user2 = new_user(name: "Mary Jane", email: "user2@plausible.test", password: "pl
 site2 = new_site(domain: "computer.example.com", owner: user2)
 invite_guest(site2, user, inviter: user2, role: :viewer)
 
-solo_user = new_user(name: "Solo User", email: "solo@plausible.test", password: "plausible")
-new_site(domain: "mysolosite.com", owner: solo_user)
-{:ok, solo_team} = Plausible.Teams.get_or_create(solo_user)
-Plausible.Billing.DevSubscriptions.create(solo_team.id, "910413")
+on_ee do
+  solo_user = new_user(name: "Solo User", email: "solo@plausible.test", password: "plausible")
+  new_site(domain: "mysolosite.com", owner: solo_user)
+  {:ok, solo_team} = Plausible.Teams.get_or_create(solo_user)
+
+  Plausible.Billing.DevSubscriptions.create(solo_team.id, "910413")
+end
 
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
 Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")

@@ -2,13 +2,24 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   @moduledoc """
   User assistance module around Plausible installation instructions/onboarding
   """
+
+  use Plausible
+  use PlausibleWeb, :live_view
+
+  require Logger
+
   alias PlausibleWeb.Flows
   alias Phoenix.LiveView.AsyncResult
-  alias Plausible.InstallationSupport.{Detection, Result}
   alias PlausibleWeb.Live.InstallationV2.Icons
   alias PlausibleWeb.Live.InstallationV2.Instructions
-  use PlausibleWeb, :live_view
-  require Logger
+
+  on_ee do
+    alias Plausible.InstallationSupport.{Detection, Result}
+
+    @installation_methods ["manual", "wordpress", "gtm", "npm"]
+  else
+    @installation_methods ["manual", "wordpress", "npm"]
+  end
 
   def mount(
         %{"domain" => domain} = params,
@@ -27,19 +38,49 @@ defmodule PlausibleWeb.Live.InstallationV2 do
     flow = params["flow"] || Flows.provisioning()
 
     socket =
-      if connected?(socket) do
-        assign_async(
-          socket,
-          [
-            :recommended_installation_type,
-            :installation_type,
-            :tracker_script_configuration_form,
-            :v1_detected
-          ],
-          fn -> initialize_installation_data(flow, site, params) end
-        )
+      on_ee do
+        if connected?(socket) do
+          assign_async(
+            socket,
+            [
+              :recommended_installation_type,
+              :installation_type,
+              :tracker_script_configuration_form,
+              :v1_detected
+            ],
+            fn -> initialize_installation_data(flow, site, params) end
+          )
+        else
+          assign_loading_states(socket)
+        end
       else
-        assign_loading_states(socket)
+        # On Community Edition, there's no v1 detection, nor pre-installation
+        # site scan - we just default the pre-selected tab to "manual".
+
+        # Although it's functionally unnecessary, we stick to using `%AsyncResult{}`
+        # for these assigns to minimize branching out the CE code and maintain only
+        # a single `render` function.
+
+        {:ok, installation_data} = initialize_installation_data(flow, site, params)
+
+        assign(socket,
+          recommended_installation_type: %AsyncResult{
+            result: installation_data.recommended_installation_type,
+            ok?: true
+          },
+          installation_type: %AsyncResult{
+            result: installation_data.installation_type,
+            ok?: true
+          },
+          tracker_script_configuration_form: %AsyncResult{
+            result: installation_data.tracker_script_configuration_form,
+            ok?: true
+          },
+          v1_detected: %AsyncResult{
+            result: installation_data.v1_detected,
+            ok?: true
+          }
+        )
       end
 
     {:ok,
@@ -51,7 +92,8 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   def handle_params(params, _url, socket) do
     socket =
-      if socket.assigns.recommended_installation_type.result do
+      if connected?(socket) && socket.assigns.recommended_installation_type.result &&
+           params["type"] in @installation_methods do
         assign(socket,
           installation_type: %AsyncResult{result: params["type"]}
         )
@@ -94,40 +136,23 @@ defmodule PlausibleWeb.Live.InstallationV2 do
             >
               <Icons.wordpress_icon /> WordPress
             </.tab>
-            <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type.result == "gtm"}>
-              <Icons.tag_manager_icon /> Tag Manager
-            </.tab>
+            <%= on_ee do %>
+              <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type.result == "gtm"}>
+                <Icons.tag_manager_icon /> Tag Manager
+              </.tab>
+            <% end %>
             <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type.result == "npm"}>
               <Icons.npm_icon /> NPM
             </.tab>
           </div>
 
-          <div :if={
-            @v1_detected.result == true and @recommended_installation_type.result == "manual" and
-              @installation_type.result == "manual"
-          }>
-            <.notice class="mt-4" theme={:yellow}>
-              Your website is running an outdated version of the tracking script. Please
-              <.styled_link new_tab href="https://plausible.io/docs/script-update-guide">
-                update
-              </.styled_link>
-              your tracking script before continuing
-            </.notice>
-          </div>
-
-          <div :if={
-            @v1_detected.result == true and @recommended_installation_type.result == "gtm" and
-              @installation_type.result == "gtm"
-          }>
-            <.notice class="mt-4" theme={:yellow}>
-              Your website might be using an outdated version of our Google Tag Manager template.
-              If so,
-              <.styled_link new_tab href="https://plausible.io/docs/script-update-guide#gtm">
-                update
-              </.styled_link>
-              your Google Tag Manager template before continuing
-            </.notice>
-          </div>
+          <%= on_ee do %>
+            <.outdated_script_notice
+              :if={@v1_detected.result == true}
+              recommended_installation_type={@recommended_installation_type}
+              installation_type={@installation_type}
+            />
+          <% end %>
 
           <.form for={@tracker_script_configuration_form.result} phx-submit="submit" class="mt-4">
             <.input
@@ -145,11 +170,13 @@ defmodule PlausibleWeb.Live.InstallationV2 do
               flow={@flow}
               recommended_installation_type={recommended_installation_type}
             />
-            <Instructions.gtm_instructions
-              :if={@installation_type.result == "gtm"}
-              recommended_installation_type={recommended_installation_type}
-              tracker_script_configuration_form={@tracker_script_configuration_form.result}
-            />
+            <%= on_ee do %>
+              <Instructions.gtm_instructions
+                :if={@installation_type.result == "gtm"}
+                recommended_installation_type={recommended_installation_type}
+                tracker_script_configuration_form={@tracker_script_configuration_form.result}
+              />
+            <% end %>
             <Instructions.npm_instructions :if={@installation_type.result == "npm"} />
 
             <.button type="submit" class="w-full mt-8">
@@ -157,6 +184,16 @@ defmodule PlausibleWeb.Live.InstallationV2 do
             </.button>
           </.form>
         </.async_result>
+        <:footer :if={ce?() and @installation_type.result == "manual"}>
+          <.focus_list>
+            <:item>
+              Still using the legacy snippet with the data-domain attribute? See
+              <.styled_link href="https://plausible.io/docs/script-update-guide">
+                migration guide
+              </.styled_link>
+            </:item>
+          </.focus_list>
+        </:footer>
       </.focus_box>
     </div>
     """
@@ -167,25 +204,73 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   defp verify_cta("gtm"), do: "Verify Tag Manager installation"
   defp verify_cta("npm"), do: "Verify NPM installation"
 
-  defp get_recommended_installation_type(flow, site) do
-    detection_result =
-      Detection.Checks.run(nil, site.domain,
-        detect_v1?: flow == Flows.review(),
-        report_to: nil,
-        slowdown: 0,
-        async?: false
+  on_ee do
+    defp detect_recommended_installation_type(flow, site) do
+      detection_result =
+        Detection.Checks.run(nil, site.domain,
+          detect_v1?: flow == Flows.review(),
+          report_to: nil,
+          slowdown: 0,
+          async?: false
+        )
+        |> Detection.Checks.interpret_diagnostics()
+
+      case detection_result do
+        %Result{
+          ok?: true,
+          data: %{suggested_technology: suggested_technology, v1_detected: v1_detected}
+        } ->
+          {suggested_technology, v1_detected}
+
+        _ ->
+          {"manual", false}
+      end
+    end
+  else
+    defp detect_recommended_installation_type(_flow, _site) do
+      {"manual", false}
+    end
+  end
+
+  on_ee do
+    defp outdated_script_notice(assigns) do
+      ~H"""
+      <div :if={
+        @recommended_installation_type.result == "manual" and
+          @installation_type.result == "manual"
+      }>
+        <.notice class="mt-4" theme={:yellow}>
+          Your website is running an outdated version of the tracking script. Please
+          <.styled_link new_tab href="https://plausible.io/docs/script-update-guide">
+            update
+          </.styled_link>
+          your tracking script before continuing
+        </.notice>
+      </div>
+
+      <div :if={
+        @recommended_installation_type.result == "gtm" and
+          @installation_type.result == "gtm"
+      }>
+        <.notice class="mt-4" theme={:yellow}>
+          Your website might be using an outdated version of our Google Tag Manager template.
+          If so,
+          <.styled_link new_tab href="https://plausible.io/docs/script-update-guide#gtm">
+            update
+          </.styled_link>
+          your Google Tag Manager template before continuing
+        </.notice>
+      </div>
+      """
+    end
+
+    defp assign_loading_states(socket) do
+      assign(socket,
+        recommended_installation_type: AsyncResult.loading(),
+        v1_detected: AsyncResult.loading(),
+        installation_type: AsyncResult.loading(),
+        tracker_script_configuration_form: AsyncResult.loading()
       )
-      |> Detection.Checks.interpret_diagnostics()
-
-    case detection_result do
-      %Result{
-        ok?: true,
-        data: %{suggested_technology: suggested_technology, v1_detected: v1_detected}
-      } ->
-        {suggested_technology, v1_detected}
-
-      _ ->
-        {"manual", false}
     end
   end
 
@@ -198,12 +283,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       if assigns[:selected] do
         assign(assigns,
           class:
-            "bg-white dark:bg-gray-800 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center"
+            "bg-white dark:bg-gray-800 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center flex-1 justify-center whitespace-nowrap"
         )
       else
         assign(assigns,
           class:
-            "bg-gray-100 dark:bg-gray-700 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center cursor-pointer"
+            "bg-gray-100 dark:bg-gray-700 rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center cursor-pointer flex-1 justify-center whitespace-nowrap"
         )
       end
 
@@ -232,7 +317,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   defp initialize_installation_data(flow, site, params) do
     {recommended_installation_type, v1_detected} =
-      get_recommended_installation_type(flow, site)
+      detect_recommended_installation_type(flow, site)
 
     tracker_script_configuration =
       PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
@@ -245,7 +330,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
     selected_installation_type =
       cond do
-        params["type"] in ["manual", "wordpress", "gtm", "npm"] ->
+        params["type"] in @installation_methods ->
           params["type"]
 
         flow == Flows.review() and
@@ -269,14 +354,5 @@ defmodule PlausibleWeb.Live.InstallationV2 do
            )
          )
      }}
-  end
-
-  defp assign_loading_states(socket) do
-    assign(socket,
-      recommended_installation_type: AsyncResult.loading(),
-      v1_detected: AsyncResult.loading(),
-      installation_type: AsyncResult.loading(),
-      tracker_script_configuration_form: AsyncResult.loading()
-    )
   end
 end

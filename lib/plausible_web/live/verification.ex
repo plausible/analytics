@@ -152,22 +152,19 @@ defmodule PlausibleWeb.Live.Verification do
       installation_type = socket.assigns.installation_type
 
       {:ok, pid} =
-        if(
-          FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site) or
-            FunWithFlags.enabled?(:scriptv2, for: socket.assigns.current_user),
-          do:
-            Verification.Checks.run(socket.assigns.url_to_verify, domain, installation_type,
-              report_to: report_to,
-              slowdown: socket.assigns.slowdown
-            ),
-          else:
-            LegacyVerification.Checks.run(
-              "https://#{socket.assigns.domain}",
-              domain,
-              report_to: report_to,
-              slowdown: socket.assigns.slowdown
-            )
-        )
+        if PlausibleWeb.Tracker.scriptv2?(socket.assigns.site, socket.assigns.current_user) do
+          Verification.Checks.run(socket.assigns.url_to_verify, domain, installation_type,
+            report_to: report_to,
+            slowdown: socket.assigns.slowdown
+          )
+        else
+          LegacyVerification.Checks.run(
+            "https://#{socket.assigns.domain}",
+            domain,
+            report_to: report_to,
+            slowdown: socket.assigns.slowdown
+          )
+        end
 
       {:noreply, assign(socket, checks_pid: pid, attempts: socket.assigns.attempts + 1)}
     end
@@ -190,10 +187,11 @@ defmodule PlausibleWeb.Live.Verification do
 
   def handle_info({:all_checks_done, %State{} = state}, socket) do
     interpretation =
-      if(FunWithFlags.enabled?(:scriptv2, for: socket.assigns.site),
-        do: Verification.Checks.interpret_diagnostics(state),
-        else: LegacyVerification.Checks.interpret_diagnostics(state)
-      )
+      if PlausibleWeb.Tracker.scriptv2?(socket.assigns.site, socket.assigns.current_user) do
+        Verification.Checks.interpret_diagnostics(state)
+      else
+        LegacyVerification.Checks.interpret_diagnostics(state)
+      end
 
     if not socket.assigns.has_pageviews? do
       schedule_pageviews_check(socket)

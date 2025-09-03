@@ -748,7 +748,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def change_domain(conn, _params) do
-    if FunWithFlags.enabled?(:scriptv2, for: conn.assigns.site) do
+    if PlausibleWeb.Tracker.scriptv2?(conn.assigns.site) do
       redirect(conn,
         to: Routes.site_path(conn, :change_domain_v2, conn.assigns.site.domain)
       )
