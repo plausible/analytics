@@ -51,7 +51,6 @@ export type VerifyV2Result = {
         plausibleVersion: number
         plausibleVariant?: string
         disallowedByCsp: boolean
-        cookieBannerLikely: boolean
         cookiesConsentResult: ConsentResult
         testEvent: {
           /**

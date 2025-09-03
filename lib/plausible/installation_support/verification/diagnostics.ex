@@ -64,8 +64,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @spec interpret(t(), String.t(), String.t()) :: Result.t()
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
           test_event: %{
             "normalizedBody" => %{
               "domain" => domain
@@ -84,8 +82,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
           test_event: %{
             "normalizedBody" => %{
               "domain" => domain
@@ -103,8 +99,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
           test_event: %{
             "normalizedBody" => %{
               "domain" => domain
@@ -137,8 +131,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
           test_event: %{
             "requestUrl" => request_url,
             "responseStatus" => response_status
@@ -175,17 +167,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _url
       ),
       do: error(@error_csp_disallowed)
-
-  def interpret(
-        %__MODULE__{
-          selected_installation_type: selected_installation_type,
-          plausible_is_on_window: false,
-          service_error: nil
-        },
-        _expected_domain,
-        _url
-      ),
-      do: error_plausible_not_found(selected_installation_type)
 
   @error_domain_not_found Error.new!(%{
                             message: "We couldn't find your website at <%= @attempted_url %>",
@@ -237,7 +218,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _expected_domain,
         url
       )
-      when is_binary(url) and page_response_status != 200 and plausible_is_on_window != true and
+      when is_binary(url) and page_response_status not in [200, nil] and plausible_is_on_window != true and
              plausible_is_initialized != true do
     attempted_url = shorten_url(url)
 
@@ -245,6 +226,18 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     |> error(attempted_url: attempted_url, page_response_status: page_response_status)
     |> struct!(data: %{offer_custom_url_input: true})
   end
+
+  def interpret(
+    %__MODULE__{
+      selected_installation_type: selected_installation_type,
+      plausible_is_on_window: false,
+      service_error: nil,
+    },
+    _expected_domain,
+    _url
+  ),
+  do: error_plausible_not_found(selected_installation_type)
+
 
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, url) do
     Sentry.capture_message("Unhandled case for site verification (v2)",
