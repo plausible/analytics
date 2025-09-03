@@ -79,7 +79,6 @@ defmodule Plausible.Stats.EmailReport do
   end
 
   defp put_top_5_goals(stats, site, query) do
-    date_str = Date.to_iso8601(query.now)
     period_str = if query.period == "month", do: "month", else: "7d"
 
     {:ok, q} =
@@ -92,7 +91,6 @@ defmodule Plausible.Stats.EmailReport do
           "metrics" => ["visitors"],
           "dimensions" => ["event:goal"],
           "date_range" => period_str,
-          "date" => date_str,
           "pagination" => %{"limit" => 5}
         },
         %{}
