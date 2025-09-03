@@ -187,10 +187,11 @@ defmodule PlausibleWeb.Live.Verification do
 
   def handle_info({:all_checks_done, %State{} = state}, socket) do
     interpretation =
-      if(PlausibleWeb.Tracker.scriptv2?(socket.assigns.site),
-        do: Verification.Checks.interpret_diagnostics(state),
-        else: LegacyVerification.Checks.interpret_diagnostics(state)
-      )
+      if PlausibleWeb.Tracker.scriptv2?(socket.assigns.site, socket.assigns.current_user) do
+        Verification.Checks.interpret_diagnostics(state)
+      else
+        LegacyVerification.Checks.interpret_diagnostics(state)
+      end
 
     if not socket.assigns.has_pageviews? do
       schedule_pageviews_check(socket)
