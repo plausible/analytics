@@ -1,104 +1,231 @@
 defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
-  alias Plausible.Stats.Query
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
-    site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:weekly_report)
+  alias Plausible.Stats.{Query, QueryResult}
 
-    if site && site.weekly_report do
-      %{site: site}
-      |> put_last_week_query()
-      |> put_date_range()
-      |> Map.put(:type, :weekly)
-      |> Map.put(:name, "Weekly")
-      |> put(:date, &Calendar.strftime(&1.date_range.last, "%-d %b %Y"))
-      |> put_stats()
-      |> send_report_for_all(site.weekly_report.recipients)
+  @weekly "weekly"
+  @monthly "monthly"
+
+  def perform(%Oban.Job{args: %{"interval" => interval, "site_id" => site_id}})
+      when interval in [@weekly, @monthly] do
+    report_type = report_type(interval)
+
+    site =
+      Plausible.Site
+      |> Repo.get(site_id)
+      |> Repo.preload(report_type)
+
+    report = site && Map.get(site, report_type)
+
+    if report do
+      date_range = date_range(site, interval)
+      report_name = report_name(interval, date_range.first)
+      date_label = Calendar.strftime(date_range.last, "%-d %b %Y")
+      stats = stats(site, date_range)
+
+      report
+      |> Map.fetch!(:recipients)
+      |> Enum.each(fn email ->
+        assigns = %{
+          site: site,
+          report_name: report_name,
+          date_label: date_label,
+          unsubscribe_link: unsubscribe_link(site, email, interval),
+          site_member?: site_member?(site, email),
+          interval: interval,
+          stats: stats
+        }
+
+        email
+        |> PlausibleWeb.Email.stats_report(assigns)
+        |> Plausible.Mailer.send()
+      end)
     else
       :discard
     end
   end
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"interval" => "monthly", "site_id" => site_id}}) do
-    site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:monthly_report)
+  defp report_type(@weekly), do: :weekly_report
+  defp report_type(@monthly), do: :monthly_report
 
-    if site && site.monthly_report do
-      %{site: site}
-      |> put_last_month_query()
-      |> put_date_range()
-      |> Map.put(:type, :monthly)
-      |> put(:name, &Calendar.strftime(&1.date_range.first, "%B"))
-      |> put(:date, &Calendar.strftime(&1.date_range.last, "%-d %b %Y"))
-      |> put_stats()
-      |> send_report_for_all(site.monthly_report.recipients)
-    else
-      :discard
-    end
-  end
-
-  defp send_report_for_all(_assigns, [] = _recipients), do: :ok
-
-  defp send_report_for_all(assigns, [email | rest]) do
-    unsubscribe_link =
-      PlausibleWeb.Endpoint.url() <>
-        "/sites/#{URI.encode_www_form(assigns.site.domain)}/#{assigns.type}-report/unsubscribe?email=#{email}"
-
+  defp site_member?(site, email) do
     user = Plausible.Auth.find_user_by(email: email)
-    login_link = user && Plausible.Teams.Memberships.site_member?(assigns.site, user)
-
-    template_assigns =
-      assigns
-      |> Map.put(:unsubscribe_link, unsubscribe_link)
-      |> Map.put(:login_link, login_link)
-
-    PlausibleWeb.Email.stats_report(email, template_assigns)
-    |> Plausible.Mailer.send()
-
-    send_report_for_all(assigns, rest)
+    user && Plausible.Teams.Memberships.site_member?(site, user)
   end
 
-  defp put_last_month_query(%{site: site} = assigns) do
-    last_month =
-      DateTime.now!(site.timezone)
-      |> DateTime.shift(month: -1)
-      |> DateTime.to_date()
-      |> Date.beginning_of_month()
-      |> Date.to_iso8601()
-
-    query = Query.from(site, %{"period" => "month", "date" => last_month})
-
-    Map.put(assigns, :query, query)
+  defp unsubscribe_link(site, email, interval) do
+    PlausibleWeb.Endpoint.url() <>
+      "/sites/#{URI.encode_www_form(site.domain)}/#{interval}-report/unsubscribe?email=#{email}"
   end
 
-  defp put_last_week_query(%{site: site} = assigns) do
-    # In production, evaluating and sending the date param to `Query.from`
-    # is redundant since the default value is today for `site.timezone` and
-    # weekly reports are always sent on Monday morning. However, this makes
-    # it easier to test - no need for a `now` argument.
-    date_param =
+  defp report_name(@weekly, _), do: "Weekly"
+  defp report_name(@monthly, first), do: Calendar.strftime(first, "%B")
+
+  defp stats(site, date_range) do
+    date_range = [
+      Date.to_iso8601(date_range.first),
+      Date.to_iso8601(date_range.last)
+    ]
+
+    stats = stats_aggreagates(site, date_range)
+    pages = pages(site, date_range)
+    sources = sources(site, date_range)
+    goals = goals(site, date_range)
+
+    stats
+    |> Map.put(:pages, pages)
+    |> Map.put(:sources, sources)
+    |> Map.put(:goals, goals)
+  end
+
+  defp stats_aggreagates(site, date_range) do
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        %{
+          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
+          "site_id" => site.domain,
+          "metrics" => ["pageviews", "visitors", "bounce_rate"],
+          "date_range" => date_range,
+          "include" => %{"comparisons" => %{"mode" => "previous_period"}},
+          "pagination" => %{"limit" => 5}
+        },
+        %{}
+      )
+
+    %QueryResult{
+      results: [
+        %{
+          metrics: [pageviews, visitors, bounce_rate],
+          comparison: %{
+            change: [pageviews_change, visitors_change, bounce_rate_change]
+          }
+        }
+      ]
+    } = Plausible.Stats.query(site, query)
+
+    %{
+      pageviews: %{value: pageviews, change: pageviews_change},
+      visitors: %{value: visitors, change: visitors_change},
+      bounce_rate: %{value: bounce_rate, change: bounce_rate_change}
+    }
+  end
+
+  defp pages(site, date_range) do
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        %{
+          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:page"],
+          "date_range" => date_range,
+          "pagination" => %{"limit" => 5}
+        },
+        %{}
+      )
+
+    site
+    |> Plausible.Stats.query(query)
+    |> Map.fetch!(:results)
+    |> Enum.map(fn %{metrics: [visitors], dimensions: [page]} ->
+      %{
+        page: page,
+        visitors: visitors
+      }
+    end)
+  end
+
+  defp sources(site, date_range) do
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        %{
+          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "filters" => [["is_not", "visit:source", ["Direct / None"]]],
+          "dimensions" => ["visit:source"],
+          "date_range" => date_range,
+          "pagination" => %{"limit" => 5}
+        },
+        %{}
+      )
+
+    site
+    |> Plausible.Stats.query(query)
+    |> Map.fetch!(:results)
+    |> Enum.map(fn %{metrics: [visitors], dimensions: [source]} ->
+      %{
+        source: source,
+        visitors: visitors
+      }
+    end)
+  end
+
+  defp goals(site, date_range) do
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        %{
+          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"],
+          "date_range" => date_range,
+          "pagination" => %{"limit" => 5}
+        },
+        %{}
+      )
+
+    site
+    |> Plausible.Stats.query(query)
+    |> Map.fetch!(:results)
+    |> Enum.map(fn %{metrics: [visitors], dimensions: [goal_name]} ->
+      %{
+        goal: goal_name,
+        visitors: visitors
+      }
+    end)
+  end
+
+  defp date_range(site, @weekly) do
+    first =
+      site.timezone
+      |> DateTime.now!()
+      |> Date.shift(day: -7)
+      |> Date.beginning_of_week()
+
+    last =
       site.timezone
       |> DateTime.now!()
       |> DateTime.to_date()
-      |> Date.beginning_of_week()
-      |> Date.to_iso8601()
+      |> Date.shift(day: -7)
+      |> Date.end_of_week()
 
-    query = Query.from(site, %{"period" => "7d", "date" => date_param})
-
-    Map.put(assigns, :query, query)
+    Date.range(first, last)
   end
 
-  defp put_date_range(%{query: query} = assigns) do
-    Map.put(assigns, :date_range, Query.date_range(query))
-  end
+  defp date_range(site, @monthly) do
+    first =
+      site.timezone
+      |> DateTime.now!()
+      |> Date.shift(month: -1)
+      |> Date.beginning_of_month()
 
-  defp put_stats(%{site: site, query: query} = assigns) do
-    Map.put(assigns, :stats, Plausible.Stats.EmailReport.get(site, query))
-  end
+    last =
+      site.timezone
+      |> DateTime.now!()
+      |> DateTime.shift(month: -1)
+      |> DateTime.to_date()
+      |> Date.end_of_month()
 
-  defp put(assigns, key, value_fn) do
-    Map.put(assigns, key, value_fn.(assigns))
+    Date.range(first, last)
   end
 end
