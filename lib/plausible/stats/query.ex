@@ -57,7 +57,7 @@ defmodule Plausible.Stats.Query do
   end
 
   @doc """
-  Builds query from old-style params. New code should prefer Query.build
+  Builds query from old-style stats APIv1 params. New code should use `Query.build`.
   """
   def from(site, params, debug_metadata \\ %{}, now \\ nil) do
     Legacy.QueryBuilder.from(site, params, debug_metadata, now)
