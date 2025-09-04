@@ -1,7 +1,6 @@
 defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
-  alias Plausible.Stats.Query
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
@@ -9,7 +8,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
     if site && site.weekly_report do
       %{site: site}
-      |> put_last_week_query()
+      |> put_last_week_date()
       |> put_date_range()
       |> Map.put(:type, :weekly)
       |> Map.put(:name, "Weekly")
@@ -27,7 +26,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
     if site && site.monthly_report do
       %{site: site}
-      |> put_last_month_query()
+      |> put_last_month_date()
       |> put_date_range()
       |> Map.put(:type, :monthly)
       |> put(:name, &Calendar.strftime(&1.date_range.first, "%B"))
@@ -60,7 +59,7 @@ defmodule Plausible.Workers.SendEmailReport do
     send_report_for_all(assigns, rest)
   end
 
-  defp put_last_month_query(%{site: site} = assigns) do
+  defp put_last_month_date(%{site: site} = assigns) do
     last_month =
       DateTime.now!(site.timezone)
       |> DateTime.shift(month: -1)
@@ -68,13 +67,11 @@ defmodule Plausible.Workers.SendEmailReport do
       |> Date.beginning_of_month()
       |> Date.to_iso8601()
 
-    query = Query.from(site, %{"period" => "month", "date" => last_month})
-
-    Map.put(assigns, :query, query)
+    Map.put(assigns, :date_param, last_month)
   end
 
-  defp put_last_week_query(%{site: site} = assigns) do
-    # In production, evaluating and sending the date param to `Query.from`
+  defp put_last_week_date(%{site: site} = assigns) do
+    # In production, evaluating and sending the date param
     # is redundant since the default value is today for `site.timezone` and
     # weekly reports are always sent on Monday morning. However, this makes
     # it easier to test - no need for a `now` argument.
@@ -85,17 +82,23 @@ defmodule Plausible.Workers.SendEmailReport do
       |> Date.beginning_of_week()
       |> Date.to_iso8601()
 
-    query = Query.from(site, %{"period" => "7d", "date" => date_param})
-
-    Map.put(assigns, :query, query)
+    Map.put(assigns, :date_param, date_param)
   end
 
-  defp put_date_range(%{query: query} = assigns) do
-    Map.put(assigns, :date_range, Query.date_range(query))
+  defp put_date_range(%{date_param: date_param} = assigns) do
+    date = Date.from_iso8601!(date_param)
+    date_range = Date.range(date, date)
+    Map.put(assigns, :date_range, date_range)
   end
 
-  defp put_stats(%{site: site, query: query} = assigns) do
-    Map.put(assigns, :stats, Plausible.Stats.EmailReport.get(site, query))
+  defp put_stats(%{site: site, date_param: date_param, type: :weekly} = assigns) do
+    stats = Plausible.Stats.EmailReport.get_for_period(site, "7d", date_param)
+    Map.put(assigns, :stats, stats)
+  end
+
+  defp put_stats(%{site: site, date_param: date_param, type: :monthly} = assigns) do
+    stats = Plausible.Stats.EmailReport.get_for_period(site, "month", date_param)
+    Map.put(assigns, :stats, stats)
   end
 
   defp put(assigns, key, value_fn) do
