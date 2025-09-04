@@ -20,6 +20,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   @type t :: %__MODULE__{}
 
+  @verify_manually_url "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+
   alias Plausible.InstallationSupport.Result
 
   defmodule Error do
@@ -62,8 +64,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @spec interpret(t(), String.t(), String.t()) :: Result.t()
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
           test_event: %{
             "normalizedBody" => %{
               "domain" => domain
@@ -82,8 +82,6 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
           test_event: %{
             "normalizedBody" => %{
               "domain" => domain
@@ -99,31 +97,23 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
              domain == expected_domain,
       do: success()
 
-  @error_unexpected_domain Error.new!(%{
-                             message: "Plausible test event is not for this site",
-                             recommendation:
-                               "Please check that the snippet on your site matches the installation instructions exactly",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                           })
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
           test_event: %{
             "normalizedBody" => %{
               "domain" => domain
             },
             "responseStatus" => response_status
           },
-          service_error: nil
+          service_error: nil,
+          selected_installation_type: selected_installation_type
         },
         expected_domain,
         _url
       )
       when response_status in [200, 202] and
              domain != expected_domain,
-      do: error(@error_unexpected_domain)
+      do: error_unexpected_domain(selected_installation_type)
 
   @error_proxy_network_error Error.new!(%{
                                message:
@@ -136,14 +126,11 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                    message: "We couldn't verify your website",
                                    recommendation:
                                      "Please try verifying again in a few minutes, or verify your installation manually",
-                                   url:
-                                     "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                                   url: @verify_manually_url
                                  })
 
   def interpret(
         %__MODULE__{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
           test_event: %{
             "requestUrl" => request_url,
             "responseStatus" => response_status
@@ -185,8 +172,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                             message: "We couldn't find your website at <%= @attempted_url %>",
                             recommendation:
                               "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
-                            url:
-                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                            url: @verify_manually_url
                           })
 
   def interpret(%__MODULE__{service_error: service_error}, expected_domain, url)
@@ -202,9 +188,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                message:
                                  "We couldn't verify your website at <%= @attempted_url %>",
                                recommendation:
-                                 "Our verification tool encountered a network error while trying to verify your website. Please verify your integration manually",
-                               url:
-                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                                 "Accessing the website resulted in a network error. Please verify your installation manually",
+                               url: @verify_manually_url
                              })
 
   def interpret(%__MODULE__{service_error: "net::" <> _}, _expected_domain, url)
@@ -216,14 +201,13 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     |> struct!(data: %{offer_custom_url_input: true})
   end
 
-  @error_non_200_page_response Error.new!(%{
-                                 message:
-                                   "We couldn't verify your website at <%= @attempted_url %>",
-                                 recommendation:
-                                   "Our verification tool encountered a <%= @page_response_status %> error. Please check for anything that might be blocking it from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your integration manually",
-                                 url:
-                                   "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                               })
+  @error_unexpected_page_response Error.new!(%{
+                                    message:
+                                      "We couldn't verify your website at <%= @attempted_url %>",
+                                    recommendation:
+                                      "Accessing the website resulted in an unexpected status code <%= @page_response_status %>. Please check for anything that might be blocking us from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your installation manually",
+                                    url: @verify_manually_url
+                                  })
 
   def interpret(
         %__MODULE__{
@@ -234,22 +218,27 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _expected_domain,
         url
       )
-      when is_binary(url) and page_response_status != 200 and plausible_is_on_window != true and
+      when is_binary(url) and not is_nil(page_response_status) and
+             (page_response_status < 200 or page_response_status >= 300) and
+             plausible_is_on_window != true and
              plausible_is_initialized != true do
     attempted_url = shorten_url(url)
 
-    @error_non_200_page_response
+    @error_unexpected_page_response
     |> error(attempted_url: attempted_url, page_response_status: page_response_status)
     |> struct!(data: %{offer_custom_url_input: true})
   end
 
-  @unknown_error Error.new!(%{
-                   message: "Your Plausible integration is not working",
-                   recommendation:
-                     "Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
-                   url:
-                     "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                 })
+  def interpret(
+        %__MODULE__{
+          selected_installation_type: selected_installation_type,
+          plausible_is_on_window: false,
+          service_error: nil
+        },
+        _expected_domain,
+        _url
+      ),
+      do: error_plausible_not_found(selected_installation_type)
 
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, url) do
     Sentry.capture_message("Unhandled case for site verification (v2)",
@@ -260,7 +249,78 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       }
     )
 
-    error(@unknown_error)
+    error_plausible_not_found(diagnostics.selected_installation_type)
+  end
+
+  @message_plausible_not_found "We couldn't detect Plausible on your site"
+  @error_plausible_not_found_for_manual Error.new!(%{
+                                          message: @message_plausible_not_found,
+                                          recommendation:
+                                            "Please make sure you've copied snippet to the head of your site, or verify your installation manually",
+                                          url: @verify_manually_url
+                                        })
+  @error_plausible_not_found_for_npm Error.new!(%{
+                                       message: @message_plausible_not_found,
+                                       recommendation:
+                                         "Please make sure you've initialized Plausible on your site, or verify your installation manually",
+                                       url: @verify_manually_url
+                                     })
+  @error_plausible_not_found_for_gtm Error.new!(%{
+                                       message: @message_plausible_not_found,
+                                       recommendation:
+                                         "Please make sure you've configured the GTM template correctly, or verify your installation manually",
+                                       url: @verify_manually_url
+                                     })
+  @error_plausible_not_found_for_wordpress Error.new!(%{
+                                             message: @message_plausible_not_found,
+                                             recommendation:
+                                               "Please make sure you've enabled the plugin, or verify your installation manually",
+                                             url: @verify_manually_url
+                                           })
+  defp error_plausible_not_found(selected_installation_type) do
+    case selected_installation_type do
+      "npm" -> error(@error_plausible_not_found_for_npm)
+      "gtm" -> error(@error_plausible_not_found_for_gtm)
+      "wordpress" -> error(@error_plausible_not_found_for_wordpress)
+      _ -> error(@error_plausible_not_found_for_manual)
+    end
+  end
+
+  @unexpected_domain_message "Plausible test event is not for this site"
+  @error_unexpected_domain_for_manual Error.new!(%{
+                                        message: @unexpected_domain_message,
+                                        recommendation:
+                                          "Please check that the snippet on your site matches the installation instructions exactly, or verify your installation manually",
+                                        url: @verify_manually_url
+                                      })
+
+  @error_unexpected_domain_for_npm Error.new!(%{
+                                     message: @unexpected_domain_message,
+                                     recommendation:
+                                       "Please check that you've initialized Plausible with the correct domain, or verify your installation manually",
+                                     url: @verify_manually_url
+                                   })
+
+  @error_unexpected_domain_for_gtm Error.new!(%{
+                                     message: @unexpected_domain_message,
+                                     recommendation:
+                                       "Please check that you've entered the ID in the GTM template correctly, or verify your installation manually",
+                                     url: @verify_manually_url
+                                   })
+
+  @error_unexpected_domain_for_wordpress Error.new!(%{
+                                           message: @unexpected_domain_message,
+                                           recommendation:
+                                             "Please check that you've installed the WordPress plugin correctly, or verify your installation manually",
+                                           url: @verify_manually_url
+                                         })
+  defp error_unexpected_domain(selected_installation_type) do
+    case selected_installation_type do
+      "npm" -> error(@error_unexpected_domain_for_npm)
+      "gtm" -> error(@error_unexpected_domain_for_gtm)
+      "wordpress" -> error(@error_unexpected_domain_for_wordpress)
+      _ -> error(@error_unexpected_domain_for_manual)
+    end
   end
 
   defp shorten_url(url) do

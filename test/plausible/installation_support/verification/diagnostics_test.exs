@@ -6,21 +6,23 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
 
   describe "interpreting diagnostics" do
     for status <- [200, 202] do
-      test "success with response status #{status}" do
+      test "returns success if test event response status is #{status} and domain is as expected" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
 
-        diagnostics = %Diagnostics{
-          plausible_is_on_window: true,
-          plausible_is_initialized: true,
-          test_event: %{
-            "normalizedBody" => %{
-              "domain" => "example.com"
+        diagnostics =
+          %Diagnostics{
+            plausible_is_on_window: true,
+            plausible_is_initialized: true,
+            test_event: %{
+              "normalizedBody" => %{
+                "domain" => "example.com"
+              },
+              "responseStatus" => unquote(status)
             },
-            "responseStatus" => unquote(status)
-          },
-          service_error: nil
-        }
+            service_error: nil,
+            diagnostics_are_from_cache_bust: nil
+          }
 
         assert Diagnostics.interpret(diagnostics, expected_domain, url_to_verify) == %Result{
                  ok?: true
@@ -28,22 +30,23 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       end
     end
 
-    test "error when it 'succeeds', but only after cache bust" do
+    test "returns error when it 'succeeds', but only after cache bust" do
       expected_domain = "example.com"
       url_to_verify = "https://#{expected_domain}"
 
-      diagnostics = %Diagnostics{
-        plausible_is_on_window: true,
-        plausible_is_initialized: true,
-        test_event: %{
-          "normalizedBody" => %{
-            "domain" => "example.com"
+      diagnostics =
+        %Diagnostics{
+          plausible_is_on_window: true,
+          plausible_is_initialized: true,
+          test_event: %{
+            "normalizedBody" => %{
+              "domain" => "example.com"
+            },
+            "responseStatus" => 200
           },
-          "responseStatus" => 200
-        },
-        diagnostics_are_from_cache_bust: true,
-        service_error: nil
-      }
+          diagnostics_are_from_cache_bust: true,
+          service_error: nil
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -58,48 +61,62 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
     end
 
-    test "error when test event domain doesn't match expected domain" do
-      expected_domain = "example.com"
-      url_to_verify = "https://#{expected_domain}"
+    for {installation_type, expected_recommendation} <- [
+          {"wordpress",
+           "Please check that you've installed the WordPress plugin correctly, or verify your installation manually"},
+          {"gtm",
+           "Please check that you've entered the ID in the GTM template correctly, or verify your installation manually"},
+          {"npm",
+           "Please check that you've initialized Plausible with the correct domain, or verify your installation manually"},
+          {"manual",
+           "Please check that the snippet on your site matches the installation instructions exactly, or verify your installation manually"}
+        ] do
+      test "returns error when test event domain doesn't match the expected domain, with recommendation for installation type: #{installation_type}" do
+        expected_domain = "example.com"
+        url_to_verify = "https://#{expected_domain}"
 
-      diagnostics = %Diagnostics{
-        plausible_is_on_window: true,
-        plausible_is_initialized: true,
-        test_event: %{
-          "normalizedBody" => %{
-            "domain" => "wrong-domain.com"
-          },
-          "responseStatus" => 200
-        },
-        service_error: nil
-      }
+        diagnostics =
+          %Diagnostics{
+            selected_installation_type: unquote(installation_type),
+            plausible_is_on_window: true,
+            plausible_is_initialized: true,
+            test_event: %{
+              "normalizedBody" => %{
+                "domain" => "wrong-domain.com"
+              },
+              "responseStatus" => 200
+            },
+            service_error: nil
+          }
 
-      assert_matches %Result{
-                       ok?: false,
-                       errors: [^any(:string, ~r/.*not for this site.*/)],
-                       recommendations: [
-                         %{
-                           text: ^any(:string, ~r/.*snippet.*/),
-                           url:
-                             "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                         }
-                       ]
-                     } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
+        assert_matches %Result{
+                         ok?: false,
+                         errors: ["Plausible test event is not for this site"],
+                         recommendations: [
+                           %{
+                             text: unquote(expected_recommendation),
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                           }
+                         ]
+                       } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
+      end
     end
 
-    test "error when proxy network error occurs" do
+    test "returns error when proxy network error occurs" do
       expected_domain = "example.com"
       url_to_verify = "https://#{expected_domain}"
 
-      diagnostics = %Diagnostics{
-        plausible_is_on_window: true,
-        plausible_is_initialized: true,
-        test_event: %{
-          "requestUrl" => "https://proxy.example.com/event",
-          "responseStatus" => 500
-        },
-        service_error: nil
-      }
+      diagnostics =
+        %Diagnostics{
+          plausible_is_on_window: true,
+          plausible_is_initialized: true,
+          test_event: %{
+            "requestUrl" => "https://proxy.example.com/event",
+            "responseStatus" => 500
+          },
+          service_error: nil
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -113,19 +130,20 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
     end
 
-    test "error when plausible network error occurs" do
+    test "returns error when Plausible network error occurs" do
       expected_domain = "example.com"
       url_to_verify = "https://#{expected_domain}"
 
-      diagnostics = %Diagnostics{
-        plausible_is_on_window: true,
-        plausible_is_initialized: true,
-        test_event: %{
-          "requestUrl" => PlausibleWeb.Endpoint.url() <> "/api/event",
-          "responseStatus" => 500
-        },
-        service_error: nil
-      }
+      diagnostics =
+        %Diagnostics{
+          plausible_is_on_window: true,
+          plausible_is_initialized: true,
+          test_event: %{
+            "requestUrl" => PlausibleWeb.Endpoint.url() <> "/api/event",
+            "responseStatus" => 500
+          },
+          service_error: nil
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -140,14 +158,16 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
     end
 
-    test "error when disallowed by CSP" do
+    test "returns error when Plausible domain is disallowed by CSP" do
       expected_domain = "example.com"
       url_to_verify = "https://#{expected_domain}"
 
-      diagnostics = %Diagnostics{
-        disallowed_by_csp: true,
-        service_error: nil
-      }
+      diagnostics =
+        %Diagnostics{
+          disallowed_by_csp: true,
+          test_event: nil,
+          service_error: nil
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -163,15 +183,16 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
     end
 
     for error_code <- [:domain_not_found, :invalid_url] do
-      test "error when DNS check fails (#{error_code})" do
+      test "returns error when DNS check fails (with error code: #{error_code})" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
 
-        diagnostics = %Diagnostics{
-          plausible_is_on_window: nil,
-          plausible_is_initialized: nil,
-          service_error: unquote(error_code)
-        }
+        diagnostics =
+          %Diagnostics{
+            plausible_is_on_window: nil,
+            plausible_is_initialized: nil,
+            service_error: unquote(error_code)
+          }
 
         assert_matches %Result{
                          ok?: false,
@@ -190,61 +211,27 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       end
     end
 
-    test "error when Browserless encounters a network error during verification" do
+    test "returns error when there's a network error during verification, offers custom URL input" do
       expected_domain = "example.com"
       url_to_verify = "https://#{expected_domain}?plausible_verification=123123123"
 
-      diagnostics = %Diagnostics{
-        plausible_is_on_window: nil,
-        plausible_is_initialized: nil,
-        service_error: "net::ERR_CONNECTION_CLOSED at https://example.com"
-      }
+      diagnostics =
+        %Diagnostics{
+          plausible_is_on_window: nil,
+          plausible_is_initialized: nil,
+          service_error: "net::ERR_CONNECTION_CLOSED at https://example.com"
+        }
 
       assert_matches %Result{
                        ok?: false,
                        data: %{offer_custom_url_input: true},
                        errors: [
-                         ^any(
-                           :string,
-                           ~r/.*couldn't verify your website at https:\/\/#{expected_domain}$/
-                         )
-                       ],
-                       recommendations: [
-                         %{
-                           text: ^any(:string, ~r/.*verify your integration manually.*/),
-                           url:
-                             "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                         }
-                       ]
-                     } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
-    end
-
-    test "error when plausible not installed and page.goto(url) response is not 200" do
-      expected_domain = "example.com"
-      url_to_verify = "https://#{expected_domain}?plausible_verification=123123123"
-
-      diagnostics = %Diagnostics{
-        plausible_is_on_window: false,
-        plausible_is_initialized: nil,
-        response_status: 403
-      }
-
-      assert_matches %Result{
-                       ok?: false,
-                       data: %{offer_custom_url_input: true},
-                       errors: [
-                         ^any(
-                           :string,
-                           ~r/.*couldn't verify your website at https:\/\/#{expected_domain}.*/
-                         )
+                         "We couldn't verify your website at https://example.com"
                        ],
                        recommendations: [
                          %{
                            text:
-                             ^any(
-                               :string,
-                               ~r/403 error.*firewall.*authentication.*CDN.*verify your integration manually/
-                             ),
+                             "Accessing the website resulted in a network error. Please verify your installation manually",
                            url:
                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                          }
@@ -252,28 +239,99 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
     end
 
-    test "unknown error when no specific case matches" do
+    test "returns error when Plausible not installed and website response status is not 200, offers custom URL input" do
       expected_domain = "example.com"
-      url_to_verify = "https://#{expected_domain}"
+      url_to_verify = "https://#{expected_domain}?plausible_verification=123123123"
 
-      diagnostics = %Diagnostics{
-        plausible_is_on_window: false,
-        plausible_is_initialized: false,
-        response_status: 200,
-        service_error: nil
-      }
+      diagnostics =
+        %Diagnostics{
+          disallowed_by_csp: false,
+          plausible_is_on_window: false,
+          plausible_is_initialized: false,
+          test_event: %{"error" => "Timed out"},
+          response_status: 403,
+          service_error: nil
+        }
 
       assert_matches %Result{
                        ok?: false,
-                       errors: [^any(:string, ~r/.*integration is not working.*/)],
+                       data: %{offer_custom_url_input: true},
+                       errors: [
+                         "We couldn't verify your website at https://example.com"
+                       ],
                        recommendations: [
                          %{
-                           text: ^any(:string, ~r/.*manually check.*/),
+                           text:
+                             "Accessing the website resulted in an unexpected status code 403. Please check for anything that might be blocking us from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your installation manually",
                            url:
                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                          }
                        ]
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
+    end
+
+    for {installation_type, expected_recommendation} <- [
+          {"wordpress",
+           "Please make sure you've enabled the plugin, or verify your installation manually"},
+          {"gtm",
+           "Please make sure you've configured the GTM template correctly, or verify your installation manually"},
+          {"npm",
+           "Please make sure you've initialized Plausible on your site, or verify your installation manually"},
+          {"manual",
+           "Please make sure you've copied snippet to the head of your site, or verify your installation manually"}
+        ] do
+      test "returns error \"We couldn't detect Plausible on your site\" when plausible_is_on_window is false (with best guess recommendation for installation type: #{installation_type})" do
+        expected_domain = "example.com"
+        url_to_verify = "https://#{expected_domain}"
+
+        diagnostics =
+          %Diagnostics{
+            response_status: 200,
+            disallowed_by_csp: false,
+            plausible_is_on_window: false,
+            service_error: nil,
+            test_event: %{"error" => "Timed out"},
+            selected_installation_type: unquote(installation_type)
+          }
+
+        assert_matches %Result{
+                         ok?: false,
+                         errors: ["We couldn't detect Plausible on your site"],
+                         recommendations: [
+                           %{
+                             text: unquote(expected_recommendation),
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                           }
+                         ]
+                       } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
+      end
+
+      test "falls back to error \"We couldn't detect Plausible on your site\" when no other case matches (with best guess recommendation for installation type: #{installation_type}), sends diagnostics to Sentry" do
+        expected_domain = "example.com"
+        url_to_verify = "https://#{expected_domain}"
+
+        diagnostics =
+          %Diagnostics{
+            selected_installation_type: unquote(installation_type),
+            disallowed_by_csp: nil,
+            response_status: nil,
+            service_error: nil,
+            test_event: nil
+          }
+
+        assert_matches %Result{
+                         ok?: false,
+                         errors: ["We couldn't detect Plausible on your site"],
+                         recommendations: [
+                           %{
+                             text: unquote(expected_recommendation),
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                           }
+                         ]
+                       } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
+      end
     end
   end
 end
