@@ -11,7 +11,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
         url_to_verify = "https://#{expected_domain}"
 
         diagnostics =
-          randomized_diagnostics(
+          %Diagnostics{
             plausible_is_on_window: true,
             plausible_is_initialized: true,
             test_event: %{
@@ -22,7 +22,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
             },
             service_error: nil,
             diagnostics_are_from_cache_bust: nil
-          )
+          }
 
         assert Diagnostics.interpret(diagnostics, expected_domain, url_to_verify) == %Result{
                  ok?: true
@@ -35,7 +35,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       url_to_verify = "https://#{expected_domain}"
 
       diagnostics =
-        randomized_diagnostics(
+        %Diagnostics{
           plausible_is_on_window: true,
           plausible_is_initialized: true,
           test_event: %{
@@ -46,7 +46,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
           },
           diagnostics_are_from_cache_bust: true,
           service_error: nil
-        )
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -76,7 +76,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
         url_to_verify = "https://#{expected_domain}"
 
         diagnostics =
-          randomized_diagnostics(
+          %Diagnostics{
             selected_installation_type: unquote(installation_type),
             plausible_is_on_window: true,
             plausible_is_initialized: true,
@@ -87,7 +87,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
               "responseStatus" => 200
             },
             service_error: nil
-          )
+          }
 
         assert_matches %Result{
                          ok?: false,
@@ -108,7 +108,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       url_to_verify = "https://#{expected_domain}"
 
       diagnostics =
-        randomized_diagnostics(
+        %Diagnostics{
           plausible_is_on_window: true,
           plausible_is_initialized: true,
           test_event: %{
@@ -116,7 +116,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
             "responseStatus" => 500
           },
           service_error: nil
-        )
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -135,7 +135,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       url_to_verify = "https://#{expected_domain}"
 
       diagnostics =
-        randomized_diagnostics(
+        %Diagnostics{
           plausible_is_on_window: true,
           plausible_is_initialized: true,
           test_event: %{
@@ -143,7 +143,7 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
             "responseStatus" => 500
           },
           service_error: nil
-        )
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -163,11 +163,11 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       url_to_verify = "https://#{expected_domain}"
 
       diagnostics =
-        randomized_diagnostics(
+        %Diagnostics{
           disallowed_by_csp: true,
           test_event: nil,
           service_error: nil
-        )
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -188,11 +188,11 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
         url_to_verify = "https://#{expected_domain}"
 
         diagnostics =
-          randomized_diagnostics(
+          %Diagnostics{
             plausible_is_on_window: nil,
             plausible_is_initialized: nil,
             service_error: unquote(error_code)
-          )
+          }
 
         assert_matches %Result{
                          ok?: false,
@@ -216,11 +216,11 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       url_to_verify = "https://#{expected_domain}?plausible_verification=123123123"
 
       diagnostics =
-        randomized_diagnostics(
+        %Diagnostics{
           plausible_is_on_window: nil,
           plausible_is_initialized: nil,
           service_error: "net::ERR_CONNECTION_CLOSED at https://example.com"
-        )
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -244,14 +244,14 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
       url_to_verify = "https://#{expected_domain}?plausible_verification=123123123"
 
       diagnostics =
-        randomized_diagnostics(
+        %Diagnostics{
           disallowed_by_csp: false,
           plausible_is_on_window: false,
           plausible_is_initialized: false,
           test_event: %{"error" => "Timed out"},
           response_status: 403,
           service_error: nil
-        )
+        }
 
       assert_matches %Result{
                        ok?: false,
@@ -285,14 +285,14 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
         url_to_verify = "https://#{expected_domain}"
 
         diagnostics =
-          randomized_diagnostics(
+          %Diagnostics{
             response_status: 200,
             disallowed_by_csp: false,
             plausible_is_on_window: false,
             service_error: nil,
             test_event: %{"error" => "Timed out"},
             selected_installation_type: unquote(installation_type)
-          )
+          }
 
         assert_matches %Result{
                          ok?: false,
@@ -312,14 +312,13 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
         url_to_verify = "https://#{expected_domain}"
 
         diagnostics =
-          randomized_diagnostics(
+          %Diagnostics{
             selected_installation_type: unquote(installation_type),
             disallowed_by_csp: nil,
             response_status: nil,
-            disallowed_by_csp: nil,
             service_error: nil,
             test_event: nil
-          )
+          }
 
         assert_matches %Result{
                          ok?: false,
@@ -334,95 +333,5 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                        } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
       end
     end
-  end
-
-  # creates a randomized diagnostics struct, and overwrites only the fields defined in opts
-  defp randomized_diagnostics(opts) do
-    selected_installation_type =
-      Keyword.get(
-        opts,
-        :selected_installation_type,
-        Enum.random(["npm", "gtm", "wordpress", "manual", nil])
-      )
-
-    disallowed_by_csp = Keyword.get(opts, :disallowed_by_csp, Enum.random([true, false, nil]))
-
-    plausible_is_on_window =
-      Keyword.get(opts, :plausible_is_on_window, Enum.random([true, false, nil]))
-
-    plausible_is_initialized =
-      Keyword.get(opts, :plausible_is_initialized, Enum.random([true, false, nil]))
-
-    plausible_version =
-      Keyword.get(opts, :plausible_version, Enum.random([Enum.random(1..100), nil]))
-
-    plausible_variant =
-      Keyword.get(opts, :plausible_variant, Enum.random(["npm", "web", "random string", nil]))
-
-    diagnostics_are_from_cache_bust =
-      Keyword.get(opts, :diagnostics_are_from_cache_bust, Enum.random([true, false, nil]))
-
-    test_event =
-      Keyword.get(
-        opts,
-        :test_event,
-        Enum.random([
-          %{
-            "normalizedBody" => %{"domain" => Enum.random(["example.com", nil])},
-            "responseStatus" => Enum.random([200, 202, 403, 404, 500, nil]),
-            "requestUrl" =>
-              Enum.random([
-                "https://example.com/api/event",
-                "https://plausible.io/api/event",
-                nil
-              ])
-          },
-          nil
-        ])
-      )
-
-    cookies_consent_result =
-      Keyword.get(
-        opts,
-        :cookies_consent_result,
-        Enum.random([
-          %{"handled" => nil, "cmp" => "cookiebot"},
-          %{"handled" => false, "error" => %{"message" => "Unknown error"}},
-          %{"handled" => nil, "engineLifecycle" => "not-started"},
-          nil
-        ])
-      )
-
-    response_status =
-      Keyword.get(opts, :response_status, Enum.random([200, 202, 403, 404, 500, nil]))
-
-    service_error =
-      Keyword.get(
-        opts,
-        :service_error,
-        Enum.random([
-          "net::ERR_CONNECTION_CLOSED at https://example.com",
-          :domain_not_found,
-          :invalid_url,
-          nil
-        ])
-      )
-
-    attempts = Keyword.get(opts, :attempts, Enum.random([1, 2, 3, nil]))
-
-    %Diagnostics{
-      selected_installation_type: selected_installation_type,
-      disallowed_by_csp: disallowed_by_csp,
-      plausible_is_on_window: plausible_is_on_window,
-      plausible_is_initialized: plausible_is_initialized,
-      plausible_version: plausible_version,
-      plausible_variant: plausible_variant,
-      diagnostics_are_from_cache_bust: diagnostics_are_from_cache_bust,
-      test_event: test_event,
-      cookies_consent_result: cookies_consent_result,
-      response_status: response_status,
-      service_error: service_error,
-      attempts: attempts
-    }
   end
 end
