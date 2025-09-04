@@ -226,14 +226,12 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                        ok?: false,
                        data: %{offer_custom_url_input: true},
                        errors: [
-                         ^any(
-                           :string,
-                           ~r/.*couldn't verify your website at https:\/\/#{expected_domain}$/
-                         )
+                         "We couldn't verify your website at https://example.com"
                        ],
                        recommendations: [
                          %{
-                           text: ^any(:string, ~r/.*verify your integration manually.*/),
+                           text:
+                             "Accessing the website resulted in a network error. Please verify your installation manually",
                            url:
                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                          }
@@ -259,18 +257,12 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                        ok?: false,
                        data: %{offer_custom_url_input: true},
                        errors: [
-                         ^any(
-                           :string,
-                           ~r/.*couldn't verify your website at https:\/\/#{expected_domain}.*/
-                         )
+                         "We couldn't verify your website at https://example.com"
                        ],
                        recommendations: [
                          %{
                            text:
-                             ^any(
-                               :string,
-                               ~r/403 error.*firewall.*authentication.*CDN.*verify your integration manually/
-                             ),
+                             "Accessing the website resulted in an unexpected status code 403. Please check for anything that might be blocking us from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your installation manually",
                            url:
                              "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                          }

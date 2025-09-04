@@ -188,7 +188,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                message:
                                  "We couldn't verify your website at <%= @attempted_url %>",
                                recommendation:
-                                 "Our verification tool encountered a network error while trying to verify your website. Please verify your integration manually",
+                                 "Accessing the website resulted in a network error. Please verify your installation manually",
                                url: @verify_manually_url
                              })
 
@@ -201,13 +201,13 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     |> struct!(data: %{offer_custom_url_input: true})
   end
 
-  @error_non_200_page_response Error.new!(%{
-                                 message:
-                                   "We couldn't verify your website at <%= @attempted_url %>",
-                                 recommendation:
-                                   "Our verification tool encountered a <%= @page_response_status %> error. Please check for anything that might be blocking it from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your integration manually",
-                                 url: @verify_manually_url
-                               })
+  @error_unexpected_page_response Error.new!(%{
+                                    message:
+                                      "We couldn't verify your website at <%= @attempted_url %>",
+                                    recommendation:
+                                      "Accessing the website resulted in an unexpected status code <%= @page_response_status %>. Please check for anything that might be blocking us from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your installation manually",
+                                    url: @verify_manually_url
+                                  })
 
   def interpret(
         %__MODULE__{
@@ -218,12 +218,13 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _expected_domain,
         url
       )
-      when is_binary(url) and page_response_status not in [200, nil] and
+      when is_binary(url) and not is_nil(page_response_status) and
+             (page_response_status < 200 or page_response_status >= 300) and
              plausible_is_on_window != true and
              plausible_is_initialized != true do
     attempted_url = shorten_url(url)
 
-    @error_non_200_page_response
+    @error_unexpected_page_response
     |> error(attempted_url: attempted_url, page_response_status: page_response_status)
     |> struct!(data: %{offer_custom_url_input: true})
   end
