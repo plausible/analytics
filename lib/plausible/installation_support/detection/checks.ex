@@ -43,4 +43,26 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
       state.url
     )
   end
+
+  @unthrottled_checks 3
+  @first_slowdown_ms 1000
+  def run_with_rate_limit(url, data_domain, opts \\ []) do
+    case Plausible.RateLimit.check_rate(
+           "site_detection_#{data_domain}",
+           :timer.minutes(60),
+           10
+         ) do
+      {:allow, count} when count <= @unthrottled_checks ->
+        {:ok, run(url, data_domain, opts)}
+
+      {:allow, count} when count > @unthrottled_checks ->
+        # slowdown steps 1x, 4x, 9x, 16x, ...
+        slowdown_ms = @first_slowdown_ms * (count - @unthrottled_checks) ** 2
+        :timer.sleep(slowdown_ms)
+        {:ok, run(url, data_domain, opts)}
+
+      {:deny, limit} ->
+        {:error, {:rate_limit_exceeded, limit}}
+    end
+  end
 end

@@ -18,6 +18,13 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     :ok
   end
 
+  on_ee do
+    setup do
+      :ets.delete_all_objects(Plausible.RateLimit)
+      :ok
+    end
+  end
+
   describe "GET /:domain/installationv2" do
     @tag :ee_only
     test "renders loading installation screen on EE", %{conn: conn, site: site} do
@@ -370,6 +377,31 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       html = render_async(lv, 500)
       assert text(html) =~ "We've detected your website is using WordPress"
+    end
+
+    @tag :ee_only
+    test "if ratelimit for detection is exceeded, does not make detection request and falls back to recommending manual installation",
+         %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
+
+      # exceed the rate limit for site detection
+      Plausible.RateLimit.check_rate(
+        Plausible.RateLimit,
+        "site_detection_#{site.domain}",
+        :timer.minutes(60),
+        1,
+        100
+      )
+
+      # this won't be used: if it were used, the output would be different
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+
+      refute text(html) =~ "We've detected your website is using WordPress"
+      assert text(html) =~ "Verify Script installation"
     end
 
     @tag :ee_only
