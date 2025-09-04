@@ -252,7 +252,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       assert result.utc_time_range == original_range
     end
 
-    test "does not trim when comparisons are set" do
+    test "does not trim day when comparisons are set" do
       now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")
       original_range = DateTimeRange.new!(~D[2024-01-01], ~D[2024-01-31], "UTC")
 
@@ -270,6 +270,26 @@ defmodule Plausible.Stats.QueryOptimizerTest do
         })
 
       assert result.utc_time_range == original_range
+    end
+
+    test "trims month when comparisons are set" do
+      now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: DateTimeRange.new!(~D[2024-01-01], ~D[2024-01-31], "UTC"),
+          input_date_range: "month",
+          now: now,
+          timezone: "UTC",
+          include:
+            Map.merge(
+              QueryParser.default_include(),
+              %{comparisons: %{mode: "previous_period"}, trim_relative_date_range: true}
+            )
+        })
+
+      assert result.utc_time_range.first == ~U[2024-01-01 00:00:00Z]
+      assert result.utc_time_range.last == ~U[2024-01-15 23:59:59Z]
     end
 
     test "does not trim when flag is false" do
