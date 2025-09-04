@@ -206,24 +206,18 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   on_ee do
     defp detect_recommended_installation_type(flow, site) do
-      detection_result =
-        Detection.Checks.run(nil, site.domain,
-          detect_v1?: flow == Flows.review(),
-          report_to: nil,
-          slowdown: 0,
-          async?: false
-        )
-        |> Detection.Checks.interpret_diagnostics()
-
-      case detection_result do
-        %Result{
-          ok?: true,
-          data: %{suggested_technology: suggested_technology, v1_detected: v1_detected}
-        } ->
-          {suggested_technology, v1_detected}
-
-        _ ->
-          {"manual", false}
+      with {:ok, detection_result} <-
+             Detection.Checks.run_with_rate_limit(nil, site.domain,
+               detect_v1?: flow == Flows.review(),
+               report_to: nil,
+               slowdown: 0,
+               async?: false
+             ),
+           %Result{ok?: true, data: data} <-
+             Detection.Checks.interpret_diagnostics(detection_result) do
+        {data.suggested_technology, data.v1_detected}
+      else
+        _ -> {"manual", false}
       end
     end
   else

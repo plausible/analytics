@@ -24,6 +24,9 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
           [{192, 168, 1, 2}]
         end)
 
+        # prevent rate limit from kicking in in tests
+        :ets.delete_all_objects(Plausible.RateLimit)
+
         :ok
       end
     end
