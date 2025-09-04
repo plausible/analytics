@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.Legacy.QueryBuilder do
   @moduledoc """
-  Module used to parse URL search params to a valid Query, used to power the API for the dashboard.
+  Module used to parse URL search params to a valid Query, used to power the API for the dashboard
+  and v1 of our Stats API.
+
   @deprecated
   """
 
