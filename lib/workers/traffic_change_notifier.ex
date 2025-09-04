@@ -119,37 +119,46 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp get_traffic_spike_stats(site) do
+    %{}
+    |> put_sources(site)
+    |> put_pages(site)
+  end
+
+  @base_query_params %{
+    "metrics" => ["visitors"],
+    "pagination" => %{"limit" => 3},
+    "date_range" => "realtime"
+  }
+
+  defp put_sources(stats, site) do
     {:ok, query} =
       Query.build(
         site,
         :internal,
-        %{
-          "site_id" => "#{site.id}",
-          "metrics" => ["visitors"],
-          "pagination" => %{"limit" => 3},
-          "date_range" => "realtime"
-        },
+        Map.merge(@base_query_params, %{
+          "site_id" => site.domain,
+          "dimensions" => ["visit:source"],
+          "filters" => [["is_not", "visit:source", ["Direct / None"]]]
+        }),
         %{}
       )
-
-    %{}
-    |> put_sources(site, query)
-    |> put_pages(site, query)
-  end
-
-  defp put_sources(stats, site, query) do
-    query =
-      query
-      |> Query.set(dimensions: ["visit:source"])
-      |> Query.add_filter([:is_not, "visit:source", ["Direct / None"]])
 
     %{results: sources} = Plausible.Stats.query(site, query)
 
     Map.put(stats, :sources, sources)
   end
 
-  defp put_pages(stats, site, query) do
-    query = Query.set(query, dimensions: ["event:page"])
+  defp put_pages(stats, site) do
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        Map.merge(@base_query_params, %{
+          "site_id" => site.domain,
+          "dimensions" => ["event:page"]
+        }),
+        %{}
+      )
 
     %{results: pages} = Plausible.Stats.query(site, query)
 
