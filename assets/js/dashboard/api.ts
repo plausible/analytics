@@ -5,6 +5,9 @@ import { serializeApiFilters } from './util/filters'
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
 
+// And keep in sync with lib/plausible_web/controllers/api/stats_controller.ex
+const EXPECTED_API_VERSION = 0
+
 export class ApiError extends Error {
   payload: unknown
   constructor(message: string, payload: unknown) {
@@ -85,6 +88,17 @@ async function handleApiResponse(response: Response) {
   const payload = await response.json()
   if (!response.ok) {
     throw new ApiError(payload.error, payload)
+  }
+
+  if (
+    payload?.api_version !== undefined &&
+    payload?.api_version !== EXPECTED_API_VERSION
+  ) {
+    console.log('Received unexpected version from API. Reloading page...', {
+      payload,
+      EXPECTED_API_VERSION
+    })
+    window.location.reload()
   }
 
   return payload
