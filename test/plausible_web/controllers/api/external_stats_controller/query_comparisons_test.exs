@@ -169,6 +169,31 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     assert actual_comparison_last_date == expected_comparison_last_date
   end
 
+  test "regression: does not trim when trim_relative_date_range is true", %{
+    conn: conn,
+    site: site
+  } do
+    conn =
+      post(conn, "/api/v2/query-internal-test", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "month",
+        "date" => "2021-01-15",
+        "dimensions" => ["time:day"],
+        "include" => %{
+          "trim_relative_date_range" => true,
+          "comparisons" => %{
+            "mode" => "previous_period"
+          }
+        }
+      })
+
+    assert json_response(conn, 200)["query"]["date_range"] == [
+             "2021-01-01T00:00:00+00:00",
+             "2021-01-31T23:59:59+00:00"
+           ]
+  end
+
   test "timeseries last 91d period in year_over_year comparison", %{
     conn: conn,
     site: site

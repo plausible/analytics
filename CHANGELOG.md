@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 - Custom events can now be marked as non-interactive in events API and tracker script. Events marked as non-interactive are not counted towards bounce rate.
 - Ability to leave team via Team Settings > Leave Team
+- Stats APIv2 now supports `include.trim_relative_date_range`. This option allows trimming empty values after current time for `day`, `month` and `year` date_range values.
 - Properties are now included in full site exports done via Site Settings > Imports & Exports
 - Google Search Console integration settings: properties can be dynamically sought
 
@@ -17,10 +18,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - A session is now marked as a bounce if it has less than 2 pageviews and no interactive custom events.
-
 - All dropmenus on dashboard are navigable with Tab (used to be a mix between tab and arrow keys), and no two dropmenus can be open at once on the dashboard
-
 - Special path-based events like "404" don't need `event.props.path` to be explicitly defined when tracking: it is set to be the same as `event.pathname` in event ingestion. If it is explicitly defined, it is not overridden for backwards compatibility.
+- Main graph no longer shows empty values after current time for `day`, `month` and `year` periods.
 
 ### Fixed
 

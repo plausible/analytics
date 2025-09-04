@@ -152,4 +152,195 @@ defmodule Plausible.Stats.QueryOptimizerTest do
              ]
     end
   end
+
+  describe "trim_relative_date_range" do
+    alias Plausible.Stats.Filters.QueryParser
+
+    test "trims current month period when flag is set" do
+      now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: DateTimeRange.new!(~D[2024-01-01], ~D[2024-01-31], "UTC"),
+          input_date_range: "month",
+          now: now,
+          timezone: "UTC",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
+        })
+
+      assert result.utc_time_range.first == ~U[2024-01-01 00:00:00Z]
+      assert result.utc_time_range.last == ~U[2024-01-15 23:59:59Z]
+    end
+
+    test "trims current year period when flag is set" do
+      now = DateTime.new!(~D[2024-03-15], ~T[12:00:00], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: DateTimeRange.new!(~D[2024-01-01], ~D[2024-12-31], "UTC"),
+          input_date_range: "year",
+          now: now,
+          timezone: "UTC",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
+        })
+
+      assert result.utc_time_range.first == ~U[2024-01-01 00:00:00Z]
+      assert result.utc_time_range.last == ~U[2024-03-15 23:59:59Z]
+    end
+
+    test "trims current day period to current hour when flag is set" do
+      now = DateTime.new!(~D[2024-01-15], ~T[14:30:00], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: DateTimeRange.new!(~D[2024-01-15], ~D[2024-01-15], "UTC"),
+          input_date_range: "day",
+          now: now,
+          timezone: "UTC",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
+        })
+
+      assert result.utc_time_range.first == ~U[2024-01-15 00:00:00Z]
+      assert result.utc_time_range.last == ~U[2024-01-15 14:59:59Z]
+    end
+
+    test "does not trim historical month periods even when flag is set" do
+      now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")
+      original_range = DateTimeRange.new!(~D[2023-06-01], ~D[2023-06-30], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: original_range,
+          input_date_range: "month",
+          now: now,
+          timezone: "UTC",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
+        })
+
+      assert result.utc_time_range == original_range
+    end
+
+    test "does not trim historical year periods even when flag is set" do
+      now = DateTime.new!(~D[2024-03-15], ~T[12:00:00], "UTC")
+      original_range = DateTimeRange.new!(~D[2023-01-01], ~D[2023-12-31], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: original_range,
+          input_date_range: "year",
+          now: now,
+          timezone: "UTC",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
+        })
+
+      assert result.utc_time_range == original_range
+    end
+
+    test "does not trim historical day periods even when flag is set" do
+      now = DateTime.new!(~D[2024-01-15], ~T[14:30:00], "UTC")
+      original_range = DateTimeRange.new!(~D[2024-01-10], ~D[2024-01-10], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: original_range,
+          input_date_range: "day",
+          now: now,
+          timezone: "UTC",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
+        })
+
+      assert result.utc_time_range == original_range
+    end
+
+    test "does not trim when comparisons are set" do
+      now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")
+      original_range = DateTimeRange.new!(~D[2024-01-01], ~D[2024-01-31], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: original_range,
+          input_date_range: "day",
+          now: now,
+          timezone: "UTC",
+          include:
+            Map.merge(
+              QueryParser.default_include(),
+              %{comparisons: %{mode: "previous_period"}, trim_relative_date_range: true}
+            )
+        })
+
+      assert result.utc_time_range == original_range
+    end
+
+    test "does not trim when flag is false" do
+      now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")
+      original_range = DateTimeRange.new!(~D[2024-01-01], ~D[2024-01-31], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: original_range,
+          input_date_range: "month",
+          now: now,
+          timezone: "UTC",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, false)
+        })
+
+      assert result.utc_time_range == original_range
+    end
+
+    test "does not trim when flag is not set" do
+      now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")
+      original_range = DateTimeRange.new!(~D[2024-01-01], ~D[2024-01-31], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: original_range,
+          input_date_range: "month",
+          now: now,
+          timezone: "UTC",
+          include: QueryParser.default_include()
+        })
+
+      assert result.utc_time_range == original_range
+    end
+
+    test "does not trim non-current periods like custom date ranges" do
+      now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")
+
+      original_range = DateTimeRange.new!(~D[2024-01-10], ~D[2024-01-16], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range: original_range,
+          input_date_range: "7d",
+          now: now,
+          timezone: "UTC",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
+        })
+
+      assert result.utc_time_range == original_range
+    end
+
+    test "handles timezone correctly when trimming year periods" do
+      now = DateTime.new!(~D[2024-03-15], ~T[12:00:00], "UTC")
+
+      result =
+        perform(%{
+          utc_time_range:
+            DateTimeRange.new!(~D[2024-01-01], ~D[2024-12-31], "America/New_York")
+            |> DateTimeRange.to_timezone("Etc/UTC"),
+          input_date_range: "year",
+          now: now,
+          timezone: "America/New_York",
+          include: Map.put(QueryParser.default_include(), :trim_relative_date_range, true)
+        })
+
+      nyc_mar_15_end =
+        DateTimeRange.new!(~D[2024-03-15], ~D[2024-03-15], "America/New_York")
+        |> DateTimeRange.to_timezone("Etc/UTC")
+        |> Map.get(:last)
+
+      assert result.utc_time_range.last == nyc_mar_15_end
+    end
+  end
 end
