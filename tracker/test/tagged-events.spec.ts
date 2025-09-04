@@ -40,7 +40,7 @@ for (const mode of ['web', 'esm']) {
       testId,
       scriptConfig: switchByMode(
         {
-          web: { ...DEFAULT_CONFIG },
+          web: config,
           esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
             config
           )})</script>`
@@ -434,8 +434,12 @@ for (const mode of ['legacy', 'web']) {
         action: () => page.click('circle'),
         expectedRequests: [
           {
-            n: 'link click'
-            // bug with p.url, can't assert
+            n: 'link click',
+            p: {
+              expected: { url: {} },
+              __expectation__: (actual) =>
+                actual && JSON.stringify(actual) === '{"url":{}}'
+            }
           }
         ],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
