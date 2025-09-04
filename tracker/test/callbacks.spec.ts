@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { LOCAL_SERVER_ADDR } from './support/server'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { mockManyRequests } from './support/mock-many-requests'
 import { switchByMode } from './support/test-utils'
@@ -49,7 +48,7 @@ for (const mode of ['web', 'esm', 'legacy']) {
         expectedResult: undefined
       }
     ]) {
-      test(name, async ({ page }, { testId }) => {
+      test(`${name}`, async ({ page }, { testId }) => {
         const config = { domain: DOMAIN, endpoint: apiPath, captureOnLocalhost }
         const { url } = await initializePageDynamically(page, {
           testId,
@@ -78,11 +77,12 @@ for (const mode of ['web', 'esm', 'legacy']) {
           mockRequestTimeout: 2000
         })
         await page.goto(url)
-        await page.waitForFunction(() => (window as any).plausible?.l)
+        await page.waitForFunction(() => window.plausible?.l)
         const callbackResult = await page.evaluate(
           () =>
             new Promise((resolve) =>
-              (window as any).plausible('Purchase', {
+              // @ts-expect-error - window.plausible is defined
+              window.plausible('Purchase', {
                 callback: (result) => resolve(result)
               })
             )

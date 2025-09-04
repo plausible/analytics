@@ -1,5 +1,5 @@
 import { expectPlausibleInAction, hideCurrentTab, hideAndShowCurrentTab } from './support/test-utils'
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 
 test.describe('scroll depth (engagement events)', () => {
@@ -89,7 +89,7 @@ test.describe('scroll depth (engagement events)', () => {
     await page.evaluate(() => window.scrollBy(0, document.body.scrollHeight))
 
     // Wait until documentHeight gets increased by the fixture JS
-    await page.waitForSelector('#more-content')
+    await expect(page.getByText('Navigate away')).toBeVisible()
 
     await page.evaluate(() => window.scrollBy(0, 1000))
 

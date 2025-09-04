@@ -69,7 +69,8 @@ test('handles double-initialization of the script with a console.warn', async ({
 
   await expect(
     page.evaluate(() =>
-      (window as any).plausible.init({
+      // @ts-expect-error - window.plausible is defined
+      window.plausible.init({
         captureOnLocalhost: true,
         customProperties: { init: 2 }
       })

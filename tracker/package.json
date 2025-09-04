@@ -1,7 +1,9 @@
 {
-  "tracker_script_version": 30,
+  "tracker_script_version": 31,
   "type": "module",
   "scripts": {
+    "lint": "eslint",
+    "check-format": "prettier --check \"**/*.{js,mjs,ts,html,json,md}\"",
     "deploy": "node compile.js",
     "test": "npx playwright test",
     "test:local": "npx playwright test",
@@ -24,11 +26,17 @@
     "threads": "^1.7.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.34.0",
     "@playwright/test": "^1.52.0",
     "@types/node": "^22.13.4",
-    "eslint": "^9.20.1",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-playwright": "^2.2.2",
     "express": "^4.21.2",
-    "markdown-table": "^3.0.4"
+    "globals": "^16.3.0",
+    "markdown-table": "^3.0.4",
+    "prettier": "^3.3.3",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.41.0"
   }
 }

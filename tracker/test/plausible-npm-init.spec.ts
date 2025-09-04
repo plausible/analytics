@@ -14,6 +14,18 @@ const DEFAULT_CONFIG = {
   captureOnLocalhost: true
 }
 
+declare global {
+  interface Window {
+    init: (...args: unknown[]) => void
+    track: (eventName: string, options?: unknown) => void
+    plausible?: {
+      l: boolean
+      v: string
+      s: string
+    }
+  }
+}
+
 test('if `init` is called without domain, it throws', async ({ page }, {
   testId
 }) => {
@@ -25,7 +37,7 @@ test('if `init` is called without domain, it throws', async ({ page }, {
   await page.goto(url)
   const config = { ...DEFAULT_CONFIG, domain: undefined }
   await expect(
-    page.evaluate((config) => (window as any).init(config), { config })
+    page.evaluate((config) => window.init(config), { config })
   ).rejects.toThrow('plausible.init(): domain argument is required')
 })
 
@@ -38,7 +50,7 @@ test('if `init` is called with no configuration, it throws', async ({ page }, {
     bodyContent: 'body'
   })
   await page.goto(url)
-  await expect(page.evaluate(() => (window as any).init())).rejects.toThrow(
+  await expect(page.evaluate(() => window.init())).rejects.toThrow(
     'plausible.init(): domain argument is required'
   )
 })
@@ -53,7 +65,7 @@ test('if `track` is called before `init`, it throws', async ({ page }, {
   })
   await page.goto(url)
   await expect(
-    page.evaluate(() => (window as any).track('purchase'))
+    page.evaluate(() => window.track('purchase'))
   ).rejects.toThrow(
     'plausible.track() can only be called after plausible.init()'
   )
@@ -80,7 +92,7 @@ test('if `init` is called twice, it throws, but tracking still works', async ({
   })
 
   await expect(
-    page.evaluate((config) => (window as any).init(config), config)
+    page.evaluate((config) => window.init(config), config)
   ).rejects.toThrow('plausible.init() can only be called once')
 
   await expectPlausibleInAction(page, {
@@ -110,15 +122,15 @@ test('`bindToWindow` is true by default, and plausible is attached to window', a
     expectedRequests: [{ n: 'pageview' }]
   })
   await expect(
-    page.waitForFunction(() => (window as any).plausible?.l !== undefined)
+    page.waitForFunction(() => window.plausible?.l !== undefined)
   ).resolves.toBeTruthy()
   await expect(
     page.evaluate(() => {
-      if ((window as any).plausible?.l) {
+      if (window.plausible?.l) {
         return {
-          l: (window as any).plausible.l,
-          v: (window as any).plausible.v,
-          s: (window as any).plausible.s
+          l: window.plausible.l,
+          v: window.plausible.v,
+          s: window.plausible.s
         }
       }
       return false
@@ -126,7 +138,7 @@ test('`bindToWindow` is true by default, and plausible is attached to window', a
   ).resolves.toEqual({ l: true, v: tracker_script_version, s: 'npm' })
 })
 
-test('if `bindToWindow` is false, `plausible` is not attached to window', async ({
+test('if `bindToWindow` is false, plausible is not attached to window', async ({
   page
 }, { testId }) => {
   const config = { ...DEFAULT_CONFIG, bindToWindow: false }
@@ -148,7 +160,7 @@ test('if `bindToWindow` is false, `plausible` is not attached to window', async 
 
   await expect(
     page.waitForFunction(
-      () => (window as any).plausible !== undefined,
+      () => window.plausible !== undefined,
       undefined,
       {
         timeout: 1000

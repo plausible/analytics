@@ -1,9 +1,7 @@
-var location = window.location
-var document = window.document
-
 if (COMPILE_COMPAT) {
   var scriptEl = document.getElementById('plausible')
 } else if (COMPILE_PLAUSIBLE_LEGACY_VARIANT) {
+  // eslint-disable-next-line no-redeclare
   var scriptEl = document.currentScript
 }
 
@@ -65,4 +63,4 @@ export function init(options) {
   }
 }
 
-export { config, scriptEl, location, document }
+export { config, scriptEl }

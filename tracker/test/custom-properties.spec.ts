@@ -7,7 +7,6 @@ import {
   expectPlausibleInAction,
   hideAndShowCurrentTab,
   isEngagementEvent,
-  isPageviewEvent,
   switchByMode
 } from './support/test-utils'
 import { test } from '@playwright/test'

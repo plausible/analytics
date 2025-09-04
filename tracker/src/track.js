@@ -1,6 +1,6 @@
 import { sendRequest } from './networking'
 import { prePageviewTrack, postPageviewTrack, onPageviewIgnored } from './engagement'
-import { config, scriptEl, location, document } from './config'
+import { config, scriptEl } from './config'
 
 export function track(eventName, options) {
   if (COMPILE_PLAUSIBLE_NPM && !config.isInitialized) {
@@ -25,9 +25,10 @@ export function track(eventName, options) {
     if (window.localStorage.plausible_ignore === 'true') {
       return onIgnoredEvent(eventName, options, 'localStorage flag')
     }
-  } catch (e) {
-
+  } catch (_error) {
+    // ignore error
   }
+
   if (COMPILE_EXCLUSIONS) {
     var dataIncludeAttr = scriptEl && scriptEl.getAttribute('data-include')
     var dataExcludeAttr = scriptEl && scriptEl.getAttribute('data-exclude')
@@ -39,6 +40,7 @@ export function track(eventName, options) {
         actualPath += location.hash
       }
 
+      // eslint-disable-next-line no-useless-escape
       return actualPath.match(new RegExp('^' + wildcardPath.trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$'))
     }
 
@@ -97,6 +99,7 @@ export function track(eventName, options) {
 
   // Track custom properties for pageviews and other events
   if (COMPILE_CUSTOM_PROPERTIES && config.customProperties) {
+    // eslint-disable-next-line no-redeclare
     var props = config.customProperties
     if (typeof props === 'function') {
       props = config.customProperties(eventName)

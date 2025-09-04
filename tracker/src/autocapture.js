@@ -1,4 +1,4 @@
-import { config, location, document } from './config'
+import { config } from './config'
 
 export function init(track) {
   var lastPage;
