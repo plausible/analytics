@@ -283,6 +283,47 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
     end
 
     @tag :ee_only
+    test "ratelimit is respected: browserless request isn't made and the notice is generic", %{
+      conn: conn,
+      site: site
+    } do
+      capture_log(fn ->
+        new_domain = "new-example.com"
+
+        # exceed the rate limit for site detection
+        Plausible.RateLimit.check_rate(
+          Plausible.RateLimit,
+          "site_detection_#{new_domain}",
+          :timer.minutes(60),
+          1,
+          100
+        )
+
+        # stub won't be used, if it were used, the output would be different
+        stub_detection_result(%{
+          "v1Detected" => false,
+          "gtmLikely" => false,
+          "wordpressLikely" => false,
+          "wordpressPlugin" => false
+        })
+
+        {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
+
+        lv
+        |> element("form")
+        |> render_submit(%{site: %{domain: new_domain}})
+
+        assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+
+        html = render_async(lv, 500)
+        assert html =~ "Additional Steps Required"
+        assert html =~ "<i>must</i>"
+        assert html =~ "also update the site"
+        assert html =~ "Plausible Installation"
+      end)
+    end
+
+    @tag :ee_only
     test "success page handles detection error gracefully", %{conn: conn, site: site} do
       stub_detection_error()
 
