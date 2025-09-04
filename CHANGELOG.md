@@ -27,6 +27,9 @@ All notable changes to this project will be documented in this file.
 - Make clicking Compare / Disable Comparison in period picker menu close the menu
 - Do not log page views for hidden pages (prerendered pages and new tabs), until pages are viewed
 - Password-authenticated shared links now carry over dashboard params properly
+- Realtime and hourly graphs of visit duration, views per visit no longer overcount due to long-lasting sessions, instead showing each visit
+  when they occurred.
+- Fixed realtime and hourly graphs of visits overcounting
 
 ## v3.0.0 - 2025-04-11
 

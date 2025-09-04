@@ -1681,6 +1681,76 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["2021-01-02 12:00:00"], "metrics" => [2]}
              ]
     end
+
+    test "visitors and visits are smeared across time:minute buckets but visit_duration is not",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 00:10:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-01 00:05:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-01 00:08:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "visits", "visit_duration", "pageviews"],
+          "date_range" => ["2021-01-01T00:00:00Z", "2021-01-01T00:30:00Z"],
+          "dimensions" => ["time:minute"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [1, 1, 0, 1]},
+               %{"dimensions" => ["2021-01-01 00:01:00"], "metrics" => [1, 1, 0, 0]},
+               %{"dimensions" => ["2021-01-01 00:02:00"], "metrics" => [1, 1, 0, 0]},
+               %{"dimensions" => ["2021-01-01 00:03:00"], "metrics" => [1, 1, 0, 0]},
+               %{"dimensions" => ["2021-01-01 00:04:00"], "metrics" => [1, 1, 0, 0]},
+               %{"dimensions" => ["2021-01-01 00:05:00"], "metrics" => [2, 2, 0, 1]},
+               %{"dimensions" => ["2021-01-01 00:06:00"], "metrics" => [2, 2, 0, 0]},
+               %{"dimensions" => ["2021-01-01 00:07:00"], "metrics" => [2, 2, 0, 0]},
+               %{"dimensions" => ["2021-01-01 00:08:00"], "metrics" => [2, 2, 180, 1]},
+               %{"dimensions" => ["2021-01-01 00:09:00"], "metrics" => [1, 1, 0, 0]},
+               %{"dimensions" => ["2021-01-01 00:10:00"], "metrics" => [1, 1, 600, 1]}
+             ]
+    end
+
+    test "visitors and visits are smeared across time:hour buckets but visit_duration is not", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 00:20:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 00:40:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 01:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 01:20:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 01:40:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 02:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 02:20:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 02:40:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 03:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 03:20:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-01 01:05:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-01 01:10:00]),
+        build(:pageview, user_id: 3, timestamp: ~N[2021-01-01 02:10:00]),
+        build(:pageview, user_id: 3, timestamp: ~N[2021-01-01 02:20:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visits", "visitors", "visit_duration", "pageviews"],
+          "date_range" => ["2021-01-01", "2021-01-01"],
+          "dimensions" => ["time:hour"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [1, 1, 0, 3]},
+               %{"dimensions" => ["2021-01-01 01:00:00"], "metrics" => [2, 2, 300, 5]},
+               %{"dimensions" => ["2021-01-01 02:00:00"], "metrics" => [2, 2, 600, 5]},
+               %{"dimensions" => ["2021-01-01 03:00:00"], "metrics" => [1, 1, 12_000, 2]}
+             ]
+    end
   end
 
   test "breakdown by visit:source", %{conn: conn, site: site} do
