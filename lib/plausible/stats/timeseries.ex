@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Timeseries do
 
   use Plausible
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Comparisons, Query, QueryRunner, QueryOptimizer, Metrics, Time}
+  alias Plausible.Stats.{Comparisons, Query, QueryRunner, Metrics, Time}
 
   @time_dimension %{
     "month" => "time:month",
@@ -26,7 +26,6 @@ defmodule Plausible.Stats.Timeseries do
         order_by: [{time_dimension(query), :asc}],
         remove_unavailable_revenue_metrics: true
       )
-      |> QueryOptimizer.optimize()
 
     comparison_query =
       if(query.include.comparisons,
