@@ -1,6 +1,6 @@
 {
   "name": "@plausible-analytics/tracker",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Plausible Analytics official frontend tracking library",
   "scripts": {
     "test": "echo \"Error: Testing done in the tracker folder\" && exit 1"
