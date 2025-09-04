@@ -197,7 +197,7 @@ queried from a single table.</p></div>
     </a>
     <h1 class="signature" translate="no">optimize(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query_optimizer.ex#L30" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query_optimizer.ex#L31" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -206,7 +206,7 @@ queried from a single table.</p></div>
 
   <section class="docstring">
 
-<p>  This module manipulates an existing query, updating it according to business logic.</p><p>  For example, it:</p><ol><li>Figures out what the right granularity to group by time is</li><li>Adds a missing order_by clause to a query</li><li>Updating &quot;time&quot; dimension in order_by to the right granularity</li><li>Updates event:hostname filters to also apply on visit level for sane results.</li><li>Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.</li></ol>
+<p>  This module manipulates an existing query, updating it according to business logic.</p><p>  For example, it:</p><ol><li>Figures out what the right granularity to group by time is</li><li>Adds a missing order_by clause to a query</li><li>Updating &quot;time&quot; dimension in order_by to the right granularity</li><li>Updates event:hostname filters to also apply on visit level for sane results.</li><li>Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.</li><li>Trims the date range to the current time if query.include.trim_relative_date_range is true.</li></ol>
   </section>
 </section>
 <section class="detail" id="split/1">
@@ -217,7 +217,7 @@ queried from a single table.</p></div>
     </a>
     <h1 class="signature" translate="no">split(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query_optimizer.ex#L41" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query_optimizer.ex#L42" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
