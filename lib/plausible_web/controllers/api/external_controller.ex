@@ -6,6 +6,7 @@ end
 
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
+  use Plausible
   require Logger
 
   alias Plausible.Ingestion
@@ -15,6 +16,10 @@ defmodule PlausibleWeb.Api.ExternalController do
          _ <- Sentry.Context.set_extra_context(%{request: request}) do
       case Ingestion.Event.build_and_buffer(request) do
         {:ok, %{dropped: [], buffered: _buffered}} ->
+          on_ee do
+            Ingestion.Analyzer.maybe_record(request, conn.req_headers, nil)
+          end
+
           conn
           |> put_status(202)
           |> text("ok")
@@ -30,6 +35,14 @@ defmodule PlausibleWeb.Api.ExternalController do
               errors: Plausible.ChangesetHelpers.traverse_errors(first_invalid_changeset)
             })
           else
+            on_ee do
+              Ingestion.Analyzer.maybe_record(
+                request,
+                conn.req_headers,
+                List.first(dropped).drop_reason
+              )
+            end
+
             conn
             |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")
             |> put_status(202)
