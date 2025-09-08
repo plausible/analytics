@@ -1340,6 +1340,95 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert Enum.at(plot, Enum.find_index(labels, &(&1 == "2023-03-01 12:00:00"))) == 1
     end
+
+    test "trims hourly relative date range", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-08 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-08 06:05:00]),
+        build(:pageview, timestamp: ~N[2021-01-08 08:59:00]),
+        build(:pageview, timestamp: ~N[2021-01-08 23:59:00])
+      ])
+
+      Plausible.Stats.Query.Test.fix_now(~U[2021-01-08 08:05:00Z])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&metric=visitors&date=2021-01-08&interval=hour"
+        )
+
+      assert_matches %{
+                       "labels" => [
+                         "2021-01-08 00:00:00",
+                         "2021-01-08 01:00:00",
+                         "2021-01-08 02:00:00",
+                         "2021-01-08 03:00:00",
+                         "2021-01-08 04:00:00",
+                         "2021-01-08 05:00:00",
+                         "2021-01-08 06:00:00",
+                         "2021-01-08 07:00:00",
+                         "2021-01-08 08:00:00"
+                       ],
+                       "plot" => [1, 0, 0, 0, 0, 0, 1, 0, 1]
+                     } = json_response(conn, 200)
+    end
+
+    test "trims monthly relative date range", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-05 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
+      ])
+
+      Plausible.Stats.Query.Test.fix_now(~U[2021-01-07 12:00:00Z])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&metric=visitors&date=2021-01-07&interval=day"
+        )
+
+      assert_matches %{
+                       "labels" => [
+                         "2021-01-01",
+                         "2021-01-02",
+                         "2021-01-03",
+                         "2021-01-04",
+                         "2021-01-05",
+                         "2021-01-06",
+                         "2021-01-07"
+                       ],
+                       "plot" => [1, 0, 0, 0, 1, 0, 1]
+                     } = json_response(conn, 200)
+    end
+
+    test "trims yearly relative date range", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-05 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-30 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-02-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-02-09 00:00:00])
+      ])
+
+      Plausible.Stats.Query.Test.fix_now(~U[2021-02-07 12:00:00Z])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=year&metric=visitors&date=2021-02-07&interval=month"
+        )
+
+      assert_matches %{
+                       "labels" => [
+                         "2021-01-01",
+                         "2021-02-01"
+                       ],
+                       "plot" => [4, 1]
+                     } = json_response(conn, 200)
+    end
   end
 
   describe "GET /api/stats/main-graph - comparisons" do
@@ -1512,6 +1601,104 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
       assert last_week_plot == [33.33, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    end
+
+    test "does not trim hourly relative date range when comparing", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-08 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-08 06:05:00]),
+        build(:pageview, timestamp: ~N[2021-01-08 08:59:00]),
+        build(:pageview, timestamp: ~N[2021-01-08 23:59:00])
+      ])
+
+      Plausible.Stats.Query.Test.fix_now(~U[2021-01-08 08:05:00Z])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&metric=visitors&date=2021-01-08&interval=hour&comparison=previous_period"
+        )
+
+      assert_matches %{
+                       "labels" => [
+                         "2021-01-08 00:00:00",
+                         "2021-01-08 01:00:00",
+                         "2021-01-08 02:00:00",
+                         "2021-01-08 03:00:00",
+                         "2021-01-08 04:00:00",
+                         "2021-01-08 05:00:00",
+                         "2021-01-08 06:00:00",
+                         "2021-01-08 07:00:00",
+                         "2021-01-08 08:00:00",
+                         "2021-01-08 09:00:00",
+                         "2021-01-08 10:00:00",
+                         "2021-01-08 11:00:00",
+                         "2021-01-08 12:00:00",
+                         "2021-01-08 13:00:00",
+                         "2021-01-08 14:00:00",
+                         "2021-01-08 15:00:00",
+                         "2021-01-08 16:00:00",
+                         "2021-01-08 17:00:00",
+                         "2021-01-08 18:00:00",
+                         "2021-01-08 19:00:00",
+                         "2021-01-08 20:00:00",
+                         "2021-01-08 21:00:00",
+                         "2021-01-08 22:00:00",
+                         "2021-01-08 23:00:00"
+                       ],
+                       "plot" => [
+                         1,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         1,
+                         0,
+                         1,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         1
+                       ],
+                       "comparison_plot" => [
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0,
+                         0
+                       ]
+                     } = json_response(conn, 200)
     end
   end
 

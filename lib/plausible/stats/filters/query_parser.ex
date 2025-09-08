@@ -27,12 +27,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   def default_include(), do: @default_include
 
   def parse(site, schema_type, params, now \\ nil) when is_map(params) do
-    {now, date} =
-      if now do
-        {now, DateTime.shift_zone!(now, site.timezone) |> DateTime.to_date()}
-      else
-        {DateTime.utc_now(:second), today(site)}
-      end
+    now = now || Plausible.Stats.Query.Test.get_fixed_now()
+    date = now |> DateTime.shift_zone!(site.timezone) |> DateTime.to_date()
 
     with :ok <- JSONSchema.validate(schema_type, params),
          {:ok, date, now} <- parse_date(site, Map.get(params, "date"), date, now),
@@ -288,8 +284,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
       _ -> {:error, "Invalid date_range '#{i([from, to])}'."}
     end
   end
-
-  defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
     parse_list(

@@ -11,7 +11,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange}
 
   def from(site, params, debug_metadata, now \\ nil) do
-    now = now || DateTime.utc_now(:second)
+    now = now || Plausible.Stats.Query.Test.get_fixed_now()
 
     query =
       Query
