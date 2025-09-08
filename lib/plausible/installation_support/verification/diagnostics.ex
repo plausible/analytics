@@ -4,9 +4,11 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   """
   require Logger
 
-  # in this struct, nil means indeterminate
+  # In this struct
+  # - nil value means the result is indeterminate (e.g. we didn't even get to the part where response_status is set)
   defstruct selected_installation_type: nil,
             disallowed_by_csp: nil,
+            tracker_is_in_html: nil,
             plausible_is_on_window: nil,
             plausible_is_initialized: nil,
             plausible_version: nil,
@@ -149,6 +151,20 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       error(@error_plausible_network_error)
     end
   end
+
+  def interpret(
+        %__MODULE__{
+          tracker_is_in_html: false,
+          selected_installation_type: "manual",
+          plausible_is_on_window: plausible_is_on_window,
+          plausible_is_initialized: plausible_is_initialized,
+          service_error: nil
+        },
+        _expected_domain,
+        _url
+      )
+      when plausible_is_on_window != true and plausible_is_initialized != true,
+      do: error_plausible_not_found("manual")
 
   @error_csp_disallowed Error.new!(%{
                           message:

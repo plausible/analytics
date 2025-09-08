@@ -158,6 +158,33 @@ defmodule Plausible.InstallationSupport.Verification.DiagnosticsTest do
                      } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
     end
 
+    test "returns error when the snippet is not found for manual installation method, it has priority over CSP-related error" do
+      expected_domain = "example.com"
+      url_to_verify = "https://#{expected_domain}"
+
+      diagnostics =
+        %Diagnostics{
+          selected_installation_type: "manual",
+          tracker_is_in_html: false,
+          disallowed_by_csp: true,
+          test_event: nil,
+          service_error: nil
+        }
+
+      assert_matches %Result{
+                       ok?: false,
+                       errors: ["We couldn't detect Plausible on your site"],
+                       recommendations: [
+                         %{
+                           text:
+                             "Please make sure you've copied snippet to the head of your site, or verify your installation manually",
+                           url:
+                             "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                         }
+                       ]
+                     } = Diagnostics.interpret(diagnostics, expected_domain, url_to_verify)
+    end
+
     test "returns error when Plausible domain is disallowed by CSP" do
       expected_domain = "example.com"
       url_to_verify = "https://#{expected_domain}"
