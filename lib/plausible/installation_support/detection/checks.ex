@@ -48,7 +48,7 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
   @first_slowdown_ms 1000
   def run_with_rate_limit(url, data_domain, opts \\ []) do
     case Plausible.RateLimit.check_rate(
-           "site_detection_#{data_domain}",
+           "site_detection:#{data_domain}",
            :timer.minutes(60),
            10
          ) do

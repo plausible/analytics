@@ -380,7 +380,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       # exceed the rate limit for site detection
       Plausible.RateLimit.check_rate(
         Plausible.RateLimit,
-        "site_detection_#{site.domain}",
+        "site_detection:#{site.domain}",
         :timer.minutes(60),
         1,
         100

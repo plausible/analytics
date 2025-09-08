@@ -290,7 +290,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
         # exceed the rate limit for site detection
         Plausible.RateLimit.check_rate(
           Plausible.RateLimit,
-          "site_detection_#{new_domain}",
+          "site_detection:#{new_domain}",
           :timer.minutes(60),
           1,
           100
