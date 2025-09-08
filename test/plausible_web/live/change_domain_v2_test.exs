@@ -24,9 +24,6 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
           [{192, 168, 1, 2}]
         end)
 
-        # prevent rate limit from kicking in in tests
-        :ets.delete_all_objects(Plausible.RateLimit)
-
         :ok
       end
     end
@@ -91,7 +88,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       end
 
       original_domain = site.domain
-      new_domain = "new-example.com"
+      new_domain = "new.#{site.domain}"
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
 
       lv
@@ -114,14 +111,14 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       end
 
       original_domain = site.domain
-      new_domain = "new-example.com"
+      new_domain = "new.#{site.domain}"
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
 
       lv
       |> element("form")
       |> render_submit(%{site: %{domain: new_domain}})
 
-      assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+      assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain-v2/success")
 
       html = render_async(lv, 500)
       assert html =~ "Domain Changed Successfully"
@@ -167,14 +164,14 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
         "wordpressPlugin" => true
       })
 
-      new_domain = "new-example.com"
+      new_domain = "new.#{site.domain}"
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
 
       lv
       |> element("form")
       |> render_submit(%{site: %{domain: new_domain}})
 
-      assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+      assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain-v2/success")
 
       html = render_async(lv, 500)
       assert html =~ "<i>must</i>"
@@ -200,14 +197,14 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
         "wordpressPlugin" => false
       })
 
-      new_domain = "new-example.com"
+      new_domain = "new.#{site.domain}"
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
 
       lv
       |> element("form")
       |> render_submit(%{site: %{domain: new_domain}})
 
-      assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+      assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain-v2/success")
 
       html = render_async(lv, 500)
       assert html =~ "<i>must</i>"
@@ -231,14 +228,14 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
         "wordpressPlugin" => false
       })
 
-      new_domain = "new-example.com"
+      new_domain = "new.#{site.domain}"
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
 
       lv
       |> element("form")
       |> render_submit(%{site: %{domain: new_domain}})
 
-      assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+      assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain-v2/success")
 
       html = render_async(lv, 500)
       refute html =~ "Additional Steps Required"
@@ -261,14 +258,14 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
         "wordpressPlugin" => false
       })
 
-      new_domain = "new-example.com"
+      new_domain = "new.#{site.domain}"
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
 
       lv
       |> element("form")
       |> render_submit(%{site: %{domain: new_domain}})
 
-      assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+      assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain-v2/success")
 
       html = render_async(lv, 500)
       assert html =~ "<i>must</i>"
@@ -288,7 +285,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       site: site
     } do
       capture_log(fn ->
-        new_domain = "new-example.com"
+        new_domain = "new.#{site.domain}"
 
         # exceed the rate limit for site detection
         Plausible.RateLimit.check_rate(
@@ -313,7 +310,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
         |> element("form")
         |> render_submit(%{site: %{domain: new_domain}})
 
-        assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+        assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain-v2/success")
 
         html = render_async(lv, 500)
         assert html =~ "Additional Steps Required"
@@ -328,14 +325,14 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       stub_detection_error()
 
       capture_log(fn ->
-        new_domain = "new-example.com"
+        new_domain = "new.#{site.domain}"
         {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
 
         lv
         |> element("form")
         |> render_submit(%{site: %{domain: new_domain}})
 
-        assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+        assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain-v2/success")
 
         html = render_async(lv, 500)
         assert html =~ "Additional Steps Required"
@@ -350,14 +347,14 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
       conn: conn,
       site: site
     } do
-      new_domain = "new-example.com"
+      new_domain = "new.#{site.domain}"
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain-v2")
 
       lv
       |> element("form")
       |> render_submit(%{site: %{domain: new_domain}})
 
-      assert_patch(lv, "/#{new_domain}/change-domain-v2/success")
+      assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain-v2/success")
 
       html = render_async(lv, 500)
       notice = text_of_element(html, "div[data-testid='ce-generic-notice']")

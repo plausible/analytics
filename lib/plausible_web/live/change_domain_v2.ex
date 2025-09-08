@@ -189,9 +189,6 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
 
         {:error, {:rate_limit_exceeded, _}} ->
           {:error, :rate_limit_exceeded}
-
-        _ ->
-          {:error, :unknown_reason}
       end
     end
   else

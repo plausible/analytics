@@ -18,13 +18,6 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     :ok
   end
 
-  on_ee do
-    setup do
-      :ets.delete_all_objects(Plausible.RateLimit)
-      :ok
-    end
-  end
-
   describe "GET /:domain/installationv2" do
     @tag :ee_only
     test "renders loading installation screen on EE", %{conn: conn, site: site} do
