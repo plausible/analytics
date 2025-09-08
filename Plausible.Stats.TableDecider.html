@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E8CE1697.js"></script>
+    <script src="dist/sidebar_items-75748577.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -151,6 +151,28 @@ and metrics, with the purpose of reducing the number of queries and JOINs needed
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:metric/0" data-no-tooltip translate="no">metric()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:table_type/0" data-no-tooltip translate="no">table_type()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -166,19 +188,7 @@ and metrics, with the purpose of reducing the number of queries and JOINs needed
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#join_options/2" data-no-tooltip translate="no">join_options(events_query, sessions_query)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Returns a three-element tuple with instructions on how to join two Ecto
-queries. The arguments (<code class="inline">events_query</code> and <code class="inline">sessions_query</code>) are <code class="inline">%Query{}</code>
-structs that have been split by TableDecider already.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#partition_metrics/2" data-no-tooltip translate="no">partition_metrics(metrics, query)</a>
+        <a href="#partition_metrics/2" data-no-tooltip translate="no">partition_metrics(requested_metrics, query)</a>
 
       </div>
 
@@ -206,6 +216,70 @@ structs that have been split by TableDecider already.</p></div>
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:metric/0">
+
+  <div class="detail-header">
+    <a href="#t:metric/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">metric()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/table_decider.ex#L58" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> metric() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:table_type/0">
+
+  <div class="detail-header">
+    <a href="#t:table_type/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">table_type()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/table_decider.ex#L57" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> table_type() :: :events | :sessions</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -235,42 +309,15 @@ structs that have been split by TableDecider already.</p></div>
 
   </section>
 </section>
-<section class="detail" id="join_options/2">
-
-  <div class="detail-header">
-    <a href="#join_options/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">join_options(events_query, sessions_query)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/table_decider.ex#L75" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Returns a three-element tuple with instructions on how to join two Ecto
-queries. The arguments (<code class="inline">events_query</code> and <code class="inline">sessions_query</code>) are <code class="inline">%Query{}</code>
-structs that have been split by TableDecider already.</p><p>Normally we can always LEFT JOIN sessions to events, selecting <code class="inline">dimensions</code>
-only from the events subquery. That's because:</p><ol><li><p>session dimensions (e.g. entry_page) cannot be queried alongside event
-metrics/dimensions, or</p></li><li><p>session dimensions (e.g. operating_system) are also available in the
-events table.</p></li></ol><p>The only exception is using the &quot;time:minute&quot; dimension where the sessions
-subquery might return more rows than the events one. That's because we're
-counting sessions in all time buckets they were active in.</p>
-  </section>
-</section>
 <section class="detail" id="partition_metrics/2">
 
   <div class="detail-header">
     <a href="#partition_metrics/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">partition_metrics(metrics, query)</h1>
+    <h1 class="signature" translate="no">partition_metrics(requested_metrics, query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/table_decider.ex#L90" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/table_decider.ex#L61" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -278,6 +325,14 @@ counting sessions in all time buckets they were active in.</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> partition_metrics([<a href="#t:metric/0">metric</a>()], <a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>()) :: [
+  {<a href="#t:table_type/0">table_type</a>(), [<a href="#t:metric/0">metric</a>()]}
+]</pre>
+
+      </div>
 
 
   </section>
