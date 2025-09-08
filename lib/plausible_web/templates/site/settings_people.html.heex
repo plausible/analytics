@@ -64,20 +64,6 @@
                         Site owner cannot be assigned to any other role
                       </div>
                     </.dropdown_item>
-                    <.dropdown_divider />
-                    <.dropdown_item
-                      :if={@site_role in [:owner, :admin]}
-                      class="text-red-600 dark:text-red-500 hover:text-red-600"
-                      href={
-                        Routes.membership_path(
-                          @conn,
-                          :transfer_ownership_form,
-                          @site.domain
-                        )
-                      }
-                    >
-                      Transfer ownership
-                    </.dropdown_item>
                   <% else %>
                     <.dropdown_item
                       href={
