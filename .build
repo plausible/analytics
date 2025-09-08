@@ -265,6 +265,7 @@ Plausible.Stats.Legacy.Dimensions.html
 Plausible.Stats.Legacy.QueryBuilder.html
 Plausible.Stats.Legacy.TimeOnPage.html
 Plausible.Stats.Metrics.html
+Plausible.Stats.Query.Test.html
 Plausible.Stats.Query.html
 Plausible.Stats.QueryOptimizer.html
 Plausible.Stats.QueryResult.html
@@ -554,8 +555,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-B816C01C.js
-dist/sidebar_items-98D65C25.js
+dist/search_data-EA1E94F8.js
+dist/sidebar_items-B67729EF.js
 index.html
 readme.html
 search.html
