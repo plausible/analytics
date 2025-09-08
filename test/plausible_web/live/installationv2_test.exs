@@ -278,7 +278,10 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
           assert_redirect(
             lv,
-            Routes.site_path(conn, :verification, site.domain, flow: "provisioning")
+            Routes.site_path(conn, :verification, site.domain,
+              flow: "provisioning",
+              installation_type: unquote(type)
+            )
           )
         end
       end
@@ -301,7 +304,10 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
       assert_redirect(
         lv,
-        Routes.site_path(conn, :verification, site.domain, flow: "provisioning")
+        Routes.site_path(conn, :verification, site.domain,
+          flow: "provisioning",
+          installation_type: "manual"
+        )
       )
     end
 
@@ -358,7 +364,13 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
         }
       })
 
-      assert_redirect(lv, Routes.site_path(conn, :verification, site.domain, flow: "review"))
+      assert_redirect(
+        lv,
+        Routes.site_path(conn, :verification, site.domain,
+          flow: "review",
+          installation_type: "manual"
+        )
+      )
     end
 
     @tag :ee_only

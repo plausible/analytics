@@ -155,7 +155,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   def interpret(
         %__MODULE__{
           tracker_is_in_html: false,
-          selected_installation_type: "manual",
+          selected_installation_type: selected_installation_type,
           plausible_is_on_window: plausible_is_on_window,
           plausible_is_initialized: plausible_is_initialized,
           service_error: nil
@@ -163,8 +163,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _expected_domain,
         _url
       )
-      when plausible_is_on_window != true and plausible_is_initialized != true,
-      do: error_plausible_not_found("manual")
+      when selected_installation_type in ["manual", nil] and plausible_is_on_window != true and
+             plausible_is_initialized != true,
+      do: error_plausible_not_found(selected_installation_type)
 
   @error_csp_disallowed Error.new!(%{
                           message:
