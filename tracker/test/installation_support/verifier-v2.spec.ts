@@ -11,7 +11,8 @@ const DEFAULT_VERIFICATION_OPTIONS = {
   timeoutMs: 1000,
   cspHostToCheck: 'plausible.io',
   maxAttempts: 2,
-  timeoutBetweenAttemptsMs: 500
+  timeoutBetweenAttemptsMs: 500,
+  trackerScriptSelector: `script[src^="/tracker/js/plausible-web.js"]`
 }
 
 const incompleteCookiesConsentResult = {
@@ -54,6 +55,7 @@ test.describe('installed plausible web variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
@@ -115,6 +117,7 @@ test.describe('installed plausible web variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
@@ -172,6 +175,7 @@ test.describe('installed plausible web variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
@@ -218,6 +222,7 @@ test.describe('installed plausible web variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
@@ -285,6 +290,7 @@ test.describe('installed plausible web variant', () => {
       data: {
         attempts: 2,
         completed: true,
+        trackerIsInHtml: true,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
@@ -426,6 +432,7 @@ test.describe('installed plausible web variant', () => {
         attempts: 1,
         completed: true,
         disallowedByCsp: true,
+        trackerIsInHtml: true,
         plausibleIsOnWindow: true,
         plausibleIsInitialized: undefined,
         plausibleVersion: undefined,
@@ -487,6 +494,7 @@ test.describe('installed plausible web variant', () => {
         attempts: 1,
         completed: true,
         disallowedByCsp: false, // scripts from our domain are allowed, but the inline sourceless snippet can't run because 'unsafe-inline' is not present in the CSP
+        trackerIsInHtml: true,
         plausibleIsOnWindow: true,
         plausibleIsInitialized: undefined,
         plausibleVersion: undefined,
@@ -547,6 +555,7 @@ test.describe('installed plausible web variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: true,
         disallowedByCsp: false,
         plausibleIsOnWindow: true,
         plausibleIsInitialized: true,
@@ -605,6 +614,7 @@ test.describe('installed plausible esm variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: false,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
@@ -664,6 +674,7 @@ test.describe('installed plausible esm variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: false,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
@@ -723,6 +734,7 @@ test.describe('installed plausible esm variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: false,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,
@@ -771,6 +783,7 @@ test.describe('installed plausible esm variant', () => {
       data: {
         attempts: 1,
         completed: true,
+        trackerIsInHtml: false,
         plausibleIsInitialized: true,
         plausibleIsOnWindow: true,
         disallowedByCsp: false,

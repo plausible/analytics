@@ -22,6 +22,7 @@ export type VerifyV2Args = {
   responseHeaders: Record<string, string>
   timeoutMs: number
   cspHostToCheck: string
+  trackerScriptSelector: string
 }
 
 type ConsentResult =
