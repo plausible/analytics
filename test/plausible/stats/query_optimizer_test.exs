@@ -363,4 +363,14 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       assert result.utc_time_range.last == nyc_mar_15_end
     end
   end
+
+  describe "set_sql_join_type" do
+    test "updates sql_join_type to :full if time:minute dimension is present" do
+      assert perform(%{dimensions: ["time:minute"]}).sql_join_type == :full
+    end
+
+    test "keeps default sql_join_type otherwise" do
+      assert perform(%{dimensions: ["time:hour"]}).sql_join_type == :left
+    end
+  end
 end

@@ -26,6 +26,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     4. Updates event:hostname filters to also apply on visit level for sane results.
     5. Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.
     6. Trims the date range to the current time if query.include.trim_relative_date_range is true.
+    7. Sets the join_type for the query based on the query.
 
   """
   def optimize(query) do
@@ -40,18 +41,12 @@ defmodule Plausible.Stats.QueryOptimizer do
   for sessions.
   """
   def split(query) do
-    {event_metrics, sessions_metrics, _other_metrics} =
-      query.metrics
-      |> Util.maybe_add_visitors_metric()
-      |> TableDecider.partition_metrics(query)
-
-    {
-      Query.set(query,
-        metrics: event_metrics,
-        include_imported: query.include_imported
-      ),
-      split_sessions_query(query, sessions_metrics)
-    }
+    query.metrics
+    |> Util.maybe_add_visitors_metric()
+    |> TableDecider.partition_metrics(query)
+    |> Enum.map(fn {table_type, metrics} ->
+      build_split_query(table_type, metrics, query)
+    end)
   end
 
   defp pipeline() do
@@ -62,7 +57,8 @@ defmodule Plausible.Stats.QueryOptimizer do
       &extend_hostname_filters_to_visit/1,
       &remove_revenue_metrics_if_unavailable/1,
       &set_time_on_page_data/1,
-      &trim_relative_date_range/1
+      &trim_relative_date_range/1,
+      &set_sql_join_type/1
     ]
   end
 
@@ -162,7 +158,17 @@ defmodule Plausible.Stats.QueryOptimizer do
     Enum.find(query.dimensions, &Time.time_dimension?/1)
   end
 
-  defp split_sessions_query(query, session_metrics) do
+  defp build_split_query(:events, metrics, query) do
+    {
+      :events,
+      Query.set(query,
+        metrics: metrics,
+        include_imported: query.include_imported
+      )
+    }
+  end
+
+  defp build_split_query(:sessions, metrics, query) do
     dimensions =
       query.dimensions
       |> Enum.map(fn
@@ -179,12 +185,21 @@ defmodule Plausible.Stats.QueryOptimizer do
         query.filters
       end
 
-    Query.set(query,
-      filters: filters,
-      metrics: session_metrics,
-      dimensions: dimensions,
-      include_imported: query.include_imported
-    )
+    {
+      :sessions,
+      Query.set(query,
+        filters: filters,
+        metrics: metrics,
+        dimensions: dimensions,
+        include_imported: query.include_imported
+      )
+    }
+  end
+
+  defp build_split_query(:sessions_smeared, metrics, query) do
+    {_, query} = build_split_query(:sessions, metrics, query)
+
+    {:sessions, Query.set(query, smear_session_metrics: true)}
   end
 
   on_ee do
@@ -297,6 +312,21 @@ defmodule Plausible.Stats.QueryOptimizer do
       date_range.first
       |> DateTimeRange.new!(trimmed_to_date, query.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
+    end
+  end
+
+  # Normally we can always LEFT JOIN as this is more performant and tables
+  # are expected to contain the same dimensions.
+
+  # The only exception is using the "time:minute" dimension where the sessions
+  # subquery might return more rows than the events one. That's because we're
+  # counting sessions in all time buckets they were active in even if no event
+  # occurred during that particular minute.
+  defp set_sql_join_type(query) do
+    if "time:minute" in query.dimensions do
+      Query.set(query, sql_join_type: :full)
+    else
+      query
     end
   end
 end

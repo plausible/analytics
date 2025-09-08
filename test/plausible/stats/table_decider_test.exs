@@ -28,127 +28,164 @@ defmodule Plausible.Stats.TableDeciderTest do
     test "with no metrics or filters" do
       query = make_query([])
 
-      assert partition_metrics([], query) == {[], [], []}
+      assert partition_metrics([], query) == []
     end
 
     test "session-only metrics accordingly" do
       query = make_query([])
 
-      assert partition_metrics([:bounce_rate, :views_per_visit], query) ==
-               {[], [:bounce_rate, :views_per_visit], []}
+      assert partition_metrics([:bounce_rate, :views_per_visit], query) == [
+               sessions: [:bounce_rate, :views_per_visit]
+             ]
     end
 
     test "event-only metrics accordingly" do
       query = make_query([])
 
-      assert partition_metrics([:total_revenue, :visitors], query) ==
-               {[:total_revenue, :visitors], [], []}
+      assert partition_metrics([:total_revenue, :visitors], query) == [
+               events: [:total_revenue, :visitors]
+             ]
     end
 
     test "filters from both, event-only metrics" do
       query = make_query(["event:name", "visit:source"])
 
-      assert partition_metrics([:total_revenue], query) == {[:total_revenue], [], []}
+      assert partition_metrics([:total_revenue], query) == [events: [:total_revenue]]
     end
 
     test "filters from both, session-only metrics" do
       query = make_query(["event:name", "visit:source"])
 
-      assert partition_metrics([:bounce_rate], query) == {[], [:bounce_rate], []}
+      assert partition_metrics([:bounce_rate], query) == [sessions: [:bounce_rate]]
     end
 
     test "session filters but no session metrics" do
       query = make_query(["visit:source"])
 
-      assert partition_metrics([:total_revenue], query) == {[:total_revenue], [], []}
+      assert partition_metrics([:total_revenue], query) == [events: [:total_revenue]]
     end
 
     test "sample_percent is added to both types of metrics" do
       query = make_query([])
 
-      assert partition_metrics([:total_revenue, :sample_percent], query) ==
-               {[:total_revenue, :sample_percent], [], []}
+      assert partition_metrics([:total_revenue, :sample_percent], query) == [
+               events: [:total_revenue, :sample_percent]
+             ]
 
-      assert partition_metrics([:bounce_rate, :sample_percent], query) ==
-               {[], [:bounce_rate, :sample_percent], []}
+      assert partition_metrics([:bounce_rate, :sample_percent], query) == [
+               sessions: [:bounce_rate, :sample_percent]
+             ]
 
-      assert partition_metrics([:total_revenue, :bounce_rate, :sample_percent], query) ==
-               {[:total_revenue, :sample_percent], [:bounce_rate, :sample_percent], []}
+      assert partition_metrics([:total_revenue, :bounce_rate, :sample_percent], query) == [
+               events: [:total_revenue, :sample_percent],
+               sessions: [:bounce_rate, :sample_percent]
+             ]
     end
 
-    test "other metrics put in its own result" do
+    test "other metrics get ignored" do
       query = make_query([])
 
-      assert partition_metrics([:percentage, :total_visitors], query) ==
-               {[], [:percentage], [:total_visitors]}
+      assert partition_metrics([:percentage, :total_visitors], query) == [sessions: [:percentage]]
     end
 
     test "metrics that can be calculated on either when event-only metrics" do
       query = make_query([])
 
-      assert partition_metrics([:total_revenue, :visitors], query) ==
-               {[:total_revenue, :visitors], [], []}
+      assert partition_metrics([:total_revenue, :visitors], query) == [
+               events: [:total_revenue, :visitors]
+             ]
 
-      assert partition_metrics([:pageviews, :visits], query) == {[:pageviews, :visits], [], []}
+      assert partition_metrics([:pageviews, :visits], query) == [events: [:pageviews, :visits]]
     end
 
     test "metrics that can be calculated on either when session-only metrics" do
       query = make_query([])
 
-      assert partition_metrics([:bounce_rate, :visitors], query) ==
-               {[], [:bounce_rate, :visitors], []}
+      assert partition_metrics([:bounce_rate, :visitors], query) == [
+               sessions: [:bounce_rate, :visitors]
+             ]
 
-      assert partition_metrics([:visit_duration, :visits], query) ==
-               {[], [:visit_duration, :visits], []}
+      assert partition_metrics([:visit_duration, :visits], query) == [
+               sessions: [:visit_duration, :visits]
+             ]
     end
 
     test "metrics that can be calculated on either are biased to events" do
       query = make_query([])
 
-      assert partition_metrics([:bounce_rate, :total_revenue, :visitors], query) ==
-               {[:total_revenue, :visitors], [:bounce_rate], []}
+      assert partition_metrics([:bounce_rate, :total_revenue, :visitors], query) == [
+               events: [:total_revenue, :visitors],
+               sessions: [:bounce_rate]
+             ]
     end
 
     test "sample_percent is handled with either metrics" do
       query = make_query([])
 
-      assert partition_metrics([:visitors, :sample_percent], query) ==
-               {[], [:visitors, :sample_percent], []}
+      assert partition_metrics([:visitors, :sample_percent], query) == [
+               sessions: [:visitors, :sample_percent]
+             ]
     end
 
     test "metric can be calculated on either, but filtering on events" do
       query = make_query(["event:name"])
 
-      assert partition_metrics([:visitors], query) == {[:visitors], [], []}
+      assert partition_metrics([:visitors], query) == [events: [:visitors]]
     end
 
     test "metric can be calculated on either, but filtering on events and sessions" do
       query = make_query(["event:name", "visit:exit_page"])
 
-      assert partition_metrics([:visitors], query) == {[], [:visitors], []}
+      assert partition_metrics([:visitors], query) == [sessions: [:visitors]]
     end
 
     test "metric can be calculated on either, filtering on either" do
       query = make_query(["visit:source"])
 
-      assert partition_metrics([:visitors], query) == {[], [:visitors], []}
+      assert partition_metrics([:visitors], query) == [sessions: [:visitors]]
     end
 
     test "metric can be calculated on either, filtering on sessions" do
       query = make_query(["visit:exit_page"])
 
-      assert partition_metrics([:visitors], query) == {[], [:visitors], []}
+      assert partition_metrics([:visitors], query) == [sessions: [:visitors]]
     end
 
     test "query dimensions lean metric" do
-      assert partition_metrics([:visitors], make_query([], ["event:name"])) ==
-               {[:visitors], [], []}
+      assert partition_metrics([:visitors], make_query([], ["event:name"])) == [
+               events: [:visitors]
+             ]
 
-      assert partition_metrics([:visitors], make_query([], ["visit:source"])) ==
-               {[], [:visitors], []}
+      assert partition_metrics([:visitors], make_query([], ["visit:source"])) == [
+               sessions: [:visitors]
+             ]
 
-      assert partition_metrics([:visitors], make_query([], ["visit:exit_page"])) ==
-               {[], [:visitors], []}
+      assert partition_metrics([:visitors], make_query([], ["visit:exit_page"])) == [
+               sessions: [:visitors]
+             ]
+    end
+
+    test "smearable metrics" do
+      assert partition_metrics(
+               [:visitors, :visits, :visit_duration, :pageviews],
+               make_query([], ["time:minute"])
+             ) == [
+               events: [:pageviews],
+               sessions: [:visit_duration],
+               sessions_smeared: [:visitors, :visits]
+             ]
+
+      assert partition_metrics([:visitors], make_query([], ["time:hour"])) == [
+               sessions_smeared: [:visitors]
+             ]
+
+      assert partition_metrics([:visitors], make_query([], ["time:day"])) == [
+               sessions: [:visitors]
+             ]
+
+      assert partition_metrics([:visitors], make_query([], [])) == [
+               sessions: [:visitors]
+             ]
     end
   end
 
