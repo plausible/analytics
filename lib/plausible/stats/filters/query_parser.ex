@@ -31,7 +31,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
       if now do
         {now, DateTime.shift_zone!(now, site.timezone) |> DateTime.to_date()}
       else
-        {DateTime.utc_now(:second), today(site)}
+        now = Plausible.Stats.Query.Test.get_fixed_now()
+        {now, today(now, site)}
       end
 
     with :ok <- JSONSchema.validate(schema_type, params),
@@ -289,7 +290,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
+  defp today(now, site), do: now |> DateTime.shift_zone!(site.timezone) |> DateTime.to_date()
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
     parse_list(

@@ -185,12 +185,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
       build(:pageview, timestamp: ~N[2022-07-01 00:00:00])
     ])
 
+    Plausible.Stats.Query.Test.fix_now(~U[2022-07-01 14:00:00Z])
+
     conn =
       post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "91d",
-        "date" => "2022-07-01",
         "dimensions" => ["time:day"],
         "include" => %{
           "time_labels" => true,
