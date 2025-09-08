@@ -173,24 +173,22 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     end
 
     defp run_detection(domain) do
-      detection_result =
-        Detection.Checks.run(nil, domain,
-          detect_v1?: true,
-          report_to: nil,
-          async?: false,
-          slowdown: 0
-        )
-        |> Detection.Checks.interpret_diagnostics()
-
-      case detection_result do
-        %Result{
-          ok?: true,
-          data: data
-        } ->
-          {:ok, %{detection_result: data}}
-
+      with {:ok, detection_result} <-
+             Detection.Checks.run_with_rate_limit(nil, domain,
+               detect_v1?: true,
+               report_to: nil,
+               async?: false,
+               slowdown: 0
+             ),
+           %Result{ok?: true, data: data} <-
+             Detection.Checks.interpret_diagnostics(detection_result) do
+        {:ok, %{detection_result: data}}
+      else
         %Result{ok?: false, errors: errors} ->
           {:error, List.first(errors, :unknown_reason)}
+
+        {:error, {:rate_limit_exceeded, _}} ->
+          {:error, :rate_limit_exceeded}
       end
     end
   else

@@ -373,6 +373,31 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     end
 
     @tag :ee_only
+    test "if ratelimit for detection is exceeded, does not make detection request and falls back to recommending manual installation",
+         %{conn: conn, site: site} do
+      stub_dns_lookup_a_records(site.domain)
+
+      # exceed the rate limit for site detection
+      Plausible.RateLimit.check_rate(
+        Plausible.RateLimit,
+        "site_detection:#{site.domain}",
+        :timer.minutes(60),
+        1,
+        100
+      )
+
+      # this won't be used: if it were used, the output would be different
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+
+      refute text(html) =~ "We've detected your website is using WordPress"
+      assert text(html) =~ "Verify Script installation"
+    end
+
+    @tag :ee_only
     test "detected GTM installation shows special message", %{conn: conn, site: site} do
       stub_dns_lookup_a_records(site.domain)
       stub_detection_gtm()

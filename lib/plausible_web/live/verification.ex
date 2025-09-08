@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Live.Verification do
       {:noreply, socket}
     else
       case Plausible.RateLimit.check_rate(
-             "site_verification_#{socket.assigns.domain}",
+             "site_verification:#{socket.assigns.domain}",
              :timer.minutes(60),
              3
            ) do
