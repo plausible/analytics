@@ -101,6 +101,6 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   defp hours_ago(hours) do
     NaiveDateTime.utc_now()
     |> NaiveDateTime.truncate(:second)
-    |> Timex.shift(hours: -hours)
+    |> NaiveDateTime.shift(hour: -hours)
   end
 end

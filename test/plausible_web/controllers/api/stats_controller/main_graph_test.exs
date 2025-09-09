@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays pageviews for the last 30 minutes in realtime graph", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minutes: -5))
+        build(:pageview, timestamp: relative_time(minute: -5))
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime&metric=pageviews")
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       |> Plausible.Repo.update()
 
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minutes: -5))
+        build(:pageview, timestamp: relative_time(minute: -5))
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime&metric=pageviews")
@@ -412,8 +412,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=30d&metric=visitors")
       assert %{"labels" => labels} = json_response(conn, 200)
 
-      first = Date.utc_today() |> Timex.shift(days: -30) |> Date.to_iso8601()
-      last = Date.utc_today() |> Timex.shift(days: -1) |> Date.to_iso8601()
+      first = Date.utc_today() |> Date.shift(day: -30) |> Date.to_iso8601()
+      last = Date.utc_today() |> Date.shift(day: -1) |> Date.to_iso8601()
       assert List.first(labels) == first
       assert List.last(labels) == last
     end
@@ -422,8 +422,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=7d&metric=visitors")
       assert %{"labels" => labels} = json_response(conn, 200)
 
-      first = Date.utc_today() |> Timex.shift(days: -7) |> Date.to_iso8601()
-      last = Date.utc_today() |> Timex.shift(days: -1) |> Date.to_iso8601()
+      first = Date.utc_today() |> Date.shift(day: -7) |> Date.to_iso8601()
+      last = Date.utc_today() |> Date.shift(day: -1) |> Date.to_iso8601()
       assert List.first(labels) == first
       assert List.last(labels) == last
     end
@@ -526,12 +526,12 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       site: site
     } do
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minutes: -35), user_id: 1),
-        build(:pageview, timestamp: relative_time(minutes: -20), user_id: 1),
-        build(:pageview, timestamp: relative_time(minutes: -25), user_id: 2),
-        build(:pageview, timestamp: relative_time(minutes: -15), user_id: 2),
-        build(:pageview, timestamp: relative_time(minutes: -5), user_id: 3),
-        build(:pageview, timestamp: relative_time(minutes: -3), user_id: 3)
+        build(:pageview, timestamp: relative_time(minute: -35), user_id: 1),
+        build(:pageview, timestamp: relative_time(minute: -20), user_id: 1),
+        build(:pageview, timestamp: relative_time(minute: -25), user_id: 2),
+        build(:pageview, timestamp: relative_time(minute: -15), user_id: 2),
+        build(:pageview, timestamp: relative_time(minute: -5), user_id: 3),
+        build(:pageview, timestamp: relative_time(minute: -3), user_id: 3)
       ])
 
       conn =
@@ -1444,14 +1444,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"labels" => labels, "comparison_labels" => comparison_labels} =
                json_response(conn, 200)
 
-      first = Date.utc_today() |> Timex.shift(days: -30) |> Date.to_iso8601()
-      last = Date.utc_today() |> Timex.shift(days: -1) |> Date.to_iso8601()
+      first = Date.utc_today() |> Date.shift(day: -30) |> Date.to_iso8601()
+      last = Date.utc_today() |> Date.shift(day: -1) |> Date.to_iso8601()
 
       assert List.first(labels) == first
       assert List.last(labels) == last
 
-      first = Date.utc_today() |> Timex.shift(days: -60) |> Date.to_iso8601()
-      last = Date.utc_today() |> Timex.shift(days: -31) |> Date.to_iso8601()
+      first = Date.utc_today() |> Date.shift(day: -60) |> Date.to_iso8601()
+      last = Date.utc_today() |> Date.shift(day: -31) |> Date.to_iso8601()
 
       assert List.first(comparison_labels) == first
       assert List.last(comparison_labels) == last
@@ -1540,7 +1540,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       site = new_site(owner: user, timezone: "America/Santiago")
 
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minutes: -5))
+        build(:pageview, timestamp: relative_time(minute: -5))
       ])
 
       conn =

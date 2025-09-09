@@ -858,8 +858,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
            } do
         now = NaiveDateTime.utc_now()
 
-        generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
-        generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
+        generate_usage_for(site, 11_000, NaiveDateTime.shift(now, day: -5))
+        generate_usage_for(site, 11_000, NaiveDateTime.shift(now, day: -35))
 
         user
         |> team_of()
@@ -1052,7 +1052,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         |> team_of()
         |> Repo.preload(:subscription)
         |> Map.fetch!(:subscription)
-        |> Subscription.changeset(%{next_bill_date: Timex.shift(DateTime.utc_now(), months: -2)})
+        |> Subscription.changeset(%{
+          next_bill_date: DateTime.shift(DateTime.utc_now(), month: -2)
+        })
         |> Repo.update!()
 
         :ok

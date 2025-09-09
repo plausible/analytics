@@ -6,7 +6,7 @@ defmodule Plausible.Factory do
   def team_factory do
     %Plausible.Teams.Team{
       name: Plausible.Teams.default_name(),
-      trial_expiry_date: Date.utc_today() |> Timex.shift(days: 30),
+      trial_expiry_date: Date.utc_today() |> Date.shift(day: 30),
       setup_complete: true,
       setup_at: NaiveDateTime.utc_now()
     }
@@ -219,7 +219,7 @@ defmodule Plausible.Factory do
       email: sequence(:google_auth_email, &"email-#{&1}@example.com"),
       refresh_token: "123",
       access_token: "123",
-      expires: DateTime.utc_now() |> Timex.shift(days: 1)
+      expires: DateTime.utc_now() |> DateTime.shift(day: 1)
     }
   end
 

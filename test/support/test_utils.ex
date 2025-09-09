@@ -222,7 +222,7 @@ defmodule Plausible.TestUtils do
 
   def relative_time(shifts) do
     NaiveDateTime.utc_now()
-    |> Timex.shift(shifts)
+    |> NaiveDateTime.shift(shifts)
     |> NaiveDateTime.truncate(:second)
   end
 
