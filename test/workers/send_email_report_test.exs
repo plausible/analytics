@@ -45,7 +45,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-      now = Timex.now(site.timezone)
+      now = DateTime.now!(site.timezone)
       last_monday = DateTime.shift(now, week: -1) |> Plausible.Times.beginning_of_week()
       last_sunday = DateTime.shift(now, week: -1) |> Plausible.Times.end_of_week()
       sunday_before_last = DateTime.shift(last_monday, minute: -1)
@@ -217,7 +217,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
       insert(:monthly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
 
       last_month =
-        Timex.now(site.timezone)
+        DateTime.now!(site.timezone)
         |> DateTime.shift(month: -1)
         |> Plausible.Times.beginning_of_month()
         |> Calendar.strftime("%B")
