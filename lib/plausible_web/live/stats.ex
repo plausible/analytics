@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.Stats do
     {:ok,
      assign(socket,
        site: site,
-       status: AsyncResult.loading()
+       result: AsyncResult.loading()
      )}
   end
 
@@ -31,16 +31,19 @@ defmodule PlausibleWeb.Live.Stats do
   end
 
   def handle_params(params, _uri, socket) do
+    site = socket.assigns.site
+    query = build_query(site, params)
+
     socket =
       socket
-      |> assign_query(params)
+      |> assign(query: query)
       |> assign(debug: Map.has_key?(params, "debug"))
+      |> assign_async(:result, fn -> {:ok, %{ result: Plausible.Stats.query(site, query) }} end)
 
     {:noreply, socket}
   end
 
-  def assign_query(socket, params) do
-    site = socket.assigns.site
+  def build_query(site, params) do
     data = JSON.decode!(params["data"] || "{}")
 
     {:ok, query} =
@@ -56,7 +59,7 @@ defmodule PlausibleWeb.Live.Stats do
         %{}
       )
 
-    assign(socket, query: query)
+    query
   end
 
   def render(assigns) do
@@ -74,9 +77,14 @@ defmodule PlausibleWeb.Live.Stats do
       </div>
     </div>
     <div :if={@debug} class="container print:max-w-full mt-4">
-      <details class="bg-white rounded w-full">
+      <details class="bg-white rounded w-full mb-4">
         <summary>Raw Query</summary>
         <pre><%= inspect(@query, charlists: :as_lists, pretty: true) %></pre>
+      </details>
+
+      <details class="bg-white rounded w-full mb-4">
+        <summary>Raw Result</summary>
+        <pre><%= inspect(@result, charlists: :as_lists, pretty: true) %></pre>
       </details>
     </div>
     """
