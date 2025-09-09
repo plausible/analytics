@@ -1052,7 +1052,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         |> team_of()
         |> Repo.preload(:subscription)
         |> Map.fetch!(:subscription)
-        |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
+        |> Subscription.changeset(%{next_bill_date: Timex.shift(DateTime.utc_now(), months: -2)})
         |> Repo.update!()
 
         :ok

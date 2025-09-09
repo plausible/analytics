@@ -270,10 +270,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
       site = new_site(owner: user)
 
       populate_stats(site, [
-        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5)),
-        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20)),
-        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -50)),
-        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -50))
+        build(:event, name: "pageview", timestamp: Timex.shift(DateTime.utc_now(), days: -5)),
+        build(:event, name: "customevent", timestamp: Timex.shift(DateTime.utc_now(), days: -20)),
+        build(:event, name: "pageview", timestamp: Timex.shift(DateTime.utc_now(), days: -50)),
+        build(:event, name: "customevent", timestamp: Timex.shift(DateTime.utc_now(), days: -50))
       ])
 
       last_bill_date = Timex.shift(Date.utc_today(), days: -10)
@@ -340,7 +340,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       subscribe_to_plan(user, @v4_plan_id,
         status: :active,
-        last_bill_date: Timex.shift(Timex.now(), months: -6)
+        last_bill_date: Timex.shift(DateTime.utc_now(), months: -6)
       )
 
       subscription =
@@ -368,7 +368,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       subscription
       |> Plausible.Billing.Subscription.changeset(%{
         status: :deleted,
-        next_bill_date: Timex.shift(Timex.now(), months: 6)
+        next_bill_date: Timex.shift(DateTime.utc_now(), months: 6)
       })
       |> Repo.update!()
 
@@ -383,8 +383,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
       site = new_site(owner: user)
 
       populate_stats(site, [
-        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5)),
-        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20))
+        build(:event, name: "pageview", timestamp: Timex.shift(DateTime.utc_now(), days: -5)),
+        build(:event, name: "customevent", timestamp: Timex.shift(DateTime.utc_now(), days: -20))
       ])
 
       last_bill_date = Timex.shift(Date.utc_today(), days: -10)
@@ -429,9 +429,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       site = new_site(owner: user)
 
       populate_stats(site, [
-        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -1)),
-        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -10)),
-        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20))
+        build(:event, name: "pageview", timestamp: Timex.shift(DateTime.utc_now(), days: -1)),
+        build(:event, name: "customevent", timestamp: Timex.shift(DateTime.utc_now(), days: -10)),
+        build(:event, name: "customevent", timestamp: Timex.shift(DateTime.utc_now(), days: -20))
       ])
 
       assert_usage = fn doc ->

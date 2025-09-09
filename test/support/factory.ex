@@ -114,8 +114,8 @@ defmodule Plausible.Factory do
       entry_page: "/",
       pageviews: 1,
       events: 1,
-      start: Timex.now(),
-      timestamp: Timex.now(),
+      start: DateTime.utc_now(),
+      timestamp: DateTime.utc_now(),
       is_bounce: false
     }
   end
@@ -219,7 +219,7 @@ defmodule Plausible.Factory do
       email: sequence(:google_auth_email, &"email-#{&1}@example.com"),
       refresh_token: "123",
       access_token: "123",
-      expires: Timex.now() |> Timex.shift(days: 1)
+      expires: DateTime.utc_now() |> Timex.shift(days: 1)
     }
   end
 

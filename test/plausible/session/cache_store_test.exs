@@ -247,7 +247,7 @@ defmodule Plausible.Session.CacheStoreTest do
   end
 
   test "updates session counters", %{buffer: buffer} do
-    timestamp = Timex.now()
+    timestamp = DateTime.utc_now()
     event1 = build(:event, name: "pageview", timestamp: timestamp |> Timex.shift(seconds: -10))
 
     event2 = %{
@@ -352,7 +352,7 @@ defmodule Plausible.Session.CacheStoreTest do
           site_id: site_id,
           pathname: "/path/1",
           hostname: "whatever.example.com",
-          timestamp: Timex.shift(Timex.now(), seconds: -5),
+          timestamp: Timex.shift(DateTime.utc_now(), seconds: -5),
           user_id: 1
         ),
         build(:event,
@@ -379,7 +379,7 @@ defmodule Plausible.Session.CacheStoreTest do
           site_id: site_id,
           pathname: "/landing",
           hostname: "example.com",
-          timestamp: Timex.shift(Timex.now(), seconds: -5),
+          timestamp: Timex.shift(DateTime.utc_now(), seconds: -5),
           user_id: 1
         ),
         build(:event,
@@ -406,7 +406,7 @@ defmodule Plausible.Session.CacheStoreTest do
           site_id: site_id,
           pathname: "/landing",
           hostname: "example.com",
-          timestamp: Timex.shift(Timex.now(), seconds: -5),
+          timestamp: Timex.shift(DateTime.utc_now(), seconds: -5),
           user_id: 1
         ),
         build(:event,
@@ -414,7 +414,7 @@ defmodule Plausible.Session.CacheStoreTest do
           site_id: site_id,
           pathname: "/path/1",
           hostname: "analytics.example.com",
-          timestamp: Timex.shift(Timex.now(), seconds: -3),
+          timestamp: Timex.shift(DateTime.utc_now(), seconds: -3),
           user_id: 1
         ),
         build(:event,
@@ -497,7 +497,7 @@ defmodule Plausible.Session.CacheStoreTest do
   end
 
   test "calculates duration correctly for out-of-order events", %{buffer: buffer} do
-    timestamp = Timex.now()
+    timestamp = DateTime.utc_now()
     event1 = build(:event, name: "pageview", timestamp: timestamp |> Timex.shift(seconds: 10))
 
     event2 = %{event1 | timestamp: timestamp}
