@@ -220,7 +220,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
         Timex.now(site.timezone)
         |> Timex.shift(months: -1)
         |> Plausible.Times.beginning_of_month()
-        |> Timex.format!("{Mfull}")
+        |> Calendar.strftime("%B")
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
 

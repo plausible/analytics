@@ -412,8 +412,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=30d&metric=visitors")
       assert %{"labels" => labels} = json_response(conn, 200)
 
-      {:ok, first} = Date.utc_today() |> Timex.shift(days: -30) |> Timex.format("{ISOdate}")
-      {:ok, last} = Date.utc_today() |> Timex.shift(days: -1) |> Timex.format("{ISOdate}")
+      first = Date.utc_today() |> Timex.shift(days: -30) |> Date.to_iso8601()
+      last = Date.utc_today() |> Timex.shift(days: -1) |> Date.to_iso8601()
       assert List.first(labels) == first
       assert List.last(labels) == last
     end
@@ -422,8 +422,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=7d&metric=visitors")
       assert %{"labels" => labels} = json_response(conn, 200)
 
-      {:ok, first} = Date.utc_today() |> Timex.shift(days: -7) |> Timex.format("{ISOdate}")
-      {:ok, last} = Date.utc_today() |> Timex.shift(days: -1) |> Timex.format("{ISOdate}")
+      first = Date.utc_today() |> Timex.shift(days: -7) |> Date.to_iso8601()
+      last = Date.utc_today() |> Timex.shift(days: -1) |> Date.to_iso8601()
       assert List.first(labels) == first
       assert List.last(labels) == last
     end
@@ -1444,14 +1444,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"labels" => labels, "comparison_labels" => comparison_labels} =
                json_response(conn, 200)
 
-      {:ok, first} = Date.utc_today() |> Timex.shift(days: -30) |> Timex.format("{ISOdate}")
-      {:ok, last} = Date.utc_today() |> Timex.shift(days: -1) |> Timex.format("{ISOdate}")
+      first = Date.utc_today() |> Timex.shift(days: -30) |> Date.to_iso8601()
+      last = Date.utc_today() |> Timex.shift(days: -1) |> Date.to_iso8601()
 
       assert List.first(labels) == first
       assert List.last(labels) == last
 
-      {:ok, first} = Date.utc_today() |> Timex.shift(days: -60) |> Timex.format("{ISOdate}")
-      {:ok, last} = Date.utc_today() |> Timex.shift(days: -31) |> Timex.format("{ISOdate}")
+      first = Date.utc_today() |> Timex.shift(days: -60) |> Date.to_iso8601()
+      last = Date.utc_today() |> Timex.shift(days: -31) |> Date.to_iso8601()
 
       assert List.first(comparison_labels) == first
       assert List.last(comparison_labels) == last
