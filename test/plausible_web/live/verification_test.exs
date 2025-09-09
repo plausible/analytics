@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @retry_button ~s|a[phx-click="retry"]|
   # @go_to_dashboard_button ~s|a[href$="?skip_to_dashboard=true"]|
   @progress ~s|#verification-ui p#progress|
-  @awaiting ~s|#verification-ui p#awaiting|
+  @awaiting ~s|#verification-ui span#awaiting|
   @heading ~s|#verification-ui h2|
 
   describe "GET /:domain" do
