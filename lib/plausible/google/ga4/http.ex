@@ -269,7 +269,7 @@ defmodule Plausible.Google.GA4.HTTP do
         date =
           case report["rows"] do
             [%{"dimensionValues" => [%{"value" => date_str}]}] ->
-              Timex.parse!(date_str, "%Y%m%d", :strftime) |> NaiveDateTime.to_date()
+              Plausible.Times.parse!(date_str, "%Y%m%d", :strftime) |> NaiveDateTime.to_date()
 
             _ ->
               nil
