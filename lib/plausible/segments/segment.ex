@@ -135,7 +135,6 @@ defmodule Plausible.Segments.Segment do
         site,
         :internal,
         %{
-          "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => "7d",
           "filters" => filters

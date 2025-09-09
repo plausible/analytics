@@ -128,6 +128,24 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     |> check_error(site, "#: Required properties site_id, metrics, date_range were not present.")
   end
 
+  test "site_id is not required in internal schema", %{site: site} do
+    %{"metrics" => ["visitors"], "date_range" => "all"}
+    |> check_success(
+      site,
+      %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: @default_include,
+        pagination: %{limit: 10_000, offset: 0}
+      },
+      :internal
+    )
+  end
+
   describe "metrics validation" do
     test "valid metrics passed", %{site: site} do
       %{"site_id" => site.domain, "metrics" => ["visitors", "events"], "date_range" => "all"}

@@ -118,28 +118,26 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     Plausible.Mailer.send(template)
   end
 
+  @pagination %{"limit" => 3}
+
   defp get_traffic_spike_stats(site) do
     %{}
     |> put_sources(site)
     |> put_pages(site)
   end
 
-  @base_query_params %{
-    "metrics" => ["visitors"],
-    "pagination" => %{"limit" => 3},
-    "date_range" => "realtime"
-  }
-
   defp put_sources(stats, site) do
     {:ok, query} =
       Query.build(
         site,
         :internal,
-        Map.merge(@base_query_params, %{
-          "site_id" => site.domain,
+        %{
+          "date_range" => "realtime",
+          "metrics" => ["visitors"],
           "dimensions" => ["visit:source"],
-          "filters" => [["is_not", "visit:source", ["Direct / None"]]]
-        }),
+          "filters" => [["is_not", "visit:source", ["Direct / None"]]],
+          "pagination" => @pagination
+        },
         %{}
       )
 
@@ -153,10 +151,12 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
       Query.build(
         site,
         :internal,
-        Map.merge(@base_query_params, %{
-          "site_id" => site.domain,
-          "dimensions" => ["event:page"]
-        }),
+        %{
+          "date_range" => "realtime",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:page"],
+          "pagination" => @pagination
+        },
         %{}
       )
 

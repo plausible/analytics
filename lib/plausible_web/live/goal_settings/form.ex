@@ -558,7 +558,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         site,
         :internal,
         %{
-          "site_id" => site.domain,
           "date_range" => "all",
           "metrics" => ["pageviews"],
           "include" => %{"imports" => true}

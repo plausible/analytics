@@ -29,6 +29,13 @@ defmodule Plausible.Stats.Filters.QueryParser do
   def parse(site, schema_type, params, now \\ nil) when is_map(params) do
     now = now || Plausible.Stats.Query.Test.get_fixed_now()
     date = now |> DateTime.shift_zone!(site.timezone) |> DateTime.to_date()
+    # Ensure site_id is always present in params. This is required by the JSON schema
+    # but we already know site at this point. Simplifies :internal schema query building
+    params =
+      if(schema_type == :internal,
+        do: Map.merge(%{"site_id" => site.domain}, params),
+        else: params
+      )
 
     with :ok <- JSONSchema.validate(schema_type, params),
          {:ok, date, now} <- parse_date(site, Map.get(params, "date"), date, now),

@@ -225,7 +225,6 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
         site,
         :internal,
         %{
-          "site_id" => site.domain,
           "date_range" => "all",
           "metrics" => ["pageviews"],
           "filters" => [["is_not", "event:page", Enum.map(page_rules, & &1.page_path)]]

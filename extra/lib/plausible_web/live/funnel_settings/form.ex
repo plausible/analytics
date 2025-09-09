@@ -352,7 +352,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         site,
         :internal,
         %{
-          "site_id" => site.domain,
           "date_range" => "month",
           "metrics" => ["pageviews"]
         },

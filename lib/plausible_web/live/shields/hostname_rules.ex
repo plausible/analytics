@@ -232,7 +232,6 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
         site,
         :internal,
         %{
-          "site_id" => site.domain,
           "date_range" => "all",
           "metrics" => ["pageviews"]
         },

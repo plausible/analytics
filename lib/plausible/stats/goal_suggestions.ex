@@ -45,7 +45,6 @@ defmodule Plausible.Stats.GoalSuggestions do
         site,
         :internal,
         %{
-          "site_id" => site.domain,
           "date_range" => [Date.to_iso8601(from_date), Date.to_iso8601(to_date)],
           "metrics" => ["pageviews"],
           "include" => %{"imports" => true}
