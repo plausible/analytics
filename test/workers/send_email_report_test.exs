@@ -46,10 +46,10 @@ defmodule Plausible.Workers.SendEmailReportTest do
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       now = Timex.now(site.timezone)
-      last_monday = Timex.shift(now, weeks: -1) |> Timex.beginning_of_week()
-      last_sunday = Timex.shift(now, weeks: -1) |> Timex.end_of_week()
+      last_monday = Timex.shift(now, weeks: -1) |> Plausible.Times.beginning_of_week()
+      last_sunday = Timex.shift(now, weeks: -1) |> Plausible.Times.end_of_week()
       sunday_before_last = Timex.shift(last_monday, minutes: -1)
-      this_monday = Timex.beginning_of_week(now)
+      this_monday = Plausible.Times.beginning_of_week(now)
 
       populate_stats(site, [
         # Sunday before last, not counted
@@ -219,7 +219,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
       last_month =
         Timex.now(site.timezone)
         |> Timex.shift(months: -1)
-        |> Timex.beginning_of_month()
+        |> Plausible.Times.beginning_of_month()
         |> Timex.format!("{Mfull}")
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})

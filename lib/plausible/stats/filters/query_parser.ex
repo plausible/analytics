@@ -231,8 +231,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_time_range(site, "year", date, _now) do
-    last = date |> Timex.end_of_year()
-    first = last |> Timex.beginning_of_year()
+    last = date |> Plausible.Times.end_of_year()
+    first = last |> Plausible.Times.beginning_of_year()
     {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 

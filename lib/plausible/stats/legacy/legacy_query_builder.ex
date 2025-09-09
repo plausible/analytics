@@ -157,9 +157,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   defp put_input_date_range(query, site, %{"period" => "year"} = params) do
     end_date =
       parse_single_date(query, params)
-      |> Timex.end_of_year()
+      |> Plausible.Times.end_of_year()
 
-    start_date = Timex.beginning_of_year(end_date)
+    start_date = Plausible.Times.beginning_of_year(end_date)
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)

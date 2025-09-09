@@ -31,4 +31,34 @@ defmodule Plausible.Times do
   def parse!(str, format, :strftime) do
     Timex.parse!(str, format, :strftime)
   end
+
+  @spec beginning_of_week(DateTime.t()) :: DateTime.t()
+  def beginning_of_week(dt) do
+    Timex.beginning_of_week(dt)
+  end
+
+  @spec beginning_of_month(DateTime.t()) :: DateTime.t()
+  def beginning_of_month(dt) do
+    Timex.beginning_of_month(dt)
+  end
+
+  @spec beginning_of_year(Date.t()) :: Date.t()
+  def beginning_of_year(d) do
+    Timex.beginning_of_year(d)
+  end
+
+  @spec end_of_week(DateTime.t()) :: DateTime.t()
+  def end_of_week(dt) do
+    Timex.end_of_week(dt)
+  end
+
+  @spec end_of_month(DateTime.t()) :: DateTime.t()
+  def end_of_month(dt) do
+    Timex.end_of_month(dt)
+  end
+
+  @spec end_of_year(Date.t()) :: Date.t()
+  def end_of_year(t) do
+    Timex.end_of_year(t)
+  end
 end
