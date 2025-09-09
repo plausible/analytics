@@ -2,6 +2,7 @@ defmodule PlausibleWeb.Live.Stats do
   @moduledoc false
   use PlausibleWeb, :live_view
 
+  alias Plausible.Stats.Query
   alias Phoenix.LiveView.AsyncResult
 
   def mount(
@@ -29,6 +30,35 @@ defmodule PlausibleWeb.Live.Stats do
     {:noreply, socket}
   end
 
+  def handle_params(params, _uri, socket) do
+    socket =
+      socket
+      |> assign_query(params)
+      |> assign(debug: Map.has_key?(params, "debug"))
+
+    {:noreply, socket}
+  end
+
+  def assign_query(socket, params) do
+    site = socket.assigns.site
+    data = JSON.decode!(params["data"] || "{}")
+
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        %{
+          "site_id" => site.domain,
+          "date_range" => data["date_range"] || "all",
+          "filters" => data["filters"] || [],
+          "metrics" => ["visitors"]
+        },
+        %{}
+      )
+
+    assign(socket, query: query)
+  end
+
   def render(assigns) do
     ~H"""
     <div class="container print:max-w-full">
@@ -42,6 +72,12 @@ defmodule PlausibleWeb.Live.Stats do
           <.top_stat_metric name="Visit duration" value="6m 16s" metric="visit_duration" />
         </div>
       </div>
+    </div>
+    <div :if={@debug} class="container print:max-w-full mt-4">
+      <details class="bg-white rounded w-full">
+        <summary>Raw Query</summary>
+        <pre><%= inspect(@query, charlists: :as_lists, pretty: true) %></pre>
+      </details>
     </div>
     """
   end
