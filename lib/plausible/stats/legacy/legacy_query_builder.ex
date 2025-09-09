@@ -304,12 +304,12 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp today(query) do
-    query.now |> Timex.to_date()
+    query.now |> DateTime.to_date()
   end
 
   defp parse_single_date(query, params) do
     case params["date"] do
-      "today" -> query.now |> Timex.to_date()
+      "today" -> query.now |> DateTime.to_date()
       date when is_binary(date) -> Date.from_iso8601!(date)
       _ -> today(query)
     end
