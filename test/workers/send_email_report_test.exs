@@ -5,7 +5,6 @@ defmodule Plausible.Workers.SendEmailReportTest do
   use Oban.Testing, repo: Plausible.Repo
   import Plausible.Test.Support.HTML
   alias Plausible.Workers.SendEmailReport
-  alias Timex.Timezone
 
   @green "#15803d"
   @red "#b91c1c"
@@ -54,17 +53,17 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       populate_stats(site, [
         # Sunday before last, not counted
-        build(:pageview, timestamp: Timezone.convert(sunday_before_last, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(sunday_before_last, "UTC")),
         # Sunday before last, not counted
-        build(:pageview, timestamp: Timezone.convert(sunday_before_last, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(sunday_before_last, "UTC")),
         # Last monday, counted
-        build(:pageview, timestamp: Timezone.convert(last_monday, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(last_monday, "UTC")),
         # Last sunday, counted
-        build(:pageview, timestamp: Timezone.convert(last_sunday, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(last_sunday, "UTC")),
         # This monday, not counted
-        build(:pageview, timestamp: Timezone.convert(this_monday, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(this_monday, "UTC")),
         # This monday, not counted
-        build(:pageview, timestamp: Timezone.convert(this_monday, "UTC"))
+        build(:pageview, timestamp: DateTime.shift_zone!(this_monday, "UTC"))
       ])
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
