@@ -6,7 +6,7 @@ defmodule Plausible.Factory do
   def team_factory do
     %Plausible.Teams.Team{
       name: Plausible.Teams.default_name(),
-      trial_expiry_date: Timex.today() |> Timex.shift(days: 30),
+      trial_expiry_date: Date.utc_today() |> Timex.shift(days: 30),
       setup_complete: true,
       setup_at: NaiveDateTime.utc_now()
     }
@@ -185,8 +185,8 @@ defmodule Plausible.Factory do
       update_url: "cancel.com",
       status: Subscription.Status.active(),
       next_bill_amount: "6.00",
-      next_bill_date: Timex.today(),
-      last_bill_date: Timex.today(),
+      next_bill_date: Date.utc_today(),
+      last_bill_date: Date.utc_today(),
       currency_code: "USD"
     }
   end
@@ -252,7 +252,7 @@ defmodule Plausible.Factory do
   def imported_visitors_factory do
     %{
       table: "imported_visitors",
-      date: Timex.today(),
+      date: Date.utc_today(),
       visitors: 1,
       pageviews: 1,
       bounces: 0,
@@ -264,7 +264,7 @@ defmodule Plausible.Factory do
   def imported_sources_factory do
     %{
       table: "imported_sources",
-      date: Timex.today(),
+      date: Date.utc_today(),
       source: "",
       visitors: 1,
       visits: 1,
@@ -276,7 +276,7 @@ defmodule Plausible.Factory do
   def imported_pages_factory do
     %{
       table: "imported_pages",
-      date: Timex.today(),
+      date: Date.utc_today(),
       page: "",
       visitors: 1,
       pageviews: 1,
@@ -289,7 +289,7 @@ defmodule Plausible.Factory do
   def imported_entry_pages_factory do
     %{
       table: "imported_entry_pages",
-      date: Timex.today(),
+      date: Date.utc_today(),
       entry_page: "",
       visitors: 1,
       entrances: 1,
@@ -301,7 +301,7 @@ defmodule Plausible.Factory do
   def imported_exit_pages_factory do
     %{
       table: "imported_exit_pages",
-      date: Timex.today(),
+      date: Date.utc_today(),
       exit_page: "",
       visitors: 1,
       exits: 1
@@ -311,7 +311,7 @@ defmodule Plausible.Factory do
   def imported_custom_events_factory do
     %{
       table: "imported_custom_events",
-      date: Timex.today(),
+      date: Date.utc_today(),
       name: "",
       link_url: "",
       visitors: 1,
@@ -322,7 +322,7 @@ defmodule Plausible.Factory do
   def imported_locations_factory do
     %{
       table: "imported_locations",
-      date: Timex.today(),
+      date: Date.utc_today(),
       country: "",
       region: "",
       city: 0,
@@ -336,7 +336,7 @@ defmodule Plausible.Factory do
   def imported_devices_factory do
     %{
       table: "imported_devices",
-      date: Timex.today(),
+      date: Date.utc_today(),
       device: "",
       visitors: 1,
       visits: 1,
@@ -348,7 +348,7 @@ defmodule Plausible.Factory do
   def imported_browsers_factory do
     %{
       table: "imported_browsers",
-      date: Timex.today(),
+      date: Date.utc_today(),
       browser: "",
       visitors: 1,
       visits: 1,
@@ -360,7 +360,7 @@ defmodule Plausible.Factory do
   def imported_operating_systems_factory do
     %{
       table: "imported_operating_systems",
-      date: Timex.today(),
+      date: Date.utc_today(),
       operating_system: "",
       visitors: 1,
       visits: 1,

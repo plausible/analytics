@@ -75,7 +75,7 @@ defmodule Plausible.TestUtils do
       Factory.insert(:site_import,
         site: site,
         start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
+        end_date: Date.utc_today(),
         source: :universal_analytics,
         legacy: opts[:create_legacy_import?] == true
       )

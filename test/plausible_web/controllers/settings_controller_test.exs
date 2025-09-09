@@ -276,7 +276,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -50))
       ])
 
-      last_bill_date = Timex.shift(Timex.today(), days: -10)
+      last_bill_date = Timex.shift(Date.utc_today(), days: -10)
 
       subscribe_to_plan(user, @v4_plan_id, last_bill_date: last_bill_date, status: :deleted)
 
@@ -387,7 +387,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20))
       ])
 
-      last_bill_date = Timex.shift(Timex.today(), days: -10)
+      last_bill_date = Timex.shift(Date.utc_today(), days: -10)
 
       subscribe_to_plan(user, @v4_plan_id, last_bill_date: last_bill_date)
 
@@ -407,7 +407,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      subscribe_to_plan(user, @v4_plan_id, last_bill_date: Timex.shift(Timex.today(), days: -1))
+      subscribe_to_plan(user, @v4_plan_id,
+        last_bill_date: Timex.shift(Date.utc_today(), days: -1)
+      )
 
       html =
         conn

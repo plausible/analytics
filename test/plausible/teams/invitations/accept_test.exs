@@ -471,7 +471,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
         new_user()
         |> subscribe_to_growth_plan(
           status: Plausible.Billing.Subscription.Status.deleted(),
-          next_bill_date: Timex.shift(Timex.today(), days: -1)
+          next_bill_date: Timex.shift(Date.utc_today(), days: -1)
         )
 
       user_on_paused_subscription =
@@ -572,7 +572,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
         new_user()
         |> subscribe_to_growth_plan(
           status: Plausible.Billing.Subscription.Status.deleted(),
-          next_bill_date: Timex.shift(Timex.today(), days: -1)
+          next_bill_date: Timex.shift(Date.utc_today(), days: -1)
         )
 
       user_on_paused_subscription =

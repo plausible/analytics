@@ -137,7 +137,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
     Repo.insert_all("sent_renewal_notifications", [
       %{
         user_id: user.id,
-        timestamp: Timex.shift(Timex.today(), years: -1) |> Timex.to_naive_datetime()
+        timestamp: Timex.shift(Date.utc_today(), years: -1) |> Timex.to_naive_datetime()
       }
     ])
 

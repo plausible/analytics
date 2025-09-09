@@ -437,7 +437,10 @@ defmodule Plausible.BillingTest do
     end
 
     test "if teams's grace period has ended, upgrading will unlock sites and remove grace period" do
-      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Timex.shift(Date.utc_today(), days: -1)
+      }
+
       user = new_user(team: [grace_period: grace_period])
 
       subscribe_to_growth_plan(user)
@@ -571,7 +574,7 @@ defmodule Plausible.BillingTest do
         Billing.subscription_payment_succeeded(%{
           "alert_name" => "subscription_payment_succeeded",
           "subscription_id" => "nonexistent_subscription_id",
-          "next_bill_date" => Timex.shift(Timex.today(), days: 30),
+          "next_bill_date" => Timex.shift(Date.utc_today(), days: 30),
           "unit_price" => "12.00"
         })
 
