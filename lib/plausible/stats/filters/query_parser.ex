@@ -197,8 +197,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_date(site, date_string, _date, _now) when is_binary(date_string) do
-    case Date.from_iso8601(date_string) do
-      {:ok, date} -> {:ok, date, DateTime.new!(date, ~T[00:00:00], site.timezone)}
+    with {:ok, date} <- Date.from_iso8601(date_string),
+         {:ok, datetime} <- DateTime.new(date, ~T[00:00:00], site.timezone) do
+      {:ok, date, datetime}
+    else
+      {:gap, just_before, _just_after} -> just_before
+      {:ambiguous, first_datetime, _second_datetime} -> first_datetime
       _ -> {:error, "Invalid date '#{date_string}'."}
     end
   end
