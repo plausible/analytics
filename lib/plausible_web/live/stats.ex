@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.Stats do
   @moduledoc false
   use PlausibleWeb, :live_view
 
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Filters, Query, QueryResult}
   alias Phoenix.LiveView.AsyncResult
 
   def mount(
@@ -32,13 +32,15 @@ defmodule PlausibleWeb.Live.Stats do
 
   def handle_params(params, _uri, socket) do
     site = socket.assigns.site
-    query = build_query(site, params)
+    {query, metric_names} = build_query(site, params)
 
     socket =
       socket
-      |> assign(query: query)
-      |> assign(debug: Map.has_key?(params, "debug"))
-      |> assign_async(:result, fn -> {:ok, %{ result: Plausible.Stats.query(site, query) }} end)
+      |> assign(query: query, metric_names: metric_names, debug: Map.has_key?(params, "debug"))
+      |> assign_async(:result, fn ->
+        result = Plausible.Stats.query(site, query)
+        {:ok, %{result: result}}
+      end)
 
     {:noreply, socket}
   end
@@ -54,12 +56,13 @@ defmodule PlausibleWeb.Live.Stats do
           "site_id" => site.domain,
           "date_range" => data["date_range"] || "all",
           "filters" => data["filters"] || [],
+          # Placeholder metrics
           "metrics" => ["visitors"]
         },
         %{}
       )
 
-    query
+    calculate_metrics(query, site)
   end
 
   def render(assigns) do
@@ -67,12 +70,15 @@ defmodule PlausibleWeb.Live.Stats do
     <div class="container print:max-w-full">
       <div class="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825">
         <div id="top-stats-container" class="flex flex-wrap " style="height: auto">
-          <.top_stat_metric name="Unique visitors" value="552" metric="visitors" />
-          <.top_stat_metric name="Total visits" value="552" metric="visits" />
-          <.top_stat_metric name="Total pageviews" value="1.7k" metric="pageviews" />
-          <.top_stat_metric name="Views per visit" value="3.14" metric="views_per_visit" />
-          <.top_stat_metric name="Bounce rate" value="15%" metric="bounce_rate" />
-          <.top_stat_metric name="Visit duration" value="6m 16s" metric="visit_duration" />
+          <.async_result :let={result} assign={@result}>
+            <%= for {metric, value} <- zip_metrics(@query.metrics, result) do %>
+              <.top_stat_metric
+                name={Map.fetch!(@metric_names, metric)}
+                value={value}
+                metric={metric}
+              />
+            <% end %>
+          </.async_result>
         </div>
       </div>
     </div>
@@ -89,6 +95,8 @@ defmodule PlausibleWeb.Live.Stats do
     </div>
     """
   end
+
+  defp top_stat_metric(%{value: nil} = _assigns), do: nil
 
   defp top_stat_metric(assigns) do
     ~H"""
@@ -130,5 +138,67 @@ defmodule PlausibleWeb.Live.Stats do
       41%
     </span>
     """
+  end
+
+  defp zip_metrics(metrics, %QueryResult{results: [%{metrics: values}]}) do
+    Enum.zip(metrics, values)
+  end
+
+  defp calculate_metrics(query, site) do
+    goal_filter? = toplevel_goal_filter?(query)
+
+    cond do
+      # query.input_date_range == "30m" && goal_filter? ->
+      #   goal_realtime_top_stats(site, query)
+
+      # query.input_date_range == "30m" ->
+      #   realtime_top_stats(site, query)
+
+      # goal_filter? ->
+      #   goal_top_stats(site, query)
+
+      true ->
+        other_top_stats(query, site)
+    end
+  end
+
+  defp other_top_stats(query, site) do
+    page_filter? =
+      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
+
+    metrics = [:visitors, :visits, :pageviews]
+
+    metrics =
+      cond do
+        page_filter? && query.include_imported ->
+          metrics ++ [:scroll_depth]
+
+        page_filter? ->
+          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
+
+        true ->
+          metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
+      end
+
+    {
+      Query.set(query, metrics: metrics),
+      %{
+        visitors: "Unique visitors",
+        visits: "Total visits",
+        pageviews: "Total pageviews",
+        views_per_visit: "Views per visit",
+        bounce_rate: "Bounce rate",
+        visit_duration: "Visit duration",
+        time_on_page: "Time on page",
+        scroll_depth: "Scroll depth"
+      }
+    }
+  end
+
+  defp toplevel_goal_filter?(query) do
+    Filters.filtering_on_dimension?(query, "event:goal",
+      max_depth: 0,
+      behavioral_filters: :ignore
+    )
   end
 end
