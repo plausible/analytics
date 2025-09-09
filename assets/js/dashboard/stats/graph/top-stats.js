@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
@@ -210,9 +210,9 @@ export default function TopStats({
 
   if (true) {
     return (
-      <iframe
+      <AutoResizingIframe
         className="w-full h-full border-0 overflow-hidden"
-        src={`${window.location.origin}${window.location.pathname}/live/top_stats`}
+        src={`${window.location.pathname}/live/top_stats`}
       />
     )
   }
@@ -225,4 +225,68 @@ export default function TopStats({
   }
 
   return stats || null
+}
+
+function AutoResizingIframe({ src, ...props }) {
+  const iframeRef = useRef(null);
+  const [height, setHeight] = useState("0px");
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const resizeIframe = () => {
+      try {
+        const body = iframe.contentDocument.body;
+        const html = iframe.contentDocument.documentElement;
+        const newHeight = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.scrollHeight,
+          html.offsetHeight
+        );
+        setHeight(newHeight + "px");
+      } catch (e) {
+        console.warn("Cannot access iframe content:", e);
+      }
+    };
+
+    const setupObserver = () => {
+      try {
+        const body = iframe.contentDocument.body;
+        resizeIframe();
+
+        const observer = new MutationObserver(resizeIframe);
+        observer.observe(body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          characterData: true,
+        });
+
+        // Clean up on unmount
+        return () => observer.disconnect();
+      } catch (e) {
+        console.warn("MutationObserver setup failed:", e);
+      }
+    };
+
+    iframe.addEventListener("load", setupObserver);
+    window.addEventListener("resize", resizeIframe);
+
+    return () => {
+      iframe.removeEventListener("load", setupObserver);
+      window.removeEventListener("resize", resizeIframe);
+    };
+  }, []);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      src={src}
+      style={{ width: "100%", height, border: "0" }}
+      {...props}
+    />
+  );
 }
