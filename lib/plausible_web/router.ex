@@ -694,6 +694,13 @@ defmodule PlausibleWeb.Router do
     get "/debug/clickhouse", DebugController, :clickhouse
 
     get "/:domain/export", StatsController, :csv_export
+
+    scope alias: Live, assigns: %{connect_live_socket: true} do
+      pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
+
+      live "/:domain/live/top_stats", Stats, :live_top_stats, as: :site
+    end
+
     get "/:domain/*path", StatsController, :stats
   end
 end
