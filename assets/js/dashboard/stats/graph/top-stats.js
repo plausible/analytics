@@ -208,6 +208,15 @@ export default function TopStats({
     )
   }
 
+  if (true) {
+    return (
+      <iframe
+        className="w-full h-full border-0 overflow-hidden"
+        src={`${window.location.origin}${window.location.pathname}/live/top_stats`}
+      />
+    )
+  }
+
   const stats =
     data && data.top_stats.filter((stat) => stat.value !== null).map(renderStat)
 

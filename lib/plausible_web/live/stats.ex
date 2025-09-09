@@ -67,20 +67,12 @@ defmodule PlausibleWeb.Live.Stats do
 
   def render(assigns) do
     ~H"""
-    <div class="container print:max-w-full">
-      <div class="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825">
-        <div id="top-stats-container" class="flex flex-wrap " style="height: auto">
-          <.async_result :let={result} assign={@result}>
-            <%= for {metric, value} <- zip_metrics(@query.metrics, result) do %>
-              <.top_stat_metric
-                name={Map.fetch!(@metric_names, metric)}
-                value={value}
-                metric={metric}
-              />
-            <% end %>
-          </.async_result>
-        </div>
-      </div>
+    <div class="bg-white dark:bg-gray-825 flex flex-wrap overflow-hidden h-full">
+      <.async_result :let={result} assign={@result}>
+        <%= for {metric, value} <- zip_metrics(@query.metrics, result) do %>
+          <.top_stat_metric name={Map.fetch!(@metric_names, metric)} value={value} metric={metric} />
+        <% end %>
+      </.async_result>
     </div>
     <div :if={@debug} class="container print:max-w-full mt-4">
       <details class="bg-white rounded w-full mb-4">
