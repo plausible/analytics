@@ -61,4 +61,16 @@ defmodule Plausible.Times do
   def end_of_year(t) do
     Timex.end_of_year(t)
   end
+
+  @spec humanize(DateTime.t()) :: String.t()
+  def humanize(%DateTime{} = dt) do
+    Timex.Format.DateTime.Formatters.Relative.format!(dt, "{relative}")
+  end
+
+  @spec humanize_seconds(pos_integer()) :: String.t()
+  def humanize_seconds(seconds) do
+    seconds
+    |> Timex.Duration.from_seconds()
+    |> Timex.format_duration(Timex.Format.Duration.Formatters.Humanized)
+  end
 end
