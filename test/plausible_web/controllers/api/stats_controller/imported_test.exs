@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.ImportedTest do
   use PlausibleWeb.ConnCase
-  use Timex
 
   @user_id Enum.random(1000..9999)
 
