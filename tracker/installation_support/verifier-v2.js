@@ -32,7 +32,6 @@ async function verifyPlausibleInstallation(options) {
   const { stopRecording, getInterceptedFetch } = startRecordingEventFetchCalls()
 
   const {
-    trackerIsInHtml,
     plausibleIsInitialized,
     plausibleIsOnWindow,
     plausibleVersion,
@@ -41,10 +40,10 @@ async function verifyPlausibleInstallation(options) {
     cookiesConsentResult,
     error: testPlausibleFunctionError
   } = await testPlausibleFunction({
-    isTrackerInHtml: () => isInHtml(trackerScriptSelector),
     timeoutMs,
     debug
   })
+  const trackerIsInHtml = isInHtml(trackerScriptSelector)
 
   if (testPlausibleFunctionError) {
     log(
@@ -176,9 +175,8 @@ function getPlausibleVariant() {
   return window.plausible?.s
 }
 
-async function testPlausibleFunction({ timeoutMs, debug, isTrackerInHtml }) {
+async function testPlausibleFunction({ timeoutMs, debug }) {
   return new Promise((_resolve) => {
-    let trackerIsInHtml = isTrackerInHtml()
     let plausibleIsOnWindow = isPlausibleOnWindow()
     let plausibleIsInitialized = isPlausibleInitialized()
     let plausibleVersion = getPlausibleVersion()
@@ -189,7 +187,6 @@ async function testPlausibleFunction({ timeoutMs, debug, isTrackerInHtml }) {
       engineLifecycle: 'not-started'
     }
     let timeout = null
-    let trackerScriptPollInterval = null
     let plausibleOnWindowPollInterval = null
     let plausibleInitializedPollInterval = null
     let testEventPollInterval = null
@@ -198,7 +195,6 @@ async function testPlausibleFunction({ timeoutMs, debug, isTrackerInHtml }) {
 
     const resolve = (overrides) => {
       clearTimeout(timeout)
-      clearInterval(trackerScriptPollInterval)
       clearInterval(plausibleOnWindowPollInterval)
       clearInterval(plausibleInitializedPollInterval)
       clearInterval(testEventPollInterval)
@@ -208,7 +204,6 @@ async function testPlausibleFunction({ timeoutMs, debug, isTrackerInHtml }) {
 
       resolved = true
       _resolve({
-        trackerIsInHtml,
         plausibleIsOnWindow,
         plausibleIsInitialized,
         plausibleVersion,
@@ -224,14 +219,6 @@ async function testPlausibleFunction({ timeoutMs, debug, isTrackerInHtml }) {
         error: 'Test Plausible function timeout exceeded'
       })
     }, timeoutMs)
-
-    trackerScriptPollInterval = setInterval(
-      () =>
-        trackerIsInHtml
-          ? clearInterval(trackerScriptPollInterval)
-          : (trackerIsInHtml = isTrackerInHtml()),
-      10
-    )
 
     plausibleOnWindowPollInterval = setInterval(
       () =>
