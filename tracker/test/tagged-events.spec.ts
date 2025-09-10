@@ -127,7 +127,7 @@ for (const mode of ['legacy', 'web']) {
         ),
         bodyContent: `
           <div id="stop-click-propagation">
-            <button class="plausible-event-name=ButtonClick">📥</a>
+            <button class="plausible-event-name=ButtonClick">📥</button>
           </div>
           <script>
             document.getElementById('stop-click-propagation').addEventListener('click', (e) => {
