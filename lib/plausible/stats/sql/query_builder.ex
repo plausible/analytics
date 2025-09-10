@@ -225,9 +225,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   defp select_dimensions(q, query) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
-      # We generally select dimensions from the left-most table. Only exception is time:minute where
+      # We generally select dimensions from the left-most table. Only exception is time:minute/time:hour where
       # we use sessions table as sessions are considered on-going during the whole period.
-      if query.sql_join_type == :full and "time:minute" == dimension do
+      if query.sql_join_type == :full and dimension in ["time:minute", "time:hour"] do
         select_merge_as(q, [..., x], %{
           shortname(query, dimension) => field(x, ^shortname(query, dimension))
         })

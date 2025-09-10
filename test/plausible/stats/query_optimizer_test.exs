@@ -365,12 +365,14 @@ defmodule Plausible.Stats.QueryOptimizerTest do
   end
 
   describe "set_sql_join_type" do
-    test "updates sql_join_type to :full if time:minute dimension is present" do
+    test "updates sql_join_type to :full if time:minute or time:hour dimension is present" do
       assert perform(%{dimensions: ["time:minute"]}).sql_join_type == :full
+      assert perform(%{dimensions: ["time:hour"]}).sql_join_type == :full
     end
 
     test "keeps default sql_join_type otherwise" do
-      assert perform(%{dimensions: ["time:hour"]}).sql_join_type == :left
+      assert perform(%{dimensions: ["time:day"]}).sql_join_type == :left
+      assert perform(%{dimensions: []}).sql_join_type == :left
     end
   end
 end
