@@ -5,7 +5,10 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
   import Plausible.Teams.Test
-  import Mox
+
+  on_ee do
+    alias Plausible.Test.Support.DNS
+  end
 
   alias Plausible.Site.TrackerScriptConfiguration
 
@@ -45,7 +48,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
   describe "LiveView" do
     @tag :ee_only
     test "detects installation type when mounted", %{conn: conn, site: site} do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site)
@@ -59,7 +62,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_manual()
 
       {lv, _} = get_lv(conn, site, "?type=wordpress")
@@ -73,7 +76,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site, "?type=gtm")
@@ -87,7 +90,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site, "?type=npm")
@@ -101,7 +104,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site, "?type=manual")
@@ -112,7 +115,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
     @tag :ee_only
     test "allows switching between installation tabs (EE)", %{conn: conn, site: site} do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_manual()
 
       {lv, _html} = get_lv(conn, site, "?type=manual")
@@ -159,7 +162,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
     test "manual installations has script snippet with expected ID", %{conn: conn, site: site} do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -179,7 +182,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
     test "manual installation shows optional measurements", %{conn: conn, site: site} do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -195,7 +198,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
     test "manual installation shows advanced options in disclosure", %{conn: conn, site: site} do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -216,7 +219,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       site: site
     } do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -258,7 +261,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
           conn: conn,
           site: site
         } do
-          stub_dns_lookup_a_records(site.domain)
+          DNS.stub_lookup_a_records(site.domain)
           stub_detection_manual()
           {lv, _html} = get_lv(conn, site, "?type=#{unquote(type)}")
 
@@ -313,7 +316,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
     test "404 goal gets created regardless of user options", %{conn: conn, site: site} do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -344,7 +347,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       site: site
     } do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -375,7 +378,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
     @tag :ee_only
     test "detected WordPress installation shows special message", %{conn: conn, site: site} do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site)
@@ -411,7 +414,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
     @tag :ee_only
     test "detected GTM installation shows special message", %{conn: conn, site: site} do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_gtm()
 
       {lv, _} = get_lv(conn, site)
@@ -423,7 +426,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
     @tag :ee_only
     test "detected NPM installation shows npm tab", %{conn: conn, site: site} do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
 
       stub_detection_result(%{
         "v1Detected" => false,
@@ -444,7 +447,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_manual_with_v1()
 
       {lv, _} = get_lv(conn, site, "?type=manual")
@@ -468,7 +471,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       site: site
     } do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_wordpress_with_v1()
       end
 
@@ -484,7 +487,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
-      stub_dns_lookup_a_records(site.domain, [])
+      DNS.stub_lookup_a_records(site.domain, [])
 
       ExUnit.CaptureLog.capture_log(fn ->
         {lv, _} = get_lv(conn, site)
@@ -502,7 +505,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       conn: conn,
       site: site
     } do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_error()
 
       ExUnit.CaptureLog.capture_log(fn ->
@@ -530,7 +533,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       add_guest(site, user: user, role: :viewer)
 
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -545,7 +548,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       add_guest(site, user: user, role: :editor)
 
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -563,7 +566,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
            site: site
          } do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -578,7 +581,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       site: site
     } do
       on_ee do
-        stub_dns_lookup_a_records(site.domain)
+        DNS.stub_lookup_a_records(site.domain)
         stub_detection_manual()
       end
 
@@ -593,7 +596,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     @describetag :ee_only
 
     test "When GTM + Wordpress detected, GTM takes precedence", %{conn: conn, site: site} do
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
 
       stub_detection_result(%{
         "v1Detected" => false,
@@ -623,7 +626,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
           form_submissions: true
         })
 
-      stub_dns_lookup_a_records(site.domain)
+      DNS.stub_lookup_a_records(site.domain)
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site, "?flow=review")
@@ -708,14 +711,5 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     {:ok, lv, html} = live(conn, "/#{site.domain}/installationv2#{qs}")
 
     {lv, html}
-  end
-
-  defp stub_dns_lookup_a_records(domain, a_records \\ [{192, 168, 1, 1}]) do
-    lookup_domain = to_charlist(domain)
-
-    Plausible.DnsLookup.Mock
-    |> expect(:lookup, fn ^lookup_domain, _type, _record, _opts, _timeout ->
-      a_records
-    end)
   end
 end
