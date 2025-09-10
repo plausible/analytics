@@ -330,7 +330,12 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert {:ok, user} = TOTP.validate_code(user, new_code, allow_reuse?: true)
 
-      assert_in_delta Timex.to_unix(user.totp_last_used_at), System.os_time(:second), 2
+      totp_last_used_at =
+        user.totp_last_used_at
+        |> DateTime.from_naive!("Etc/UTC")
+        |> DateTime.to_unix()
+
+      assert_in_delta totp_last_used_at, System.os_time(:second), 2
     end
 
     test "fails when trying to reuse the same code twice" do

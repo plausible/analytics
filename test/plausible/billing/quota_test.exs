@@ -710,12 +710,12 @@ defmodule Plausible.Billing.QuotaTest do
       now = NaiveDateTime.utc_now()
 
       populate_stats(site, [
-        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -40), name: "custom"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -10), name: "custom"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -9), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -8), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -7), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -6), name: "custom")
       ])
 
       assert %{
@@ -735,9 +735,9 @@ defmodule Plausible.Billing.QuotaTest do
       now = NaiveDateTime.utc_now()
 
       populate_stats(site, [
-        build(:event, timestamp: Timex.shift(now, days: -8), name: "custom"),
-        build(:pageview, user_id: 199, timestamp: Timex.shift(now, days: -5, minutes: -2)),
-        build(:engagement, user_id: 199, timestamp: Timex.shift(now, days: -5))
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -8), name: "custom"),
+        build(:pageview, user_id: 199, timestamp: NaiveDateTime.shift(now, day: -5, minute: -2)),
+        build(:engagement, user_id: 199, timestamp: NaiveDateTime.shift(now, day: -5))
       ])
 
       assert %{
@@ -761,12 +761,12 @@ defmodule Plausible.Billing.QuotaTest do
       now = NaiveDateTime.utc_now()
 
       populate_stats(site, [
-        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -40), name: "custom"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -10), name: "custom"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -9), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -8), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -7), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -6), name: "custom")
       ])
 
       assert %{
@@ -806,12 +806,12 @@ defmodule Plausible.Billing.QuotaTest do
 
       for site <- [site1, site2, site3] do
         populate_stats(site, [
-          build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-          build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-          build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -40), name: "custom"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -10), name: "custom"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -9), name: "pageview"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -8), name: "pageview"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -7), name: "pageview"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -6), name: "custom")
         ])
       end
 

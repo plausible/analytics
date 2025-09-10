@@ -52,7 +52,9 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "does not lock team which has an active subscription and is on grace period" do
-      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: 1)}
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.shift(Date.utc_today(), day: 1)
+      }
 
       user =
         new_user(team: [grace_period: grace_period])
@@ -101,7 +103,10 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "locks all sites if team has an active subscription but grace period has ended (still over limits)" do
-      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.shift(Date.utc_today(), day: -1)
+      }
+
       user = new_user(team: [grace_period: grace_period])
       subscribe_to_plan(user, @v4_growth_plan_id)
       site = new_site(owner: user)
@@ -116,7 +121,10 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "does not lock sites (and removes grace period), when on active subscription and grace period ended, but usage now within limits" do
-      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.shift(Date.utc_today(), day: -1)
+      }
+
       user = new_user(team: [grace_period: grace_period])
       subscribe_to_plan(user, @v4_growth_plan_id)
       site = new_site(owner: user)
@@ -130,7 +138,10 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "sends email to all billing members if grace period has ended and still over limits" do
-      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.shift(Date.utc_today(), day: -1)
+      }
+
       user = new_user(team: [grace_period: grace_period])
       subscribe_to_plan(user, @v4_growth_plan_id)
       new_site(owner: user)
@@ -159,7 +170,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "does not send grace period email if site is already locked" do
       grace_period = %Plausible.Teams.GracePeriod{
-        end_date: Timex.shift(Timex.today(), days: -1),
+        end_date: Date.shift(Date.utc_today(), day: -1),
         is_over: false
       }
 
@@ -193,7 +204,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "unlocks already ended grace periods when they still have an active subscription and went within limits again" do
       grace_period = %Plausible.Teams.GracePeriod{
-        end_date: Timex.shift(Timex.today(), days: -7),
+        end_date: Date.shift(Date.utc_today(), day: -7),
         is_over: true
       }
 

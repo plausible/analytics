@@ -361,7 +361,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       insert(:site_import,
         site: site,
         start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
+        end_date: Date.utc_today(),
         source: :universal_analytics
       )
 
@@ -554,7 +554,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       insert(:site_import,
         site: site,
         start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
+        end_date: Date.utc_today(),
         source: :universal_analytics
       )
 
@@ -879,7 +879,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       insert(:site_import,
         site: site,
         start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
+        end_date: Date.utc_today(),
         source: :universal_analytics
       )
 
@@ -2521,7 +2521,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         insert(:site_import,
           site: site,
           start_date: ~D[2005-01-01],
-          end_date: Timex.today(),
+          end_date: Date.utc_today(),
           source: :universal_analytics
         )
 

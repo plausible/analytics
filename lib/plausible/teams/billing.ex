@@ -435,7 +435,7 @@ defmodule Plausible.Teams.Billing do
     last_bill_date = team.subscription.last_bill_date
 
     normalized_last_bill_date =
-      Date.shift(last_bill_date, month: Timex.diff(today, last_bill_date, :months))
+      Date.shift(last_bill_date, month: Plausible.Times.diff(today, last_bill_date, :month))
 
     date_range =
       case cycle do
