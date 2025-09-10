@@ -220,8 +220,8 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
   end
 
   def suggest_page_paths(input, _options, site, page_rules) do
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
@@ -229,8 +229,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
           "date_range" => "all",
           "metrics" => ["pageviews"],
           "filters" => [["is_not", "event:page", Enum.map(page_rules, & &1.page_path)]]
-        },
-        %{}
+        }
       )
 
     site

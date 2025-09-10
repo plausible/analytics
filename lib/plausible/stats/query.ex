@@ -37,7 +37,12 @@ defmodule Plausible.Stats.Query do
 
   @type t :: %__MODULE__{}
 
-  def build(site, schema_type, params, debug_metadata) do
+  def build(
+        %Plausible.Site{domain: domain} = site,
+        schema_type,
+        %{"site_id" => domain} = params,
+        debug_metadata \\ %{}
+      ) do
     with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params) do
       query =
         %__MODULE__{
@@ -55,6 +60,13 @@ defmodule Plausible.Stats.Query do
       end
 
       {:ok, query}
+    end
+  end
+
+  def build!(site, schema_type, params, debug_metadata \\ %{}) do
+    case build(site, schema_type, params, debug_metadata) do
+      {:ok, query} -> query
+      {:error, reason} -> raise "Failed to build query: #{inspect(reason)}"
     end
   end
 
