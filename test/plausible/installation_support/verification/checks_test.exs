@@ -8,7 +8,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
     import Plausible.AssertMatches
     alias Plausible.InstallationSupport.Verification.Checks
     alias Plausible.InstallationSupport.Result
-    alias Plausible.Test.Support.DNS
+    use Plausible.Test.Support.DNS
     import Plug.Conn
     @moduletag :capture_log
 
@@ -18,7 +18,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
           expected_domain = "example.com"
           url_to_verify = "https://#{expected_domain}"
 
-          DNS.stub_lookup_a_records(expected_domain)
+          stub_lookup_a_records(expected_domain)
 
           verification_counter =
             stub_verification_result(%{
@@ -52,7 +52,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
 
-        DNS.stub_lookup_a_records(expected_domain)
+        stub_lookup_a_records(expected_domain)
 
         verification_counter =
           stub_verification_result_i(fn i ->
@@ -115,7 +115,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         test "returns error when test event domain doesn't match the expected domain, with recommendation for installation type: #{installation_type}" do
           expected_domain = "example.com"
           url_to_verify = "https://#{expected_domain}"
-          DNS.stub_lookup_a_records(expected_domain)
+          stub_lookup_a_records(expected_domain)
 
           verification_counter =
             stub_verification_result(%{
@@ -156,7 +156,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       test "returns error when proxy network error occurs" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
-        DNS.stub_lookup_a_records(expected_domain)
+        stub_lookup_a_records(expected_domain)
 
         verification_counter =
           stub_verification_result(%{
@@ -196,7 +196,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       test "returns error when Plausible network error occurs" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
-        DNS.stub_lookup_a_records(expected_domain)
+        stub_lookup_a_records(expected_domain)
 
         verification_counter =
           stub_verification_result(%{
@@ -237,7 +237,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       test "returns error when the snippet is not found for manual installation method, it has priority over CSP-related error" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
-        DNS.stub_lookup_a_records(expected_domain)
+        stub_lookup_a_records(expected_domain)
 
         verification_counter =
           stub_verification_result(%{
@@ -273,7 +273,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       test "returns error when Plausible domain is disallowed by CSP" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
-        DNS.stub_lookup_a_records(expected_domain)
+        stub_lookup_a_records(expected_domain)
 
         verification_counter =
           stub_verification_result(%{
@@ -311,7 +311,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       test "returns error when DNS check fails with domain not found error, offers custom URL input" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
-        DNS.stub_lookup_a_records(expected_domain, [])
+        stub_lookup_a_records(expected_domain, [])
 
         assert_matches %Result{
                          ok?: false,
@@ -339,7 +339,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       test "returns error when DNS check fails with invalid URL error, offers custom URL input" do
         expected_domain = "example.com"
         url_to_verify = "file://#{expected_domain}"
-        DNS.stub_lookup_a_records(expected_domain, [])
+        stub_lookup_a_records(expected_domain, [])
 
         assert_matches %Result{
                          ok?: false,
@@ -367,7 +367,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       test "returns error when there's a network error during verification, offers custom URL input" do
         expected_domain = "example.com"
         url_to_verify = "https://example.com?plausible_verification=123123123"
-        DNS.stub_lookup_a_records(expected_domain)
+        stub_lookup_a_records(expected_domain)
 
         verification_counter =
           stub_verification_result(%{
@@ -403,7 +403,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       test "returns error when Plausible not installed and website response status is not 200, offers custom URL input" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}?plausible_verification=123123123"
-        DNS.stub_lookup_a_records(expected_domain)
+        stub_lookup_a_records(expected_domain)
 
         verification_counter =
           stub_verification_result(%{
@@ -453,7 +453,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         test "returns error \"We couldn't detect Plausible on your site\" when plausible_is_on_window is false (with best guess recommendation for installation type: #{installation_type})" do
           expected_domain = "example.com"
           url_to_verify = "https://#{expected_domain}"
-          DNS.stub_lookup_a_records(expected_domain)
+          stub_lookup_a_records(expected_domain)
 
           verification_counter =
             stub_verification_result(%{
@@ -489,7 +489,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         test "falls back to error \"We couldn't detect Plausible on your site\" when no other case matches (with best guess recommendation for installation type: #{installation_type}), sends diagnostics to Sentry" do
           expected_domain = "example.com"
           url_to_verify = "https://#{expected_domain}"
-          DNS.stub_lookup_a_records(expected_domain)
+          stub_lookup_a_records(expected_domain)
 
           verification_counter =
             stub_verification_result(%{
