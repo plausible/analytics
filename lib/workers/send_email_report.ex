@@ -85,7 +85,6 @@ defmodule Plausible.Workers.SendEmailReport do
         site,
         :internal,
         %{
-          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
           "site_id" => site.domain,
           "metrics" => ["pageviews", "visitors", "bounce_rate"],
           "date_range" => date_range,
@@ -118,7 +117,6 @@ defmodule Plausible.Workers.SendEmailReport do
         site,
         :internal,
         %{
-          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "dimensions" => ["event:page"],
@@ -144,7 +142,6 @@ defmodule Plausible.Workers.SendEmailReport do
         site,
         :internal,
         %{
-          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "filters" => [["is_not", "visit:source", ["Direct / None"]]],
@@ -171,7 +168,6 @@ defmodule Plausible.Workers.SendEmailReport do
         site,
         :internal,
         %{
-          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "dimensions" => ["event:goal"],
