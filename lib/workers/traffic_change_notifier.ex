@@ -131,16 +131,15 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   }
 
   defp put_sources(stats, site) do
-    {:ok, query} =
-      Query.build(
+    query =
+      Query.build!(
         site,
         :internal,
         Map.merge(@base_query_params, %{
           "site_id" => site.domain,
           "dimensions" => ["visit:source"],
           "filters" => [["is_not", "visit:source", ["Direct / None"]]]
-        }),
-        %{}
+        })
       )
 
     %{results: sources} = Plausible.Stats.query(site, query)
@@ -149,15 +148,14 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp put_pages(stats, site) do
-    {:ok, query} =
-      Query.build(
+    query =
+      Query.build!(
         site,
         :internal,
         Map.merge(@base_query_params, %{
           "site_id" => site.domain,
           "dimensions" => ["event:page"]
-        }),
-        %{}
+        })
       )
 
     %{results: pages} = Plausible.Stats.query(site, query)
