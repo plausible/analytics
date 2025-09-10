@@ -185,7 +185,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         )
         |> select_join_metrics(query, query.metrics -- [:sample_percent])
     end)
-    |> select_dimensions(main_query)
+    |> select_dimensions(main_query, queries)
   end
 
   # NOTE: Old queries do their own pagination
@@ -223,19 +223,31 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end)
   end
 
-  defp select_dimensions(q, query) do
+  defp select_dimensions(q, query, queries) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
-      # We generally select dimensions from the left-most table. Only exception is time:minute/time:hour where
-      # we use sessions table as sessions are considered on-going during the whole period.
-      if query.sql_join_type == :full and dimension in ["time:minute", "time:hour"] do
-        select_merge_as(q, [..., x], %{
-          shortname(query, dimension) => field(x, ^shortname(query, dimension))
-        })
-      else
-        select_merge_as(q, [x], %{
-          shortname(query, dimension) => field(x, ^shortname(query, dimension))
-        })
+      case select_from(dimension, query, queries) do
+        :leftmost_table ->
+          select_merge_as(q, [x], %{
+            shortname(query, dimension) => field(x, ^shortname(query, dimension))
+          })
+
+        :rightmost_table ->
+          select_merge_as(q, [..., x], %{
+            shortname(query, dimension) => field(x, ^shortname(query, dimension))
+          })
       end
     end)
+  end
+
+  defp select_from(dimension, query, queries) do
+    smeared? = Enum.any?(queries, fn {_table_type, query, _q} -> query.smear_session_metrics end)
+
+    cond do
+      query.sql_join_type == :left -> :leftmost_table
+      # We generally select dimensions from the left-most table. Only exception is time:minute/time:hour where
+      # we use sessions table as smeared sessions are considered on-going during the whole period.
+      dimension in ["time:minute", "time:hour"] and smeared? -> :rightmost_table
+      true -> :leftmost_table
+    end
   end
 end
