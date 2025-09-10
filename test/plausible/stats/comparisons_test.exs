@@ -427,8 +427,8 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   defp build_comparison_query(site, params) do
-    {:ok, query} =
-      Query.build(
+    query =
+      Query.build!(
         site,
         :internal,
         Map.merge(
@@ -439,8 +439,7 @@ defmodule Plausible.Stats.ComparisonsTest do
             "include" => %{"comparisons" => %{"mode" => "previous_period"}}
           },
           params
-        ),
-        %{}
+        )
       )
 
     query

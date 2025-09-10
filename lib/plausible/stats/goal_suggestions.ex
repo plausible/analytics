@@ -40,8 +40,8 @@ defmodule Plausible.Stats.GoalSuggestions do
     to_date = Date.utc_today()
     from_date = Date.shift(to_date, month: -6)
 
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
@@ -49,8 +49,7 @@ defmodule Plausible.Stats.GoalSuggestions do
           "date_range" => [Date.to_iso8601(from_date), Date.to_iso8601(to_date)],
           "metrics" => ["pageviews"],
           "include" => %{"imports" => true}
-        },
-        %{}
+        }
       )
 
     native_q =
