@@ -27,7 +27,7 @@ defmodule Plausible.Billing.Subscriptions do
 
   def expired?(%Subscription{next_bill_date: next_bill_date} = subscription) do
     deleted? = Subscription.Status.deleted?(subscription)
-    expired? = Date.compare(next_bill_date, Date.utc_today()) == :lt
+    expired? = Date.before?(next_bill_date, Date.utc_today())
 
     deleted? && expired?
   end
