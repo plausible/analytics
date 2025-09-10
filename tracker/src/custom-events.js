@@ -9,6 +9,17 @@ var MIDDLE_MOUSE_BUTTON = 1
 var PARENTS_TO_SEARCH_LIMIT = 3
 var fileTypesToTrack = DEFAULT_FILE_TYPES
 
+// We track custom events with eventListeners attached to the `document` in order
+// to capture interactions with elements that get added to the DOM dynamically.
+//
+// Normally we set the eventListeners in the capture phase to make sure our event
+// handlers run before anything else on the page that may call `stopPropagation`.
+// We can safely let our handler be the first one, since it does not intercept the
+// event in any way. However that's not true for compat mode where we call
+// `event.preventDefault()` to delay navigation. Therefore, in compat mode we use
+// eventListeners in the bubble phase.
+var useCapturePhase = !COMPILE_COMPAT
+
 function getLinkEl(link) {
   while (link && (typeof link.tagName === 'undefined' || !isLink(link) || !link.href)) {
     link = link.parentNode
@@ -168,8 +179,8 @@ function getTaggedEventAttributes(htmlElement) {
 }
 
 export function init() {
-  document.addEventListener('click', handleLinkClickEvent)
-  document.addEventListener('auxclick', handleLinkClickEvent)
+  document.addEventListener('click', handleLinkClickEvent, useCapturePhase)
+  document.addEventListener('auxclick', handleLinkClickEvent, useCapturePhase)
 
   if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
     if (COMPILE_CONFIG) {
@@ -283,8 +294,8 @@ export function init() {
     }
     
 
-    document.addEventListener('submit', handleTaggedFormSubmitEvent)
-    document.addEventListener('click', handleTaggedElementClickEvent)
-    document.addEventListener('auxclick', handleTaggedElementClickEvent)
+    document.addEventListener('submit', handleTaggedFormSubmitEvent, useCapturePhase)
+    document.addEventListener('click', handleTaggedElementClickEvent, useCapturePhase)
+    document.addEventListener('auxclick', handleTaggedElementClickEvent, useCapturePhase)
   }
 }

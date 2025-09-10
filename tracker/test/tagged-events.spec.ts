@@ -112,6 +112,39 @@ for (const mode of ['legacy', 'web']) {
       })
     })
 
+    test('tracks tagged element click even if a parent eventHandler calls event.stopPropagation()', async ({ page }, {
+      testId
+    }) => {
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG},
+            legacy:
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `
+          <div id="stop-click-propagation">
+            <button class="plausible-event-name=ButtonClick">📥</a>
+          </div>
+          <script>
+            document.getElementById('stop-click-propagation').addEventListener('click', (e) => {
+              e.stopPropagation()
+            })
+          </script>
+        `
+      })
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('button'),
+        expectedRequests: [{ n: 'ButtonClick' }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+    })
+
     test('tracks link press when its parent div is tagged (using plausible-event-... equals syntax)', async ({
       page
     }, { testId }) => {
