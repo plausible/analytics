@@ -1,4 +1,8 @@
 defmodule Plausible.Timezones do
+  @moduledoc """
+  API for working with timezones wrapping around external libraries where necessary.
+  """
+
   @spec options(DateTime.t()) :: [{:key, String.t()}, {:value, String.t()}, {:offset, integer()}]
   def options(now \\ DateTime.utc_now()) do
     Tzdata.zone_list()
