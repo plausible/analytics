@@ -53,10 +53,10 @@ defmodule Plausible.Stats.Time do
     date_range = Query.date_range(query)
 
     n_buckets =
-      Plausible.Times.diff(
+      Timex.diff(
         date_range.last,
         Date.beginning_of_month(date_range.first),
-        :month
+        :months
       )
 
     Enum.map(n_buckets..0//-1, fn shift ->
@@ -71,10 +71,10 @@ defmodule Plausible.Stats.Time do
     date_range = Query.date_range(query)
 
     n_buckets =
-      Plausible.Times.diff(
+      Timex.diff(
         date_range.last,
         Date.beginning_of_week(date_range.first),
-        :week
+        :weeks
       )
 
     Enum.map(0..n_buckets, fn shift ->

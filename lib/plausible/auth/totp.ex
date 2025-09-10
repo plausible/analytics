@@ -336,9 +336,7 @@ defmodule Plausible.Auth.TOTP do
       |> Repo.one()
 
     if datetime do
-      datetime
-      |> DateTime.from_naive!("Etc/UTC")
-      |> DateTime.to_unix()
+      Timex.to_unix(datetime)
     end
   end
 

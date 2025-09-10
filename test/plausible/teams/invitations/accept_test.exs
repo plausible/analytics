@@ -396,8 +396,8 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       new_owner_site = new_site(owner: new_owner)
       old_owner_site = new_site(owner: old_owner)
 
-      somewhere_last_month = NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -5)
-      somewhere_penultimate_month = NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -35)
+      somewhere_last_month = NaiveDateTime.utc_now() |> Timex.shift(days: -5)
+      somewhere_penultimate_month = NaiveDateTime.utc_now() |> Timex.shift(days: -35)
 
       generate_usage_for(new_owner_site, 5_000, somewhere_last_month)
       generate_usage_for(new_owner_site, 1_000, somewhere_penultimate_month)
@@ -421,8 +421,8 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       new_owner_site = new_site(owner: new_owner)
       old_owner_site = new_site(owner: old_owner)
 
-      somewhere_last_month = NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -5)
-      somewhere_penultimate_month = NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -35)
+      somewhere_last_month = NaiveDateTime.utc_now() |> Timex.shift(days: -5)
+      somewhere_penultimate_month = NaiveDateTime.utc_now() |> Timex.shift(days: -35)
 
       generate_usage_for(new_owner_site, 5_000, somewhere_last_month)
       generate_usage_for(new_owner_site, 1_000, somewhere_penultimate_month)
@@ -471,7 +471,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
         new_user()
         |> subscribe_to_growth_plan(
           status: Plausible.Billing.Subscription.Status.deleted(),
-          next_bill_date: Date.shift(Date.utc_today(), day: -1)
+          next_bill_date: Timex.shift(Timex.today(), days: -1)
         )
 
       user_on_paused_subscription =
@@ -572,7 +572,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
         new_user()
         |> subscribe_to_growth_plan(
           status: Plausible.Billing.Subscription.Status.deleted(),
-          next_bill_date: Date.shift(Date.utc_today(), day: -1)
+          next_bill_date: Timex.shift(Timex.today(), days: -1)
         )
 
       user_on_paused_subscription =

@@ -418,7 +418,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
     test "can compare conversion_rate with previous period", %{conn: conn, site: site} do
       today = ~N[2023-05-05 12:00:00]
-      yesterday = NaiveDateTime.shift(today, day: -1)
+      yesterday = Timex.shift(today, days: -1)
 
       populate_stats(site, [
         build(:event, name: "Signup", timestamp: yesterday),

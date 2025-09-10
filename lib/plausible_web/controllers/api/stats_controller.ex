@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Api.StatsController do
          labels
        ) do
     date_range = Query.date_range(query)
-    build_intervals(labels, date_range, &Date.beginning_of_week/1, &Date.end_of_week/1)
+    build_intervals(labels, date_range, &Timex.beginning_of_week/1, &Timex.end_of_week/1)
   end
 
   defp build_full_intervals(
@@ -156,7 +156,7 @@ defmodule PlausibleWeb.Api.StatsController do
          labels
        ) do
     date_range = Query.date_range(query)
-    build_intervals(labels, date_range, &Date.beginning_of_month/1, &Date.end_of_month/1)
+    build_intervals(labels, date_range, &Timex.beginning_of_month/1, &Timex.end_of_month/1)
   end
 
   defp build_full_intervals(_query, _labels) do
@@ -243,7 +243,7 @@ defmodule PlausibleWeb.Api.StatsController do
       "day" ->
         current_date =
           DateTime.now!(site.timezone)
-          |> DateTime.to_date()
+          |> Timex.to_date()
           |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
@@ -253,7 +253,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
         current_date =
           DateTime.now!(site.timezone)
-          |> DateTime.to_date()
+          |> Timex.to_date()
           |> Time.date_or_weekstart(date_range)
           |> Date.to_string()
 
@@ -262,8 +262,8 @@ defmodule PlausibleWeb.Api.StatsController do
       "month" ->
         current_date =
           DateTime.now!(site.timezone)
-          |> DateTime.to_date()
-          |> Date.beginning_of_month()
+          |> Timex.to_date()
+          |> Timex.beginning_of_month()
           |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))

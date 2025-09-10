@@ -154,7 +154,7 @@ defmodule Plausible.Exports do
             ["expiry-date=", expiry_date, ", rule-id=", _rule_id] =
               String.split(x_amz_expiration, "\"", trim: true)
 
-            Plausible.Times.parse!(expiry_date, "{RFC1123}")
+            Timex.parse!(expiry_date, "{RFC1123}")
           end
 
         %{

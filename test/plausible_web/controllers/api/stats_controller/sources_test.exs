@@ -422,17 +422,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview,
           referrer_source: "Google",
           referrer: "google.com",
-          timestamp: relative_time(minute: -3)
+          timestamp: relative_time(minutes: -3)
         ),
         build(:pageview,
           referrer_source: "Google",
           referrer: "google.com",
-          timestamp: relative_time(minute: -2)
+          timestamp: relative_time(minutes: -2)
         ),
         build(:pageview,
           referrer_source: "DuckDuckGo",
           referrer: "duckduckgo.com",
-          timestamp: relative_time(minute: -1)
+          timestamp: relative_time(minutes: -1)
         )
       ])
 

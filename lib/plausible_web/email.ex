@@ -487,7 +487,10 @@ defmodule PlausibleWeb.Email do
   def export_success(user, site, expires_at) do
     expires_in =
       if expires_at do
-        Plausible.Times.humanize(expires_at)
+        Timex.Format.DateTime.Formatters.Relative.format!(
+          expires_at,
+          "{relative}"
+        )
       end
 
     download_url =

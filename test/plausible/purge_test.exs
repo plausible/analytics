@@ -9,7 +9,7 @@ defmodule Plausible.PurgeTest do
     import_params = %{
       source: :universal_analytics,
       start_date: ~D[2005-01-01],
-      end_date: Date.utc_today()
+      end_date: Timex.today()
     }
 
     [site_import1, site_import2] =

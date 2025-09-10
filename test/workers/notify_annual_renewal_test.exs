@@ -134,12 +134,10 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   test "does not send multiple notifications on second year", %{user: user} do
     subscribe_to_plan(user, @yearly_plan, next_bill_date: Date.shift(Date.utc_today(), day: 7))
 
-    year_ago = Date.shift(Date.utc_today(), year: -1)
-
     Repo.insert_all("sent_renewal_notifications", [
       %{
         user_id: user.id,
-        timestamp: NaiveDateTime.new!(year_ago, ~T[00:00:00])
+        timestamp: Timex.shift(Timex.today(), years: -1) |> Timex.to_naive_datetime()
       }
     ])
 

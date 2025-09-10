@@ -95,7 +95,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     cond do
       DateTime.diff(last, first, :hour) <= 48 -> "time:hour"
       DateTime.diff(last, first, :day) <= 40 -> "time:day"
-      Plausible.Times.diff(last, first, :week) <= 52 -> "time:week"
+      Timex.diff(last, first, :weeks) <= 52 -> "time:week"
       true -> "time:month"
     end
   end

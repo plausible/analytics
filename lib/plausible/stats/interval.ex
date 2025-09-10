@@ -42,7 +42,7 @@ defmodule Plausible.Stats.Interval do
   """
   def default_for_date_range(%DateTimeRange{first: first, last: last}) do
     cond do
-      Plausible.Times.diff(last, first, :month) > 0 ->
+      Timex.diff(last, first, :months) > 0 ->
         "month"
 
       DateTime.diff(last, first, :day) > 0 ->
@@ -75,7 +75,7 @@ defmodule Plausible.Stats.Interval do
     table =
       with %Date{} = from <- Keyword.get(opts, :from),
            %Date{} = to <- Keyword.get(opts, :to),
-           true <- abs(Plausible.Times.diff(from, to, :month)) > 12 do
+           true <- abs(Timex.diff(from, to, :months)) > 12 do
         Map.replace(@valid_by_period, "custom", ["week", "month"])
       else
         _ ->
@@ -83,7 +83,7 @@ defmodule Plausible.Stats.Interval do
       end
 
     with %Date{} = stats_start <- Plausible.Sites.stats_start_date(site),
-         true <- abs(Plausible.Times.diff(Date.utc_today(), stats_start, :month)) > 12 do
+         true <- abs(Timex.diff(Date.utc_today(), stats_start, :months)) > 12 do
       Map.replace(table, "all", ["week", "month"])
     else
       _ ->

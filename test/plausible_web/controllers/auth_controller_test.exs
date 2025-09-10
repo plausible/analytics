@@ -329,7 +329,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "regenerates an activation pin even if there's one already", %{conn: conn, user: user} do
       five_minutes_ago =
         NaiveDateTime.utc_now()
-        |> NaiveDateTime.shift(minute: -5)
+        |> Timex.shift(minutes: -5)
         |> NaiveDateTime.truncate(:second)
 
       {:ok, verification} = Auth.EmailVerification.issue_code(user, five_minutes_ago)
@@ -380,7 +380,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "with expired pin - reloads the form with error", %{conn: conn, user: user} do
       one_day_ago =
         NaiveDateTime.utc_now()
-        |> NaiveDateTime.shift(day: -1)
+        |> Timex.shift(days: -1)
         |> NaiveDateTime.truncate(:second)
 
       {:ok, verification} = Auth.EmailVerification.issue_code(user, one_day_ago)

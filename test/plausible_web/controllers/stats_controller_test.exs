@@ -992,8 +992,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         user_id: 123,
         pathname: "/",
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], minute: -1)
-          |> NaiveDateTime.truncate(:second),
+          Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
         country_code: "EE",
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
@@ -1014,8 +1013,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         user_id: 123,
         pathname: "/some-other-page",
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], minute: -2)
-          |> NaiveDateTime.truncate(:second),
+          Timex.shift(~N[2021-10-20 12:00:00], minutes: -2) |> NaiveDateTime.truncate(:second),
         country_code: "EE",
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
@@ -1025,8 +1023,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         user_id: 123,
         pathname: "/some-other-page",
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], minute: -1)
-          |> NaiveDateTime.truncate(:second),
+          Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
         engagement_time: 60_000,
         scroll_depth: 30,
         country_code: "EE",
@@ -1038,7 +1035,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         user_id: 100,
         pathname: "/",
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1) |> NaiveDateTime.truncate(:second),
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         utm_medium: "search",
         utm_campaign: "ads",
         utm_source: "google",
@@ -1053,7 +1050,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         user_id: 100,
         pathname: "/",
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1, minute: 1)
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1, minutes: 1)
           |> NaiveDateTime.truncate(:second),
         engagement_time: 30_000,
         scroll_depth: 30,
@@ -1070,8 +1067,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       build(:pageview,
         user_id: 200,
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], month: -1)
-          |> NaiveDateTime.truncate(:second),
+          Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
         country_code: "EE",
         browser: "Firefox",
         browser_version: "120",
@@ -1081,7 +1077,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       build(:engagement,
         user_id: 200,
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], month: -1, minute: 1)
+          Timex.shift(~N[2021-10-20 12:00:00], months: -1, minutes: 1)
           |> NaiveDateTime.truncate(:second),
         engagement_time: 30_000,
         scroll_depth: 20,
@@ -1094,8 +1090,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       build(:pageview,
         user_id: 300,
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], month: -5)
-          |> NaiveDateTime.truncate(:second),
+          Timex.shift(~N[2021-10-20 12:00:00], months: -5) |> NaiveDateTime.truncate(:second),
         utm_campaign: "ads",
         country_code: "EE",
         referrer_source: "Google",
@@ -1106,7 +1101,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       build(:engagement,
         user_id: 300,
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], month: -5, minute: 1)
+          Timex.shift(~N[2021-10-20 12:00:00], months: -5, minutes: 1)
           |> NaiveDateTime.truncate(:second),
         engagement_time: 30_000,
         scroll_depth: 20,
@@ -1120,7 +1115,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       build(:pageview,
         user_id: 456,
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1, minute: -1)
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1, minutes: -1)
           |> NaiveDateTime.truncate(:second),
         pathname: "/signup",
         "meta.key": ["variant"],
@@ -1129,7 +1124,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       build(:engagement,
         user_id: 456,
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1) |> NaiveDateTime.truncate(:second),
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         pathname: "/signup",
         engagement_time: 60_000,
         scroll_depth: 20,
@@ -1139,7 +1134,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       build(:event,
         user_id: 456,
         timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1) |> NaiveDateTime.truncate(:second),
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         name: "Signup",
         "meta.key": ["variant"],
         "meta.value": ["A"]

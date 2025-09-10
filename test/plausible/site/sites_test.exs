@@ -159,7 +159,7 @@ defmodule Plausible.SitesTest do
         build(:pageview)
       ])
 
-      assert Sites.stats_start_date(site) == Plausible.Times.today(site.timezone)
+      assert Sites.stats_start_date(site) == Timex.today(site.timezone)
     end
 
     test "memoizes value of start date" do
@@ -171,8 +171,8 @@ defmodule Plausible.SitesTest do
         build(:pageview)
       ])
 
-      assert Sites.stats_start_date(site) == Plausible.Times.today(site.timezone)
-      assert Repo.reload!(site).stats_start_date == Plausible.Times.today(site.timezone)
+      assert Sites.stats_start_date(site) == Timex.today(site.timezone)
+      assert Repo.reload!(site).stats_start_date == Timex.today(site.timezone)
     end
   end
 
@@ -190,7 +190,7 @@ defmodule Plausible.SitesTest do
         build(:pageview)
       ])
 
-      assert Sites.native_stats_start_date(site) == Plausible.Times.today(site.timezone)
+      assert Sites.native_stats_start_date(site) == Timex.today(site.timezone)
     end
 
     test "ignores imported stats" do

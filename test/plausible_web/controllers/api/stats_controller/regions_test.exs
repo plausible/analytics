@@ -103,7 +103,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       site = new_site(owner: user, timezone: "Atlantic/Azores")
 
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minute: -5))
+        build(:pageview, timestamp: relative_time(minutes: -5))
       ])
 
       conn =

@@ -311,7 +311,7 @@ defmodule PlausibleWeb.Live.CSVImport do
           native_stats_start_date: native_stats_start_date
         } = socket.assigns
 
-        cutoff_date = native_stats_start_date || Plausible.Times.today(site.timezone)
+        cutoff_date = native_stats_start_date || Timex.today(site.timezone)
 
         case Imported.clamp_dates(occupied_ranges, cutoff_date, start_date, end_date) do
           {:ok, start_date, end_date} -> Date.range(start_date, end_date)
