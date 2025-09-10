@@ -16,9 +16,35 @@ defmodule Plausible.Stats.QueryResultTest do
     {:ok, site: site}
   end
 
+  test "query!/3 raises on error on site_id mismatch", %{site: site} do
+    assert_raise FunctionClauseError, fn ->
+      Query.build!(
+        site,
+        :public,
+        %{
+          "site_id" => "different"
+        }
+      )
+    end
+  end
+
+  test "query!/3 raises on schema validation error", %{site: site} do
+    assert_raise RuntimeError,
+                 ~s/Failed to build query: "#: Required properties metrics, date_range were not present."/,
+                 fn ->
+                   Query.build!(
+                     site,
+                     :public,
+                     %{
+                       "site_id" => site.domain
+                     }
+                   )
+                 end
+  end
+
   test "serializing query to JSON keeps keys ordered", %{site: site} do
-    {:ok, query} =
-      Query.build(
+    query =
+      Query.build!(
         site,
         :public,
         %{
@@ -26,8 +52,7 @@ defmodule Plausible.Stats.QueryResultTest do
           "metrics" => ["pageviews"],
           "date_range" => ["2024-01-01", "2024-02-01"],
           "include" => %{"imports" => true}
-        },
-        %{}
+        }
       )
 
     query = QueryOptimizer.optimize(query)
