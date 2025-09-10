@@ -1,14 +1,11 @@
 defmodule PlausibleWeb.Live.InstallationV2Test do
   use PlausibleWeb.ConnCase, async: true
   use Plausible
+  use Plausible.Test.Support.DNS
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
   import Plausible.Teams.Test
-
-  on_ee do
-    use Plausible.Test.Support.DNS
-  end
 
   alias Plausible.Site.TrackerScriptConfiguration
 
@@ -390,7 +387,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
     @tag :ee_only
     test "if ratelimit for detection is exceeded, does not make detection request and falls back to recommending manual installation",
          %{conn: conn, site: site} do
-      stub_dns_lookup_a_records(site.domain)
+      stub_lookup_a_records(site.domain)
 
       # exceed the rate limit for site detection
       Plausible.RateLimit.check_rate(
