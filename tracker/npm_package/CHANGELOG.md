@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Trigger tagged events, file downloads, and outbound link clicks even when `event.stopPropagation()` is called before the event bubbles up to `document` (does not apply for legacy compat mode).  
+
 ## [0.4.2] - 2025-09-04
 
 - Remove redeclared variables from the tracker.
