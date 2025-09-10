@@ -553,8 +553,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def suggest_page_paths(input, site) do
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
@@ -562,8 +562,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           "date_range" => "all",
           "metrics" => ["pageviews"],
           "include" => %{"imports" => true}
-        },
-        %{}
+        }
       )
 
     site

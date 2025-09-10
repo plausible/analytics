@@ -227,16 +227,15 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
   end
 
   def suggest_hostnames(input, _options, site) do
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
           "site_id" => site.domain,
           "date_range" => "all",
           "metrics" => ["pageviews"]
-        },
-        %{}
+        }
       )
 
     site
