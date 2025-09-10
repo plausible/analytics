@@ -150,8 +150,6 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   end
 
   defp format_duration(seconds) do
-    seconds
-    |> Timex.Duration.from_seconds()
-    |> Timex.format_duration(Timex.Format.Duration.Formatters.Humanized)
+    Plausible.Times.humanize_seconds(seconds)
   end
 end

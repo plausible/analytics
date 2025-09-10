@@ -79,18 +79,18 @@ defmodule Plausible.Plugins.API.TokenTest do
     now = NaiveDateTime.utc_now()
 
     last_seen = fn shift ->
-      Token.last_used_humanize(%Token{last_used_at: Timex.shift(now, shift)})
+      Token.last_used_humanize(%Token{last_used_at: NaiveDateTime.shift(now, shift)})
     end
 
     assert Token.last_used_humanize(%Token{}) == "Not yet"
 
-    assert last_seen.(minutes: -1) == "Just recently"
-    assert last_seen.(minutes: -4) == "Just recently"
-    assert last_seen.(minutes: -6) == "Several minutes ago"
-    assert last_seen.(hours: -1) == "An hour ago"
-    assert last_seen.(hours: -7) == "Hours ago"
-    assert last_seen.(days: -1) == "Yesterday"
-    assert last_seen.(days: -3) == "Sometime this week"
-    assert last_seen.(months: -1) == "Long time ago"
+    assert last_seen.(minute: -1) == "Just recently"
+    assert last_seen.(minute: -4) == "Just recently"
+    assert last_seen.(minute: -6) == "Several minutes ago"
+    assert last_seen.(hour: -1) == "An hour ago"
+    assert last_seen.(hour: -7) == "Hours ago"
+    assert last_seen.(day: -1) == "Yesterday"
+    assert last_seen.(day: -3) == "Sometime this week"
+    assert last_seen.(month: -1) == "Long time ago"
   end
 end

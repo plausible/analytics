@@ -69,8 +69,8 @@ defmodule PlausibleWeb.BillingControllerTest do
       site = new_site(owner: user)
       now = NaiveDateTime.utc_now()
 
-      generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
-      generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
+      generate_usage_for(site, 11_000, NaiveDateTime.shift(now, day: -5))
+      generate_usage_for(site, 11_000, NaiveDateTime.shift(now, day: -35))
 
       conn1 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
