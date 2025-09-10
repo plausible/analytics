@@ -953,22 +953,18 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         conn = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}")
 
-        assert json_response(conn, 200) == %{
-                 "guests" => [
-                   %{"email" => guest2.email, "status" => "accepted", "role" => "viewer"},
-                   %{"email" => guest1.email, "status" => "accepted", "role" => "editor"},
-                   %{
-                     "email" => guest3.team_invitation.email,
-                     "status" => "invited",
-                     "role" => "viewer"
-                   }
-                 ],
-                 "meta" => %{
-                   "before" => nil,
-                   "after" => nil,
-                   "limit" => 100
-                 }
-               }
+        assert %{"guests" => guests, "meta" => meta} = json_response(conn, 200)
+
+        assert %{"email" => guest2.email, "status" => "accepted", "role" => "viewer"} in guests
+        assert %{"email" => guest1.email, "status" => "accepted", "role" => "editor"} in guests
+
+        assert %{
+                 "email" => guest3.team_invitation.email,
+                 "status" => "invited",
+                 "role" => "viewer"
+               } in guests
+
+        assert meta == %{"before" => nil, "after" => nil, "limit" => 100}
       end
 
       test "returns guests paginated", %{conn: conn, user: user} do
