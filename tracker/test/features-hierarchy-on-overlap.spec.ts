@@ -50,7 +50,11 @@ for (const mode of ['legacy', 'web'] as const) {
           },
           mode
         ),
-        bodyContent: `<a class="plausible-event-name=Custom+Event" href="${downloadUrl}">Outbound Download</a>`
+        bodyContent: /* HTML */ `<a
+          class="plausible-event-name=Custom+Event"
+          href="${downloadUrl}"
+          >Outbound Download</a
+        >`
       })
       await page.goto(url)
 
@@ -93,7 +97,7 @@ for (const mode of ['legacy', 'web'] as const) {
           },
           mode
         ),
-        bodyContent: `<a href="${downloadUrl}">Get file</a>`
+        bodyContent: /* HTML */ `<a href="${downloadUrl}">Get file</a>`
       })
       await page.goto(url)
 
@@ -137,7 +141,7 @@ for (const mode of ['legacy', 'web'] as const) {
           },
           mode
         ),
-        bodyContent: `<a href="${downloadUrl}">Get file</a>`
+        bodyContent: /* HTML */ `<a href="${downloadUrl}">Get file</a>`
       })
       await page.goto(url)
 
@@ -159,9 +163,9 @@ for (const mode of ['legacy', 'web'] as const) {
 
 for (const mode of ['web', 'esm'] as const) {
   test.describe(`form submissions and tagged events features hierarchy on overlap v2-specific (${mode})`, () => {
-    test('sends only tagged event if a form is tagged', async ({
-      page
-    }, { testId }) => {
+    test('sends only tagged event if a form is tagged', async ({ page }, {
+      testId
+    }) => {
       const config = { ...DEFAULT_CONFIG, formSubmissions: true }
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -178,9 +182,12 @@ for (const mode of ['web', 'esm'] as const) {
           },
           mode
         ),
-        bodyContent: `
+        bodyContent: /* HTML */ `
           <form method="POST" class="plausible-event-name=A+Tagged+Form">
-            <input id="name" type="text" placeholder="Name" /><input type="submit" value="Submit" />
+            <input id="name" type="text" placeholder="Name" /><input
+              type="submit"
+              value="Submit"
+            />
           </form>
         `
       })
@@ -223,7 +230,7 @@ for (const mode of ['web', 'esm'] as const) {
           },
           mode
         ),
-        bodyContent: `
+        bodyContent: /* HTML */ `
           <div class="plausible-event-name--A+Tagged+Form">
             <form onsubmit="${customSubmitHandlerStub}">
               <input type="email" />

@@ -1,28 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Plausible Playwright tests</title>
+    <script
+      async
+      event-author="John"
+      src="/tracker/js/plausible.local.pageview-props.js"
+    ></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Plausible Playwright tests</title>
-  <script async event-author="John" src="/tracker/js/plausible.local.pageview-props.js"></script>
-</head>
+  <body>
+    <a id="navigate-away" href="/manual.html">Navigate away</a>
+    <button
+      id="custom-event-button"
+      onclick="plausible('Custom event', { props: { author: 'Karl' } })"
+    >
+      Custom event
+    </button>
+    <button id="back-button-trigger" onclick="window.history.back()">
+      Back button
+    </button>
+    <button id="increment-event-index" onclick="increment()">
+      Increment event index
+    </button>
+  </body>
 
-<body>
-  <a id="navigate-away" href="/manual.html">Navigate away</a>
-  <button id="custom-event-button" onclick="plausible('Custom event', { props: { author: 'Karl' } })">Custom event</button>
-  <button id="back-button-trigger" onclick="window.history.back()">Back button</button>
-  <button id="increment-event-index" onclick="increment()">Increment event index</button>
-</body>
+  <script>
+    var i = 0
 
-<script>
-  var i = 0
+    function increment() {
+      document
+        .getElementsByTagName('script')[0]
+        .setAttribute('event-index', i++)
+    }
 
-  function increment() {
-    document.getElementsByTagName('script')[0].setAttribute("event-index", i++)
-  }
-
-  increment()
-</script>
+    increment()
+  </script>
 </html>

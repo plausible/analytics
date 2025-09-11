@@ -1,7 +1,4 @@
-import {
-  expectPlausibleInAction,
-  isPageviewEvent
-} from './support/test-utils'
+import { expectPlausibleInAction, isPageviewEvent } from './support/test-utils'
 import { test } from '@playwright/test'
 
 test.describe('legacy custom properties support', () => {
@@ -24,9 +21,7 @@ test.describe('legacy custom properties support', () => {
         await page.goto('/legacy-custom-properties.html')
         await page.click('#custom-props-button')
       },
-      expectedRequests: [
-        { n: 'Props event', p: { type: 'props' } }
-      ],
+      expectedRequests: [{ n: 'Props event', p: { type: 'props' } }],
       shouldIgnoreRequest: isPageviewEvent
     })
   })
@@ -37,9 +32,7 @@ test.describe('legacy custom properties support', () => {
         await page.goto('/legacy-custom-properties.html')
         await page.click('#custom-meta-button')
       },
-      expectedRequests: [
-        { n: 'Meta event', m: '{"type":"meta"}' }
-      ],
+      expectedRequests: [{ n: 'Meta event', m: '{"type":"meta"}' }],
       shouldIgnoreRequest: isPageviewEvent
     })
   })

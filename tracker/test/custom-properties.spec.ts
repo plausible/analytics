@@ -163,7 +163,11 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<button onclick="window.plausible('subscribed from blog', { props: { title: 'A blog post title' } })">Subscribe</button>`
+        bodyContent: /* HTML */ `<button
+          onclick="window.plausible('subscribed from blog', { props: { title: 'A blog post title' } })"
+        >
+          Subscribe
+        </button>`
       })
 
       await expectPlausibleInAction(page, {
@@ -210,7 +214,11 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<button onclick="window.plausible('subscribed from blog', { props: { title: 'A blog post title' } })">Subscribe</button>`
+        bodyContent: /* HTML */ `<button
+          onclick="window.plausible('subscribed from blog', { props: { title: 'A blog post title' } })"
+        >
+          Subscribe
+        </button>`
       })
 
       await expectPlausibleInAction(page, {
@@ -253,7 +261,11 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<button onclick="window.plausible('subscribed from blog', { props: { title: 'A blog post title' } })">Subscribe</button>`
+        bodyContent: /* HTML */ `<button
+          onclick="window.plausible('subscribed from blog', { props: { title: 'A blog post title' } })"
+        >
+          Subscribe
+        </button>`
       })
 
       await expectPlausibleInAction(page, {

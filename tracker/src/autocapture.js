@@ -1,18 +1,20 @@
 import { config } from './config'
 
 export function init(track) {
-  var lastPage;
+  var lastPage
 
   function page(isSPANavigation) {
     if (!(COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting))) {
-      if (isSPANavigation && lastPage === location.pathname) return;
+      if (isSPANavigation && lastPage === location.pathname) return
     }
 
     lastPage = location.pathname
     track('pageview')
   }
 
-  var onSPANavigation = function () { page(true) }
+  var onSPANavigation = function () {
+    page(true)
+  }
 
   if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
     window.addEventListener('hashchange', onSPANavigation)
@@ -22,7 +24,7 @@ export function init(track) {
       var originalPushState = his['pushState']
       his.pushState = function () {
         originalPushState.apply(this, arguments)
-        onSPANavigation();
+        onSPANavigation()
       }
       window.addEventListener('popstate', onSPANavigation)
     }
@@ -34,8 +36,11 @@ export function init(track) {
     }
   }
 
-  if (document.visibilityState === 'hidden' || document.visibilityState === 'prerender') {
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+  if (
+    document.visibilityState === 'hidden' ||
+    document.visibilityState === 'prerender'
+  ) {
+    document.addEventListener('visibilitychange', handleVisibilityChange)
   } else {
     page()
   }
@@ -43,7 +48,7 @@ export function init(track) {
   window.addEventListener('pageshow', function (event) {
     if (event.persisted) {
       // Page was restored from bfcache - track a pageview
-      page();
+      page()
     }
   })
 }

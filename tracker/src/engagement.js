@@ -57,7 +57,11 @@ function triggerEngagement() {
 
   Also, we don't send engagements if the current pageview is ignored (onIgnoredEvent)
   */
-  if (!currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime >= 3000)) {
+  if (
+    !currentEngagementIgnored &&
+    (currentEngagementMaxScrollDepth < maxScrollDepthPx ||
+      engagementTime >= 3000)
+  ) {
     currentEngagementMaxScrollDepth = maxScrollDepthPx
 
     var payload = {
@@ -83,7 +87,11 @@ function triggerEngagement() {
 }
 
 function onVisibilityChange() {
-  if (document.visibilityState === 'visible' && document.hasFocus() && runningEngagementStart === 0) {
+  if (
+    document.visibilityState === 'visible' &&
+    document.hasFocus() &&
+    runningEngagementStart === 0
+  ) {
     runningEngagementStart = Date.now()
   } else if (document.visibilityState === 'hidden' || !document.hasFocus()) {
     // Tab went back to background or lost focus. Save the engaged time so far
@@ -112,7 +120,6 @@ function getEngagementTime() {
   }
 }
 
-
 var currentDocumentHeight
 var maxScrollDepthPx
 
@@ -135,7 +142,9 @@ function getCurrentScrollDepthPx() {
   var viewportHeight = window.innerHeight || el.clientHeight || 0
   var scrollTop = window.scrollY || el.scrollTop || body.scrollTop || 0
 
-  return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
+  return currentDocumentHeight <= viewportHeight
+    ? currentDocumentHeight
+    : scrollTop + viewportHeight
 }
 
 export function init() {
@@ -151,7 +160,9 @@ export function init() {
     var count = 0
     var interval = setInterval(function () {
       currentDocumentHeight = getDocumentHeight()
-      if (++count === 15) { clearInterval(interval) }
+      if (++count === 15) {
+        clearInterval(interval)
+      }
     }, 200)
   })
 

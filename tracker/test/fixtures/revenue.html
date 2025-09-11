@@ -1,22 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Plausible Playwright tests</title>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Plausible Playwright tests</title>
+    <script
+      async
+      src="/tracker/js/plausible.local.manual.revenue.tagged-events.js"
+    ></script>
+  </head>
 
-  <script async src="/tracker/js/plausible.local.manual.revenue.tagged-events.js"></script>
-</head>
+  <body>
+    <button
+      id="manual-purchase"
+      onclick="window.plausible('Purchase', {revenue: {amount: 15.99, currency: 'USD'}})"
+    >
+      Click me
+    </button>
 
-<body>
-  <button id="manual-purchase" onclick="window.plausible('Purchase', {revenue: {amount: 15.99, currency: 'USD'}})">
-    Click me
-  </button>
-
-  <button id="tagged-purchase" class="plausible-event-name=Purchase plausible-revenue-currency=EUR plausible-revenue-amount=13.32">
-    Click me
-  </button>
-</body>
+    <button
+      id="tagged-purchase"
+      class="plausible-event-name=Purchase plausible-revenue-currency=EUR plausible-revenue-amount=13.32"
+    >
+      Click me
+    </button>
+  </body>
 </html>

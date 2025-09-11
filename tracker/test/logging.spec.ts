@@ -1,8 +1,5 @@
 import { initializePageDynamically } from './support/initialize-page-dynamically'
-import {
-  expectPlausibleInAction,
-  switchByMode,
-} from './support/test-utils'
+import { expectPlausibleInAction, switchByMode } from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { ScriptConfig } from './support/types'
 import { LOCAL_SERVER_ADDR } from './support/server'

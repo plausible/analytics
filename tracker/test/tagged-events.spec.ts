@@ -47,7 +47,11 @@ for (const mode of ['web', 'esm']) {
         },
         mode
       ),
-      bodyContent: `<a class="plausible-event-name=Purchase plausible-event-discounted=true plausible-revenue-currency=EUR plausible-revenue-amount=13.32" href="https://example.com/target">Purchase</a>`
+      bodyContent: /* HTML */ `<a
+        class="plausible-event-name=Purchase plausible-event-discounted=true plausible-revenue-currency=EUR plausible-revenue-amount=13.32"
+        href="https://example.com/target"
+        >Purchase</a
+      >`
     })
     await expectPlausibleInAction(page, {
       action: async () => {
@@ -82,9 +86,11 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `
-        <a class="plausible-event-name--Payment+Complete should ignore-this plausible-event-amount--100 plausible-event-method--Credit+Card" href="https://example.com/payment?secret=foo">
-            <h1>✅</h1>
+        bodyContent: /* HTML */ ` <a
+          class="plausible-event-name--Payment+Complete should ignore-this plausible-event-amount--100 plausible-event-method--Credit+Card"
+          href="https://example.com/payment?secret=foo"
+        >
+          <h1>✅</h1>
         </a>`
       })
       await page.goto(url)
@@ -125,8 +131,12 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<div class="plausible-event-name=Reset+Password plausible-event-foo=bar">
-          <a href="https://example.com/reset?verification=123">Reset password</a>
+        bodyContent: /* HTML */ `<div
+          class="plausible-event-name=Reset+Password plausible-event-foo=bar"
+        >
+          <a href="https://example.com/reset?verification=123"
+            >Reset password</a
+          >
         </div>`
       })
       await page.goto(url)
@@ -159,8 +169,11 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `
-        <form class="plausible-event-name=Signup plausible-event-type=Newsletter" action="https://example.com/register" method="post">
+        bodyContent: /* HTML */ ` <form
+          class="plausible-event-name=Signup plausible-event-type=Newsletter"
+          action="https://example.com/register"
+          method="post"
+        >
           <h2>Newsletter Signup</h2>
           <label for="email">Email:</label>
           <input type="email" />
@@ -208,10 +221,9 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `
-        <div class="plausible-event-name=Form+Submit">
+        bodyContent: /* HTML */ ` <div class="plausible-event-name=Form+Submit">
           <form action="https://example.com/register" method="post">
-            <input type="text"/>
+            <input type="text" />
             <input type="submit" value="Submit" />
           </form>
         </div>`
@@ -252,7 +264,10 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<span class="plausible-event-name=Custom+Event plausible-event-foo=bar"><strong>any</strong>text</span>`
+        bodyContent: /* HTML */ `<span
+          class="plausible-event-name=Custom+Event plausible-event-foo=bar"
+          ><strong>any</strong>text</span
+        >`
       })
       await page.goto(url)
 
@@ -287,7 +302,11 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<button class="plausible-event-name=Custom+Event plausible-event-foo=bar">✅</button>`
+        bodyContent: /* HTML */ `<button
+          class="plausible-event-name=Custom+Event plausible-event-foo=bar"
+        >
+          ✅
+        </button>`
       })
       await page.goto(url)
 
@@ -360,7 +379,7 @@ for (const mode of ['legacy', 'web']) {
       const targetPage = await initializePageDynamically(page, {
         testId,
         scriptConfig: '',
-        bodyContent: `<h1>Subscription successful</h1>`,
+        bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
         path: '/target'
       })
       const { url } = await initializePageDynamically(page, {
@@ -373,7 +392,11 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a class="plausible-event-name=Subscribe" href="${targetPage.url}">Click to subscribe</a>`
+        bodyContent: /* HTML */ `<a
+          class="plausible-event-name=Subscribe"
+          href="${targetPage.url}"
+          >Click to subscribe</a
+        >`
       })
       await page.goto(url)
       const navigationPromise = page.waitForRequest(targetPage.url, {
@@ -403,7 +426,7 @@ for (const mode of ['legacy', 'web']) {
       const targetPage = await initializePageDynamically(page, {
         testId,
         scriptConfig: '',
-        bodyContent: `<h1>Navigation successful</h1>`,
+        bodyContent: /* HTML */ `<h1>Navigation successful</h1>`,
         path: '/target'
       })
       const { url } = await initializePageDynamically(page, {
@@ -416,7 +439,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `
+        bodyContent: /* HTML */ `
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <a class="plausible-event-name=link+click" href="${targetPage.url}">
               <circle cx="50" cy="50" r="50" />
@@ -458,7 +481,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<button class="anything">✅</button>`
+        bodyContent: /* HTML */ `<button class="anything">✅</button>`
       })
       await page.goto(url)
 
@@ -482,7 +505,9 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<span class="plausible-event-name=">anything</span>`
+        bodyContent: /* HTML */ `<span class="plausible-event-name="
+          >anything</span
+        >`
       })
       await page.goto(url)
 
@@ -562,7 +587,12 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
         testId,
         scriptConfig:
           '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-        bodyContent: `<a class="plausible-event-name=outbound" ${linkAttributes} href="${outboundUrl}"><h1>➡️</h1></a>`
+        bodyContent: /* HTML */ `<a
+          class="plausible-event-name=outbound"
+          ${linkAttributes}
+          href="${outboundUrl}"
+          ><h1>➡️</h1></a
+        >`
       })
       await page.goto(url)
 
@@ -591,14 +621,18 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const targetPage = await initializePageDynamically(page, {
       testId,
       scriptConfig: '',
-      bodyContent: `<h1>Subscription successful</h1>`,
+      bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
       path: '/target'
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
         '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-      bodyContent: `<a class="plausible-event-name=Subscribe" href="${targetPage.url}">Click to subscribe</a>`
+      bodyContent: /* HTML */ `<a
+        class="plausible-event-name=Subscribe"
+        href="${targetPage.url}"
+        >Click to subscribe</a
+      >`
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(targetPage.url, {
@@ -635,14 +669,18 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const targetPage = await initializePageDynamically(page, {
       testId,
       scriptConfig: '',
-      bodyContent: `<h1>Subscription successful</h1>`,
+      bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
       path: '/target'
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
         '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-      bodyContent: `<a class="plausible-event-name=Subscribe" href="${targetPage.url}">Click to subscribe</a>`
+      bodyContent: /* HTML */ `<a
+        class="plausible-event-name=Subscribe"
+        href="${targetPage.url}"
+        >Click to subscribe</a
+      >`
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(targetPage.url, {
@@ -659,14 +697,18 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const targetPage = await initializePageDynamically(page, {
       testId,
       scriptConfig: '',
-      bodyContent: `<h1>Subscription successful</h1>`,
+      bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
       path: '/target'
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
         '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-      bodyContent: `<a class="plausible-event-key=value" href="${targetPage.url}">Click to subscribe</a>`
+      bodyContent: /* HTML */ `<a
+        class="plausible-event-key=value"
+        href="${targetPage.url}"
+        >Click to subscribe</a
+      >`
     })
     await page.goto(url)
 
@@ -684,14 +726,14 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const targetPage = await initializePageDynamically(page, {
       testId,
       scriptConfig: '',
-      bodyContent: `<h1>Subscription successful</h1>`,
+      bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
       path: '/target'
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
         '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-      bodyContent: `
+      bodyContent: /* HTML */ `
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <a class="plausible-event-name=link+click" href="${targetPage.url}">
             <circle cx="50" cy="50" r="50" />

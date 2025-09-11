@@ -1,9 +1,13 @@
-import { waitForPlausibleFunction } from "./plausible-function-check"
-import { checkWordPress } from "./check-wordpress"
-import { checkGTM } from "./check-gtm"
-import { checkNPM } from "./check-npm"
+import { waitForPlausibleFunction } from './plausible-function-check'
+import { checkWordPress } from './check-wordpress'
+import { checkGTM } from './check-gtm'
+import { checkNPM } from './check-npm'
 
-window.scanPageBeforePlausibleInstallation = async function({ detectV1, debug, timeoutMs }) {
+window.scanPageBeforePlausibleInstallation = async function ({
+  detectV1,
+  debug,
+  timeoutMs
+}) {
   function log(message) {
     if (debug) console.log('[Plausible Verification]', message)
   }
@@ -18,7 +22,7 @@ window.scanPageBeforePlausibleInstallation = async function({ detectV1, debug, t
     log(`v1Detected: ${v1Detected}`)
   }
 
-  const {wordpressPlugin, wordpressLikely} = checkWordPress(document)
+  const { wordpressPlugin, wordpressLikely } = checkWordPress(document)
   log(`wordpressPlugin: ${wordpressPlugin}`)
   log(`wordpressLikely: ${wordpressLikely}`)
 

@@ -1,44 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Plausible Playwright tests</title>
+    <script async src="/tracker/js/plausible.local.manual.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Plausible Playwright tests</title>
-  <script async src="/tracker/js/plausible.local.manual.js"></script>
-</head>
+  <body>
+    <button id="pageview-trigger">
+      Triggers a pageview with default URL (location.href)
+    </button>
+    <button id="pageview-trigger-custom-url">
+      Triggers a pageview with custom URL
+    </button>
+    <button id="custom-event-trigger">
+      Triggers a custom event with default URL (location.href)
+    </button>
+    <button id="custom-event-trigger-custom-url">
+      Triggers a custom event with custom URL
+    </button>
 
-<body>
-  <button id="pageview-trigger">
-    Triggers a pageview with default URL (location.href)
-  </button>
-  <button id="pageview-trigger-custom-url">
-    Triggers a pageview with custom URL
-  </button>
-  <button id="custom-event-trigger">
-    Triggers a custom event with default URL (location.href)
-  </button>
-  <button id="custom-event-trigger-custom-url">
-    Triggers a custom event with custom URL
-  </button>
-
-  <script>
-    document.addEventListener('click', (e) => {
-      if (e.target.id === 'pageview-trigger') {
-        window.plausible('pageview')
-      }
-      if (e.target.id === 'pageview-trigger-custom-url') {
-        window.plausible('pageview', {u: 'https://example.com/custom/location'})
-      }
-      if (e.target.id === 'custom-event-trigger') {
-        window.plausible('CustomEvent')
-      }
-      if (e.target.id === 'custom-event-trigger-custom-url') {
-        window.plausible('CustomEvent', {u: 'https://example.com/custom/location'})
-      }
-    })
-  </script>
-</body>
-
+    <script>
+      document.addEventListener('click', (e) => {
+        if (e.target.id === 'pageview-trigger') {
+          window.plausible('pageview')
+        }
+        if (e.target.id === 'pageview-trigger-custom-url') {
+          window.plausible('pageview', {
+            u: 'https://example.com/custom/location'
+          })
+        }
+        if (e.target.id === 'custom-event-trigger') {
+          window.plausible('CustomEvent')
+        }
+        if (e.target.id === 'custom-event-trigger-custom-url') {
+          window.plausible('CustomEvent', {
+            u: 'https://example.com/custom/location'
+          })
+        }
+      })
+    </script>
+  </body>
 </html>

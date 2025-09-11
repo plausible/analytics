@@ -1,35 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Plausible Playwright tests</title>
+    <script async src="/tracker/js/plausible.local.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Plausible Playwright tests</title>
-  <script async src="/tracker/js/plausible.local.js"></script>
-</head>
+  <body>
+    <div id="main" style="height: 3000px; background-color: lightblue">
+      <a id="navigate-away" href="/manual.html">Navigate away</a>
+    </div>
 
-<body>
-  <div id="main" style="height: 3000px; background-color: lightblue;">
-    <a id="navigate-away" href="/manual.html">Navigate away</a>
-  </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const mainDiv = document.getElementById('main')
+        let loadedMore = false
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const mainDiv = document.getElementById("main")
-      let loadedMore = false
+        window.addEventListener('scroll', () => {
+          if (
+            !loadedMore &&
+            window.innerHeight + window.scrollY >= document.body.offsetHeight
+          ) {
+            loadedMore = true
 
-      window.addEventListener("scroll", () => {
-        if (!loadedMore && window.innerHeight + window.scrollY >= document.body.offsetHeight) {
-          loadedMore = true
-
-          const newDiv = document.createElement("div")
-          newDiv.setAttribute("id", "more-content")
-          newDiv.setAttribute("style", "height: 2000px; background-color: lightcoral;")
-          document.body.appendChild(newDiv);
-        }
-      });
-    });
-  </script>
-</body>
+            const newDiv = document.createElement('div')
+            newDiv.setAttribute('id', 'more-content')
+            newDiv.setAttribute(
+              'style',
+              'height: 2000px; background-color: lightcoral;'
+            )
+            document.body.appendChild(newDiv)
+          }
+        })
+      })
+    </script>
+  </body>
 </html>

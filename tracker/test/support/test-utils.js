@@ -1,6 +1,6 @@
-import { expect } from "@playwright/test"
+import { expect } from '@playwright/test'
 import packageJson from '../../package.json' with { type: 'json' }
-import { mockManyRequests } from "./mock-many-requests"
+import { mockManyRequests } from './mock-many-requests'
 
 export const tracker_script_version = packageJson.tracker_script_version
 
@@ -33,19 +33,26 @@ export const tracker_script_version = packageJson.tracker_script_version
  *  API by the given number of milliseconds.
  *  @param {number} [args.mockRequestTimeout] - How long to wait for the requests to be made
  */
-export const expectPlausibleInAction = async function (page, {
-  action,
-  expectedRequests = [],
-  refutedRequests = [],
-  pathToMock = '/api/event',
-  awaitedRequestCount,
-  expectedRequestCount,
-  responseDelay,
-  shouldIgnoreRequest,
-  mockRequestTimeout = 3000
-}) {
-  const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
-  const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
+export const expectPlausibleInAction = async function (
+  page,
+  {
+    action,
+    expectedRequests = [],
+    refutedRequests = [],
+    pathToMock = '/api/event',
+    awaitedRequestCount,
+    expectedRequestCount,
+    responseDelay,
+    shouldIgnoreRequest,
+    mockRequestTimeout = 3000
+  }
+) {
+  const requestsToExpect = expectedRequestCount
+    ? expectedRequestCount
+    : expectedRequests.length
+  const requestsToAwait = awaitedRequestCount
+    ? awaitedRequestCount
+    : requestsToExpect + refutedRequests.length
 
   const { getRequestList } = await mockManyRequests({
     page,
@@ -66,7 +73,9 @@ export const expectPlausibleInAction = async function (page, {
       return includesSubset(requestBody, bodySubset)
     })
 
-    if (!wasFound) {expectedButNotFoundBodySubsets.push(bodySubset)}
+    if (!wasFound) {
+      expectedButNotFoundBodySubsets.push(bodySubset)
+    }
   })
 
   const refutedButFoundRequestBodies = []
@@ -76,63 +85,79 @@ export const expectPlausibleInAction = async function (page, {
       return includesSubset(requestBody, bodySubset)
     })
 
-    if (found) {refutedButFoundRequestBodies.push(found)}
+    if (found) {
+      refutedButFoundRequestBodies.push(found)
+    }
   })
 
   const expectedBodySubsetsErrorMessage = `The following body subsets were not found from the requests that were made:\n\n${JSON.stringify(expectedButNotFoundBodySubsets, null, 4)}\n\nReceived requests with the following bodies:\n\n${JSON.stringify(requestBodies, null, 4)}`
-  expect(expectedButNotFoundBodySubsets, expectedBodySubsetsErrorMessage).toHaveLength(0)
+  expect(
+    expectedButNotFoundBodySubsets,
+    expectedBodySubsetsErrorMessage
+  ).toHaveLength(0)
 
   const refutedBodySubsetsErrorMessage = `The following requests were made, but were not expected:\n\n${JSON.stringify(refutedButFoundRequestBodies, null, 4)}`
-  expect(refutedButFoundRequestBodies, refutedBodySubsetsErrorMessage).toHaveLength(0)
+  expect(
+    refutedButFoundRequestBodies,
+    refutedBodySubsetsErrorMessage
+  ).toHaveLength(0)
 
   const unexpectedRequestBodiesErrorMessage = `Expected ${requestsToExpect} requests, but received ${requestBodies.length}:\n\n${JSON.stringify(requestBodies, null, 4)}`
-  expect(requestBodies.length, unexpectedRequestBodiesErrorMessage).toBe(requestsToExpect)
+  expect(requestBodies.length, unexpectedRequestBodiesErrorMessage).toBe(
+    requestsToExpect
+  )
 
   return requestBodies
 }
 
-export const isPageviewEvent = function(requestPostData) {
+export const isPageviewEvent = function (requestPostData) {
   return requestPostData.n === 'pageview'
 }
 
-export const isEngagementEvent = function(requestPostData) {
+export const isEngagementEvent = function (requestPostData) {
   return requestPostData.n === 'engagement'
 }
 
 async function toggleTabVisibility(page, hide) {
   await page.evaluate((hide) => {
-    Object.defineProperty(document, 'visibilityState', { value: hide ? 'hidden' : 'visible', writable: true })
+    Object.defineProperty(document, 'visibilityState', {
+      value: hide ? 'hidden' : 'visible',
+      writable: true
+    })
     Object.defineProperty(document, 'hidden', { value: hide, writable: true })
     document.dispatchEvent(new Event('visibilitychange'))
   }, hide)
 }
 
-export const hideCurrentTab = async function(page) {
+export const hideCurrentTab = async function (page) {
   return toggleTabVisibility(page, true)
 }
 
-export const showCurrentTab = async function(page) {
+export const showCurrentTab = async function (page) {
   return toggleTabVisibility(page, false)
 }
 
 async function setFocus(page, focus) {
   await page.evaluate((focus) => {
-    Object.defineProperty(document, 'hasFocus', { value: () => focus, writable: true })
+    Object.defineProperty(document, 'hasFocus', {
+      value: () => focus,
+      writable: true
+    })
 
     const eventName = focus ? 'focus' : 'blur'
     window.dispatchEvent(new Event(eventName))
   }, focus)
 }
 
-export const focus = async function(page) {
+export const focus = async function (page) {
   return setFocus(page, true)
 }
 
-export const blur = async function(page) {
+export const blur = async function (page) {
   return setFocus(page, false)
 }
 
-export const hideAndShowCurrentTab = async function(page, options = {}) {
+export const hideAndShowCurrentTab = async function (page, options = {}) {
   await hideCurrentTab(page)
   if (options.delay > 0) {
     await delay(options.delay)
@@ -140,7 +165,7 @@ export const hideAndShowCurrentTab = async function(page, options = {}) {
   await showCurrentTab(page)
 }
 
-export const blurAndFocusPage = async function(page, options = {}) {
+export const blurAndFocusPage = async function (page, options = {}) {
   await blur(page)
   if (options.delay > 0) {
     await delay(options.delay)
@@ -163,7 +188,10 @@ export const e = {
 function includesSubset(body, subset) {
   return Object.keys(subset).every((key) => {
     if (typeof subset[key] === 'object' && !subset[key].__expectation__) {
-      return typeof body[key] === 'object' && areFlatObjectsEqual(body[key], subset[key])
+      return (
+        typeof body[key] === 'object' &&
+        areFlatObjectsEqual(body[key], subset[key])
+      )
     } else {
       return checkEqual(body[key], subset[key])
     }
@@ -176,9 +204,9 @@ function areFlatObjectsEqual(obj1, obj2) {
   const keys1 = Object.keys(obj1)
   const keys2 = Object.keys(obj2)
 
-  if (keys1.length !== keys2.length) return false;
+  if (keys1.length !== keys2.length) return false
 
-  return keys1.every(key => checkEqual(obj2[key], obj1[key]))
+  return keys1.every((key) => checkEqual(obj2[key], obj1[key]))
 }
 
 function checkEqual(a, b) {
@@ -189,14 +217,14 @@ function checkEqual(a, b) {
 }
 
 export function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export function switchByMode(cases, mode) {
   switch (mode) {
     case 'web':
       return cases.web
-    case 'esm': 
+    case 'esm':
       return cases.esm
     case 'legacy':
       return cases.legacy
@@ -208,10 +236,10 @@ export function switchByMode(cases, mode) {
 /**
  * This function ensures that the tracker script has attached the event listener before test is run.
  * Note that this race condition happens in the real world as well:
- * Events from features like form submissions, file downloads, outbound links, tagged events 
+ * Events from features like form submissions, file downloads, outbound links, tagged events
  * that work with event handlers registered on the document
  * will not be tracked if the event happens before the tracker script has attached the event listener.
  */
 export function ensurePlausibleInitialized(page) {
-  return page.waitForFunction(() =>(window.plausible?.l === true))
+  return page.waitForFunction(() => window.plausible?.l === true)
 }

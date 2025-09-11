@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { checkManualExtension } from '../../installation_support/check-manual-extension'
 
 function mockSnippet(dataDomain) {
-  return { getAttribute: _ => dataDomain }
+  return { getAttribute: (_) => dataDomain }
 }
 
 test.describe('checkManualExtension', () => {

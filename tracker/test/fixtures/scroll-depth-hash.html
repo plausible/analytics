@@ -1,37 +1,36 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Plausible Playwright tests</title>
+    <script async src="/tracker/js/plausible.hash.local.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Plausible Playwright tests</title>
-  <script async src="/tracker/js/plausible.hash.local.js"></script>
-</head>
+  <body>
+    <nav>
+      <a id="home-link" href="#home">Home</a>
+      <a id="about-link" href="#about">About</a>
+    </nav>
 
-<body>
-  <nav>
-    <a id="home-link" href="#home">Home</a>
-    <a id="about-link" href="#about">About</a>
-  </nav>
+    <div id="content"></div>
 
-  <div id="content"></div>
+    <script>
+      const routes = {
+        '#home': '<h1>Home</h1><p>Welcome to the Home page!</p>',
+        '#about':
+          '<h1>About</h1><p style="height: 2000px;">Learn more about us here</p>'
+      }
 
-  <script>
-    const routes = {
-      '#home': '<h1>Home</h1><p>Welcome to the Home page!</p>',
-      '#about': '<h1>About</h1><p style="height: 2000px;">Learn more about us here</p>',
-    };
+      function loadContent() {
+        const hash = window.location.hash || '#home'
+        const content = routes[hash]
+        document.getElementById('content').innerHTML = content
+      }
 
-    function loadContent() {
-      const hash = window.location.hash || '#home';
-      const content = routes[hash]
-      document.getElementById('content').innerHTML = content;
-    }
-
-    window.addEventListener('hashchange', loadContent);
-    window.addEventListener('DOMContentLoaded', loadContent);
-  </script>
-</body>
-
+      window.addEventListener('hashchange', loadContent)
+      window.addEventListener('DOMContentLoaded', loadContent)
+    </script>
+  </body>
 </html>
