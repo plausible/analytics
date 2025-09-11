@@ -172,6 +172,15 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     end
   end
 
+  defp get_site_with_role(conn, current_user, "rollup:" <> team_identifier) do
+    with true <- Plausible.Auth.is_super_admin?(current_user),
+         %Plausible.Teams.Team{} = team <- Plausible.Teams.get(team_identifier) do
+      {:ok, %{site: Plausible.Site.rollup(team), role: nil, member_type: nil}}
+    else
+      _ -> error_not_found(conn)
+    end
+  end
+
   defp get_site_with_role(conn, current_user, domain) do
     site = Repo.get_by(Plausible.Site, domain: domain)
 

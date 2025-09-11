@@ -26,6 +26,7 @@ defmodule Plausible.Stats.Query do
             revenue_warning: nil,
             remove_unavailable_revenue_metrics: false,
             site_id: nil,
+            rollup_site_ids: nil,
             site_native_stats_start_at: nil,
             # Contains information to determine how to combine legacy and new time on page metrics
             time_on_page_data: %{},
