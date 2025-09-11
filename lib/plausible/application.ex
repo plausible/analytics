@@ -153,6 +153,9 @@ defmodule Plausible.Application do
         endpoint,
         {Oban, Application.get_env(:plausible, Oban)},
         on_ee do
+          Plausible.Ingestion.Analyzer
+        end,
+        on_ee do
           help_scout_vault()
         end
       ]
