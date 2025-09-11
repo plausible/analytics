@@ -28,6 +28,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_parsed_filters(params)
       |> resolve_segments(site)
       |> preload_goals_and_revenue(site)
+      |> put_rollup_site_ids(site)
       |> put_order_by(params)
       |> put_include(site, params)
       |> Query.put_comparison_utc_time_range()
@@ -40,6 +41,13 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     query
   end
+
+  defp put_rollup_site_ids(query, %Plausible.Site{rollup: true} = site) do
+    site_ids = Plausible.Teams.owned_sites_ids(site.team)
+    struct!(query, rollup_site_ids: site_ids)
+  end
+
+  defp put_rollup_site_ids(query, _site), do: query
 
   defp resolve_segments(query, site) do
     with {:ok, preloaded_segments} <-

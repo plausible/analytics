@@ -97,6 +97,30 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  def rollup(conn, params) do
+    team_id = String.to_integer(params["team_id"])
+    team = Plausible.Teams.get!(team_id)
+    site = Plausible.Site.rollup(team)
+
+    render(conn, "stats.html",
+      site: site,
+      site_role: :super_admin,
+      has_goals: false,
+      revenue_goals: [],
+      funnels: [],
+      has_props: false,
+      stats_start_date: ~D[2025-01-01],
+      native_stats_start_date: ~D[2025-01-01],
+      title: "HELLO WORLD",
+      demo: false,
+      flags: get_flags(nil, nil),
+      is_dbip: is_dbip(),
+      segments: [],
+      load_dashboard_js: true,
+      hide_footer?: true
+    )
+  end
+
   on_ee do
     defp list_funnels(site) do
       Plausible.Funnels.list(site)

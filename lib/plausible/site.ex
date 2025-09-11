@@ -62,7 +62,20 @@ defmodule Plausible.Site do
 
     has_many :completed_imports, Plausible.Imported.SiteImport, where: [status: :completed]
 
+    field :rollup, :boolean, virtual: true, default: false
+
     timestamps()
+  end
+
+  def rollup(team) do
+    %Plausible.Site{
+      id: 0,
+      native_stats_start_at: ~N[2018-01-01 00:00:00],
+      stats_start_date: ~D[2018-01-01],
+      rollup: true,
+      domain: "rollup:#{team.id}",
+      team: team
+    }
   end
 
   def new_for_team(team, params) do
