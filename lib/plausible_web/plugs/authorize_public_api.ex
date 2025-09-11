@@ -175,10 +175,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   defp find_site(nil, _api_key), do: {:error, :missing_site_id}
 
-  defp find_site("rollup:" <> team_id, api_key) do
+  defp find_site("rollup:" <> team_identifier, api_key) do
     with true <- Plausible.Auth.is_super_admin?(api_key.user),
-         {team_id, ""} <- Integer.parse(team_id),
-         %Plausible.Teams.Team{} = team <- Plausible.Teams.get(team_id) do
+         %Plausible.Teams.Team{} = team <- Plausible.Teams.get(team_identifier) do
       {:ok, Plausible.Site.rollup(team)}
     else
       _ -> {:error, :invalid_api_key}
