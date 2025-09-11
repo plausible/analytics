@@ -4,4 +4,4 @@
  * so this stub can be used in tests to simulate such behavior.
  */
 export const customSubmitHandlerStub =
-  "event.preventDefault(); console.log('Submitted')"
+  'event.preventDefault(); console.log("Submitted")'
