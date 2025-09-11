@@ -83,7 +83,7 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: /* HTML */ `
-        <form onsubmit="${customSubmitHandlerStub}">
+        <form onsubmit=${customSubmitHandlerStub}>
           <input type="text" /><input type="submit" value="Submit" />
         </form>
       `
@@ -118,7 +118,8 @@ test.describe('form submissions feature is enabled', () => {
           <script>
             function createForm() {
               const form = document.createElement('form')
-              form.setAttribute('onsubmit', '${customSubmitHandlerStub}')
+              /* prettier-ignore */
+              form.onsubmit = ${customSubmitHandlerStub}
               const submit = document.createElement('input')
               submit.type = 'submit'
               submit.value = 'Submit'
@@ -155,7 +156,7 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: /* HTML */ `
-        <form novalidate onsubmit="${customSubmitHandlerStub}">
+        <form novalidate onsubmit=${customSubmitHandlerStub}>
           <input type="email" />
           <input type="submit" value="Submit" />
         </form>
@@ -255,11 +256,11 @@ test.describe('form submissions feature is enabled', () => {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: /* HTML */ `
-        <form onsubmit="${customSubmitHandlerStub}">
+        <form onsubmit=${customSubmitHandlerStub}>
           <h2>Form 1</h2>
           <input type="text" /><input type="submit" value="Submit" />
         </form>
-        <form onsubmit="${customSubmitHandlerStub}">
+        <form onsubmit=${customSubmitHandlerStub}>
           <h2>Form 2</h2>
           <input type="email" />
         </form>
