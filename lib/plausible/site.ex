@@ -74,7 +74,8 @@ defmodule Plausible.Site do
       stats_start_date: ~D[2018-01-01],
       rollup: true,
       domain: "rollup:#{team.id}",
-      team: team
+      team: team,
+      team_id: team.id
     }
   end
 
