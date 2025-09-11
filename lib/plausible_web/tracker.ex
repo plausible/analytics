@@ -153,6 +153,20 @@ defmodule PlausibleWeb.Tracker do
     end
   end
 
+  on_ee do
+    def supported_installation_types do
+      ["manual", "wordpress", "gtm", "npm"]
+    end
+  else
+    def supported_installation_types do
+      ["manual", "wordpress", "npm"]
+    end
+  end
+
+  def fallback_installation_type do
+    "manual"
+  end
+
   # Sync plausible goals with the updated script config
   defp sync_goals(site, original_config, updated_config) do
     [:track_404_pages, :outbound_links, :file_downloads, :form_submissions]

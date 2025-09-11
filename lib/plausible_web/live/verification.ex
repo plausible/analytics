@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.Verification do
         domain: domain,
         has_pageviews?: has_pageviews?,
         component: @component,
-        installation_type: params["installation_type"],
+        installation_type: get_installation_type(params, site, socket.assigns.current_user),
         report_to: self(),
         delay: private[:delay] || 500,
         slowdown: private[:slowdown] || 500,
@@ -149,11 +149,13 @@ defmodule PlausibleWeb.Live.Verification do
       end
 
       domain = socket.assigns.domain
-      installation_type = socket.assigns.installation_type
 
       {:ok, pid} =
         if PlausibleWeb.Tracker.scriptv2?(socket.assigns.site, socket.assigns.current_user) do
-          Verification.Checks.run(socket.assigns.url_to_verify, domain, installation_type,
+          Verification.Checks.run(
+            socket.assigns.url_to_verify,
+            domain,
+            socket.assigns.installation_type,
             report_to: report_to,
             slowdown: socket.assigns.slowdown
           )
@@ -218,6 +220,26 @@ defmodule PlausibleWeb.Live.Verification do
       end
 
     {:noreply, socket}
+  end
+
+  @supported_installation_types_atoms PlausibleWeb.Tracker.supported_installation_types()
+                                      |> Enum.map(&String.to_atom/1)
+  defp get_installation_type(params, site, current_user) do
+    if PlausibleWeb.Tracker.scriptv2?(site, current_user) do
+      cond do
+        params["installation_type"] in PlausibleWeb.Tracker.supported_installation_types() ->
+          params["installation_type"]
+
+        saved_installation_type =
+            PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site).installation_type in @supported_installation_types_atoms ->
+          Atom.to_string(saved_installation_type)
+
+        true ->
+          PlausibleWeb.Tracker.fallback_installation_type()
+      end
+    else
+      params["installation_type"]
+    end
   end
 
   defp schedule_pageviews_check(socket) do
