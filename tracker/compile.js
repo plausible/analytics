@@ -4,19 +4,19 @@ import chokidar from 'chokidar'
 
 const { values } = parseArgs({
   options: {
-    'watch': {
+    watch: {
       type: 'boolean',
       short: 'w'
     },
-    'help': {
-      type: 'boolean',
+    help: {
+      type: 'boolean'
     },
-    'suffix': {
+    suffix: {
       type: 'string',
       default: ''
     },
     'web-snippet': {
-      type: 'boolean',
+      type: 'boolean'
     }
   }
 })
@@ -24,11 +24,19 @@ const { values } = parseArgs({
 if (values.help) {
   console.log('Usage: node compile.js [flags]')
   console.log('Options:')
-  console.log('  --watch, -w                               Watch src/ directory for changes and recompile')
-  console.log('  --suffix, -s                              Suffix to add to the output file name. Used for testing script size changes')
-  console.log('  --help                                    Show this help message')
-  console.log('  --web-snippet                             Compile and output the web snippet')
-  process.exit(0);
+  console.log(
+    '  --watch, -w                               Watch src/ directory for changes and recompile'
+  )
+  console.log(
+    '  --suffix, -s                              Suffix to add to the output file name. Used for testing script size changes'
+  )
+  console.log(
+    '  --help                                    Show this help message'
+  )
+  console.log(
+    '  --web-snippet                             Compile and output the web snippet'
+  )
+  process.exit(0)
 }
 
 if (values['web-snippet']) {

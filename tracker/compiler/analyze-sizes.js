@@ -23,18 +23,18 @@ import variantsFile from './variants.json' with { type: 'json' }
 
 const { values } = parseArgs({
   options: {
-    'help': {
-      type: 'boolean',
+    help: {
+      type: 'boolean'
     },
-    'currentSuffix': {
+    currentSuffix: {
       type: 'string',
       default: 'current'
     },
-    'baselineSuffix': {
+    baselineSuffix: {
       type: 'string',
       default: 'master'
     },
-    'usePreviousData': {
+    usePreviousData: {
       type: 'boolean',
       default: false
     }
@@ -43,8 +43,8 @@ const { values } = parseArgs({
 
 const { currentSuffix, baselineSuffix } = values
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const TRACKER_FILES_DIR = path.join(__dirname, "../../priv/tracker/js/")
-const NPM_PACKAGE_FILES_DIR = path.join(__dirname, "../npm_package")
+const TRACKER_FILES_DIR = path.join(__dirname, '../../priv/tracker/js/')
+const NPM_PACKAGE_FILES_DIR = path.join(__dirname, '../npm_package')
 
 const HEADER = ['', 'Brotli', 'Gzip', 'Uncompressed']
 
@@ -52,22 +52,34 @@ if (values.help) {
   console.log('Usage: node analyze-sizes.js master current')
   console.log('Options:')
   console.log('  --help               Show this help message')
-  console.log('  --currentSuffix      The suffix of the current script variants (see suffix flag for compile.js). Default: current')
-  console.log('  --baselineSuffix     The suffix of the previous script variants (see suffix flag for compile.js). Default: master')
-  console.log('  --usePreviousData    Use data from a previous run, speeding up the analysis.')
-  process.exit(0);
+  console.log(
+    '  --currentSuffix      The suffix of the current script variants (see suffix flag for compile.js). Default: current'
+  )
+  console.log(
+    '  --baselineSuffix     The suffix of the previous script variants (see suffix flag for compile.js). Default: master'
+  )
+  console.log(
+    '  --usePreviousData    Use data from a previous run, speeding up the analysis.'
+  )
+  process.exit(0)
 }
-
 
 let fileData
 if (values.usePreviousData) {
-  fileData = JSON.parse(fs.readFileSync(path.join(__dirname, '.analyze-sizes.json'), 'utf8'))
+  fileData = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '.analyze-sizes.json'), 'utf8')
+  )
 } else {
   fileData = readPlausibleScriptSizes()
-  fs.writeFileSync(path.join(__dirname, '.analyze-sizes.json'), JSON.stringify(fileData))
+  fs.writeFileSync(
+    path.join(__dirname, '.analyze-sizes.json'),
+    JSON.stringify(fileData)
+  )
 }
 
-const manualVariants = variantsFile.manualVariants.map((variant) => `'${variant.name}'`).join(', ')
+const manualVariants = variantsFile.manualVariants
+  .map((variant) => `'${variant.name}'`)
+  .join(', ')
 const ctes = `
 WITH
   array(${manualVariants}) as manual_variants,
@@ -99,21 +111,27 @@ WITH
   )
 `
 
-const mainVariantResults = clickhouseLocal(`
+const mainVariantResults = clickhouseLocal(
+  `
   ${ctes}
   SELECT *
   FROM data
   WHERE not is_legacy_variant
   ORDER BY variant
-`, fileData)
+`,
+  fileData
+)
 
-const legacyVariantResults = clickhouseLocal(`
+const legacyVariantResults = clickhouseLocal(
+  `
   ${ctes}
   SELECT *
   FROM data
   WHERE is_legacy_variant AND has(important_variants, variant)
   ORDER BY length(variant)
-`, fileData)
+`,
+  fileData
+)
 
 const rowAsMap = `
 map(
@@ -133,7 +151,8 @@ map(
 )
 `
 
-const [summary] = clickhouseLocal(`
+const [summary] = clickhouseLocal(
+  `
   ${ctes}
   SELECT
     count() AS total_variants,
@@ -168,26 +187,45 @@ const [summary] = clickhouseLocal(`
       'brotli_increase_percentage', toString(median(brotli_increase_percentage))
     ) AS median_result
   FROM data
-`, fileData)
+`,
+  fileData
+)
 
-console.log(`Analyzed ${summary.total_variants} tracker script variants for size changes.`)
-console.log(`The following tables summarize the results, with comparison with the baseline version in parentheses.\n`)
+console.log(
+  `Analyzed ${summary.total_variants} tracker script variants for size changes.`
+)
+console.log(
+  `The following tables summarize the results, with comparison with the baseline version in parentheses.\n`
+)
 
-console.log("Main variants:")
+console.log('Main variants:')
 console.log(createMarkdownTable(mainVariantResults))
 
-console.log("\nImportant legacy variants:")
+console.log('\nImportant legacy variants:')
 console.log(createMarkdownTable(legacyVariantResults))
 
-console.log("\nSummary:")
-console.log(createMarkdownTable([
-  { ...summary.largest_variant, variant: `Largest variant (${summary.largest_variant.variant})`},
-  { ...summary.max_increase_variant, variant: `Max change (${summary.max_increase_variant.variant})`},
-  { ...summary.min_increase_variant, variant: `Min change (${summary.min_increase_variant.variant})`},
-  summary.median_result
-]))
+console.log('\nSummary:')
+console.log(
+  createMarkdownTable([
+    {
+      ...summary.largest_variant,
+      variant: `Largest variant (${summary.largest_variant.variant})`
+    },
+    {
+      ...summary.max_increase_variant,
+      variant: `Max change (${summary.max_increase_variant.variant})`
+    },
+    {
+      ...summary.min_increase_variant,
+      variant: `Min change (${summary.min_increase_variant.variant})`
+    },
+    summary.median_result
+  ])
+)
 
-console.log(`\nIn total, ${summary.brotli_increase_percentaged_variants} variants brotli size increased and ${summary.brotli_decreased_variants} variants brotli size decreased.`)
+console.log(
+  `\nIn total, ${summary.brotli_increase_percentaged_variants} variants brotli size increased and ${summary.brotli_decreased_variants} variants brotli size decreased.`
+)
 
 function createMarkdownTable(rows) {
   return markdownTable([HEADER].concat(rows.map(markdownRow)))
@@ -207,7 +245,6 @@ function markdownRow(row) {
     sizeColumn(row, 'uncompressed')
   ]
 }
-
 
 function sizeColumn(row, key) {
   const currentSize = row[`current_${key}`]
@@ -230,11 +267,13 @@ function addSign(value) {
 }
 
 function readPlausibleScriptSizes() {
-  const trackerFileSizes = fs.readdirSync(TRACKER_FILES_DIR)
+  const trackerFileSizes = fs
+    .readdirSync(TRACKER_FILES_DIR)
     .filter(isRelevantFile)
     .map((filename) => readFileSize(filename, TRACKER_FILES_DIR))
 
-  const npmPackageFileSizes = fs.readdirSync(NPM_PACKAGE_FILES_DIR)
+  const npmPackageFileSizes = fs
+    .readdirSync(NPM_PACKAGE_FILES_DIR)
     .filter(isRelevantFile)
     .map((filename) => readFileSize(filename, NPM_PACKAGE_FILES_DIR))
 
@@ -246,7 +285,10 @@ function readFileSize(filename, basepath) {
   const [_, variant, suffix] = /(.*)[.]js(.*)/.exec(filename)
 
   return {
-    variant: (basepath === TRACKER_FILES_DIR ? `${variant}.js` : 'npm_package/plausible.js'),
+    variant:
+      basepath === TRACKER_FILES_DIR
+        ? `${variant}.js`
+        : 'npm_package/plausible.js',
     suffix,
     uncompressed: fs.statSync(filePath).size,
     gzip: execSync(`gzip -c -9 "${filePath}"`).length,
@@ -255,18 +297,23 @@ function readFileSize(filename, basepath) {
 }
 
 function isRelevantFile(filename) {
-  return !['.gitkeep', 'p.js'].includes(filename) &&
+  return (
+    !['.gitkeep', 'p.js'].includes(filename) &&
     filename.includes('.js') &&
     (filename.includes(currentSuffix) || filename.includes(baselineSuffix))
+  )
 }
 
 function clickhouseLocal(sql, inputLines = null) {
   const options = {}
   if (inputLines) {
-    options.input = inputLines.map(JSON.stringify).join("\n")
+    options.input = inputLines.map(JSON.stringify).join('\n')
   }
 
-  const result = execSync(`clickhouse-local --query="${sql}" --format=JSON ${inputLines ? "--input-format=JSONLines" : ""}`, options)
+  const result = execSync(
+    `clickhouse-local --query="${sql}" --format=JSON ${inputLines ? '--input-format=JSONLines' : ''}`,
+    options
+  )
   const json = JSON.parse(result.toString())
 
   return json.data

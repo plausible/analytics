@@ -45,7 +45,7 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<a href="${filePath}">📥</a>`
+        bodyContent: /* HTML */ `<a href="${filePath}">📥</a>`
       })
 
       await expectPlausibleInAction(page, {
@@ -90,7 +90,7 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<a href="${filePath}">📥</a>`
+        bodyContent: /* HTML */ `<a href="${filePath}">📥</a>`
       })
 
       await expectPlausibleInAction(page, {
@@ -149,7 +149,8 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<a href="${isoFileURL}" target="_blank">📥</a><a href="${csvFileURL}" target="_blank">📥</a>`
+        bodyContent: /* HTML */ `<a href="${isoFileURL}" target="_blank">📥</a
+          ><a href="${csvFileURL}" target="_blank">📥</a>`
       })
       await page.goto(url)
       await expectPlausibleInAction(page, {
@@ -193,7 +194,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${filePath}">📥</a>`
+        bodyContent: /* HTML */ `<a href="${filePath}">📥</a>`
       })
       await page.goto(url)
 
@@ -230,7 +231,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${pdfUrl}" target="_blank">📥</a>`
+        bodyContent: /* HTML */ `<a href="${pdfUrl}" target="_blank">📥</a>`
       })
       await page.goto(url)
 
@@ -270,7 +271,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${pdfUrl}">📥</a>`
+        bodyContent: /* HTML */ `<a href="${pdfUrl}">📥</a>`
       })
       await page.goto(url)
 
@@ -305,7 +306,9 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${pdfUrl}"><div><span>📥</span></div></a>`
+        bodyContent: /* HTML */ `<a href="${pdfUrl}"
+          ><div><span>📥</span></div></a
+        >`
       })
       await page.goto(url)
 
@@ -350,7 +353,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${pdfUrl}">Download</a>`
+        bodyContent: /* HTML */ `<a href="${pdfUrl}">Download</a>`
       })
       await page.goto(url)
       await page.click('a')
@@ -396,7 +399,9 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${pdfUrl}?user=foo%secret=123">Download PDF</a>`
+        bodyContent: /* HTML */ `<a href="${pdfUrl}?user=foo%secret=123"
+          >Download PDF</a
+        >`
       })
       await page.goto(url)
 
@@ -430,7 +435,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="https://example.com/file.iso">📥</a>`
+        bodyContent: /* HTML */ `<a href="https://example.com/file.iso">📥</a>`
       })
       await page.goto(url)
 
@@ -476,7 +481,8 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${isoFileURL}" target="_blank">📥</a><a href="${csvFileURL}" target="_blank">📥</a>`
+        bodyContent: /* HTML */ `<a href="${isoFileURL}" target="_blank">📥</a
+          ><a href="${csvFileURL}" target="_blank">📥</a>`
       })
       await page.goto(url)
       await expectPlausibleInAction(page, {
@@ -517,9 +523,11 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><a href="${csvFileURL}"><circle cx="50" cy="50" r="50" /></a></svg>
-            `
+        bodyContent: /* HTML */ `
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <a href="${csvFileURL}"><circle cx="50" cy="50" r="50" /></a>
+          </svg>
+        `
       })
 
       const pageErrors: Error[] = []
@@ -603,7 +611,9 @@ test.describe('file downloads feature when using legacy .compat extension', () =
         testId,
         scriptConfig:
           '<script id="plausible" async src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
-        bodyContent: `<a ${linkAttributes} href="${filePath}"><h1>📥</h1></a>`
+        bodyContent: /* HTML */ `<a ${linkAttributes} href="${filePath}"
+          ><h1>📥</h1></a
+        >`
       })
       await page.goto(url)
       await page.click(click.element, { modifiers: click.modifiers })
@@ -668,7 +678,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
         testId,
         scriptConfig:
           '<script id="plausible" async src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
-        bodyContent: `<a href="${filePath}">📥</a>`
+        bodyContent: /* HTML */ `<a href="${filePath}">📥</a>`
       })
       await page.goto(url)
 
@@ -721,7 +731,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       testId,
       scriptConfig:
         '<script id="plausible" async src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
-      bodyContent: `<a href="${filePath}">📥</a>`
+      bodyContent: /* HTML */ `<a href="${filePath}">📥</a>`
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(filePath, {

@@ -47,7 +47,7 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<a href="${outboundUrl}">➡️</a>`
+        bodyContent: /* HTML */ `<a href="${outboundUrl}">➡️</a>`
       })
 
       await expectPlausibleInAction(page, {
@@ -94,7 +94,7 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<a href="${outboundUrl}">➡️</a>`
+        bodyContent: /* HTML */ `<a href="${outboundUrl}">➡️</a>`
       })
 
       await expectPlausibleInAction(page, {
@@ -169,7 +169,7 @@ for (const mode of ['legacy', 'web'])
             },
             mode
           ),
-          bodyContent: `<a href="${outboundUrl}"><h1>➡️</h1></a>`
+          bodyContent: /* HTML */ `<a href="${outboundUrl}"><h1>➡️</h1></a>`
         })
         await page.goto(url)
 
@@ -219,7 +219,7 @@ for (const mode of ['legacy', 'web'])
           },
           mode
         ),
-        bodyContent: `<a href="${outboundUrl}">>➡️</a>`
+        bodyContent: /* HTML */ `<a href="${outboundUrl}">>➡️</a>`
       })
       await page.goto(url)
       await page.click('a')
@@ -268,7 +268,7 @@ for (const mode of ['legacy', 'web'])
           },
           mode
         ),
-        bodyContent: `
+        bodyContent: /* HTML */ `
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <a href="${outboundUrl}">
               <circle cx="50" cy="50" r="50" />
@@ -359,7 +359,9 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         testId,
         scriptConfig:
           '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-        bodyContent: `<a ${linkAttributes} href="${outboundUrl}"><h1>➡️</h1></a>`
+        bodyContent: /* HTML */ `<a ${linkAttributes} href="${outboundUrl}"
+          ><h1>➡️</h1></a
+        >`
       })
       await page.goto(url)
 
@@ -402,7 +404,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       testId,
       scriptConfig:
         '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-      bodyContent: `<a href="${outboundUrl}">📥</a>`
+      bodyContent: /* HTML */ `<a href="${outboundUrl}">📥</a>`
     })
     await page.goto(url)
 
@@ -454,7 +456,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       testId,
       scriptConfig:
         '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-      bodyContent: `<a href="${outboundUrl}">➡️</a>`
+      bodyContent: /* HTML */ `<a href="${outboundUrl}">➡️</a>`
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(outboundUrl, {
@@ -495,7 +497,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       testId,
       scriptConfig:
         '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-      bodyContent: `
+      bodyContent: /* HTML */ `
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <a href="${outboundUrl}">
             <circle cx="50" cy="50" r="50" />

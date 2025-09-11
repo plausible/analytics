@@ -592,13 +592,18 @@ test.describe('installed plausible esm variant', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
-        {
-          domain: 'example.com',
-          endpoint: `https://plausible.io/api/event`,
-          captureOnLocalhost: true
-        }
-      )})</script>`,
+      scriptConfig: /* HTML */ `<script type="module">
+        import { init, track } from '/tracker/js/npm_package/plausible.js'
+        window.init = init
+        window.track = track
+        init(
+          ${JSON.stringify({
+            domain: 'example.com',
+            endpoint: `https://plausible.io/api/event`,
+            captureOnLocalhost: true
+          })}
+        )
+      </script>`,
       bodyContent: ''
     })
 
@@ -652,13 +657,18 @@ test.describe('installed plausible esm variant', () => {
 
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
-        {
-          domain: 'example.com',
-          endpoint: `/events`,
-          captureOnLocalhost: true
-        }
-      )})</script>`,
+      scriptConfig: /* HTML */ `<script type="module">
+        import { init, track } from '/tracker/js/npm_package/plausible.js'
+        window.init = init
+        window.track = track
+        init(
+          ${JSON.stringify({
+            domain: 'example.com',
+            endpoint: `/events`,
+            captureOnLocalhost: true
+          })}
+        )
+      </script>`,
       bodyContent: ''
     })
 
@@ -701,13 +711,18 @@ test.describe('installed plausible esm variant', () => {
   }, { testId }) => {
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
-        {
-          domain: 'example.com',
-          endpoint: `https://example.com/events`,
-          captureOnLocalhost: true
-        }
-      )})</script>`,
+      scriptConfig: /* HTML */ `<script type="module">
+        import { init, track } from '/tracker/js/npm_package/plausible.js'
+        window.init = init
+        window.track = track
+        init(
+          ${JSON.stringify({
+            domain: 'example.com',
+            endpoint: `https://example.com/events`,
+            captureOnLocalhost: true
+          })}
+        )
+      </script>`,
       bodyContent: ''
     })
 
@@ -761,13 +776,18 @@ test.describe('installed plausible esm variant', () => {
   }, { testId }) => {
     const { url } = await initializePageDynamically(page, {
       testId,
-      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
-        {
-          domain: 'example.com/foobar',
-          endpoint: 'invalid:/plausible.io/api/event',
-          captureOnLocalhost: true
-        }
-      )})</script>`,
+      scriptConfig: /* HTML */ `<script type="module">
+        import { init, track } from '/tracker/js/npm_package/plausible.js'
+        window.init = init
+        window.track = track
+        init(
+          ${JSON.stringify({
+            domain: 'example.com/foobar',
+            endpoint: 'invalid:/plausible.io/api/event',
+            captureOnLocalhost: true
+          })}
+        )
+      </script>`,
       bodyContent: ''
     })
 

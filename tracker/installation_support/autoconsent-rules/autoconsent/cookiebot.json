@@ -1,9 +1,21 @@
 {
-    "name": "cookiebot",
-    "prehideSelectors": [],
-    "detectCmp": [{ "exists": "#CybotCookiebotDialogBodyButtonAccept, #CybotCookiebotDialogBody, #CybotCookiebotDialogBodyLevelButtonPreferences, #cb-cookieoverlay, #CybotCookiebotDialog" }],
-    "detectPopup": [{ "visible": "#CybotCookiebotDialogBodyButtonAccept, #CybotCookiebotDialogBody, #CybotCookiebotDialogBodyLevelButtonPreferences, #cb-cookieoverlay, #CybotCookiebotDialog, #cookiebanner" }],
-    "optIn": [{ "waitForThenClick": "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll" }],
-    "optOut": [],
-    "test": []
+  "name": "cookiebot",
+  "prehideSelectors": [],
+  "detectCmp": [
+    {
+      "exists": "#CybotCookiebotDialogBodyButtonAccept, #CybotCookiebotDialogBody, #CybotCookiebotDialogBodyLevelButtonPreferences, #cb-cookieoverlay, #CybotCookiebotDialog"
+    }
+  ],
+  "detectPopup": [
+    {
+      "visible": "#CybotCookiebotDialogBodyButtonAccept, #CybotCookiebotDialogBody, #CybotCookiebotDialogBodyLevelButtonPreferences, #cb-cookieoverlay, #CybotCookiebotDialog, #cookiebanner"
+    }
+  ],
+  "optIn": [
+    {
+      "waitForThenClick": "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll"
+    }
+  ],
+  "optOut": [],
+  "test": []
 }

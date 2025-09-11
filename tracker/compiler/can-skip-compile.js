@@ -15,19 +15,19 @@ const COMPILE_DEPENDENCIES = [
 ]
 
 function currentHash() {
-  const combinedHash = crypto.createHash('sha256');
+  const combinedHash = crypto.createHash('sha256')
 
   for (const filePath of COMPILE_DEPENDENCIES) {
     try {
-      const fileContent = fs.readFileSync(filePath);
-      const fileHash = crypto.createHash('sha256').update(fileContent).digest();
-      combinedHash.update(fileHash);
+      const fileContent = fs.readFileSync(filePath)
+      const fileHash = crypto.createHash('sha256').update(fileContent).digest()
+      combinedHash.update(fileHash)
     } catch (error) {
-      throw new Error(`Failed to read or hash ${filePath}: ${error.message}`);
+      throw new Error(`Failed to read or hash ${filePath}: ${error.message}`)
     }
   }
 
-  return combinedHash.digest('hex');
+  return combinedHash.digest('hex')
 }
 
 function lastHash() {

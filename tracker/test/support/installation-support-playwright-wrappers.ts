@@ -14,8 +14,13 @@ const DETECTOR_JS_VARIANT = variantsFile.manualVariants.find(
 )
 
 export async function executeVerifyV2(
-    page: Page,
-    { responseHeaders, maxAttempts, timeoutBetweenAttemptsMs, ...functionContext }: VerifyV2Args & { maxAttempts: number, timeoutBetweenAttemptsMs: number }
+  page: Page,
+  {
+    responseHeaders,
+    maxAttempts,
+    timeoutBetweenAttemptsMs,
+    ...functionContext
+  }: VerifyV2Args & { maxAttempts: number; timeoutBetweenAttemptsMs: number }
 ): Promise<VerifyV2Result> {
   const verifierCode = (await compileFile(VERIFIER_V2_JS_VARIANT, {
     returnCode: true
@@ -26,34 +31,38 @@ export async function executeVerifyV2(
       await page.evaluate(verifierCode) // injects window.verifyPlausibleInstallation
       return await page.evaluate(
         // @ts-expect-error - window.verifyPlausibleInstallation has been injected
-        (c) => {return window.verifyPlausibleInstallation(c)},
-        {...functionContext, responseHeaders}
-      );
+        (c) => {
+          return window.verifyPlausibleInstallation(c)
+        },
+        { ...functionContext, responseHeaders }
+      )
     }
 
-    let lastError;
+    let lastError
     for (let attempts = 1; attempts <= maxAttempts; attempts++) {
       try {
-        const output = await verify();
+        const output = await verify()
         return {
           data: {
             ...output.data,
             attempts
-          },
-        };
+          }
+        }
       } catch (error) {
-        lastError = error;
+        lastError = error
         if (
-          typeof error?.message === "string" &&
-          error.message.toLowerCase().includes("execution context")
+          typeof error?.message === 'string' &&
+          error.message.toLowerCase().includes('execution context')
         ) {
-          await new Promise((resolve) => setTimeout(resolve, timeoutBetweenAttemptsMs));
-          continue;
+          await new Promise((resolve) =>
+            setTimeout(resolve, timeoutBetweenAttemptsMs)
+          )
+          continue
         }
         throw error
       }
     }
-    throw lastError;
+    throw lastError
   } catch (error) {
     return {
       data: {
@@ -80,10 +89,7 @@ export async function verifyV1(page, context) {
   return await page.evaluate(
     async ({ expectedDataDomain, debug }) => {
       // @ts-expect-error - window.verifyPlausibleInstallation has been injected
-      return await window.verifyPlausibleInstallation(
-        expectedDataDomain,
-        debug
-      )
+      return await window.verifyPlausibleInstallation(expectedDataDomain, debug)
     },
     { expectedDataDomain, debug }
   )

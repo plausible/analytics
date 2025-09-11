@@ -1,30 +1,47 @@
-import { expect } from "@playwright/test"
-import { expectPlausibleInAction, hideAndShowCurrentTab, focus, blur, blurAndFocusPage, tracker_script_version } from './support/test-utils'
+import { expect } from '@playwright/test'
+import {
+  expectPlausibleInAction,
+  hideAndShowCurrentTab,
+  focus,
+  blur,
+  blurAndFocusPage,
+  tracker_script_version
+} from './support/test-utils'
 import { test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 
 test.describe('engagement events', () => {
-  test('sends an engagement event with time measurement when navigating to the next page', async ({ page }) => {
+  test('sends an engagement event with time measurement when navigating to the next page', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     await page.waitForTimeout(1000)
 
     const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`, v: tracker_script_version}]
+      expectedRequests: [
+        {
+          n: 'engagement',
+          u: `${LOCAL_SERVER_ADDR}/engagement.html`,
+          v: tracker_script_version
+        }
+      ]
     })
 
     expect(request.e).toBeGreaterThan(1000)
     expect(request.e).toBeLessThan(1500)
   })
 
-  test('sends an event and a pageview on hash-based SPA navigation', async ({ page }) => {
+  test('sends an event and a pageview on hash-based SPA navigation', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-hash.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     await page.waitForTimeout(1000)
@@ -32,8 +49,11 @@ test.describe('engagement events', () => {
     const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#hash-nav'),
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`}
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html` },
+        {
+          n: 'pageview',
+          u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`
+        }
       ]
     })
 
@@ -41,10 +61,12 @@ test.describe('engagement events', () => {
     expect(request.e).toBeLessThan(1500)
   })
 
-  test('sends an event and a pageview on history-based SPA navigation', async ({ page }) => {
+  test('sends an event and a pageview on history-based SPA navigation', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     await page.waitForTimeout(1000)
@@ -52,8 +74,8 @@ test.describe('engagement events', () => {
     const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#history-nav'),
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/another-page`}
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` },
+        { n: 'pageview', u: `${LOCAL_SERVER_ADDR}/another-page` }
       ]
     })
 
@@ -61,10 +83,12 @@ test.describe('engagement events', () => {
     expect(request.e).toBeLessThan(1500)
   })
 
-  test('sends engagements when pageviews are triggered manually on a SPA', async ({ page }) => {
+  test('sends engagements when pageviews are triggered manually on a SPA', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-hash-manual.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     await page.waitForTimeout(1000)
@@ -72,8 +96,8 @@ test.describe('engagement events', () => {
     const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#about-us-hash-link'),
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/#home`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/#about-us`}
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/#home` },
+        { n: 'pageview', u: `${LOCAL_SERVER_ADDR}/#about-us` }
       ]
     })
 
@@ -86,45 +110,53 @@ test.describe('engagement events', () => {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#pageview-trigger-custom-url'),
-      expectedRequests: [{n: 'pageview', u: 'https://example.com/custom/location'}],
+      expectedRequests: [
+        { n: 'pageview', u: 'https://example.com/custom/location' }
+      ]
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', u: 'https://example.com/custom/location'}]
+      expectedRequests: [
+        { n: 'engagement', u: 'https://example.com/custom/location' }
+      ]
     })
   })
 
-  test('does not send an event when pageview was not sent in manual mode', async ({ page }) => {
+  test('does not send an event when pageview was not sent in manual mode', async ({
+    page
+  }) => {
     await page.goto('/engagement-manual.html')
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      refutedRequests: [{n: 'engagement'}]
+      refutedRequests: [{ n: 'engagement' }]
     })
   })
 
-  test('script.exclusions.hash.js sends an event only from URLs where a pageview was sent', async ({ page }) => {
+  test('script.exclusions.hash.js sends an event only from URLs where a pageview was sent', async ({
+    page
+  }) => {
     const pageBaseURL = `${LOCAL_SERVER_ADDR}/engagement-hash-exclusions.html`
 
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-hash-exclusions.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     // After the initial pageview is sent, navigate to ignored page ->
     // engagement event is sent from the initial page URL
     await expectPlausibleInAction(page, {
       action: () => page.click('#ignored-hash-link'),
-      expectedRequests: [{n: 'engagement', u: pageBaseURL, h: 1}]
+      expectedRequests: [{ n: 'engagement', u: pageBaseURL, h: 1 }]
     })
 
     // Navigate from ignored page to a tracked page ->
     // no engagement from the current page, pageview on the next page
     await expectPlausibleInAction(page, {
       action: () => page.click('#hash-link-1'),
-      expectedRequests: [{n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1}],
-      refutedRequests: [{n: 'engagement'}]
+      expectedRequests: [{ n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1 }],
+      refutedRequests: [{ n: 'engagement' }]
     })
 
     // Navigate from a tracked page to another tracked page ->
@@ -132,94 +164,109 @@ test.describe('engagement events', () => {
     await expectPlausibleInAction(page, {
       action: () => page.click('#hash-link-2'),
       expectedRequests: [
-        {n: 'engagement', u: `${pageBaseURL}#hash1`, h: 1},
-        {n: 'pageview', u: `${pageBaseURL}#hash2`, h: 1}
+        { n: 'engagement', u: `${pageBaseURL}#hash1`, h: 1 },
+        { n: 'pageview', u: `${pageBaseURL}#hash2`, h: 1 }
       ]
     })
   })
 
-  test('sends an event with the same props as pageview (manual extension)', async ({ page }) => {
+  test('sends an event with the same props as pageview (manual extension)', async ({
+    page
+  }) => {
     await page.goto('/engagement-manual.html')
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#pageview-trigger-custom-props'),
-      expectedRequests: [{n: 'pageview', p: {author: 'John'}}],
+      expectedRequests: [{ n: 'pageview', p: { author: 'John' } }]
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', p: {author: 'John'}}]
+      expectedRequests: [{ n: 'engagement', p: { author: 'John' } }]
     })
   })
 
-  test('sends an event with the same props as pageview (pageview-props extension)', async ({ page }) => {
+  test('sends an event with the same props as pageview (pageview-props extension)', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-pageview-props.html'),
-      expectedRequests: [{n: 'pageview', p: {author: 'John', index: "0"}}],
+      expectedRequests: [{ n: 'pageview', p: { author: 'John', index: '0' } }]
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', p: {author: 'John', index: "0"}}]
+      expectedRequests: [{ n: 'engagement', p: { author: 'John', index: '0' } }]
     })
   })
 
-  test('pageview props with custom events and values changing mid-view (pageview-props extension)', async ({ page }) => {
+  test('pageview props with custom events and values changing mid-view (pageview-props extension)', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-pageview-props.html'),
-      expectedRequests: [{n: 'pageview', p: {author: 'John', index: "0"}}],
+      expectedRequests: [{ n: 'pageview', p: { author: 'John', index: '0' } }]
     })
 
     await page.click('#increment-event-index')
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#custom-event-button'),
-      expectedRequests: [{n: 'Custom event', p: {author: 'Karl', index: "1"}}]
+      expectedRequests: [
+        { n: 'Custom event', p: { author: 'Karl', index: '1' } }
+      ]
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', p: {author: 'John', index: "0"}}]
+      expectedRequests: [{ n: 'engagement', p: { author: 'John', index: '0' } }]
     })
   })
 
-  test('sends an event with the same props as pageview (hash navigation / pageview-props extension)', async ({ page }) => {
+  test('sends an event with the same props as pageview (hash navigation / pageview-props extension)', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-hash-pageview-props.html'),
-      expectedRequests: [{n: 'pageview', p: {}}],
+      expectedRequests: [{ n: 'pageview', p: {} }]
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#john-post'),
       expectedRequests: [
-        {n: 'engagement', p: {}},
-        {n: 'pageview', p: {author: 'john'}}
+        { n: 'engagement', p: {} },
+        { n: 'pageview', p: { author: 'john' } }
       ]
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#jane-post'),
       expectedRequests: [
-        {n: 'engagement', p: {author: 'john'}},
-        {n: 'pageview', p: {author: 'jane'}}
+        { n: 'engagement', p: { author: 'john' } },
+        { n: 'pageview', p: { author: 'jane' } }
       ]
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#home'),
       expectedRequests: [
-        {n: 'engagement', p: {author: 'jane'}},
-        {n: 'pageview', p: {}}
+        { n: 'engagement', p: { author: 'jane' } },
+        { n: 'pageview', p: {} }
       ]
     })
   })
 
-  test('sends an event when plausible API is slow and user navigates away before response is received', async ({ page, browserName }) => {
+  test('sends an event when plausible API is slow and user navigates away before response is received', async ({
+    page,
+    browserName
+  }) => {
     test.skip(browserName === 'chromium', 'flaky')
 
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
-      expectedRequests: [{n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+      expectedRequests: [
+        { n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html` }
+      ]
     })
 
     await expectPlausibleInAction(page, {
@@ -229,47 +276,65 @@ test.describe('engagement events', () => {
         await page.click('#back-button-trigger')
       },
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John', index: "0"}},
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John', index: "0"}},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html`}
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` },
+        {
+          n: 'pageview',
+          u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`,
+          p: { author: 'John', index: '0' }
+        },
+        {
+          n: 'engagement',
+          u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`,
+          p: { author: 'John', index: '0' }
+        },
+        { n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html` }
       ],
       responseDelay: 1000
     })
   })
 
-  test('sends engagement events when tab toggles between foreground and background', async ({ page }) => {
+  test('sends engagement events when tab toggles between foreground and background', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     const [request1] = await expectPlausibleInAction(page, {
-      action: () => hideAndShowCurrentTab(page, {delay: 2000}),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+      action: () => hideAndShowCurrentTab(page, { delay: 2000 }),
+      expectedRequests: [
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` }
+      ]
     })
     expect(request1.e).toBeLessThan(500)
 
     await page.waitForTimeout(3000)
 
     const [request2] = await expectPlausibleInAction(page, {
-      action: () => hideAndShowCurrentTab(page, {delay: 2000}),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+      action: () => hideAndShowCurrentTab(page, { delay: 2000 }),
+      expectedRequests: [
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` }
+      ]
     })
 
     expect(request2.e).toBeGreaterThan(3000)
     expect(request2.e).toBeLessThan(3500)
   })
 
-  test('does not send engagement events when tab is only open for a short time until over 3000ms has passed', async ({ page }) => {
+  test('does not send engagement events when tab is only open for a short time until over 3000ms has passed', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     const [request1] = await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+      expectedRequests: [
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` }
+      ]
     })
     expect(request1.e).toBeLessThan(500)
 
@@ -277,15 +342,17 @@ test.describe('engagement events', () => {
 
     await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page),
-      refutedRequests: [{n: 'engagement'}],
+      refutedRequests: [{ n: 'engagement' }],
       mockRequestTimeout: 100
     })
 
     await page.waitForTimeout(2500)
 
     const [request2] = await expectPlausibleInAction(page, {
-      action: () => hideAndShowCurrentTab(page, {delay: 3000}),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+      action: () => hideAndShowCurrentTab(page, { delay: 3000 }),
+      expectedRequests: [
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` }
+      ]
     })
 
     // Sum of both visibility times
@@ -296,7 +363,7 @@ test.describe('engagement events', () => {
   test('tracks engagement time properly in a SPA', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-hash.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     await page.waitForTimeout(1000)
@@ -304,8 +371,11 @@ test.describe('engagement events', () => {
     const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#hash-nav'),
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`}
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html` },
+        {
+          n: 'pageview',
+          u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`
+        }
       ]
     })
 
@@ -315,8 +385,14 @@ test.describe('engagement events', () => {
     const [request2] = await expectPlausibleInAction(page, {
       action: () => page.click('#hash-nav-2'),
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`}
+        {
+          n: 'engagement',
+          u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`
+        },
+        {
+          n: 'pageview',
+          u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`
+        }
       ]
     })
 
@@ -326,7 +402,12 @@ test.describe('engagement events', () => {
 
     const [request3] = await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`}],
+      expectedRequests: [
+        {
+          n: 'engagement',
+          u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`
+        }
+      ]
     })
 
     expect(request3.e).toBeGreaterThan(3000)
@@ -336,8 +417,14 @@ test.describe('engagement events', () => {
     const [request4] = await expectPlausibleInAction(page, {
       action: () => page.click('#hash-nav'),
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`}
+        {
+          n: 'engagement',
+          u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`
+        },
+        {
+          n: 'pageview',
+          u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`
+        }
       ]
     })
 
@@ -345,15 +432,19 @@ test.describe('engagement events', () => {
     expect(request4.e).toBeLessThan(3500)
   })
 
-  test('tracks engagement time whilst tab gains and loses focus', async ({ page }) => {
+  test('tracks engagement time whilst tab gains and loses focus', async ({
+    page
+  }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
-      expectedRequests: [{n: 'pageview'}],
+      expectedRequests: [{ n: 'pageview' }]
     })
 
     const [request1] = await expectPlausibleInAction(page, {
       action: () => blur(page),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+      expectedRequests: [
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` }
+      ]
     })
     expect(request1.e).toBeLessThan(500)
 
@@ -362,7 +453,7 @@ test.describe('engagement events', () => {
 
     await expectPlausibleInAction(page, {
       action: () => blurAndFocusPage(page, { delay: 3000 }),
-      refutedRequests: [{n: 'engagement'}],
+      refutedRequests: [{ n: 'engagement' }],
       mockRequestTimeout: 100
     })
 
@@ -370,7 +461,9 @@ test.describe('engagement events', () => {
 
     const [request2] = await expectPlausibleInAction(page, {
       action: () => blur(page),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+      expectedRequests: [
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` }
+      ]
     })
 
     expect(request2.e).toBeGreaterThan(3500)

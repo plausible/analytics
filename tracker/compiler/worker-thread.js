@@ -1,4 +1,4 @@
 import { compileFile } from './index.js'
-import { expose } from "threads/worker"
+import { expose } from 'threads/worker'
 
 expose({ compileFile })

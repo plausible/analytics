@@ -54,7 +54,9 @@ test('handles double-initialization of the script with a console.warn', async ({
   const { url } = await initializePageDynamically(page, {
     testId,
     scriptConfig: config,
-    bodyContent: `<button onclick="window.plausible('Purchase')">Purchase</button>`
+    bodyContent: /* HTML */ `<button onclick="window.plausible('Purchase')">
+      Purchase
+    </button>`
   })
   const messages: [string, string][] = []
   page.on('console', (message) => {
@@ -90,14 +92,21 @@ test('handles double-initialization of the script with a console.warn', async ({
   })
 })
 
-test('if there are two snippets on the page, one wins, no warning is emitted', async ({ page }, {
-  testId
-}) => {
+test('if there are two snippets on the page, one wins, no warning is emitted', async ({
+  page
+}, { testId }) => {
   const config = { ...DEFAULT_CONFIG }
-  const snippetAlfa = getConfiguredPlausibleWebSnippet({...config, customProperties: { alfa: true }})
-  const initCallAlfa = 'plausible.init({"captureOnLocalhost":true,"customProperties":{"alfa":true}})'
-  expect(snippetAlfa).toEqual(expect.stringContaining(initCallAlfa)) 
-  const snippetBeta = getConfiguredPlausibleWebSnippet({...config, customProperties: { beta: true }})
+  const snippetAlfa = getConfiguredPlausibleWebSnippet({
+    ...config,
+    customProperties: { alfa: true }
+  })
+  const initCallAlfa =
+    'plausible.init({"captureOnLocalhost":true,"customProperties":{"alfa":true}})'
+  expect(snippetAlfa).toEqual(expect.stringContaining(initCallAlfa))
+  const snippetBeta = getConfiguredPlausibleWebSnippet({
+    ...config,
+    customProperties: { beta: true }
+  })
   const initCallBeta = `plausible.init({"captureOnLocalhost":true,"customProperties":{"beta":true}})`
   expect(snippetBeta).toEqual(expect.stringContaining(initCallBeta))
 
@@ -108,18 +117,22 @@ test('if there are two snippets on the page, one wins, no warning is emitted', a
 
   const { url } = await initializePageDynamically(page, {
     testId,
-    scriptConfig: `${snippetAlfa}${snippetBeta}`,
+    scriptConfig: /* HTML */ `${snippetAlfa}${snippetBeta}`,
     bodyContent: ''
   })
   await expectPlausibleInAction(page, {
     action: () => page.goto(url),
     expectedRequests: [
-      { n: 'pageview', d: config.domain, u: `${LOCAL_SERVER_ADDR}${url}`, p: { beta: true } },
+      {
+        n: 'pageview',
+        d: config.domain,
+        u: `${LOCAL_SERVER_ADDR}${url}`,
+        p: { beta: true }
+      }
     ],
     shouldIgnoreRequest: isEngagementEvent
   })
   expect(messages).toEqual([])
-
 })
 
 test('if domain is provided in `init`, it is ignored', async ({ page }, {
@@ -129,7 +142,7 @@ test('if domain is provided in `init`, it is ignored', async ({ page }, {
   const scriptConfig = getConfiguredPlausibleWebSnippet(config)
   const originalInitCall = 'plausible.init({"captureOnLocalhost":true})'
   // verify that the original snippet is what we expect it to be
-  expect(scriptConfig).toEqual(expect.stringContaining(originalInitCall)) 
+  expect(scriptConfig).toEqual(expect.stringContaining(originalInitCall))
   const initCallWithDomainOverride = `plausible.init({"captureOnLocalhost":true,"domain":"sub.${config.domain}"})`
   const updatedScriptConfig = scriptConfig.replace(
     originalInitCall,

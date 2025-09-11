@@ -1,14 +1,17 @@
-import { waitForSnippetsV1 } from "./snippet-checks"
-import { plausibleFunctionCheck } from "./plausible-function-check"
-import { checkDataDomainMismatch } from "./check-data-domain-mismatch"
-import { checkProxyLikely } from "./check-proxy-likely"
-import { checkWordPress } from "./check-wordpress"
-import { checkGTM } from "./check-gtm"
-import { checkCookieBanner } from "./check-cookie-banner"
-import { checkManualExtension } from "./check-manual-extension"
-import { checkUnknownAttributes } from "./check-unknown-attributes"
+import { waitForSnippetsV1 } from './snippet-checks'
+import { plausibleFunctionCheck } from './plausible-function-check'
+import { checkDataDomainMismatch } from './check-data-domain-mismatch'
+import { checkProxyLikely } from './check-proxy-likely'
+import { checkWordPress } from './check-wordpress'
+import { checkGTM } from './check-gtm'
+import { checkCookieBanner } from './check-cookie-banner'
+import { checkManualExtension } from './check-manual-extension'
+import { checkUnknownAttributes } from './check-unknown-attributes'
 
-window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
+window.verifyPlausibleInstallation = async function (
+  expectedDataDomain,
+  debug
+) {
   function log(message) {
     if (debug) console.log('[Plausible Verification]', message)
   }
@@ -21,7 +24,10 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   const plausibleInstalled = plausibleFunctionDiagnostics.plausibleInstalled
   const callbackStatus = plausibleFunctionDiagnostics.callbackStatus || 0
 
-  const dataDomainMismatch = checkDataDomainMismatch(snippetData.nodes, expectedDataDomain)
+  const dataDomainMismatch = checkDataDomainMismatch(
+    snippetData.nodes,
+    expectedDataDomain
+  )
   log(`dataDomainMismatch: ${dataDomainMismatch}`)
 
   const manualScriptExtension = checkManualExtension(snippetData.nodes)
@@ -33,7 +39,7 @@ window.verifyPlausibleInstallation = async function(expectedDataDomain, debug) {
   const proxyLikely = checkProxyLikely(snippetData.nodes)
   log(`proxyLikely: ${proxyLikely}`)
 
-  const {wordpressPlugin, wordpressLikely} = checkWordPress(document)
+  const { wordpressPlugin, wordpressLikely } = checkWordPress(document)
   log(`wordpressPlugin: ${wordpressPlugin}`)
   log(`wordpressLikely: ${wordpressLikely}`)
 
