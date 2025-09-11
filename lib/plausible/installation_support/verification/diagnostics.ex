@@ -4,19 +4,23 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   """
   require Logger
 
-  # in this struct, nil means indeterminate
-  defstruct selected_installation_type: nil,
-            disallowed_by_csp: nil,
-            plausible_is_on_window: nil,
-            plausible_is_initialized: nil,
-            plausible_version: nil,
-            plausible_variant: nil,
-            diagnostics_are_from_cache_bust: nil,
-            test_event: nil,
-            cookies_consent_result: nil,
-            response_status: nil,
-            service_error: nil,
-            attempts: nil
+  # In this struct
+  # - the default nil value for each field means that the value is indeterminate (e.g. we didn't even get to the part where response_status is set)
+  defstruct [
+    :selected_installation_type,
+    :disallowed_by_csp,
+    :tracker_is_in_html,
+    :plausible_is_on_window,
+    :plausible_is_initialized,
+    :plausible_version,
+    :plausible_variant,
+    :diagnostics_are_from_cache_bust,
+    :test_event,
+    :cookies_consent_result,
+    :response_status,
+    :service_error,
+    :attempts
+  ]
 
   @type t :: %__MODULE__{}
 
@@ -149,6 +153,21 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       error(@error_plausible_network_error)
     end
   end
+
+  def interpret(
+        %__MODULE__{
+          tracker_is_in_html: false,
+          selected_installation_type: selected_installation_type,
+          plausible_is_on_window: plausible_is_on_window,
+          plausible_is_initialized: plausible_is_initialized,
+          service_error: nil
+        },
+        _expected_domain,
+        _url
+      )
+      when selected_installation_type in ["manual", nil] and plausible_is_on_window != true and
+             plausible_is_initialized != true,
+      do: error_plausible_not_found(selected_installation_type)
 
   @error_csp_disallowed Error.new!(%{
                           message:

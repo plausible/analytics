@@ -9,12 +9,20 @@ import { checkDisallowedByCSP } from './check-disallowed-by-csp'
  * @returns {Promise<VerifyV2Result>}
  */
 
-async function verifyPlausibleInstallation({
-  timeoutMs,
-  responseHeaders,
-  debug,
-  cspHostToCheck
-}) {
+const DEFAULT_TRACKER_SCRIPT_SELECTOR = 'script[src^="https://plausible.io/js"]'
+
+async function verifyPlausibleInstallation(options) {
+  const {
+    timeoutMs,
+    responseHeaders,
+    debug,
+    cspHostToCheck,
+    trackerScriptSelector
+  } = {
+    trackerScriptSelector: DEFAULT_TRACKER_SCRIPT_SELECTOR,
+    ...options
+  }
+
   function log(message) {
     if (debug) console.log('[VERIFICATION v2]', message)
   }
@@ -35,6 +43,7 @@ async function verifyPlausibleInstallation({
     timeoutMs,
     debug
   })
+  const trackerIsInHtml = isInHtml(trackerScriptSelector)
 
   if (testPlausibleFunctionError) {
     log(
@@ -52,6 +61,7 @@ async function verifyPlausibleInstallation({
 
   const diagnostics = {
     disallowedByCsp,
+    trackerIsInHtml,
     plausibleIsOnWindow,
     plausibleIsInitialized,
     plausibleVersion,
@@ -145,6 +155,10 @@ function startRecordingEventFetchCalls() {
   }
 }
 
+function isInHtml(selector) {
+  return document.querySelector(selector) !== null
+}
+
 function isPlausibleOnWindow() {
   return !!window.plausible
 }
@@ -162,10 +176,7 @@ function getPlausibleVariant() {
 }
 
 async function testPlausibleFunction({ timeoutMs, debug }) {
-  // async executor is not a problem in this case, because it's only used for `await delay()` calls
-  // not for controlling promise resolution
-  // eslint-disable-next-line no-async-promise-executor
-  return new Promise(async (resolvePromise) => {
+  return new Promise((_resolve) => {
     let plausibleIsOnWindow = isPlausibleOnWindow()
     let plausibleIsInitialized = isPlausibleInitialized()
     let plausibleVersion = getPlausibleVersion()
@@ -175,14 +186,26 @@ async function testPlausibleFunction({ timeoutMs, debug }) {
       handled: null,
       engineLifecycle: 'not-started'
     }
+    let timeout = null
+    let plausibleOnWindowPollInterval = null
+    let plausibleInitializedPollInterval = null
+    let testEventPollInterval = null
 
     let resolved = false
 
     const resolve = (overrides) => {
+      clearTimeout(timeout)
+      clearInterval(plausibleOnWindowPollInterval)
+      clearInterval(plausibleInitializedPollInterval)
+      clearInterval(testEventPollInterval)
+      if (resolved) {
+        return
+      }
+
       resolved = true
-      resolvePromise({
-        plausibleIsInitialized,
+      _resolve({
         plausibleIsOnWindow,
+        plausibleIsInitialized,
         plausibleVersion,
         plausibleVariant,
         testEvent,
@@ -191,11 +214,42 @@ async function testPlausibleFunction({ timeoutMs, debug }) {
       })
     }
 
-    const timeout = setTimeout(() => {
+    timeout = setTimeout(() => {
       resolve({
         error: 'Test Plausible function timeout exceeded'
       })
     }, timeoutMs)
+
+    plausibleOnWindowPollInterval = setInterval(
+      () =>
+        plausibleIsOnWindow
+          ? clearInterval(plausibleOnWindowPollInterval)
+          : (plausibleIsOnWindow = isPlausibleOnWindow()),
+      10
+    )
+
+    plausibleInitializedPollInterval = setInterval(() => {
+      if (plausibleIsInitialized) {
+        plausibleVersion = getPlausibleVersion()
+        plausibleVariant = getPlausibleVariant()
+        clearInterval(plausibleInitializedPollInterval)
+      } else {
+        plausibleIsInitialized = isPlausibleInitialized()
+      }
+    }, 10)
+
+    testEventPollInterval = setInterval(() => {
+      if (plausibleIsOnWindow && plausibleIsInitialized) {
+        window.plausible('verification-agent-test', {
+          callback: (testEventCallbackResult) => {
+            resolve({
+              testEvent: { callbackResult: testEventCallbackResult }
+            })
+          }
+        })
+        clearInterval(testEventPollInterval)
+      }
+    }, 10)
 
     cookiesConsentResult = initializeCookieConsentEngine({
       debug,
@@ -218,37 +272,7 @@ async function testPlausibleFunction({ timeoutMs, debug }) {
         }
       }
     })
-
-    while (!plausibleIsOnWindow) {
-      if (isPlausibleOnWindow()) {
-        plausibleIsOnWindow = true
-      }
-      await delay(10)
-    }
-
-    while (!plausibleIsInitialized) {
-      if (isPlausibleInitialized()) {
-        plausibleIsInitialized = true
-        plausibleVersion = getPlausibleVersion()
-        plausibleVariant = getPlausibleVariant()
-      }
-      await delay(10)
-    }
-
-    window.plausible('verification-agent-test', {
-      callback: (testEventCallbackResult) => {
-        if (resolved) return
-        clearTimeout(timeout)
-        resolve({
-          testEvent: { callbackResult: testEventCallbackResult }
-        })
-      }
-    })
   })
-}
-
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 window.verifyPlausibleInstallation = verifyPlausibleInstallation
