@@ -318,12 +318,12 @@ defmodule Plausible.Stats.QueryOptimizer do
   # Normally we can always LEFT JOIN as this is more performant and tables
   # are expected to contain the same dimensions.
 
-  # The only exception is using the "time:minute" dimension where the sessions
+  # The only exception is using the "time:minute"/"time:hour" dimension where the sessions
   # subquery might return more rows than the events one. That's because we're
   # counting sessions in all time buckets they were active in even if no event
-  # occurred during that particular minute.
+  # occurred during that particular bucket.
   defp set_sql_join_type(query) do
-    if "time:minute" in query.dimensions do
+    if "time:minute" in query.dimensions or "time:hour" in query.dimensions do
       Query.set(query, sql_join_type: :full)
     else
       query
