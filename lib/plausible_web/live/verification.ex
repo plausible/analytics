@@ -34,7 +34,9 @@ defmodule PlausibleWeb.Live.Verification do
 
     super_admin? = Plausible.Auth.is_super_admin?(current_user)
     has_pageviews? = has_pageviews?(site)
-    custom_url_input? = params["custom_url"] == "true"
+
+    custom_url_input? =
+      PlausibleWeb.Tracker.scriptv2?(site, current_user) and params["custom_url"] == "true"
 
     socket =
       assign(socket,
