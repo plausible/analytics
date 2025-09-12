@@ -233,8 +233,7 @@ defmodule PlausibleWeb.Live.Verification do
         params["installation_type"] in PlausibleWeb.Tracker.supported_installation_types() ->
           params["installation_type"]
 
-        saved_installation_type =
-            PlausibleWeb.Tracker.get_tracker_script_configuration(site)[:installation_type] in @supported_installation_types_atoms ->
+        (saved_installation_type = get_saved_installation_type(site)) in @supported_installation_types_atoms ->
           Atom.to_string(saved_installation_type)
 
         true ->
@@ -242,6 +241,16 @@ defmodule PlausibleWeb.Live.Verification do
       end
     else
       params["installation_type"]
+    end
+  end
+
+  defp get_saved_installation_type(site) do
+    case PlausibleWeb.Tracker.get_tracker_script_configuration(site) do
+      %{installation_type: installation_type} ->
+        installation_type
+
+      _ ->
+        nil
     end
   end
 
