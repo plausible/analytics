@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Tracker do
       #
       # Note that EE is relying on CDN caching the script
       if PlausibleWeb.TrackerScriptCache.get(id, cache_opts) do
-        get_tracker_script_configuration(id)
+        get_tracker_script_configuration_by_id(id)
         |> build_script()
       end
     else
@@ -109,13 +109,17 @@ defmodule PlausibleWeb.Tracker do
     def purge_tracker_script_cache!(_site), do: nil
   end
 
+  def get_tracker_script_configuration(site) do
+    Repo.get_by(TrackerScriptConfiguration, site_id: site.id)
+  end
+
   def update_script_configuration!(site, config_update, changeset_type) do
     {:ok, updated_config} = update_script_configuration(site, config_update, changeset_type)
     updated_config
   end
 
   def get_or_create_tracker_script_configuration(site, params \\ %{}) do
-    configuration = Repo.get_by(TrackerScriptConfiguration, site_id: site.id)
+    configuration = get_tracker_script_configuration(site)
 
     if configuration do
       {:ok, configuration}
@@ -141,19 +145,6 @@ defmodule PlausibleWeb.Tracker do
   end
 
   on_ee do
-    import Ecto.Query
-
-    defp get_tracker_script_configuration(id) do
-      from(t in TrackerScriptConfiguration,
-        where: t.id == ^id,
-        join: s in assoc(t, :site),
-        preload: [site: s]
-      )
-      |> Plausible.Repo.one()
-    end
-  end
-
-  on_ee do
     def supported_installation_types do
       ["manual", "wordpress", "gtm", "npm"]
     end
@@ -165,6 +156,19 @@ defmodule PlausibleWeb.Tracker do
 
   def fallback_installation_type do
     "manual"
+  end
+
+  on_ee do
+    import Ecto.Query
+
+    defp get_tracker_script_configuration_by_id(id) do
+      from(t in TrackerScriptConfiguration,
+        where: t.id == ^id,
+        join: s in assoc(t, :site),
+        preload: [site: s]
+      )
+      |> Plausible.Repo.one()
+    end
   end
 
   # Sync plausible goals with the updated script config
