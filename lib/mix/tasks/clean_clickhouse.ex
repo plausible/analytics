@@ -11,6 +11,8 @@ defmodule Mix.Tasks.CleanClickhouse do
       tables --
         [
           "schema_migrations",
+          "failed_batches",
+          "failed_batches_dict",
           "location_data",
           "location_data_dict",
           "acquisition_channel_source_category",
