@@ -133,7 +133,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
         |> element("form")
         |> render_submit(%{site: %{domain: ""}})
 
-      assert html =~ "can&#39;t be blank"
+      assert html =~ htmlize_quotes("can't be blank")
     end
 
     test "form validation shows error for invalid domain format", %{conn: conn, site: site} do

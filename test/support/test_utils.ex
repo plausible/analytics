@@ -267,6 +267,10 @@ defmodule Plausible.TestUtils do
     Enum.map_join(1..4, ".", fn _ -> Enum.random(1..254) end)
   end
 
+  def htmlize_quotes(string) do
+    String.replace(string, "'", "&#39;")
+  end
+
   def minio_running? do
     %{host: host, port: port} = ExAws.Config.new(:s3)
     healthcheck_req = Finch.build(:head, "http://#{host}:#{port}")
