@@ -15,10 +15,6 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   on_ee do
     alias Plausible.InstallationSupport.{Detection, Result}
-
-    @installation_methods ["manual", "wordpress", "gtm", "npm"]
-  else
-    @installation_methods ["manual", "wordpress", "npm"]
   end
 
   def mount(
@@ -93,7 +89,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   def handle_params(params, _url, socket) do
     socket =
       if connected?(socket) && socket.assigns.recommended_installation_type.result &&
-           params["type"] in @installation_methods do
+           params["type"] in PlausibleWeb.Tracker.supported_installation_types() do
         assign(socket,
           installation_type: %AsyncResult{result: params["type"]}
         )
@@ -217,12 +213,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
              Detection.Checks.interpret_diagnostics(detection_result) do
         {data.suggested_technology, data.v1_detected}
       else
-        _ -> {"manual", false}
+        _ -> {PlausibleWeb.Tracker.fallback_installation_type(), false}
       end
     end
   else
     defp detect_recommended_installation_type(_flow, _site) do
-      {"manual", false}
+      {PlausibleWeb.Tracker.fallback_installation_type(), false}
     end
   end
 
@@ -326,7 +322,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
     selected_installation_type =
       cond do
-        params["type"] in @installation_methods ->
+        params["type"] in PlausibleWeb.Tracker.supported_installation_types() ->
           params["type"]
 
         flow == Flows.review() and

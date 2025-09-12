@@ -43,7 +43,14 @@ defmodule PlausibleWeb.Live.Installation do
     if PlausibleWeb.Tracker.scriptv2?(site) do
       {:ok,
        redirect(socket,
-         to: Routes.site_path(socket, :installation_v2, site.domain, flow: params["flow"])
+         to:
+           Routes.site_path(
+             socket,
+             :installation_v2,
+             site.domain,
+             [flow: params["flow"], type: params["installation_type"]]
+             |> Keyword.filter(fn {_k, v} -> not is_nil(v) and v != "" end)
+           )
        )}
     else
       flow = params["flow"]

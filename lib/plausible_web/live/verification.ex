@@ -19,8 +19,10 @@ defmodule PlausibleWeb.Live.Verification do
         _session,
         socket
       ) do
+    current_user = socket.assigns.current_user
+
     site =
-      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
+      Plausible.Sites.get_for_user!(current_user, domain, [
         :owner,
         :admin,
         :editor,
@@ -30,9 +32,11 @@ defmodule PlausibleWeb.Live.Verification do
 
     private = Map.get(socket.private.connect_info, :private, %{})
 
-    super_admin? = Plausible.Auth.is_super_admin?(socket.assigns.current_user)
+    super_admin? = Plausible.Auth.is_super_admin?(current_user)
     has_pageviews? = has_pageviews?(site)
-    custom_url_input? = params["custom_url"] == "true"
+
+    custom_url_input? =
+      PlausibleWeb.Tracker.scriptv2?(site, current_user) and params["custom_url"] == "true"
 
     socket =
       assign(socket,
@@ -42,7 +46,7 @@ defmodule PlausibleWeb.Live.Verification do
         domain: domain,
         has_pageviews?: has_pageviews?,
         component: @component,
-        installation_type: params["installation_type"],
+        installation_type: get_installation_type(params, site, current_user),
         report_to: self(),
         delay: private[:delay] || 500,
         slowdown: private[:slowdown] || 500,
@@ -136,11 +140,14 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_info({:start, report_to}, socket) do
-    if is_pid(socket.assigns.checks_pid) and Process.alive?(socket.assigns.checks_pid) do
+    domain = socket.assigns.domain
+    checks_pid = socket.assigns.checks_pid
+
+    if is_pid(checks_pid) and Process.alive?(checks_pid) do
       {:noreply, socket}
     else
       case Plausible.RateLimit.check_rate(
-             "site_verification:#{socket.assigns.domain}",
+             "site_verification:#{domain}",
              :timer.minutes(60),
              3
            ) do
@@ -148,18 +155,18 @@ defmodule PlausibleWeb.Live.Verification do
         {:deny, _} -> :timer.sleep(@slowdown_for_frequent_checking)
       end
 
-      domain = socket.assigns.domain
-      installation_type = socket.assigns.installation_type
-
       {:ok, pid} =
         if PlausibleWeb.Tracker.scriptv2?(socket.assigns.site, socket.assigns.current_user) do
-          Verification.Checks.run(socket.assigns.url_to_verify, domain, installation_type,
+          Verification.Checks.run(
+            socket.assigns.url_to_verify,
+            domain,
+            socket.assigns.installation_type,
             report_to: report_to,
             slowdown: socket.assigns.slowdown
           )
         else
           LegacyVerification.Checks.run(
-            "https://#{socket.assigns.domain}",
+            "https://#{domain}",
             domain,
             report_to: report_to,
             slowdown: socket.assigns.slowdown
@@ -218,6 +225,35 @@ defmodule PlausibleWeb.Live.Verification do
       end
 
     {:noreply, socket}
+  end
+
+  @supported_installation_types_atoms PlausibleWeb.Tracker.supported_installation_types()
+                                      |> Enum.map(&String.to_atom/1)
+  defp get_installation_type(params, site, current_user) do
+    if PlausibleWeb.Tracker.scriptv2?(site, current_user) do
+      cond do
+        params["installation_type"] in PlausibleWeb.Tracker.supported_installation_types() ->
+          params["installation_type"]
+
+        (saved_installation_type = get_saved_installation_type(site)) in @supported_installation_types_atoms ->
+          Atom.to_string(saved_installation_type)
+
+        true ->
+          PlausibleWeb.Tracker.fallback_installation_type()
+      end
+    else
+      params["installation_type"]
+    end
+  end
+
+  defp get_saved_installation_type(site) do
+    case PlausibleWeb.Tracker.get_tracker_script_configuration(site) do
+      %{installation_type: installation_type} ->
+        installation_type
+
+      _ ->
+        nil
+    end
   end
 
   defp schedule_pageviews_check(socket) do

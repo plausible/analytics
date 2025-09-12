@@ -254,7 +254,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ "can&#39;t be blank"
+      assert html_response(conn, 200) =~ htmlize_quotes("can't be blank")
     end
 
     test "fails to create site when not allowed to in selected team", %{conn: conn, user: user} do
@@ -404,7 +404,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ "can&#39;t be blank"
+      assert html_response(conn, 200) =~ htmlize_quotes("can't be blank")
     end
 
     test "only alphanumeric characters and slash allowed in domain", %{conn: conn} do

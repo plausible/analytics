@@ -15,6 +15,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
     Checks.InstallationV2CacheBust
   ]
 
+  @spec run(String.t(), String.t(), String.t(), Keyword.t()) :: :ok
   def run(url, data_domain, installation_type, opts \\ []) do
     report_to = Keyword.get(opts, :report_to, self())
     async? = Keyword.get(opts, :async?, true)

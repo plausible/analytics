@@ -1008,7 +1008,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
           "user" => %{"password" => password, "email" => user.email}
         })
 
-      assert html_response(conn, 200) =~ "can&#39;t be the same"
+      assert html_response(conn, 200) =~ htmlize_quotes("can't be the same")
     end
   end
 
