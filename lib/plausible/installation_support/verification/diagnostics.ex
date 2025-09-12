@@ -275,7 +275,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @error_plausible_not_found_for_manual Error.new!(%{
                                           message: @message_plausible_not_found,
                                           recommendation:
-                                            "Please make sure you've copied snippet to the head of your site, or verify your installation manually",
+                                            "Please make sure you've copied the snippet to the head of your site, or verify your installation manually",
                                           url: @verify_manually_url
                                         })
   @error_plausible_not_found_for_npm Error.new!(%{
