@@ -1,9 +1,7 @@
 defmodule PlausibleWeb.Live.VerificationTest do
   use PlausibleWeb.ConnCase, async: true
 
-  on_ee do
-    use Plausible.Test.Support.DNS
-  end
+  use Plausible.Test.Support.DNS
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
