@@ -3,8 +3,6 @@ defmodule Plausible.Google.API do
   API to Google services.
   """
 
-  use Timex
-
   alias Plausible.Google.HTTP
   alias Plausible.Google.SearchConsole
   alias Plausible.Stats.Query

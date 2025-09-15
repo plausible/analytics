@@ -50,8 +50,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
   end
 
   defp days_ago(days) do
-    NaiveDateTime.utc_now()
-    |> NaiveDateTime.truncate(:second)
-    |> Timex.shift(days: -days)
+    NaiveDateTime.utc_now(:second)
+    |> NaiveDateTime.shift(day: -days)
   end
 end

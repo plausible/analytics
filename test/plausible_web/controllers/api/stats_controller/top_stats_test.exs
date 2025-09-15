@@ -843,9 +843,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "shows current visitors (last 5 minutes)", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minutes: -10)),
-        build(:pageview, timestamp: relative_time(minutes: -4)),
-        build(:pageview, timestamp: relative_time(minutes: -1))
+        build(:pageview, timestamp: relative_time(minute: -10)),
+        build(:pageview, timestamp: relative_time(minute: -4)),
+        build(:pageview, timestamp: relative_time(minute: -1))
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime")
@@ -859,9 +859,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "shows unique visitors (last 30 minutes)", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minutes: -45)),
-        build(:pageview, timestamp: relative_time(minutes: -25)),
-        build(:pageview, timestamp: relative_time(minutes: -1))
+        build(:pageview, timestamp: relative_time(minute: -45)),
+        build(:pageview, timestamp: relative_time(minute: -25)),
+        build(:pageview, timestamp: relative_time(minute: -1))
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime")
@@ -877,10 +877,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "shows pageviews (last 30 minutes)", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: @user_id, timestamp: relative_time(minutes: -45)),
-        build(:pageview, user_id: @user_id, timestamp: relative_time(minutes: -25)),
-        build(:pageview, user_id: @user_id, timestamp: relative_time(minutes: -20)),
-        build(:pageview, timestamp: relative_time(minutes: -1))
+        build(:pageview, user_id: @user_id, timestamp: relative_time(minute: -45)),
+        build(:pageview, user_id: @user_id, timestamp: relative_time(minute: -25)),
+        build(:pageview, user_id: @user_id, timestamp: relative_time(minute: -20)),
+        build(:pageview, timestamp: relative_time(minute: -1))
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime")
@@ -894,10 +894,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "shows current visitors (last 5 min) with goal filter", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minutes: -10)),
-        build(:pageview, timestamp: relative_time(minutes: -3)),
-        build(:event, name: "Signup", timestamp: relative_time(minutes: -2)),
-        build(:event, name: "Signup", timestamp: relative_time(minutes: -1))
+        build(:pageview, timestamp: relative_time(minute: -10)),
+        build(:pageview, timestamp: relative_time(minute: -3)),
+        build(:event, name: "Signup", timestamp: relative_time(minute: -2)),
+        build(:event, name: "Signup", timestamp: relative_time(minute: -1))
       ])
 
       filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
@@ -916,11 +916,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, name: "Signup", timestamp: relative_time(minutes: -45)),
-        build(:event, name: "Signup", timestamp: relative_time(minutes: -25)),
-        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -22)),
-        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -21)),
-        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -20))
+        build(:event, name: "Signup", timestamp: relative_time(minute: -45)),
+        build(:event, name: "Signup", timestamp: relative_time(minute: -25)),
+        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minute: -22)),
+        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minute: -21)),
+        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minute: -20))
       ])
 
       insert(:goal, site: site, event_name: "Signup")

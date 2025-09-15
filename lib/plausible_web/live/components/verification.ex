@@ -79,14 +79,13 @@ defmodule PlausibleWeb.Live.Components.Verification do
       <div class="mt-8">
         <.title>Success!</.title>
         <p class="text-sm mt-4">
-          Your installation is working and visitors are being counted accurately
-        </p>
-        <p :if={@awaiting_first_pageview?} id="awaiting" class="text-sm mt-4 animate-pulse">
-          Awaiting your first pageview
+          Your installation is working and visitors are being counted accurately.
+          <span :if={@awaiting_first_pageview?} id="awaiting" class="text-sm mt-4 animate-pulse">
+            Awaiting your first pageview...
+          </span>
         </p>
       </div>
       <.button_link
-        mt?={false}
         href={"/#{URI.encode_www_form(@domain)}?skip_to_dashboard=true"}
         class="w-full font-bold mb-4"
       >

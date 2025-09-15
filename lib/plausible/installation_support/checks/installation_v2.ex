@@ -160,6 +160,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   defp parse_to_diagnostics(data),
     do: [
       disallowed_by_csp: data["disallowedByCsp"],
+      tracker_is_in_html: data["trackerIsInHtml"],
       plausible_is_on_window: data["plausibleIsOnWindow"],
       plausible_is_initialized: data["plausibleIsInitialized"],
       plausible_version: data["plausibleVersion"],

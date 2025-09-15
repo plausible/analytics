@@ -1758,7 +1758,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           site,
           user,
           start_date: ~D[2022-01-01],
-          end_date: Timex.today()
+          end_date: Date.utc_today()
         )
 
       %{args: %{import_id: import_id}} = job
@@ -1829,7 +1829,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         site,
         user,
         start_date: ~D[2022-01-01],
-        end_date: Timex.today()
+        end_date: Date.utc_today()
       )
 
       populate_stats(site, [
@@ -1850,7 +1850,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           site,
           user,
           start_date: ~D[2022-01-01],
-          end_date: Timex.today()
+          end_date: Date.utc_today()
         )
 
       populate_stats(site, [

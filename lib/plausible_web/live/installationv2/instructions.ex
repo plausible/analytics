@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
       Script installation
     </.title>
 
-    <div class="text-sm mt-4 leading-6">
+    <div class="text-sm my-4 leading-6">
       Paste this snippet into the <code>&lt;head&gt;</code>
       section of your site. See our
       <.styled_link href="https://plausible.io/docs/integration-guides" new_tab={true}>
@@ -98,12 +98,14 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
       WordPress installation
     </.title>
     <div class="text-sm mt-4 leading-6">
-      <span :if={@recommended_installation_type == "wordpress"}>
-        We've detected your website is using WordPress. Here's how to integrate Plausible:
-      </span>
-      <span :if={@recommended_installation_type != "wordpress"}>
-        Using Wordpress? Here's how to integrate Plausible:
-      </span>
+      <div class="mb-4">
+        <span :if={@recommended_installation_type == "wordpress"}>
+          We've detected your website is using WordPress. Here's how to integrate Plausible:
+        </span>
+        <span :if={@recommended_installation_type != "wordpress"}>
+          Using Wordpress? Here's how to integrate Plausible:
+        </span>
+      </div>
       <.focus_list>
         <:item>
           <.styled_link href="https://plausible.io/wordpress-analytics-plugin" new_tab={true}>
@@ -161,7 +163,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
 
   def npm_instructions(assigns) do
     ~H"""
-    <.title class="mt-4">
+    <.title class="my-4">
       NPM installation
     </.title>
     <.focus_list>

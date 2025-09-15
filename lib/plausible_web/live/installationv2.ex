@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
             </div>
           </:loading>
 
-          <div class="flex flex-row gap-2 bg-gray-100 dark:bg-gray-900 rounded-md p-1">
+          <div class="grid grid-cols-2 sm:flex sm:flex-row gap-2 bg-gray-100 dark:bg-gray-900 rounded-md p-1">
             <.tab
               patch={"?type=manual&flow=#{@flow}"}
               selected={@installation_type.result == "manual"}
@@ -294,17 +294,19 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   end
 
   def handle_event("submit", %{"tracker_script_configuration" => params}, socket) do
-    PlausibleWeb.Tracker.update_script_configuration!(
-      socket.assigns.site,
-      params,
-      :installation
-    )
+    config =
+      PlausibleWeb.Tracker.update_script_configuration!(
+        socket.assigns.site,
+        params,
+        :installation
+      )
 
     {:noreply,
      push_navigate(socket,
        to:
          Routes.site_path(socket, :verification, socket.assigns.site.domain,
-           flow: socket.assigns.flow
+           flow: socket.assigns.flow,
+           installation_type: config.installation_type
          )
      )}
   end

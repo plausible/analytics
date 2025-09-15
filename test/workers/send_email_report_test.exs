@@ -5,7 +5,6 @@ defmodule Plausible.Workers.SendEmailReportTest do
   use Oban.Testing, repo: Plausible.Repo
   import Plausible.Test.Support.HTML
   alias Plausible.Workers.SendEmailReport
-  alias Timex.Timezone
 
   @green "#15803d"
   @red "#b91c1c"
@@ -46,37 +45,25 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-      now = Timex.now(site.timezone)
-      last_monday = Timex.shift(now, weeks: -1) |> Timex.beginning_of_week()
-      last_sunday = Timex.shift(now, weeks: -1) |> Timex.end_of_week()
-      sunday_before_last = Timex.shift(last_monday, minutes: -1)
-      this_monday = Timex.beginning_of_week(now)
+      now = DateTime.now!(site.timezone)
+      last_monday = DateTime.shift(now, week: -1) |> Plausible.Times.beginning_of_week()
+      last_sunday = DateTime.shift(now, week: -1) |> Plausible.Times.end_of_week()
+      sunday_before_last = DateTime.shift(last_monday, minute: -1)
+      this_monday = Plausible.Times.beginning_of_week(now)
 
       populate_stats(site, [
         # Sunday before last, not counted
-        build(:pageview,
-          timestamp: Timezone.convert(sunday_before_last, "UTC")
-        ),
+        build(:pageview, timestamp: DateTime.shift_zone!(sunday_before_last, "UTC")),
         # Sunday before last, not counted
-        build(:pageview,
-          timestamp: Timezone.convert(sunday_before_last, "UTC")
-        ),
+        build(:pageview, timestamp: DateTime.shift_zone!(sunday_before_last, "UTC")),
         # Last monday, counted
-        build(:pageview,
-          timestamp: Timezone.convert(last_monday, "UTC")
-        ),
+        build(:pageview, timestamp: DateTime.shift_zone!(last_monday, "UTC")),
         # Last sunday, counted
-        build(:pageview,
-          timestamp: Timezone.convert(last_sunday, "UTC")
-        ),
+        build(:pageview, timestamp: DateTime.shift_zone!(last_sunday, "UTC")),
         # This monday, not counted
-        build(:pageview,
-          timestamp: Timezone.convert(this_monday, "UTC")
-        ),
+        build(:pageview, timestamp: DateTime.shift_zone!(this_monday, "UTC")),
         # This monday, not counted
-        build(:pageview,
-          timestamp: Timezone.convert(this_monday, "UTC")
-        )
+        build(:pageview, timestamp: DateTime.shift_zone!(this_monday, "UTC"))
       ])
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
@@ -91,18 +78,18 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "includes the correct stats" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      site = new_site(domain: "test-site.com", inserted_at: Timex.shift(now, days: -8))
+      now = NaiveDateTime.utc_now(:second)
+      site = new_site(domain: "test-site.com", inserted_at: NaiveDateTime.shift(now, day: -8))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          timestamp: Timex.shift(now, days: -7),
+          timestamp: NaiveDateTime.shift(now, day: -7),
           referrer_source: "Google"
         ),
-        build(:pageview, user_id: 123, timestamp: Timex.shift(now, days: -7)),
-        build(:pageview, timestamp: Timex.shift(now, days: -7))
+        build(:pageview, user_id: 123, timestamp: NaiveDateTime.shift(now, day: -7)),
+        build(:pageview, timestamp: NaiveDateTime.shift(now, day: -7))
       ])
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
@@ -121,11 +108,11 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "renders correct signs (+/-) and trend colors for positive percentage changes" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      week_ago = now |> Timex.shift(days: -7)
-      two_weeks_ago = now |> Timex.shift(days: -14)
+      now = NaiveDateTime.utc_now(:second)
+      week_ago = now |> NaiveDateTime.shift(day: -7)
+      two_weeks_ago = now |> NaiveDateTime.shift(day: -14)
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+      site = new_site(inserted_at: NaiveDateTime.shift(now, day: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -156,11 +143,11 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "renders correct signs (+/-) and trend colors for negative percentage changes" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      week_ago = now |> Timex.shift(days: -7)
-      two_weeks_ago = now |> Timex.shift(days: -14)
+      now = NaiveDateTime.utc_now(:second)
+      week_ago = now |> NaiveDateTime.shift(day: -7)
+      two_weeks_ago = now |> NaiveDateTime.shift(day: -14)
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+      site = new_site(inserted_at: NaiveDateTime.shift(now, day: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -191,11 +178,11 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "renders 0% changes with a green color and without a sign" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      week_ago = now |> Timex.shift(days: -7)
-      two_weeks_ago = now |> Timex.shift(days: -14)
+      now = NaiveDateTime.utc_now(:second)
+      week_ago = now |> NaiveDateTime.shift(day: -7)
+      two_weeks_ago = now |> NaiveDateTime.shift(day: -14)
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+      site = new_site(inserted_at: NaiveDateTime.shift(now, day: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -284,10 +271,10 @@ defmodule Plausible.Workers.SendEmailReportTest do
       insert(:monthly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
 
       last_month =
-        Timex.now(site.timezone)
-        |> Timex.shift(months: -1)
-        |> Timex.beginning_of_month()
-        |> Timex.format!("{Mfull}")
+        DateTime.now!(site.timezone)
+        |> DateTime.shift(month: -1)
+        |> Plausible.Times.beginning_of_month()
+        |> Calendar.strftime("%B")
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
 
@@ -315,38 +302,38 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
-      now = Timex.now(site.timezone)
-      last_month_first = Timex.shift(now, months: -1) |> Timex.beginning_of_month()
-      last_month_last = Timex.shift(now, months: -1) |> Timex.end_of_month()
-      month_before_last = Timex.shift(last_month_first, minutes: -1)
-      this_month_first = Timex.beginning_of_month(now)
+      now = DateTime.now!(site.timezone)
+      last_month_first = DateTime.shift(now, month: -1) |> Plausible.Times.beginning_of_month()
+      last_month_last = DateTime.shift(now, month: -1) |> Plausible.Times.end_of_month()
+      month_before_last = DateTime.shift(last_month_first, minute: -1)
+      this_month_first = Plausible.Times.beginning_of_month(now)
 
       populate_stats(site, [
         # Month before last, not counted
         build(:pageview,
-          timestamp: Timezone.convert(month_before_last, "UTC")
+          timestamp: DateTime.shift_zone!(month_before_last, "UTC")
         ),
         # Month before last, not counted
         build(:pageview,
-          timestamp: Timezone.convert(month_before_last, "UTC")
+          timestamp: DateTime.shift_zone!(month_before_last, "UTC")
         ),
         # Last month first day, counted
         build(:pageview,
           user_id: 123,
-          timestamp: Timezone.convert(last_month_first, "UTC")
+          timestamp: DateTime.shift_zone!(last_month_first, "UTC")
         ),
         # Last month last day, counted
         build(:pageview,
           user_id: 124,
-          timestamp: Timezone.convert(last_month_last, "UTC")
+          timestamp: DateTime.shift_zone!(last_month_last, "UTC")
         ),
         # This month first day, not counted
         build(:pageview,
-          timestamp: Timezone.convert(this_month_first, "UTC")
+          timestamp: DateTime.shift_zone!(this_month_first, "UTC")
         ),
         # This month first day, not counted
         build(:pageview,
-          timestamp: Timezone.convert(this_month_first, "UTC")
+          timestamp: DateTime.shift_zone!(this_month_first, "UTC")
         )
       ])
 
