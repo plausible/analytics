@@ -186,7 +186,7 @@ defmodule PlausibleWeb.Live.Sites do
       data-domain={@site.domain}
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
-      <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
+      <div class="col-span-1 bg-white dark:bg-gray-800 rounded-md shadow p-4 group-hover:shadow-lg cursor-pointer transition duration-100">
         <div class="w-full flex items-center justify-between space-x-4">
           <img
             src={"/favicon/sources/#{@site.domain}"}
@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
-        <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
+        <div class="col-span-1 bg-white dark:bg-gray-800 rounded-md shadow p-4 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between space-x-4">
             <.favicon domain={@site.domain} />
             <div class="flex-1 -mt-px w-full">

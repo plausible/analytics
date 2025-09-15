@@ -208,33 +208,6 @@ blockquote {
   background-color: rgb(26 32 44);
 }
 
-.stats-item {
-  min-height: 436px;
-}
-
-@screen md {
-  .stats-item {
-    margin-left: 6px;
-    margin-right: 6px;
-    width: calc(50% - 6px);
-    position: relative;
-    min-height: initial;
-    height: 27.25rem;
-  }
-
-  .stats-item-header {
-    height: inherit;
-  }
-}
-
-.stats-item:first-child {
-  margin-left: 0;
-}
-
-.stats-item:last-child {
-  margin-right: 0;
-}
-
 .fade-enter {
   opacity: 0;
 }
