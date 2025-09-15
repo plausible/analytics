@@ -1,13 +1,16 @@
 import http from "k6/http";
 import { check } from "k6";
 
-const PAYLOAD = JSON.stringify({
-  n: "pageview",
-  u: "http://dummy.site/some-page",
-  d: "dummy.site",
-  r: null,
-  w: 1666,
-});
+function getPayload() {
+  const domainIdx = Math.floor(Math.random() * 1000);
+  return JSON.stringify({
+    n: "pageview",
+    u: `http://foo${domainIdx}.example.com/some-page`,
+    d: `foo${domainIdx}.example.com`,
+    r: null,
+    w: 1666,
+  });
+}
 
 function newParams() {
   const ip =
@@ -45,7 +48,7 @@ export const options = {
 export default function () {
   const res = http.post(
     "http://localhost:8000/api/event",
-    PAYLOAD,
+    getPayload(),
     newParams(),
   );
 
