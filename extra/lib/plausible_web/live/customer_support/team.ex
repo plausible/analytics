@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   @moduledoc """
   Team coordinator LiveView for Customer Support interface.
 
-  Manages tab-based navigation and delegates rendering to specialized 
+  Manages tab-based navigation and delegates rendering to specialized
   components: Overview, Members, Sites, Billing, SSO, and Audit.
   """
   use PlausibleWeb.CustomerSupport.Live
@@ -134,10 +134,14 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
       <:tabs>
         <.tab to="overview" tab={@tab}>Overview</.tab>
         <.tab to="members" tab={@tab}>
-          Members ({number_format(@usage.team_members)}/{number_format(@limits.team_members)})
+          Members ({PlausibleWeb.StatsView.number_format(@usage.team_members)}/{PlausibleWeb.StatsView.number_format(
+            @limits.team_members
+          )})
         </.tab>
         <.tab to="sites" tab={@tab}>
-          Sites ({number_format(@usage.sites)}/{number_format(@limits.sites)})
+          Sites ({PlausibleWeb.StatsView.number_format(@usage.sites)}/{PlausibleWeb.StatsView.number_format(
+            @limits.sites
+          )})
         </.tab>
         <.tab :if={has_sso_integration?(@team)} to="sso" tab={@tab}>SSO</.tab>
         <.tab to="billing" tab={@tab}>Billing</.tab>
@@ -359,14 +363,4 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
       socket
     end
   end
-
-  defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
-    "unlimited"
-  end
-
-  defp number_format(number) when is_integer(number) do
-    Cldr.Number.to_string!(number)
-  end
-
-  defp number_format(other), do: other
 end
