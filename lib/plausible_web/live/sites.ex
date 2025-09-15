@@ -815,12 +815,12 @@ defmodule PlausibleWeb.Live.Sites do
       |> Enum.flat_map(& &1.intervals)
       |> Enum.group_by(& &1.interval)
       |> Enum.map(fn {interval, interval_stats} ->
-        total_visitors = Enum.sum(Enum.map(interval_stats, & &1.visitors))
+        total_visitors = Enum.sum_by(interval_stats, & &1.visitors)
         %{interval: interval, visitors: total_visitors}
       end)
       |> Enum.sort_by(& &1.interval, NaiveDateTime)
 
-    total_visitors = Enum.sum(Enum.map(site_stats, & &1.visitors))
+    total_visitors = Enum.sum_by(site_stats, & &1.visitors)
 
     weighted_change = calculate_weighted_change(site_stats)
 
@@ -837,12 +837,11 @@ defmodule PlausibleWeb.Live.Sites do
         {stat.change, stat.visitors}
       end)
 
-    total_weight = Enum.sum(Enum.map(changes_with_weights, &elem(&1, 1)))
+    total_weight = Enum.sum_by(changes_with_weights, &elem(&1, 1))
 
     if total_weight > 0 do
       changes_with_weights
-      |> Enum.map(fn {change, weight} -> change * weight end)
-      |> Enum.sum()
+      |> Enum.sum_by(fn {change, weight} -> change * weight end)
       |> div(total_weight)
     else
       0
