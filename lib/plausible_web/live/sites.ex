@@ -799,6 +799,5 @@ defmodule PlausibleWeb.Live.Sites do
           intervals: stats.intervals
         }
     end)
-    |> IO.inspect(label: :merged)
   end
 end
