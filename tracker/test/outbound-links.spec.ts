@@ -31,7 +31,7 @@ for (const mode of ['web', 'esm']) {
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: OTHER_PAGE_BODY
         },
         awaitedRequestCount: 1
       })
@@ -78,7 +78,7 @@ for (const mode of ['web', 'esm']) {
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: OTHER_PAGE_BODY
         },
         awaitedRequestCount: 1
       })
@@ -151,7 +151,7 @@ for (const mode of ['legacy', 'web'])
           fulfill: {
             status: 200,
             contentType: 'text/html',
-            body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+            body: OTHER_PAGE_BODY
           },
           awaitedRequestCount: 1
         })
@@ -201,7 +201,7 @@ for (const mode of ['legacy', 'web'])
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: OTHER_PAGE_BODY
         },
         awaitedRequestCount: 1
       })
@@ -253,7 +253,7 @@ for (const mode of ['legacy', 'web'])
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: OTHER_PAGE_BODY
         },
         awaitedRequestCount: 1
       })
@@ -340,7 +340,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: OTHER_PAGE_BODY
         },
         awaitedRequestCount: 2,
         mockRequestTimeout: 2000
@@ -396,7 +396,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       fulfill: {
         status: 200,
         contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        body: OTHER_PAGE_BODY
       },
       awaitedRequestCount: 1
     })
@@ -448,7 +448,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       fulfill: {
         status: 200,
         contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        body: OTHER_PAGE_BODY
       },
       awaitedRequestCount: 1
     })
@@ -478,7 +478,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       fulfill: {
         status: 200,
         contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        body: OTHER_PAGE_BODY
       },
       awaitedRequestCount: 2,
       mockRequestTimeout: 2000
@@ -522,3 +522,13 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     })
   })
 })
+
+const OTHER_PAGE_BODY = /* HTML */ `<!DOCTYPE html>
+  <html>
+    <head>
+      <title>other page</title>
+    </head>
+    <body>
+      other page
+    </body>
+  </html>`
