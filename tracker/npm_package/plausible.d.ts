@@ -6,7 +6,7 @@ export function track(eventName: string, options: PlausibleEventOptions): void
 
 export interface PlausibleConfig {
   // Your site's domain, as declared by you in Plausible's settings.
-  domain: string,
+  domain: string
 
   // The URL of the Plausible API endpoint. Defaults to https://plausible.io/api/event
   // See proxying guide at https://plausible.io/docs/proxy/introduction
@@ -36,14 +36,18 @@ export interface PlausibleConfig {
 
   // Custom properties to add to all events tracked.
   // If passed as a function, it will be called when `track` is called.
-  customProperties?: CustomProperties | ((eventName: string) => CustomProperties)
+  customProperties?:
+    | CustomProperties
+    | ((eventName: string) => CustomProperties)
 
   // A function that can be used to transform the payload before it is sent to the API.
   // If the function returns null or any other falsy value, the event will be ignored.
   //
   // This can be used to avoid sending certain types of events, or modifying any event
   // parameters, e.g. to clean URLs of values that should not be recorded.
-  transformRequest?: (payload: PlausibleRequestPayload) => PlausibleRequestPayload | null
+  transformRequest?: (
+    payload: PlausibleRequestPayload
+  ) => PlausibleRequestPayload | null
 
   // If enabled (the default), the script will set `window.plausible` after `init` is called.
   // This is used by the verifier to detect if the script is loaded from npm package.
@@ -67,7 +71,9 @@ export interface PlausibleEventOptions {
   // When request is ignored, the result will be undefined.
   // When request was delivered, the result will be an object with the response status code of the request.
   // When there was a network error, the result will be an object with the error object.
-  callback?: (result?: { status: number } | { error: unknown } | undefined) => void
+  callback?: (
+    result?: { status: number } | { error: unknown } | undefined
+  ) => void
 
   // Overrides the URL of the page that the event is being tracked on.
   // If not provided, `location.href` will be used.
@@ -78,26 +84,26 @@ export type CustomProperties = Record<string, string>
 
 export type PlausibleEventRevenue = {
   // Revenue amount in `currency`
-  amount: number | string,
+  amount: number | string
   // Currency is an ISO 4217 string representing the currency code, e.g. "USD" or "EUR"
   currency: string
 }
 
 export type PlausibleRequestPayload = {
   // Event name
-  n: string,
+  n: string
   // URL of the event
-  u: string,
+  u: string
   // Domain of the event
-  d: string,
+  d: string
   // Referrer
-  r?: string | null,
+  r?: string | null
   // Custom properties
-  p?: CustomProperties,
+  p?: CustomProperties
   // Revenue information
-  $?: PlausibleEventRevenue,
+  $?: PlausibleEventRevenue
   // Whether the event is interactive
-  i?: boolean,
+  i?: boolean
 } & Record<string, unknown>
 
 // Default file types that are tracked when `fileDownloads` is enabled.

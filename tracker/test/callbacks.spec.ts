@@ -37,7 +37,7 @@ for (const mode of ['web', 'esm', 'legacy']) {
         apiPath: 'h://no-exist',
         mockPath: `/api/event`,
         fulfill: { status: 202 },
-        expectedResult: { error: expect.any(Error)}
+        expectedResult: { error: expect.any(Error) }
       },
       {
         name: 'on ignored request (because of not having capturing events on localhost)',

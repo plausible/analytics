@@ -76,9 +76,19 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `
-        <a id="alfa" onclick="window.plausible('pageview', { u: '/:masked/alfa' })" href="#">A</a>
-        <a id="beta" onclick="window.plausible('pageview', { url: '/:masked/beta' })" href="#">B</a>
+        bodyContent: /* HTML */ `
+          <a
+            id="alfa"
+            onclick="window.plausible('pageview', { u: '/:masked/alfa' })"
+            href="#"
+            >A</a
+          >
+          <a
+            id="beta"
+            onclick="window.plausible('pageview', { url: '/:masked/beta' })"
+            href="#"
+            >B</a
+          >
         `
       })
 
@@ -132,7 +142,7 @@ for (const mode of ['legacy', 'web', 'esm']) {
             d: DEFAULT_CONFIG.domain,
             u: `${LOCAL_SERVER_ADDR}${url}`,
             v: tracker_script_version,
-            h: e.toBeUndefined(),
+            h: e.toBeUndefined()
           }
         ],
         shouldIgnoreRequest: [isEngagementEvent]

@@ -1,9 +1,9 @@
-import { runThrottledCheck } from "./run-check"
+import { runThrottledCheck } from './run-check'
 
 export async function plausibleFunctionCheck(log) {
   log('Checking for Plausible function...')
   const plausibleFound = await waitForPlausibleFunction()
-    
+
   if (plausibleFound) {
     log('Plausible function found. Executing test event...')
     const callbackResult = await testPlausibleCallback(log)
@@ -11,17 +11,21 @@ export async function plausibleFunctionCheck(log) {
     return { plausibleInstalled: true, callbackStatus: callbackResult.status }
   } else {
     log('Plausible function not found')
-    return { plausibleInstalled: false}
+    return { plausibleInstalled: false }
   }
 }
 
 export async function waitForPlausibleFunction(timeout = 5000) {
   const checkFn = (opts) => {
-    if (window.plausible?.l) { return true }
-    if (opts.timeout) { return false }
+    if (window.plausible?.l) {
+      return true
+    }
+    if (opts.timeout) {
+      return false
+    }
     return 'continue'
   }
-  return await runThrottledCheck(checkFn, {timeout: timeout, interval: 100})
+  return await runThrottledCheck(checkFn, { timeout: timeout, interval: 100 })
 }
 
 function testPlausibleCallback(log) {
@@ -38,11 +42,11 @@ function testPlausibleCallback(log) {
 
     try {
       window.plausible('verification-agent-test', {
-        callback: function(options) {
+        callback: function (options) {
           if (!callbackResolved) {
             callbackResolved = true
             clearTimeout(callbackTimeout)
-            resolve({status: options && options.status ? options.status : -1 })
+            resolve({ status: options && options.status ? options.status : -1 })
           }
         }
       })

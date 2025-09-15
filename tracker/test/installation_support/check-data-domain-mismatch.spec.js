@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { checkDataDomainMismatch } from '../../installation_support/check-data-domain-mismatch'
 
 function mockSnippet(dataDomain) {
-  return { getAttribute: _ => dataDomain }
+  return { getAttribute: (_) => dataDomain }
 }
 
 test.describe('checkDataDomainMismatch', () => {
@@ -43,7 +43,9 @@ test.describe('checkDataDomainMismatch', () => {
   })
 
   test('handles multiple domains with www prefix', () => {
-    const snippets = [mockSnippet('www.example.org, www.example.com, www.example.net')]
+    const snippets = [
+      mockSnippet('www.example.org, www.example.com, www.example.net')
+    ]
     expect(checkDataDomainMismatch(snippets, 'example.com')).toBe(false)
   })
 
@@ -53,10 +55,7 @@ test.describe('checkDataDomainMismatch', () => {
   })
 
   test('handles multiple snippets - returns true if any snippet has domain mismatch', () => {
-    const snippets = [
-      mockSnippet('example.com'),
-      mockSnippet('wrong.com')
-    ]
+    const snippets = [mockSnippet('example.com'), mockSnippet('wrong.com')]
     expect(checkDataDomainMismatch(snippets, 'example.com')).toBe(true)
   })
 

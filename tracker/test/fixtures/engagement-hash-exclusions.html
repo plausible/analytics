@@ -1,18 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Plausible Playwright tests</title>
+    <script
+      async
+      data-exclude="/*#*/hash/**/ignored"
+      src="/tracker/js/plausible.exclusions.hash.local.js"
+    ></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Plausible Playwright tests</title>
-  <script async data-exclude='/*#*/hash/**/ignored' src="/tracker/js/plausible.exclusions.hash.local.js"></script>
-</head>
-
-<body>
-  <a id="ignored-hash-link" href="#this/hash/should/be/ignored">Ignored Hash Link</a>
-  <a id="hash-link-1" href="#hash1">Hash Link 1</a>
-  <a id="hash-link-2" href="#hash2">Hash Link 2</a>
-</body>
-
+  <body>
+    <a id="ignored-hash-link" href="#this/hash/should/be/ignored"
+      >Ignored Hash Link</a
+    >
+    <a id="hash-link-1" href="#hash1">Hash Link 1</a>
+    <a id="hash-link-2" href="#hash2">Hash Link 2</a>
+  </body>
 </html>
