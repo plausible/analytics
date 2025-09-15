@@ -107,6 +107,11 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <.site
+            :if={Plausible.Auth.is_super_admin?(@current_user) and @sites.total_entries > 1}
+            site={Plausible.Site.rollup(@current_team)}
+            hourly_stats={merge_hourly_stats(@hourly_stats)}
+          />
           <%= for site <- @sites.entries do %>
             <.site
               :if={site.entry_type in ["pinned_site", "site"]}
@@ -234,7 +239,8 @@ defmodule PlausibleWeb.Live.Sites do
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
         <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
-            <.favicon domain={@site.domain} />
+            <.favicon :if={!@site.rollup} domain={@site.domain} />
+            <.rollup_favicon :if={@site.rollup} />
             <div class="flex-1 -mt-px w-full">
               <h3
                 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
@@ -249,7 +255,7 @@ defmodule PlausibleWeb.Live.Sites do
       </.unstyled_link>
 
       <div class="absolute right-0 top-2">
-        <.ellipsis_menu site={@site} />
+        <.ellipsis_menu :if={!@site.rollup} site={@site} />
       </div>
     </li>
     """
@@ -572,6 +578,12 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  def rollup_favicon(assigns) do
+    ~H"""
+    <Heroicons.chart_bar class="w-4 h-4 flex-shrink-0 mt-px text-green-500 dark:text-green-400" />
+    """
+  end
+
   def handle_event("pin-toggle", %{"domain" => domain}, socket) do
     site = Enum.find(socket.assigns.sites.entries, &(&1.domain == domain))
 
@@ -773,5 +785,20 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp hash_domain(domain) do
     :sha |> :crypto.hash(domain) |> Base.encode16()
+  end
+
+  defp merge_hourly_stats(hourly_stats) do
+    Enum.reduce(hourly_stats, %{change: 0, visitors: 0, intervals: []}, fn
+      {_domain, :loading}, _acc ->
+        :loading
+
+      {_domain, stats}, acc ->
+        %{
+          change: acc.change + stats.change,
+          visitors: acc.visitors + stats.visitors,
+          intervals: stats.intervals
+        }
+    end)
+    |> IO.inspect(label: :merged)
   end
 end
