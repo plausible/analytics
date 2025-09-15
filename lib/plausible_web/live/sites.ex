@@ -788,16 +788,64 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp merge_hourly_stats(hourly_stats) do
-    Enum.reduce(hourly_stats, %{change: 0, visitors: 0, intervals: []}, fn
-      {_domain, :loading}, _acc ->
+    case hourly_stats do
+      :loading ->
         :loading
 
-      {_domain, stats}, acc ->
-        %{
-          change: acc.change + stats.change,
-          visitors: acc.visitors + stats.visitors,
-          intervals: stats.intervals
-        }
-    end)
+      stats when is_map(stats) ->
+        site_stats =
+          stats
+          |> Enum.reject(fn {_domain, stat} -> stat == :loading end)
+          |> Enum.map(fn {_domain, stat} -> stat end)
+
+        if Enum.empty?(site_stats) do
+          :loading
+        else
+          merge_site_stats(site_stats)
+        end
+
+      _ ->
+        :loading
+    end
+  end
+
+  defp merge_site_stats(site_stats) do
+    merged_intervals =
+      site_stats
+      |> Enum.flat_map(& &1.intervals)
+      |> Enum.group_by(& &1.interval)
+      |> Enum.map(fn {interval, interval_stats} ->
+        total_visitors = Enum.sum(Enum.map(interval_stats, & &1.visitors))
+        %{interval: interval, visitors: total_visitors}
+      end)
+      |> Enum.sort_by(& &1.interval, NaiveDateTime)
+
+    total_visitors = Enum.sum(Enum.map(site_stats, & &1.visitors))
+
+    weighted_change = calculate_weighted_change(site_stats)
+
+    %{
+      intervals: merged_intervals,
+      visitors: total_visitors,
+      change: weighted_change
+    }
+  end
+
+  defp calculate_weighted_change(site_stats) do
+    changes_with_weights =
+      Enum.map(site_stats, fn stat ->
+        {stat.change, stat.visitors}
+      end)
+
+    total_weight = Enum.sum(Enum.map(changes_with_weights, &elem(&1, 1)))
+
+    if total_weight > 0 do
+      changes_with_weights
+      |> Enum.map(fn {change, weight} -> change * weight end)
+      |> Enum.sum()
+      |> div(total_weight)
+    else
+      0
+    end
   end
 end
