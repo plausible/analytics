@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - Realtime and hourly graphs of visit duration, views per visit no longer overcount due to long-lasting sessions, instead showing each visit
   when they occurred.
 - Fixed realtime and hourly graphs of visits overcounting
+- When reporting only `visitors` and `visits` per hour, count visits in each hour they were active in.
 
 ## v3.0.0 - 2025-04-11
 
