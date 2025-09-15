@@ -80,7 +80,9 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<button onclick="window.plausible('Purchase')">Purchase</button>`
+        bodyContent: /* HTML */ `<button onclick="window.plausible('Purchase')">
+          Purchase
+        </button>`
       })
 
       await expectPlausibleInAction(page, {
@@ -119,7 +121,9 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<button onclick="window.plausible('Purchase')">Purchase</button>`
+        bodyContent: /* HTML */ `<button onclick="window.plausible('Purchase')">
+          Purchase
+        </button>`
       })
 
       await expectPlausibleInAction(page, {
@@ -137,45 +141,47 @@ for (const mode of ['web', 'esm']) {
     })
 
     test('"transformRequest" does not allow making engagement event props different from pageview event props', async ({
-        page
-      }, { testId }) => {
-        const config = {
-          ...DEFAULT_CONFIG,
-          transformRequest: (payload) => {
-            // @ts-expect-error - defines window.requestCount
-            window.requestCount = (window.requestCount ?? 0) + 1
-            // @ts-expect-error - window.requestCount is defined
-            return { ...payload, p: { requestCount: window.requestCount } }
+      page
+    }, { testId }) => {
+      const config = {
+        ...DEFAULT_CONFIG,
+        transformRequest: (payload) => {
+          // @ts-expect-error - defines window.requestCount
+          window.requestCount = (window.requestCount ?? 0) + 1
+          // @ts-expect-error - window.requestCount is defined
+          return { ...payload, p: { requestCount: window.requestCount } }
         }
-        }
-  
-        const { url } = await initializePageDynamically(page, {
-          testId,
-          scriptConfig: switchByMode(
-            {
-              web: config,
-              esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${serializeWithFunctions(
-                config
-              )})</script>`
-            },
-            mode
-          ),
-          bodyContent: `<button onclick="window.plausible('Purchase')">Purchase</button>`
-        })
-  
-        await expectPlausibleInAction(page, {
-          action: async () => {
-            await page.goto(url)
-            await page.click('button')
-            await hideAndShowCurrentTab(page, { delay: 200 })
+      }
+
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: config,
+            esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${serializeWithFunctions(
+              config
+            )})</script>`
           },
-          expectedRequests: [
-            { n: 'pageview', p: { requestCount: 1 } },
-            { n: 'Purchase', p: { requestCount: 2 } },
-            { n: 'engagement', p: { requestCount: 1 } }
-          ]
-        })
-      })  
+          mode
+        ),
+        bodyContent: /* HTML */ `<button onclick="window.plausible('Purchase')">
+          Purchase
+        </button>`
+      })
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await page.goto(url)
+          await page.click('button')
+          await hideAndShowCurrentTab(page, { delay: 200 })
+        },
+        expectedRequests: [
+          { n: 'pageview', p: { requestCount: 1 } },
+          { n: 'Purchase', p: { requestCount: 2 } },
+          { n: 'engagement', p: { requestCount: 1 } }
+        ]
+      })
+    })
 
     test('specificity: "transformRequest" runs after custom properties are determined', async ({
       page
@@ -239,7 +245,11 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<button onclick="window.plausible('subscribed from blog', { props: { title: 'A blog post title' } })">Subscribe</button>`
+        bodyContent: /* HTML */ `<button
+          onclick="window.plausible('subscribed from blog', { props: { title: 'A blog post title' } })"
+        >
+          Subscribe
+        </button>`
       })
 
       await expectPlausibleInAction(page, {

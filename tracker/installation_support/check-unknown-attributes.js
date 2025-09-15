@@ -12,7 +12,7 @@ const KNOWN_ATTRIBUTES = [
 export function checkUnknownAttributes(snippets) {
   if (!snippets || snippets.length === 0) return false
 
-  return snippets.some(snippet => {
+  return snippets.some((snippet) => {
     const attributes = snippet.attributes
 
     for (let i = 0; i < attributes.length; i++) {

@@ -1,4 +1,4 @@
-import { runThrottledCheck } from "./run-check"
+import { runThrottledCheck } from './run-check'
 
 export async function waitForSnippetsV1(log) {
   log('Starting snippet detection...')
@@ -6,19 +6,23 @@ export async function waitForSnippetsV1(log) {
   let snippetCounts = await waitForFirstSnippet()
 
   if (snippetCounts.all > 0) {
-    log(`Found snippets: head=${snippetCounts.head}; body=${snippetCounts.body}`)
+    log(
+      `Found snippets: head=${snippetCounts.head}; body=${snippetCounts.body}`
+    )
     log('Waiting for additional snippets to appear...')
 
     snippetCounts = await waitForAdditionalSnippets()
 
-    log(`Final snippet count: head=${snippetCounts.head}; body=${snippetCounts.body}`)
+    log(
+      `Final snippet count: head=${snippetCounts.head}; body=${snippetCounts.body}`
+    )
   } else {
-    log('No snippets found after 5 seconds') 
+    log('No snippets found after 5 seconds')
   }
 
   return {
     nodes: [...getHeadSnippets(), ...getBodySnippets()],
-    counts: snippetCounts,
+    counts: snippetCounts
   }
 }
 
@@ -33,7 +37,7 @@ function getBodySnippets() {
 function countSnippets() {
   const headSnippets = getHeadSnippets()
   const bodySnippets = getBodySnippets()
-  
+
   return {
     head: headSnippets.length,
     body: bodySnippets.length,
@@ -44,7 +48,7 @@ function countSnippets() {
 async function waitForFirstSnippet() {
   const checkFn = (opts) => {
     const snippetsFound = countSnippets()
-    
+
     if (snippetsFound.all > 0 || opts.timeout) {
       return snippetsFound
     }
@@ -52,7 +56,7 @@ async function waitForFirstSnippet() {
     return 'continue'
   }
 
-  return await runThrottledCheck(checkFn, {timeout: 5000, interval: 100})
+  return await runThrottledCheck(checkFn, { timeout: 5000, interval: 100 })
 }
 
 async function waitForAdditionalSnippets() {

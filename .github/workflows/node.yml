@@ -32,5 +32,5 @@ jobs:
     - run: npm run check-format --prefix ./assets
     - run: npm run test --prefix ./assets
     - run: npm run lint --prefix ./tracker
-    # - run: npm run check-format --prefix ./tracker
+    - run: npm run check-format --prefix ./tracker
     - run: npm run deploy --prefix ./tracker
