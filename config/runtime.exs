@@ -318,8 +318,6 @@ secure_cookie =
 
 license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
 
-sso_enabled = get_bool_from_path_or_env(config_dir, "SSO_ENABLED", false)
-
 sso_saml_adapter =
   case get_var_from_path_or_env(config_dir, "SSO_SAML_ADAPTER", "fake") do
     "fake" -> PlausibleWeb.SSO.FakeSAMLAdapter
@@ -353,7 +351,6 @@ config :plausible,
   license_key: license_key,
   data_dir: data_dir,
   session_transfer_dir: session_transfer_dir,
-  sso_enabled: sso_enabled,
   sso_saml_adapter: sso_saml_adapter,
   sso_verification_nameservers: sso_verification_nameservers
 

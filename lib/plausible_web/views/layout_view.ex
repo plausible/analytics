@@ -125,7 +125,7 @@ defmodule PlausibleWeb.LayoutView do
             do: %{key: "API Keys", value: "api-keys", icon: :key}
           ),
           if(
-            Plausible.sso_enabled?() and current_team_role == :owner and
+            ee?() and current_team_role == :owner and
               Plausible.Billing.Feature.SSO.check_availability(current_team) == :ok,
             do: %{
               key: "Single Sign-On",
@@ -137,8 +137,7 @@ defmodule PlausibleWeb.LayoutView do
             }
           ),
           if(
-            Plausible.sso_enabled?() and
-              Plausible.Billing.Feature.SSO.check_availability(current_team) != :ok,
+            ee?() and Plausible.Billing.Feature.SSO.check_availability(current_team) != :ok,
             do: %{
               key: "Single Sign-On",
               value: "sso/info",

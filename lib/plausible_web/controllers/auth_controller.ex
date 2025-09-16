@@ -245,11 +245,7 @@ defmodule PlausibleWeb.AuthController do
 
       case {login_preference, params["prefer"], error} do
         {"sso", nil, nil} ->
-          if Plausible.sso_enabled?() do
-            redirect(conn, to: Routes.sso_path(conn, :login_form, return_to: params["return_to"]))
-          else
-            render(conn, "login_form.html")
-          end
+          redirect(conn, to: Routes.sso_path(conn, :login_form, return_to: params["return_to"]))
 
         _ ->
           render(conn, "login_form.html")

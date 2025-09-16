@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.SSOController do
   use PlausibleWeb, :controller
+  use Plausible
 
   require Logger
 
@@ -95,7 +96,7 @@ defmodule PlausibleWeb.SSOController do
   end
 
   def sso_settings(conn, _params) do
-    if Plausible.Teams.setup?(conn.assigns.current_team) and Plausible.sso_enabled?() and
+    if ee?() and Plausible.Teams.setup?(conn.assigns.current_team) and
          Plausible.Billing.Feature.SSO.check_availability(conn.assigns.current_team) == :ok do
       render(conn, :sso_settings,
         layout: {PlausibleWeb.LayoutView, :settings},
