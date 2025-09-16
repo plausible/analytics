@@ -504,7 +504,6 @@ PlausibleWeb.Plugs.AuthorizePluginsAPI.html
 PlausibleWeb.Plugs.AuthorizePublicAPI.html
 PlausibleWeb.Plugs.AuthorizeSiteAccess.html
 PlausibleWeb.Plugs.ErrorHandler.html
-PlausibleWeb.Plugs.GateSSO.html
 PlausibleWeb.Plugs.MaybeDisableRegistration.html
 PlausibleWeb.Plugs.NoRobots.html
 PlausibleWeb.Plugs.SecureSSO.html
@@ -556,8 +555,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-BC2CEF1C.js
-dist/sidebar_items-879118A3.js
+dist/search_data-C7EC6112.js
+dist/sidebar_items-FA3FE64F.js
 index.html
 readme.html
 search.html
