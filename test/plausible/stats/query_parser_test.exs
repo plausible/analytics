@@ -78,7 +78,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         :preloaded_goals,
         :revenue_warning,
         :revenue_currencies,
-        :rollup_site_ids
+        :rollup_team_id
       ])
 
     assert result == expected_result

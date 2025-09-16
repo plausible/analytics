@@ -47,10 +47,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
          {preloaded_goals, revenue_warning, revenue_currencies} <-
            preload_goals_and_revenue(site, metrics, filters, dimensions),
-         rollup_site_ids = get_rollup_site_ids(site),
          query = %{
            now: now,
-           rollup_site_ids: rollup_site_ids,
+           rollup_team_id: if(site.rollup, do: site.team_id),
            input_date_range: Map.get(params, "date_range"),
            metrics: metrics,
            filters: filters,
@@ -76,12 +75,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
       {:ok, query}
     end
   end
-
-  def get_rollup_site_ids(%Plausible.Site{rollup: true} = site) do
-    Plausible.Teams.owned_sites_ids(site.team)
-  end
-
-  def get_rollup_site_ids(_site), do: nil
 
   def parse_date_range_pair(site, [from, to]) when is_binary(from) and is_binary(to) do
     with {:ok, date_range} <- date_range_from_date_strings(site, from, to) do

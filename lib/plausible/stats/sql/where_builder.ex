@@ -43,13 +43,15 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp filter_site_time_range(
          :events,
-         %Plausible.Stats.Query{rollup_site_ids: [_ | _] = site_ids} = query
-       ) do
+         %Plausible.Stats.Query{rollup_team_id: rollup_team_id} = query
+       )
+       when not is_nil(rollup_team_id) do
     {first_datetime, last_datetime} = utc_boundaries(query)
 
     dynamic(
       [e],
-      e.site_id in ^site_ids and e.timestamp >= ^first_datetime and
+      fragment("? in dictGet('team_sites_dict', 'site_ids', ?)", e.site_id, ^rollup_team_id) and
+        e.timestamp >= ^first_datetime and
         e.timestamp <= ^last_datetime
     )
   end
@@ -66,13 +68,14 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp filter_site_time_range(
          :sessions,
-         %Plausible.Stats.Query{rollup_site_ids: [_ | _] = site_ids} = query
-       ) do
+         %Plausible.Stats.Query{rollup_team_id: rollup_team_id} = query
+       )
+       when not is_nil(rollup_team_id) do
     {first_datetime, last_datetime} = utc_boundaries(query)
 
     dynamic(
       [s],
-      s.site_id in ^site_ids and
+      fragment("? in dictGet('team_sites_dict', 'site_ids', ?)", s.site_id, ^rollup_team_id) and
         s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
         s.timestamp >= ^first_datetime and
         s.start <= ^last_datetime
