@@ -254,7 +254,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "Please make sure you've copied snippet to the head of your site, or verify your installation manually",
+                               "Please make sure you've copied the snippet to the head of your site, or verify your installation manually",
                              url:
                                "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                            }
@@ -448,7 +448,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
             {"npm",
              "Please make sure you've initialized Plausible on your site, or verify your installation manually"},
             {"manual",
-             "Please make sure you've copied snippet to the head of your site, or verify your installation manually"}
+             "Please make sure you've copied the snippet to the head of your site, or verify your installation manually"}
           ] do
         test "returns error \"We couldn't detect Plausible on your site\" when plausible_is_on_window is false (with best guess recommendation for installation type: #{installation_type})" do
           expected_domain = "example.com"

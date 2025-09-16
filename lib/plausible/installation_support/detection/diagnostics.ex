@@ -56,7 +56,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
         } = diagnostics,
         _url
       ) do
-    get_result("manual", diagnostics)
+    get_result(PlausibleWeb.Tracker.fallback_installation_type(), diagnostics)
   end
 
   def interpret(
