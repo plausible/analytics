@@ -17,7 +17,7 @@ function DashboardStats({
   updateImportedDataInView?: (v: boolean) => void
 }) {
   const statsBoxClass =
-    'stats-item relative w-full mt-6 p-4 flex flex-col bg-white dark:bg-gray-825 shadow-xl rounded'
+    'relative min-h-[436px] w-full mt-5 p-4 flex flex-col bg-white dark:bg-gray-825 shadow rounded-md md:min-h-initial md:h-27.25rem md:w-[calc(50%-10px)] md:ml-[10px] md:mr-[10px] first:ml-0 last:mr-0'
 
   return (
     <>
@@ -57,7 +57,7 @@ function Dashboard() {
   const [importedDataInView, setImportedDataInView] = useState(false)
 
   return (
-    <div className="mb-12">
+    <div className="mb-16">
       <TopBar showCurrentVisitors={!isRealTimeDashboard} />
       <DashboardStats
         importedDataInView={

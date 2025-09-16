@@ -86,9 +86,9 @@ export const buildDataSet = (
 
   const defaultOptions = {
     label,
-    borderWidth: 3,
+    borderWidth: 2,
     pointBorderColor: 'transparent',
-    pointHoverRadius: 4,
+    pointHoverRadius: 3,
     backgroundColor: gradient,
     fill: true
   }
