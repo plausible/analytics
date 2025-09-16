@@ -394,7 +394,7 @@ defmodule PlausibleWeb.Live.Sites do
         </path>
       </svg>
 
-      {PlausibleWeb.StatsView.number_format(abs(@change))}%
+      {PlausibleWeb.TextHelpers.number_format(abs(@change))}%
     </p>
     """
   end

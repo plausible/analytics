@@ -72,10 +72,10 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             <.td>{date}</.td>
             <.td>
               <span class={if total > limit, do: "text-red-600"}>
-                {PlausibleWeb.StatsView.number_format(total)}
+                {number_format(total)}
               </span>
             </.td>
-            <.td>{PlausibleWeb.StatsView.number_format(limit)}</.td>
+            <.td>{number_format(limit)}</.td>
           </:tbody>
         </.table>
 
@@ -113,10 +113,10 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
             <.td max_width="max-w-40">
               <.table rows={[
-                {"Pageviews", PlausibleWeb.StatsView.number_format(plan.monthly_pageview_limit)},
-                {"Sites", PlausibleWeb.StatsView.number_format(plan.site_limit)},
-                {"Members", PlausibleWeb.StatsView.number_format(plan.team_member_limit)},
-                {"API Requests", PlausibleWeb.StatsView.number_format(plan.hourly_api_request_limit)}
+                {"Pageviews", number_format(plan.monthly_pageview_limit)},
+                {"Sites", number_format(plan.site_limit)},
+                {"Members", number_format(plan.team_member_limit)},
+                {"API Requests", number_format(plan.hourly_api_request_limit)}
               ]}>
                 <:tbody :let={{label, value}}>
                   <.td>{label}</.td>
@@ -358,6 +358,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     )
   end
 
+  defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
+    "unlimited"
+  end
+
+  defp number_format(input) do
+    PlausibleWeb.TextHelpers.number_format(input)
+  end
+
   defp sanitize_params(params) do
     params
     |> Enum.map(&clear_param/1)
@@ -395,7 +403,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   defp preview_number(n) do
     case Integer.parse("#{n}") do
       {n, ""} ->
-        PlausibleWeb.StatsView.number_format(n) <>
+        number_format(n) <>
           " (#{PlausibleWeb.StatsView.large_number_format(n)})"
 
       _ ->

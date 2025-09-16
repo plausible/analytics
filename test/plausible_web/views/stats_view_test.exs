@@ -60,43 +60,4 @@ defmodule PlausibleWeb.StatsViewTest do
       assert StatsView.large_number_format(250_500_000_000) == "250B"
     end
   end
-
-  describe "number_format" do
-    test "numbers under 1000 stay the same" do
-      assert StatsView.number_format(0) == "0"
-      assert StatsView.number_format(1) == "1"
-      assert StatsView.number_format(123) == "123"
-      assert StatsView.number_format(999) == "999"
-    end
-
-    test "thousands get comma separator" do
-      assert StatsView.number_format(1_000) == "1,000"
-      assert StatsView.number_format(1_234) == "1,234"
-      assert StatsView.number_format(12_345) == "12,345"
-      assert StatsView.number_format(123_456) == "123,456"
-    end
-
-    test "millions get multiple comma separators" do
-      assert StatsView.number_format(1_000_000) == "1,000,000"
-      assert StatsView.number_format(1_234_567) == "1,234,567"
-      assert StatsView.number_format(12_345_678) == "12,345,678"
-      assert StatsView.number_format(123_456_789) == "123,456,789"
-    end
-
-    test "billions get multiple comma separators" do
-      assert StatsView.number_format(1_000_000_000) == "1,000,000,000"
-      assert StatsView.number_format(1_234_567_890) == "1,234,567,890"
-      assert StatsView.number_format(12_345_678_901) == "12,345,678,901"
-    end
-
-    test "handles negative numbers" do
-      assert StatsView.number_format(-1234) == "-1,234"
-      assert StatsView.number_format(-1_234_567) == "-1,234,567"
-    end
-
-    test "handles edge cases" do
-      assert StatsView.number_format(0) == "0"
-      assert StatsView.number_format(-0) == "0"
-    end
-  end
 end

@@ -198,8 +198,8 @@ defmodule PlausibleWeb.Components.Billing do
         {@title}
       </td>
       <td class="text-sm py-4 sm:whitespace-nowrap text-right">
-        {PlausibleWeb.StatsView.number_format(@usage)}
-        {if is_number(@limit), do: "/ #{PlausibleWeb.StatsView.number_format(@limit)}"}
+        {PlausibleWeb.TextHelpers.number_format(@usage)}
+        {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
       </td>
     </tr>
     """

@@ -42,16 +42,6 @@ defmodule PlausibleWeb.StatsView do
     end
   end
 
-  def number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
-    "unlimited"
-  end
-
-  def number_format(number) when is_integer(number) do
-    Cldr.Number.to_string!(number)
-  end
-
-  def number_format(other), do: other
-
   def stats_container_class(conn) do
     cond do
       conn.assigns[:embedded] && conn.params["width"] == "manual" -> "px-6"

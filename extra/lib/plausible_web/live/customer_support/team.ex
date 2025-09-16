@@ -134,14 +134,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
       <:tabs>
         <.tab to="overview" tab={@tab}>Overview</.tab>
         <.tab to="members" tab={@tab}>
-          Members ({PlausibleWeb.StatsView.number_format(@usage.team_members)}/{PlausibleWeb.StatsView.number_format(
-            @limits.team_members
-          )})
+          Members ({number_format(@usage.team_members)}/{number_format(@limits.team_members)})
         </.tab>
         <.tab to="sites" tab={@tab}>
-          Sites ({PlausibleWeb.StatsView.number_format(@usage.sites)}/{PlausibleWeb.StatsView.number_format(
-            @limits.sites
-          )})
+          Sites ({number_format(@usage.sites)}/{number_format(@limits.sites)})
         </.tab>
         <.tab :if={has_sso_integration?(@team)} to="sso" tab={@tab}>SSO</.tab>
         <.tab to="billing" tab={@tab}>Billing</.tab>
@@ -362,5 +358,13 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     else
       socket
     end
+  end
+
+  defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
+    "unlimited"
+  end
+
+  defp number_format(input) do
+    PlausibleWeb.TextHelpers.number_format(input)
   end
 end
