@@ -78,7 +78,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   def get_rollup_site_ids(%Plausible.Site{rollup: true} = site) do
-    Plausible.Teams.owned_sites_ids(site.team)
+    Plausible.Cache.Adapter.get(:site_ids, site.team_id, fn ->
+      Plausible.Teams.owned_sites_ids(site.team)
+    end)
   end
 
   def get_rollup_site_ids(_site), do: nil
