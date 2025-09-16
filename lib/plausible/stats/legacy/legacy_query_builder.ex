@@ -43,7 +43,11 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp put_rollup_site_ids(query, %Plausible.Site{rollup: true} = site) do
-    site_ids = Plausible.Teams.owned_sites_ids(site.team)
+    site_ids =
+      Plausible.Cache.Adapter.get(:site_ids, site.team_id, fn ->
+        Plausible.Teams.owned_sites_ids(site.team)
+      end)
+
     struct!(query, rollup_site_ids: site_ids)
   end
 

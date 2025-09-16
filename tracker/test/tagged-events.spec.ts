@@ -26,7 +26,15 @@ test.beforeEach(async ({ page }) => {
       await route.fulfill({
         status: 200,
         contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>mocked page</title></head><body>mocked page</body></html>'
+        body: /* HTML */ `<!DOCTYPE html>
+          <html>
+            <head>
+              <title>mocked page</title>
+            </head>
+            <body>
+              mocked page
+            </body>
+          </html>`
       })
     })
 })
@@ -40,7 +48,7 @@ for (const mode of ['web', 'esm']) {
       testId,
       scriptConfig: switchByMode(
         {
-          web: { ...DEFAULT_CONFIG },
+          web: config,
           esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
             config
           )})</script>`
@@ -457,8 +465,12 @@ for (const mode of ['legacy', 'web']) {
         action: () => page.click('circle'),
         expectedRequests: [
           {
-            n: 'link click'
-            // bug with p.url, can't assert
+            n: 'link click',
+            p: {
+              expected: { url: {} },
+              __expectation__: (actual) =>
+                actual && JSON.stringify(actual) === '{"url":{}}'
+            }
           }
         ],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
@@ -568,7 +580,15 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: /* HTML */ `<!DOCTYPE html>
+            <html>
+              <head>
+                <title>other page</title>
+              </head>
+              <body>
+                other page
+              </body>
+            </html>`
         },
         awaitedRequestCount: 2,
         mockRequestTimeout: 2000
