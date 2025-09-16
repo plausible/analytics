@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.VerificationTest do
+defmodule PlausibleWeb.Live.VerificationV2Test do
   use PlausibleWeb.ConnCase, async: true
 
   use Plausible.Test.Support.DNS
