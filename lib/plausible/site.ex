@@ -12,6 +12,7 @@ defmodule Plausible.Site do
   @derive {Jason.Encoder, only: [:domain, :timezone]}
   schema "sites" do
     field :domain, :string
+    field :consolidated, :boolean, default: false
     field :timezone, :string, default: "Etc/UTC"
     field :public, :boolean
     field :stats_start_date, :date
@@ -67,16 +68,8 @@ defmodule Plausible.Site do
     timestamps()
   end
 
-  def rollup(team) do
-    %Plausible.Site{
-      id: 0,
-      native_stats_start_at: ~N[2018-01-01 00:00:00],
-      stats_start_date: ~D[2018-01-01],
-      rollup: true,
-      domain: "rollup:#{team.identifier}",
-      team: team,
-      team_id: team.id
-    }
+  def new_consolidated_for_team(team) do
+    new_for_team(team, %{consolidated: true, domain: "cv-#{team.identifier}"})
   end
 
   def new_for_team(team, params) do
@@ -99,7 +92,7 @@ defmodule Plausible.Site do
 
   def changeset(site, attrs \\ %{}) do
     site
-    |> cast(attrs, [:domain, :timezone, :legacy_time_on_page_cutoff])
+    |> cast(attrs, [:domain, :consolidated, :timezone, :legacy_time_on_page_cutoff])
     |> clean_domain()
     |> validate_required([:domain, :timezone])
     |> validate_timezone()
