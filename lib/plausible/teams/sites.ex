@@ -50,6 +50,7 @@ defmodule Plausible.Teams.Sites do
       inner_join: s in Plausible.Site,
       on: u.site_id == s.id,
       as: :site,
+      where: not s.consolidated,
       left_join: up in Site.UserPreference,
       on: up.site_id == s.id and up.user_id == ^user.id,
       select: %{
@@ -98,6 +99,7 @@ defmodule Plausible.Teams.Sites do
       inner_join: s in Plausible.Site,
       on: u.site_id == s.id,
       as: :site,
+      where: not s.consolidated,
       left_join: up in Site.UserPreference,
       on: up.site_id == s.id and up.user_id == ^user.id,
       left_join: ti in Teams.Invitation,

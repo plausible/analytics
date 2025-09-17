@@ -16,6 +16,7 @@ defmodule Plausible.CustomerSupport.Resource.Site do
 
     q =
       from s in Plausible.Site,
+        where: not s.consolidated,
         inner_join: t in assoc(s, :team),
         inner_join: o in assoc(t, :owners),
         order_by: [
@@ -34,6 +35,7 @@ defmodule Plausible.CustomerSupport.Resource.Site do
       from s in Plausible.Site,
         inner_join: t in assoc(s, :team),
         inner_join: o in assoc(t, :owners),
+        where: not s.consolidated,
         where:
           ilike(s.domain, ^"%#{input}%") or ilike(t.name, ^"%#{input}%") or
             ilike(o.name, ^"%#{input}%") or ilike(o.email, ^"%#{input}%"),

@@ -174,6 +174,7 @@ defmodule Plausible.HelpScout do
       from(s in Plausible.Site,
         inner_join: t in assoc(s, :team),
         inner_join: tm in assoc(t, :team_memberships),
+        where: not s.consolidated,
         where: tm.user_id == parent_as(:user).id and tm.role == :owner,
         where: ilike(s.domain, ^search_term) or ilike(s.domain_changed_from, ^search_term),
         select: 1
@@ -296,6 +297,7 @@ defmodule Plausible.HelpScout do
       left_join: t in assoc(tm, :team),
       left_join: s in assoc(t, :sites),
       as: :sites,
+      where: is_nil(s) or not s.consolidated,
       group_by: u.id,
       order_by: [desc: count(s.id)]
     )
