@@ -236,6 +236,7 @@ defmodule Plausible.Sites do
         left_join: gm in assoc(tm, :guest_memberships),
         as: :guest_memberships,
         where: tm.user_id == ^user.id,
+        where: not s.consolidated,
         order_by: [desc: s.id]
       )
 
