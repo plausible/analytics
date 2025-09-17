@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   @moduledoc """
   Team coordinator LiveView for Customer Support interface.
 
-  Manages tab-based navigation and delegates rendering to specialized 
+  Manages tab-based navigation and delegates rendering to specialized
   components: Overview, Members, Sites, Billing, SSO, and Audit.
   """
   use PlausibleWeb.CustomerSupport.Live
@@ -364,9 +364,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     "unlimited"
   end
 
-  defp number_format(number) when is_integer(number) do
-    Cldr.Number.to_string!(number)
+  defp number_format(input) do
+    PlausibleWeb.TextHelpers.number_format(input)
   end
-
-  defp number_format(other), do: other
 end
