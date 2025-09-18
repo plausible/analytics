@@ -12,6 +12,7 @@ defmodule Plausible.Site do
   @derive {Jason.Encoder, only: [:domain, :timezone]}
   schema "sites" do
     field :domain, :string
+    field :consolidated, :boolean
     field :timezone, :string, default: "Etc/UTC"
     field :public, :boolean
     field :stats_start_date, :date
