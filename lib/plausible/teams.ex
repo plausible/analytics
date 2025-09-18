@@ -108,7 +108,7 @@ defmodule Plausible.Teams do
   def owned_sites_ids(team) do
     Repo.all(
       from(s in Plausible.Site,
-        where: s.team_id == ^team.id and not s.consolidated,
+        where: s.team_id == ^team.id,
         select: s.id,
         order_by: [desc: s.id]
       )

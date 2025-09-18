@@ -101,9 +101,15 @@ defmodule Plausible.Site do
     """
   end
 
+  on_ee do
+    @changeset_cast_fields [:domain, :consolidated, :timezone, :legacy_time_on_page_cutoff]
+  else
+    @changeset_cast_fields [:domain, :timezone, :legacy_time_on_page_cutoff]
+  end
+
   def changeset(site, attrs \\ %{}) do
     site
-    |> cast(attrs, [:domain, :consolidated, :timezone, :legacy_time_on_page_cutoff])
+    |> cast(attrs, @changeset_cast_fields)
     |> clean_domain()
     |> validate_required([:domain, :timezone])
     |> validate_timezone()
