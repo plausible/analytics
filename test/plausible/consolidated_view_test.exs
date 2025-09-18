@@ -49,4 +49,20 @@ defmodule Plausible.ConsolidatedViewTest do
       refute Plausible.Repo.get_by(Plausible.Site, domain: ConsolidatedView.cv_domain(team))
     end
   end
+
+  describe "site_ids/1" do
+    setup [:create_user, :create_team, :create_site]
+
+    test "returns {:error, :not_found} when no consolidated view exists", %{team: team} do
+      assert {:error, :not_found} = ConsolidatedView.site_ids(team)
+    end
+
+    test "returns site_ids owned by the team when consolidated view exists", %{
+      team: team,
+      site: site
+    } do
+      ConsolidatedView.enable(team)
+      assert ConsolidatedView.site_ids(team) == {:ok, [site.id]}
+    end
+  end
 end

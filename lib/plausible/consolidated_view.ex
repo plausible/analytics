@@ -6,15 +6,14 @@ defmodule Plausible.ConsolidatedView do
   import Ecto.Query
 
   alias Plausible.Teams.Team
-  alias Plausible.Repo
+  alias Plausible.{Repo, Site}
 
-  @spec cv_domain(Plausible.Teams.Team.t()) :: String.t()
+  @spec cv_domain(Team.t()) :: String.t()
   def cv_domain(%Team{} = team) do
     "cv-#{team.identifier}"
   end
 
-  @spec enable(Plausible.Teams.Team.t()) ::
-          {:ok, Plausible.Site.t()} | {:error, :upgrade_required}
+  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :upgrade_required}
   def enable(%Team{} = team) do
     if eligible?(team) do
       do_enable(team)
@@ -23,20 +22,28 @@ defmodule Plausible.ConsolidatedView do
     end
   end
 
-  @spec disable(Plausible.Teams.Team.t()) :: :ok
+  @spec disable(Team.t()) :: :ok
   def disable(%Team{} = team) do
-    from(s in Plausible.Site, where: s.consolidated and s.domain == ^cv_domain(team))
+    from(s in Site, where: s.consolidated and s.domain == ^cv_domain(team))
     |> Plausible.Repo.delete_all()
 
     :ok
   end
 
+  @spec site_ids(Team.t()) :: [pos_integer()] | {:error, :not_found}
+  def site_ids(%Team{} = team) do
+    case Repo.get_by(Site, domain: cv_domain(team)) do
+      nil -> {:error, :not_found}
+      _found -> {:ok, Plausible.Teams.owned_sites_ids(team)}
+    end
+  end
+
   defp do_enable(%Team{} = team) do
     cv_domain = cv_domain(team)
 
-    case Repo.get_by(Plausible.Site, domain: cv_domain) do
+    case Repo.get_by(Site, domain: cv_domain) do
       nil ->
-        Plausible.Site.new_for_team(team, %{consolidated: true, domain: cv_domain})
+        Site.new_for_team(team, %{consolidated: true, domain: cv_domain})
         |> Repo.insert()
 
       cv ->
