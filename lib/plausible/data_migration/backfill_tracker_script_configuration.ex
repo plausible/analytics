@@ -44,7 +44,12 @@ defmodule Plausible.DataMigration.BackfillTrackerScriptConfiguration do
   def process_batch(offset, now) do
     sites =
       Repo.all(
-        from(s in Plausible.Site, order_by: [asc: :id], limit: @batch_size, offset: ^offset)
+        from(s in "sites",
+          order_by: [asc: :id],
+          limit: @batch_size,
+          offset: ^offset,
+          select: %{id: s.id, installation_meta: s.installation_meta}
+        )
       )
 
     if length(sites) > 0 do
