@@ -71,7 +71,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             <.td>{cycle}</.td>
             <.td>{date}</.td>
             <.td>
-              <span class={if total > limit, do: "text-red-600"}>{number_format(total)}</span>
+              <span class={if total > limit, do: "text-red-600"}>
+                {number_format(total)}
+              </span>
             </.td>
             <.td>{number_format(limit)}</.td>
           </:tbody>
@@ -360,11 +362,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     "unlimited"
   end
 
-  defp number_format(number) when is_integer(number) do
-    Cldr.Number.to_string!(number)
+  defp number_format(input) do
+    PlausibleWeb.TextHelpers.number_format(input)
   end
-
-  defp number_format(other), do: other
 
   defp sanitize_params(params) do
     params
@@ -403,7 +403,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   defp preview_number(n) do
     case Integer.parse("#{n}") do
       {n, ""} ->
-        number_format(n) <> " (#{PlausibleWeb.StatsView.large_number_format(n)})"
+        number_format(n) <>
+          " (#{PlausibleWeb.StatsView.large_number_format(n)})"
 
       _ ->
         "0"

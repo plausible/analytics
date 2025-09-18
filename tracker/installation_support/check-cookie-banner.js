@@ -9,18 +9,18 @@ const SELECTORS = {
     '#CybotCookiebotDialogBodyLevelButtonPreferences',
     '#cb-cookieoverlay',
     '#CybotCookiebotDialog',
-    '#cookiebanner',
+    '#cookiebanner'
   ]
 }
 
 function isVisible(element) {
-  const style = window.getComputedStyle(element);
+  const style = window.getComputedStyle(element)
 
   return (
     style.display !== 'none' &&
     style.visibility !== 'hidden' &&
     element.offsetParent !== null
-  );
+  )
 }
 
 export function checkCookieBanner() {

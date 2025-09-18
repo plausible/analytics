@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { checkProxyLikely } from '../../installation_support/check-proxy-likely'
 
 function mockSnippet(src) {
-  return { getAttribute: _ => src }
+  return { getAttribute: (_) => src }
 }
 
 test.describe('checkProxyLikely', () => {
@@ -23,12 +23,16 @@ test.describe('checkProxyLikely', () => {
   })
 
   test('returns false when snippet src is official plausible.io URL with query params', () => {
-    const snippets = [mockSnippet('https://plausible.io/js/plausible.js?v=1.0.0')]
+    const snippets = [
+      mockSnippet('https://plausible.io/js/plausible.js?v=1.0.0')
+    ]
     expect(checkProxyLikely(snippets)).toBe(false)
   })
 
   test('handles similar domain names (should be true)', () => {
-    const snippets = [mockSnippet('https://plausible.io.example.com/js/plausible.js')]
+    const snippets = [
+      mockSnippet('https://plausible.io.example.com/js/plausible.js')
+    ]
     expect(checkProxyLikely(snippets)).toBe(true)
   })
 
@@ -54,7 +58,9 @@ test.describe('checkProxyLikely', () => {
   })
 
   test('handles plausible.io subdomain (should be true)', () => {
-    const snippets = [mockSnippet('https://staging.plausible.io/js/plausible.js')]
+    const snippets = [
+      mockSnippet('https://staging.plausible.io/js/plausible.js')
+    ]
     expect(checkProxyLikely(snippets)).toBe(true)
   })
 })

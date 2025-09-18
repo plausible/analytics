@@ -49,7 +49,7 @@
         </.styled_link>
         instead.
       </:item>
-      <:item :if={ee?() and Plausible.sso_enabled?()}>
+      <:item :if={ee?()}>
         <%= on_ee do %>
           Have a Single Sign-on account?
           <.styled_link href={

@@ -246,7 +246,10 @@ export default function ListReport<
   function renderRow(listItem: TListItem) {
     return (
       <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
-        <div className="flex w-full" style={{ marginTop: ROW_GAP_HEIGHT }}>
+        <div
+          className="flex w-full items-center"
+          style={{ marginTop: ROW_GAP_HEIGHT }}
+        >
           {renderBarFor(listItem)}
           {renderMetricValuesFor(listItem)}
         </div>

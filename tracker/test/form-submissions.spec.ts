@@ -23,10 +23,8 @@ test('does not track form submissions when the feature is disabled', async ({
   const { url } = await initializePageDynamically(page, {
     testId,
     scriptConfig: DEFAULT_CONFIG,
-    bodyContent: `
-      <form>
-        <input type="text" /><input type="submit" value="Submit" />
-      </form>
+    bodyContent: /* HTML */ `
+      <form><input type="text" /><input type="submit" value="Submit" /></form>
     `
   })
 
@@ -50,9 +48,12 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
+      bodyContent: /* HTML */ `
         <form method="GET">
-          <input id="name" type="text" placeholder="Name" /><input type="submit" value="Submit" />
+          <input id="name" type="text" placeholder="Name" /><input
+            type="submit"
+            value="Submit"
+          />
         </form>
       `
     })
@@ -81,8 +82,8 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-        <form onsubmit="${customSubmitHandlerStub}">
+      bodyContent: /* HTML */ `
+        <form onsubmit=${customSubmitHandlerStub}>
           <input type="text" /><input type="submit" value="Submit" />
         </form>
       `
@@ -109,21 +110,24 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-      <div>
-        <button id="dynamically-insert-form" onclick="createForm()">Open form</button>
-        <script>
-          function createForm() {
-            const form = document.createElement('form');
-            form.setAttribute('onsubmit', "${customSubmitHandlerStub}");
-            const submit = document.createElement('input');
-            submit.type = 'submit';
-            submit.value = 'Submit';
-            form.appendChild(submit);
-            document.body.appendChild(form);
-          }
-        </script>
-      </div>
+      bodyContent: /* HTML */ `
+        <div>
+          <button id="dynamically-insert-form" onclick="createForm()">
+            Open form
+          </button>
+          <script>
+            function createForm() {
+              const form = document.createElement('form')
+              /* prettier-ignore */
+              form.onsubmit = ${customSubmitHandlerStub}
+              const submit = document.createElement('input')
+              submit.type = 'submit'
+              submit.value = 'Submit'
+              form.appendChild(submit)
+              document.body.appendChild(form)
+            }
+          </script>
+        </div>
       `
     })
 
@@ -151,8 +155,8 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-        <form novalidate onsubmit="${customSubmitHandlerStub}">
+      bodyContent: /* HTML */ `
+        <form novalidate onsubmit=${customSubmitHandlerStub}>
           <input type="email" />
           <input type="submit" value="Submit" />
         </form>
@@ -184,7 +188,7 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
+      bodyContent: /* HTML */ `
         <form>
           <input type="email" />
           <input type="submit" value="Submit" />
@@ -215,11 +219,16 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
+      bodyContent: /* HTML */ `
         <form id="form">
           <input type="text" placeholder="Name" />
         </form>
-        <button id="trigger-FormElement-submit" onclick="document.getElementById('form').submit()">Submit</button>
+        <button
+          id="trigger-FormElement-submit"
+          onclick="document.getElementById('form').submit()"
+        >
+          Submit
+        </button>
       `
     })
 
@@ -246,12 +255,12 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-        <form onsubmit="${customSubmitHandlerStub}">
+      bodyContent: /* HTML */ `
+        <form onsubmit=${customSubmitHandlerStub}>
           <h2>Form 1</h2>
           <input type="text" /><input type="submit" value="Submit" />
         </form>
-        <form onsubmit="${customSubmitHandlerStub}">
+        <form onsubmit=${customSubmitHandlerStub}>
           <h2>Form 2</h2>
           <input type="email" />
         </form>

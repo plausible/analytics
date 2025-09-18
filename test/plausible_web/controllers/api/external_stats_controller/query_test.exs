@@ -1372,6 +1372,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "breakdown by time:hour (internal API), counts visitors and visits in all buckets their session was active in",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:20:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:40:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 01:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 01:20:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "visits", "visit_duration"],
+          "date_range" => ["2021-01-01", "2021-01-02"],
+          "dimensions" => ["time:hour"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 01:00:00"], "metrics" => [1, 1, 3600]}
+             ]
+    end
+
     test "shows hourly data for a certain date with time_labels", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),

@@ -176,14 +176,14 @@ defmodule PlausibleWeb.Router do
     end
 
     scope "/sso", PlausibleWeb do
-      pipe_through [PlausibleWeb.Plugs.GateSSO, :browser, :csrf]
+      pipe_through [:browser, :csrf]
 
       get "/login", SSOController, :login_form
       post "/login", SSOController, :login
     end
 
     scope "/sso/saml", PlausibleWeb do
-      pipe_through [PlausibleWeb.Plugs.GateSSO, :sso_saml]
+      pipe_through [:sso_saml]
 
       scope [] do
         pipe_through :sso_saml_auth

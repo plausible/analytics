@@ -9,4 +9,10 @@
 
 ## Tweak GC to run more often
 ##-env ERL_FULLSWEEP_AFTER 10
+
+<%= if Application.get_env(:plausible, :is_selfhost) != true do %>
+-kernel inet_dist_listen_min 9100
+-kernel inet_dist_listen_max 9200
+<% end %>
+
 +Mdai max

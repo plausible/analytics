@@ -7,7 +7,7 @@ import variantsFile from './variants.json' with { type: 'json' }
 import { canSkipCompile } from './can-skip-compile.js'
 import packageJson from '../package.json' with { type: 'json' }
 import progress from 'cli-progress'
-import { spawn, Worker, Pool } from "threads"
+import { spawn, Worker, Pool } from 'threads'
 import json from '@rollup/plugin-json'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -28,27 +28,34 @@ export const DEFAULT_GLOBALS = {
   COMPILE_TAGGED_EVENTS: false,
   COMPILE_REVENUE: false,
   COMPILE_EXCLUSIONS: false,
-  COMPILE_TRACKER_SCRIPT_VERSION: packageJson.tracker_script_version,
+  COMPILE_TRACKER_SCRIPT_VERSION: packageJson.tracker_script_version
 }
 
-const ALL_VARIANTS = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
+const ALL_VARIANTS = variantsFile.legacyVariants.concat(
+  variantsFile.manualVariants
+)
 
 export async function compileAll(options = {}) {
   if (process.env.NODE_ENV === 'dev' && canSkipCompile()) {
-    console.info('COMPILATION SKIPPED: No changes detected in tracker dependencies')
+    console.info(
+      'COMPILATION SKIPPED: No changes detected in tracker dependencies'
+    )
     return
   }
 
   const bundledCode = await bundleCode()
 
-  const startTime = Date.now();
+  const startTime = Date.now()
   console.log(`Starting compilation of ${ALL_VARIANTS.length} variants...`)
 
-  const bar = new progress.SingleBar({ clearOnComplete: true }, progress.Presets.shades_classic)
+  const bar = new progress.SingleBar(
+    { clearOnComplete: true },
+    progress.Presets.shades_classic
+  )
   bar.start(ALL_VARIANTS.length, 0)
 
   const workerPool = Pool(() => spawn(new Worker('./worker-thread.js')))
-  ALL_VARIANTS.forEach(variant => {
+  ALL_VARIANTS.forEach((variant) => {
     workerPool.queue(async (worker) => {
       await worker.compileFile(variant, { ...options, bundledCode })
       bar.increment()
@@ -59,7 +66,9 @@ export async function compileAll(options = {}) {
   await workerPool.terminate()
   bar.stop()
 
-  console.log(`Completed compilation of ${ALL_VARIANTS.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
+  console.log(
+    `Completed compilation of ${ALL_VARIANTS.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`
+  )
 }
 
 export async function compileFile(variant, options) {
@@ -69,7 +78,7 @@ export async function compileFile(variant, options) {
   if (variant.entry_point) {
     code = await bundleCode(variant.entry_point)
   } else {
-    code = options.bundledCode || await bundleCode()
+    code = options.bundledCode || (await bundleCode())
   }
 
   if (!variant.npm_package) {
@@ -111,7 +120,7 @@ export function compileWebSnippet() {
 async function bundleCode(entryPoint = 'src/plausible.js') {
   const bundle = await rollup({
     input: entryPoint,
-    plugins: [json({compact: true})]
+    plugins: [json({ compact: true })]
   })
 
   const { output } = await bundle.generate({ format: 'esm' })
@@ -121,11 +130,13 @@ async function bundleCode(entryPoint = 'src/plausible.js') {
 
 function outputPath(variant, options) {
   if (variant.output_path) {
-    return relPath(`../../${variant.output_path}${options.suffix || ""}`)
+    return relPath(`../../${variant.output_path}${options.suffix || ''}`)
   } else if (variant.npm_package) {
-    return relPath(`../${variant.name}${options.suffix || ""}`)
+    return relPath(`../${variant.name}${options.suffix || ''}`)
   } else {
-    return relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`)
+    return relPath(
+      `../../priv/tracker/js/${variant.name}${options.suffix || ''}`
+    )
   }
 }
 
