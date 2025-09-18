@@ -508,6 +508,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, property} <- expect_param_key(params, "property"),
+         # Property name is extracted from route URL via wildcard,
+         # which returns a list.
          property = Path.join(property),
          {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
          {:ok, _} <- Props.disallow(site, property) do
