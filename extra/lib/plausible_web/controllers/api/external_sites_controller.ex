@@ -485,12 +485,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
       {:error, changeset} ->
         %{allowed_event_props: [error | _]} =
-          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+          Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
             cond do
               opts[:type] == :list and opts[:validation] == :length ->
                 "Can't add any more custom properties"
 
-              msg =~ "must be between" ->
+              opts[:type] == :string and opts[:validation] == :length ->
                 "Parameter `property` is too long"
 
               true ->
