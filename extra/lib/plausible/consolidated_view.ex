@@ -1,5 +1,9 @@
 defmodule Plausible.ConsolidatedView do
-  @moduledoc false
+  @moduledoc """
+  Contextual interface for consolidated views, 
+  each implemented as Site object serving as
+  pointers to team's regular sites. 
+  """
 
   use Plausible
 
