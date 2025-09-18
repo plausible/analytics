@@ -11,7 +11,7 @@ defmodule Plausible.ConsolidatedViewTest do
 
       test "creates and persists a new consolidated site instance", %{team: team} do
         assert {:ok, %Plausible.Site{consolidated: true}} = ConsolidatedView.enable(team)
-        assert Plausible.Repo.get_by(Plausible.Site, domain: ConsolidatedView.cv_domain(team))
+        assert ConsolidatedView.get(team)
       end
 
       test "is idempotent", %{team: team} do
@@ -38,18 +38,18 @@ defmodule Plausible.ConsolidatedViewTest do
       end
 
       test "deletes an existing consolidated site instance", %{team: team} do
-        assert Plausible.Repo.get_by(Plausible.Site, domain: ConsolidatedView.cv_domain(team))
+        assert ConsolidatedView.get(team)
 
         assert :ok = ConsolidatedView.disable(team)
 
-        refute Plausible.Repo.get_by(Plausible.Site, domain: ConsolidatedView.cv_domain(team))
+        refute ConsolidatedView.get(team)
       end
 
       test "is idempotent", %{team: team} do
         assert :ok = ConsolidatedView.disable(team)
         assert :ok = ConsolidatedView.disable(team)
 
-        refute Plausible.Repo.get_by(Plausible.Site, domain: ConsolidatedView.cv_domain(team))
+        refute ConsolidatedView.get(team)
       end
     end
 
@@ -66,6 +66,22 @@ defmodule Plausible.ConsolidatedViewTest do
       } do
         ConsolidatedView.enable(team)
         assert ConsolidatedView.site_ids(team) == {:ok, [site.id]}
+      end
+    end
+
+    describe "get/1" do
+      setup [:create_user, :create_team]
+
+      test "can get by team", %{team: team} do
+        assert is_nil(ConsolidatedView.get(team))
+        ConsolidatedView.enable(team)
+        assert %Plausible.Site{} = ConsolidatedView.get(team)
+      end
+
+      test "can get by team.identifier", %{team: team} do
+        assert is_nil(ConsolidatedView.get(team.identifier))
+        ConsolidatedView.enable(team)
+        assert %Plausible.Site{} = ConsolidatedView.get(team.identifier)
       end
     end
   end

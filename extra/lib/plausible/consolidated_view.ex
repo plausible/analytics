@@ -1,8 +1,8 @@
 defmodule Plausible.ConsolidatedView do
   @moduledoc """
-  Contextual interface for consolidated views, 
+  Contextual interface for consolidated views,
   each implemented as Site object serving as
-  pointers to team's regular sites. 
+  pointers to team's regular sites.
   """
 
   use Plausible
@@ -11,11 +11,6 @@ defmodule Plausible.ConsolidatedView do
 
   alias Plausible.Teams.Team
   alias Plausible.{Repo, Site}
-
-  @spec cv_domain(Team.t()) :: String.t()
-  def cv_domain(%Team{} = team) do
-    "cv-#{team.identifier}"
-  end
 
   @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :upgrade_required}
   def enable(%Team{} = team) do
@@ -28,7 +23,7 @@ defmodule Plausible.ConsolidatedView do
 
   @spec disable(Team.t()) :: :ok
   def disable(%Team{} = team) do
-    from(s in Site, where: s.consolidated and s.domain == ^cv_domain(team))
+    from(s in Site, where: s.consolidated and s.domain == ^make_id(team))
     |> Plausible.Repo.delete_all()
 
     :ok
@@ -36,23 +31,36 @@ defmodule Plausible.ConsolidatedView do
 
   @spec site_ids(Team.t()) :: [pos_integer()] | {:error, :not_found}
   def site_ids(%Team{} = team) do
-    case Repo.get_by(Site, domain: cv_domain(team)) do
+    case get(team) do
       nil -> {:error, :not_found}
       _found -> {:ok, owned_site_ids(team)}
     end
   end
 
-  defp do_enable(%Team{} = team) do
-    cv_domain = cv_domain(team)
+  @spec get(Team.t() | String.t()) :: Site.t() | nil
+  def get(team_or_id)
 
-    case Repo.get_by(Site, domain: cv_domain) do
+  def get(%Team{} = team) do
+    team |> make_id() |> get()
+  end
+
+  def get(id) when is_binary(id) do
+    Repo.get_by(Site, domain: id, consolidated: true)
+  end
+
+  defp do_enable(%Team{} = team) do
+    case get(team) do
       nil ->
-        Site.new_for_team(team, %{consolidated: true, domain: cv_domain})
+        Site.new_for_team(team, %{consolidated: true, domain: make_id(team)})
         |> Repo.insert()
 
       cv ->
         {:ok, cv}
     end
+  end
+
+  defp make_id(%Team{} = team) do
+    team.identifier
   end
 
   # TODO: Only active trials and business subscriptions should be eligible.
