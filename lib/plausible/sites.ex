@@ -12,6 +12,20 @@ defmodule Plausible.Sites do
 
   require Plausible.Site.UserPreference
 
+  on_ee do
+    @spec regular?(Site.t()) :: boolean()
+    def regular?(%Site{} = site), do: not site.consolidated
+
+    @spec consolidated?(Site.t()) :: boolean()
+    def consolidated?(%Site{} = site), do: site.consolidated
+  else
+    @spec regular?(Site.t()) :: boolean()
+    def regular?(%Site{}), do: true
+
+    @spec consolidated?(Site.t()) :: boolean()
+    def consolidated?(%Site{}), do: false
+  end
+
   @shared_link_special_names ["WordPress - Shared Dashboard"]
   @doc """
   Special shared link names are used to distinguish between those
