@@ -48,6 +48,10 @@ defmodule PlausibleWeb.Router do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
+  pipeline :embedded_liveview_layout do
+    plug :put_root_layout, html: {PlausibleWeb.LayoutView, :embedded_liveview}
+  end
+
   pipeline :external_api do
     plug :accepts, ["json"]
   end
@@ -695,14 +699,8 @@ defmodule PlausibleWeb.Router do
 
     get "/:domain/export", StatsController, :csv_export
 
-    scope alias: Live,
-          assigns: %{
-            connect_live_socket: true,
-            hide_header?: true,
-            hide_footer?: true,
-            embedded?: true
-          } do
-      pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
+    scope alias: Live do
+      pipe_through [:embedded_liveview_layout, PlausibleWeb.RequireAccountPlug]
 
       live "/:domain/live/top_stats", Stats, :live_top_stats, as: :site
     end
