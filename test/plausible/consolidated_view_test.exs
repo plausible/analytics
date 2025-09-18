@@ -21,6 +21,9 @@ defmodule Plausible.ConsolidatedViewTest do
 
       assert s1.domain == s2.domain
     end
+
+    @tag :skip
+    test "returns {:error, :upgrade_required} when team ineligible for this feature"
   end
 
   describe "disable/1" do
