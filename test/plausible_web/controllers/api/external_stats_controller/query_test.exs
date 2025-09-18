@@ -1049,6 +1049,94 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
     end
 
+    test "contains source filter with no ref value match", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, referrer: ""),
+        build(:pageview, referrer_source: "Google"),
+        build(:pageview, referrer_source: "https://DirectX.com")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains", "visit:source", ["Direct"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+    end
+
+    test "contains not source filter with no ref value match", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, referrer: ""),
+        build(:pageview, referrer_source: "Google"),
+        build(:pageview, referrer_source: "https://DirectX.com")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains_not", "visit:source", ["Direct"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+    end
+
+    test "contains source filter with no ref value match combined with member filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, referrer: ""),
+        build(:pageview, referrer_source: "Google"),
+        build(:pageview, referrer_source: "Bing"),
+        build(:pageview, referrer_source: "https://DirectX.com")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains", "visit:source", ["Direct", "Google"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+    end
+
+    test "contains source filter with no ref value match without case sensitivity", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, referrer: ""),
+        build(:pageview, referrer_source: "Google"),
+        build(:pageview, referrer_source: "Bing"),
+        build(:pageview, referrer_source: "https://DirectX.com")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains", "visit:source", ["direct"], %{"case_sensitive" => false}]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+    end
+
     test "`matches` operator", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/user/1234"),
