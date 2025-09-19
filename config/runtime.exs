@@ -148,6 +148,11 @@ persistor_backend =
     "remote" -> Plausible.Ingestion.Persistor.Remote
   end
 
+persistor_backend_percent_enabled =
+  config_dir
+  |> get_var_from_path_or_env("PERSISTOR_BACKEND_PERCENT_ENABLED", "0")
+  |> Integer.parse()
+
 persistor_url =
   get_var_from_path_or_env(config_dir, "PERSISTOR_URL", "http://localhost:8001/event")
 
@@ -660,7 +665,9 @@ config :plausible, Plausible.ImportDeletionRepo,
   transport_opts: ch_transport_opts,
   pool_size: 1
 
-config :plausible, Plausible.Ingestion.Persistor, backend: persistor_backend
+config :plausible, Plausible.Ingestion.Persistor,
+  backend: persistor_backend,
+  backend_percent_enabled: persistor_backend_percent_enabled
 
 config :plausible, Plausible.Ingestion.Persistor.Remote,
   url: persistor_url,
