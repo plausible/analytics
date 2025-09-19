@@ -26,7 +26,7 @@ export function prePageviewTrack() {
     // has been sent by the current script (i.e. it's most likely a SPA).
     // Trigger an engagement marking the "exit from the previous page".
     triggerEngagement()
-    currentDocumentHeight = getDocumentHeight()
+    currentDocumentHeight = _getDocumentHeight()
     maxScrollDepthPx = getCurrentScrollDepthPx()
   }
 }
@@ -124,6 +124,10 @@ var currentDocumentHeight
 var maxScrollDepthPx
 
 function getDocumentHeight() {
+  return requestAnimationFrame(_getDocumentHeight)
+}
+
+function _getDocumentHeight() {
   var body = document.body || {}
   var el = document.documentElement || {}
   return Math.max(
@@ -137,6 +141,10 @@ function getDocumentHeight() {
 }
 
 function getCurrentScrollDepthPx() {
+  return requestAnimationFrame(_getCurrentScrollDepthPx)
+}
+
+function _getCurrentScrollDepthPx() {
   var body = document.body || {}
   var el = document.documentElement || {}
   var viewportHeight = window.innerHeight || el.clientHeight || 0
