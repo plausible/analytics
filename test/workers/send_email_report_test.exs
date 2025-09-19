@@ -209,6 +209,60 @@ defmodule Plausible.Workers.SendEmailReportTest do
       assert text(bounce_rate_change_container) == "0%"
       assert text_of_attr(bounce_rate_change_container, "style") =~ @green
     end
+
+    test "includes goal conversions when goals exist" do
+      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      site = new_site(domain: "test-site.com", inserted_at: NaiveDateTime.shift(now, day: -8))
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
+
+      _goal1 = insert(:goal, site: site, event_name: "Signup")
+      _goal2 = insert(:goal, site: site, event_name: "Purchase")
+      _goal3 = insert(:goal, site: site, page_path: "/thank-you")
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          timestamp: NaiveDateTime.shift(now, day: -7)
+        ),
+        build(:pageview,
+          user_id: 124,
+          timestamp: NaiveDateTime.shift(now, day: -6)
+        ),
+        build(:event,
+          user_id: 123,
+          name: "Signup",
+          timestamp: NaiveDateTime.shift(now, day: -7)
+        ),
+        build(:event,
+          user_id: 124,
+          name: "Signup",
+          timestamp: NaiveDateTime.shift(now, day: -6)
+        ),
+        build(:event,
+          user_id: 125,
+          name: "Purchase",
+          timestamp: NaiveDateTime.shift(now, day: -5)
+        ),
+        build(:pageview,
+          user_id: 126,
+          pathname: "/thank-you",
+          timestamp: NaiveDateTime.shift(now, day: -4)
+        )
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      goal_names = find(html_body, ".goal-name") |> Enum.map(&text/1)
+      goal_conversions = find(html_body, ".goal-conversions") |> Enum.map(&text/1)
+
+      assert goal_names == ["Signup", "Purchase", "Visit /thank-you"]
+      assert goal_conversions == ["2", "1", "1"]
+    end
   end
 
   describe "monthly_reports" do
@@ -240,6 +294,121 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       assert :discard =
                perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
+    end
+
+    test "calculates timezone correctly" do
+      site =
+        new_site(timezone: "US/Eastern")
+
+      insert(:monthly_report, site: site, recipients: ["user@email.com"])
+
+      now = DateTime.now!(site.timezone)
+      last_month_first = DateTime.shift(now, month: -1) |> Plausible.Times.beginning_of_month()
+      last_month_last = DateTime.shift(now, month: -1) |> Plausible.Times.end_of_month()
+      month_before_last = DateTime.shift(last_month_first, minute: -1)
+      this_month_first = Plausible.Times.beginning_of_month(now)
+
+      populate_stats(site, [
+        # Month before last, not counted
+        build(:pageview,
+          timestamp: DateTime.shift_zone!(month_before_last, "UTC")
+        ),
+        # Month before last, not counted
+        build(:pageview,
+          timestamp: DateTime.shift_zone!(month_before_last, "UTC")
+        ),
+        # Last month first day, counted
+        build(:pageview,
+          user_id: 123,
+          timestamp: DateTime.shift_zone!(last_month_first, "UTC")
+        ),
+        # Last month last day, counted
+        build(:pageview,
+          user_id: 124,
+          timestamp: DateTime.shift_zone!(last_month_last, "UTC")
+        ),
+        # This month first day, not counted
+        build(:pageview,
+          timestamp: DateTime.shift_zone!(this_month_first, "UTC")
+        ),
+        # This month first day, not counted
+        build(:pageview,
+          timestamp: DateTime.shift_zone!(this_month_first, "UTC")
+        )
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      # Should find 2 visitors
+      assert text_of_element(html_body, ".page-count") == "2"
+    end
+
+    test "limits all stats sections to 5 entries" do
+      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      site = new_site(domain: "test-site.com", inserted_at: Timex.shift(now, months: -2))
+      insert(:monthly_report, site: site, recipients: ["user@email.com"])
+
+      for i <- 1..6, do: insert(:goal, site: site, event_name: "Goal#{i}")
+
+      last_month_stats =
+        for i <- 1..6 do
+          [
+            build(:pageview,
+              user_id: 100 + i,
+              pathname: "/page#{i}",
+              referrer_source: if(i == 6, do: "Direct / None", else: "Source#{i}"),
+              timestamp: Date.shift(now, month: -1)
+            ),
+            build(:event,
+              user_id: 100 + i,
+              name: "Goal#{i}",
+              timestamp: Date.shift(now, month: -1)
+            )
+          ]
+        end
+        |> List.flatten()
+
+      populate_stats(site, last_month_stats)
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      page_names = find(html_body, ".page-name")
+      assert length(page_names) == 5
+
+      referrer_names = find(html_body, ".referrer-name")
+      assert length(referrer_names) == 5
+
+      goal_names = find(html_body, ".goal-name")
+      assert length(goal_names) == 5
+    end
+
+    test "email subject includes month name" do
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
+      insert(:monthly_report, site: site, recipients: ["user@email.com"])
+
+      last_month =
+        site.timezone
+        |> DateTime.now!()
+        |> Date.shift(month: -1)
+        |> Date.beginning_of_month()
+        |> Calendar.strftime("%B")
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
+
+      assert_email_delivered_with(
+        subject: "#{last_month} report for #{site.domain}",
+        to: [nil: "user@email.com"]
+      )
     end
   end
 end
