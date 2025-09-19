@@ -23,7 +23,7 @@ jobs:
         with:
           token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 23.2.0
           registry-url: 'https://registry.npmjs.org'
