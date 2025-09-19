@@ -294,7 +294,11 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp filter_field(db_field, [:contains | _rest] = filter) do
-    contains_clause(col_value_string(db_field), filter)
+    if no_ref_field?(db_field) do
+      contains_clause_no_ref(col_value_string(db_field), filter)
+    else
+      contains_clause(col_value_string(db_field), filter)
+    end
   end
 
   defp filter_field(db_field, [:contains_not | rest]) do
@@ -326,6 +330,15 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp db_field_name("channel"), do: :acquisition_channel
   defp db_field_name(name), do: String.to_existing_atom(name)
+
+  defp no_ref_field?(:source), do: true
+  defp no_ref_field?(:referrer), do: true
+  defp no_ref_field?(:utm_medium), do: true
+  defp no_ref_field?(:utm_source), do: true
+  defp no_ref_field?(:utm_campaign), do: true
+  defp no_ref_field?(:utm_content), do: true
+  defp no_ref_field?(:utm_term), do: true
+  defp no_ref_field?(_), do: false
 
   defp db_field_val(:source, @no_ref), do: ""
   defp db_field_val(:referrer, @no_ref), do: ""
@@ -375,6 +388,39 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     end
   end
 
+  defp contains_clause_no_ref(value_expression, [_, _, clauses | _] = filter) do
+    case_sensitive? = case_sensitive?(filter)
+
+    expression =
+      if case_sensitive? do
+        dynamic(
+          [x],
+          fragment("multiSearchAny(?, ?)", ^value_expression, ^clauses)
+        )
+      else
+        dynamic(
+          [x],
+          fragment("multiSearchAnyCaseInsensitive(?, ?)", ^value_expression, ^clauses)
+        )
+      end
+
+    if Enum.any?(clauses, &matches_no_ref?(&1, case_sensitive?)) do
+      dynamic([x], ^expression or fragment("? = ?", ^value_expression, ""))
+    else
+      expression
+    end
+  end
+
   defp case_sensitive?([_, _, _, %{case_sensitive: false}]), do: false
   defp case_sensitive?(_), do: true
+
+  @no_ref_downcase String.downcase(@no_ref)
+
+  defp matches_no_ref?(input, false) do
+    String.contains?(@no_ref_downcase, String.downcase(input))
+  end
+
+  defp matches_no_ref?(input, true) do
+    String.contains?(@no_ref, input)
+  end
 end
