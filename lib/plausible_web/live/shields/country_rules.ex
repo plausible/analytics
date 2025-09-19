@@ -30,8 +30,8 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
     <div>
       <.settings_tiles>
         <.tile docs="excluding">
-          <:title>Country Block List</:title>
-          <:subtitle>Reject incoming traffic from specific countries</:subtitle>
+          <:title>Country block list</:title>
+          <:subtitle>Reject incoming traffic from specific countries.</:subtitle>
           <.filter_bar
             :if={@country_rules_count < Shields.maximum_country_rules()}
             filtering_enabled?={false}
@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
               x-on:click={Modal.JS.open("country-rule-form-modal")}
               mt?={false}
             >
-              Add Country
+              Add country
             </.button>
           </.filter_bar>
 
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
           </.notice>
 
           <p :if={Enum.empty?(@country_rules)} class="mt-12 mb-8 text-center text-sm">
-            No Country Rules configured for this site.
+            No country rules configured for this site.
           </p>
 
           <.table :if={not Enum.empty?(@country_rules)} rows={@country_rules}>

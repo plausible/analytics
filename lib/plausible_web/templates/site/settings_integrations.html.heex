@@ -3,7 +3,7 @@
 <.settings_tiles>
   <.tile docs="google-search-console-integration">
     <:title>
-      Google Search Console Integration
+      Google Search Console integration
     </:title>
     <:subtitle>
       <p>
@@ -18,6 +18,7 @@
           value={@site.google_auth.email}
           disabled="disabled"
           width="w-1/2"
+          mt?={false}
         />
 
         <.button_link
@@ -25,7 +26,7 @@
           href={Routes.site_path(@conn, :delete_google_auth, @site.domain)}
           method="delete"
         >
-          Unlink Google Account
+          Unlink Google account
         </.button_link>
 
         <%= case @search_console_domains do %>
@@ -142,7 +143,7 @@
       </p>
     </:subtitle>
 
-    <div class="mt-4 text-sm">
+    <div class="text-sm">
       Plausible Looker Studio Connector adds powerful reporting features that help turn Plausible
       into an even better replacement for Google Analytics.
       <.styled_link href="https://plausible.io/docs/looker-studio" new_tab={true}>
@@ -153,10 +154,10 @@
 
   <.tile :if={@has_plugins_tokens? || @conn.query_params["new_token"]}>
     <:title>
-      Plugin Tokens
+      Plugin tokens
     </:title>
     <:subtitle>
-      Control Plugin Access
+      Control plugin access.
     </:subtitle>
 
     {live_render(@conn, PlausibleWeb.Live.Plugins.API.Settings,

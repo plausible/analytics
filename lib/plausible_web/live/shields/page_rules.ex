@@ -33,8 +33,8 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
     <div>
       <.settings_tiles>
         <.tile docs="top-pages#block-traffic-from-specific-pages-or-sections">
-          <:title>Pages Block List</:title>
-          <:subtitle>Reject incoming traffic for specific pages</:subtitle>
+          <:title>Pages block list</:title>
+          <:subtitle>Reject incoming traffic for specific pages.</:subtitle>
           <.filter_bar
             :if={@page_rules_count < Shields.maximum_page_rules()}
             filtering_enabled?={false}
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
               x-on:click={Modal.JS.open("page-rule-form-modal")}
               mt?={false}
             >
-              Add Page
+              Add page
             </.button>
           </.filter_bar>
 
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
           </.notice>
 
           <p :if={Enum.empty?(@page_rules)} class="mt-12 mb-8 text-center text-sm">
-            No Page Rules configured for this site.
+            No page rules configured for this site.
           </p>
 
           <.table :if={not Enum.empty?(@page_rules)} rows={@page_rules}>
