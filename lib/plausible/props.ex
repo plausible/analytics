@@ -120,7 +120,11 @@ defmodule Plausible.Props do
     |> Ecto.Changeset.validate_change(:allowed_event_props, fn field, allowed_props ->
       if Enum.all?(allowed_props, &valid?/1),
         do: [],
-        else: [{field, "must be between 1 and #{@max_prop_key_length} characters"}]
+        else: [
+          {field,
+           {"must be between 1 and #{@max_prop_key_length} characters",
+            validation: :length, type: :string}}
+        ]
     end)
   end
 

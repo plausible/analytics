@@ -54,17 +54,23 @@ defmodule Plausible.PropsTest do
 
     long_prop = String.duplicate("a", 301)
     assert {:error, changeset} = Plausible.Props.allow(site, long_prop)
-    assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
+
+    assert {"must be between 1 and 300 characters", [validation: :length, type: :string]} ==
+             changeset.errors[:allowed_event_props]
   end
 
   test "allow/2 fails when prop key is empty" do
     site = new_site()
 
     assert {:error, changeset} = Plausible.Props.allow(site, "")
-    assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
+
+    assert {"must be between 1 and 300 characters", [validation: :length, type: :string]} ==
+             changeset.errors[:allowed_event_props]
 
     assert {:error, changeset} = Plausible.Props.allow(site, " ")
-    assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
+
+    assert {"must be between 1 and 300 characters", [validation: :length, type: :string]} ==
+             changeset.errors[:allowed_event_props]
   end
 
   test "allow/2 does not fail when prop key is already in the list" do
