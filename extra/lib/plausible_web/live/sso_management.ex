@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
         <a id="sso-config">Single Sign-On</a>
       </:title>
       <:subtitle>
-        Configure and manage Single Sign-On for your team
+        Configure and manage Single Sign-On for your team.
       </:subtitle>
 
       <.init_view :if={@mode == :init} current_team={@current_team} />
@@ -244,7 +244,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
         <a id="sso-manage-config">Single Sign-On</a>
       </:title>
       <:subtitle>
-        Configure and manage Single Sign-On for your team
+        Configure and manage Single Sign-On for your team.
       </:subtitle>
 
       <div class="flex-col space-y-6">

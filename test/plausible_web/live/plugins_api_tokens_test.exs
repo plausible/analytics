@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       conn = get(conn, "/#{site.domain}/settings/integrations?new_token=test")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Plugin Tokens"
+      assert resp =~ "Plugin tokens"
     end
 
     test "does display the Plugins API section when there are tokens already created", %{
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Plugin Tokens"
+      assert resp =~ "Plugin tokens"
     end
 
     test "lists tokens with revoke actions", %{conn: conn, site: site} do

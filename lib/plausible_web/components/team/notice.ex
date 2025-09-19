@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Team.Notice do
   def team_members_notice(assigns) do
     ~H"""
     <aside class="mt-4 mb-4">
-      <.notice theme={:gray} class="rounded border border-gray-300 text-sm mt-4">
+      <.notice theme={:gray} class="mt-4">
         <p>
           Team members automatically have access to this site.
           <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :team_general)}>

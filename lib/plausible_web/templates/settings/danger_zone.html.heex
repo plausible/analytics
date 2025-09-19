@@ -1,16 +1,16 @@
-<.notice title="Danger Zone" theme={:red}>
+<.notice title="Danger zone" theme={:red}>
   Destructive actions below can result in irrecoverable data loss. Be careful.
 </.notice>
 
 <.settings_tiles>
   <.tile docs="delete-account">
-    <:title>Delete Account</:title>
-    <:subtitle>Deleting your account removes all sites and stats you've collected</:subtitle>
+    <:title>Delete account</:title>
+    <:subtitle>Permanently deletes your sites and all collected stats.</:subtitle>
 
     <%= cond do %>
       <% length(@solely_owned_teams) > 0 -> %>
-        <.notice theme={:gray} title="Cannot delete account at this time">
-          You are the sole owner of one or more teams. If you want to delete your account, please either add another owner or delete each of the following teams:
+        <.notice theme={:gray} title="You can't delete your account yet">
+          You're the sole owner of one or more teams. To delete your account, either add another owner or delete each of the following team(s):
           <ul class="w-full py-4">
             <li :for={team <- @solely_owned_teams} class="pt-1">
               <.styled_link href={
@@ -22,8 +22,8 @@
           </ul>
         </.notice>
       <% Plausible.Billing.Subscription.Status.active?(@my_team && @my_team.subscription) -> %>
-        <.notice theme={:gray} title="Cannot delete account at this time">
-          Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.
+        <.notice theme={:gray} title="You can't delete your account yet">
+          You have an active subscription. To delete your account, cancel your subscription first.
         </.notice>
       <% true -> %>
         <.button_link
@@ -31,8 +31,9 @@
           href="/me"
           method="delete"
           theme="danger"
+          mt?={false}
         >
-          Delete My Account
+          Delete my account
         </.button_link>
     <% end %>
   </.tile>

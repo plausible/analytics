@@ -505,9 +505,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Site Timezone"
-      assert resp =~ "Site Domain"
-      assert resp =~ "Site Installation"
+      assert resp =~ "Site timezone"
+      assert resp =~ "Site domain"
+      assert resp =~ "Site installation"
     end
 
     @tag :ee_only
@@ -530,16 +530,16 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"Visibility", "/#{site.domain}/settings/visibility"},
                {"Goals", "/#{site.domain}/settings/goals"},
                {"Funnels", "/#{site.domain}/settings/funnels"},
-               {"Custom Properties", "/#{site.domain}/settings/properties"},
+               {"Custom properties", "/#{site.domain}/settings/properties"},
                {"Integrations", "/#{site.domain}/settings/integrations"},
-               {"Imports & Exports", "/#{site.domain}/settings/imports-exports"},
+               {"Imports & exports", "/#{site.domain}/settings/imports-exports"},
                {"Shields", ""},
-               {"IP Addresses", "/#{site.domain}/settings/shields/ip_addresses"},
+               {"IP addresses", "/#{site.domain}/settings/shields/ip_addresses"},
                {"Countries", "/#{site.domain}/settings/shields/countries"},
                {"Pages", "/#{site.domain}/settings/shields/pages"},
                {"Hostnames", "/#{site.domain}/settings/shields/hostnames"},
-               {"Email Reports", "/#{site.domain}/settings/email-reports"},
-               {"Danger Zone", "/#{site.domain}/settings/danger-zone"}
+               {"Email reports", "/#{site.domain}/settings/email-reports"},
+               {"Danger zone", "/#{site.domain}/settings/danger-zone"}
              ]
     end
 
@@ -562,16 +562,16 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"People", "/#{site.domain}/settings/people"},
                {"Visibility", "/#{site.domain}/settings/visibility"},
                {"Goals", "/#{site.domain}/settings/goals"},
-               {"Custom Properties", "/#{site.domain}/settings/properties"},
+               {"Custom properties", "/#{site.domain}/settings/properties"},
                {"Integrations", "/#{site.domain}/settings/integrations"},
-               {"Imports & Exports", "/#{site.domain}/settings/imports-exports"},
+               {"Imports & exports", "/#{site.domain}/settings/imports-exports"},
                {"Shields", ""},
-               {"IP Addresses", "/#{site.domain}/settings/shields/ip_addresses"},
+               {"IP addresses", "/#{site.domain}/settings/shields/ip_addresses"},
                {"Countries", "/#{site.domain}/settings/shields/countries"},
                {"Pages", "/#{site.domain}/settings/shields/pages"},
                {"Hostnames", "/#{site.domain}/settings/shields/hostnames"},
-               {"Email Reports", "/#{site.domain}/settings/email-reports"},
-               {"Danger Zone", "/#{site.domain}/settings/danger-zone"}
+               {"Email reports", "/#{site.domain}/settings/email-reports"},
+               {"Danger zone", "/#{site.domain}/settings/danger-zone"}
              ]
     end
 
@@ -905,9 +905,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert text_of_attr(resp, ~s|a[href]|, "href") =~
                "https://accounts.google.com/o/oauth2/"
 
-      assert resp =~ "Import Data"
+      assert resp =~ "Import data"
       assert resp =~ "There are no imports yet"
-      assert resp =~ "Export Data"
+      assert resp =~ "Export data"
     end
 
     test "renders imports in import list", %{conn: conn, site: site} do
@@ -1870,8 +1870,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
 
-      assert resp =~ "Site Domain"
-      assert resp =~ "Change Domain"
+      assert resp =~ "Site domain"
+      assert resp =~ "Change domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
     end
 
@@ -1980,7 +1980,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "no change team section appears when <1 team", %{conn: conn, site: site} do
       conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
       html = html_response(conn, 200)
-      assert html =~ "Danger Zone"
+      assert html =~ "Danger zone"
       assert html =~ "Delete #{site.domain}"
       refute html =~ "Change #{site.domain} team"
     end
@@ -1990,7 +1990,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
       html = html_response(conn, 200)
-      assert html =~ "Danger Zone"
+      assert html =~ "Danger zone"
       assert html =~ "Delete #{site.domain}"
       assert html =~ "Change #{site.domain} team"
     end

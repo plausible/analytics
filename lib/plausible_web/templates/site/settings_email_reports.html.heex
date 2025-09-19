@@ -6,10 +6,10 @@
       enable_route: :enable_weekly_report,
       remove_route: :remove_weekly_report_recipient,
       add_route: :add_weekly_report_recipient,
-      heading: "Weekly Email Reports",
-      subtitle: "Send weekly analytics reports to as many addresses as you wish",
+      heading: "Weekly email reports",
+      subtitle: "Send weekly analytics reports to as many addresses as you wish.",
       toggle: "Send a weekly email report every Monday",
-      add_label: "Add Weekly Report Recipient"
+      add_label: "Add weekly report recipient"
     },
     monthly: %{
       report: @monthly_report,
@@ -17,10 +17,10 @@
       enable_route: :enable_monthly_report,
       remove_route: :remove_monthly_report_recipient,
       add_route: :add_monthly_report_recipient,
-      heading: "Monthly Email Reports",
-      subtitle: "Send monthly analytics reports to as many addresses as you wish",
+      heading: "Monthly email reports",
+      subtitle: "Send monthly analytics reports to as many addresses as you wish.",
       toggle: "Send a monthly email report on 1st of the month",
-      add_label: "Add Monthly Report Recipient"
+      add_label: "Add monthly report recipient"
     }
   ] %>
 
@@ -48,11 +48,7 @@
     </.form>
 
     <div :if={meta.report} class="mt-4">
-      <.table
-        :if={Enum.count(meta.report.recipients) > 0}
-        width="w-1/2"
-        rows={meta.report.recipients}
-      >
+      <.table :if={Enum.count(meta.report.recipients) > 0} rows={meta.report.recipients}>
         <:thead>
           <.th>
             Recipients
@@ -101,7 +97,7 @@
             mt?={false}
           />
           <.button type="submit" mt?={false}>
-            Add Recipient
+            Add recipient
           </.button>
         </div>
       </.form>
@@ -111,16 +107,16 @@
   <% change_notifications = [
     spike: %{
       notification: @spike_notification,
-      heading: "Traffic Spike Notifications",
-      subtitle: "Get notified when your site has unusually high number of current visitors",
+      heading: "Traffic spike notifications",
+      subtitle: "Get notified when your site has unusually high number of current visitors.",
       threshold_text: "Current visitors threshold",
       toggle: "Send notifications of traffic spikes"
     },
     drop: %{
       notification: @drop_notification,
-      heading: "Traffic Drop Notifications",
+      heading: "Traffic drop notifications",
       subtitle:
-        "Get notified when your site has unusually low number of visitors within 12 hours",
+        "Get notified when your site has unusually low number of visitors within 12 hours.",
       threshold_text: "12 hours visitor threshold",
       toggle: "Send notifications of traffic drops"
     }
@@ -163,17 +159,13 @@
           label={meta.threshold_text}
         />
         <.button type="submit" mt?={false}>
-          Save Threshold
+          Save threshold
         </.button>
       </div>
     </.form>
 
-    <div class="mt-4">
-      <.table
-        :if={meta.notification && Enum.count(meta.notification.recipients) > 0}
-        width="w-1/2"
-        rows={meta.notification.recipients}
-      >
+    <div :if={meta.notification && Enum.count(meta.notification.recipients) > 0} class="mt-4">
+      <.table rows={meta.notification.recipients}>
         <:thead>
           <.th>
             Recipients
@@ -231,7 +223,7 @@
             required
           />
           <.button type="submit" mt?={false}>
-            Add Recipient
+            Add recipient
           </.button>
         </div>
       </.form>

@@ -1,44 +1,35 @@
 <.settings_tiles>
   <.tile :if={Plausible.Users.type(@current_user) == :standard}>
     <:title>
-      <a id="update-name">Your Name</a>
+      <a id="update-name">Your name</a>
     </:title>
-    <:subtitle>
-      Change the name associated with your account
-    </:subtitle>
     <.form
       :let={f}
       action={Routes.settings_path(@conn, :update_name)}
       for={@name_changeset}
       method="post"
     >
-      <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
+      <.input type="text" field={f[:name]} label="Name" width="w-1/2" mt?={false} />
 
       <.button type="submit">
-        Change Name
+        Change name
       </.button>
     </.form>
   </.tile>
 
   <.tile :if={Plausible.Users.type(@current_user) == :sso}>
     <:title>
-      <a id="view-name">Your Name</a>
+      <a id="view-name">Your name</a>
     </:title>
-    <:subtitle>
-      The name associated with your account
-    </:subtitle>
     <.form :let={f} for={@name_changeset}>
-      <.input type="text" field={f[:name]} disabled={true} label="Name" width="w-1/2" />
+      <.input type="text" field={f[:name]} disabled={true} label="Name" width="w-1/2" mt?={false} />
     </.form>
   </.tile>
 
   <.tile docs="dashboard-appearance">
     <:title>
-      <a id="update-theme">Dashboard Appearance</a>
+      <a id="update-theme">Appearance</a>
     </:title>
-    <:subtitle>
-      Set your visual preferences
-    </:subtitle>
     <.form
       :let={f}
       action={Routes.settings_path(@conn, :update_theme)}
@@ -51,10 +42,11 @@
         options={Plausible.Themes.options()}
         label="Theme"
         width="w-1/2"
+        mt?={false}
       />
 
       <.button type="submit">
-        Change Theme
+        Change theme
       </.button>
     </.form>
   </.tile>

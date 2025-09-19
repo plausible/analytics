@@ -72,22 +72,24 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       {@import_warning}
     </.notice>
 
-    <div class="mt-4 flex justify-end gap-x-4">
+    <div class="flex gap-x-4">
       <.button_link
         theme="bright"
         href={Plausible.Google.API.import_authorize_url(@site.id)}
         disabled={@import_in_progress? or @at_maximum?}
+        mt?={false}
       >
         Import from
         <img
           src="/images/icon/google_analytics_logo.svg"
           alt="Google Analytics import"
-          class="h-6 w-12"
+          class="h-6 w-12 -my-1"
         />
       </.button_link>
       <.button_link
         disabled={@import_in_progress? or @at_maximum?}
         href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
+        mt?={false}
       >
         Import from CSV
       </.button_link>
@@ -97,7 +99,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       There are no imports yet for this site.
     </p>
 
-    <div class="mt-8">
+    <div class="mt-6">
       <.table :if={not Enum.empty?(@site_imports)} rows={@site_imports}>
         <:thead>
           <.th>Import</.th>
@@ -111,22 +113,22 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
         <:tbody :let={entry}>
           <.td max_width="max-w-40">
             <div class="flex items-center gap-x-2 truncate">
-              <div class="w-6" title={notice_message(entry.tooltip)}>
+              <div class="w-5" title={notice_message(entry.tooltip)}>
                 <Heroicons.clock
                   :if={entry.live_status == SiteImport.pending()}
-                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                  class="block size-5 text-indigo-600 dark:text-green-600"
                 />
                 <.spinner
                   :if={entry.live_status == SiteImport.importing()}
-                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                  class="block size-5 text-indigo-600 dark:text-green-600"
                 />
                 <Heroicons.check
                   :if={entry.live_status == SiteImport.completed()}
-                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                  class="block size-5 text-indigo-600 dark:text-green-600"
                 />
                 <Heroicons.exclamation_triangle
                   :if={entry.live_status == SiteImport.failed()}
-                  class="block h-6 w-6 text-red-700 dark:text-red-500"
+                  class="block size-5 text-red-700 dark:text-red-500"
                 />
               </div>
               <div

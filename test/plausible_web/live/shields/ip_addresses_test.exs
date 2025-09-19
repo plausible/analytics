@@ -13,8 +13,8 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/ip_addresses")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No IP Rules configured for this site"
-      assert resp =~ "IP Block List"
+      assert resp =~ "No IP rules configured for this site"
+      assert resp =~ "IP block list"
     end
 
     test "lists ip rules with remove actions", %{conn: conn, site: site} do

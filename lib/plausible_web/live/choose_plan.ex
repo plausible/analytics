@@ -146,10 +146,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="mt-6 w-full md:flex">
           <a
             href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="hidden md:flex md:w-1/6 h-max md:mt-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-bold gap-1 items-center"
+            class="hidden md:flex md:w-1/6 h-max md:mt-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-semibold gap-1 items-center"
           >
             <span>←</span>
-            <p>Back to Settings</p>
+            <p>Back to settings</p>
           </a>
           <div class="md:w-4/6">
             <h1 class="mx-auto max-w-4xl text-center text-2xl font-bold tracking-tight lg:text-3xl">
@@ -165,9 +165,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="md:hidden mt-6 max-w-md mx-auto">
           <a
             href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-bold"
+            class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-semibold"
           >
-            ← Back to Settings
+            ← Back to settings
           </a>
         </div>
         <div class="mt-10 flex flex-col gap-8 lg:flex-row items-center lg:items-baseline">

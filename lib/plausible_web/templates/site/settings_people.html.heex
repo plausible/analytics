@@ -20,7 +20,7 @@
         mt?={false}
         href={Routes.membership_path(@conn, :invite_member_form, @site.domain)}
       >
-        Invite New Guest
+        Invite new guest
       </.button_link>
     </.filter_bar>
 
@@ -29,7 +29,7 @@
     } />
 
     <div class="flow-root">
-      <ul class="divide-y divide-gray-200 dark:divide-gray-400">
+      <ul class="divide-y divide-gray-200 dark:divide-gray-600">
         <%= for membership <- @memberships do %>
           <li class="py-4" id={"membership-#{membership.user.id}"}>
             <div class="flex items-center space-x-4">
@@ -78,7 +78,7 @@
                       method="put"
                       disabled={@site_role not in [:owner, :admin] or membership.role == "editor"}
                     >
-                      <div>Guest Editor</div>
+                      <div>Guest editor</div>
                       <div class="text-gray-500 dark:text-gray-400 text-xs/5">
                         View stats and edit site settings
                       </div>
@@ -96,7 +96,7 @@
                       method="put"
                       disabled={@site_role not in [:owner, :admin] or membership.role == "viewer"}
                     >
-                      <div>Guest Viewer</div>
+                      <div>Guest viewer</div>
                       <div class="text-gray-500 dark:text-gray-400 text-xs/5">
                         View stats only
                       </div>
@@ -129,7 +129,7 @@
 
   <.tile :if={Enum.count(@invitations) > 0}>
     <:title>Pending invitations</:title>
-    <:subtitle>Waiting for new members to accept their invitations</:subtitle>
+    <:subtitle>Waiting for new members to accept their invitations.</:subtitle>
 
     <.table
       rows={@invitations}

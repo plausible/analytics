@@ -13,8 +13,8 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/hostnames")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No Hostname Rules configured for this site"
-      assert resp =~ "Hostnames Allow List"
+      assert resp =~ "No hostname rules configured for this site"
+      assert resp =~ "Hostnames allow list"
       assert resp =~ "Traffic from all hostnames is currently accepted."
     end
 

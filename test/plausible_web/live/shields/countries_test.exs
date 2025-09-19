@@ -13,8 +13,8 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/countries")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No Country Rules configured for this site"
-      assert resp =~ "Country Block List"
+      assert resp =~ "No country rules configured for this site"
+      assert resp =~ "Country block list"
     end
 
     test "lists country rules with remove actions", %{conn: conn, site: site} do

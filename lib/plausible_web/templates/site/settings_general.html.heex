@@ -1,21 +1,21 @@
 <.settings_tiles>
   <.tile docs="change-domain-name">
     <:title>
-      Site Domain
+      Site domain
     </:title>
     <:subtitle>
       Moving your site to a different domain? We got you!
     </:subtitle>
-    <.input name="domain" label="Domain" value={@site.domain} disabled width="w-1/2" />
+    <.input name="domain" label="Domain" value={@site.domain} disabled width="w-1/2" mt?={false} />
 
     <.button_link href={Routes.site_path(@conn, :change_domain, @site.domain)}>
-      Change Domain
+      Change domain
     </.button_link>
   </.tile>
 
   <.tile docs="general">
-    <:title>Site Timezone</:title>
-    <:subtitle>Update your reporting timezone</:subtitle>
+    <:title>Site timezone</:title>
+    <:subtitle>Update your reporting timezone.</:subtitle>
     <.form :let={f} for={@changeset} action={"/#{URI.encode_www_form(@site.domain)}/settings"}>
       <.input
         field={f[:timezone]}
@@ -23,6 +23,7 @@
         type="select"
         options={Plausible.Timezones.options()}
         width="w-1/2"
+        mt?={false}
       />
       <.button type="submit">
         Save timezone
@@ -30,17 +31,17 @@
     </.form>
   </.tile>
   <.tile docs="plausible-script">
-    <:title>Site Installation</:title>
+    <:title>Site installation</:title>
     <:subtitle>
       Control what data is collected and verify your installation.
     </:subtitle>
     <.button_link
-      class="mt-4"
       href={
         Routes.site_path(@conn, :installation, @site.domain, flow: PlausibleWeb.Flows.review())
       }
+      mt?={false}
     >
-      Review Installation
+      Review installation
     </.button_link>
   </.tile>
 </.settings_tiles>

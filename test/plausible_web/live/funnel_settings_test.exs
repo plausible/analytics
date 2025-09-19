@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
 
         resp = html_response(conn, 200)
-        assert resp =~ "Compose Goals into Funnels"
+        assert resp =~ "Compose goals into funnels"
         assert resp =~ "From blog to signup"
         assert resp =~ "From signup to blog"
         refute resp =~ "Your account does not have access"

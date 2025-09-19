@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         {:ok, _lv, doc} = get_liveview(conn)
 
         assert doc =~ "Upgrade your trial"
-        assert doc =~ "Back to Settings"
+        assert doc =~ "Back to settings"
         assert doc =~ "You have used"
         assert doc =~ "<b>0</b>"
         assert doc =~ "billable pageviews in the last 30 days"
