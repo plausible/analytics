@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input(%{type: "radio"} = assigns) do
     ~H"""
     <div class={[
-      "flex flex-inline items-center justify-start gap-x-3"
+      "flex flex-inline justify-start gap-x-3"
     ]}>
       <input
         type="radio"
@@ -130,7 +130,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         id={@id}
         name={@name}
         checked={assigns[:checked]}
-        class="block dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
+        class="block dark:bg-gray-900 h-4 w-4 mt-[0.15rem] cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
         {@rest}
       />
       <.label :if={@label} class="flex flex-col flex-inline" for={@id}>
