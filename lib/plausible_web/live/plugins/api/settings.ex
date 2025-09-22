@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
       <div>
         <.filter_bar filtering_enabled?={false}>
           <.button phx-click="create-token" mt?={false}>
-            Create Plugin Token
+            Create plugin token
           </.button>
         </.filter_bar>
 

@@ -6,10 +6,10 @@ defmodule PlausibleWeb.Components.Generic do
 
   @notice_themes %{
     gray: %{
-      bg: "bg-white dark:bg-gray-800",
+      bg: "bg-gray-100 dark:bg-gray-700/50",
       icon: "text-gray-400",
-      title_text: "text-gray-800 dark:text-gray-400",
-      body_text: "text-gray-700 dark:text-gray-500 leading-5"
+      title_text: "text-sm text-gray-800 dark:text-gray-300",
+      body_text: "text-sm text-gray-700 dark:text-gray-400 leading-5"
     },
     yellow: %{
       bg: "bg-yellow-50 dark:bg-yellow-100",
@@ -138,7 +138,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
       <Heroicons.information_circle class={[
-        "text-gray-500 dark:text-indigo-500 w-6 h-6 stroke-2 hover:text-indigo-500 dark:hover:text-indigo-300",
+        "text-gray-400 dark:text-indigo-500 w-5 h-5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150",
         @class
       ]} />
     </a>
@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Components.Generic do
       new_tab={@new_tab}
       href={@href}
       method={@method}
-      class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> @class}
+      class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150 " <> @class}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -444,7 +444,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :docs, :string, default: nil
   slot :inner_block, required: true
   slot :title, required: true
-  slot :subtitle, required: true
+  slot :subtitle, required: false
   attr :feature_mod, :atom, default: nil
   attr :feature_toggle?, :boolean, default: false
   attr :current_role, :atom, default: nil
@@ -461,7 +461,7 @@ defmodule PlausibleWeb.Components.Generic do
 
           <.docs_info :if={@docs} slug={@docs} class="absolute top-4 right-4" />
         </.title>
-        <div class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
+        <div :if={@subtitle != []} class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           {render_slot(@subtitle)}
         </div>
         <PlausibleWeb.Components.Site.Feature.toggle
@@ -479,12 +479,12 @@ defmodule PlausibleWeb.Components.Generic do
             current_role={@current_role}
             current_team={@current_team}
           >
-            <div class="py-4 px-6">
+            <div class="p-6">
               {render_slot(@inner_block)}
             </div>
           </PlausibleWeb.Components.Billing.feature_gate>
         <% else %>
-          <div class="py-4 px-6">
+          <div class="p-6">
             {render_slot(@inner_block)}
           </div>
         <% end %>
@@ -753,7 +753,7 @@ defmodule PlausibleWeb.Components.Generic do
       if assigns[:invisible] do
         "invisible"
       else
-        "px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-medium"
+        "px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-semibold"
       end
 
     assigns = assign(assigns, class: class)
@@ -771,7 +771,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def toggle_submit(assigns) do
     ~H"""
-    <div class="mt-4 mb-2 flex items-center">
+    <div class="my-2 flex items-center">
       <button
         type="submit"
         class={[
@@ -813,7 +813,7 @@ defmodule PlausibleWeb.Components.Generic do
       <.unstyled_link href={@href} {@rest}>
         <.dynamic_icon
           name={@icon}
-          class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
+          class="size-5 text-indigo-700 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
         />
       </.unstyled_link>
       """
@@ -822,7 +822,7 @@ defmodule PlausibleWeb.Components.Generic do
       <button {@rest}>
         <.dynamic_icon
           name={@icon}
-          class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
+          class="size-5 text-indigo-700 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
         />
       </button>
       """
@@ -839,7 +839,7 @@ defmodule PlausibleWeb.Components.Generic do
       <.unstyled_link href={@href} {@rest}>
         <.dynamic_icon
           name={@icon}
-          class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
+          class="size-5 text-red-700 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
         />
       </.unstyled_link>
       """
@@ -848,7 +848,7 @@ defmodule PlausibleWeb.Components.Generic do
       <button {@rest}>
         <.dynamic_icon
           name={@icon}
-          class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
+          class="size-5 text-red-700 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
         />
       </button>
       """
@@ -963,4 +963,14 @@ defmodule PlausibleWeb.Components.Generic do
     </div>
     """
   end
+
+  def settings_badge(%{type: :new} = assigns) do
+    ~H"""
+    <span class="inline-block ml-2 bg-indigo-100 text-indigo-600 text-xs font-semibold py-1 px-2 rounded-md">
+      NEW 🔥
+    </span>
+    """
+  end
+
+  def settings_badge(assigns), do: ~H""
 end

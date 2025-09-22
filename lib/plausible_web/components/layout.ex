@@ -59,15 +59,17 @@ defmodule PlausibleWeb.Components.Layout do
 
   def settings_sidebar(assigns) do
     ~H"""
-    <.settings_top_tab
-      :for={%{key: key, value: value, icon: icon} = opts <- @options}
-      selected_fn={@selected_fn}
-      prefix={@prefix}
-      icon={icon}
-      text={key}
-      badge={opts[:badge]}
-      value={value}
-    />
+    <div class="flex flex-col gap-0.5 -ml-2">
+      <.settings_top_tab
+        :for={%{key: key, value: value, icon: icon} = opts <- @options}
+        selected_fn={@selected_fn}
+        prefix={@prefix}
+        icon={icon}
+        text={key}
+        badge={opts[:badge]}
+        value={value}
+      />
+    </div>
     """
   end
 
@@ -126,19 +128,19 @@ defmodule PlausibleWeb.Components.Layout do
       class={[
         "text-sm flex items-center px-2 py-2 leading-5 font-medium rounded-md outline-none focus:outline-none transition ease-in-out duration-150",
         @current_tab? &&
-          "text-gray-900 dark:text-gray-100 bg-gray-100 font-semibold dark:bg-gray-900 hover:text-gray-900 focus:bg-gray-200 dark:focus:bg-gray-800",
+          "text-gray-900 dark:text-gray-100 bg-gray-150 font-semibold dark:bg-gray-700/50 hover:text-gray-900 focus:bg-gray-200 dark:focus:bg-gray-800",
         @value && not @current_tab? &&
-          "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 focus:text-gray-900 focus:bg-gray-50 dark:focus:text-gray-100 dark:focus:bg-gray-800",
-        !@value && "text-gray-600 dark:text-gray-400"
+          "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 focus:text-gray-900 focus:bg-gray-50 dark:focus:text-gray-100 dark:focus:bg-gray-800",
+        !@value && "text-gray-600 dark:text-gray-300"
       ]}
     >
       <PlausibleWeb.Components.Generic.dynamic_icon
         :if={not @submenu? && @icon}
         name={@icon}
-        class={["h-4 w-4 mr-2", @current_tab? && "stroke-2"]}
+        class="size-5 mr-2"
       />
       {@text}
-      <.settings_badge type={@badge} />
+      <PlausibleWeb.Components.Generic.settings_badge type={@badge} />
       <Heroicons.chevron_down
         :if={is_nil(@value)}
         class="h-3 w-3 ml-2 text-gray-400 dark:text-gray-500"
@@ -146,16 +148,6 @@ defmodule PlausibleWeb.Components.Layout do
     </a>
     """
   end
-
-  defp settings_badge(%{type: :new} = assigns) do
-    ~H"""
-    <span class="inline-block ml-2 bg-indigo-700 text-gray-100 text-xs p-1 rounded">
-      NEW
-    </span>
-    """
-  end
-
-  defp settings_badge(assigns), do: ~H""
 
   defp theme_preference(%{theme: theme}) when not is_nil(theme), do: theme
 

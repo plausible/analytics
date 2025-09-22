@@ -330,7 +330,11 @@ defmodule PlausibleWeb.Components.Billing do
 
   def upgrade_link(assigns) do
     ~H"""
-    <.button_link id="upgrade-link-2" href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}>
+    <.button_link
+      id="upgrade-link-2"
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+      mt?={false}
+    >
       Upgrade
     </.button_link>
     """
