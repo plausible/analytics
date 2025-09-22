@@ -181,6 +181,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == []
     end
 
+    test "returns 400 for nil query parameter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:01],
+          pathname: "/",
+          country_code: "US"
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01"
+        )
+
+      assert json_response(conn, 400) == %{
+               "error" => "Query parameter 'q' is required"
+             }
+    end
+
     test "returns suggestions for screen sizes", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
