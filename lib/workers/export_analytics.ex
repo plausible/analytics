@@ -30,6 +30,7 @@ defmodule Plausible.Workers.ExportAnalytics do
     } = args
 
     site = Plausible.Repo.get!(Plausible.Site, site_id)
+    true = Plausible.Sites.regular?(site)
     %Date.Range{} = date_range = Exports.date_range(site.id, site.timezone)
 
     queries =

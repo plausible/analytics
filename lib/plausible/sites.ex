@@ -45,12 +45,24 @@ defmodule Plausible.Sites do
   """
   def shared_link_special_names(), do: @shared_link_special_names
 
-  def get_by_domain(domain) do
-    Repo.get_by(Site, domain: domain)
+  def get_by_domain(domain, opts \\ []) do
+    include_consolidated? = Keyword.get(opts, :include_consolidated?, false)
+
+    if include_consolidated? do
+      Repo.get_by(Site, domain: domain)
+    else
+      Repo.get_by(Site, domain: domain, consolidated: false)
+    end
   end
 
-  def get_by_domain!(domain) do
-    Repo.get_by!(Site, domain: domain)
+  def get_by_domain!(domain, opts \\ []) do
+    include_consolidated? = Keyword.get(opts, :include_consolidated?, false)
+
+    if include_consolidated? do
+      Repo.get_by!(Site, domain: domain)
+    else
+      Repo.get_by!(Site, domain: domain, consolidated: false)
+    end
   end
 
   @spec toggle_pin(Auth.User.t(), Site.t()) ::
@@ -430,18 +442,26 @@ defmodule Plausible.Sites do
     end
   end
 
-  defp get_for_user_query(user_id, domain, roles) do
+  defp get_for_user_query(user_id, domain, roles, opts \\ []) do
+    include_consolidated? = Keyword.get(opts, :include_consolidated?, false)
     roles = Enum.map(roles, &to_string/1)
 
-    from(s in Plausible.Site,
-      join: t in assoc(s, :team),
-      join: tm in assoc(t, :team_memberships),
-      left_join: gm in assoc(tm, :guest_memberships),
-      where: tm.user_id == ^user_id,
-      where: coalesce(gm.role, tm.role) in ^roles,
-      where: s.domain == ^domain or s.domain_changed_from == ^domain,
-      where: is_nil(gm.id) or gm.site_id == s.id,
-      select: s
-    )
+    q =
+      from(s in Plausible.Site,
+        join: t in assoc(s, :team),
+        join: tm in assoc(t, :team_memberships),
+        left_join: gm in assoc(tm, :guest_memberships),
+        where: tm.user_id == ^user_id,
+        where: coalesce(gm.role, tm.role) in ^roles,
+        where: s.domain == ^domain or s.domain_changed_from == ^domain,
+        where: is_nil(gm.id) or gm.site_id == s.id,
+        select: s
+      )
+
+    if include_consolidated? do
+      q
+    else
+      from(s in q, where: not s.consolidated)
+    end
   end
 end
