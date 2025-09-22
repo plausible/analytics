@@ -26,6 +26,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       test "renders", %{conn: conn, user: user} do
         team = team_of(user)
         new_site(owner: user)
+        new_site(owner: user, consolidated: true)
         add_member(team, role: :editor)
 
         {:ok, _lv, html} = live(conn, open_team(team.id))
@@ -144,6 +145,32 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_team(9999))
         end
+      end
+    end
+
+    describe "sites" do
+      setup [:create_user, :log_in, :create_site]
+
+      setup %{user: user} do
+        patch_env(:super_admin_user_ids, [user.id])
+      end
+
+      test "lists sites belonging to a team", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(owner: user, domain: "primary.example.com")
+        new_site(owner: user, domain: "consolidated.example.com", consolidated: true)
+        new_site(owner: user, domain: "secondary.example.com")
+        # other
+        new_site(domain: "other.example.com")
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+        html = render(lv)
+        text = text(html)
+
+        assert text =~ "primary.example.com"
+        assert text =~ "secondary.example.com"
+        refute text =~ "condolidated.example.com"
+        refute text =~ "other.example.com"
       end
     end
 
