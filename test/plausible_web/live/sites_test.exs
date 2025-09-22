@@ -310,7 +310,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text_of_element(
                html,
                ~s/li[data-domain="#{site.domain}"] a[phx-value-domain]/
-             ) == "Pin Site"
+             ) == "Pin site"
     end
 
     test "site state changes when pin toggled", %{conn: conn, user: user} do
@@ -327,7 +327,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert html =~ "Site pinned"
 
-      assert text_of_element(html, button_selector) == "Unpin Site"
+      assert text_of_element(html, button_selector) == "Unpin site"
 
       html =
         lv
@@ -336,7 +336,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert html =~ "Site unpinned"
 
-      assert text_of_element(html, button_selector) == "Pin Site"
+      assert text_of_element(html, button_selector) == "Pin site"
     end
 
     test "shows error when pins limit hit", %{conn: conn, user: user} do
