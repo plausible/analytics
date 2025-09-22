@@ -136,12 +136,16 @@ defmodule PlausibleWeb.Components.Generic do
 
   def docs_info(assigns) do
     ~H"""
-    <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
-      <Heroicons.information_circle class={[
-        "text-gray-400 dark:text-indigo-500 w-5 h-5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150",
-        @class
-      ]} />
-    </a>
+    <div class={@class}>
+      <.tooltip enabled?={true} centered?={true}>
+        <:tooltip_content>
+          <span>Learn more</span>
+        </:tooltip_content>
+        <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
+          <Heroicons.information_circle class="text-gray-400 dark:text-indigo-500 size-5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" />
+        </a>
+      </.tooltip>
+    </div>
     """
   end
 
@@ -495,6 +499,8 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:sticky?, :boolean, default: true)
   attr(:enabled?, :boolean, default: true)
+  attr(:centered?, :boolean, default: false)
+  attr(:testid, :string, default: nil)
   slot(:inner_block, required: true)
   slot(:tooltip_content, required: true)
 
@@ -504,7 +510,29 @@ defmodule PlausibleWeb.Components.Generic do
 
     show_inner = if assigns[:sticky?], do: "hovered || sticky", else: "hovered"
 
-    assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
+    base_classes = [
+      "absolute",
+      "pb-2",
+      "top-0",
+      "-translate-y-full",
+      "z-[1000]",
+      "sm:max-w-72",
+      "whitespace-nowrap"
+    ]
+
+    tooltip_position_classes =
+      if assigns.centered? do
+        base_classes ++ ["left-1/2", "-translate-x-1/2"]
+      else
+        base_classes
+      end
+
+    assigns =
+      assign(assigns,
+        wrapper_data: wrapper_data,
+        show_inner: show_inner,
+        tooltip_position_classes: tooltip_position_classes
+      )
 
     if assigns.enabled? do
       ~H"""
@@ -517,7 +545,8 @@ defmodule PlausibleWeb.Components.Generic do
         <div
           x-cloak
           x-show={@show_inner}
-          class={["tooltip-content absolute pb-2 top-0 -translate-y-full z-[1000] sm:w-72"]}
+          class={@tooltip_position_classes}
+          data-testid={@testid}
           x-transition:enter="transition ease-out duration-200"
           x-transition:enter-start="opacity-0"
           x-transition:enter-end="opacity-100"
@@ -525,7 +554,7 @@ defmodule PlausibleWeb.Components.Generic do
           x-transition:leave-start="opacity-100"
           x-transition:leave-end="opacity-0"
         >
-          <div class="bg-gray-900 text-white rounded p-4 text-sm font-medium">
+          <div class="bg-gray-900 text-white rounded px-2.5 py-1.5 text-xs font-medium">
             {render_slot(@tooltip_content)}
           </div>
         </div>
