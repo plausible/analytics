@@ -429,4 +429,60 @@ defmodule Plausible.TeamsTest do
       assert Repo.reload(team)
     end
   end
+
+  describe "owned_sites/1" do
+    setup [:create_user, :create_team]
+
+    test "returns sites owned by a team", %{user: user, team: team} do
+      %{id: site_id} = new_site(owner: user)
+      new_site(owner: user, consolidated: true)
+
+      assert [%{id: ^site_id}] = Teams.owned_sites(team)
+    end
+
+    test "limit limits number of sites returned", %{user: user, team: team} do
+      %{id: site_id1} = new_site(owner: user, domain: "b")
+      %{id: site_id2} = new_site(owner: user, domain: "c")
+      %{id: _site_id3} = new_site(owner: user, domain: "d")
+      new_site(owner: user, consolidated: true, domain: "a")
+
+      assert [%{id: ^site_id1}, %{id: ^site_id2}] = Teams.owned_sites(team, 2)
+    end
+
+    test "rerutns empty list for no team" do
+      assert [] = Teams.owned_sites(nil)
+    end
+  end
+
+  describe "owned_sites_ids/1" do
+    setup [:create_user, :create_team]
+
+    test "returns site IDs owned by a team", %{user: user, team: team} do
+      %{id: site_id2} = new_site(owner: user)
+      %{id: site_id1} = new_site(owner: user)
+      new_site(owner: user, consolidated: true)
+
+      assert [^site_id1, ^site_id2] = Teams.owned_sites_ids(team)
+    end
+
+    test "rerutns empty list for no team" do
+      assert [] = Teams.owned_sites_ids(nil)
+    end
+  end
+
+  describe "owned_sites_count/1" do
+    setup [:create_user, :create_team]
+
+    test "returns site count owned by a team", %{user: user, team: team} do
+      new_site(owner: user)
+      new_site(owner: user)
+      new_site(owner: user, consolidated: true)
+
+      assert Teams.owned_sites_count(team) == 2
+    end
+
+    test "rerutns empty list for no team" do
+      assert Teams.owned_sites_count(nil) == 0
+    end
+  end
 end
