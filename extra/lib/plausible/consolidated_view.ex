@@ -9,6 +9,7 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
+  alias Plausible.Teams
   alias Plausible.Teams.Team
   alias Plausible.{Repo, Site}
 
@@ -33,7 +34,7 @@ defmodule Plausible.ConsolidatedView do
   def site_ids(%Team{} = team) do
     case get(team) do
       nil -> {:error, :not_found}
-      _found -> {:ok, owned_site_ids(team)}
+      _found -> {:ok, Teams.owned_sites_ids(team)}
     end
   end
 
@@ -66,18 +67,4 @@ defmodule Plausible.ConsolidatedView do
   # TODO: Only active trials and business subscriptions should be eligible.
   # This function should call a new underlying feature module.
   defp eligible?(%Team{}), do: always(true)
-
-  # TEMPORARY: Will be replaced with `Teams.owned_site_ids` once it starts
-  # filtering out consolidated sites. There are many other list/count all
-  # sites queries for which there will probably be a dedicated DB view that
-  # applies the where clause.
-  defp owned_site_ids(team) do
-    Repo.all(
-      from(s in Site,
-        where: s.team_id == ^team.id and not s.consolidated,
-        select: s.id,
-        order_by: [desc: s.id]
-      )
-    )
-  end
 end
