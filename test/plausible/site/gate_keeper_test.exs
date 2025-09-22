@@ -15,6 +15,17 @@ defmodule Plausible.Site.GateKeeperTest do
     assert {:deny, :not_found} = GateKeeper.check("example.com", opts)
   end
 
+  test "consolidated sites should be treated as not found", %{opts: opts, test: test} do
+    consolidated_site =
+      add_site_and_refresh_cache(test, domain: "consolidated.example.com", consolidated: true)
+
+    assert {:deny, :not_found} = GateKeeper.check("consolidated.example.com", opts)
+
+    Plausible.Cache.Adapter.put(test, "consolidated.example.com", consolidated_site)
+
+    assert {:deny, :not_found} = GateKeeper.check("consolidated.example.com", opts)
+  end
+
   test "sites with accepted_traffic_until < now are denied", %{test: test, opts: opts} do
     domain = "expired.example.com"
     yesterday = Date.utc_today() |> Date.add(-1)
