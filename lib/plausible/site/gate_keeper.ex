@@ -43,9 +43,9 @@ defmodule Plausible.Site.GateKeeper do
   end
 
   defp policy(domain, opts) when is_binary(domain) do
-    with %Site{consolidated: false} = from_cache <-
+    with %Site{team: %{accept_traffic_until: accept_traffic_until}} = site <-
            Cache.get(domain, Keyword.get(opts, :cache_opts, [])),
-         site = %Site{team: %{accept_traffic_until: accept_traffic_until}} <- from_cache do
+         true <- Plausible.Sites.regular?(site) do
       if not is_nil(accept_traffic_until) and
            Date.after?(Date.utc_today(), accept_traffic_until) do
         :payment_required

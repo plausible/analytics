@@ -15,6 +15,7 @@ defmodule Plausible.Site.GateKeeperTest do
     assert {:deny, :not_found} = GateKeeper.check("example.com", opts)
   end
 
+  @tag :ee_only
   test "consolidated sites should be treated as not found", %{opts: opts, test: test} do
     consolidated_site =
       add_site_and_refresh_cache(test, domain: "consolidated.example.com", consolidated: true)

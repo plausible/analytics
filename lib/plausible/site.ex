@@ -22,13 +22,7 @@ defmodule Plausible.Site do
     field :funnels_enabled, :boolean, default: true
     field :legacy_time_on_page_cutoff, :date, default: ~D[1970-01-01]
 
-    on_ee do
-      field :consolidated, :boolean
-    end
-
-    on_ce do
-      field :consolidated, :boolean, default: false, virtual: true
-    end
+    field :consolidated, :boolean, default: false
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
