@@ -60,22 +60,22 @@ defmodule PlausibleWeb.LayoutView do
       on_ee do
         %{key: "Funnels", value: "funnels", icon: :funnel}
       end,
-      %{key: "Custom Properties", value: "properties", icon: :document_text},
+      %{key: "Custom properties", value: "properties", icon: :document_text},
       %{key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square},
-      %{key: "Imports & Exports", value: "imports-exports", icon: :arrows_up_down},
+      %{key: "Imports & exports", value: "imports-exports", icon: :arrows_up_down},
       %{
         key: "Shields",
         icon: :shield_exclamation,
         value: [
-          %{key: "IP Addresses", value: "shields/ip_addresses"},
+          %{key: "IP addresses", value: "shields/ip_addresses"},
           %{key: "Countries", value: "shields/countries"},
           %{key: "Pages", value: "shields/pages"},
           %{key: "Hostnames", value: "shields/hostnames"}
         ]
       },
-      %{key: "Email Reports", value: "email-reports", icon: :envelope},
+      %{key: "Email reports", value: "email-reports", icon: :envelope},
       if conn.assigns[:site_role] in [:owner, :admin] do
-        %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
+        %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]
     |> Enum.reject(&is_nil/1)
@@ -89,7 +89,7 @@ defmodule PlausibleWeb.LayoutView do
     subscription? = !!(conn.assigns[:current_team] && conn.assigns.current_team.subscription)
 
     options = %{
-      "Account Settings" =>
+      "Account" =>
         [
           %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
           %{key: "Security", value: "security", icon: :lock_closed},
@@ -100,10 +100,10 @@ defmodule PlausibleWeb.LayoutView do
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(not Teams.setup?(current_team),
-            do: %{key: "API Keys", value: "api-keys", icon: :key}
+            do: %{key: "API keys", value: "api-keys", icon: :key}
           ),
           if(Plausible.Users.type(conn.assigns.current_user) == :standard,
-            do: %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
+            do: %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
           )
         ]
         |> Enum.reject(&is_nil/1)
@@ -112,7 +112,7 @@ defmodule PlausibleWeb.LayoutView do
     if Teams.setup?(current_team) do
       Map.put(
         options,
-        "Team Settings",
+        "Team",
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
           if(current_team_role in [:owner, :billing],
@@ -122,7 +122,7 @@ defmodule PlausibleWeb.LayoutView do
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(current_team_role in [:owner, :billing, :admin, :editor],
-            do: %{key: "API Keys", value: "api-keys", icon: :key}
+            do: %{key: "API keys", value: "api-keys", icon: :key}
           ),
           if(
             ee?() and current_team_role == :owner and
@@ -141,12 +141,11 @@ defmodule PlausibleWeb.LayoutView do
             do: %{
               key: "Single Sign-On",
               value: "sso/info",
-              icon: :cloud,
-              badge: :new
+              icon: :cloud
             }
           ),
           if(current_team_role == :owner,
-            do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
+            do: %{key: "Danger zone", value: "team/delete", icon: :exclamation_triangle}
           )
         ]
         |> Enum.reject(&is_nil/1)

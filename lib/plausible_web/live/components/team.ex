@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   def member(assigns) do
     ~H"""
     <div
-      class="mt-4"
+      class="mt-6"
       id={"member-row-#{:erlang.phash2(@user.email)}"}
       data-test-kind={if @role == :guest, do: "guest", else: "member"}
       data-role-changed={
@@ -29,21 +29,24 @@ defmodule PlausibleWeb.Live.Components.Team do
       }
     >
       <div class="flex items-center gap-x-5">
-        <img src={User.profile_img_url(@user)} class="w-7 rounded-full bg-gray-300" />
-        <span class="text-sm">
-          {@user.name}
-          <span
-            :if={@label}
-            class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-100 text-gray-500 text-xs px-1 rounded"
-          >
-            {@label}
+        <img src={User.profile_img_url(@user)} class="w-8 rounded-full bg-gray-300" />
+        <div class="flex flex-col">
+          <span class="text-sm font-medium">
+            {@user.name}
+            <span
+              :if={@label}
+              class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-150 text-gray-500 text-xs px-1 py-0.5 rounded-md"
+            >
+              {@label}
+            </span>
           </span>
-
-          <br /><span class="text-gray-500 text-xs">{@user.email}</span>
-        </span>
+          <span class="text-gray-500 text-xs">
+            {@user.email}
+          </span>
+        </div>
         <div class="flex-1 text-right">
           <.dropdown id={"role-dropdown-#{@user.email}"}>
-            <:button class="role bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
+            <:button class="role bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
               <span :if={@disabled} class="text-gray-400">
                 {@role |> to_string() |> String.capitalize()}
               </span>

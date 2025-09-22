@@ -1310,8 +1310,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert html = html_response(conn, 200)
 
-      refute html =~ "Your account cannot be deleted because you have an active subscription"
-      assert html =~ "Delete My Account"
+      refute html =~
+               "You have an active subscription. To delete your account, cancel your subscription first."
+
+      assert html =~ "Delete my account"
     end
 
     test "with active subscription", %{conn: conn, user: user} do
@@ -1320,8 +1322,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert html = html_response(conn, 200)
 
-      assert html =~ "Your account cannot be deleted because you have an active subscription"
-      refute html =~ "Delete My Account"
+      assert html =~
+               "You have an active subscription. To delete your account, cancel your subscription first."
+
+      refute html =~ "Delete my account"
     end
 
     test "with a setup team", %{conn: conn, user: user} do
@@ -1336,8 +1340,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert html = html_response(conn, 200)
 
-      assert html =~ "You are the sole owner of one or more teams"
-      refute html =~ "Delete My Account"
+      assert html =~ "You're the sole owner of one or more teams"
+      refute html =~ "Delete my account"
     end
   end
 
@@ -1348,19 +1352,19 @@ defmodule PlausibleWeb.SettingsControllerTest do
       test "does not allow to update name in preferences", %{conn: conn} do
         conn = get(conn, Routes.settings_path(conn, :preferences))
         assert html = html_response(conn, 200)
-        refute html =~ "Change Name"
+        refute html =~ "Change name"
       end
 
       test "does not allow to update email in security settings", %{conn: conn} do
         conn = get(conn, Routes.settings_path(conn, :security))
         assert html = html_response(conn, 200)
-        refute html =~ "Change Email"
+        refute html =~ "Change email"
       end
 
       test "does not allow to change password in security settings", %{conn: conn} do
         conn = get(conn, Routes.settings_path(conn, :security))
         assert html = html_response(conn, 200)
-        refute html =~ "Change Password"
+        refute html =~ "Change password"
       end
 
       test "does not allow to disable 2FA in security settings", %{conn: conn, user: user} do
@@ -1386,7 +1390,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "does not render team settings, when no team assigned", %{conn: conn} do
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      refute html =~ "Team Settings"
+      refute html =~ "Team"
     end
 
     test "does not render invoices when no subscription present (no team assigned)", %{conn: conn} do
@@ -1437,7 +1441,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      assert html =~ "Team Settings"
+      assert html =~ ~r/Team.*#{Regex.escape(team.name)}/s
       assert html =~ team.name
     end
 
@@ -1445,7 +1449,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      refute html =~ "Team Settings"
+      refute html =~ ~r/Team.*#{Regex.escape(team.name)}/s
       refute html =~ team.name
     end
 
@@ -1455,7 +1459,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
       conn = get(conn, Routes.settings_path(conn, :team_general))
       html = html_response(conn, 200)
-      assert html =~ "Team Information"
+      assert html =~ "Team name"
       assert html =~ "Change the name of your team"
       assert text_of_attr(html, "input#team_name", "value") == team.name
     end
@@ -1465,13 +1469,13 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       conn =
         post(conn, Routes.settings_path(conn, :update_team_name), %{
-          "team" => %{"name" => "New Name"}
+          "team" => %{"name" => "New name"}
         })
 
       assert redirected_to(conn, 302) ==
                Routes.settings_path(conn, :team_general) <> "#update-name"
 
-      assert Repo.reload!(team).name == "New Name"
+      assert Repo.reload!(team).name == "New name"
     end
 
     test "POST /settings/team/general/name - changeset error", %{conn: conn, user: user} do

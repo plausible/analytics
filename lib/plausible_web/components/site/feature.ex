@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
       |> assign(:disabled?, assigns.feature_mod.check_availability(assigns.site.team) !== :ok)
 
     ~H"""
-    <div>
+    <div class="mt-4">
       <.form
         action={target(@site, @feature_mod.toggle_field(), @conn, !@current_setting)}
         method="put"
@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
         class={@class}
       >
         <.toggle_submit set_to={@current_setting} disabled?={@disabled?}>
-          Show {@feature_mod.display_name()} in the Dashboard
+          Show {String.downcase(@feature_mod.display_name())} in the dashboard
         </.toggle_submit>
       </.form>
 

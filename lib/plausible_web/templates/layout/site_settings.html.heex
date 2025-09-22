@@ -2,12 +2,12 @@
   <% options = site_settings_sidebar(@conn) %>
   <div class="container pt-6">
     <.styled_link
-      class="text-indigo-600 font-bold text-sm"
+      class="text-indigo-600 font-semibold text-sm"
       href={"/#{URI.encode_www_form(@site.domain)}"}
     >
-      ← Back to Stats
+      ← Back to stats
     </.styled_link>
-    <div class="pb-5 border-b border-gray-200 dark:border-gray-500">
+    <div class="pb-5 border-b border-gray-200 dark:border-gray-700">
       <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
         Settings for {@site.domain}
       </h2>

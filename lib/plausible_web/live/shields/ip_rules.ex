@@ -31,8 +31,8 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
     <div>
       <.settings_tiles>
         <.tile docs="excluding">
-          <:title>IP Block List</:title>
-          <:subtitle>Reject incoming traffic from specific IP addresses</:subtitle>
+          <:title>IP block list</:title>
+          <:subtitle>Reject incoming traffic from specific IP addresses.</:subtitle>
           <.filter_bar :if={@ip_rules_count < Shields.maximum_ip_rules()} filtering_enabled?={false}>
             <.button
               id="add-ip-rule"
@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               x-on:click={Modal.JS.open("ip-rule-form-modal")}
               mt?={false}
             >
-              Add IP Address
+              Add IP address
             </.button>
           </.filter_bar>
 
@@ -56,12 +56,12 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
           </.notice>
 
           <p :if={Enum.empty?(@ip_rules)} class="mt-12 mb-8 text-center text-sm">
-            No IP Rules configured for this site.
+            No IP rules configured for this site.
           </p>
 
           <.table :if={not Enum.empty?(@ip_rules)} rows={@ip_rules}>
             <:thead>
-              <.th>IP Address</.th>
+              <.th>IP address</.th>
               <.th hide_on_mobile>Status</.th>
               <.th hide_on_mobile>Description</.th>
               <.th invisible>Actions</.th>
