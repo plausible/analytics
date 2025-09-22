@@ -227,15 +227,15 @@ defmodule Plausible.SitesTest do
       patch_env(:super_admin_user_ids, [user2.id])
 
       %{id: site_id, domain: domain} = new_site(owner: user1)
-      assert %{id: ^site_id} = Plausible.Sites.get_for_user(user1, domain)
+      assert %{id: ^site_id} = Sites.get_for_user(user1, domain)
 
       assert %{id: ^site_id} =
-               Plausible.Sites.get_for_user(user1, domain, [:owner])
+               Sites.get_for_user(user1, domain, [:owner])
 
-      assert is_nil(Plausible.Sites.get_for_user(user2, domain))
+      assert is_nil(Sites.get_for_user(user2, domain))
 
       assert %{id: ^site_id} =
-               Plausible.Sites.get_for_user(user2, domain, [:super_admin])
+               Sites.get_for_user(user2, domain, [:super_admin])
     end
   end
 
@@ -285,7 +285,11 @@ defmodule Plausible.SitesTest do
 
       # owned site on a setup team
       site1 = new_site(owner: user1, domain: "own.example.com")
+
       Plausible.Teams.complete_setup(site1.team)
+
+      # excluded 
+      new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
 
       # guest site access
       site2 = new_site(owner: user2, domain: "guest.example.com")
@@ -338,6 +342,9 @@ defmodule Plausible.SitesTest do
       site5 = new_site(domain: "team.example.com", owner: user4)
       add_member(site5.team, user: user1, role: :editor)
 
+      # excluded 
+      new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
+
       assert %{
                entries: [
                  %{domain: "invitation.example.com"},
@@ -375,6 +382,9 @@ defmodule Plausible.SitesTest do
       team5 = Plausible.Teams.complete_setup(site5.team)
       add_member(site5.team, user: user1, role: :admin)
 
+      # excluded 
+      new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
+
       assert %{
                entries: [
                  %{domain: "transfer.example.com"},
@@ -393,6 +403,10 @@ defmodule Plausible.SitesTest do
       invite_transfer(site, pending_owner, inviter: owner)
 
       {:ok, _} = Sites.toggle_pin(pending_owner, site)
+
+      # excluded 
+      new_site(owner: owner, domain: "consolidated.example.com", consolidated: true)
+      new_site(owner: pending_owner, domain: "consolidated2.example.com", consolidated: true)
 
       assert %{
                entries: [
@@ -581,6 +595,11 @@ defmodule Plausible.SitesTest do
       site4 = new_site(domain: "four.example.com")
       site5 = new_site(owner: user3, domain: "five.example.com")
 
+      # excluded
+      new_site(owner: user1, domain: "consolidated1.example.com", consolidated: true)
+      new_site(owner: user2, domain: "consolidated2.example.com", consolidated: true)
+      new_site(owner: user3, domain: "consolidated3.example.com", consolidated: true)
+
       invite_guest(site2, user1, role: :editor, inviter: user2)
       add_guest(site3, user: user1, role: :viewer)
       add_guest(site4, user: user1, role: :editor)
@@ -671,6 +690,7 @@ defmodule Plausible.SitesTest do
       site2 = new_site(owner: user2, domain: "first-transfer.example.com")
       site3 = new_site(owner: user3, domain: "first-invitation.example.com")
       _site4 = new_site(owner: user1, domain: "another.example.com")
+      new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
 
       invite_guest(site3, user1, role: :viewer, inviter: user3)
       invite_transfer(site2, user1, inviter: user2)
