@@ -65,6 +65,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         left_join: se in "setup_success_emails",
         on: se.site_id == s.id,
         where: is_nil(se.id),
+        where: not s.consolidated,
         inner_join: t in assoc(s, :team),
         where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
         preload: [:owners, team: t]

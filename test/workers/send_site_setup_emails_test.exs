@@ -95,6 +95,17 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
 
       assert_no_emails_delivered()
     end
+
+    test "do not send the setup success email for consolidated website" do
+      user = new_user()
+
+      # for test purposes, set stats_start_date for a consolidated site
+      new_site(owner: user, consolidated: true, stats_start_date: Date.utc_today())
+
+      perform_job(SendSiteSetupEmails, %{})
+
+      assert_no_emails_delivered()
+    end
   end
 
   describe "trial user who has not set up a website" do
