@@ -35,7 +35,7 @@ defmodule Plausible.ConsolidatedView do
     :ok
   end
 
-  @spec site_ids(Team.t()) :: [pos_integer()] | {:error, :not_found}
+  @spec site_ids(Team.t()) :: {:ok, [pos_integer()]} | {:error, :not_found}
   def site_ids(%Team{} = team) do
     case get(team) do
       nil -> {:error, :not_found}
