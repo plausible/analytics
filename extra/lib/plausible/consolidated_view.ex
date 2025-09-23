@@ -13,6 +13,13 @@ defmodule Plausible.ConsolidatedView do
   alias Plausible.Teams.Team
   alias Plausible.{Repo, Site}
 
+  import Ecto.Query
+
+  @spec sites(Ecto.Query.t() | Site.t()) :: Ecto.Query.t()
+  def sites(q \\ Site) do
+    from s in q, where: s.consolidated == true
+  end
+
   @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :upgrade_required}
   def enable(%Team{} = team) do
     if eligible?(team) do
@@ -24,9 +31,7 @@ defmodule Plausible.ConsolidatedView do
 
   @spec disable(Team.t()) :: :ok
   def disable(%Team{} = team) do
-    from(s in Site, where: s.consolidated and s.domain == ^make_id(team))
-    |> Plausible.Repo.delete_all()
-
+    Plausible.Repo.delete_all(from(s in sites(), where: s.domain == ^make_id(team)))
     :ok
   end
 
@@ -46,7 +51,7 @@ defmodule Plausible.ConsolidatedView do
   end
 
   def get(id) when is_binary(id) do
-    Repo.get_by(Site, domain: id, consolidated: true)
+    Repo.one(from s in sites(), where: s.domain == ^id)
   end
 
   defp do_enable(%Team{} = team) do

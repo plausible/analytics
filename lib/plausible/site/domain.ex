@@ -29,8 +29,8 @@ defmodule Plausible.Site.Domain do
   def expire_change_transitions(expire_threshold_hours \\ @expire_threshold_hours) do
     {updated, _} =
       Repo.update_all(
-        from(s in Site,
-          where: not s.consolidated and s.domain_changed_at < ago(^expire_threshold_hours, "hour")
+        from(s in Site.regular(),
+          where: s.domain_changed_at < ago(^expire_threshold_hours, "hour")
         ),
         set: [
           domain_changed_from: nil,

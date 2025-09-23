@@ -5,6 +5,7 @@ defmodule Plausible.Site do
   use Ecto.Schema
   use Plausible
   import Ecto.Changeset
+  import Ecto.Query, only: [from: 2]
   alias Plausible.Site.GoogleAuth
 
   @type t() :: %__MODULE__{}
@@ -67,6 +68,10 @@ defmodule Plausible.Site do
     field :rollup, :boolean, virtual: true, default: false
 
     timestamps()
+  end
+
+  def regular(q \\ __MODULE__) do
+    from s in q, where: not s.consolidated
   end
 
   def rollup(team) do

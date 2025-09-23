@@ -239,7 +239,7 @@ defmodule Plausible.Sites do
   @spec for_user_query(Auth.User.t(), Teams.Team.t() | nil) :: Ecto.Query.t()
   def for_user_query(user, team \\ nil) do
     query =
-      from(s in Site,
+      from(s in Site.regular(),
         as: :site,
         inner_join: t in assoc(s, :team),
         as: :team,
@@ -248,7 +248,6 @@ defmodule Plausible.Sites do
         left_join: gm in assoc(tm, :guest_memberships),
         as: :guest_memberships,
         where: tm.user_id == ^user.id,
-        where: not s.consolidated,
         order_by: [desc: s.id]
       )
 
@@ -455,7 +454,7 @@ defmodule Plausible.Sites do
     roles = Enum.map(roles, &to_string/1)
 
     q =
-      from(s in Plausible.Site,
+      from(s in Site,
         join: t in assoc(s, :team),
         join: tm in assoc(t, :team_memberships),
         left_join: gm in assoc(tm, :guest_memberships),
@@ -469,7 +468,7 @@ defmodule Plausible.Sites do
     if include_consolidated? do
       q
     else
-      from(s in q, where: not s.consolidated)
+      from(s in Site.regular(q))
     end
   end
 

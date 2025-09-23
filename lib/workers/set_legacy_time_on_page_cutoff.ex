@@ -29,8 +29,7 @@ defmodule Plausible.Workers.SetLegacyTimeOnPageCutoff do
 
       {count, _} =
         Repo.update_all(
-          from(s in Plausible.Site,
-            where: not s.consolidated,
+          from(s in Plausible.Site.regular(),
             where: s.id in ^to_update,
             where: is_nil(s.legacy_time_on_page_cutoff)
           ),
@@ -82,9 +81,8 @@ defmodule Plausible.Workers.SetLegacyTimeOnPageCutoff do
 
   defp filter_sites_needing_update({small_sites, large_sites}) do
     needing_update =
-      from(s in Plausible.Site,
+      from(s in Plausible.Site.regular(),
         where: is_nil(s.legacy_time_on_page_cutoff),
-        where: not s.consolidated,
         select: s.id
       )
       |> Repo.all()

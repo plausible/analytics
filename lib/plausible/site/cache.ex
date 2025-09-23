@@ -41,14 +41,13 @@ defmodule Plausible.Site.Cache do
 
   @impl true
   def count_all() do
-    from(s in Site, where: not s.consolidated)
+    from(s in Site.regular())
     |> Plausible.Repo.aggregate(:count)
   end
 
   @impl true
   def base_db_query() do
-    from s in Site,
-      where: not s.consolidated,
+    from s in Site.regular(),
       left_join: rg in assoc(s, :revenue_goals),
       inner_join: team in assoc(s, :team),
       select: {

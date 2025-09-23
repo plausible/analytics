@@ -171,10 +171,9 @@ defmodule Plausible.HelpScout do
     search_term = "%#{term}%"
 
     domain_query =
-      from(s in Plausible.Site,
+      from(s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         inner_join: tm in assoc(t, :team_memberships),
-        where: not s.consolidated,
         where: tm.user_id == parent_as(:user).id and tm.role == :owner,
         where: ilike(s.domain, ^search_term) or ilike(s.domain_changed_from, ^search_term),
         select: 1
