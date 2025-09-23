@@ -922,4 +922,23 @@ defmodule Plausible.SitesTest do
       assert {:error, :too_many_pins} = Sites.toggle_pin(user, site)
     end
   end
+
+  describe "predicates for site.consolidated" do
+    on_ee do
+      test "regular?/1" do
+        assert Sites.regular?(%Plausible.Site{consolidated: false})
+        refute Sites.regular?(%Plausible.Site{consolidated: true})
+      end
+
+      test "consolidated?/1" do
+        assert Sites.consolidated?(%Plausible.Site{consolidated: true})
+        refute Sites.consolidated?(%Plausible.Site{consolidated: false})
+      end
+    else
+      test "all sites are regular on CE" do
+        assert Sites.regular?(%Plausible.Site{})
+        refute Sites.consolidated?(%Plausible.Site{})
+      end
+    end
+  end
 end

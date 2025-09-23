@@ -288,7 +288,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
     <div :if={@exceeded_plan_limits != [] && @disabled_message} class="flex flex-col items-center">
-      <.tooltip>
+      <.tooltip testid="plan-tooltip">
         <div class="h-0 text-sm">
           <div class="flex items-center text-red-700 dark:text-red-500 justify-center">
             {@disabled_message}

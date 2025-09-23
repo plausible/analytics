@@ -74,8 +74,8 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class={@mt? && "mt-2"}>
-      <.label for={@id} class="mb-2">{@label}</.label>
+    <div class={@mt? && "mt-4"}>
+      <.label for={@id} class="mb-1.5">{@label}</.label>
 
       <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
         {@help_text}
@@ -122,8 +122,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input(%{type: "radio"} = assigns) do
     ~H"""
     <div class={[
-      "flex flex-inline items-center justify-start gap-x-3",
-      @mt? && "mt-2"
+      "flex flex-inline justify-start gap-x-3"
     ]}>
       <input
         type="radio"
@@ -131,7 +130,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         id={@id}
         name={@name}
         checked={assigns[:checked]}
-        class="block dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
+        class="block dark:bg-gray-900 h-4 w-4 mt-[0.15rem] cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
         {@rest}
       />
       <.label :if={@label} class="flex flex-col flex-inline" for={@id}>
@@ -151,8 +150,8 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class={@mt? && "mt-2"}>
-      <.label class="mb-2" for={@id}>{@label}</.label>
+    <div class={@mt? && "mt-4"}>
+      <.label class="mb-1.5" for={@id}>{@label}</.label>
       <textarea
         id={@id}
         rows={@rest[:rows] || "6"}
@@ -177,8 +176,8 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :errors, errors)
 
     ~H"""
-    <div class={@mt? && "mt-2"}>
-      <.label :if={@label != nil and @label != ""} for={@id} class="mb-2">
+    <div class={@mt? && "mt-4"}>
+      <.label :if={@label != nil and @label != ""} for={@id} class="mb-1.5">
         {@label}
       </.label>
       <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">

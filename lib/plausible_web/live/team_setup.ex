@@ -100,7 +100,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
           </.form>
 
           <.label class="mb-2">
-            Team Members
+            Team members
           </.label>
           {live_render(@socket, PlausibleWeb.Live.TeamManagement,
             id: "team-management-setup",

@@ -13,8 +13,24 @@ defmodule Plausible.Application do
     # in CE we start the endpoint under site_encrypt for automatic https
     endpoint = on_ee(do: PlausibleWeb.Endpoint, else: maybe_https_endpoint())
 
+    cluster =
+      on_ee(
+        do:
+          {Cluster.Supervisor,
+           [
+             [
+               default: [
+                 strategy: Cluster.Strategy.ErlangHosts,
+                 config: [timeout: 30_000]
+               ]
+             ],
+             [name: Plausible.ClusterSupervisor]
+           ]}
+      )
+
     children =
       [
+        cluster,
         {PartitionSupervisor,
          child_spec: Task.Supervisor, name: Plausible.UserAgentParseTaskSupervisor},
         Plausible.Session.BalancerSupervisor,

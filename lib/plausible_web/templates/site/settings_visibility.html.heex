@@ -1,10 +1,10 @@
 <.settings_tiles>
   <.tile docs="visibility">
     <:title>
-      Public Dashboard
+      Public dashboard
     </:title>
     <:subtitle>
-      Share your stats publicly or keep them private
+      Share your stats publicly or keep them private.
     </:subtitle>
 
     <.form
@@ -36,7 +36,7 @@
     conn={@conn}
   >
     <:title>
-      Shared Links
+      Shared links
     </:title>
     <:subtitle>
       You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.
@@ -96,7 +96,7 @@
     conn={@conn}
   >
     <:title>
-      Embed Dashboard
+      Embed dashboard
     </:title>
     <:subtitle>
       You can use shared links to embed your stats in any other webpage using an <code>iframe</code>. Copy & paste a shared link into the form below to generate the embed code.
@@ -105,16 +105,17 @@
     <.input
       name="embed-link"
       id="embed-link"
-      label="Enter Shared Link (only public shared links without password can be embedded)"
+      label="Enter shared link (only public shared links without password can be embedded)"
       value=""
       width="w-1/2"
+      mt?={false}
     />
 
     <.input
       type="select"
       name="theme"
       id="theme"
-      label="Select Theme"
+      label="Select theme"
       options={["Light", "Dark", "System"]}
       value="Light"
       width="w-1/2"
@@ -123,18 +124,18 @@
     <.input
       name="background"
       id="background"
-      label="Custom Background Colour (optional). Try using `transparent` background to blend the dashboard with your site."
+      label="Custom background color (optional). Try using `transparent` background to blend the dashboard with your site."
       value=""
       placeholder="e.g. #F9FAFB"
       width="w-1/2"
     />
 
     <.input name="base-url" type="hidden" id="base-url" value={plausible_url()} />
-    <.button id="generate-embed" class="mt-4">
-      Generate Embed Code
+    <.button id="generate-embed" mt?={false}>
+      Generate embed code
     </.button>
 
-    <.label for="embed-code">Embed Code</.label>
+    <.label for="embed-code" class="mt-4">Embed code</.label>
 
     <div class="relative mt-1">
       <textarea

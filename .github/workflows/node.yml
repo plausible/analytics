@@ -21,7 +21,7 @@ jobs:
       uses: marocchino/tool-versions-action@v1
       id: versions
     - name: Set up Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{steps.versions.outputs.nodejs}}
     - run: npm install --prefix ./assets

@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     @slider_value "#slider-value"
 
     @starter_plan_box "#starter-plan-box"
-    @starter_plan_tooltip "#starter-plan-box .tooltip-content"
+    @starter_plan_tooltip "#starter-plan-box [data-testid='plan-tooltip']"
     @starter_price_tag_amount "#starter-price-tag-amount"
     @starter_price_tag_interval "#starter-price-tag-interval"
     @starter_discount_price_tag_amount "#starter-discount-price-tag-amount"
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     @starter_checkout_button "#starter-checkout"
 
     @growth_plan_box "#growth-plan-box"
-    @growth_plan_tooltip "#growth-plan-box .tooltip-content"
+    @growth_plan_tooltip "#growth-plan-box [data-testid='plan-tooltip']"
     @growth_price_tag_amount "#growth-price-tag-amount"
     @growth_price_tag_interval "#growth-price-tag-interval"
     @growth_discount_price_tag_amount "#growth-discount-price-tag-amount"
@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         {:ok, _lv, doc} = get_liveview(conn)
 
         assert doc =~ "Upgrade your trial"
-        assert doc =~ "Back to Settings"
+        assert doc =~ "Back to settings"
         assert doc =~ "You have used"
         assert doc =~ "<b>0</b>"
         assert doc =~ "billable pageviews in the last 30 days"

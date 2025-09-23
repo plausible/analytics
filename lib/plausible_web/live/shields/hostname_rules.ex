@@ -33,8 +33,8 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
     <div>
       <.settings_tiles>
         <.tile docs="excluding#exclude-visits-by-hostname">
-          <:title>Hostnames Allow List</:title>
-          <:subtitle>Accept incoming traffic only from familiar hostnames</:subtitle>
+          <:title>Hostnames allow list</:title>
+          <:subtitle>Accept incoming traffic only from familiar hostnames.</:subtitle>
           <.filter_bar
             :if={@hostname_rules_count < Shields.maximum_hostname_rules()}
             filtering_enabled?={false}
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
               x-on:click={Modal.JS.open("hostname-rule-form-modal")}
               mt?={false}
             >
-              Add Hostname
+              Add hostname
             </.button>
           </.filter_bar>
 
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
           </.notice>
 
           <p :if={Enum.empty?(@hostname_rules)} class="mt-12 mb-8 text-center text-sm">
-            No Hostname Rules configured for this site.
+            No hostname rules configured for this site.
             <strong>
               Traffic from all hostnames is currently accepted.
             </strong>

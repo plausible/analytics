@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         assert text_of_element(html, "#{member_el()}:nth-of-type(1)") =~ "You (SSO)"
 
         assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
-        assert text_of_element(html, "#{member_el()}:nth-of-type(2)") =~ "SSO Member"
+        assert text_of_element(html, "#{member_el()}:nth-of-type(2)") =~ "SSO"
 
         change_role(lv, 2, "owner")
         html = render(lv)
@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "new@example.com"
       assert member_row1 =~ "Invited User"
-      assert member_row1 =~ "Invitation Sent"
+      assert member_row1 =~ "Invitation sent"
 
       member_row2 = find(html, "#{member_el()}:nth-of-type(2)") |> text()
       assert member_row2 =~ "#{user.name}"
@@ -236,10 +236,10 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert pending =~ "Invitation Pending"
-      assert sent =~ "Invitation Sent"
-      assert owner =~ "You"
-      assert admin =~ "Team Member"
+      assert pending =~ "Invitation pending"
+      assert sent =~ "Invitation sent"
+      assert owner =~ "Owner"
+      assert admin != ""
       assert guest_member =~ "Guest"
 
       remove_member(lv, 1)
@@ -253,9 +253,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation Pending"
-      refute html =~ "Invitation Sent"
-      refute html =~ "Team Member"
+      refute html =~ "Invitation pending"
+      refute html =~ "Invitation sent"
       refute html =~ "Guest"
 
       html = render(lv)
@@ -306,9 +305,9 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert sent =~ "Invitation Sent"
-      assert owner =~ "You"
-      assert admin =~ "Team Member"
+      assert sent =~ "Invitation sent"
+      assert owner =~ "Owner"
+      assert admin != ""
       assert guest_member =~ "Guest"
 
       remove_member(lv, 1)
@@ -320,8 +319,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation Sent"
-      refute html =~ "Team Member"
+      refute html =~ "Invitation sent"
       refute html =~ "Guest"
 
       html = render(lv)

@@ -1,10 +1,10 @@
 <.settings_tiles>
   <.tile docs="users-roles">
     <:title>
-      <a id="update-name#changing-the-name-of-a-team">Team Information</a>
+      <a id="update-name#changing-the-name-of-a-team">Team name</a>
     </:title>
     <:subtitle>
-      Change the name of your team
+      Change the name of your team.
     </:subtitle>
     <.form
       :let={f}
@@ -18,10 +18,11 @@
         field={f[:name]}
         label="Name"
         width="w-1/2"
+        mt?={false}
       />
 
       <.button type="submit" disabled={@current_team_role not in [:owner, :admin]}>
-        Change Name
+        Change name
       </.button>
     </.form>
   </.tile>
@@ -32,10 +33,10 @@
     feature_mod={Plausible.Billing.Feature.Teams}
   >
     <:title>
-      <a id="team-members">Team Members</a>
+      <a id="team-members">Team members</a>
     </:title>
     <:subtitle>
-      Add or remove team members and adjust their roles
+      Add or remove team members and adjust their roles.
     </:subtitle>
     {live_render(@conn, PlausibleWeb.Live.TeamManagement,
       id: "team-setup",
@@ -43,15 +44,16 @@
     )}
   </.tile>
   <.tile docs="users-roles#leaving-team">
-    <:title>Leave Team</:title>
-    <:subtitle>Leaving the team removes you from this team as a member.</:subtitle>
+    <:title>Leave team</:title>
+    <:subtitle>Remove yourself from this team as a member.</:subtitle>
     <.button_link
       data-confirm="Are you sure you want to leave this team?"
       href={Routes.settings_path(@conn, :leave_team)}
       method="post"
       theme="danger"
+      mt?={false}
     >
-      Leave Team
+      Leave team
     </.button_link>
   </.tile>
 </.settings_tiles>
