@@ -27,7 +27,7 @@ defmodule Plausible.Ingestion.Persistor do
       backend == @fallback_backend or percent_enabled >= 100 ->
         backend
 
-      :erlang.phash2(user_id, 100) + 1 >= percent_enabled ->
+      :erlang.phash2(user_id, 100) + 1 <= percent_enabled ->
         backend
 
       true ->
