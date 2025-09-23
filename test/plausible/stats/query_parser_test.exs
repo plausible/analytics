@@ -2703,4 +2703,33 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
   end
+
+  describe "query.consolidated_site_ids" do
+    test "is set to nil when site is regular", %{site: site} do
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all"
+      }
+
+      {:ok, %{consolidated_site_ids: nil}} = parse(site, :public, params)
+      {:ok, %{consolidated_site_ids: nil}} = parse(site, :internal, params)
+    end
+
+    test "is set to a list of site_ids when site is consolidated", %{site: site} do
+      Plausible.ConsolidatedView.enable(site.team)
+      cv = Plausible.ConsolidatedView.get(site.team) |> Plausible.Repo.preload(:team)
+
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all"
+      }
+
+      site_id = site.id
+
+      assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :public, params)
+      assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :internal, params)
+    end
+  end
 end

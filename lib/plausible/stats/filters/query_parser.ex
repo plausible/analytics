@@ -79,7 +79,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   def get_consolidated_site_ids(%Plausible.Site{} = site) do
     if Plausible.Sites.consolidated?(site) do
-      Plausible.ConsolidatedView.site_ids(site.team)
+      {:ok, site_ids} = Plausible.ConsolidatedView.site_ids(site.team)
+      site_ids
     else
       nil
     end
