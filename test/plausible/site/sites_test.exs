@@ -237,6 +237,13 @@ defmodule Plausible.SitesTest do
       assert %{id: ^site_id} =
                Sites.get_for_user(user2, domain, [:super_admin])
     end
+
+    test "ignores consolidated site by default" do
+      user = new_user()
+      %{domain: domain} = new_site(owner: user, consolidated: true)
+      refute Sites.get_for_user(user, domain)
+      assert_raise(Ecto.NoResultsError, fn -> Sites.get_for_user!(user, domain) end)
+    end
   end
 
   describe "list/3 and list_with_invitations/3" do
