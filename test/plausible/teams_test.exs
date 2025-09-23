@@ -449,7 +449,7 @@ defmodule Plausible.TeamsTest do
       assert [%{id: ^site_id1}, %{id: ^site_id2}] = Teams.owned_sites(team, 2)
     end
 
-    test "rerutns empty list for no team" do
+    test "returns empty list for no team" do
       assert [] = Teams.owned_sites(nil)
     end
   end
@@ -465,7 +465,7 @@ defmodule Plausible.TeamsTest do
       assert [^site_id1, ^site_id2] = Teams.owned_sites_ids(team)
     end
 
-    test "rerutns empty list for no team" do
+    test "returns empty list for no team" do
       assert [] = Teams.owned_sites_ids(nil)
     end
   end
@@ -481,7 +481,7 @@ defmodule Plausible.TeamsTest do
       assert Teams.owned_sites_count(team) == 2
     end
 
-    test "rerutns empty list for no team" do
+    test "returns empty list for no team" do
       assert Teams.owned_sites_count(nil) == 0
     end
   end
