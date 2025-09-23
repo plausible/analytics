@@ -2185,13 +2185,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "visits" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                },
                %{
                  "visitors" => 1,
                  "visits" => 2,
                  "name" => "/page2",
-                 "visit_duration" => 450
+                 "visit_duration" => 450,
+                 "bounce_rate" => 50
                }
              ]
     end
@@ -2241,13 +2243,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 1,
                  "visits" => 1,
                  "name" => "/blog",
-                 "visit_duration" => 60
+                 "visit_duration" => 60,
+                 "bounce_rate" => 0
                },
                %{
                  "visitors" => 1,
                  "visits" => 1,
                  "name" => "/blog/john-2",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                }
              ]
     end
@@ -2296,13 +2300,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "visits" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                },
                %{
                  "visitors" => 1,
                  "visits" => 2,
                  "name" => "/page2",
-                 "visit_duration" => 450
+                 "visit_duration" => 450,
+                 "bounce_rate" => 50
                }
              ]
 
@@ -2317,13 +2323,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 3,
                  "visits" => 5,
                  "name" => "/page2",
-                 "visit_duration" => 240.0
+                 "visit_duration" => 240.0,
+                 "bounce_rate" => 20
                },
                %{
                  "visitors" => 2,
                  "visits" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                }
              ]
     end
@@ -2376,8 +2384,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       # We're going to only join sessions where the exit hostname matches the filter
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "/page1", "visit_duration" => 0, "visitors" => 1, "visits" => 1},
-               %{"name" => "/page2", "visit_duration" => 0, "visitors" => 1, "visits" => 1}
+               %{
+                 "name" => "/page1",
+                 "visit_duration" => 0,
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "bounce_rate" => 100
+               },
+               %{
+                 "name" => "/page2",
+                 "visit_duration" => 0,
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "bounce_rate" => 100
+               }
              ]
     end
 
@@ -2534,19 +2554,22 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visit_duration" => 100.0,
                  "name" => "/a",
                  "visits" => 10,
-                 "visitors" => 6
+                 "visitors" => 6,
+                 "bounce_rate" => 10
                },
                %{
                  "visit_duration" => 50.0,
                  "name" => "/bbb",
                  "visits" => 2,
-                 "visitors" => 2
+                 "visitors" => 2,
+                 "bounce_rate" => 0
                },
                %{
                  "visit_duration" => 0,
                  "name" => "/aaa",
                  "visits" => 1,
-                 "visitors" => 1
+                 "visitors" => 1,
+                 "bounce_rate" => 100
                }
              ]
     end

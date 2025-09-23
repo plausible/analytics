@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - All dropmenus on dashboard are navigable with Tab (used to be a mix between tab and arrow keys), and no two dropmenus can be open at once on the dashboard
 - Special path-based events like "404" don't need `event.props.path` to be explicitly defined when tracking: it is set to be the same as `event.pathname` in event ingestion. If it is explicitly defined, it is not overridden for backwards compatibility.
 - Main graph no longer shows empty values after current time for `day`, `month` and `year` periods.
+- Include `bounce_rate` metric in Entry Pages breakdown.
 
 ### Fixed
 

@@ -73,6 +73,7 @@ function EntryPagesModal() {
         renderLabel: (_query) => 'Total Entrances',
         width: 'w-36'
       }),
+      metrics.createBounceRate(),
       metrics.createVisitDuration()
     ]
   }
