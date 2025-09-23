@@ -80,6 +80,22 @@ defmodule Plausible.Application do
               {Plausible.Site.Cache.RecentlyUpdated, interval: :timer.seconds(30)}
           ]
         ),
+        on_ee do
+          warmed_cache(Plausible.ConsolidatedView.Cache,
+            adapter_opts: [
+              n_lock_partitions: 1,
+              ttl_check_interval: false,
+              ets_options: [read_concurrency: true]
+            ],
+            warmers: [
+              refresh_all:
+                {Plausible.ConsolidatedView.Cache.All,
+                 interval: :timer.minutes(20) + Enum.random(1..:timer.seconds(10))},
+              refresh_updated_recently:
+                {Plausible.ConsolidatedView.Cache.RecentlyUpdated, interval: :timer.minutes(1)}
+            ]
+          )
+        end,
         warmed_cache(Plausible.Shield.IPRuleCache,
           adapter_opts: [
             n_lock_partitions: 1,

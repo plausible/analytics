@@ -61,8 +61,8 @@ defmodule Plausible.ConsolidatedView do
         |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
         |> Repo.insert()
 
-      cv ->
-        {:ok, cv}
+      consolidated_view ->
+        {:ok, consolidated_view}
     end
   end
 
