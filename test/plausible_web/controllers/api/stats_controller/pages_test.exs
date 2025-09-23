@@ -2144,6 +2144,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :ee_only
     test "returns pages across all sites on a consolidated view", %{conn: conn, site: site} do
       another_site = new_site(team: site.team)
       cv = new_consolidated_view(site.team)

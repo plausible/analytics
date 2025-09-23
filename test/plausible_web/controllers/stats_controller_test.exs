@@ -149,6 +149,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
+    @tag :ee_only
     test "does not redirect consolidated views to verification", %{
       conn: conn,
       user: user

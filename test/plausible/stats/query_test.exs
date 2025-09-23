@@ -486,6 +486,8 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   describe "query.consolidated_site_ids" do
+    @describetag :ee_only
+
     test "is set to nil when site is regular", %{site: site} do
       assert %{consolidated_site_ids: nil} = Query.from(site, %{"period" => "day"})
     end

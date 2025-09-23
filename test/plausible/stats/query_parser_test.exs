@@ -2705,6 +2705,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "query.consolidated_site_ids" do
+    @describetag :ee_only
+
     test "is set to nil when site is regular", %{site: site} do
       params = %{
         "site_id" => site.domain,

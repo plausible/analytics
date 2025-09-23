@@ -42,13 +42,17 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     query
   end
 
-  defp put_consolidated_site_ids(query, %Plausible.Site{} = site) do
-    if Plausible.Sites.consolidated?(site) do
-      {:ok, site_ids} = Plausible.ConsolidatedView.site_ids(site.team)
-      struct!(query, consolidated_site_ids: site_ids)
-    else
-      query
+  on_ee do
+    defp put_consolidated_site_ids(query, %Plausible.Site{} = site) do
+      if Plausible.Sites.consolidated?(site) do
+        {:ok, site_ids} = Plausible.ConsolidatedView.site_ids(site.team)
+        struct!(query, consolidated_site_ids: site_ids)
+      else
+        query
+      end
     end
+  else
+    defp put_consolidated_site_ids(query, _site), do: query
   end
 
   defp resolve_segments(query, site) do

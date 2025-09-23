@@ -77,13 +77,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def get_consolidated_site_ids(%Plausible.Site{} = site) do
-    if Plausible.Sites.consolidated?(site) do
-      {:ok, site_ids} = Plausible.ConsolidatedView.site_ids(site.team)
-      site_ids
-    else
-      nil
+  on_ee do
+    def get_consolidated_site_ids(%Plausible.Site{} = site) do
+      if Plausible.Sites.consolidated?(site) do
+        {:ok, site_ids} = Plausible.ConsolidatedView.site_ids(site.team)
+        site_ids
+      else
+        nil
+      end
     end
+  else
+    def get_consolidated_site_ids(_site), do: nil
   end
 
   def parse_date_range_pair(site, [from, to]) when is_binary(from) and is_binary(to) do
