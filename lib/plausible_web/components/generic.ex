@@ -6,22 +6,22 @@ defmodule PlausibleWeb.Components.Generic do
 
   @notice_themes %{
     gray: %{
-      bg: "bg-gray-100 dark:bg-gray-700/50",
-      icon: "text-gray-400",
-      title_text: "text-sm text-gray-800 dark:text-gray-300",
-      body_text: "text-sm text-gray-700 dark:text-gray-400 leading-5"
+      bg: "bg-gray-150 dark:bg-gray-700/50",
+      icon: "text-gray-600 dark:text-gray-300",
+      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-300 leading-5"
     },
     yellow: %{
-      bg: "bg-yellow-50 dark:bg-yellow-100",
-      icon: "text-yellow-400",
-      title_text: "text-sm text-yellow-800 dark:text-yellow-900",
-      body_text: "text-sm text-yellow-700 dark:text-yellow-800 leading-5"
+      bg: "bg-yellow-100/60 dark:bg-yellow-900/40",
+      icon: "text-yellow-500",
+      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     red: %{
-      bg: "bg-red-100",
-      icon: "text-red-700",
-      title_text: "text-sm text-red-800 dark:text-red-900",
-      body_text: "text-sm text-red-700 dark:text-red-800"
+      bg: "bg-red-100 dark:bg-red-900/50",
+      icon: "text-red-600",
+      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     }
   }
 
@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <div id={@dismissable_id} class={[@dismissable_id && "hidden"]}>
-      <div class={["rounded-md p-4 relative", @theme.bg, @class]} {@rest}>
+      <div class={["rounded-md p-5 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}
           class={"absolute right-0 top-0 m-2 #{@theme.title_text}"}
@@ -169,7 +169,7 @@ defmodule PlausibleWeb.Components.Generic do
         >
           <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
         </button>
-        <div class="flex">
+        <div class="flex gap-x-3">
           <div :if={@title} class="flex-shrink-0">
             <svg
               class={"h-5 w-5 #{@theme.icon}"}
@@ -184,8 +184,8 @@ defmodule PlausibleWeb.Components.Generic do
               />
             </svg>
           </div>
-          <div class={["w-full", @title && "ml-3"]}>
-            <h3 :if={@title} class={"font-medium #{@theme.title_text} mb-2"}>
+          <div class="w-full flex flex-col gap-y-1.5">
+            <h3 :if={@title} class={"font-medium #{@theme.title_text}"}>
               {@title}
             </h3>
             <div class={"#{@theme.body_text}"}>
