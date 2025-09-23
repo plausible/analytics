@@ -39,7 +39,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
 
   defp send_setup_help_emails() do
     q =
-      from(s in Plausible.Site,
+      from(s in Plausible.Site.regular(),
         left_join: se in "setup_help_emails",
         on: se.site_id == s.id,
         where: is_nil(se.id),
@@ -60,7 +60,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
 
   defp send_setup_success_emails() do
     q =
-      from(s in Plausible.Site,
+      from(s in Plausible.Site.regular(),
         left_join: se in "setup_success_emails",
         on: se.site_id == s.id,
         where: is_nil(se.id),

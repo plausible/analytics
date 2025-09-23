@@ -47,7 +47,7 @@ defmodule Plausible.Teams.Sites do
       end
 
     from(u in subquery(all_query),
-      inner_join: s in Plausible.Site,
+      inner_join: s in ^Plausible.Site.regular(),
       on: u.site_id == s.id,
       as: :site,
       left_join: up in Site.UserPreference,
@@ -95,7 +95,7 @@ defmodule Plausible.Teams.Sites do
       end
 
     from(u in subquery(union_query),
-      inner_join: s in Plausible.Site,
+      inner_join: s in ^Plausible.Site.regular(),
       on: u.site_id == s.id,
       as: :site,
       left_join: up in Site.UserPreference,

@@ -5,6 +5,7 @@ defmodule Plausible.Site do
   use Ecto.Schema
   use Plausible
   import Ecto.Changeset
+  import Ecto.Query, only: [from: 2]
   alias Plausible.Site.GoogleAuth
 
   @type t() :: %__MODULE__{}
@@ -22,9 +23,7 @@ defmodule Plausible.Site do
     field :funnels_enabled, :boolean, default: true
     field :legacy_time_on_page_cutoff, :date, default: ~D[1970-01-01]
 
-    on_ee do
-      field :consolidated, :boolean
-    end
+    field :consolidated, :boolean, default: false
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
@@ -69,6 +68,10 @@ defmodule Plausible.Site do
     field :rollup, :boolean, virtual: true, default: false
 
     timestamps()
+  end
+
+  def regular(q \\ __MODULE__) do
+    from s in q, where: not s.consolidated
   end
 
   def rollup(team) do

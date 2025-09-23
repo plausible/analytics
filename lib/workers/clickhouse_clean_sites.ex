@@ -55,7 +55,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
 
   def get_deleted_sites_with_clickhouse_data() do
     pg_sites =
-      from(s in Plausible.Site, select: s.id)
+      from(s in Plausible.Site.regular(), select: s.id)
       |> Plausible.Repo.all()
       |> MapSet.new()
 

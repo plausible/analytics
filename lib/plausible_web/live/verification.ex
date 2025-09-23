@@ -22,13 +22,15 @@ defmodule PlausibleWeb.Live.Verification do
     current_user = socket.assigns.current_user
 
     site =
-      Plausible.Sites.get_for_user!(current_user, domain, [
-        :owner,
-        :admin,
-        :editor,
-        :super_admin,
-        :viewer
-      ])
+      Plausible.Sites.get_for_user!(current_user, domain,
+        roles: [
+          :owner,
+          :admin,
+          :editor,
+          :super_admin,
+          :viewer
+        ]
+      )
 
     private = Map.get(socket.private.connect_info, :private, %{})
 

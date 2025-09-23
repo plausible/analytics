@@ -11,12 +11,14 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [
-          :owner,
-          :admin,
-          :editor,
-          :super_admin
-        ])
+        Plausible.Sites.get_for_user!(current_user, domain,
+          roles: [
+            :owner,
+            :admin,
+            :editor,
+            :super_admin
+          ]
+        )
       end)
       |> assign_new(:displayed_tokens, fn %{site: site} ->
         Tokens.list(site)

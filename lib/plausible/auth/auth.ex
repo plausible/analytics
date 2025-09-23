@@ -299,7 +299,7 @@ defmodule Plausible.Auth do
 
   defp find_team_by_site(domain) do
     Repo.one(
-      from s in Plausible.Site,
+      from s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         where: s.domain == ^domain or s.domain_changed_from == ^domain,
         select: t

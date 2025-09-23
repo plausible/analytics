@@ -10,12 +10,14 @@ defmodule PlausibleWeb.Live.Shields.Pages do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [
-          :owner,
-          :admin,
-          :editor,
-          :super_admin
-        ])
+        Plausible.Sites.get_for_user!(current_user, domain,
+          roles: [
+            :owner,
+            :admin,
+            :editor,
+            :super_admin
+          ]
+        )
       end)
       |> assign_new(:page_rules_count, fn %{site: site} ->
         Shields.count_page_rules(site)

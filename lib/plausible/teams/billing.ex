@@ -581,7 +581,7 @@ defmodule Plausible.Teams.Billing do
 
   defp query_team_member_emails(team, pending_ownership_site_ids, exclude_emails) do
     pending_owner_memberships_q =
-      from s in Plausible.Site,
+      from s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         inner_join: tm in assoc(t, :team_memberships),
         inner_join: u in assoc(tm, :user),

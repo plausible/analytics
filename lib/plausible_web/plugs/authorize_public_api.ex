@@ -186,7 +186,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   defp find_site(site_id, _api_key) do
     domain_based_search =
-      from s in Plausible.Site, where: s.domain == ^site_id or s.domain_changed_from == ^site_id
+      from s in Plausible.Site.regular(),
+        where: s.domain == ^site_id or s.domain_changed_from == ^site_id
 
     case Repo.one(domain_based_search) do
       %Plausible.Site{} = site ->

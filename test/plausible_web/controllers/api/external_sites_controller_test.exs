@@ -806,6 +806,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         site2 = new_site(owner: user)
 
         _unrelated_site = new_site()
+        _consolidated_excluded = new_site(owner: user, consolidated: true)
 
         conn = get(conn, "/api/v1/sites")
 

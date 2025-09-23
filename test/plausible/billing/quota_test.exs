@@ -91,9 +91,10 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  test "site_usage/1 returns the amount of sites the user owns" do
+  test "site_usage/1 returns the amount of sites the user owns (excludes consolidated)" do
     user = new_user()
     for _ <- 1..3, do: new_site(owner: user)
+    new_site(owner: user, consolidated: true)
     add_guest(new_site(), user: user, role: :editor)
     add_guest(new_site(), user: user, role: :viewer)
     team = team_of(user)

@@ -38,9 +38,11 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         conn = get(conn, @cs_index)
         resp = html_response(conn, 200)
         team = team_of(user)
+        consolidated_site = new_site(owner: user, consolidated: true)
         assert_search_result(resp, "site", site.id)
         assert_search_result(resp, "team", team.id)
         assert_search_result(resp, "user", user.id)
+        refute_search_result(resp, "site", consolidated_site.id)
       end
 
       test "filters as you type", %{conn: conn, site: site, user: user} do

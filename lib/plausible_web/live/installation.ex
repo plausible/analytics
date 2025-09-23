@@ -32,13 +32,15 @@ defmodule PlausibleWeb.Live.Installation do
         socket
       ) do
     site =
-      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
-        :owner,
-        :admin,
-        :editor,
-        :super_admin,
-        :viewer
-      ])
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain,
+        roles: [
+          :owner,
+          :admin,
+          :editor,
+          :super_admin,
+          :viewer
+        ]
+      )
 
     if PlausibleWeb.Tracker.scriptv2?(site) do
       {:ok,

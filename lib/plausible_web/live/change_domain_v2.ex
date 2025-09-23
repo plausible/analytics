@@ -23,11 +23,13 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
         socket
       ) do
     site =
-      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
-        :owner,
-        :admin,
-        :super_admin
-      ])
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain,
+        roles: [
+          :owner,
+          :admin,
+          :super_admin
+        ]
+      )
 
     {:ok,
      assign(socket,

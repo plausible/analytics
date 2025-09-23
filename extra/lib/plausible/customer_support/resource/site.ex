@@ -15,7 +15,7 @@ defmodule Plausible.CustomerSupport.Resource.Site do
     limit = Keyword.fetch!(opts, :limit)
 
     q =
-      from s in Plausible.Site,
+      from s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         inner_join: o in assoc(t, :owners),
         order_by: [
@@ -31,7 +31,7 @@ defmodule Plausible.CustomerSupport.Resource.Site do
     limit = Keyword.fetch!(opts, :limit)
 
     q =
-      from s in Plausible.Site,
+      from s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         inner_join: o in assoc(t, :owners),
         where:

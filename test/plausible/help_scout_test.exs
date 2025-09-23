@@ -478,6 +478,9 @@ defmodule Plausible.HelpScoutTest do
         new_site(owner: user3)
         new_site(domain: "big.match.example.com/hit", owner: user3)
 
+        # excluded
+        new_site(domain: "consolidated.example.com", owner: user3, consolidated: true)
+
         assert HelpScout.search_users("match.example.co", "123") == [
                  %{email: user3.email, sites_count: 2},
                  %{email: user2.email, sites_count: 1},

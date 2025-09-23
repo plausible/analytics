@@ -17,12 +17,14 @@ defmodule PlausibleWeb.Live.Shields.IPAddresses do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [
-          :owner,
-          :admin,
-          :editor,
-          :super_admin
-        ])
+        Plausible.Sites.get_for_user!(current_user, domain,
+          roles: [
+            :owner,
+            :admin,
+            :editor,
+            :super_admin
+          ]
+        )
       end)
       |> assign_new(:ip_rules_count, fn %{site: site} ->
         Shields.count_ip_rules(site)
