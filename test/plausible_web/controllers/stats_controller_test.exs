@@ -149,6 +149,21 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
+    test "does not redirect consolidated views to verification", %{
+      conn: conn,
+      user: user
+    } do
+      cv = user |> team_of() |> new_consolidated_view()
+
+      conn = get(conn, "/" <> cv.domain)
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-domain") == cv.domain
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
+      assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
+    end
+
     @tag :ee_only
     test "header, stats are shown; footer is not shown", %{conn: conn, site: site, user: user} do
       populate_stats(site, [build(:pageview)])

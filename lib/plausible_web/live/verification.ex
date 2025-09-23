@@ -32,6 +32,8 @@ defmodule PlausibleWeb.Live.Verification do
         ]
       )
 
+    true = Plausible.Sites.regular?(site)
+
     private = Map.get(socket.private.connect_info, :private, %{})
 
     super_admin? = Plausible.Auth.is_super_admin?(current_user)
