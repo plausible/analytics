@@ -420,12 +420,7 @@ defmodule Plausible.Sites do
   end
 
   def get_for_user!(user, domain, opts \\ []) do
-    opts =
-      Keyword.merge(
-        [include_consolidated?: false, roles: [:owner, :admin, :editor, :viewer]],
-        opts
-      )
-
+    opts = default_get_for_user_opts(opts)
     roles = Keyword.fetch!(opts, :roles)
     include_consolidated? = Keyword.fetch!(opts, :include_consolidated?)
 
@@ -442,12 +437,7 @@ defmodule Plausible.Sites do
   end
 
   def get_for_user(user, domain, opts \\ []) do
-    opts =
-      Keyword.merge(
-        [include_consolidated?: false, roles: [:owner, :admin, :editor, :viewer]],
-        opts
-      )
-
+    opts = default_get_for_user_opts(opts)
     roles = Keyword.fetch!(opts, :roles)
     include_consolidated? = Keyword.fetch!(opts, :include_consolidated?)
 
@@ -481,5 +471,12 @@ defmodule Plausible.Sites do
     else
       from(s in q, where: not s.consolidated)
     end
+  end
+
+  defp default_get_for_user_opts(opts) do
+    Keyword.merge(
+      [include_consolidated?: false, roles: [:owner, :admin, :editor, :viewer]],
+      opts
+    )
   end
 end
