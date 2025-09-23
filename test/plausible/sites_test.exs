@@ -957,6 +957,35 @@ defmodule Plausible.SitesTest do
     end
   end
 
+  describe "get_by_domain/2" do
+    test "returns site when found with regular site" do
+      site = new_site(domain: "example.com")
+
+      assert %{domain: "example.com"} = Sites.get_by_domain("example.com")
+      assert site.id == Sites.get_by_domain("example.com").id
+    end
+
+    test "returns nil when site not found" do
+      refute Sites.get_by_domain("nonexistent.com")
+    end
+
+    test "excludes consolidated sites by default" do
+      _regular_site = new_site(domain: "regular.com")
+      _consolidated_site = new_site(domain: "consolidated.com", consolidated: true)
+
+      assert Sites.get_by_domain("regular.com")
+      refute Sites.get_by_domain("consolidated.com")
+    end
+
+    test "includes consolidated sites when explicitly requested" do
+      _regular_site = new_site(domain: "regular.com")
+      _consolidated_site = new_site(domain: "consolidated.com", consolidated: true)
+
+      assert Sites.get_by_domain("regular.com", include_consolidated?: true)
+      assert Sites.get_by_domain("consolidated.com", include_consolidated?: true)
+    end
+  end
+
   describe "predicates for site.consolidated" do
     on_ee do
       test "regular?/1" do
