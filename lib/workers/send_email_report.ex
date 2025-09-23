@@ -68,7 +68,7 @@ defmodule Plausible.Workers.SendEmailReport do
       Date.to_iso8601(date_range.last)
     ]
 
-    stats = stats_aggreagates(site, date_range)
+    stats = stats_aggregates(site, date_range)
     pages = pages(site, date_range)
     sources = sources(site, date_range)
     goals = goals(site, date_range)
@@ -79,7 +79,7 @@ defmodule Plausible.Workers.SendEmailReport do
     |> Map.put(:goals, goals)
   end
 
-  defp stats_aggreagates(site, date_range) do
+  defp stats_aggregates(site, date_range) do
     {:ok, query} =
       Query.build(
         site,
