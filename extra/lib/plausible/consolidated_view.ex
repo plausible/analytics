@@ -15,7 +15,7 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
-  @spec sites(Ecto.Query.t() | Site.t()) :: Ecto.Query.t()
+  @spec sites(Ecto.Query.t() | Site) :: Ecto.Query.t()
   def sites(q \\ Site) do
     from s in q, where: s.consolidated == true
   end
