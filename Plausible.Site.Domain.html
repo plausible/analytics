@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-B2A15708.js"></script>
+    <script src="dist/sidebar_items-800314B0.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,10 +138,10 @@ Pages
 
 
     <section id="moduledoc">
-<p>Basic interface for domain changes.</p><p>Once <a href="Plausible.DataMigration.NumericIDs.html"><code class="inline">Plausible.DataMigration.NumericIDs</code></a> schema migration is ready, 
+<p>Basic interface for domain changes.</p><p>Once <a href="Plausible.DataMigration.NumericIDs.html"><code class="inline">Plausible.DataMigration.NumericIDs</code></a> schema migration is ready,
 domain change operation will be enabled, accessible to the users.</p><p>We will set a transition period of 72 hours
 during which, both old and new domains, will be accepted as traffic
-identifiers to the same site. </p><p>A periodic worker will call the <code class="inline">expire/0</code> function to end it where applicable.
+identifiers to the same site.</p><p>A periodic worker will call the <code class="inline">expire/0</code> function to end it where applicable.
 See: <a href="Plausible.Workers.ExpireDomainChangeTransitions.html"><code class="inline">Plausible.Workers.ExpireDomainChangeTransitions</code></a>.</p><p>The underlying changeset for domain change (see: <a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) relies
 on database trigger installed via <code class="inline">Plausible.Repo.Migrations.AllowDomainChange</code>
 Postgres migration. The trigger checks if either <code class="inline">domain</code> or <code class="inline">domain_changed_from</code>
