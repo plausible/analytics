@@ -16,12 +16,14 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [
-          :owner,
-          :admin,
-          :editor,
-          :super_admin
-        ])
+        Plausible.Sites.get_for_user!(current_user, domain,
+          roles: [
+            :owner,
+            :admin,
+            :editor,
+            :super_admin
+          ]
+        )
       end)
       |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
         Funnels.list(site)
@@ -114,7 +116,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       Plausible.Sites.get_for_user!(
         socket.assigns.current_user,
         socket.assigns.domain,
-        [:owner, :admin, :editor]
+        roles: [:owner, :admin, :editor]
       )
 
     id = String.to_integer(id)

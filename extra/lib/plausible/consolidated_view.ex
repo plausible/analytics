@@ -52,7 +52,8 @@ defmodule Plausible.ConsolidatedView do
   defp do_enable(%Team{} = team) do
     case get(team) do
       nil ->
-        Site.new_for_team(team, %{consolidated: true, domain: make_id(team)})
+        team
+        |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
         |> Repo.insert()
 
       cv ->

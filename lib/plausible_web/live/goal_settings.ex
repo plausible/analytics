@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
         current_user
-        |> Plausible.Sites.get_for_user!(domain, [:owner, :admin, :editor, :super_admin])
+        |> Plausible.Sites.get_for_user!(domain, roles: [:owner, :admin, :editor, :super_admin])
       end)
       |> assign_new(:site_role, fn %{site: site, current_user: current_user} ->
         if Plausible.Auth.is_super_admin?(current_user) do

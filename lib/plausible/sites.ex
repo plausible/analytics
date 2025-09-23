@@ -100,7 +100,7 @@ defmodule Plausible.Sites do
 
   @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
   def set_option(user, site, option, value) when option in Site.UserPreference.options() do
-    Plausible.Sites.get_for_user!(user, site.domain)
+    get_for_user!(user, site.domain)
 
     user
     |> Site.UserPreference.changeset(site, %{option => value})
@@ -292,7 +292,7 @@ defmodule Plausible.Sites do
     end)
     |> Ecto.Multi.run(:clear_changed_from, fn
       _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
-        case Plausible.Sites.get_for_user(user, domain, [:owner]) do
+        case get_for_user(user, domain, roles: [:owner]) do
           %Site{domain_changed_from: ^domain} = site ->
             site
             |> Ecto.Changeset.change()
@@ -419,31 +419,49 @@ defmodule Plausible.Sites do
     )
   end
 
-  def get_for_user!(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
+  def get_for_user!(user, domain, opts \\ []) do
+    opts =
+      Keyword.merge(
+        [include_consolidated?: false, roles: [:owner, :admin, :editor, :viewer]],
+        opts
+      )
+
+    roles = Keyword.fetch!(opts, :roles)
+    include_consolidated? = Keyword.fetch!(opts, :include_consolidated?)
+
     site =
       if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
-        get_by_domain!(domain)
+        get_by_domain!(domain, include_consolidated?: include_consolidated?)
       else
         user.id
-        |> get_for_user_query(domain, List.delete(roles, :super_admin))
+        |> get_for_user_query(domain, List.delete(roles, :super_admin), opts)
         |> Repo.one!()
       end
 
     Repo.preload(site, :team)
   end
 
-  def get_for_user(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
+  def get_for_user(user, domain, opts \\ []) do
+    opts =
+      Keyword.merge(
+        [include_consolidated?: false, roles: [:owner, :admin, :editor, :viewer]],
+        opts
+      )
+
+    roles = Keyword.fetch!(opts, :roles)
+    include_consolidated? = Keyword.fetch!(opts, :include_consolidated?)
+
     if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
-      get_by_domain(domain)
+      get_by_domain(domain, include_consolidated?: include_consolidated?)
     else
       user.id
-      |> get_for_user_query(domain, List.delete(roles, :super_admin))
+      |> get_for_user_query(domain, List.delete(roles, :super_admin), opts)
       |> Repo.one()
     end
   end
 
-  defp get_for_user_query(user_id, domain, roles, opts \\ []) do
-    include_consolidated? = Keyword.get(opts, :include_consolidated?, false)
+  defp get_for_user_query(user_id, domain, roles, opts) do
+    include_consolidated? = Keyword.fetch!(opts, :include_consolidated?)
     roles = Enum.map(roles, &to_string/1)
 
     q =

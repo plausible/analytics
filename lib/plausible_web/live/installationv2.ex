@@ -23,13 +23,15 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         socket
       ) do
     site =
-      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
-        :owner,
-        :admin,
-        :editor,
-        :super_admin,
-        :viewer
-      ])
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain,
+        roles: [
+          :owner,
+          :admin,
+          :editor,
+          :super_admin,
+          :viewer
+        ]
+      )
 
     flow = params["flow"] || Flows.provisioning()
 

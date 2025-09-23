@@ -13,12 +13,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     site =
-      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
-        :owner,
-        :admin,
-        :editor,
-        :super_admin
-      ])
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain,
+        roles: [
+          :owner,
+          :admin,
+          :editor,
+          :super_admin
+        ]
+      )
 
     # We'll have the options trimmed to only the data we care about, to keep
     # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
