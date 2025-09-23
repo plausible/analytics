@@ -51,7 +51,7 @@ defmodule Plausible.Sites do
     if include_consolidated? do
       Repo.get_by(Site, domain: domain)
     else
-      Repo.get_by(Site, domain: domain, consolidated: false)
+      Repo.get_by(Site.regular(), domain: domain)
     end
   end
 
@@ -61,7 +61,7 @@ defmodule Plausible.Sites do
     if include_consolidated? do
       Repo.get_by!(Site, domain: domain)
     else
-      Repo.get_by!(Site, domain: domain, consolidated: false)
+      Repo.get_by!(Site.regular(), domain: domain)
     end
   end
 
