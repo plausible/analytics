@@ -2143,6 +2143,56 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                }
              ]
     end
+
+    test "returns pages across all sites on a consolidated view", %{conn: conn, site: site} do
+      another_site = new_site(team: site.team)
+      cv = new_consolidated_view(site.team)
+
+      populate_stats(site, [
+        build(:pageview, pathname: "/a1", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/a2", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/a2", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      populate_stats(another_site, [
+        build(:pageview, pathname: "/b1", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/b1", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/b1", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{cv.domain}/pages?period=day&date=2021-01-01&detailed=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "bounce_rate" => 100,
+                 "name" => "/b1",
+                 "pageviews" => 3,
+                 "time_on_page" => nil,
+                 "visitors" => 3,
+                 "scroll_depth" => nil
+               },
+               %{
+                 "bounce_rate" => 100,
+                 "name" => "/a2",
+                 "pageviews" => 2,
+                 "time_on_page" => nil,
+                 "visitors" => 2,
+                 "scroll_depth" => nil
+               },
+               %{
+                 "bounce_rate" => 100,
+                 "name" => "/a1",
+                 "pageviews" => 1,
+                 "time_on_page" => nil,
+                 "visitors" => 1,
+                 "scroll_depth" => nil
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/entry-pages" do
