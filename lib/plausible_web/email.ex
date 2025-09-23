@@ -125,8 +125,8 @@ defmodule PlausibleWeb.Email do
   def stats_report(email, assigns) do
     base_email(%{layout: nil})
     |> to(email)
-    |> tag("#{assigns.type}-report")
-    |> subject("#{assigns.name} report for #{assigns.site.domain}")
+    |> tag("#{assigns.interval}-report")
+    |> subject("#{assigns.report_name} report for #{assigns.site.domain}")
     |> html_body(PlausibleWeb.MJML.StatsReport.render(assigns))
   end
 
