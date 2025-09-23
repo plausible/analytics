@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryConsolidatedViewTest do
     conn: conn
   } do
     another_site = new_site(team: team)
-    {:ok, cv} = Plausible.ConsolidatedView.enable(team)
+    cv = new_consolidated_view(team)
 
     populate_stats(site, [build(:pageview)])
     populate_stats(another_site, [build(:pageview)])

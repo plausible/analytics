@@ -491,8 +491,7 @@ defmodule Plausible.Stats.QueryTest do
     end
 
     test "is set to a list of site_ids when site is consolidated", %{site: site} do
-      Plausible.ConsolidatedView.enable(site.team)
-      cv = Plausible.ConsolidatedView.get(site.team) |> Plausible.Repo.preload(:team)
+      cv = new_consolidated_view(site.team)
 
       site_id = site.id
       assert %{consolidated_site_ids: [^site_id]} = Query.from(cv, %{"period" => "day"})

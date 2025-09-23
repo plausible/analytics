@@ -2717,8 +2717,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "is set to a list of site_ids when site is consolidated", %{site: site} do
-      Plausible.ConsolidatedView.enable(site.team)
-      cv = Plausible.ConsolidatedView.get(site.team) |> Plausible.Repo.preload(:team)
+      cv = new_consolidated_view(site.team)
 
       params = %{
         "site_id" => site.domain,
