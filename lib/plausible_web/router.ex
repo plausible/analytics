@@ -337,6 +337,7 @@ defmodule PlausibleWeb.Router do
 
         scope assigns: %{api_context: :site} do
           get "/goals", ExternalSitesController, :goals_index
+          get "/custom-props", ExternalSitesController, :custom_props_index
           get "/guests", ExternalSitesController, :guests_index
           get "/:site_id", ExternalSitesController, :get_site
         end
@@ -352,6 +353,10 @@ defmodule PlausibleWeb.Router do
 
           put "/goals", ExternalSitesController, :find_or_create_goal
           delete "/goals/:goal_id", ExternalSitesController, :delete_goal
+
+          put "/custom-props", ExternalSitesController, :add_custom_prop
+          # Property name can contain forward slashes, hence we match on wildcard here
+          delete "/custom-props/*property", ExternalSitesController, :delete_custom_prop
 
           put "/guests", ExternalSitesController, :find_or_create_guest
           delete "/guests/:email", ExternalSitesController, :delete_guest

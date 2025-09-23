@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   alias Plausible.Sites
   alias Plausible.Goal
   alias Plausible.Goals
+  alias Plausible.Props
   alias Plausible.Teams
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -439,6 +440,86 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
       {:missing, "goal_id"} ->
         H.bad_request(conn, "Parameter `goal_id` is required to delete a goal")
+
+      e ->
+        H.bad_request(conn, "Something went wrong: #{inspect(e)}")
+    end
+  end
+
+  def custom_props_index(conn, params) do
+    user = conn.assigns.current_user
+    team = conn.assigns.current_team
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
+      properties =
+        (site.allowed_event_props || [])
+        |> Enum.sort()
+        |> Enum.map(fn prop -> %{property: prop} end)
+
+      json(conn, %{custom_properties: properties})
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to list custom properties")
+    end
+  end
+
+  def add_custom_prop(conn, params) do
+    user = conn.assigns.current_user
+    team = conn.assigns.current_team
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, property} <- expect_param_key(params, "property"),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, _} <- Props.allow(site, property) do
+      json(conn, %{"created" => true})
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, param} ->
+        H.bad_request(conn, "Parameter `#{param}` is required to create a custom property")
+
+      {:error, changeset} ->
+        %{allowed_event_props: [error | _]} =
+          Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
+            cond do
+              opts[:type] == :list and opts[:validation] == :length ->
+                "Can't add any more custom properties"
+
+              opts[:type] == :string and opts[:validation] == :length ->
+                "Parameter `property` is too long"
+
+              true ->
+                "Parameter `property` is invalid"
+            end
+          end)
+
+        H.bad_request(conn, error)
+    end
+  end
+
+  def delete_custom_prop(conn, params) do
+    user = conn.assigns.current_user
+    team = conn.assigns.current_team
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, property} <- expect_param_key(params, "property"),
+         # Property name is extracted from route URL via wildcard,
+         # which returns a list.
+         property = Path.join(property),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, _} <- Props.disallow(site, property) do
+      json(conn, %{"deleted" => true})
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, param} ->
+        H.bad_request(conn, "Parameter `#{param}` is required to delete a custom property")
 
       e ->
         H.bad_request(conn, "Something went wrong: #{inspect(e)}")
