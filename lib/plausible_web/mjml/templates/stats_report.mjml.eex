@@ -44,7 +44,7 @@
           <%= @site.domain %>
         </mj-text>
         <mj-text mj-class="text-sm" padding="0 25px 0 25px">
-          <%= @name %> Report (<%= @date %>)
+          <%= @report_name %> Report (<%= @date_label %>)
         </mj-text>
       </mj-column>
     </mj-section>
@@ -179,7 +179,38 @@
       </mj-group>
     </mj-section>
 
-    <%= if @login_link do %>
+    <%= if @stats.goals && length(@stats.goals) > 0 do %>
+    <mj-section padding="0">
+      <mj-column>
+        <mj-divider />
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-group>
+        <mj-column>
+          <mj-text font-weight="bold">Goal</mj-text>
+
+          <%= for goal <- @stats.goals do %>
+            <mj-text css-class="goal-name">
+              <%= goal[:goal] %>
+            </mj-text>
+          <% end %>
+        </mj-column>
+        <mj-column>
+          <mj-text font-weight="bold" align="right">Conversions</mj-text>
+
+          <%= for goal <- @stats.goals do %>
+            <mj-text align="right" css-class="goal-conversions">
+              <%= PlausibleWeb.StatsView.large_number_format(goal[:visitors]) %>
+            </mj-text>
+          <% end %>
+        </mj-column>
+      </mj-group>
+    </mj-section>
+    <% end %>
+
+    <%= if @site_member? do %>
       <mj-section>
         <mj-column>
         <mj-button href="<%= PlausibleWeb.Router.Helpers.auth_url(PlausibleWeb.Endpoint, :login_form) %>">

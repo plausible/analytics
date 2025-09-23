@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Stats APIv2 now supports `include.trim_relative_date_range`. This option allows trimming empty values after current time for `day`, `month` and `year` date_range values.
 - Properties are now included in full site exports done via Site Settings > Imports & Exports
 - Google Search Console integration settings: properties can be dynamically sought
+- Weekly/monthly e-mail reports now contain top goal conversions
 
 ### Removed
 
