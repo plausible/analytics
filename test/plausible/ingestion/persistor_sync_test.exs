@@ -51,7 +51,7 @@ defmodule Plausible.Ingestion.PersistorSyncTest do
       assert is_integer(ingested_event.clickhouse_event.session_id)
     end
 
-    test "ingests with remote persistor for a fraction of user with fallback to embedded when set to < 100%" do
+    test "ingests with remote persistor for a fraction of users with fallback to embedded when set to < 100%" do
       Application.put_env(:plausible, Persistor,
         backend_percent_enabled: 50,
         backend: Persistor.Remote
