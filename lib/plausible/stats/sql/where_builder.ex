@@ -41,46 +41,23 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     end
   end
 
-  defp filter_site_time_range(
-         :events,
-         %Plausible.Stats.Query{rollup_site_ids: [_ | _] = site_ids} = query
-       ) do
-    {first_datetime, last_datetime} = utc_boundaries(query)
-
-    dynamic(
-      [e],
-      fragment("? in ?", e.site_id, ^site_ids) and
-        e.timestamp >= ^first_datetime and
-        e.timestamp <= ^last_datetime
-    )
+  defp filter_site_time_range(table, query) do
+    dynamic([], ^filter_site_id(query) and ^filter_time_range(table, query))
   end
 
-  defp filter_site_time_range(:events, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query)
-
-    dynamic(
-      [e],
-      e.site_id == ^query.site_id and e.timestamp >= ^first_datetime and
-        e.timestamp <= ^last_datetime
-    )
+  defp filter_site_id(query) do
+    case query.consolidated_site_ids do
+      nil -> dynamic([x], x.site_id == ^query.site_id)
+      ids -> dynamic([x], fragment("? in ?", x.site_id, ^ids))
+    end
   end
 
-  defp filter_site_time_range(
-         :sessions,
-         %Plausible.Stats.Query{rollup_site_ids: [_ | _] = site_ids} = query
-       ) do
+  defp filter_time_range(:events, query) do
     {first_datetime, last_datetime} = utc_boundaries(query)
-
-    dynamic(
-      [s],
-      fragment("? in ?", s.site_id, ^site_ids) and
-        s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
-        s.timestamp >= ^first_datetime and
-        s.start <= ^last_datetime
-    )
+    dynamic([e], e.timestamp >= ^first_datetime and e.timestamp <= ^last_datetime)
   end
 
-  defp filter_site_time_range(:sessions, query) do
+  defp filter_time_range(:sessions, query) do
     {first_datetime, last_datetime} = utc_boundaries(query)
 
     # Counts each _active_ session in time range even if they started before
@@ -96,8 +73,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       # Without it, the sample factor would be greatly overestimated for large sites,
       # as query would be estimated to return _all_ rows matching other conditions
       # before `start == last_datetime`.
-      s.site_id == ^query.site_id and
-        s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
+      s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
         s.timestamp >= ^first_datetime and
         s.start <= ^last_datetime
     )
