@@ -61,8 +61,8 @@ defmodule PlausibleWeb.LayoutView do
         %{key: "Funnels", value: "funnels", icon: :funnel}
       end,
       %{key: "Custom properties", value: "properties", icon: :document_text},
-      %{key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square},
-      %{key: "Imports & exports", value: "imports-exports", icon: :arrows_up_down},
+      %{key: "Integrations", value: "integrations", icon: :puzzle_piece},
+      %{key: "Imports & exports", value: "imports-exports", icon: :arrow_down_tray},
       %{
         key: "Shields",
         icon: :shield_exclamation,
