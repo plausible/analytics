@@ -43,6 +43,17 @@ defmodule Plausible.ConsolidatedView do
     end
   end
 
+  def native_stats_start_at(%Team{} = team) do
+    q =
+      from(sr in Site.regular(),
+        group_by: sr.team_id,
+        where: sr.team_id == ^team.id,
+        select: min(sr.native_stats_start_at)
+      )
+
+    Repo.one(q)
+  end
+
   @spec get(Team.t() | String.t()) :: Site.t() | nil
   def get(team_or_id)
 

@@ -352,6 +352,21 @@ defmodule Plausible.Sites do
     date
   end
 
+  def stats_start_date(%Site{consolidated: true} = site) do
+    native_stats_start_at = Plausible.ConsolidatedView.native_stats_start_at(site.team)
+
+    if native_stats_start_at do
+      start_date = NaiveDateTime.to_date(native_stats_start_at)
+
+      site
+      |> Site.set_native_stats_start_at(native_stats_start_at)
+      |> Site.set_stats_start_date(start_date)
+      |> Repo.update!()
+
+      start_date
+    end
+  end
+
   def stats_start_date(%Site{} = site) do
     start_date =
       [
