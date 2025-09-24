@@ -1428,13 +1428,20 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
+    search_query = params["q"]
 
-    query = Query.from(site, params, debug_metadata(conn))
+    if is_nil(search_query) do
+      conn
+      |> put_status(:bad_request)
+      |> json(%{"error" => "Search parameter 'q' is required"})
+    else
+      query = Query.from(site, params, debug_metadata(conn))
 
-    json(
-      conn,
-      Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
-    )
+      json(
+        conn,
+        Stats.filter_suggestions(site, query, params["filter_name"], search_query)
+      )
+    end
   end
 
   def custom_prop_value_filter_suggestions(conn, %{"prop_key" => prop_key} = params) do
