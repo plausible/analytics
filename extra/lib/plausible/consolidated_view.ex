@@ -35,7 +35,7 @@ defmodule Plausible.ConsolidatedView do
     :ok
   end
 
-  @spec site_ids(Team.t() | String.t()) :: [pos_integer()] | {:error, :not_found}
+  @spec site_ids(Team.t() | String.t()) :: {:ok, [pos_integer()]} | {:error, :not_found}
   def site_ids(consolidated_view_id) when is_binary(consolidated_view_id) do
     case get(consolidated_view_id) do
       nil -> {:error, :not_found}
