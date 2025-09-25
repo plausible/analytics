@@ -1,5 +1,5 @@
 @import "tailwindcss" source(none);
-@config "../tailwind.config.js";
+@plugin "@tailwindcss/forms";
 @source "../css";
 @source "../js";
 @source "../../lib/plausible_web";
@@ -60,15 +60,26 @@
   --default-ring-color: var(--color-blue-500);
 }
 
-[x-cloak] {
-  display: none;
-}
-
 @media print {
   canvas {
     width: 100% !important;
     height: auto !important;
   }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
+@custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
+
+[x-cloak] {
+  display: none;
 }
 
 .button {

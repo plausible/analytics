@@ -1,5 +1,4 @@
 @import 'tailwindcss' source(none);
-@config '../tailwind.config.js';
 
 /*
  * Put your component styling within the Tailwind utilities layer.
