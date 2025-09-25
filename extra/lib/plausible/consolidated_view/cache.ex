@@ -67,7 +67,10 @@ defmodule Plausible.ConsolidatedView.Cache do
 
   @impl true
   def get_from_source(consolidated_view_id) do
-    ConsolidatedView.get(consolidated_view_id)
+    case ConsolidatedView.site_ids(consolidated_view_id) do
+      {:ok, some} -> some
+      {:error, :not_found} -> nil
+    end
   end
 
   @impl true

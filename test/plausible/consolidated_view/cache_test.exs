@@ -73,6 +73,21 @@ defmodule Plausible.CondolidatedView.CacheTest do
       assert [_] = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
     end
 
+    test "get_from_source/1", %{test: test} do
+      user = new_user()
+      new_site(owner: user)
+      new_site(owner: user)
+      team = team_of(user)
+      {:ok, consolidated_view} = ConsolidatedView.enable(team)
+
+      start_test_cache(test)
+      :ok = Cache.refresh_all(cache_name: test)
+
+      result = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
+      assert ^result = Cache.get(consolidated_view.domain)
+      assert ^result = Cache.get_from_source(consolidated_view.domain)
+    end
+
     defp start_test_cache(cache_name) do
       %{start: {m, f, a}} = Cache.child_spec(cache_name: cache_name)
       apply(m, f, a)
