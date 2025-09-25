@@ -1,12 +1,15 @@
-@import 'tailwindcss/base';
+@import "tailwindcss" source(none);
+@config "../tailwind.config.js";
+@source "../css";
+@source "../js";
+@source "../../lib/plausible_web";
+@source "../../extra/lib/plausible_web";
 @import 'flatpickr/dist/flatpickr.min.css';
 @import './modal.css';
 @import './loader.css';
 @import './tooltip.css';
 @import './flatpickr-colors.css';
 @import './chartjs.css';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
 
 [x-cloak] {
   display: none;

@@ -26,22 +26,20 @@ config :esbuild,
   ]
 
 config :tailwind,
-  version: "3.4.7",
+  version: "4.1.12",
   default: [
     args: ~w(
-      --config=tailwind.config.js
-      --input=css/app.css
-      --output=../priv/static/css/app.css
+      --input=assets/css/app.css
+      --output=priv/static/css/app.css
     ),
-    cd: Path.expand("../assets", __DIR__)
+    cd: Path.expand("..", __DIR__)
   ],
   storybook: [
     args: ~w(
-    --config=tailwind.config.js
-    --input=css/storybook.css
-    --output=../priv/static/css/storybook.css
+    --input=assets/css/storybook.css
+    --output=priv/static/css/storybook.css
   ),
-    cd: Path.expand("../assets", __DIR__)
+    cd: Path.expand("..", __DIR__)
   ]
 
 config :ua_inspector,
