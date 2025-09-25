@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   defp verify_by_scope(conn, api_key, "stats:read:" <> _ = scope) do
     with :ok <- check_scope(api_key, scope),
-         {:ok, site} <- find_site(conn.params["site_id"], api_key),
+         {:ok, site} <- find_site(conn.params["site_id"]),
          :ok <- verify_site_access(api_key, site, Plausible.Billing.Feature.StatsAPI) do
       Plausible.OpenTelemetry.add_site_attributes(site)
       site = Plausible.Repo.preload(site, :completed_imports)
@@ -191,7 +191,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp maybe_verify_site_access(conn, api_key, feature) do
-    case find_site(conn.params["site_id"], api_key) do
+    case find_site(conn.params["site_id"]) do
       {:ok, site} ->
         verify_site_access(api_key, site, feature)
 
@@ -210,20 +210,11 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     end
   end
 
-  defp find_site(nil, _api_key), do: {:error, :missing_site_id}
+  defp find_site(nil), do: {:error, :missing_site_id}
 
-  defp find_site("rollup:" <> team_identifier, api_key) do
-    with true <- Plausible.Auth.is_super_admin?(api_key.user),
-         %Plausible.Teams.Team{} = team <- Plausible.Teams.get(team_identifier) do
-      {:ok, Plausible.Site.rollup(team)}
-    else
-      _ -> {:error, :invalid_api_key}
-    end
-  end
-
-  defp find_site(site_id, _api_key) do
+  defp find_site(site_id) do
     domain_based_search =
-      from s in Plausible.Site.regular(),
+      from s in Plausible.Site,
         where: s.domain == ^site_id or s.domain_changed_from == ^site_id
 
     case Repo.one(domain_based_search) do

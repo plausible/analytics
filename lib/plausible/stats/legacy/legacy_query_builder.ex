@@ -28,7 +28,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_parsed_filters(params)
       |> resolve_segments(site)
       |> preload_goals_and_revenue(site)
-      |> put_rollup_site_ids(site)
+      |> put_consolidated_site_ids(site)
       |> put_order_by(params)
       |> put_include(site, params)
       |> Query.put_comparison_utc_time_range()
@@ -42,16 +42,18 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     query
   end
 
-  defp put_rollup_site_ids(query, %Plausible.Site{rollup: true} = site) do
-    site_ids =
-      Plausible.Cache.Adapter.get(:site_ids, site.team_id, fn ->
-        Plausible.Teams.owned_sites_ids(site.team)
-      end)
-
-    struct!(query, rollup_site_ids: site_ids)
+  on_ee do
+    defp put_consolidated_site_ids(query, %Plausible.Site{} = site) do
+      if Plausible.Sites.consolidated?(site) do
+        site_ids = Plausible.ConsolidatedView.Cache.get(site.team.identifier)
+        struct!(query, consolidated_site_ids: site_ids)
+      else
+        query
+      end
+    end
+  else
+    defp put_consolidated_site_ids(query, _site), do: query
   end
-
-  defp put_rollup_site_ids(query, _site), do: query
 
   defp resolve_segments(query, site) do
     with {:ok, preloaded_segments} <-

@@ -60,7 +60,9 @@ defmodule PlausibleWeb.StatsController do
     can_see_stats? = not Teams.locked?(site.team) or site_role == :super_admin
     demo = site.domain == "plausible.io"
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
-    skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
+
+    skip_to_dashboard? =
+      conn.params["skip_to_dashboard"] == "true" or Plausible.Sites.consolidated?(site)
 
     {:ok, segments} = Plausible.Segments.get_all_for_site(site, site_role)
 
