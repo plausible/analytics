@@ -105,7 +105,9 @@ defmodule Plausible.Cache do
       end
 
       @spec refresh_updated_recently(Keyword.t()) :: :ok
-      def refresh_updated_recently(opts \\ []) do
+      def refresh_updated_recently(opts \\ [])
+
+      def refresh_updated_recently(opts) do
         recently_updated_query =
           from([s, ...] in base_db_query(),
             order_by: [asc: s.updated_at],
@@ -120,6 +122,8 @@ defmodule Plausible.Cache do
           Keyword.put(opts, :delete_stale_items?, false)
         )
       end
+
+      defoverridable refresh_updated_recently: 1
 
       @spec merge_items(new_items :: [any()], opts :: Keyword.t()) :: :ok
       def merge_items(new_items, opts \\ [])
