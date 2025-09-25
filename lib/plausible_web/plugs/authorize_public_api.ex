@@ -122,10 +122,27 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   defp verify_by_scope(conn, api_key, "stats:read:" <> _ = scope) do
     with :ok <- check_scope(api_key, scope),
          {:ok, site} <- find_site(conn.params["site_id"]),
-         :ok <- verify_site_access(api_key, site) do
+         :ok <- verify_site_access(api_key, site, Plausible.Billing.Feature.StatsAPI) do
       Plausible.OpenTelemetry.add_site_attributes(site)
       site = Plausible.Repo.preload(site, :completed_imports)
       {:ok, assign(conn, :site, site)}
+    end
+  end
+
+  defp verify_by_scope(conn, api_key, "sites:" <> scope_suffix = scope) do
+    feature =
+      case scope_suffix do
+        "read:" <> _ ->
+          Plausible.Billing.Feature.StatsAPI
+
+        "provision:" <> _ ->
+          Plausible.Billing.Feature.SitesAPI
+      end
+
+    with :ok <- check_scope(api_key, scope),
+         :ok <- maybe_verify_site_access(conn, api_key, feature),
+         :ok <- maybe_verify_team_access(conn, api_key, feature) do
+      {:ok, conn}
     end
   end
 
@@ -173,6 +190,26 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     end
   end
 
+  defp maybe_verify_site_access(conn, api_key, feature) do
+    case find_site(conn.params["site_id"]) do
+      {:ok, site} ->
+        verify_site_access(api_key, site, feature)
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp maybe_verify_team_access(conn, api_key, feature) do
+    team = api_key.team || Teams.get(conn.params["team_id"])
+
+    if team do
+      verify_team_access(api_key, team, feature)
+    else
+      :ok
+    end
+  end
+
   defp find_site(nil), do: {:error, :missing_site_id}
 
   defp find_site(site_id) do
@@ -189,7 +226,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     end
   end
 
-  defp verify_site_access(api_key, site) do
+  defp verify_site_access(api_key, site, feature) do
     team = Repo.preload(site, :team).team
 
     is_member? = Plausible.Teams.Memberships.site_member?(site, api_key.user)
@@ -205,7 +242,32 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
       Teams.locked?(team) ->
         {:error, :site_locked}
 
-      Plausible.Billing.Feature.StatsAPI.check_availability(team) !== :ok ->
+      feature.check_availability(team) !== :ok ->
+        {:error, :upgrade_required}
+
+      is_member? ->
+        :ok
+
+      true ->
+        {:error, :invalid_api_key}
+    end
+  end
+
+  defp verify_team_access(api_key, team, feature) do
+    is_member? = Plausible.Teams.Memberships.team_member?(team, api_key.user)
+    is_super_admin? = Auth.is_super_admin?(api_key.user_id)
+
+    cond do
+      is_super_admin? ->
+        :ok
+
+      api_key.team_id && api_key.team_id != team.id ->
+        {:error, :invalid_api_key}
+
+      Teams.locked?(team) ->
+        {:error, :site_locked}
+
+      feature.check_availability(team) !== :ok ->
         {:error, :upgrade_required}
 
       is_member? ->
@@ -251,17 +313,32 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     )
   end
 
-  defp send_error(conn, _, {:error, :upgrade_required}) do
-    H.payment_required(
-      conn,
-      "The account that owns this API key does not have access to Stats API. Please make sure you're using the API key of a subscriber account and that the subscription plan includes Stats API"
-    )
+  defp send_error(conn, scope, {:error, :upgrade_required}) do
+    feature =
+      case scope do
+        "sites:provision:" <> _ ->
+          Plausible.Billing.Feature.SitesAPI
+
+        _ ->
+          Plausible.Billing.Feature.StatsAPI
+      end
+
+    feature_payment_error(conn, feature)
   end
 
   defp send_error(conn, _, {:error, :site_locked}) do
     H.payment_required(
       conn,
       "This Plausible site is locked due to missing active subscription. In order to access it, the site owner should subscribe to a suitable plan"
+    )
+  end
+
+  defp feature_payment_error(conn, feature) do
+    feature_name = feature.display_name()
+
+    H.payment_required(
+      conn,
+      "The account that owns this API key does not have access to #{feature_name}. Please make sure you're using the API key of a subscriber account and that the subscription plan includes #{feature_name}"
     )
   end
 end
