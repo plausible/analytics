@@ -32,7 +32,8 @@ defmodule Plausible.ConsolidatedView.Cache do
     from sc in ConsolidatedView.sites(),
       inner_join: sr in ^Plausible.Site.regular(),
       on: sr.team_id == sc.team_id,
-      group_by: [sc.domain, sc.updated_at],
+      group_by: sc.id,
+      order_by: [desc: sc.id],
       select: %{
         consolidated_view_id: sc.domain,
         site_ids: fragment("array_agg(?.id)", sr)
@@ -53,8 +54,8 @@ defmodule Plausible.ConsolidatedView.Cache do
         join: sr in ^Plausible.Site.regular(),
         on: sr.team_id == sc.team_id,
         where: sc.id in subquery(recently_updated_site_ids),
-        group_by: [sc.domain, sc.updated_at],
-        order_by: [desc: sc.updated_at],
+        group_by: sc.id,
+        order_by: [desc: sc.id],
         select: %{consolidated_view_id: sc.domain, site_ids: fragment("array_agg(?)", sr.id)}
 
     refresh(
