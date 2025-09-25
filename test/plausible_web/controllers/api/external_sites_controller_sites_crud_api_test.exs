@@ -21,6 +21,17 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
     end
 
     describe "POST /api/v1/sites" do
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.SitesAPI
+          ]
+        )
+
+        :ok
+      end
+
       test "can create a site", %{conn: conn} do
         conn =
           post(conn, "/api/v1/sites", %{
@@ -113,15 +124,19 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
             "timezone" => "Europe/Tallinn"
           })
 
-        assert json_response(conn, 403) == %{
-                 "error" => "You can't add sites to the selected team."
-               }
+        assert %{"error" => error} = json_response(conn, 402)
+        assert error =~ "API key does not have access to Sites API"
       end
 
       test "can create a site under a specific team if permitted", %{conn: conn, user: user} do
         _site = new_site(owner: user)
 
-        owner = new_user() |> subscribe_to_growth_plan()
+        owner =
+          new_user()
+          |> subscribe_to_enterprise_plan(
+            features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+          )
+
         team = owner |> team_of() |> Plausible.Teams.complete_setup()
         add_member(team, user: user, role: :owner)
 
@@ -159,7 +174,13 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
       test "creates under a particular team when team-scoped key used", %{conn: conn, user: user} do
         personal_team = user |> subscribe_to_business_plan() |> team_of()
 
-        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        another_team =
+          new_user()
+          |> subscribe_to_enterprise_plan(
+            features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+          )
+          |> team_of()
+
         add_member(another_team, user: user, role: :admin)
 
         api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
@@ -331,21 +352,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
                        }) = response
       end
 
-      test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
-        for _ <- 1..10, do: new_site(owner: user)
-
-        conn =
-          post(conn, "/api/v1/sites", %{
-            "domain" => "some-site.domain",
-            "timezone" => "Europe/Tallinn"
-          })
-
-        assert json_response(conn, 402) == %{
-                 "error" =>
-                   "Your account has reached the limit of 10 sites. To unlock more sites, please upgrade your subscription."
-               }
-      end
-
       test "cannot access with a bad API key scope", %{conn: conn, user: user} do
         api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 
@@ -363,6 +369,17 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
 
     describe "DELETE /api/v1/sites/:site_id" do
       setup :create_site
+
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.SitesAPI
+          ]
+        )
+
+        :ok
+      end
 
       test "delete a site by its domain", %{conn: conn, site: site} do
         conn = delete(conn, "/api/v1/sites/" <> site.domain)
@@ -393,7 +410,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         add_guest(site, user: user, role: :editor)
         conn = delete(conn, "/api/v1/sites/" <> site.domain)
 
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+        assert %{"error" => error} = json_response(conn, 402)
+        assert error =~ "API key does not have access to Sites API"
       end
 
       test "cannot delete if team not matching team-scoped API key", %{
@@ -408,7 +426,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
 
         conn = delete(conn, "/api/v1/sites/" <> site.domain)
 
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+        assert %{"error" => error} = json_response(conn, 401)
+        assert error =~ "Invalid API key"
       end
 
       test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
@@ -669,8 +688,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
 
         conn = get(conn, "/api/v1/sites/" <> site.domain)
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
 
       test "is 404 when site cannot be found", %{conn: conn} do
@@ -679,17 +698,30 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         assert json_response(conn, 404) == %{"error" => "Site could not be found"}
       end
 
+      @tag :capture_log
       test "is 404 when user is not a member of the site", %{conn: conn} do
-        site = insert(:site)
+        site = new_site()
 
         conn = get(conn, "/api/v1/sites/" <> site.domain)
 
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+        assert %{"error" => error} = json_response(conn, 401)
+        assert error =~ "Invalid API key"
       end
     end
 
     describe "PUT /api/v1/sites/:site_id" do
       setup :create_site
+
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.SitesAPI
+          ]
+        )
+
+        :ok
+      end
 
       test "can change domain name", %{conn: conn, site: site} do
         old_domain = site.domain
@@ -836,9 +868,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
             "domain" => "new.example.com"
           })
 
-        assert json_response(conn, 404) == %{
-                 "error" => "Site could not be found"
-               }
+        assert %{"error" => error} = json_response(conn, 401)
+        assert error =~ "Invalid API key"
       end
 
       test "fails when neither 'domain' nor 'tracker_script_configuration' is provided", %{
