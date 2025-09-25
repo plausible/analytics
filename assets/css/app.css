@@ -23,7 +23,7 @@
 }
 
 .button {
-  @apply inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+  @apply inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
 }
 
 .button[disabled] {
@@ -61,7 +61,7 @@ blockquote {
   @apply px-4 py-2 my-4 border-l-4 border-gray-500;
 }
 
-@screen xl {
+@media (min-width: 1280px) {
   .container {
     max-width: 70rem;
   }
@@ -71,7 +71,7 @@ blockquote {
   height: 920px;
 }
 
-@screen md {
+@media (min-width: 768px) {
   .pricing-table {
     height: auto;
   }
