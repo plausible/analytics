@@ -48,7 +48,7 @@
                 class="hidden mr-6 sm:block"
               >
                 <.styled_link
-                  class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
+                  class="text-sm text-yellow-900 dark:text-yellow-900 rounded-xs px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
                   href={Routes.settings_path(@conn, :subscription)}
                 >
                   {trial_notification(@conn.assigns[:current_team])}
@@ -149,7 +149,7 @@
                 <div class="inline-flex">
                   <a
                     href="/login"
-                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out"
+                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 focus:outline-hidden focus:text-gray-900 transition duration-150 ease-in-out"
                   >
                     Login
                   </a>
@@ -162,15 +162,15 @@
                 <div class="inline-flex">
                   <a
                     href="/login"
-                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out"
+                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 focus:outline-hidden focus:text-gray-900 transition duration-150 ease-in-out"
                   >
                     Login
                   </a>
                 </div>
-                <div class="inline-flex ml-6 rounded shadow">
+                <div class="inline-flex ml-6 rounded-xs shadow-xs">
                   <a
                     href="/register"
-                    class="inline-flex items-center justify-center px-5 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out"
+                    class="inline-flex items-center justify-center px-5 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-hidden focus:ring transition duration-150 ease-in-out"
                   >
                     Sign up
                   </a>
