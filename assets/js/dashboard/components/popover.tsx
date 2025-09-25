@@ -26,7 +26,7 @@ const transition = {
 const panel = {
   classNames: {
     roundedSheet:
-      'focus:outline-none rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200'
+      'focus:outline-hidden rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black/5 font-medium text-gray-800 dark:text-gray-200'
   }
 }
 
