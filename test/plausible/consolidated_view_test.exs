@@ -5,24 +5,31 @@ defmodule Plausible.ConsolidatedViewTest do
     use Plausible.DataCase, async: true
     import Ecto.Query
     alias Plausible.ConsolidatedView
+    import Plausible.Teams.Test
 
     describe "enable/1" do
       setup [:create_user, :create_team]
 
       test "creates and persists a new consolidated site instance", %{team: team} do
+        new_site(team: team)
         assert {:ok, %Plausible.Site{consolidated: true}} = ConsolidatedView.enable(team)
         assert ConsolidatedView.get(team)
       end
 
       test "is idempotent", %{team: team} do
+        new_site(team: team)
         assert {:ok, s1} = ConsolidatedView.enable(team)
         assert {:ok, s2} = ConsolidatedView.enable(team)
 
         assert 1 =
-                 from(s in Plausible.Site, where: s.team_id == ^team.id)
+                 from(s in Plausible.ConsolidatedView.sites(), where: s.team_id == ^team.id)
                  |> Plausible.Repo.aggregate(:count)
 
         assert s1.domain == s2.domain
+      end
+
+      test "returns {:error, :no_sites} when the team does not have any sites", %{team: team} do
+        assert {:error, :no_sites} = ConsolidatedView.enable(team)
       end
 
       @tag :skip
@@ -30,7 +37,7 @@ defmodule Plausible.ConsolidatedViewTest do
     end
 
     describe "disable/1" do
-      setup [:create_user, :create_team]
+      setup [:create_user, :create_team, :create_site]
 
       setup %{team: team} do
         ConsolidatedView.enable(team)
@@ -70,7 +77,7 @@ defmodule Plausible.ConsolidatedViewTest do
     end
 
     describe "get/1" do
-      setup [:create_user, :create_team]
+      setup [:create_user, :create_team, :create_site]
 
       test "can get by team", %{team: team} do
         assert is_nil(ConsolidatedView.get(team))
@@ -82,6 +89,29 @@ defmodule Plausible.ConsolidatedViewTest do
         assert is_nil(ConsolidatedView.get(team.identifier))
         ConsolidatedView.enable(team)
         assert %Plausible.Site{} = ConsolidatedView.get(team.identifier)
+      end
+    end
+
+    describe "native_stats_start_at/1" do
+      setup [:create_user, :create_team]
+
+      test "returns nil if no included sites", %{team: team} do
+        ConsolidatedView.enable(team)
+        assert is_nil(ConsolidatedView.native_stats_start_at(team))
+      end
+
+      test "returns earliest native_stats_start_at from included sites", %{team: team} do
+        ConsolidatedView.enable(team)
+
+        datetimes = [
+          ~N[2024-01-01 12:00:00],
+          ~N[2024-01-01 11:00:00],
+          ~N[2024-02-01 12:00:00]
+        ]
+
+        for dt <- datetimes, do: new_site(team: team, native_stats_start_at: dt)
+
+        assert ConsolidatedView.native_stats_start_at(team) == Enum.min(datetimes)
       end
     end
   end

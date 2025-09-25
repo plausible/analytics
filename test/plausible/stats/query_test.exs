@@ -484,4 +484,19 @@ defmodule Plausible.Stats.QueryTest do
                })
     end
   end
+
+  on_ee do
+    describe "query.consolidated_site_ids" do
+      test "is set to nil when site is regular", %{site: site} do
+        assert %{consolidated_site_ids: nil} = Query.from(site, %{"period" => "day"})
+      end
+
+      test "is set to a list of site_ids when site is consolidated", %{site: site} do
+        cv = new_consolidated_view(site.team)
+
+        site_id = site.id
+        assert %{consolidated_site_ids: [^site_id]} = Query.from(cv, %{"period" => "day"})
+      end
+    end
+  end
 end

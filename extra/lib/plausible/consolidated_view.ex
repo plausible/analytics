@@ -20,13 +20,9 @@ defmodule Plausible.ConsolidatedView do
     from s in q, where: s.consolidated == true
   end
 
-  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :upgrade_required}
+  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :no_sites}
   def enable(%Team{} = team) do
-    if eligible?(team) do
-      do_enable(team)
-    else
-      {:error, :upgrade_required}
-    end
+    with :ok <- ensure_eligible(team), do: do_enable(team)
   end
 
   @spec disable(Team.t()) :: :ok
@@ -35,12 +31,16 @@ defmodule Plausible.ConsolidatedView do
     :ok
   end
 
-  @spec site_ids(Team.t()) :: [pos_integer()] | {:error, :not_found}
-  def site_ids(%Team{} = team) do
-    case get(team) do
+  @spec site_ids(Team.t() | String.t()) :: {:ok, [pos_integer()]} | {:error, :not_found}
+  def site_ids(consolidated_view_id) when is_binary(consolidated_view_id) do
+    case get(consolidated_view_id) do
       nil -> {:error, :not_found}
-      _found -> {:ok, Teams.owned_sites_ids(team)}
+      view -> {:ok, Teams.owned_sites_ids(view.team)}
     end
+  end
+
+  def site_ids(%Team{} = team) do
+    site_ids(team.identifier)
   end
 
   @spec get(Team.t() | String.t()) :: Site.t() | nil
@@ -51,18 +51,35 @@ defmodule Plausible.ConsolidatedView do
   end
 
   def get(id) when is_binary(id) do
-    Repo.one(from s in sites(), where: s.domain == ^id)
+    Repo.one(
+      from s in sites(), inner_join: assoc(s, :team), where: s.domain == ^id, preload: [:team]
+    )
+  end
+
+  @spec native_stats_start_at(Team.t()) :: NaiveDateTime.t() | nil
+  def native_stats_start_at(%Team{} = team) do
+    q =
+      from(sr in Site.regular(),
+        group_by: sr.team_id,
+        where: sr.team_id == ^team.id,
+        select: min(sr.native_stats_start_at)
+      )
+
+    Repo.one(q)
   end
 
   defp do_enable(%Team{} = team) do
     case get(team) do
       nil ->
+        native_stats_start_at = native_stats_start_at(team)
+
         team
         |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
+        |> Site.set_native_stats_start_at(native_stats_start_at)
         |> Repo.insert()
 
-      cv ->
-        {:ok, cv}
+      consolidated_view ->
+        {:ok, consolidated_view}
     end
   end
 
@@ -71,6 +88,12 @@ defmodule Plausible.ConsolidatedView do
   end
 
   # TODO: Only active trials and business subscriptions should be eligible.
-  # This function should call a new underlying feature module.
-  defp eligible?(%Team{}), do: always(true)
+  # This function should also call a new underlying feature module.
+  defp ensure_eligible(%Team{} = team) do
+    if Plausible.Teams.owned_sites_count(team) == 0 do
+      {:error, :no_sites}
+    else
+      :ok
+    end
+  end
 end

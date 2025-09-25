@@ -483,6 +483,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:missing, param} ->
         H.bad_request(conn, "Parameter `#{param}` is required to create a custom property")
 
+      {:error, :upgrade_required} ->
+        H.payment_required(
+          conn,
+          "Your current subscription plan does not include Custom Properties"
+        )
+
       {:error, changeset} ->
         %{allowed_event_props: [error | _]} =
           Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->

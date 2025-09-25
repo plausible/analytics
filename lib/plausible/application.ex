@@ -58,12 +58,6 @@ defmodule Plausible.Application do
           n_lock_partitions: 1,
           ets_options: [read_concurrency: true, write_concurrency: true]
         ),
-        Plausible.Cache.Adapter.child_specs(:site_ids, :cache_site_ids,
-          ttl_check_interval: :timer.seconds(10),
-          global_ttl: :timer.minutes(30),
-          n_lock_partitions: 1,
-          ets_options: [read_concurrency: true, write_concurrency: true]
-        ),
         {Plausible.Session.Transfer,
          base_path: Application.get_env(:plausible, :session_transfer_dir)},
         warmed_cache(Plausible.Site.Cache,
@@ -80,6 +74,22 @@ defmodule Plausible.Application do
               {Plausible.Site.Cache.RecentlyUpdated, interval: :timer.seconds(30)}
           ]
         ),
+        on_ee do
+          warmed_cache(Plausible.ConsolidatedView.Cache,
+            adapter_opts: [
+              n_lock_partitions: 1,
+              ttl_check_interval: false,
+              ets_options: [read_concurrency: true]
+            ],
+            warmers: [
+              refresh_all:
+                {Plausible.ConsolidatedView.Cache.All,
+                 interval: :timer.minutes(20) + Enum.random(1..:timer.seconds(10))},
+              refresh_updated_recently:
+                {Plausible.ConsolidatedView.Cache.RecentlyUpdated, interval: :timer.minutes(1)}
+            ]
+          )
+        end,
         warmed_cache(Plausible.Shield.IPRuleCache,
           adapter_opts: [
             n_lock_partitions: 1,

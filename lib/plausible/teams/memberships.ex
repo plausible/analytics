@@ -31,6 +31,8 @@ defmodule Plausible.Teams.Memberships do
     )
   end
 
+  @spec team_role(Teams.Team.t(), Auth.User.t()) ::
+          {:ok, Teams.Membership.role()} | {:error, :not_a_member}
   def team_role(team, user) do
     result =
       from(u in Auth.User,
@@ -86,8 +88,17 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
+  @spec site_member?(Plausible.Site.t(), Auth.User.t() | nil) :: boolean()
   def site_member?(site, user) do
     case site_role(site, user) do
+      {:ok, _} -> true
+      _ -> false
+    end
+  end
+
+  @spec team_member?(Teams.Team.t(), Auth.User.t()) :: boolean()
+  def team_member?(team, user) do
+    case team_role(team, user) do
       {:ok, _} -> true
       _ -> false
     end

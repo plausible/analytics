@@ -84,6 +84,10 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def has_pageviews?(site) do
+    # This function is currently only used in installation verification
+    # which is not accessible for consolidated views.
+    true = Plausible.Sites.regular?(site)
+
     ClickhouseRepo.exists?(
       from(e in "events_v2",
         where:

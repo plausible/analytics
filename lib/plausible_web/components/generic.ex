@@ -149,6 +149,32 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr(:title, :any, default: "")
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+  slot(:icon, required: true)
+  slot(:inner_block)
+
+  def upgrade(assigns) do
+    ~H"""
+    <div class={["rounded-md p-5 bg-gray-100 dark:bg-gray-700/50", @class]} {@rest}>
+      <div class="flex flex-col gap-y-4">
+        <div class="flex-shrink-0 bg-white dark:bg-gray-700 max-w-max rounded-md p-2 border border-gray-200 dark:border-gray-600 text-indigo-500 dark:text-indigo-400">
+          {render_slot(@icon)}
+        </div>
+        <div class="flex flex-col gap-y-2">
+          <h3 class="font-medium text-gray-900 dark:text-gray-100">
+            {@title}
+          </h3>
+          <p class="mb-1 text-sm text-gray-600 dark:text-gray-100/60 leading-normal">
+            {render_slot(@inner_block)}
+          </p>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   attr(:title, :any, default: nil)
   attr(:theme, :atom, default: :yellow)
   attr(:dismissable_id, :any, default: nil)
