@@ -14,6 +14,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryConsolidatedViewTest do
     another_site = new_site(team: team)
     cv = new_consolidated_view(team)
 
+    cv
+    |> Ecto.Changeset.change(%{native_stats_start_at: ~N[2020-01-01 12:00:00]})
+    |> Plausible.Repo.update!()
+
     populate_stats(site, [build(:pageview)])
     populate_stats(another_site, [build(:pageview)])
 
