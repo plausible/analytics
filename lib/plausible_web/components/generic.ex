@@ -296,7 +296,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-on:click.outside="close($refs.button)"
         style="display: none;"
         class={[
-          "origin-top-right absolute z-50 right-0 mt-2 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none",
+          "origin-top-right absolute z-50 right-0 mt-2 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5 focus:outline-none",
           @menu_class
         ]}
       >
