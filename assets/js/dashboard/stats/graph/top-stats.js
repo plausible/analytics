@@ -126,7 +126,7 @@ export default function TopStats({
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
     const statDisplayNameClass = classNames(
-      'text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b',
+      'text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-fit border-b',
       {
         'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500':
           isSelected,
