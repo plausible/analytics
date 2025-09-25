@@ -20,13 +20,9 @@ defmodule Plausible.ConsolidatedView do
     from s in q, where: s.consolidated == true
   end
 
-  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :upgrade_required}
+  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :no_sites | :upgrade_required}
   def enable(%Team{} = team) do
-    if eligible?(team) do
-      do_enable(team)
-    else
-      {:error, :upgrade_required}
-    end
+    with :ok <- ensure_eligible(team), do: do_enable(team)
   end
 
   @spec disable(Team.t()) :: :ok
@@ -89,6 +85,12 @@ defmodule Plausible.ConsolidatedView do
   end
 
   # TODO: Only active trials and business subscriptions should be eligible.
-  # This function should call a new underlying feature module.
-  defp eligible?(%Team{}), do: always(true)
+  # This function should also call a new underlying feature module.
+  defp ensure_eligible(%Team{} = team) do
+    cond do
+      always(false) -> {:error, :upgrade_required}
+      Plausible.Teams.owned_sites_count(team) == 0 -> {:error, :no_sites}
+      true -> :ok
+    end
+  end
 end

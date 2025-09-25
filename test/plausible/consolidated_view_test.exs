@@ -11,19 +11,25 @@ defmodule Plausible.ConsolidatedViewTest do
       setup [:create_user, :create_team]
 
       test "creates and persists a new consolidated site instance", %{team: team} do
+        new_site(team: team)
         assert {:ok, %Plausible.Site{consolidated: true}} = ConsolidatedView.enable(team)
         assert ConsolidatedView.get(team)
       end
 
       test "is idempotent", %{team: team} do
+        new_site(team: team)
         assert {:ok, s1} = ConsolidatedView.enable(team)
         assert {:ok, s2} = ConsolidatedView.enable(team)
 
         assert 1 =
-                 from(s in Plausible.Site, where: s.team_id == ^team.id)
+                 from(s in Plausible.ConsolidatedView.sites(), where: s.team_id == ^team.id)
                  |> Plausible.Repo.aggregate(:count)
 
         assert s1.domain == s2.domain
+      end
+
+      test "returns {:error, :no_sites} when the team does not have any sites", %{team: team} do
+        assert {:error, :no_sites} = ConsolidatedView.enable(team)
       end
 
       @tag :skip
@@ -31,7 +37,7 @@ defmodule Plausible.ConsolidatedViewTest do
     end
 
     describe "disable/1" do
-      setup [:create_user, :create_team]
+      setup [:create_user, :create_team, :create_site]
 
       setup %{team: team} do
         ConsolidatedView.enable(team)
@@ -71,7 +77,7 @@ defmodule Plausible.ConsolidatedViewTest do
     end
 
     describe "get/1" do
-      setup [:create_user, :create_team]
+      setup [:create_user, :create_team, :create_site]
 
       test "can get by team", %{team: team} do
         assert is_nil(ConsolidatedView.get(team))
