@@ -43,6 +43,7 @@ defmodule Plausible.ConsolidatedView do
     end
   end
 
+  @spec native_stats_start_at(Team.t()) :: NaiveDateTime.t() | nil
   def native_stats_start_at(%Team{} = team) do
     q =
       from(sr in Site.regular(),

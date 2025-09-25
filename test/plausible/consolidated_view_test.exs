@@ -5,6 +5,7 @@ defmodule Plausible.ConsolidatedViewTest do
     use Plausible.DataCase, async: true
     import Ecto.Query
     alias Plausible.ConsolidatedView
+    import Plausible.Teams.Test
 
     describe "enable/1" do
       setup [:create_user, :create_team]
@@ -82,6 +83,29 @@ defmodule Plausible.ConsolidatedViewTest do
         assert is_nil(ConsolidatedView.get(team.identifier))
         ConsolidatedView.enable(team)
         assert %Plausible.Site{} = ConsolidatedView.get(team.identifier)
+      end
+    end
+
+    describe "native_stats_start_at/1" do
+      setup [:create_user, :create_team]
+
+      test "returns nil if no included sites", %{team: team} do
+        ConsolidatedView.enable(team)
+        assert is_nil(ConsolidatedView.native_stats_start_at(team))
+      end
+
+      test "returns earliest native_stats_start_at from included sites", %{team: team} do
+        ConsolidatedView.enable(team)
+
+        datetimes = [
+          ~N[2024-01-01 12:00:00],
+          ~N[2024-01-01 11:00:00],
+          ~N[2024-02-01 12:00:00]
+        ]
+
+        for dt <- datetimes, do: new_site(team: team, native_stats_start_at: dt)
+
+        assert ConsolidatedView.native_stats_start_at(team) == Enum.min(datetimes)
       end
     end
   end
