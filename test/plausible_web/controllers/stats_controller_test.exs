@@ -149,52 +149,52 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
-    @tag :ee_only
-    test "first view of a consolidated dashboard sets stats_start_date and native_stats_start_at according to native_stats_start_at of the earliest team site",
-         %{
-           conn: conn,
-           site: site,
-           user: user
-         } do
-      team = team_of(user)
-      now = NaiveDateTime.utc_now(:second)
-      ten_days_ago = NaiveDateTime.add(now, -10, :day)
-      twenty_days_ago = NaiveDateTime.add(now, -20, :day)
+    on_ee do
+      test "first view of a consolidated dashboard sets stats_start_date and native_stats_start_at according to native_stats_start_at of the earliest team site",
+           %{
+             conn: conn,
+             site: site,
+             user: user
+           } do
+        team = team_of(user)
+        now = NaiveDateTime.utc_now(:second)
+        ten_days_ago = NaiveDateTime.add(now, -10, :day)
+        twenty_days_ago = NaiveDateTime.add(now, -20, :day)
 
-      site
-      |> Plausible.Site.set_native_stats_start_at(ten_days_ago)
-      |> Plausible.Repo.update!()
+        site
+        |> Plausible.Site.set_native_stats_start_at(ten_days_ago)
+        |> Plausible.Repo.update!()
 
-      new_site(team: team, native_stats_start_at: twenty_days_ago)
-      cv = new_consolidated_view(team)
+        new_site(team: team, native_stats_start_at: twenty_days_ago)
+        cv = new_consolidated_view(team)
 
-      conn = get(conn, "/" <> cv.domain)
-      resp = html_response(conn, 200)
+        conn = get(conn, "/" <> cv.domain)
+        resp = html_response(conn, 200)
 
-      assert text_of_attr(resp, @react_container, "data-domain") == cv.domain
-      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
-      assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
-      assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
+        assert text_of_attr(resp, @react_container, "data-domain") == cv.domain
+        assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+        assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
+        assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
 
-      cv = Plausible.Repo.reload(cv)
-      assert cv.stats_start_date == NaiveDateTime.to_date(twenty_days_ago)
-      assert cv.native_stats_start_at == twenty_days_ago
-    end
+        cv = Plausible.Repo.reload(cv)
+        assert cv.stats_start_date == NaiveDateTime.to_date(twenty_days_ago)
+        assert cv.native_stats_start_at == twenty_days_ago
+      end
 
-    @tag :ee_only
-    test "does not redirect consolidated views to verification", %{
-      conn: conn,
-      user: user
-    } do
-      cv = user |> team_of() |> new_consolidated_view()
+      test "does not redirect consolidated views to verification", %{
+        conn: conn,
+        user: user
+      } do
+        cv = user |> team_of() |> new_consolidated_view()
 
-      conn = get(conn, "/" <> cv.domain)
-      resp = html_response(conn, 200)
+        conn = get(conn, "/" <> cv.domain)
+        resp = html_response(conn, 200)
 
-      assert text_of_attr(resp, @react_container, "data-domain") == cv.domain
-      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
-      assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
-      assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
+        assert text_of_attr(resp, @react_container, "data-domain") == cv.domain
+        assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+        assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
+        assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
+      end
     end
 
     @tag :ee_only

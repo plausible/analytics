@@ -28,10 +28,6 @@ defmodule Plausible.Teams.Test do
       {:ok, site} = Plausible.ConsolidatedView.enable(team)
       site
     end
-  else
-    # Keeping the function available on CE so that ee_only tests can be
-    # excluded by tags without having to wrap them into on_ee blocks.
-    def new_consolidated_view(_), do: {:error, :ee_only}
   end
 
   def new_site(args \\ []) do

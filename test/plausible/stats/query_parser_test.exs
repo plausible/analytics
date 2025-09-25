@@ -2704,33 +2704,33 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
-  describe "query.consolidated_site_ids" do
-    @describetag :ee_only
+  on_ee do
+    describe "query.consolidated_site_ids" do
+      test "is set to nil when site is regular", %{site: site} do
+        params = %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all"
+        }
 
-    test "is set to nil when site is regular", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all"
-      }
+        {:ok, %{consolidated_site_ids: nil}} = parse(site, :public, params)
+        {:ok, %{consolidated_site_ids: nil}} = parse(site, :internal, params)
+      end
 
-      {:ok, %{consolidated_site_ids: nil}} = parse(site, :public, params)
-      {:ok, %{consolidated_site_ids: nil}} = parse(site, :internal, params)
-    end
+      test "is set to a list of site_ids when site is consolidated", %{site: site} do
+        cv = new_consolidated_view(site.team)
 
-    test "is set to a list of site_ids when site is consolidated", %{site: site} do
-      cv = new_consolidated_view(site.team)
+        params = %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all"
+        }
 
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all"
-      }
+        site_id = site.id
 
-      site_id = site.id
-
-      assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :public, params)
-      assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :internal, params)
+        assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :public, params)
+        assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :internal, params)
+      end
     end
   end
 end
