@@ -11,6 +11,55 @@
 @import './flatpickr-colors.css';
 @import './chartjs.css';
 
+/* Tailwind v3 compatibility: restore v3 default border and ring styling */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+@theme {
+  /* Color aliases from tailwind.config.js */
+  /* yellow: colors.amber - Map yellow to amber colors */
+  --color-yellow-50: var(--color-amber-50);
+  --color-yellow-100: var(--color-amber-100);
+  --color-yellow-200: var(--color-amber-200);
+  --color-yellow-300: var(--color-amber-300);
+  --color-yellow-400: var(--color-amber-400);
+  --color-yellow-500: var(--color-amber-500);
+  --color-yellow-600: var(--color-amber-600);
+  --color-yellow-700: var(--color-amber-700);
+  --color-yellow-800: var(--color-amber-800);
+  --color-yellow-900: var(--color-amber-900);
+  --color-yellow-950: var(--color-amber-950);
+
+  /* gray: colors.slate - Map gray to slate colors */
+  --color-gray-50: var(--color-slate-50);
+  --color-gray-100: var(--color-slate-100);
+  --color-gray-200: var(--color-slate-200);
+  --color-gray-300: var(--color-slate-300);
+  --color-gray-400: var(--color-slate-400);
+  --color-gray-500: var(--color-slate-500);
+  --color-gray-600: var(--color-slate-600);
+  --color-gray-700: var(--color-slate-700);
+  --color-gray-800: var(--color-slate-800);
+  --color-gray-900: var(--color-slate-900);
+
+  /* Custom gray shades from config (override some slate values) */
+  --color-gray-150: rgb(234, 238, 244);
+  --color-gray-825: rgb(37, 47, 63);
+  --color-gray-850: rgb(26, 32, 44);
+  --color-gray-950: rgb(13, 18, 30);
+
+  /* Set v3 default ring behavior */
+  --default-ring-width: 3px;
+  --default-ring-color: var(--color-blue-500);
+}
+
 [x-cloak] {
   display: none;
 }
