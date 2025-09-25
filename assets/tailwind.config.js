@@ -1,4 +1,3 @@
-const colors = require('tailwindcss/colors')
 const plugin = require('tailwindcss/plugin')
 
 module.exports = {
@@ -20,14 +19,6 @@ module.exports = {
       padding: '1rem',
     },
     extend: {
-      colors: {
-        yellow: colors.amber, // We started using `yellow` in v2 but it was renamed to `amber` in v3 https://tailwindcss.com/docs/upgrade-guide#removed-color-aliases
-        gray: colors.slate,
-        'gray-150': 'rgb(234, 238, 244)',
-        'gray-950': 'rgb(13, 18, 30)',
-        'gray-850': 'rgb(26, 32, 44)',
-        'gray-825': 'rgb(37, 47, 63)'
-      },
       spacing: {
         '44': '11rem'
       },
