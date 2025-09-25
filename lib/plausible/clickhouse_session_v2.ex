@@ -4,6 +4,8 @@ defmodule Plausible.ClickhouseSessionV2 do
   """
   use Ecto.Schema
 
+  @type t() :: %__MODULE__{}
+
   defmodule BoolUInt8 do
     @moduledoc """
     Custom type to cast Bool as UInt8

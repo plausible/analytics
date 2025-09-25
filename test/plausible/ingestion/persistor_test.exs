@@ -39,12 +39,12 @@ defmodule Plausible.Ingestion.PersistorTest do
     bypass = Bypass.open()
 
     expect_persistor(bypass, fn input_event, session_attrs ->
-      assert session_attrs == @session_params
-      assert input_event.user_id == event.user_id
+      assert session_attrs == Map.new(@session_params, fn {key, val} -> {to_string(key), val} end)
+      assert input_event["user_id"] == event.user_id
 
       input_event
       |> Map.merge(session_attrs)
-      |> Map.put(:session_id, 123)
+      |> Map.put("session_id", 123)
     end)
 
     assert {:ok, ingested_event} =
@@ -77,12 +77,12 @@ defmodule Plausible.Ingestion.PersistorTest do
     bypass = Bypass.open()
 
     expect_persistor(bypass, fn input_event, session_attrs ->
-      assert session_attrs == @session_params
-      assert input_event.user_id == event.user_id
+      assert session_attrs == Map.new(@session_params, fn {key, val} -> {to_string(key), val} end)
+      assert input_event["user_id"] == event.user_id
 
       input_event
       |> Map.merge(session_attrs)
-      |> Map.put(:session_id, 123)
+      |> Map.put("session_id", 123)
     end)
 
     assert {:ok, ingested_event} =
@@ -104,7 +104,7 @@ defmodule Plausible.Ingestion.PersistorTest do
     bypass = Bypass.open()
 
     Bypass.expect_once(bypass, "POST", "/event", fn conn ->
-      event_payload = Base.encode64("invalid", padding: false)
+      event_payload = Jason.encode!(%{"timestamp" => "invalid"})
 
       conn
       |> Plug.Conn.resp(200, event_payload)
@@ -119,7 +119,7 @@ defmodule Plausible.Ingestion.PersistorTest do
            end) =~ "invalid_payload"
   end
 
-  test "remote persistor failing due to invalid response payload encoding" do
+  test "remote persistor failing due to invalid response payload format" do
     event = build(:event, name: "pageview")
     ingest_event = %Event{clickhouse_event: event, clickhouse_session_attrs: @session_params}
 
@@ -136,7 +136,7 @@ defmodule Plausible.Ingestion.PersistorTest do
                         backend: Persistor.Remote,
                         url: bypass_url(bypass)
                       )
-           end) =~ "invalid_web_encoding"
+           end) =~ "malformed_payload"
   end
 
   test "remote persistor failing due to no session for engagement" do
@@ -223,19 +223,15 @@ defmodule Plausible.Ingestion.PersistorTest do
     Bypass.expect_once(bypass, "POST", "/event", fn conn ->
       {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-      {input_event, session_attrs} =
-        body
-        |> Base.decode64!(padding: false)
-        |> :erlang.binary_to_term()
+      %{"event" => input_event, "session" => session_attrs} = Jason.decode!(body)
 
       output_event = callback_fn.(input_event, session_attrs)
 
       event_payload =
         output_event
         |> Map.merge(session_attrs)
-        |> Map.put(:session_id, 123)
-        |> :erlang.term_to_binary()
-        |> Base.encode64(padding: false)
+        |> Map.put("session_id", 123)
+        |> Jason.encode!()
 
       conn
       |> Plug.Conn.resp(200, event_payload)
