@@ -61,6 +61,7 @@ defmodule Plausible.Ingestion.Persistor.Remote.Serializer do
   @event_string_fields Enum.map(@event_fields, &to_string/1)
   @event_mappings Map.new(@event_fields, fn field -> {to_string(field), field} end)
 
+  @spec encode(ClickhouseEventV2.t(), map()) :: binary()
   def encode(event, session_attrs) do
     event_data =
       event
@@ -84,6 +85,8 @@ defmodule Plausible.Ingestion.Persistor.Remote.Serializer do
     })
   end
 
+  @spec decode(binary()) ::
+          {:ok, ClickhouseEventV2.t()} | {:error, :invalid_payload | :malformed_payload}
   def decode(payload) do
     case Jason.decode(payload) do
       {:ok, data} ->
