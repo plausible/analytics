@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
     <div
       x-cloak
       x-data={x_data(@site)}
-      class="w-full px-4 text-sm font-bold text-center text-blue-900 bg-blue-200 rounded transition"
+      class="w-full px-4 text-sm font-bold text-center text-blue-900 bg-blue-200 rounded-xs transition"
       style="top: 91px"
       role="alert"
       x-bind:class="! show ? 'hidden' : ''"
