@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-A1D8BDC0.js"></script>
+    <script src="dist/sidebar_items-EC750B5F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -299,6 +299,7 @@ Pages
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Stats.Query{
   comparison_utc_time_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  consolidated_site_ids: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   debug_metadata: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -317,7 +318,6 @@ Pages
   remove_unavailable_revenue_metrics: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   revenue_currencies: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   revenue_warning: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  rollup_site_ids: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   sample_threshold: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   site_native_stats_start_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -602,6 +602,7 @@ from use.</p>
           <pre translate="no"><span class="attribute">@spec</span> trace(
   %Plausible.Stats.Query{
     comparison_utc_time_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    consolidated_site_ids: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     debug_metadata: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -620,7 +621,6 @@ from use.</p>
     remove_unavailable_revenue_metrics: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     revenue_currencies: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     revenue_warning: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-    rollup_site_ids: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     sample_threshold: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     site_native_stats_start_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -634,6 +634,7 @@ from use.</p>
   [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]
 ) :: %Plausible.Stats.Query{
   comparison_utc_time_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  consolidated_site_ids: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   debug_metadata: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -652,7 +653,6 @@ from use.</p>
   remove_unavailable_revenue_metrics: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   revenue_currencies: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   revenue_warning: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  rollup_site_ids: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   sample_threshold: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   site_native_stats_start_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
