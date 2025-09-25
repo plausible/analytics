@@ -2149,10 +2149,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         another_site = new_site(team: site.team)
         cv = new_consolidated_view(site.team)
 
-        cv
-        |> Ecto.Changeset.change(%{native_stats_start_at: ~N[2021-01-01 00:00:00]})
-        |> Plausible.Repo.update()
-
         populate_stats(site, [
           build(:pageview, pathname: "/a1", timestamp: ~N[2021-01-01 00:00:00]),
           build(:pageview, pathname: "/a2", timestamp: ~N[2021-01-01 00:00:00]),

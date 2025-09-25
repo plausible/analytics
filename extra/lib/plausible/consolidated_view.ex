@@ -71,8 +71,11 @@ defmodule Plausible.ConsolidatedView do
   defp do_enable(%Team{} = team) do
     case get(team) do
       nil ->
+        native_stats_start_at = native_stats_start_at(team)
+
         team
         |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
+        |> Site.set_native_stats_start_at(native_stats_start_at)
         |> Repo.insert()
 
       consolidated_view ->
