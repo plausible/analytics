@@ -41,18 +41,17 @@ defmodule Plausible.ConsolidatedView.Cache do
 
   @spec refresh_updated_recently(Keyword.t()) :: :ok
   def refresh_updated_recently(opts) do
-    recently_updated_site_ids =
+    recently_updated_views =
       from sc in ConsolidatedView.sites(),
         join: sr in ^Plausible.Site.regular(),
         on: sc.team_id == sr.team_id,
         where: sr.updated_at > ago(^15, "minute") or sc.updated_at > ago(^15, "minute"),
-        select: sc.id
+        select: sc
 
     query =
-      from sc in ConsolidatedView.sites(),
+      from sc in subquery(recently_updated_views),
         join: sr in ^Plausible.Site.regular(),
         on: sr.team_id == sc.team_id,
-        where: sc.id in subquery(recently_updated_site_ids),
         group_by: [sc.domain, sc.updated_at],
         order_by: [desc: sc.updated_at],
         select: %{consolidated_view_id: sc.domain, site_ids: fragment("array_agg(?)", sr.id)}
