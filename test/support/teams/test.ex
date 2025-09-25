@@ -23,8 +23,11 @@ defmodule Plausible.Teams.Test do
     Plug.Conn.put_session(conn, :current_team_id, team.identifier)
   end
 
-  def new_consolidated_view(team) do
-    new_site(team: team, domain: team.identifier, consolidated: true)
+  on_ee do
+    def new_consolidated_view(team) do
+      {:ok, site} = Plausible.ConsolidatedView.enable(team)
+      site
+    end
   end
 
   def new_site(args \\ []) do
