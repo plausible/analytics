@@ -82,8 +82,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
       if Plausible.Sites.consolidated?(site) do
         {:ok, site_ids} = Plausible.ConsolidatedView.site_ids(site.team)
         site_ids
-      else
-        nil
       end
     end
   else
