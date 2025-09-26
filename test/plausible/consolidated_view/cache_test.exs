@@ -46,22 +46,24 @@ defmodule Plausible.CondolidatedView.CacheTest do
 
       owner = new_user()
       new_site(owner: owner, updated_at: yesterday())
+      new_site(owner: owner, updated_at: yesterday())
       consolidated_view = new_site(owner: owner, updated_at: yesterday(), consolidated: true)
 
       :ok = Cache.refresh_all(cache_name: test)
 
-      assert [_] = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
+      assert [_, _] = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
 
       new_site(owner: owner)
 
       :ok = Cache.refresh_updated_recently(cache_name: test)
-      assert [_, _] = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
+      assert [_, _, _] = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
     end
 
     test "small refresh re-consolidates", %{test: test} do
       start_test_cache(test)
 
       owner = new_user()
+      new_site(owner: owner, updated_at: yesterday())
       new_site(owner: owner, updated_at: yesterday())
 
       team = team_of(owner)
@@ -70,7 +72,7 @@ defmodule Plausible.CondolidatedView.CacheTest do
 
       :ok = Cache.refresh_updated_recently(cache_name: test)
 
-      assert [_] = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
+      assert [_, _] = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
     end
 
     test "get_from_source/1", %{test: test} do
@@ -99,5 +101,35 @@ defmodule Plausible.CondolidatedView.CacheTest do
         day: -1
       )
     end
+  end
+
+  test "refresh_all doesn't cache if there's not enough regular sites", %{test: test} do
+    start_test_cache(test)
+
+    owner = new_user()
+    new_site(owner: owner)
+    team = team_of(owner)
+
+    # this will be later on made impossible due to constraint violation
+    {:ok, _} = ConsolidatedView.enable(team)
+
+    :ok = Cache.refresh_all(cache_name: test)
+
+    assert Cache.size(test) == 0
+  end
+
+  test "refresh_updated_recently doesn't cache if there's not enough regular sites", %{test: test} do
+    start_test_cache(test)
+
+    owner = new_user()
+    new_site(owner: owner)
+    team = team_of(owner)
+
+    # this will be later on made impossible due to constraint violation
+    {:ok, _} = ConsolidatedView.enable(team)
+
+    :ok = Cache.refresh_updated_recently(cache_name: test)
+
+    assert Cache.size(test) == 0
   end
 end
