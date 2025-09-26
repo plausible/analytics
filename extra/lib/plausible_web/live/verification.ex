@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.Verification do
   Onboarding new sites, renders a standalone component.
   Embedded modal variant is available for general site settings.
   """
-  use Plausible
   use PlausibleWeb, :live_view
 
   import PlausibleWeb.Components.Generic
@@ -61,66 +60,29 @@ defmodule PlausibleWeb.Live.Verification do
         custom_url_input?: custom_url_input?
       )
 
-    on_ee do
-      if connected?(socket) and not custom_url_input? do
-        launch_delayed(socket)
-      end
+    if connected?(socket) and not custom_url_input? do
+      launch_delayed(socket)
     end
 
-    on_ee do
-      {:ok, socket}
-    else
-      # on CE we skip the verification process and instead,
-      # we just wait for the first pageview to be recorded
-      socket =
-        if has_pageviews? do
-          redirect_to_stats(socket)
-        else
-          schedule_pageviews_check(socket)
-        end
-
-      {:ok, socket}
-    end
+    {:ok, socket}
   end
 
-  on_ee do
-    def render(assigns) do
-      ~H"""
-      <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Verify installation" />
-      <.custom_url_form :if={@custom_url_input?} domain={@domain} />
-      <.live_component
-        :if={not @custom_url_input?}
-        module={@component}
-        installation_type={@installation_type}
-        domain={@domain}
-        id="verification-standalone"
-        attempts={@attempts}
-        flow={@flow}
-        awaiting_first_pageview?={not @has_pageviews?}
-        super_admin?={@super_admin?}
-      />
-      """
-    end
-  else
-    def render(assigns) do
-      ~H"""
-      <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Verify installation" />
-      <.awaiting_pageviews />
-      """
-    end
-  end
-
-  on_ce do
-    defp awaiting_pageviews(assigns) do
-      ~H"""
-      <.focus_box>
-        <div class="flex items-center">
-          <div class="block pulsating-circle"></div>
-          <p class="ml-8">Awaiting your first pageview …</p>
-        </div>
-      </.focus_box>
-      """
-    end
+  def render(assigns) do
+    ~H"""
+    <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Verify installation" />
+    <.custom_url_form :if={@custom_url_input?} domain={@domain} />
+    <.live_component
+      :if={not @custom_url_input?}
+      module={@component}
+      installation_type={@installation_type}
+      domain={@domain}
+      id="verification-standalone"
+      attempts={@attempts}
+      flow={@flow}
+      awaiting_first_pageview?={not @has_pageviews?}
+      super_admin?={@super_admin?}
+    />
+    """
   end
 
   def handle_event("launch-verification", _, socket) do
@@ -300,48 +262,46 @@ defmodule PlausibleWeb.Live.Verification do
     Plausible.Stats.Clickhouse.has_pageviews?(site)
   end
 
-  on_ee do
-    defp custom_url_form(assigns) do
-      ~H"""
-      <.focus_box>
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-          <Heroicons.globe_alt class="h-6 w-6 text-blue-600 dark:text-blue-200" />
-        </div>
-        <div class="mt-8">
-          <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-            Enter Your Custom URL
-          </h3>
-          <p class="text-sm mt-4 text-gray-600 dark:text-gray-400">
-            Please enter the URL where your website with the Plausible script is located.
-          </p>
-          <form phx-submit="verify-custom-url" class="mt-6">
-            <div class="mb-4">
-              <label
-                for="custom_url"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Website URL
-              </label>
-              <input
-                type="url"
-                name="custom_url"
-                id="custom_url"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
-                placeholder={"https://#{@domain}"}
-                value={"https://#{@domain}"}
-              />
-            </div>
-            <button
-              type="submit"
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+  defp custom_url_form(assigns) do
+    ~H"""
+    <.focus_box>
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+        <Heroicons.globe_alt class="h-6 w-6 text-blue-600 dark:text-blue-200" />
+      </div>
+      <div class="mt-8">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+          Enter Your Custom URL
+        </h3>
+        <p class="text-sm mt-4 text-gray-600 dark:text-gray-400">
+          Please enter the URL where your website with the Plausible script is located.
+        </p>
+        <form phx-submit="verify-custom-url" class="mt-6">
+          <div class="mb-4">
+            <label
+              for="custom_url"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Verify Installation
-            </button>
-          </form>
-        </div>
-      </.focus_box>
-      """
-    end
+              Website URL
+            </label>
+            <input
+              type="url"
+              name="custom_url"
+              id="custom_url"
+              required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
+              placeholder={"https://#{@domain}"}
+              value={"https://#{@domain}"}
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+          >
+            Verify Installation
+          </button>
+        </form>
+      </div>
+    </.focus_box>
+    """
   end
 end
