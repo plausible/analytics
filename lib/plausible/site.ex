@@ -84,9 +84,17 @@ defmodule Plausible.Site do
     @domain_unique_error """
     This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
     """
+
+    @consolidated_view_precondition """
+    To create a consolidated view, you need to have at least two sites in your team
+    """
   else
     @domain_unique_error """
     This domain cannot be registered. Perhaps one of your colleagues registered it?
+    """
+
+    @consolidated_view_precondition """
+    Consolidated sites are not supported in Plausible Community Edition
     """
   end
 
@@ -110,6 +118,10 @@ defmodule Plausible.Site do
     |> unique_constraint(:domain,
       name: "domain_change_disallowed",
       message: @domain_unique_error
+    )
+    |> check_constraint(:consolidated,
+      name: "consolidated_sites_check",
+      message: @consolidated_view_precondition
     )
     |> put_change(
       :ingest_rate_limit_threshold,
