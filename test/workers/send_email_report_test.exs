@@ -211,8 +211,14 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "includes goal conversions when goals exist" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      site = new_site(domain: "test-site.com", inserted_at: NaiveDateTime.shift(now, day: -8))
+      last_monday =
+        NaiveDateTime.utc_now(:second)
+        |> NaiveDateTime.shift(day: -7)
+        |> Plausible.Times.beginning_of_week()
+
+      site =
+        new_site(domain: "test-site.com", inserted_at: NaiveDateTime.shift(last_monday, day: -1))
+
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       _goal1 = insert(:goal, site: site, event_name: "Signup")
@@ -222,31 +228,31 @@ defmodule Plausible.Workers.SendEmailReportTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          timestamp: NaiveDateTime.shift(now, day: -7)
+          timestamp: last_monday
         ),
         build(:pageview,
           user_id: 124,
-          timestamp: NaiveDateTime.shift(now, day: -6)
+          timestamp: NaiveDateTime.shift(last_monday, day: 1)
         ),
         build(:event,
           user_id: 123,
           name: "Signup",
-          timestamp: NaiveDateTime.shift(now, day: -7)
+          timestamp: last_monday
         ),
         build(:event,
           user_id: 124,
           name: "Signup",
-          timestamp: NaiveDateTime.shift(now, day: -6)
+          timestamp: NaiveDateTime.shift(last_monday, day: 1)
         ),
         build(:event,
           user_id: 125,
           name: "Purchase",
-          timestamp: NaiveDateTime.shift(now, day: -5)
+          timestamp: NaiveDateTime.shift(last_monday, day: 2)
         ),
         build(:pageview,
           user_id: 126,
           pathname: "/thank-you",
-          timestamp: NaiveDateTime.shift(now, day: -4)
+          timestamp: NaiveDateTime.shift(last_monday, day: 3)
         )
       ])
 
