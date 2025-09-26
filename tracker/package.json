@@ -1,5 +1,5 @@
 {
-  "tracker_script_version": 32,
+  "tracker_script_version": 33,
   "type": "module",
   "scripts": {
     "lint": "eslint",
