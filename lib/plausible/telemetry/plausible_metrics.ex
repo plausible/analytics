@@ -2,6 +2,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   @moduledoc """
   Custom PromEx plugin for instrumenting code within Plausible app.
   """
+  use Plausible
   use PromEx.Plugin
   alias Plausible.Site
   alias Plausible.Ingestion
@@ -140,17 +141,26 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           tags: [:status],
           tag_values: &%{status: &1.status}
         ),
-        counter(
-          metric_prefix ++ [:verification, :js_elixir_diff],
-          event_name:
-            Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = true)
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:verification, :js_elixir_diff],
+              event_name:
+                Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = true)
+            ),
+          else: nil
         ),
-        counter(
-          metric_prefix ++ [:verification, :js_elixir_match],
-          event_name:
-            Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = false)
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:verification, :js_elixir_match],
+              event_name:
+                Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = false)
+            ),
+          else: nil
         )
       ]
+      |> Enum.reject(&is_nil/1)
     )
   end
 

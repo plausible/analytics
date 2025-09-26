@@ -21,7 +21,9 @@ defmodule Plausible.Ingestion.Event do
             salts: nil,
             changeset: nil
 
-  @verification_user_agent Plausible.InstallationSupport.user_agent()
+  on_ee do
+    @verification_user_agent Plausible.InstallationSupport.user_agent()
+  end
 
   @type drop_reason() ::
           :bot
@@ -193,14 +195,18 @@ defmodule Plausible.Ingestion.Event do
     struct!(event, clickhouse_session_attrs: Map.merge(event.clickhouse_session_attrs, attrs))
   end
 
-  defp drop_verification_agent(%__MODULE__{} = event, _context) do
-    case event.request.user_agent do
-      @verification_user_agent ->
-        drop(event, :verification_agent)
+  on_ee do
+    defp drop_verification_agent(%__MODULE__{} = event, _context) do
+      case event.request.user_agent do
+        @verification_user_agent ->
+          drop(event, :verification_agent)
 
-      _ ->
-        event
+        _ ->
+          event
+      end
     end
+  else
+    defp drop_verification_agent(%__MODULE__{} = event, _context), do: event
   end
 
   defp drop_datacenter_ip(%__MODULE__{} = event, _context) do
