@@ -78,7 +78,7 @@ export const DropdownTabButton = ({
         <>
           <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
           <Popover.Button
-            className="inline-flex justify-between rounded-sm"
+            className="inline-flex justify-between rounded-xs"
             ref={dropdownButtonRef}
           >
             <TabButtonText active={active}>{children}</TabButtonText>

@@ -201,7 +201,7 @@ export default function ListReport<
           <div style={{ height: ROW_HEIGHT }}>{renderReportHeader()}</div>
 
           <div style={{ minHeight: DATA_CONTAINER_HEIGHT }}>
-            <FlipMove className="flex-grow">
+            <FlipMove className="grow">
               {state.list.slice(0, MAX_ITEMS).map(renderRow)}
             </FlipMove>
           </div>
@@ -237,7 +237,7 @@ export default function ListReport<
 
     return (
       <div className="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
-        <span className="flex-grow truncate">{keyLabel}</span>
+        <span className="grow truncate">{keyLabel}</span>
         {metricLabels}
       </div>
     )
@@ -262,12 +262,12 @@ export default function ListReport<
     const metricToPlot = metrics.find((metric) => metric.meta.plot)?.key
 
     return (
-      <div className="flex-grow w-full overflow-hidden">
+      <div className="grow w-full overflow-hidden">
         <Bar
           maxWidthDeduction={undefined}
           count={listItem[metricToPlot]}
           all={state.list}
-          bg={`${lightBackground} dark:bg-gray-500 dark:bg-opacity-15`}
+          bg={`${lightBackground} dark:bg-gray-500/15`}
           plot={metricToPlot}
         >
           <div className="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">

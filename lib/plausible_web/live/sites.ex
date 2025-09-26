@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Live.Sites do
       } />
 
       <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
-        <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
+        <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate shrink-0">
           {Teams.name(@current_team)}
           <.unstyled_link
             :if={Teams.setup?(@current_team)}
@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <div class="rounded-md bg-yellow-100 p-4">
       <div class="flex">
-        <div class="flex-shrink-0">
+        <div class="shrink-0">
           <svg
             class="h-5 w-5 text-yellow-400"
             xmlns="http://www.w3.org/2000/svg"
@@ -186,12 +186,12 @@ defmodule PlausibleWeb.Live.Sites do
       data-domain={@site.domain}
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
-      <div class="col-span-1 bg-white dark:bg-gray-800 rounded-md shadow p-4 group-hover:shadow-lg cursor-pointer transition duration-100">
+      <div class="col-span-1 bg-white dark:bg-gray-800 rounded-md shadow-xs p-4 group-hover:shadow-lg cursor-pointer transition duration-100">
         <div class="w-full flex items-center justify-between space-x-4">
           <img
             src={"/favicon/sources/#{@site.domain}"}
             onerror="this.onerror=null; this.src='/favicon/sources/placeholder';"
-            class="size-[1.15rem] flex-shrink-0"
+            class="size-[1.15rem] shrink-0"
           />
           <div class="flex-1 truncate -mt-px">
             <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100">
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Live.Sites do
             </h3>
           </div>
 
-          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-xs text-xs font-medium bg-green-100 text-green-800">
             Pending invitation
           </span>
         </div>
@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
-        <div class="col-span-1 bg-white dark:bg-gray-800 rounded-md shadow p-4 group-hover:shadow-lg cursor-pointer transition duration-100">
+        <div class="col-span-1 bg-white dark:bg-gray-800 rounded-md shadow-xs p-4 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between space-x-4">
             <.favicon domain={@site.domain} />
             <div class="flex-1 -mt-px w-full">
@@ -425,7 +425,7 @@ defmodule PlausibleWeb.Live.Sites do
           x-transition:leave="transition ease-in duration-200"
           x-transition:leave-start="opacity-100"
           x-transition:leave-end="opacity-0"
-          class="fixed inset-0 bg-gray-500 dark:bg-gray-800 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
+          class="fixed inset-0 bg-gray-500/75 dark:bg-gray-800/75 transition-opacity"
           aria-hidden="true"
           x-on:click="invitationOpen = false"
         >
@@ -449,14 +449,14 @@ defmodule PlausibleWeb.Live.Sites do
             <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
               <button
                 x-on:click="invitationOpen = false"
-                class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <span class="sr-only">Close</span>
                 <Heroicons.x_mark class="h-6 w-6" />
               </button>
             </div>
             <div class="sm:flex sm:items-start">
-              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+              <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
                 <Heroicons.user_group class="h-6 w-6" />
               </div>
               <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
@@ -490,7 +490,7 @@ defmodule PlausibleWeb.Live.Sites do
             <.notice
               x-show="selectedInvitation && selectedInvitation.missing_features"
               title="Missing features"
-              class="mt-4 shadow-sm dark:shadow-none"
+              class="mt-4 shadow-xs dark:shadow-none"
             >
               <p>
                 The site uses <span x-text="selectedInvitation && selectedInvitation.missing_features"></span>,
@@ -507,7 +507,7 @@ defmodule PlausibleWeb.Live.Sites do
             <.notice
               x-show="selectedInvitation && selectedInvitation.exceeded_limits"
               title="Unable to accept site ownership"
-              class="mt-4 shadow-sm dark:shadow-none"
+              class="mt-4 shadow-xs dark:shadow-none"
             >
               <p>
                 Owning this site would exceed your <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>. Please check your usage in
@@ -523,7 +523,7 @@ defmodule PlausibleWeb.Live.Sites do
             <.notice
               x-show="selectedInvitation && selectedInvitation.no_plan"
               title="No subscription"
-              class="mt-4 shadow-sm dark:shadow-none"
+              class="mt-4 shadow-xs dark:shadow-none"
             >
               You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
             </.notice>
@@ -575,7 +575,7 @@ defmodule PlausibleWeb.Live.Sites do
     assigns = assign(assigns, :src, src)
 
     ~H"""
-    <img src={@src} class="w-4 h-4 flex-shrink-0 mt-px" />
+    <img src={@src} class="w-4 h-4 shrink-0 mt-px" />
     """
   end
 
