@@ -5,6 +5,8 @@ defmodule Plausible.Ingestion.Persistor.Remote do
 
   require Logger
 
+  alias __MODULE__
+
   @max_transient_retries 3
 
   def persist_event(ingest_event, previous_user_id, opts) do
@@ -16,6 +18,7 @@ defmodule Plausible.Ingestion.Persistor.Remote do
     override_url = Keyword.get(opts, :url)
 
     headers = [
+      {"content-type", "application/json"},
       {"x-site-id", site_id},
       {"x-current-user-id", current_user_id},
       {"x-previous-user-id", previous_user_id}
@@ -23,13 +26,13 @@ defmodule Plausible.Ingestion.Persistor.Remote do
 
     case Req.post(persistor_url(override_url),
            finch: Plausible.Finch,
-           body: encode_payload(event, session_attrs),
+           body: Remote.Serializer.encode(event, session_attrs),
            headers: headers,
            retry: &handle_transient_error/2,
            max_retries: @max_transient_retries
          ) do
       {:ok, %{status: 200, body: event_payload}} ->
-        case decode_payload(event_payload) do
+        case Remote.Serializer.decode(event_payload) do
           {:ok, event} ->
             {:ok, %{ingest_event | clickhouse_event: event}}
 
@@ -61,33 +64,6 @@ defmodule Plausible.Ingestion.Persistor.Remote do
   end
 
   defp handle_transient_error(_reqeust, _response), do: false
-
-  defp encode_payload(event, session_attrs) do
-    event_data =
-      event
-      |> Map.from_struct()
-      |> Map.delete(:__meta__)
-
-    {event_data, session_attrs}
-    |> :erlang.term_to_binary()
-    |> Base.encode64(padding: false)
-  end
-
-  defp decode_payload(payload) do
-    case Base.decode64(payload, padding: false) do
-      {:ok, data} ->
-        event_data = :erlang.binary_to_term(data)
-        event = struct(Plausible.ClickhouseEventV2, event_data)
-
-        {:ok, event}
-
-      _ ->
-        {:error, :invalid_web_encoding}
-    end
-  catch
-    _, _ ->
-      {:error, :invalid_payload}
-  end
 
   defp decode_error("no_session_for_engagement"), do: :no_session_for_engagement
   defp decode_error("lock_timeout"), do: :lock_timeout

@@ -68,7 +68,7 @@ defmodule Plausible.Ingestion.PersistorSyncTest do
 
         input_event
         |> Map.merge(session_attrs)
-        |> Map.put(:session_id, System.unique_integer())
+        |> Map.put("session_id", System.unique_integer())
       end)
 
       assert ingest_via_both_backends(false, false, 10) == :ok
@@ -114,19 +114,15 @@ defmodule Plausible.Ingestion.PersistorSyncTest do
       Bypass.expect(bypass, "POST", "/event", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        {input_event, session_attrs} =
-          body
-          |> Base.decode64!(padding: false)
-          |> :erlang.binary_to_term()
+        %{"event" => input_event, "session" => session_attrs} = Jason.decode!(body)
 
         output_event = callback_fn.(input_event, session_attrs)
 
         event_payload =
           output_event
           |> Map.merge(session_attrs)
-          |> Map.put(:session_id, 123)
-          |> :erlang.term_to_binary()
-          |> Base.encode64(padding: false)
+          |> Map.put("session_id", 123)
+          |> Jason.encode!()
 
         conn
         |> Plug.Conn.resp(200, event_payload)

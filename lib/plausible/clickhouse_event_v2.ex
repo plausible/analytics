@@ -5,6 +5,8 @@ defmodule Plausible.ClickhouseEventV2 do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @primary_key false
   schema "events_v2" do
     field :name, Ch, type: "LowCardinality(String)"
