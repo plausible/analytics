@@ -73,10 +73,19 @@ defmodule Plausible.ConsolidatedView do
       nil ->
         native_stats_start_at = native_stats_start_at(team)
 
-        team
-        |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
-        |> Site.set_native_stats_start_at(native_stats_start_at)
-        |> Repo.insert()
+        result =
+          team
+          |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
+          |> Site.set_native_stats_start_at(native_stats_start_at)
+          |> Repo.insert()
+
+        case result do
+          {:ok, _} = ok ->
+            ok
+
+          {:error, %Ecto.Changeset{errors: [consolidated: _]}} ->
+            {:error, :no_sites}
+        end
 
       consolidated_view ->
         {:ok, consolidated_view}
@@ -89,11 +98,7 @@ defmodule Plausible.ConsolidatedView do
 
   # TODO: Only active trials and business subscriptions should be eligible.
   # This function should also call a new underlying feature module.
-  defp ensure_eligible(%Team{} = team) do
-    if Plausible.Teams.owned_sites_count(team) == 0 do
-      {:error, :no_sites}
-    else
-      :ok
-    end
+  defp ensure_eligible(%Team{} = _team) do
+    :ok
   end
 end
