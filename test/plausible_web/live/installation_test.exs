@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       test "mounts and detects installation type", %{conn: conn, site: site} do
         stub_fetch_body(200, "wp-content")
 
-        {lv, _} = get_lv(conn, site)
+        {lv, _} = get_lv(conn, site, nil)
 
         assert eventually(fn ->
                  html = render(lv)
@@ -370,7 +370,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
     end
   end
 
-  defp get_lv(conn, site, qs \\ nil) do
+  defp get_lv(conn, site, qs) do
     {:ok, lv, html} = live(conn, "/#{site.domain}/installation#{qs}")
 
     {lv, html}
