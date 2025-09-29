@@ -20,7 +20,8 @@ defmodule Plausible.Site.Removal do
       Teams.Invitations.prune_guest_invitations(site.team)
 
       on_ee do
-        if not Plausible.ConsolidatedView.has_sites_to_consolidate?(site.team) do
+        if Plausible.ConsolidatedView.enabled?(site.team) and
+             not Plausible.ConsolidatedView.has_sites_to_consolidate?(site.team) do
           Plausible.ConsolidatedView.disable(site.team)
         end
 

@@ -39,18 +39,49 @@ defmodule Plausible.Site.SiteRemovalTest do
     refute Repo.reload(team_invitation)
   end
 
-  @tag :ee_only
-  test "site deletion updates team dashboard lock state" do
-    owner = new_user(team: [locked: true])
-    site = new_site(owner: owner)
-    team = site.team
+  on_ee do
+    test "site deletion updates team dashboard lock state" do
+      owner = new_user(team: [locked: true])
+      site = new_site(owner: owner)
+      team = site.team
 
-    assert team.locked
+      assert team.locked
 
-    assert {:ok, context} = Removal.run(site)
-    assert context.delete_all == {1, nil}
-    refute Sites.get_by_domain(site.domain)
+      assert {:ok, context} = Removal.run(site)
+      assert context.delete_all == {1, nil}
+      refute Sites.get_by_domain(site.domain)
 
-    refute Repo.reload(team).locked
+      refute Repo.reload(team).locked
+    end
+
+    test "site deletion disables consolidated view if need be" do
+      owner = new_user()
+      site = new_site(owner: owner)
+      team = team_of(owner)
+
+      {:ok, _} = Plausible.ConsolidatedView.enable(team)
+      assert Plausible.ConsolidatedView.enabled?(team)
+
+      assert {:ok, _} = Removal.run(site)
+
+      refute Plausible.ConsolidatedView.enabled?(team)
+    end
+
+    test "site deletion keeps consolidated view if there's still regular sites" do
+      owner = new_user()
+      site = new_site(owner: owner)
+
+      # another site
+      new_site(owner: owner)
+
+      team = team_of(owner)
+
+      {:ok, _} = Plausible.ConsolidatedView.enable(team)
+      assert Plausible.ConsolidatedView.enabled?(team)
+
+      assert {:ok, _} = Removal.run(site)
+
+      assert Plausible.ConsolidatedView.enabled?(team)
+    end
   end
 end
