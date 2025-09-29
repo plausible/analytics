@@ -21,10 +21,6 @@ defmodule Plausible.Ingestion.Event do
             salts: nil,
             changeset: nil
 
-  on_ee do
-    @verification_user_agent Plausible.InstallationSupport.user_agent()
-  end
-
   @type drop_reason() ::
           :bot
           | :spam_referrer
@@ -196,6 +192,8 @@ defmodule Plausible.Ingestion.Event do
   end
 
   on_ee do
+    @verification_user_agent Plausible.InstallationSupport.user_agent()
+
     defp drop_verification_agent(%__MODULE__{} = event, _context) do
       case event.request.user_agent do
         @verification_user_agent ->
