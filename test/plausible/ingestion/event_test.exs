@@ -80,22 +80,24 @@ defmodule Plausible.Ingestion.EventTest do
     assert_receive :telemetry_handled
   end
 
-  test "drops installation support user agent" do
-    site = new_site()
+  on_ee do
+    test "drops installation support user agent" do
+      site = new_site()
 
-    payload = %{
-      name: "pageview",
-      url: "http://#{site.domain}"
-    }
+      payload = %{
+        name: "pageview",
+        url: "http://#{site.domain}"
+      }
 
-    conn =
-      build_conn(:post, "/api/events", payload)
-      |> Plug.Conn.put_req_header("user-agent", Plausible.InstallationSupport.user_agent())
+      conn =
+        build_conn(:post, "/api/events", payload)
+        |> Plug.Conn.put_req_header("user-agent", Plausible.InstallationSupport.user_agent())
 
-    assert {:ok, request} = Request.build(conn)
+      assert {:ok, request} = Request.build(conn)
 
-    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
-    assert dropped.drop_reason == :verification_agent
+      assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+      assert dropped.drop_reason == :verification_agent
+    end
   end
 
   test "drops a request when site does not exists" do

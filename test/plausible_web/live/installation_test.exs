@@ -130,42 +130,44 @@ defmodule PlausibleWeb.Live.InstallationTest do
   end
 
   describe "LiveView" do
-    test "mounts and detects installation type", %{conn: conn, site: site} do
-      stub_fetch_body(200, "wp-content")
+    on_ee do
+      test "mounts and detects installation type", %{conn: conn, site: site} do
+        stub_fetch_body(200, "wp-content")
 
-      {lv, _} = get_lv(conn, site)
+        {lv, _} = get_lv(conn, site, nil)
 
-      assert eventually(fn ->
-               html = render(lv)
+        assert eventually(fn ->
+                 html = render(lv)
 
-               {
-                 text(html) =~ "Install WordPress",
-                 html
-               }
-             end)
+                 {
+                   text(html) =~ "Install WordPress",
+                   html
+                 }
+               end)
 
-      _ = render(lv)
-    end
+        _ = render(lv)
+      end
 
-    @tag :slow
-    test "mounts and does not detect installation type, if it's provided", %{
-      conn: conn,
-      site: site
-    } do
-      stub_fetch_body(200, "wp-content")
+      @tag :slow
+      test "mounts and does not detect installation type, if it's provided", %{
+        conn: conn,
+        site: site
+      } do
+        stub_fetch_body(200, "wp-content")
 
-      {lv, _} = get_lv(conn, site, "?installation_type=gtm")
+        {lv, _} = get_lv(conn, site, "?installation_type=gtm")
 
-      refute eventually(fn ->
-               html = render(lv)
+        refute eventually(fn ->
+                 html = render(lv)
 
-               {
-                 text(html) =~ "Install WordPress",
-                 html
-               }
-             end)
+                 {
+                   text(html) =~ "Install WordPress",
+                   html
+                 }
+               end)
 
-      _ = render(lv)
+        _ = render(lv)
+      end
     end
 
     test "allows manual snippet customization", %{conn: conn, site: site} do
@@ -354,19 +356,21 @@ defmodule PlausibleWeb.Live.InstallationTest do
     end
   end
 
-  defp stub_fetch_body(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.InstallationSupport.Checks.FetchBody, f)
+  on_ee do
+    defp stub_fetch_body(f) when is_function(f, 1) do
+      Req.Test.stub(Plausible.InstallationSupport.Checks.FetchBody, f)
+    end
+
+    defp stub_fetch_body(status, body) do
+      stub_fetch_body(fn conn ->
+        conn
+        |> put_resp_content_type("text/html")
+        |> send_resp(status, body)
+      end)
+    end
   end
 
-  defp stub_fetch_body(status, body) do
-    stub_fetch_body(fn conn ->
-      conn
-      |> put_resp_content_type("text/html")
-      |> send_resp(status, body)
-    end)
-  end
-
-  defp get_lv(conn, site, qs \\ nil) do
+  defp get_lv(conn, site, qs) do
     {:ok, lv, html} = live(conn, "/#{site.domain}/installation#{qs}")
 
     {lv, html}
