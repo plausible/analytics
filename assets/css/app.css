@@ -1,9 +1,4 @@
 @import "tailwindcss" source(none);
-@plugin "@tailwindcss/forms";
-@source "../css";
-@source "../js";
-@source "../../lib/plausible_web";
-@source "../../extra/lib/plausible_web";
 @import 'flatpickr/dist/flatpickr.min.css';
 @import './modal.css';
 @import './loader.css';
@@ -11,7 +6,16 @@
 @import './flatpickr-colors.css';
 @import './chartjs.css';
 
+@plugin "@tailwindcss/forms";
+
+@source "../css";
+@source "../js";
+@source "../../lib/plausible_web";
+@source "../../extra/lib/plausible_web";
+
+
 /* Tailwind v3 compatibility: restore v3 default border and ring styling */
+
 @layer base {
   *,
   ::after,
@@ -24,6 +28,7 @@
 
 @theme {
   /* Color aliases from tailwind.config.js */
+
   /* yellow: colors.amber - Map yellow to amber colors */
   --color-yellow-50: var(--color-amber-50);
   --color-yellow-100: var(--color-amber-100);
@@ -50,10 +55,10 @@
   --color-gray-900: var(--color-slate-900);
 
   /* Custom gray shades from config (override some slate values) */
-  --color-gray-150: rgb(234, 238, 244);
-  --color-gray-825: rgb(37, 47, 63);
-  --color-gray-850: rgb(26, 32, 44);
-  --color-gray-950: rgb(13, 18, 30);
+  --color-gray-150: rgb(234 238 244);
+  --color-gray-825: rgb(37 47 63);
+  --color-gray-850: rgb(26 32 44);
+  --color-gray-950: rgb(13 18 30);
 
   /* Set v3 default ring behavior */
   --default-ring-width: 3px;
@@ -73,7 +78,6 @@
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
-
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
@@ -121,7 +125,7 @@ blockquote {
   @apply px-4 py-2 my-4 border-l-4 border-gray-500;
 }
 
-@media (min-width: 1280px) {
+@media (width >= 1280px) {
   .container {
     max-width: 70rem;
   }
@@ -131,7 +135,7 @@ blockquote {
   height: 920px;
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .pricing-table {
     height: auto;
   }
