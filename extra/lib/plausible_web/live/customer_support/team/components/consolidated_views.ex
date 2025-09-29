@@ -21,7 +21,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
 
   def render(assigns) do
     ~H"""
-    <div class="mt-2 mb-4">
+    <div data-test-id="consolidated-views-tab-content" class="mt-2 mb-4">
       <%= if Enum.empty?(@consolidated_views) do %>
         <div class="mx-auto flex flex-col items-center">
           <p>This team does not have a consolidated view yet.</p>

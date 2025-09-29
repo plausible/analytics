@@ -174,6 +174,67 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       end
     end
 
+    @create_consolidated_view_button ~s|button[phx-click="create-consolidated-view"]|
+    @delete_consolidated_view_button ~s|button[phx-click="delete-consolidated-view"]|
+    @consolidated_views_tab_content ~s|div[data-test-id="consolidated-views-tab-content"]|
+
+    describe "consolidated views" do
+      setup [:create_user, :log_in, :create_site]
+
+      setup %{user: user} do
+        patch_env(:super_admin_user_ids, [user.id])
+      end
+
+      test "renders button to create one inonef  exist yet", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
+        html = render(lv)
+
+        assert text_of_element(html, @consolidated_views_tab_content) =~
+                 "This team does not have a consolidated view yet"
+
+        assert text_of_element(html, @create_consolidated_view_button) == "Create one"
+      end
+
+      test "can create a consolidated view for team", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
+
+        lv |> element(@create_consolidated_view_button) |> render_click()
+
+        assert not is_nil(Plausible.ConsolidatedView.get(team))
+      end
+
+      test "renders existing consolidated view", %{conn: conn, user: user} do
+        team = team_of(user)
+        Plausible.ConsolidatedView.enable(team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
+        html = render(lv)
+
+        table_text = text_of_element(html, @consolidated_views_tab_content)
+
+        assert table_text =~ team.identifier
+        assert table_text =~ "Dashboard"
+        assert table_text =~ "Settings"
+
+        assert element_exists?(html, @delete_consolidated_view_button)
+      end
+
+      test "can delete consolidated view", %{conn: conn, user: user} do
+        team = team_of(user)
+        Plausible.ConsolidatedView.enable(team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
+
+        lv |> element(@delete_consolidated_view_button) |> render_click()
+
+        assert is_nil(Plausible.ConsolidatedView.get(team))
+      end
+    end
+
     describe "billing" do
       setup [:create_user, :log_in, :create_site]
 
