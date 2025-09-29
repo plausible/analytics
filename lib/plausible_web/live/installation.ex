@@ -312,7 +312,7 @@ defmodule PlausibleWeb.Live.Installation do
           id={"check-#{@variant}"}
           name={@variant}
           checked={Map.get(@config, @variant, false)}
-          class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
+          class="block h-5 w-5 rounded-sm dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
         />
         <label for={"check-#{@variant}"}>
           {@label}

@@ -26,7 +26,7 @@ const transition = {
 const panel = {
   classNames: {
     roundedSheet:
-      'focus:outline-none rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200'
+      'focus:outline-hidden rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black/5 font-medium text-gray-800 dark:text-gray-200'
   }
 }
 
@@ -34,7 +34,7 @@ const toggleButton = {
   classNames: {
     rounded: 'flex items-center rounded text-sm leading-tight h-9',
     shadow:
-      'bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900',
+      'bg-white dark:bg-gray-800 shadow-sm text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900',
     ghost:
       'text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900',
     truncatedText: 'truncate block font-medium',

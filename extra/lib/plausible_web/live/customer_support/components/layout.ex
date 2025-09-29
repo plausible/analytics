@@ -52,7 +52,7 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
       id="help"
       x-show="openHelp"
       x-cloak
-      class="p-16 fixed top-0 left-0 w-full h-full bg-gray-800 text-gray-300 bg-opacity-95 z-50 flex items-center justify-center"
+      class="p-16 fixed top-0 left-0 w-full h-full bg-gray-800/95 text-gray-300 z-50 flex items-center justify-center"
     >
       <div @click.away="openHelp = false" @click="openHelp = false">
         Prefix your searches with: <br /><br />

@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Live.Components.Form do
           checked={@checked}
           id={@id}
           name={@name}
-          class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+          class="block h-5 w-5 rounded-sm dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
           {@rest}
         />
         {@label}
@@ -441,7 +441,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         type="select"
         options={@options}
         onchange={"if (event.target.value) { location.href = '#{@href_base}' + event.target.value }"}
-        class="dark:bg-gray-800 mt-1 block w-full pl-3.5 pr-10 py-2.5 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
+        class="dark:bg-gray-800 mt-1 block w-full pl-3.5 pr-10 py-2.5 text-base border-gray-300 dark:border-gray-500 outline-hidden focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
       />
     </.form>
     """

@@ -131,7 +131,7 @@ export function SearchTerms() {
                 <Bar
                   count={term.visitors}
                   all={searchTerms}
-                  bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
+                  bg="bg-blue-50 dark:bg-gray-500/15"
                   maxWidthDeduction="4rem"
                 >
                   <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-all">
@@ -188,7 +188,7 @@ export function SearchTerms() {
   return (
     <div className="flex flex-col h-full">
       <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
-      <div className="relative flex-grow">
+      <div className="relative grow">
         {loading && (
           <div className="absolute inset-0 flex justify-center items-center">
             <div className="loading">
@@ -196,7 +196,7 @@ export function SearchTerms() {
             </div>
           </div>
         )}
-        <FadeIn show={!loading} className="flex-grow">
+        <FadeIn show={!loading} className="grow">
           <LazyLoader onVisible={onVisible}>
             {searchTerms && searchTerms.length > 0 && renderList()}
             {searchTerms && searchTerms.length === 0 && renderNoDataYet()}

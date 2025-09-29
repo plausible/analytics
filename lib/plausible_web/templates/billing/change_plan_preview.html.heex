@@ -10,7 +10,7 @@
 
   <div class="flex flex-col mt-4">
     <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-      <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200 dark:border-t dark:border-l dark:border-r dark:shadow-none">
+      <div class="align-middle inline-block min-w-full shadow-sm overflow-hidden sm:rounded-lg border-b border-gray-200 dark:border-t dark:border-l dark:border-r dark:shadow-none">
         <table class="min-w-full">
           <thead>
             <tr>
@@ -45,7 +45,7 @@
 
   <div class="flex flex-col">
     <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-      <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200 dark:border-t dark:border-l dark:border-r dark:shadow-none">
+      <div class="align-middle inline-block min-w-full shadow-sm overflow-hidden sm:rounded-lg border-b border-gray-200 dark:border-t dark:border-l dark:border-r dark:shadow-none">
         <table class="min-w-full">
           <thead>
             <tr>
@@ -75,16 +75,16 @@
   </div>
 
   <div class="flex items-center justify-between mt-10">
-    <span class="flex rounded-md shadow-sm">
+    <span class="flex rounded-md shadow-xs">
       <a
         href={@back_link}
         type="button"
-        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 dark:active:text-gray-200 active:bg-gray-50 transition ease-in-out duration-150"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-hidden focus:border-blue-300 focus:ring active:text-gray-800 dark:active:text-gray-200 active:bg-gray-50 transition ease-in-out duration-150"
       >
         Back
       </a>
     </span>
-    <span class="flex space-betwee rounded-md shadow-sm">
+    <span class="flex space-betwee rounded-md shadow-xs">
       <.button_link
         href={Routes.billing_path(@conn, :change_plan, @preview_info["plan_id"])}
         method="post"

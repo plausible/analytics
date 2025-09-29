@@ -4,7 +4,7 @@
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "test": "TZ=UTC jest",
-    "format": "prettier --write",
+    "format": "prettier --write \"**/*.{js,css,ts,tsx}\"",
     "check-format": "prettier --check \"**/*.{js,css,ts,tsx}\"",
     "eslint": "eslint js/**",
     "stylelint": "stylelint css/**",
@@ -18,8 +18,7 @@
     "@jsonurl/jsonurl": "^1.1.7",
     "@juggle/resize-observer": "^3.3.1",
     "@popperjs/core": "^2.11.6",
-    "@tailwindcss/aspect-ratio": "^0.4.2",
-    "@tailwindcss/forms": "^0.5.6",
+    "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.4.1",
     "@tanstack/react-query": "^5.51.1",
     "abortcontroller-polyfill": "^1.7.3",
