@@ -112,5 +112,33 @@ defmodule Plausible.ConsolidatedViewTest do
         assert view.stats_start_date == NaiveDateTime.to_date(min)
       end
     end
+
+    describe "reset_if_enabled/1" do
+      setup [:create_user, :create_team]
+
+      test "no-op if disabled", %{team: team} do
+        :ok = ConsolidatedView.reset_if_enabled(team)
+        refute ConsolidatedView.enabled?(team)
+        refute ConsolidatedView.get(team)
+      end
+
+      @tag :slow
+      test "re-enables", %{team: team} do
+        _site = new_site(team: team, native_stats_start_at: ~N[2024-01-01 12:00:00])
+
+        {:ok, first_enable} = ConsolidatedView.enable(team)
+
+        another_site = new_site(team: team, native_stats_start_at: ~N[2024-01-01 10:00:00])
+
+        Process.sleep(1_000)
+
+        :ok = ConsolidatedView.reset_if_enabled(team)
+        assert ConsolidatedView.enabled?(team)
+
+        consolidated_view = ConsolidatedView.get(team)
+        assert consolidated_view.native_stats_start_at == another_site.native_stats_start_at
+        assert NaiveDateTime.after?(consolidated_view.updated_at, first_enable.updated_at)
+      end
+    end
   end
 end

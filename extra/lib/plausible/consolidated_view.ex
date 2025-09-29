@@ -15,6 +15,21 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
+  @spec reset_if_enabled(Team.t()) :: :ok
+  def reset_if_enabled(%Team{} = team) do
+    case Repo.transaction(fn ->
+           if enabled?(team) do
+             disable(team)
+             enable(team)
+           end
+
+           :ok
+         end) do
+      {:ok, :ok} -> :ok
+      error -> error
+    end
+  end
+
   @spec sites(Ecto.Query.t() | Site) :: Ecto.Query.t()
   def sites(q \\ Site) do
     from s in q, where: s.consolidated == true
@@ -25,7 +40,7 @@ defmodule Plausible.ConsolidatedView do
     with :ok <- ensure_eligible(team), do: do_enable(team)
   end
 
-  @spec enabled?(Team.t()) :: boolean
+  @spec enabled?(Team.t()) :: boolean()
   def enabled?(%Team{} = team) do
     not is_nil(get(team))
   end
