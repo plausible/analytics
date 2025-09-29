@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     Overview,
     Members,
     Sites,
+    ConsolidatedViews,
     Billing,
     SSO,
     Audit
@@ -139,6 +140,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         <.tab to="sites" tab={@tab}>
           Sites ({number_format(@usage.sites)}/{number_format(@limits.sites)})
         </.tab>
+        <.tab to="consolidated_views" tab={@tab}>
+          Consolidated Views
+        </.tab>
         <.tab :if={has_sso_integration?(@team)} to="sso" tab={@tab}>SSO</.tab>
         <.tab to="billing" tab={@tab}>Billing</.tab>
         <.tab to="audit" tab={@tab}>Audit</.tab>
@@ -208,6 +212,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   defp tab_component("overview"), do: Overview
   defp tab_component("members"), do: Members
   defp tab_component("sites"), do: Sites
+  defp tab_component("consolidated_views"), do: ConsolidatedViews
   defp tab_component("billing"), do: Billing
   defp tab_component("sso"), do: SSO
   defp tab_component("audit"), do: Audit
