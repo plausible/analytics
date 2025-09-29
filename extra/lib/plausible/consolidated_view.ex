@@ -17,17 +17,17 @@ defmodule Plausible.ConsolidatedView do
 
   @spec reset_if_enabled(Team.t()) :: :ok
   def reset_if_enabled(%Team{} = team) do
-    case Repo.transaction(fn ->
-           if enabled?(team) do
-             disable(team)
-             enable(team)
-           end
+    {:ok, :ok} =
+      Repo.transaction(fn ->
+        if enabled?(team) do
+          disable(team)
+          enable(team)
+        end
 
-           :ok
-         end) do
-      {:ok, :ok} -> :ok
-      error -> error
-    end
+        :ok
+      end)
+
+    :ok
   end
 
   @spec sites(Ecto.Query.t() | Site) :: Ecto.Query.t()
