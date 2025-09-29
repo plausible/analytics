@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.FaviconTest do
   use Plausible.DataCase, async: true
-  use Plug.Test
+  import Plug.Test
   alias PlausibleWeb.Favicon
 
   import Mox
