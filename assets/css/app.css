@@ -1,4 +1,4 @@
-@import "tailwindcss" source(none);
+@import 'tailwindcss' source(none);
 @import 'flatpickr/dist/flatpickr.min.css';
 @import './modal.css';
 @import './loader.css';
@@ -12,7 +12,6 @@
 @source "../js";
 @source "../../lib/plausible_web";
 @source "../../extra/lib/plausible_web";
-
 
 /* Tailwind v3 compatibility: restore v3 default border and ring styling */
 

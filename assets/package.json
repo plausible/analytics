@@ -4,7 +4,7 @@
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "test": "TZ=UTC jest",
-    "format": "prettier --write",
+    "format": "prettier --write \"**/*.{js,css,ts,tsx}\"",
     "check-format": "prettier --check \"**/*.{js,css,ts,tsx}\"",
     "eslint": "eslint js/**",
     "stylelint": "stylelint css/**",
