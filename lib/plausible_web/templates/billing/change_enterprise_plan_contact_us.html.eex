@@ -3,7 +3,7 @@
 </div>
 
 <div class="w-full max-w-lg px-4 mx-auto mt-4">
-  <div class="flex-1 p-8 mt-8 bg-white rounded-xs shadow-md dark:bg-gray-800">
+  <div class="flex-1 p-8 mt-8 bg-white rounded-sm shadow-md dark:bg-gray-800">
     <div class="w-full pb-4 dark:text-gray-100">
       <span>Looking to adjust your plan?</span>
     </div>

@@ -265,7 +265,7 @@ const SeeMoreMenu = ({
             aria-hidden="true"
             className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 pr-[3px]"
           >
-            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow-xs px-[3px] py-[1px] flex items-center rounded-xs bg-gray-100 dark:bg-gray-850">
+            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow-sm px-[3px] py-[1px] flex items-center rounded-xs bg-gray-100 dark:bg-gray-850">
               +{filtersInMenuCount}
             </div>
           </div>

@@ -59,7 +59,7 @@ export const SegmentMenu = () => {
   }
 
   return (
-    <div className="flex shadow-xs">
+    <div className="flex shadow-sm">
       <AppNavigationLink
         className={classNames(
           popover.toggleButton.classNames.rounded,

@@ -48,7 +48,7 @@
                 class="hidden mr-6 sm:block"
               >
                 <.styled_link
-                  class="text-sm text-yellow-900 dark:text-yellow-900 rounded-xs px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
+                  class="text-sm text-yellow-900 dark:text-yellow-900 rounded-sm px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
                   href={Routes.settings_path(@conn, :subscription)}
                 >
                   {trial_notification(@conn.assigns[:current_team])}
@@ -167,7 +167,7 @@
                     Login
                   </a>
                 </div>
-                <div class="inline-flex ml-6 rounded-xs shadow-xs">
+                <div class="inline-flex ml-6 rounded-sm shadow-sm">
                   <a
                     href="/register"
                     class="inline-flex items-center justify-center px-5 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-hidden focus:ring transition duration-150 ease-in-out"

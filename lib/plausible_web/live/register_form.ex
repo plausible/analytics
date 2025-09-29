@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       <div class="text-xl font-medium">Lightweight and privacy-friendly web analytics</div>
     </div>
 
-    <div class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded-xs px-8 py-6 mb-4 mt-8">
+    <div class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded-sm px-8 py-6 mb-4 mt-8">
       <h2 class="text-xl font-black dark:text-gray-100">Invitation expired</h2>
 
       <p class="mt-4">

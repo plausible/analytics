@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden">
       <div class="w-1/2 h-full">
         <div
-          class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded-xs px-8 pt-6 pb-8 mb-4 mt-8"
+          class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded-sm px-8 pt-6 pb-8 mb-4 mt-8"
           phx-click-away="close-token-modal"
         >
           <%= if @token_generated do %>

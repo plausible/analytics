@@ -455,7 +455,7 @@ defmodule PlausibleWeb.Components.Generic do
       >
         <span
           aria-hidden="true"
-          class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out"
+          class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
           x-bind:class={"#{@js_active_var} ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"}
         />
       </span>
@@ -484,7 +484,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def tile(assigns) do
     ~H"""
-    <div class="shadow-xs bg-white dark:bg-gray-800 rounded-md mb-6">
+    <div class="shadow-sm bg-white dark:bg-gray-800 rounded-md mb-6">
       <header class="relative py-4 px-6">
         <.title>
           {render_slot(@title)}
@@ -580,7 +580,7 @@ defmodule PlausibleWeb.Components.Generic do
           x-transition:leave-start="opacity-100"
           x-transition:leave-end="opacity-0"
         >
-          <div class="bg-gray-900 text-white rounded-xs px-2.5 py-1.5 text-xs font-medium">
+          <div class="bg-gray-900 text-white rounded-sm px-2.5 py-1.5 text-xs font-medium">
             {render_slot(@tooltip_content)}
           </div>
         </div>

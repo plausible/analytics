@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Components.Billing.PageviewSlider do
             phx-change="slide"
             id="slider"
             name="slider"
-            class="shadow-xs dark:bg-gray-600 dark:border-none"
+            class="shadow-sm dark:bg-gray-600 dark:border-none"
             type="range"
             min="0"
             max={length(@available_volumes)}

@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
       phx-change="validate"
       phx-submit="set"
       phx-trigger-action={@trigger_submit}
-      class="bg-white dark:bg-gray-800 max-w-md w-full mx-auto shadow-md rounded-xs px-8 py-6 mt-8"
+      class="bg-white dark:bg-gray-800 max-w-md w-full mx-auto shadow-md rounded-sm px-8 py-6 mt-8"
     >
       <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
       <h2 class="text-xl font-black dark:text-gray-100">

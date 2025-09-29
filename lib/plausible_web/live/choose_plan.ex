@@ -324,7 +324,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div class="lg:flex-1 lg:order-3 lg:justify-end flex">
       <div class="relative">
         <.two_months_free />
-        <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white dark:bg-gray-700 p-1 text-center text-sm font-semibold leading-5 shadow-xs dark:ring-gray-600">
+        <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white dark:bg-gray-700 p-1 text-center text-sm font-semibold leading-5 shadow-sm dark:ring-gray-600">
           <label
             class={"cursor-pointer rounded-full px-2.5 py-1 text-gray-900 dark:text-white #{if @selected_interval == :monthly, do: "bg-indigo-600 text-white"}"}
             phx-click="set_interval"

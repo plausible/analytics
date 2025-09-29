@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Live.Components.Form do
           checked={@checked}
           id={@id}
           name={@name}
-          class="block h-5 w-5 rounded-xs dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+          class="block h-5 w-5 rounded-sm dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
           {@rest}
         />
         {@label}
