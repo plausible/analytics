@@ -25,10 +25,20 @@ defmodule Plausible.ConsolidatedView do
     with :ok <- ensure_eligible(team), do: do_enable(team)
   end
 
+  @spec enabled?(Team.t()) :: boolean
+  def enabled?(%Team{} = team) do
+    not is_nil(get(team))
+  end
+
   @spec disable(Team.t()) :: :ok
   def disable(%Team{} = team) do
     Plausible.Repo.delete_all(from(s in sites(), where: s.domain == ^make_id(team)))
     :ok
+  end
+
+  @spec has_sites_to_consolidate?(Team.t()) :: boolean()
+  def has_sites_to_consolidate?(%Team{} = team) do
+    Teams.owned_sites_count(team) > 0
   end
 
   @spec site_ids(Team.t() | String.t()) :: {:ok, [pos_integer()]} | {:error, :not_found}
@@ -90,10 +100,6 @@ defmodule Plausible.ConsolidatedView do
   # TODO: Only active trials and business subscriptions should be eligible.
   # This function should also call a new underlying feature module.
   defp ensure_eligible(%Team{} = team) do
-    if Plausible.Teams.owned_sites_count(team) == 0 do
-      {:error, :no_sites}
-    else
-      :ok
-    end
+    if has_sites_to_consolidate?(team), do: :ok, else: {:error, :no_sites}
   end
 end

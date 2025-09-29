@@ -7,13 +7,13 @@ defmodule Plausible.ConsolidatedViewTest do
     alias Plausible.ConsolidatedView
     import Plausible.Teams.Test
 
-    describe "enable/1" do
+    describe "enable/1 and enabled?/1" do
       setup [:create_user, :create_team]
 
       test "creates and persists a new consolidated site instance", %{team: team} do
         new_site(team: team)
         assert {:ok, %Plausible.Site{consolidated: true}} = ConsolidatedView.enable(team)
-        assert ConsolidatedView.get(team)
+        assert ConsolidatedView.enabled?(team)
       end
 
       test "is idempotent", %{team: team} do
@@ -30,6 +30,7 @@ defmodule Plausible.ConsolidatedViewTest do
 
       test "returns {:error, :no_sites} when the team does not have any sites", %{team: team} do
         assert {:error, :no_sites} = ConsolidatedView.enable(team)
+        refute ConsolidatedView.enabled?(team)
       end
 
       @tag :skip
