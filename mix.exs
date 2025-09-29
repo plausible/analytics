@@ -16,6 +16,7 @@ defmodule Plausible.MixProject do
       test_coverage: [
         tool: ExCoveralls
       ],
+      listeners: [Phoenix.CodeReloader],
       releases: [
         plausible: [
           include_executables_for: [:unix],
@@ -103,13 +104,13 @@ defmodule Plausible.MixProject do
       {:opentelemetry_exporter, "~> 1.6.0"},
       {:opentelemetry_phoenix, "~> 1.0"},
       {:opentelemetry_oban, "~> 1.1.1"},
-      {:phoenix, "~> 1.7.0"},
+      {:phoenix, "~> 1.8.0"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.5"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: [:dev, :ce_dev]},
       {:phoenix_pubsub, "~> 2.0"},
-      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_live_view, "~> 1.1"},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
       {:plug_cowboy, "~> 2.3"},
@@ -153,7 +154,7 @@ defmodule Plausible.MixProject do
       {:odgn_json_pointer, "~> 3.0.1"},
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]},
-      {:phoenix_storybook, "~> 0.8"},
+      {:phoenix_storybook, "~> 0.9"},
       {:libcluster, "~> 3.5"}
     ]
   end
