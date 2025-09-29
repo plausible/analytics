@@ -66,26 +66,28 @@ defmodule Plausible.ConsolidatedView do
     )
   end
 
-  @spec native_stats_start_at(Team.t()) :: NaiveDateTime.t() | nil
-  def native_stats_start_at(%Team{} = team) do
-    q =
-      from(sr in Site.regular(),
-        group_by: sr.team_id,
-        where: sr.team_id == ^team.id,
-        select: min(sr.native_stats_start_at)
-      )
+  @spec change_stats_dates(Site.t() | Ecto.Changeset.t(), Team.t()) ::
+          Ecto.Changeset.t() | Site.t()
+  def change_stats_dates(site_or_changeset, %Team{} = team) do
+    native_stats_start_at = native_stats_start_at(team)
 
-    Repo.one(q)
+    if native_stats_start_at do
+      start_date = NaiveDateTime.to_date(native_stats_start_at)
+
+      site_or_changeset
+      |> Site.set_native_stats_start_at(native_stats_start_at)
+      |> Site.set_stats_start_date(start_date)
+    else
+      site_or_changeset
+    end
   end
 
   defp do_enable(%Team{} = team) do
     case get(team) do
       nil ->
-        native_stats_start_at = native_stats_start_at(team)
-
         team
         |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
-        |> Site.set_native_stats_start_at(native_stats_start_at)
+        |> change_stats_dates(team)
         |> Repo.insert()
 
       consolidated_view ->
@@ -101,5 +103,16 @@ defmodule Plausible.ConsolidatedView do
   # This function should also call a new underlying feature module.
   defp ensure_eligible(%Team{} = team) do
     if has_sites_to_consolidate?(team), do: :ok, else: {:error, :no_sites}
+  end
+
+  defp native_stats_start_at(%Team{} = team) do
+    q =
+      from(sr in Site.regular(),
+        group_by: sr.team_id,
+        where: sr.team_id == ^team.id,
+        select: min(sr.native_stats_start_at)
+      )
+
+    Repo.one(q)
   end
 end

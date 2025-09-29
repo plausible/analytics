@@ -93,17 +93,10 @@ defmodule Plausible.ConsolidatedViewTest do
       end
     end
 
-    describe "native_stats_start_at/1" do
+    describe "stats start" do
       setup [:create_user, :create_team]
 
-      test "returns nil if no included sites", %{team: team} do
-        ConsolidatedView.enable(team)
-        assert is_nil(ConsolidatedView.native_stats_start_at(team))
-      end
-
       test "returns earliest native_stats_start_at from included sites", %{team: team} do
-        ConsolidatedView.enable(team)
-
         datetimes = [
           ~N[2024-01-01 12:00:00],
           ~N[2024-01-01 11:00:00],
@@ -112,7 +105,11 @@ defmodule Plausible.ConsolidatedViewTest do
 
         for dt <- datetimes, do: new_site(team: team, native_stats_start_at: dt)
 
-        assert ConsolidatedView.native_stats_start_at(team) == Enum.min(datetimes)
+        {:ok, view} = ConsolidatedView.enable(team)
+
+        min = Enum.min(datetimes)
+        assert view.native_stats_start_at == min
+        assert view.stats_start_date == NaiveDateTime.to_date(min)
       end
     end
   end
