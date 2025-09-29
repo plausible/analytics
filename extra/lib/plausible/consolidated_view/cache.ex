@@ -36,7 +36,7 @@ defmodule Plausible.ConsolidatedView.Cache do
       order_by: [desc: sc.id],
       select: %{
         consolidated_view_id: sc.domain,
-        site_ids: fragment("array_agg(?.id)", sr)
+        site_ids: fragment("array_agg(? ORDER BY ? DESC)", sr.id, sr.id)
       }
   end
 
@@ -56,7 +56,10 @@ defmodule Plausible.ConsolidatedView.Cache do
         where: sc.id in subquery(recently_updated_site_ids),
         group_by: sc.id,
         order_by: [desc: sc.id],
-        select: %{consolidated_view_id: sc.domain, site_ids: fragment("array_agg(?)", sr.id)}
+        select: %{
+          consolidated_view_id: sc.domain,
+          site_ids: fragment("array_agg(? ORDER BY ? DESC)", sr.id, sr.id)
+        }
 
     refresh(
       :updated_recently,

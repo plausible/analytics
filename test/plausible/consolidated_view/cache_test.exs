@@ -84,7 +84,7 @@ defmodule Plausible.CondolidatedView.CacheTest do
       :ok = Cache.refresh_all(cache_name: test)
 
       result = Cache.get(consolidated_view.domain, cache_name: test, force?: true)
-      assert ^result = Cache.get(consolidated_view.domain, cache_name: test)
+      assert ^result = Cache.get(consolidated_view.domain)
       assert ^result = Cache.get_from_source(consolidated_view.domain)
     end
 
