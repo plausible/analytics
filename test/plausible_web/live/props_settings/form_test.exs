@@ -147,7 +147,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
 
   defp type_into_combo(lv, id, text) do
     lv
-    |> element("input##{id}")
+    |> element("input#{id}")
     |> render_change(%{
       "_target" => ["display-#{id}"],
       "display-#{id}" => "#{text}"
