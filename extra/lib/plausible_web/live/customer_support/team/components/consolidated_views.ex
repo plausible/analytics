@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   @moduledoc """
-  [Experimental - new feature]
-
   Lists ConsolidatedViews of a team and allows creating one if none exist. Current
   limitation is one consolidated view per team, which always includes all sites of
   this team.
