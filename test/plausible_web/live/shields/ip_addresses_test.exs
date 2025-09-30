@@ -91,7 +91,7 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
       lv = get_liveview(conn, site)
       html = render(lv)
 
-      assert text(html) =~ "Your current IP address is: #{ip}"
+      assert text(html) =~ LazyHTML.html_escape("Your current IP address is: #{ip}")
       assert element_exists?(html, ~s/a[phx-click="prefill-own-ip-rule"]/)
     end
 

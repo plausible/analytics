@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       text = text(html)
       assert text =~ "My Personal Sites"
-      assert text =~ "You don't have any sites yet"
+      assert text =~ LazyHTML.html_escape("You don't have any sites yet")
       refute text =~ "You currently have no personal sites"
       refute text =~ "Go to your team"
     end
@@ -356,7 +356,8 @@ defmodule PlausibleWeb.Live.SitesTest do
         |> element(button_selector)
         |> render_click()
 
-      assert text(html) =~ "Looks like you've hit the pinned sites limit!"
+      assert html =~
+               LazyHTML.html_escape("Looks like you've hit the pinned sites limit!")
     end
 
     test "does not allow pinning site user doesn't have access to", %{conn: conn, user: user} do
