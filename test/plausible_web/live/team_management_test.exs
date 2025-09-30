@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       lv = get_liveview(conn)
       add_invite(lv, user.email, "admin")
 
-      assert lv |> render() |> text() =~
+      assert lv |> render() |> lazy_text() =~
                "Error! Make sure the e-mail is valid and is not taken already"
     end
 

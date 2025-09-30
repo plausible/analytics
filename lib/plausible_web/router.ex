@@ -36,6 +36,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["html"]
     plug :put_secure_browser_headers
     plug PlausibleWeb.Plugs.NoRobots
+    plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
   pipeline :csrf do
