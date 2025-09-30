@@ -62,11 +62,6 @@ defmodule Plausible.ConsolidatedView do
     :ok
   end
 
-  @spec has_sites_to_consolidate?(Team.t()) :: boolean()
-  def has_sites_to_consolidate?(%Team{} = team) do
-    Teams.owned_sites_count(team) > 0
-  end
-
   @spec site_ids(Team.t() | String.t()) :: {:ok, [pos_integer()]} | {:error, :not_found}
   def site_ids(consolidated_view_id) when is_binary(consolidated_view_id) do
     case get(consolidated_view_id) do
@@ -144,5 +139,9 @@ defmodule Plausible.ConsolidatedView do
       )
 
     Repo.one(q)
+  end
+
+  defp has_sites_to_consolidate?(%Team{} = team) do
+    Teams.owned_sites_count(team) > 0
   end
 end
