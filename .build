@@ -370,6 +370,7 @@ PlausibleWeb.CustomerSupport.Site.Components.People.html
 PlausibleWeb.CustomerSupport.Site.Components.RescueZone.html
 PlausibleWeb.CustomerSupport.Team.Components.Audit.html
 PlausibleWeb.CustomerSupport.Team.Components.Billing.html
+PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews.html
 PlausibleWeb.CustomerSupport.Team.Components.Members.html
 PlausibleWeb.CustomerSupport.Team.Components.Overview.html
 PlausibleWeb.CustomerSupport.Team.Components.SSO.html
@@ -557,8 +558,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-43B27426.js
-dist/sidebar_items-1A467ACC.js
+dist/search_data-0633DAE9.js
+dist/sidebar_items-1667CFBB.js
 index.html
 readme.html
 search.html
