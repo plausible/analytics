@@ -218,7 +218,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert table_text =~ team.identifier
         assert table_text =~ "Dashboard"
-        assert table_text =~ "Settings"
 
         assert element_exists?(html, @delete_consolidated_view_button)
       end

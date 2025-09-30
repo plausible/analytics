@@ -29,7 +29,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
             <.th>Domain</.th>
             <.th>Timezone</.th>
             <.th invisible>Dashboard</.th>
-            <.th invisible>Settings</.th>
             <.th invisible>Delete</.th>
           </:thead>
 
@@ -42,21 +41,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
                 href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, consolidated_view.domain, [])}
               >
                 Dashboard
-              </.styled_link>
-            </.td>
-            <.td>
-              <.styled_link
-                new_tab={true}
-                href={
-                  Routes.site_path(
-                    PlausibleWeb.Endpoint,
-                    :settings_general,
-                    consolidated_view.domain,
-                    []
-                  )
-                }
-              >
-                Settings
               </.styled_link>
             </.td>
             <.td>
