@@ -25,7 +25,7 @@ defmodule Plausible.ConsolidatedView do
         if has_sites_to_consolidate?(team) do
           consolidated_view
           |> change_stats_dates(team)
-          |> bump_updateed_at()
+          |> bump_updated_at()
           |> Repo.update!()
         else
           disable(team)
@@ -37,7 +37,7 @@ defmodule Plausible.ConsolidatedView do
 
   @spec sites(Ecto.Query.t() | Site) :: Ecto.Query.t()
   def sites(q \\ Site) do
-    from s in q, where: s.consolidated == true
+    from(s in q, where: s.consolidated == true)
   end
 
   @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :no_sites}
@@ -78,7 +78,7 @@ defmodule Plausible.ConsolidatedView do
 
   def get(id) when is_binary(id) do
     Repo.one(
-      from s in sites(), inner_join: assoc(s, :team), where: s.domain == ^id, preload: [:team]
+      from(s in sites(), inner_join: assoc(s, :team), where: s.domain == ^id, preload: [:team])
     )
   end
 
@@ -98,7 +98,7 @@ defmodule Plausible.ConsolidatedView do
     end
   end
 
-  defp bump_updateed_at(struct_or_changeset) do
+  defp bump_updated_at(struct_or_changeset) do
     Ecto.Changeset.change(struct_or_changeset, updated_at: NaiveDateTime.utc_now(:second))
   end
 
