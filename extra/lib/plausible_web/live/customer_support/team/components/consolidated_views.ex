@@ -9,13 +9,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   alias Plausible.ConsolidatedView
 
   def update(%{team: team}, socket) do
-    cvs =
-      case ConsolidatedView.get(team) do
-        nil -> []
-        cv -> [cv]
-      end
-
-    {:ok, assign(socket, team: team, consolidated_views: cvs)}
+    consolidated_views = ConsolidatedView.get(team) |> List.wrap()
+    {:ok, assign(socket, team: team, consolidated_views: consolidated_views)}
   end
 
   def render(assigns) do
@@ -76,9 +71,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
 
   def handle_event("create-consolidated-view", _, socket) do
     case ConsolidatedView.enable(socket.assigns.team) do
-      {:ok, cv} ->
+      {:ok, consolidated_view} ->
         success("Consolidated view created")
-        {:noreply, assign(socket, consolidated_views: [cv])}
+        {:noreply, assign(socket, consolidated_views: [consolidated_view])}
 
       {:error, _} ->
         failure("Could not create consolidated View")
