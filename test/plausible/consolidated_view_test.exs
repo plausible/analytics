@@ -35,6 +35,22 @@ defmodule Plausible.ConsolidatedViewTest do
 
       @tag :skip
       test "returns {:error, :upgrade_required} when team ineligible for this feature"
+
+      test "creates consolidated view with stats start dates of the oldest site", %{team: team} do
+        datetimes = [
+          ~N[2024-01-01 12:00:00],
+          ~N[2024-01-01 11:00:00],
+          ~N[2024-02-01 12:00:00]
+        ]
+
+        for dt <- datetimes, do: new_site(team: team, native_stats_start_at: dt)
+
+        {:ok, view} = ConsolidatedView.enable(team)
+
+        min = Enum.min(datetimes)
+        assert view.native_stats_start_at == min
+        assert view.stats_start_date == NaiveDateTime.to_date(min)
+      end
     end
 
     describe "disable/1" do
@@ -90,26 +106,6 @@ defmodule Plausible.ConsolidatedViewTest do
         assert is_nil(ConsolidatedView.get(team.identifier))
         ConsolidatedView.enable(team)
         assert %Plausible.Site{} = ConsolidatedView.get(team.identifier)
-      end
-    end
-
-    describe "stats start" do
-      setup [:create_user, :create_team]
-
-      test "returns earliest native_stats_start_at from included sites", %{team: team} do
-        datetimes = [
-          ~N[2024-01-01 12:00:00],
-          ~N[2024-01-01 11:00:00],
-          ~N[2024-02-01 12:00:00]
-        ]
-
-        for dt <- datetimes, do: new_site(team: team, native_stats_start_at: dt)
-
-        {:ok, view} = ConsolidatedView.enable(team)
-
-        min = Enum.min(datetimes)
-        assert view.native_stats_start_at == min
-        assert view.stats_start_date == NaiveDateTime.to_date(min)
       end
     end
 
