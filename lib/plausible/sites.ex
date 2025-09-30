@@ -356,8 +356,7 @@ defmodule Plausible.Sites do
       site
       |> Plausible.ConsolidatedView.change_stats_dates(team)
       |> Repo.update!()
-
-      site.stats_start_date
+      |> Map.fetch!(:stats_start_date)
     end
   end
 
