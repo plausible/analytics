@@ -17,26 +17,26 @@ defmodule Plausible.ConsolidatedView do
 
   @spec reset_if_enabled(Team.t()) :: :ok
   def reset_if_enabled(%Team{} = team) do
-    {:ok, :done} =
-      Repo.transaction(fn ->
-        case get(team) do
-          nil ->
-            :skip
+    transaction = fn ->
+      case get(team) do
+        nil ->
+          :skip
 
-          consolidated_view ->
-            if has_sites_to_consolidate?(team) do
-              consolidated_view
-              |> change_stats_dates(team)
-              |> bump_updateed_at()
-              |> Repo.update!()
-            else
-              disable(team)
-            end
-        end
+        consolidated_view ->
+          if has_sites_to_consolidate?(team) do
+            consolidated_view
+            |> change_stats_dates(team)
+            |> bump_updateed_at()
+            |> Repo.update!()
+          else
+            disable(team)
+          end
+      end
 
-        :done
-      end)
+      :done
+    end
 
+    {:ok, :done} = Repo.transaction(transaction)
     :ok
   end
 
