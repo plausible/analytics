@@ -60,7 +60,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
               </.styled_link>
             </.td>
             <.td>
-              <.delete_button phx-click="delete-consolidated-view" phx-target={@myself} />
+              <.delete_button
+                phx-click="delete-consolidated-view"
+                phx-target={@myself}
+                data-confirm="Are you sure you want to delete this consolidated view?"
+              />
             </.td>
           </:tbody>
         </.table>
