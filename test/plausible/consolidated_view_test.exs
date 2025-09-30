@@ -7,13 +7,13 @@ defmodule Plausible.ConsolidatedViewTest do
     alias Plausible.ConsolidatedView
     import Plausible.Teams.Test
 
-    describe "enable/1" do
+    describe "enable/1 and enabled?/1" do
       setup [:create_user, :create_team]
 
       test "creates and persists a new consolidated site instance", %{team: team} do
         new_site(team: team)
         assert {:ok, %Plausible.Site{consolidated: true}} = ConsolidatedView.enable(team)
-        assert ConsolidatedView.get(team)
+        assert ConsolidatedView.enabled?(team)
       end
 
       test "is idempotent", %{team: team} do
@@ -30,10 +30,27 @@ defmodule Plausible.ConsolidatedViewTest do
 
       test "returns {:error, :no_sites} when the team does not have any sites", %{team: team} do
         assert {:error, :no_sites} = ConsolidatedView.enable(team)
+        refute ConsolidatedView.enabled?(team)
       end
 
       @tag :skip
       test "returns {:error, :upgrade_required} when team ineligible for this feature"
+
+      test "creates consolidated view with stats start dates of the oldest site", %{team: team} do
+        datetimes = [
+          ~N[2024-01-01 12:00:00],
+          ~N[2024-01-01 11:00:00],
+          ~N[2024-02-01 12:00:00]
+        ]
+
+        for dt <- datetimes, do: new_site(team: team, native_stats_start_at: dt)
+
+        {:ok, view} = ConsolidatedView.enable(team)
+
+        min = Enum.min(datetimes)
+        assert view.native_stats_start_at == min
+        assert view.stats_start_date == NaiveDateTime.to_date(min)
+      end
     end
 
     describe "disable/1" do
@@ -92,26 +109,32 @@ defmodule Plausible.ConsolidatedViewTest do
       end
     end
 
-    describe "native_stats_start_at/1" do
+    # see also: Site.RemovalTest and Sites.TransferTest
+    describe "reset_if_enabled/1" do
       setup [:create_user, :create_team]
 
-      test "returns nil if no included sites", %{team: team} do
-        ConsolidatedView.enable(team)
-        assert is_nil(ConsolidatedView.native_stats_start_at(team))
+      test "no-op if disabled", %{team: team} do
+        :ok = ConsolidatedView.reset_if_enabled(team)
+        refute ConsolidatedView.enabled?(team)
+        refute ConsolidatedView.get(team)
       end
 
-      test "returns earliest native_stats_start_at from included sites", %{team: team} do
-        ConsolidatedView.enable(team)
+      @tag :slow
+      test "re-enables", %{team: team} do
+        _site = new_site(team: team, native_stats_start_at: ~N[2024-01-01 12:00:00])
 
-        datetimes = [
-          ~N[2024-01-01 12:00:00],
-          ~N[2024-01-01 11:00:00],
-          ~N[2024-02-01 12:00:00]
-        ]
+        {:ok, first_enable} = ConsolidatedView.enable(team)
 
-        for dt <- datetimes, do: new_site(team: team, native_stats_start_at: dt)
+        another_site = new_site(team: team, native_stats_start_at: ~N[2024-01-01 10:00:00])
 
-        assert ConsolidatedView.native_stats_start_at(team) == Enum.min(datetimes)
+        Process.sleep(1_000)
+
+        :ok = ConsolidatedView.reset_if_enabled(team)
+        assert ConsolidatedView.enabled?(team)
+
+        consolidated_view = ConsolidatedView.get(team)
+        assert consolidated_view.native_stats_start_at == another_site.native_stats_start_at
+        assert NaiveDateTime.after?(consolidated_view.updated_at, first_enable.updated_at)
       end
     end
   end
