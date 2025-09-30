@@ -6,10 +6,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   """
   use PlausibleWeb, :live_component
   import PlausibleWeb.CustomerSupport.Live
+  alias Plausible.ConsolidatedView
 
   def update(%{team: team}, socket) do
     cvs =
-      case Plausible.ConsolidatedView.get(team) do
+      case ConsolidatedView.get(team) do
         nil -> []
         cv -> [cv]
       end
@@ -74,7 +75,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   end
 
   def handle_event("create-consolidated-view", _, socket) do
-    case Plausible.ConsolidatedView.enable(socket.assigns.team) do
+    case ConsolidatedView.enable(socket.assigns.team) do
       {:ok, cv} ->
         success("Consolidated view created")
         {:noreply, assign(socket, consolidated_views: [cv])}
@@ -86,7 +87,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   end
 
   def handle_event("delete-consolidated-view", _, socket) do
-    Plausible.ConsolidatedView.disable(socket.assigns.team)
+    ConsolidatedView.disable(socket.assigns.team)
     success("Deleted consolidated view")
     {:noreply, assign(socket, consolidated_views: [])}
   end
