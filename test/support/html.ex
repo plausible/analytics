@@ -5,6 +5,27 @@ defmodule Plausible.Test.Support.HTML do
   Floki wrappers to help make assertions about HTML/DOM structures
   """
 
+  def lazy_text(html) do
+    html
+    |> LazyHTML.from_document()
+    |> LazyHTML.text()
+    |> String.trim()
+    |> String.replace(~r/\s+/, " ")
+  end
+
+  def lazy_text_of_attr(html, attr) do
+    case LazyHTML.attribute(LazyHTML.from_fragment(html), attr) do
+      [] ->
+        nil
+
+      [value] ->
+        value
+
+      [_ | _] ->
+        raise "Multiple attributes found. Narrow down the element you are looking for"
+    end
+  end
+
   def element_exists?(html, selector) do
     html
     |> find(selector)

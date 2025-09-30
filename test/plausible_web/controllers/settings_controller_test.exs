@@ -964,7 +964,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "renders form with error on no fields filled", %{conn: conn} do
       conn = post(conn, Routes.settings_path(conn, :update_email), %{"user" => %{"email" => ""}})
 
-      assert text(html_response(conn, 200)) =~ "can't be blank"
+      assert text(html_response(conn, 200)) =~ LazyHTML.html_escape("can't be blank")
     end
 
     test "renders form with error on invalid password", %{conn: conn, user: user} do

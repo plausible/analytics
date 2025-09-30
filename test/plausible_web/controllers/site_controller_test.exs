@@ -1880,8 +1880,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
       assert resp =~ Routes.site_path(conn, :change_domain_submit, site.domain)
 
-      assert text(resp) =~
-               "Once you change your domain, you must update Plausible Installation on your site within 72 hours"
+      assert resp =~
+               "Once you change your domain, you <i>must</i>\n    update Plausible Installation on your site within 72 hours"
     end
 
     test "domain change form submission when no change is made", %{conn: conn, site: site} do
@@ -2027,7 +2027,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         )
 
       html = html_response(conn, 200)
-      assert text(html) =~ "This team doesn't have a subscription"
+      assert text(html) =~ LazyHTML.html_escape("This team doesn't have a subscription")
     end
 
     @tag :ee_only
@@ -2050,7 +2050,11 @@ defmodule PlausibleWeb.SiteControllerTest do
         )
 
       html = html_response(conn, 200)
-      assert text(html) =~ "This site's usage is over the limits of the team's subscription"
+
+      assert html =~
+               LazyHTML.html_escape(
+                 "This site's usage is over the limits of the team's subscription"
+               )
     end
 
     test "change team form error: unknown team identifier", %{

@@ -19,9 +19,9 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         |> Plausible.Repo.update!()
 
         conn = get(conn, "/#{site.domain}/settings/funnels")
-        resp = conn |> html_response(200) |> text()
+        resp = conn |> html_response(200)
 
-        assert resp =~ "please upgrade your subscription"
+        assert lazy_text(resp) =~ "please upgrade your subscription"
       end
 
       test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
@@ -316,15 +316,15 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv = get_liveview(conn, site)
 
         lv
-        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{f1_id}"]/)
         |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")
 
-        assert lv |> element("#step-1") |> render() |> text_of_attr("value") ==
+        assert lv |> element("#step-1") |> render() |> lazy_text_of_attr("value") ==
                  "Visit /go/to/blog/**"
 
-        assert lv |> element("#step-2") |> render() |> text_of_attr("value") == "Signup"
+        assert lv |> element("#step-2") |> render() |> lazy_text_of_attr("value") == "Signup"
       end
 
       test "clicking save after editing the funnel, updates it", %{
@@ -337,7 +337,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv = get_liveview(conn, site)
 
         lv
-        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{f1_id}"]/)
         |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")
