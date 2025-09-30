@@ -7,7 +7,7 @@ import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
-import { addFilter } from '../../query'
+import { addFilter, revenueAvailable } from '../../query'
 import { SortDirection } from '../../hooks/use-order-by'
 
 const VIEWS = {
@@ -37,6 +37,9 @@ const VIEWS = {
 function LocationsModal({ currentView }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
+
+  /*global BUILD_EXTRA*/
+  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   let reportInfo = VIEWS[currentView]
   reportInfo = {
@@ -75,8 +78,10 @@ function LocationsModal({ currentView }) {
           renderLabel: (_query) => 'Conversions',
           width: 'w-28'
         }),
-        metrics.createConversionRate()
-      ]
+        metrics.createConversionRate(),
+        showRevenueMetrics && metrics.createTotalRevenue(),
+        showRevenueMetrics && metrics.createAverageRevenue()
+      ].filter((metric) => !!metric)
     }
 
     if (query.period === 'realtime') {
