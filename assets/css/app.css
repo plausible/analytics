@@ -1,15 +1,72 @@
-@import 'tailwindcss/base';
-@import 'flatpickr/dist/flatpickr.min.css';
-@import './modal.css';
-@import './loader.css';
-@import './tooltip.css';
-@import './flatpickr-colors.css';
-@import './chartjs.css';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import 'tailwindcss' source(none);
+@import 'flatpickr/dist/flatpickr.min.css' layer(components);
+@import './modal.css' layer(components);
+@import './loader.css' layer(components);
+@import './tooltip.css' layer(components);
+@import './flatpickr-colors.css' layer(components);
+@import './chartjs.css' layer(components);
 
-[x-cloak] {
-  display: none;
+@plugin "@tailwindcss/forms";
+
+@source "../css";
+@source "../js";
+@source "../../lib/plausible_web";
+@source "../../extra/lib/plausible_web";
+
+/* Tailwind v3 compatibility: restore v3 default border and ring styling */
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@theme {
+  /* Color aliases from tailwind.config.js */
+
+  /* yellow: colors.amber - Map yellow to amber colors */
+  --color-yellow-50: var(--color-amber-50);
+  --color-yellow-100: var(--color-amber-100);
+  --color-yellow-200: var(--color-amber-200);
+  --color-yellow-300: var(--color-amber-300);
+  --color-yellow-400: var(--color-amber-400);
+  --color-yellow-500: var(--color-amber-500);
+  --color-yellow-600: var(--color-amber-600);
+  --color-yellow-700: var(--color-amber-700);
+  --color-yellow-800: var(--color-amber-800);
+  --color-yellow-900: var(--color-amber-900);
+  --color-yellow-950: var(--color-amber-950);
+
+  /* gray: colors.slate - Map gray to slate colors */
+  --color-gray-50: var(--color-slate-50);
+  --color-gray-100: var(--color-slate-100);
+  --color-gray-200: var(--color-slate-200);
+  --color-gray-300: var(--color-slate-300);
+  --color-gray-400: var(--color-slate-400);
+  --color-gray-500: var(--color-slate-500);
+  --color-gray-600: var(--color-slate-600);
+  --color-gray-700: var(--color-slate-700);
+  --color-gray-800: var(--color-slate-800);
+  --color-gray-900: var(--color-slate-900);
+
+  /* Custom gray shades from config (override some slate values) */
+  --color-gray-150: rgb(234 238 244);
+  --color-gray-825: rgb(37 47 63);
+  --color-gray-850: rgb(26 32 44);
+  --color-gray-950: rgb(13 18 30);
+
+  /* Set v3 default ring behavior */
+  --default-ring-width: 3px;
+  --default-ring-color: var(--color-blue-500);
 }
 
 @media print {
@@ -19,8 +76,22 @@
   }
 }
 
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
+@custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
+
+[x-cloak] {
+  display: none;
+}
+
 .button {
-  @apply inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+  @apply inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
 }
 
 .button[disabled] {
@@ -58,7 +129,7 @@ blockquote {
   @apply px-4 py-2 my-4 border-l-4 border-gray-500;
 }
 
-@screen xl {
+@media (width >= 1280px) {
   .container {
     max-width: 70rem;
   }
@@ -68,7 +139,7 @@ blockquote {
   height: 920px;
 }
 
-@screen md {
+@media (width >= 768px) {
   .pricing-table {
     height: auto;
   }

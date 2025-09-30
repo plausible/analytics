@@ -3,7 +3,10 @@ defmodule PlausibleWeb.Live.Installation do
   User assistance module around Plausible installation instructions/onboarding
   """
   use PlausibleWeb, :live_view
-  alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
+
+  on_ee do
+    alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
+  end
 
   @script_extension_params %{
     "outbound_links" => "outbound-links",
@@ -68,16 +71,18 @@ defmodule PlausibleWeb.Live.Installation do
           {key, Map.get(tracker_script_configuration, string_key)}
         end)
 
-      if connected?(socket) and is_nil(installation_type) do
-        LegacyVerification.Checks.run("https://#{domain}", domain,
-          checks: [
-            Checks.FetchBody,
-            Checks.ScanBody
-          ],
-          report_to: self(),
-          async?: true,
-          slowdown: 0
-        )
+      on_ee do
+        if connected?(socket) and is_nil(installation_type) do
+          LegacyVerification.Checks.run("https://#{domain}", domain,
+            checks: [
+              Checks.FetchBody,
+              Checks.ScanBody
+            ],
+            report_to: self(),
+            async?: true,
+            slowdown: 0
+          )
+        end
       end
 
       {:ok,
@@ -95,23 +100,25 @@ defmodule PlausibleWeb.Live.Installation do
     end
   end
 
-  def handle_info({:all_checks_done, %State{} = state}, socket) do
-    installation_type =
-      case state.diagnostics do
-        %{wordpress_likely?: true} -> "wordpress"
-        %{gtm_likely?: true} -> "gtm"
-        _ -> "manual"
-      end
+  on_ee do
+    def handle_info({:all_checks_done, %State{} = state}, socket) do
+      installation_type =
+        case state.diagnostics do
+          %{wordpress_likely?: true} -> "wordpress"
+          %{gtm_likely?: true} -> "gtm"
+          _ -> "manual"
+        end
 
-    {:noreply,
-     assign(socket,
-       initial_installation_type: installation_type,
-       installation_type: installation_type
-     )}
-  end
+      {:noreply,
+       assign(socket,
+         initial_installation_type: installation_type,
+         installation_type: installation_type
+       )}
+    end
 
-  def handle_info(_msg, socket) do
-    {:noreply, socket}
+    def handle_info(_msg, socket) do
+      {:noreply, socket}
+    end
   end
 
   def render(assigns) do
@@ -305,7 +312,7 @@ defmodule PlausibleWeb.Live.Installation do
           id={"check-#{@variant}"}
           name={@variant}
           checked={Map.get(@config, @variant, false)}
-          class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
+          class="block h-5 w-5 rounded-sm dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
         />
         <label for={"check-#{@variant}"}>
           {@label}

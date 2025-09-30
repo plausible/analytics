@@ -196,7 +196,7 @@ defmodule PlausibleWeb.Components.Generic do
           <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
         </button>
         <div class="flex gap-x-3">
-          <div :if={@title} class="flex-shrink-0">
+          <div :if={@title} class="shrink-0">
             <svg
               class={"h-5 w-5 #{@theme.icon}"}
               viewBox="0 0 20 20"
@@ -296,7 +296,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-on:click.outside="close($refs.button)"
         style="display: none;"
         class={[
-          "origin-top-right absolute z-50 right-0 mt-2 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none",
+          "origin-top-right absolute z-50 right-0 mt-2 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5 focus:outline-none",
           @menu_class
         ]}
       >
@@ -450,12 +450,12 @@ defmodule PlausibleWeb.Components.Generic do
       {@rest}
     >
       <span
-        class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+        class="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
         x-bind:class={"#{@js_active_var} ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"}
       >
         <span
           aria-hidden="true"
-          class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+          class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
           x-bind:class={"#{@js_active_var} ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"}
         />
       </span>
@@ -484,7 +484,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def tile(assigns) do
     ~H"""
-    <div class="shadow bg-white dark:bg-gray-800 rounded-md mb-6">
+    <div class="shadow-sm bg-white dark:bg-gray-800 rounded-md mb-6">
       <header class="relative py-4 px-6">
         <.title>
           {render_slot(@title)}
@@ -580,7 +580,7 @@ defmodule PlausibleWeb.Components.Generic do
           x-transition:leave-start="opacity-100"
           x-transition:leave-end="opacity-0"
         >
-          <div class="bg-gray-900 text-white rounded px-2.5 py-1.5 text-xs font-medium">
+          <div class="bg-gray-900 text-white rounded-sm px-2.5 py-1.5 text-xs font-medium">
             {render_slot(@tooltip_content)}
           </div>
         </div>
@@ -918,7 +918,7 @@ defmodule PlausibleWeb.Components.Generic do
   def filter_bar(assigns) do
     ~H"""
     <div class="mb-6 flex items-center justify-between" x-data>
-      <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
+      <div :if={@filtering_enabled?} class="relative rounded-md shadow-xs flex">
         <form id="filter-form" phx-change="filter" phx-submit="filter" class="flex items-center">
           <div class="text-gray-800 inline-flex items-center">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -928,7 +928,7 @@ defmodule PlausibleWeb.Components.Generic do
               type="text"
               name="filter-text"
               id="filter-text"
-              class="w-36 sm:w-full pl-8 text-sm shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+              class="w-36 sm:w-full pl-8 text-sm shadow-xs dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
               placeholder="Press / to search"
               x-ref="filter_text"
               phx-debounce={200}

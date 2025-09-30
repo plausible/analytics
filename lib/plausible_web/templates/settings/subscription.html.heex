@@ -33,7 +33,7 @@
         team={@current_team}
         subscription={@subscription}
       />
-      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded dark:bg-gray-900">
+      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-900">
         <h4 class="font-black dark:text-gray-100">Next bill amount</h4>
         <%= if Plausible.Billing.Subscription.Status.in?(@subscription, [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()]) do %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">
@@ -46,7 +46,7 @@
           <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>
         <% end %>
       </div>
-      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded dark:bg-gray-900">
+      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-900">
         <h4 class="font-black dark:text-gray-100">Next bill date</h4>
 
         <%= if @subscription && @subscription.next_bill_date && Plausible.Billing.Subscription.Status.in?(@subscription, [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()]) do %>
@@ -94,7 +94,7 @@
           <%= if Application.get_env(:plausible, :environment) == "dev" do %>
             <a
               href={@subscription.update_url}
-              class="ml-2 font-medium rounded-md px-3.5 py-2.5 text-sm shadow-sm border border-gray-300 dark:border-gray-500 text-yellow-600 dark:text-yellow-400 bg-white dark:bg-gray-900"
+              class="ml-2 font-medium rounded-md px-3.5 py-2.5 text-sm shadow-xs border border-gray-300 dark:border-gray-500 text-yellow-600 dark:text-yellow-400 bg-white dark:bg-gray-900"
             >
               [DEV ONLY] Change subscription status
             </a>

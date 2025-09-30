@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
   def render(assigns) do
     ~H"""
     <div
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"
+      class="fixed inset-0 bg-gray-500/75 transition-opacity z-50"
       phx-window-keydown="cancel-allow-prop"
       phx-key="Escape"
     >
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
         <.form
           :let={f}
           for={@form}
-          class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
+          class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded-sm px-8 pt-6 pb-8 mb-4 mt-8"
           phx-submit="allow-prop"
           phx-click-away="cancel-allow-prop"
         >

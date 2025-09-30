@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Live.Flash do
       ]}
       {@rest}
     >
-      <div class="rounded-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
+      <div class="rounded-lg ring-1/5 ring-black overflow-hidden">
         <div class="p-4">
           <div class="flex items-start">
             {render_slot(@icon)}
@@ -124,7 +124,7 @@ defmodule PlausibleWeb.Live.Flash do
                 {render_slot(@message)}
               </p>
             </div>
-            <div class="ml-4 flex-shrink-0 flex">
+            <div class="ml-4 shrink-0 flex">
               <.clear_flash_button on_close={@on_close} key={@key} />
             </div>
           </div>
@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.Flash do
 
   def icon_success(assigns) do
     ~H"""
-    <div class="flex-shrink-0">
+    <div class="shrink-0">
       <svg
         class="h-6 w-6 text-green-400"
         xmlns="http://www.w3.org/2000/svg"
@@ -178,7 +178,7 @@ defmodule PlausibleWeb.Live.Flash do
   def clear_flash_button(assigns) do
     ~H"""
     <button
-      class="inline-flex text-gray-400 focus:outline-none focus:text-gray-500 dark:focus:text-gray-200 transition ease-in-out duration-150"
+      class="inline-flex text-gray-400 focus:outline-hidden focus:text-gray-500 dark:focus:text-gray-200 transition ease-in-out duration-150"
       phx-click={@on_close}
       phx-value-key={@key}
     >
