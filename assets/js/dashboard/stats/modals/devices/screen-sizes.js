@@ -39,7 +39,7 @@ function ScreenSizesModal() {
     <Modal>
       <BreakdownModal
         reportInfo={reportInfo}
-        metrics={chooseMetrics(query)}
+        metrics={chooseMetrics(query, site)}
         getFilterInfo={getFilterInfo}
         searchEnabled={false}
         renderIcon={renderIcon}
