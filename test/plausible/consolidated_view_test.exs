@@ -113,6 +113,7 @@ defmodule Plausible.ConsolidatedViewTest do
       end
     end
 
+    # see also: Site.RemovalTest and Sites.TransferTest
     describe "reset_if_enabled/1" do
       setup [:create_user, :create_team]
 

@@ -17,14 +17,24 @@ defmodule Plausible.ConsolidatedView do
 
   @spec reset_if_enabled(Team.t()) :: :ok
   def reset_if_enabled(%Team{} = team) do
-    {:ok, :ok} =
+    {:ok, :done} =
       Repo.transaction(fn ->
-        if enabled?(team) do
-          disable(team)
-          enable(team)
+        case get(team) do
+          nil ->
+            :skip
+
+          consolidated_view ->
+            if has_sites_to_consolidate?(team) do
+              consolidated_view
+              |> change_stats_dates(team)
+              |> bump_updateed_at()
+              |> Repo.update!()
+            else
+              disable(team)
+            end
         end
 
-        :ok
+        :done
       end)
 
     :ok
@@ -47,6 +57,7 @@ defmodule Plausible.ConsolidatedView do
 
   @spec disable(Team.t()) :: :ok
   def disable(%Team{} = team) do
+    # consider `Plausible.Site.Removal.run/1` if we ever support memberships or invitations
     Plausible.Repo.delete_all(from(s in sites(), where: s.domain == ^make_id(team)))
     :ok
   end
@@ -95,6 +106,10 @@ defmodule Plausible.ConsolidatedView do
     else
       site_or_changeset
     end
+  end
+
+  defp bump_updateed_at(struct_or_changeset) do
+    Ecto.Changeset.change(struct_or_changeset, updated_at: NaiveDateTime.utc_now(:second))
   end
 
   defp do_enable(%Team{} = team) do
