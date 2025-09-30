@@ -1693,7 +1693,7 @@ defmodule PlausibleWeb.Api.StatsController do
     if toplevel_goal_filter?(query) do
       metrics = [:visitors, :conversion_rate, :total_visitors]
 
-      if include_revenue? do
+      if ee?() and include_revenue? do
         metrics ++ [:average_revenue, :total_revenue]
       else
         metrics
