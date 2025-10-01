@@ -50,7 +50,7 @@ defmodule Plausible.Stats.SamplingCache do
   end
 
   @spec consolidated_get(list(pos_integer()), Keyword.t()) :: pos_integer() | nil
-  def consolidated_get(site_ids, opts \\ []) do
+  def consolidated_get(site_ids, opts \\ []) when is_list(site_ids) do
     events_ingested = Enum.sum_by(site_ids, &(get(&1, opts) || 0))
     if events_ingested > 0, do: events_ingested
   end
