@@ -29,6 +29,7 @@ defmodule PlausibleWeb.Router do
       plug PlausibleWeb.AuthPlug
       on_ee(do: plug(Plausible.Plugs.HandleExpiredSession))
       plug PlausibleWeb.Plugs.UserSessionTouch
+      plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
     end
   end
 
