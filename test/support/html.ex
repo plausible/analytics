@@ -84,8 +84,4 @@ defmodule Plausible.Test.Support.HTML do
   defp lazy_parse(element) when is_binary(element) do
     LazyHTML.from_fragment(element)
   end
-
-  defp lazy_parse(tree) when is_tuple(tree) do
-    LazyHTML.from_tree(tree)
-  end
 end
