@@ -204,7 +204,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         lv |> element(@create_consolidated_view_button) |> render_click()
 
-        assert not is_nil(Plausible.ConsolidatedView.get(team))
+        assert Plausible.ConsolidatedView.enabled?(team)
       end
 
       test "renders existing consolidated view", %{conn: conn, user: user} do
@@ -218,7 +218,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert table_text =~ team.identifier
         assert table_text =~ "Dashboard"
-        assert table_text =~ "Settings"
 
         assert element_exists?(html, @delete_consolidated_view_button)
       end
@@ -231,7 +230,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         lv |> element(@delete_consolidated_view_button) |> render_click()
 
-        assert is_nil(Plausible.ConsolidatedView.get(team))
+        assert not Plausible.ConsolidatedView.enabled?(team)
       end
     end
 

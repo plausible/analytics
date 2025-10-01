@@ -6,6 +6,7 @@ defmodule Plausible.ConsolidatedView do
   """
 
   use Plausible
+  alias Plausible.ConsolidatedView
 
   import Ecto.Query
 
@@ -105,10 +106,15 @@ defmodule Plausible.ConsolidatedView do
   defp do_enable(%Team{} = team) do
     case get(team) do
       nil ->
-        team
-        |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
-        |> change_stats_dates(team)
-        |> Repo.insert()
+        {:ok, consolidated_view} =
+          team
+          |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
+          |> change_stats_dates(team)
+          |> Repo.insert()
+
+        {:ok, site_ids} = site_ids(team)
+        :ok = ConsolidatedView.Cache.broadcast_put(consolidated_view.domain, site_ids)
+        {:ok, consolidated_view}
 
       consolidated_view ->
         {:ok, consolidated_view}
