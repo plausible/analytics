@@ -38,6 +38,9 @@ defmodule Plausible.Ingestion.Persistor.Remote do
             {:error, :persist_decode_error}
         end
 
+      {:ok, %{body: "no_session_for_engagement"}} ->
+        {:error, :no_session_for_engagement}
+
       {:ok, %{body: error}} ->
         log_error(site_id, current_user_id, previous_user_id, error)
         {:error, decode_error(error)}

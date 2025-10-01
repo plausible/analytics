@@ -6,6 +6,7 @@ defmodule Plausible.ConsolidatedView do
   """
 
   use Plausible
+  alias Plausible.ConsolidatedView
 
   import Ecto.Query
 
@@ -15,9 +16,29 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
+  @spec reset_if_enabled(Team.t()) :: :ok
+  def reset_if_enabled(%Team{} = team) do
+    case get(team) do
+      nil ->
+        :skip
+
+      consolidated_view ->
+        if has_sites_to_consolidate?(team) do
+          consolidated_view
+          |> change_stats_dates(team)
+          |> bump_updated_at()
+          |> Repo.update!()
+        else
+          disable(team)
+        end
+    end
+
+    :ok
+  end
+
   @spec sites(Ecto.Query.t() | Site) :: Ecto.Query.t()
   def sites(q \\ Site) do
-    from s in q, where: s.consolidated == true
+    from(s in q, where: s.consolidated == true)
   end
 
   @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :no_sites}
@@ -25,8 +46,14 @@ defmodule Plausible.ConsolidatedView do
     with :ok <- ensure_eligible(team), do: do_enable(team)
   end
 
+  @spec enabled?(Team.t()) :: boolean()
+  def enabled?(%Team{} = team) do
+    not is_nil(get(team))
+  end
+
   @spec disable(Team.t()) :: :ok
   def disable(%Team{} = team) do
+    # consider `Plausible.Site.Removal.run/1` if we ever support memberships or invitations
     Plausible.Repo.delete_all(from(s in sites(), where: s.domain == ^make_id(team)))
     :ok
   end
@@ -52,31 +79,42 @@ defmodule Plausible.ConsolidatedView do
 
   def get(id) when is_binary(id) do
     Repo.one(
-      from s in sites(), inner_join: assoc(s, :team), where: s.domain == ^id, preload: [:team]
+      from(s in sites(), inner_join: assoc(s, :team), where: s.domain == ^id, preload: [:team])
     )
   end
 
-  @spec native_stats_start_at(Team.t()) :: NaiveDateTime.t() | nil
-  def native_stats_start_at(%Team{} = team) do
-    q =
-      from(sr in Site.regular(),
-        group_by: sr.team_id,
-        where: sr.team_id == ^team.id,
-        select: min(sr.native_stats_start_at)
-      )
+  @spec change_stats_dates(Site.t() | Ecto.Changeset.t(), Team.t()) ::
+          Ecto.Changeset.t() | Site.t()
+  def change_stats_dates(site_or_changeset, %Team{} = team) do
+    native_stats_start_at = native_stats_start_at(team)
 
-    Repo.one(q)
+    if native_stats_start_at do
+      start_date = NaiveDateTime.to_date(native_stats_start_at)
+
+      site_or_changeset
+      |> Site.set_native_stats_start_at(native_stats_start_at)
+      |> Site.set_stats_start_date(start_date)
+    else
+      site_or_changeset
+    end
+  end
+
+  defp bump_updated_at(struct_or_changeset) do
+    Ecto.Changeset.change(struct_or_changeset, updated_at: NaiveDateTime.utc_now(:second))
   end
 
   defp do_enable(%Team{} = team) do
     case get(team) do
       nil ->
-        native_stats_start_at = native_stats_start_at(team)
+        {:ok, consolidated_view} =
+          team
+          |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
+          |> change_stats_dates(team)
+          |> Repo.insert()
 
-        team
-        |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
-        |> Site.set_native_stats_start_at(native_stats_start_at)
-        |> Repo.insert()
+        {:ok, site_ids} = site_ids(team)
+        :ok = ConsolidatedView.Cache.broadcast_put(consolidated_view.domain, site_ids)
+        {:ok, consolidated_view}
 
       consolidated_view ->
         {:ok, consolidated_view}
@@ -90,10 +128,21 @@ defmodule Plausible.ConsolidatedView do
   # TODO: Only active trials and business subscriptions should be eligible.
   # This function should also call a new underlying feature module.
   defp ensure_eligible(%Team{} = team) do
-    if Plausible.Teams.owned_sites_count(team) == 0 do
-      {:error, :no_sites}
-    else
-      :ok
-    end
+    if has_sites_to_consolidate?(team), do: :ok, else: {:error, :no_sites}
+  end
+
+  defp native_stats_start_at(%Team{} = team) do
+    q =
+      from(sr in Site.regular(),
+        group_by: sr.team_id,
+        where: sr.team_id == ^team.id,
+        select: min(sr.native_stats_start_at)
+      )
+
+    Repo.one(q)
+  end
+
+  defp has_sites_to_consolidate?(%Team{} = team) do
+    Teams.owned_sites_count(team) > 0
   end
 end

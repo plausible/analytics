@@ -348,25 +348,20 @@ defmodule Plausible.Sites do
   """
   def stats_start_date(site)
 
-  def stats_start_date(%Site{stats_start_date: %Date{} = date}) do
-    date
+  on_ee do
+    # for now, we're going to always update consolidated views
+    def stats_start_date(%Site{consolidated: true} = site) do
+      team = Repo.preload(site, :team).team
+
+      site
+      |> Plausible.ConsolidatedView.change_stats_dates(team)
+      |> Repo.update!()
+      |> Map.fetch!(:stats_start_date)
+    end
   end
 
-  on_ee do
-    def stats_start_date(%Site{consolidated: true} = site) do
-      native_stats_start_at = Plausible.ConsolidatedView.native_stats_start_at(site.team)
-
-      if native_stats_start_at do
-        start_date = NaiveDateTime.to_date(native_stats_start_at)
-
-        site
-        |> Site.set_native_stats_start_at(native_stats_start_at)
-        |> Site.set_stats_start_date(start_date)
-        |> Repo.update!()
-
-        start_date
-      end
-    end
+  def stats_start_date(%Site{stats_start_date: %Date{} = date}) do
+    date
   end
 
   def stats_start_date(%Site{} = site) do

@@ -440,6 +440,7 @@ defmodule Plausible.Teams.Invitations do
     on_ee do
       Billing.SiteLocker.update_for(prior_team, send_email?: false)
       :unlocked = Billing.SiteLocker.update_for(team, send_email?: false)
+      Plausible.ConsolidatedView.reset_if_enabled(prior_team)
     end
 
     :ok

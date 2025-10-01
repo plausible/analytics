@@ -54,21 +54,25 @@ defmodule Plausible.Stats.Sampling do
   end
 
   defp decide_sample_rate(site, query) do
-    sampling_adjustments? = FunWithFlags.enabled?(:sampling_adjustments, for: site)
-
-    site.id
-    |> SamplingCache.get()
-    |> fractional_sample_rate(query, sampling_adjustments?)
+    if Plausible.Sites.consolidated?(site) and not Enum.empty?(query.consolidated_site_ids) do
+      query.consolidated_site_ids
+      |> SamplingCache.consolidated_get()
+      |> fractional_sample_rate(query)
+    else
+      site.id
+      |> SamplingCache.get()
+      |> fractional_sample_rate(query)
+    end
   end
 
-  def fractional_sample_rate(nil = _traffic_30_day, _query, _sampling_adjustments?),
+  def fractional_sample_rate(nil = _traffic_30_day, _query),
     do: :no_sampling
 
-  def fractional_sample_rate(traffic_30_day, query, sampling_adjustments?) do
+  def fractional_sample_rate(traffic_30_day, query) do
     date_range = Query.date_range(query)
     duration = Date.diff(date_range.last, date_range.first)
 
-    estimated_traffic = estimate_traffic(traffic_30_day, duration, query, sampling_adjustments?)
+    estimated_traffic = estimate_traffic(traffic_30_day, duration, query)
 
     fraction =
       if(estimated_traffic > 0,
@@ -81,22 +85,16 @@ defmodule Plausible.Stats.Sampling do
       duration < 1 -> :no_sampling
       # If sampling doesn't have a significant effect, don't sample
       fraction > 0.4 -> :no_sampling
-      true -> max(fraction, min_sample_rate(sampling_adjustments?))
+      true -> max(fraction, min_sample_rate())
     end
   end
 
-  defp min_sample_rate(false = _sampling_adjustments?), do: 0.01
-  defp min_sample_rate(true = _sampling_adjustments?), do: 0.013
+  defp min_sample_rate(), do: 0.013
 
-  defp estimate_traffic(traffic_30_day, duration, query, sampling_adjustments?) do
+  defp estimate_traffic(traffic_30_day, duration, query) do
     duration_adjusted_traffic = traffic_30_day / 30.0 * duration
 
-    if sampling_adjustments? do
-      duration_adjusted_traffic
-      |> estimate_by_filters(query.filters)
-    else
-      duration_adjusted_traffic
-    end
+    estimate_by_filters(duration_adjusted_traffic, query.filters)
   end
 
   @filter_traffic_multiplier 1 / 20.0

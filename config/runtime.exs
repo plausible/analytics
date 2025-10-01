@@ -148,7 +148,7 @@ persistor_backend =
     "remote" -> Plausible.Ingestion.Persistor.Remote
   end
 
-persistor_backend_percent_enabled =
+{persistor_backend_percent_enabled, ""} =
   config_dir
   |> get_var_from_path_or_env("PERSISTOR_BACKEND_PERCENT_ENABLED", "0")
   |> Integer.parse()
