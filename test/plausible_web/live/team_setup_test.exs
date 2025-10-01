@@ -263,8 +263,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = lv |> render()
 
-      assert [_ | _] = find(html, "#{member_el()}:nth-of-type(1) a")
-      assert find(html, "#{member_el()}:nth-of-type(2) a") == []
+      assert Enum.count(find(html, "#{member_el()}:nth-of-type(1) a")) >= 2
+      refute element_exists?(html, "#{member_el()}:nth-of-type(2) a")
     end
 
     test "allows removing any type of entry", %{
