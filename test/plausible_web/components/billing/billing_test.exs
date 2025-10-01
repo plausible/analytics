@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Components.BillingTest do
       refute class_of_element(html, "#feature-gate-inner-block-container") =~
                "pointer-events-none"
 
-      refute class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur"
+      refute element_exists?(html, "#feature-gate-overlay")
     end
 
     test "renders upgrade cta linking to the upgrade page if user role is :owner", %{user: user} do
