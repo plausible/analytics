@@ -196,14 +196,14 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert length(find(html, member_el())) == 1
+      assert Enum.count(find(html, member_el())) == 1
 
       assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
 
       change_role(lv, 1, "viewer", guest_el())
       html = render(lv)
 
-      assert length(find(html, member_el())) == 2
+      assert Enum.count(find(html, member_el())) == 2
       refute element_exists?(html, "#guest-list")
 
       save_layout(lv)
