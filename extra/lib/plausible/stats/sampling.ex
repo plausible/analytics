@@ -56,7 +56,7 @@ defmodule Plausible.Stats.Sampling do
   defp decide_sample_rate(site, query) do
     sampling_adjustments? = FunWithFlags.enabled?(:sampling_adjustments, for: site)
 
-    if site.consolidated and not Enum.empty?(query.consolidated_site_ids) do
+    if Plausible.Sites.consolidated?(site) and not Enum.empty?(query.consolidated_site_ids) do
       query.consolidated_site_ids
       |> SamplingCache.consolidated_get()
       |> fractional_sample_rate(query, sampling_adjustments?)
