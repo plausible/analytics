@@ -566,6 +566,30 @@ defmodule PlausibleWeb.SiteControllerTest do
              ]
     end
 
+    @tag :ee_only
+    test "consolidated view settings sidebar items", %{
+      conn: conn,
+      user: user
+    } do
+      team = user |> team_of()
+      site = new_consolidated_view(team)
+      conn = get(conn, "/#{site.domain}/settings/general")
+      resp = html_response(conn, 200)
+
+      items =
+        resp
+        |> find("[data-testid=site_settings_sidebar] a")
+        |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
+
+      assert items == [
+               {"General", "/#{site.domain}/settings/general"},
+               {"Goals", "/#{site.domain}/settings/goals"},
+               {"Custom properties", "/#{site.domain}/settings/properties"},
+               {"Integrations", "/#{site.domain}/settings/integrations"},
+               {"Email reports", "/#{site.domain}/settings/email-reports"}
+             ]
+    end
+
     test "header and footer are shown", %{conn: conn, site: site, user: user} do
       conn = get(conn, "/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
