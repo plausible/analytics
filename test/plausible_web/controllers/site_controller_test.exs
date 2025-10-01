@@ -533,7 +533,7 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"Custom properties", "/#{site.domain}/settings/properties"},
                {"Integrations", "/#{site.domain}/settings/integrations"},
                {"Imports & exports", "/#{site.domain}/settings/imports-exports"},
-               {"Shields", ""},
+               {"Shields", nil},
                {"IP addresses", "/#{site.domain}/settings/shields/ip_addresses"},
                {"Countries", "/#{site.domain}/settings/shields/countries"},
                {"Pages", "/#{site.domain}/settings/shields/pages"},
@@ -565,7 +565,7 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"Custom properties", "/#{site.domain}/settings/properties"},
                {"Integrations", "/#{site.domain}/settings/integrations"},
                {"Imports & exports", "/#{site.domain}/settings/imports-exports"},
-               {"Shields", ""},
+               {"Shields", nil},
                {"IP addresses", "/#{site.domain}/settings/shields/ip_addresses"},
                {"Countries", "/#{site.domain}/settings/shields/countries"},
                {"Pages", "/#{site.domain}/settings/shields/pages"},
@@ -902,10 +902,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      assert text_of_attr(resp, ~s|a[href]|, "href") =~
-               "https://accounts.google.com/o/oauth2/"
+      assert element_exists?(resp, ~s|a[href^="https://accounts.google.com/o/oauth2/"]|)
 
-      assert resp =~ "Import data"
+      assert(resp =~ "Import data")
       assert resp =~ "There are no imports yet"
       assert resp =~ "Export data"
     end
@@ -928,7 +927,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
 
       buttons = find(resp, ~s|a[data-method="delete"]|)
-      assert length(buttons) == 4
+      assert Enum.count(buttons) == 4
 
       assert resp =~ "Google Analytics (123456)"
       assert resp =~ "9.9k"
@@ -2027,7 +2026,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         )
 
       html = html_response(conn, 200)
-      assert text(html) =~ LazyHTML.html_escape("This team doesn't have a subscription")
+      assert text(html) =~ "This team doesn't have a subscription"
     end
 
     @tag :ee_only
@@ -2051,10 +2050,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       html = html_response(conn, 200)
 
-      assert html =~
-               LazyHTML.html_escape(
-                 "This site's usage is over the limits of the team's subscription"
-               )
+      assert text(html) =~ "This site's usage is over the limits of the team's subscription"
     end
 
     test "change team form error: unknown team identifier", %{
