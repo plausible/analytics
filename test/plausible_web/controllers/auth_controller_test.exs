@@ -480,11 +480,10 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "renders `return_to` query param as hidden input", %{conn: conn} do
       conn = get(conn, "/login?return_to=/dummy.site")
 
-      [input_value] =
+      input_value =
         conn
         |> html_response(200)
-        |> Floki.parse_document!()
-        |> Floki.attribute("input[name=return_to]", "value")
+        |> text_of_attr("input[name=return_to]", "value")
 
       assert input_value == "/dummy.site"
     end

@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       refute element_exists?(doc, suggestion_li(16))
       refute element_exists?(doc, suggestion_li(17))
 
-      assert Floki.text(doc) =~ "Max results reached"
+      assert text(doc) =~ "Max results reached"
     end
 
     test "renders up to n suggestions if provided" do

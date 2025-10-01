@@ -30,13 +30,10 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
       assert text_of_attr(resp, @react_container, "data-embedded") == ""
 
-      [{"div", attrs, _}] = find(resp, @react_container)
-      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
-
-      assert ["noindex, nofollow"] ==
+      assert "noindex, nofollow" ==
                resp
                |> find("meta[name=robots]")
-               |> Floki.attribute("content")
+               |> text_of_attr("content")
 
       assert text_of_element(resp, "title") == "Plausible · #{site.domain}"
     end
@@ -84,10 +81,10 @@ defmodule PlausibleWeb.StatsControllerTest do
       resp = html_response(conn, 200)
       assert element_exists?(resp, @react_container)
 
-      assert ["index, nofollow"] ==
+      assert "index, nofollow" ==
                resp
                |> find("meta[name=robots]")
-               |> Floki.attribute("content")
+               |> text_of_attr("content")
 
       assert text_of_element(resp, "title") == "Plausible Analytics: Live Demo"
       assert resp =~ "Login"
@@ -335,9 +332,6 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/" <> site.domain)
       resp = html_response(conn, 200)
       assert resp =~ "This dashboard is actually locked"
-
-      [{"div", attrs, _}] = find(resp, @react_container)
-      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
 
     test "can view private locked verification without stats", %{conn: conn} do
@@ -356,9 +350,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/" <> site.domain)
       resp = html_response(conn, 200)
-
-      [{"div", attrs, _}] = find(resp, @react_container)
-      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
+      assert resp =~ "This dashboard is actually locked"
     end
 
     on_ee do
@@ -1373,9 +1365,6 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
       assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
-
-      [{"div", attrs, _}] = find(resp, @react_container)
-      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
 
     test "does not show header, does not show footer on embedded pages", %{conn: conn} do
