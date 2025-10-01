@@ -590,7 +590,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> html_response(200)
 
       assert html =~ "Invoices"
-      assert text(html) =~ LazyHTML.html_escape("We couldn't retrieve your invoices")
+      assert text(html) =~ "We couldn't retrieve your invoices"
     end
   end
 
@@ -684,7 +684,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "renders form with error if form validations fail", %{conn: conn} do
       conn = post(conn, Routes.settings_path(conn, :update_name), %{"user" => %{"name" => ""}})
 
-      assert text(html_response(conn, 200)) =~ LazyHTML.html_escape("can't be blank")
+      assert text(html_response(conn, 200)) =~ "can't be blank"
     end
   end
 
@@ -872,7 +872,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert html = html_response(conn, 200)
-      assert text(html) =~ LazyHTML.html_escape("can't be blank")
+      assert text(html) =~ "can't be blank"
     end
   end
 
@@ -964,7 +964,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "renders form with error on no fields filled", %{conn: conn} do
       conn = post(conn, Routes.settings_path(conn, :update_email), %{"user" => %{"email" => ""}})
 
-      assert text(html_response(conn, 200)) =~ LazyHTML.html_escape("can't be blank")
+      assert text(html_response(conn, 200)) =~ "can't be blank"
     end
 
     test "renders form with error on invalid password", %{conn: conn, user: user} do
@@ -1488,7 +1488,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
           "team" => %{"name" => ""}
         })
 
-      assert text(html_response(conn, 200)) =~ LazyHTML.html_escape("can't be blank")
+      assert text(html_response(conn, 200)) =~ "can't be blank"
     end
 
     test "POST /settings/team/leave", %{conn: conn, user: user} do

@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                email_input,
                password_input,
                password_confirmation_input | _
-             ] = find(html, "input")
+             ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
       assert text_of_attr(action_input, "value") == "register_form"
@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                name_input,
                password_input,
                password_confirmation_input | _
-             ] = find(html, "input")
+             ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
       assert text_of_attr(action_input, "value") == "register_from_invitation_form"
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                name_input,
                password_input,
                password_confirmation_input | _
-             ] = find(html, "input")
+             ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
       assert text_of_attr(action_input, "value") == "register_from_invitation_form"
@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                _csrf_input,
                _action_input,
                email_input | _
-             ] = find(html, "input")
+             ] = find(html, "input") |> Enum.into([])
 
       # attempt at tampering with form
       assert text_of_attr(email_input, "value") == "mary.sue@plausible.test"

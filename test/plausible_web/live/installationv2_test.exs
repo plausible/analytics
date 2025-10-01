@@ -381,7 +381,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       {lv, _} = get_lv(conn, site)
 
       html = render_async(lv, 500)
-      assert text(html) =~ LazyHTML.html_escape("We've detected your website is using WordPress")
+      assert text(html) =~ "We've detected your website is using WordPress"
     end
 
     @tag :ee_only
@@ -419,8 +419,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
       html = render_async(lv, 500)
       assert html =~ "Verify Tag Manager installation"
 
-      assert html =~
-               LazyHTML.html_escape("We've detected your website is using Google Tag Manager")
+      assert text(html) =~ "We've detected your website is using Google Tag Manager"
     end
 
     @tag :ee_only

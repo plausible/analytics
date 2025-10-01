@@ -31,9 +31,8 @@ defmodule PlausibleWeb.Live.Components.FormTest do
     test "renders weak password warning and hints when password too short" do
       doc = render_password_input_with_strength("too-short")
 
-      assert [warning_p, hint_p] = find(doc, "p")
-      assert text(warning_p) == "Password is too weak"
-      assert text(hint_p) != ""
+      assert text_of_element(doc, "p:first-of-type") == "Password is too weak"
+      assert text_of_element(doc, "p:last-of-type") != ""
     end
 
     test "does not render hints and suggestions paragraph when there's none" do
@@ -46,7 +45,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
           }
         )
 
-      assert [warning_p] = find(doc, "p")
+      assert warning_p = find(doc, "p")
       assert text(warning_p) == "Password is too weak"
     end
 
@@ -54,7 +53,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       too_long_password = String.duplicate("very-long-very-secret-1234567890", 10)
       doc = render_password_input_with_strength(too_long_password)
 
-      assert [error_p] = find(doc, "p")
+      assert error_p = find(doc, "p")
       assert text(error_p) =~ "cannot be longer than"
     end
   end
@@ -63,7 +62,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
     test "renders for long enough password" do
       doc = render_password_length_hint("very-secret-and-very-long-123", 12)
 
-      assert [p_hint] = find(doc, "p")
+      assert p_hint = find(doc, "p")
       assert text_of_attr(p_hint, "class") =~ "text-gray-500"
       assert text(p_hint) == "Min 12 characters"
     end
@@ -71,7 +70,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
     test "renders for too short password" do
       doc = render_password_length_hint("too-short", 12)
 
-      assert [p_hint] = find(doc, "p")
+      assert p_hint = find(doc, "p")
       assert text_of_attr(p_hint, "class") =~ "text-red-500"
       assert text(p_hint) == "Min 12 characters"
     end
@@ -80,7 +79,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       too_long_password = String.duplicate("very-long-very-secret-1234567890", 10)
       doc = render_password_length_hint(too_long_password, 12)
 
-      assert [p_hint] = find(doc, "p")
+      assert p_hint = find(doc, "p")
       assert text_of_attr(p_hint, "class") =~ "text-gray-500"
       assert text(p_hint) == "Min 12 characters"
     end
@@ -92,7 +91,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       meter = find(doc, "div.rounded-full")
 
       assert text_of_attr(meter, "style") == "width: 0%"
-      assert [p_warning] = find(doc, "p")
+      assert p_warning = find(doc, "p")
       assert text(p_warning) == "Password is too weak"
     end
 
@@ -101,7 +100,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       meter = find(doc, "div.rounded-full")
 
       assert text_of_attr(meter, "style") == "width: 25%"
-      assert [p_warning] = find(doc, "p")
+      assert p_warning = find(doc, "p")
       assert text(p_warning) == "Password is too weak"
     end
 
@@ -110,7 +109,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       meter = find(doc, "div.rounded-full")
 
       assert text_of_attr(meter, "style") == "width: 50%"
-      assert [p_warning] = find(doc, "p")
+      assert p_warning = find(doc, "p")
       assert text(p_warning) == "Password is too weak"
     end
 
@@ -119,7 +118,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       meter = find(doc, "div.rounded-full")
 
       assert text_of_attr(meter, "style") == "width: 75%"
-      assert find(doc, "p") == []
+      refute element_exists?(doc, "p")
     end
 
     test "renders very strong level" do
@@ -127,7 +126,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       meter = find(doc, "div.rounded-full")
 
       assert text_of_attr(meter, "style") == "width: 100%"
-      assert find(doc, "p") == []
+      refute element_exists?(doc, "p")
     end
 
     test "renders hints paragraph when warning hint is present" do
@@ -138,8 +137,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
           suggestions: []
         )
 
-      assert [_p_warning, p_hint] = find(doc, "p")
-      assert text(p_hint) == "Test warning hint."
+      assert text_of_element(doc, "p:last-of-type") == "Test warning hint."
     end
 
     test "renders only first suggestion when no warning present" do
@@ -150,9 +148,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
           suggestions: ["Test suggestion 1.", "Test suggestion 2."]
         )
 
-      assert [_p_warning, p_hint] = find(doc, "p")
-      assert text(p_hint) =~ "Test suggestion 1."
-      refute text(p_hint) =~ "Test suggestion 2."
+      assert text_of_element(doc, "p:last-of-type") == "Test suggestion 1."
     end
 
     @tag :slow
@@ -164,10 +160,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
           suggestions: ["Test suggestion 1.", "Test suggestion 2."]
         )
 
-      assert [_p_warning, p_hint] = find(doc, "p")
-      assert text(p_hint) =~ "Test warning hint."
-      refute text(p_hint) =~ "Test suggestion 1."
-      refute text(p_hint) =~ "Test suggestion 2."
+      assert text_of_element(doc, "p:last-of-type") == "Test warning hint."
     end
   end
 

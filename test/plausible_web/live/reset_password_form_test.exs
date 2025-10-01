@@ -20,7 +20,8 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
       type_into_passowrd(lv, "very-secret-and-very-long-123")
       html = lv |> element("form") |> render_submit()
 
-      assert [csrf_input, password_input | _] = find(html, "input")
+      csrf_input = find(html, ~s|input[name="_csrf_token"]|)
+      password_input = find(html, ~s|input[name="user[password]"]|)
       assert String.length(text_of_attr(csrf_input, "value")) > 0
       assert text_of_attr(password_input, "value") == "very-secret-and-very-long-123"
       assert %{password_hash: new_hash} = Repo.one(User)

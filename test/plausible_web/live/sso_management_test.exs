@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         lv |> element("form#sso-idp-form") |> render_submit()
         lv |> element("form#sso-idp-config") |> render_submit()
 
-        text = lazy_text(render(lv))
+        text = text(render(lv))
 
         assert text =~ "SSO URL / Sign-on URL / Login URL can't be blank"
         assert text =~ "Entity ID / Issuer / Identifier can't be blank"
@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         |> element("form#sso-add-domain")
         |> render_submit()
 
-        text = lazy_text(render(lv))
+        text = text(render(lv))
         assert text =~ "Domain can't be blank"
 
         lv

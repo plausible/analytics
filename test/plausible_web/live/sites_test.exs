@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       text = text(html)
       assert text =~ "My Personal Sites"
-      assert text =~ LazyHTML.html_escape("You don't have any sites yet")
+      assert text =~ "You don't have any sites yet"
       refute text =~ "You currently have no personal sites"
       refute text =~ "Go to your team"
     end
@@ -73,29 +73,25 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
                "G.I. Jane has invited you to join the \"My Personal Sites\" as editor member."
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}"]|
+             )
     end
 
     test "renders metadata for invitation", %{

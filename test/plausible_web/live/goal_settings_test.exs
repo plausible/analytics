@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       refute element_exists?(
                resp,
-               ~s/button[phx-click="edit-goal"][phx-value-goal-id=#{g3.id}][disabled]#edit-goal-#{g3.id}/
+               ~s/button[phx-click="edit-goal"][phx-value-goal-id="#{g3.id}"][disabled]#edit-goal-#{g3.id}/
              )
     end
 
@@ -58,12 +58,12 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       for g <- goals do
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="delete-goal"][phx-value-goal-id=#{g.id}]#delete-goal-#{g.id}/
+                 ~s/button[phx-click="delete-goal"][phx-value-goal-id="#{g.id}"]#delete-goal-#{g.id}/
                )
 
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="edit-goal"][phx-value-goal-id=#{g.id}]#edit-goal-#{g.id}/
+                 ~s/button[phx-click="edit-goal"][phx-value-goal-id="#{g.id}"]#edit-goal-#{g.id}/
                )
       end
     end

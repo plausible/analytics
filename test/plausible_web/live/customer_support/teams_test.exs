@@ -629,7 +629,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
-        text = lv |> render() |> lazy_text()
+        text = lv |> render() |> text()
 
         assert text =~ "sso1.example.com"
         assert text =~ "sso2.example.com"
@@ -670,7 +670,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         html = render(lv)
 
-        assert lazy_text(html) =~ "SSO membership"
+        assert text(html) =~ "SSO membership"
         lv |> element("#deprovision-sso-user-#{user.id}") |> render_click()
 
         assert Plausible.Repo.reload!(user).type == :standard
@@ -747,7 +747,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :audit))
 
-        text = lv |> render() |> lazy_text()
+        text = lv |> render() |> text()
 
         assert text =~ "(N/A) (N/A)"
       end

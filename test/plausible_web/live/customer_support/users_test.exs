@@ -123,8 +123,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
       test "shows 2FA disabled status when user has no 2FA", %{conn: conn, user: user} do
         {:ok, _lv, html} = live(conn, open_user(user.id))
 
-        assert lazy_text(html) =~ "Two-Factor Authentication: Disabled"
-        refute lazy_text(html) =~ "Force Disable 2FA"
+        assert text(html) =~ "Two-Factor Authentication: Disabled"
+        refute text(html) =~ "Force Disable 2FA"
       end
 
       test "shows 2FA enabled status and disable button when user has 2FA", %{
@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
 
         {:ok, _lv, html} = live(conn, open_user(user.id))
 
-        assert lazy_text(html) =~ "Two-Factor Authentication: Enabled"
+        assert text(html) =~ "Two-Factor Authentication: Enabled"
         assert text(html) =~ "Force Disable 2FA"
       end
 
@@ -149,9 +149,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         lv |> element("[phx-click='force-disable-2fa']") |> render_click()
 
         html = render(lv)
-        assert lazy_text(html) =~ "2FA has been force disabled"
-        assert lazy_text(html) =~ "Two-Factor Authentication: Disabled"
-        refute lazy_text(html) =~ "Force Disable 2FA"
+        assert text(html) =~ "2FA has been force disabled"
+        assert text(html) =~ "Two-Factor Authentication: Disabled"
+        refute text(html) =~ "Force Disable 2FA"
 
         updated_user = Plausible.Repo.reload(user)
         refute Plausible.Auth.TOTP.enabled?(updated_user)

@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
         resp = conn |> html_response(200)
 
-        assert lazy_text(resp) =~ "please upgrade your subscription"
+        assert text(resp) =~ "please upgrade your subscription"
       end
 
       test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
@@ -53,12 +53,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id=#{f1_id}]#delete-funnel-#{f1_id}/
+                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id="#{f1_id}"]#delete-funnel-#{f1_id}/
                )
 
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id=#{f2_id}]#delete-funnel-#{f2_id}/
+                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id="#{f2_id}"]#delete-funnel-#{f2_id}/
                )
       end
 
@@ -321,10 +321,10 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert lv = find_live_child(lv, "funnels-form")
 
-        assert lv |> element("#step-1") |> render() |> lazy_text_of_attr("value") ==
+        assert lv |> element("#step-1") |> render() |> text_of_attr("value") ==
                  "Visit /go/to/blog/**"
 
-        assert lv |> element("#step-2") |> render() |> lazy_text_of_attr("value") == "Signup"
+        assert lv |> element("#step-2") |> render() |> text_of_attr("value") == "Signup"
       end
 
       test "clicking save after editing the funnel, updates it", %{

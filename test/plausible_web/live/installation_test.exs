@@ -174,9 +174,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, html} = get_lv(conn, site, "?installation_type=manual")
 
       assert text_of_element(html, "textarea#snippet") ==
-               LazyHTML.html_escape(
-                 ~s|<script defer data-domain="#{site.domain}" src="http://localhost:8000/js/script.js"></script>|
-               )
+               ~s|<script defer data-domain="#{site.domain}" src="http://localhost:8000/js/script.js"></script>|
 
       for {param, script_extension} <- PlausibleWeb.Live.Installation.script_extension_params() do
         lv
@@ -241,9 +239,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       html = lv |> render()
 
       assert text_of_element(html, "textarea#snippet") =~
-               LazyHTML.html_escape(
-                 "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
-               )
+               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
 
       lv
       |> element(~s|form#snippet-form|)
@@ -254,9 +250,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       html = lv |> render()
 
       refute text_of_element(html, "textarea#snippet") =~
-               LazyHTML.html_escape(
-                 "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
-               )
+               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
     end
 
     test "turning on file-downloads, outbound-links and 404 creates special goals", %{

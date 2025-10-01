@@ -166,14 +166,14 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv)
 
-      assert length(find(html, member_el())) == 1
+      assert Enum.count(find(html, member_el())) == 1
 
       assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
 
       change_role(lv, 1, "viewer", guest_el())
       html = render(lv)
 
-      assert length(find(html, member_el())) == 2
+      assert Enum.count(find(html, member_el())) == 2
       refute element_exists?(html, "#guest-list")
     end
 
@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       lv = get_liveview(conn)
       add_invite(lv, user.email, "admin")
 
-      assert lv |> render() |> lazy_text() =~
+      assert lv |> render() |> text() =~
                "Error! Make sure the e-mail is valid and is not taken already"
     end
 
