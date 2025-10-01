@@ -1,22 +1,16 @@
 defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   @moduledoc """
-  [Experimental - new feature]
-
   Lists ConsolidatedViews of a team and allows creating one if none exist. Current
   limitation is one consolidated view per team, which always includes all sites of
   this team.
   """
   use PlausibleWeb, :live_component
   import PlausibleWeb.CustomerSupport.Live
+  alias Plausible.ConsolidatedView
 
   def update(%{team: team}, socket) do
-    cvs =
-      case Plausible.ConsolidatedView.get(team) do
-        nil -> []
-        cv -> [cv]
-      end
-
-    {:ok, assign(socket, team: team, consolidated_views: cvs)}
+    consolidated_views = ConsolidatedView.get(team) |> List.wrap()
+    {:ok, assign(socket, team: team, consolidated_views: consolidated_views)}
   end
 
   def render(assigns) do
@@ -35,7 +29,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
             <.th>Domain</.th>
             <.th>Timezone</.th>
             <.th invisible>Dashboard</.th>
-            <.th invisible>Settings</.th>
             <.th invisible>Delete</.th>
           </:thead>
 
@@ -51,22 +44,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
               </.styled_link>
             </.td>
             <.td>
-              <.styled_link
-                new_tab={true}
-                href={
-                  Routes.site_path(
-                    PlausibleWeb.Endpoint,
-                    :settings_general,
-                    consolidated_view.domain,
-                    []
-                  )
-                }
-              >
-                Settings
-              </.styled_link>
-            </.td>
-            <.td>
-              <.delete_button phx-click="delete-consolidated-view" phx-target={@myself} />
+              <.delete_button
+                phx-click="delete-consolidated-view"
+                phx-target={@myself}
+                data-confirm="Are you sure you want to delete this consolidated view?"
+              />
             </.td>
           </:tbody>
         </.table>
@@ -76,19 +58,19 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   end
 
   def handle_event("create-consolidated-view", _, socket) do
-    case Plausible.ConsolidatedView.enable(socket.assigns.team) do
-      {:ok, cv} ->
+    case ConsolidatedView.enable(socket.assigns.team) do
+      {:ok, consolidated_view} ->
         success("Consolidated view created")
-        {:noreply, assign(socket, consolidated_views: [cv])}
+        {:noreply, assign(socket, consolidated_views: [consolidated_view])}
 
       {:error, _} ->
-        failure("Could not create consolidated View")
+        failure("Could not create consolidated view")
         {:noreply, socket}
     end
   end
 
   def handle_event("delete-consolidated-view", _, socket) do
-    Plausible.ConsolidatedView.disable(socket.assigns.team)
+    ConsolidatedView.disable(socket.assigns.team)
     success("Deleted consolidated view")
     {:noreply, assign(socket, consolidated_views: [])}
   end
