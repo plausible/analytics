@@ -79,8 +79,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
         success("Consolidated view created")
         {:noreply, assign(socket, consolidated_views: [consolidated_view])}
 
-      {:error, _} ->
-        failure("Could not create consolidated view")
+      {:error, reason} ->
+        failure("Could not create consolidated view. Reason: #{inspect(reason)}")
         {:noreply, socket}
     end
   end
