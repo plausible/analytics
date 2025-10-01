@@ -147,16 +147,14 @@ defmodule Plausible.Ingestion.PersistorTest do
 
     Bypass.expect_once(bypass, "POST", "/event", fn conn ->
       conn
-      |> Plug.Conn.resp(500, "no_session_for_engagement")
+      |> Plug.Conn.resp(422, "no_session_for_engagement")
     end)
 
-    assert capture_log(fn ->
-             assert {:error, :no_session_for_engagement} =
-                      Persistor.persist_event(ingest_event, nil,
-                        backend: Persistor.Remote,
-                        url: bypass_url(bypass)
-                      )
-           end) =~ "no_session_for_engagement"
+    assert {:error, :no_session_for_engagement} =
+             Persistor.persist_event(ingest_event, nil,
+               backend: Persistor.Remote,
+               url: bypass_url(bypass)
+             )
   end
 
   test "remote persistor failing due to lock timeout" do
