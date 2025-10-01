@@ -51,6 +51,15 @@ defmodule Plausible.ConsolidatedViewTest do
         assert view.native_stats_start_at == min
         assert view.stats_start_date == NaiveDateTime.to_date(min)
       end
+
+      test "enable/1 updates cache", %{team: team} do
+        site = new_site(team: team)
+        {:ok, _} = ConsolidatedView.enable(team)
+
+        assert eventually(fn ->
+                 {ConsolidatedView.Cache.get(team.identifier) == [site.id], :ok}
+               end)
+      end
     end
 
     describe "disable/1" do
