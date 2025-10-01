@@ -788,7 +788,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
           |> element(~s|button[phx-click="reveal-audit-entry"][phx-value-id="#{entry.id}"]|)
           |> render_click()
 
-        assert text_of_element(html, ~s|textarea|) == LazyHTML.html_escape(~s|{ "foo": "bar" }|)
+        assert text_of_element(html, ~s|textarea|) == ~s|{ "foo": "bar" }|
       end
 
       test "shows audit entries when user id does not exists", %{conn: conn, user: user} do
