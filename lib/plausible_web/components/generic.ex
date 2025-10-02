@@ -490,7 +490,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def tile(assigns) do
     ~H"""
-    <div class="shadow-sm bg-white dark:bg-gray-900 rounded-md mb-6">
+    <div data-test-id="settings-tile" class="shadow-sm bg-white dark:bg-gray-900 rounded-md mb-6">
       <header class="relative py-4 px-6">
         <.title>
           {render_slot(@title)}

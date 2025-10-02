@@ -502,6 +502,16 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     @tag :ee_only
+    test "renders only timezone section for a consolidated site", %{conn: conn, user: user} do
+      consolidated_view = user |> team_of() |> new_consolidated_view()
+      conn = get(conn, "/#{consolidated_view.domain}/settings/general")
+      resp = html_response(conn, 200)
+
+      assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|) |> Enum.into([])
+      assert text(tile_element) =~ "Site timezone"
+    end
+
+    @tag :ee_only
     test "all site settings sidebar items are working links", %{
       conn: conn,
       user: user
