@@ -27,6 +27,7 @@ defmodule Plausible.Ingestion.Event do
           | GateKeeper.policy()
           | :invalid
           | :dc_ip
+          | :threat_ip
           | :site_ip_blocklist
           | :site_country_blocklist
           | :site_page_blocklist
@@ -130,6 +131,7 @@ defmodule Plausible.Ingestion.Event do
     [
       drop_verification_agent: &drop_verification_agent/2,
       drop_datacenter_ip: &drop_datacenter_ip/2,
+      drop_threat_ip: &drop_threat_ip/2,
       drop_shield_rule_hostname: &drop_shield_rule_hostname/2,
       drop_shield_rule_page: &drop_shield_rule_page/2,
       drop_shield_rule_ip: &drop_shield_rule_ip/2,
@@ -211,6 +213,16 @@ defmodule Plausible.Ingestion.Event do
     case event.request.ip_classification do
       "dc_ip" ->
         drop(event, :dc_ip)
+
+      _any ->
+        event
+    end
+  end
+
+  defp drop_threat_ip(%__MODULE__{} = event, _context) do
+    case event.request.ip_classification do
+      "threat_ip" ->
+        drop(event, :threat_ip)
 
       _any ->
         event
