@@ -282,6 +282,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
   | <a href="Plausible.Site.GateKeeper.html#t:policy/0">Plausible.Site.GateKeeper.policy</a>()
   | :invalid
   | :dc_ip
+  | :threat_ip
   | :site_ip_blocklist
   | :site_country_blocklist
   | :site_page_blocklist
@@ -306,7 +307,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L41" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L42" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -452,7 +453,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">build_and_buffer(request, context \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L55" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L56" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -479,7 +480,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">emit_telemetry_buffered(event)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L107" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L108" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -505,7 +506,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">emit_telemetry_dropped(event, reason)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L116" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L117" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -531,7 +532,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">emit_telemetry_ua_parse_timeout()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L102" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L103" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -557,7 +558,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">telemetry_event_buffered()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L82" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L83" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -583,7 +584,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">telemetry_event_dropped()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L87" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L88" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -609,7 +610,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">telemetry_pipeline_step_duration()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L92" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L93" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -635,7 +636,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">telemetry_ua_parse_timeout()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L97" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L98" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
