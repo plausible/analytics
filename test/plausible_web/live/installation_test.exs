@@ -174,7 +174,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, html} = get_lv(conn, site, "?installation_type=manual")
 
       assert text_of_element(html, "textarea#snippet") ==
-               "&amp;lt;script defer data-domain=&amp;quot;#{site.domain}&amp;quot; src=&amp;quot;http://localhost:8000/js/script.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;"
+               ~s|<script defer data-domain="#{site.domain}" src="http://localhost:8000/js/script.js"></script>|
 
       for {param, script_extension} <- PlausibleWeb.Live.Installation.script_extension_params() do
         lv
@@ -188,7 +188,9 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
         lv
         |> element(~s|form#snippet-form|)
-        |> render_change(%{})
+        |> render_change(%{
+          param => "off"
+        })
 
         html = lv |> render()
         assert text_of_element(html, "textarea#snippet") =~ "/js/script.js"
@@ -214,7 +216,9 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
         lv
         |> element(~s|form#snippet-form|)
-        |> render_change(%{})
+        |> render_change(%{
+          param => "off"
+        })
 
         html = lv |> render()
         assert text_of_element(html, "textarea#snippet") =~ "/js/script.js"
@@ -235,16 +239,18 @@ defmodule PlausibleWeb.Live.InstallationTest do
       html = lv |> render()
 
       assert text_of_element(html, "textarea#snippet") =~
-               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }&amp;lt;/script&amp;gt;"
+               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
 
       lv
       |> element(~s|form#snippet-form|)
-      |> render_change(%{})
+      |> render_change(%{
+        "track_404_pages" => "off"
+      })
 
       html = lv |> render()
 
       refute text_of_element(html, "textarea#snippet") =~
-               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }&amp;lt;/script&amp;gt;"
+               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
     end
 
     test "turning on file-downloads, outbound-links and 404 creates special goals", %{
@@ -295,7 +301,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
       |> element(~s|form#snippet-form|)
       |> render_change(%{
         "file_downloads" => "on",
-        "outbound_links" => "on"
+        "outbound_links" => "on",
+        "track_404_pages" => "off"
       })
 
       assert render(lv) =~ "Snippet updated and goal deleted"
@@ -303,14 +310,20 @@ defmodule PlausibleWeb.Live.InstallationTest do
       lv
       |> element(~s|form#snippet-form|)
       |> render_change(%{
-        "file_downloads" => "on"
+        "file_downloads" => "on",
+        "outbound_links" => "off",
+        "track_404_pages" => "off"
       })
 
       assert render(lv) =~ "Snippet updated and goal deleted"
 
       lv
       |> element(~s|form#snippet-form|)
-      |> render_change(%{})
+      |> render_change(%{
+        "file_downloads" => "off",
+        "outbound_links" => "off",
+        "track_404_pages" => "off"
+      })
 
       assert render(lv) =~ "Snippet updated and goal deleted"
 
@@ -336,7 +349,12 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       lv
       |> element(~s|form#snippet-form|)
-      |> render_change(%{})
+      |> render_change(%{
+        "tagged_events" => "off",
+        "hash_based_routing" => "off",
+        "pageview_props" => "off",
+        "revenue_tracking" => "off"
+      })
 
       assert render(lv) =~ "Snippet updated. Please insert the newest snippet into your site"
     end

@@ -249,7 +249,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     You have used
     <span :if={@pageview_usage[:last_30_days]} class="inline">
-      <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_30_days.total) %></b> billable pageviews in the last 30 days.
+      <b>{PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_30_days.total)}</b>
+      billable pageviews in the last 30 days.
     </span>
     <span :if={@pageview_usage[:last_cycle]} class="inline">
       <b>{PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_cycle.total)}</b>
@@ -261,7 +262,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
     >
       "Subscription" section
-    </a> in your account settings.
+    </a>
+    in your account settings.
     """
   end
 

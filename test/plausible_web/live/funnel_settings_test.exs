@@ -19,9 +19,9 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         |> Plausible.Repo.update!()
 
         conn = get(conn, "/#{site.domain}/settings/funnels")
-        resp = conn |> html_response(200) |> text()
+        resp = conn |> html_response(200)
 
-        assert resp =~ "please upgrade your subscription"
+        assert text(resp) =~ "please upgrade your subscription"
       end
 
       test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
@@ -53,12 +53,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id=#{f1_id}]#delete-funnel-#{f1_id}/
+                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id="#{f1_id}"]#delete-funnel-#{f1_id}/
                )
 
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id=#{f2_id}]#delete-funnel-#{f2_id}/
+                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id="#{f2_id}"]#delete-funnel-#{f2_id}/
                )
       end
 
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
 
         doc = conn |> html_response(200)
-        assert Floki.text(doc) =~ "Set up a few goals first"
+        assert text(doc) =~ "Set up a few goals first"
 
         add_goals_path = Routes.site_path(conn, :settings_goals, site.domain)
         assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)
@@ -316,7 +316,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv = get_liveview(conn, site)
 
         lv
-        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{f1_id}"]/)
         |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")
@@ -337,7 +337,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv = get_liveview(conn, site)
 
         lv
-        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{f1_id}"]/)
         |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")

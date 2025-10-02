@@ -25,16 +25,15 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         assert text =~ user.name
         assert text =~ user.email
 
-        assert [uid] = find(html, "#user-identifier")
+        assert uid = find(html, "#user-identifier")
         assert text_of_attr(uid, "value") == "#{user.id}"
 
         team = team_of(user)
 
-        assert [_] =
-                 find(
-                   html,
-                   ~s|a[href="#{Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)}"]|
-                 )
+        assert element_exists?(
+                 html,
+                 ~s|a[href="#{Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)}"]|
+               )
       end
 
       test "404", %{conn: conn} do

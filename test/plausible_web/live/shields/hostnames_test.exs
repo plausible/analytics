@@ -34,10 +34,10 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
       assert remove_button_1 = find(resp, "#remove-hostname-rule-#{r1.id}")
       assert remove_button_2 = find(resp, "#remove-hostname-rule-#{r2.id}")
 
-      assert text_of_attr(remove_button_1, "phx-click" == "remove-hostname-rule")
-      assert text_of_attr(remove_button_1, "phx-value-rule-id" == r1.id)
-      assert text_of_attr(remove_button_2, "phx-click" == "remove-hostname-rule")
-      assert text_of_attr(remove_button_2, "phx-value-rule-id" == r2.id)
+      assert text_of_attr(remove_button_1, "phx-click") == "remove-hostname-rule"
+      assert text_of_attr(remove_button_1, "phx-value-rule-id") == r1.id
+      assert text_of_attr(remove_button_2, "phx-click") == "remove-hostname-rule"
+      assert text_of_attr(remove_button_2, "phx-value-rule-id") == r2.id
     end
 
     test "add rule button is rendered", %{conn: conn, site: site} do

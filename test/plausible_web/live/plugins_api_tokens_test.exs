@@ -56,12 +56,12 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
 
       assert element_exists?(
                resp,
-               ~s/button[phx-click="revoke-token"][phx-value-token-id=#{t1.id}]#revoke-token-#{t1.id}/
+               ~s/button[phx-click="revoke-token"][phx-value-token-id="#{t1.id}"]#revoke-token-#{t1.id}/
              )
 
       assert element_exists?(
                resp,
-               ~s/button[phx-click="revoke-token"][phx-value-token-id=#{t2.id}]#revoke-token-#{t2.id}/
+               ~s/button[phx-click="revoke-token"][phx-value-token-id="#{t2.id}"]#revoke-token-#{t2.id}/
              )
     end
 

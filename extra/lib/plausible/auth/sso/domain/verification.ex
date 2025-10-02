@@ -2,17 +2,17 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
   @moduledoc """
   SSO domain ownership verification chain
 
-  1. DNS TXT `{domain}` record lookup. 
+  1. DNS TXT `{domain}` record lookup.
      Successful expectation contains `plausible-sso-verification={domain-identifier}` record.
 
-  2. HTTP GET lookup at `https://{domain}/plausible-sso-verification` 
+  2. HTTP GET lookup at `https://{domain}/plausible-sso-verification`
      Successful expectation contains `{domain-identifier}` in the body.
 
   3. META tag lookup at `https://{domain}`
      Successful expectation contains:
 
        ```html
-       <meta name="plausible-sso-verification" content="{domain-identifier}"> 
+       <meta name="plausible-sso-verification" content="{domain-identifier}">
        ```
 
      in the body of `text/html` type.
@@ -60,8 +60,10 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
     with %Req.Response{body: body} = response when is_binary(body) <-
            run_request(url_override || "https://#{sso_domain}"),
          true <- html?(response),
-         {:ok, html} <- Floki.parse_document(body),
-         [_ | _] <- Floki.find(html, ~s|meta[name="#{@prefix}"][content="#{domain_identifier}"]|) do
+         html <- LazyHTML.from_document(body),
+         [_ | _] <-
+           LazyHTML.query(html, ~s|meta[name="#{@prefix}"][content="#{domain_identifier}"]|)
+           |> Enum.into([]) do
       true
     else
       _ ->

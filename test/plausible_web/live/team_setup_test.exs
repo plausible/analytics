@@ -196,14 +196,14 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert length(find(html, member_el())) == 1
+      assert Enum.count(find(html, member_el())) == 1
 
       assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
 
       change_role(lv, 1, "viewer", guest_el())
       html = render(lv)
 
-      assert length(find(html, member_el())) == 2
+      assert Enum.count(find(html, member_el())) == 2
       refute element_exists?(html, "#guest-list")
 
       save_layout(lv)
@@ -263,8 +263,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = lv |> render()
 
-      assert [_ | _] = find(html, "#{member_el()}:nth-of-type(1) a")
-      assert find(html, "#{member_el()}:nth-of-type(2) a") == []
+      assert Enum.count(find(html, "#{member_el()}:nth-of-type(1) a")) >= 2
+      refute element_exists?(html, "#{member_el()}:nth-of-type(2) a")
     end
 
     test "allows removing any type of entry", %{

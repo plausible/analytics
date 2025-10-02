@@ -389,13 +389,13 @@ defmodule Plausible.Workers.SendEmailReportTest do
       })
 
       page_names = find(html_body, ".page-name")
-      assert length(page_names) == 5
+      assert Enum.count(page_names) == 5
 
       referrer_names = find(html_body, ".referrer-name")
-      assert length(referrer_names) == 5
+      assert Enum.count(referrer_names) == 5
 
       goal_names = find(html_body, ".goal-name")
-      assert length(goal_names) == 5
+      assert Enum.count(goal_names) == 5
     end
 
     test "email subject includes month name" do

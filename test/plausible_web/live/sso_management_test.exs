@@ -210,7 +210,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         assert text_of_attr(
                  html,
-                 ~s|#sso-policy_sso_default_role option[selected="selected"]|,
+                 ~s|#sso-policy_sso_default_role option[selected]|,
                  "value"
                ) == "viewer"
 
@@ -229,7 +229,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         assert text_of_attr(
                  html,
-                 ~s|#sso-policy_sso_default_role option[selected="selected"]|,
+                 ~s|#sso-policy_sso_default_role option[selected]|,
                  "value"
                ) == "admin"
 

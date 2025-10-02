@@ -1,5 +1,6 @@
 We've recorded {@current_visitors} visitors on
-<a href={"https://" <> @site.domain}><%= @site.domain %></a> in the last 12 hours.
+<a href={"https://" <> @site.domain}>{@site.domain}</a>
+in the last 12 hours.
 <%= if @dashboard_link do %>
   <br /><br /> View dashboard: <a href={@dashboard_link}>{@dashboard_link}</a>
   <br /><br /> Something looks off? Please

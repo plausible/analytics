@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
     end
 
     defp assert_search_result(doc, type, id) do
-      assert [link] = find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
+      assert link = find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
 
       assert text_of_attr(link, "href") ==
                apply(Routes, :"customer_support_#{type}_path", [
@@ -138,7 +138,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
     end
 
     defp refute_search_result(doc, type, id) do
-      assert find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|) == []
+      refute element_exists?(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
     end
 
     defp type_into_input(lv, id, text) do

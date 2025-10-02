@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                email_input,
                password_input,
                password_confirmation_input | _
-             ] = find(html, "input")
+             ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
       assert text_of_attr(action_input, "value") == "register_form"
@@ -130,11 +130,11 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     test "pushing send-metrics-after event submits the form", %{conn: conn} do
       lv = get_liveview(conn, "/register")
 
-      refute render(lv) =~ ~s|phx-trigger-action="phx-trigger-action"|
+      refute render(lv) =~ ~s|phx-trigger-action=""|
 
       render_hook(lv, "send-metrics-after", %{event_name: "Signup", params: %{}})
 
-      assert render(lv) =~ ~s|phx-trigger-action="phx-trigger-action"|
+      assert render(lv) =~ ~s|phx-trigger-action=""|
     end
   end
 
@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                name_input,
                password_input,
                password_confirmation_input | _
-             ] = find(html, "input")
+             ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
       assert text_of_attr(action_input, "value") == "register_from_invitation_form"
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                name_input,
                password_input,
                password_confirmation_input | _
-             ] = find(html, "input")
+             ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
       assert text_of_attr(action_input, "value") == "register_from_invitation_form"
@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                _csrf_input,
                _action_input,
                email_input | _
-             ] = find(html, "input")
+             ] = find(html, "input") |> Enum.into([])
 
       # attempt at tampering with form
       assert text_of_attr(email_input, "value") == "mary.sue@plausible.test"
@@ -311,11 +311,11 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     } do
       lv = get_liveview(conn, "/register/invitation/#{guest_invitation.invitation_id}")
 
-      refute render(lv) =~ ~s|phx-trigger-action="phx-trigger-action"|
+      refute render(lv) =~ ~s|phx-trigger-action=""|
 
       render_hook(lv, "send-metrics-after", %{event_name: "Signup via invitation", params: %{}})
 
-      assert render(lv) =~ ~s|phx-trigger-action="phx-trigger-action"|
+      assert render(lv) =~ ~s|phx-trigger-action=""|
     end
   end
 

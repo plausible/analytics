@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Plugs.NoRobotsTest do
   use Plausible.DataCase, async: true
-  use Plug.Test
+  import Plug.Test
+  import Plug.Conn
 
   alias PlausibleWeb.Plugs.NoRobots
 

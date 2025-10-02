@@ -36,10 +36,10 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
       assert remove_button_1 = find(resp, "#remove-ip-rule-#{r1.id}")
       assert remove_button_2 = find(resp, "#remove-ip-rule-#{r2.id}")
 
-      assert text_of_attr(remove_button_1, "phx-click" == "remove-ip-rule")
-      assert text_of_attr(remove_button_1, "phx-value-rule-id" == r1.id)
-      assert text_of_attr(remove_button_2, "phx-click" == "remove-ip-rule")
-      assert text_of_attr(remove_button_2, "phx-value-rule-id" == r2.id)
+      assert text_of_attr(remove_button_1, "phx-click") == "remove-ip-rule"
+      assert text_of_attr(remove_button_1, "phx-value-rule-id") == r1.id
+      assert text_of_attr(remove_button_2, "phx-click") == "remove-ip-rule"
+      assert text_of_attr(remove_button_2, "phx-value-rule-id") == r2.id
     end
 
     test "add rule button is rendered", %{conn: conn, site: site} do
