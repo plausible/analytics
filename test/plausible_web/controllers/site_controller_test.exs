@@ -511,6 +511,16 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     @tag :ee_only
+    test "renders only timezone section for a consolidated site", %{conn: conn, user: user} do
+      consolidated_view = user |> team_of() |> new_consolidated_view()
+      conn = get(conn, "/#{consolidated_view.domain}/settings/general")
+      resp = html_response(conn, 200)
+
+      assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|)
+      assert text(tile_element) =~ "Site timezone"
+    end
+
+    @tag :ee_only
     test "all site settings sidebar items are working links", %{
       conn: conn,
       user: user
@@ -1882,6 +1892,19 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/#{site.domain}/settings/forget-imported")
 
       assert Repo.reload(job).state == "cancelled"
+    end
+  end
+
+  describe "/:domain/settings/general" do
+    setup [:create_user, :log_in]
+
+    test "shows domain change in the settings form", %{conn: conn, site: site} do
+      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Site domain"
+      assert resp =~ "Change domain"
+      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
     end
   end
 
