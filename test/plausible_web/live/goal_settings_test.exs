@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
+  @funnels_cta ~s|p[data-test-id="setup-funnels-cta"]|
+
   describe "GET /:domain/settings/goals" do
     setup [:create_user, :log_in, :create_site]
 
@@ -14,8 +16,11 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       resp = html_response(conn, 200)
       assert resp =~ "Define actions that you want your users to take"
-      assert resp =~ "compose goals into funnels"
-      assert resp =~ "/#{URI.encode_www_form(site.domain)}/settings/funnels"
+      assert text_of_element(resp, @funnels_cta) =~ "compose goals into funnels"
+
+      assert text_of_attr(resp, "#{@funnels_cta} a", "href") =~
+               "/#{URI.encode_www_form(site.domain)}/settings/funnels"
+
       assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
 
       assert resp =~ to_string(g1)
@@ -132,6 +137,13 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
         assert resp =~ "Pageview"
         assert resp =~ to_string(g2)
         assert resp =~ "Custom Event"
+      end
+
+      test "does not render funnels cta", %{conn: conn, consolidated_view: consolidated_view} do
+        conn = get(conn, "/#{consolidated_view.domain}/settings/goals")
+
+        assert resp = html_response(conn, 200)
+        refute element_exists?(resp, @funnels_cta)
       end
     end
   end
