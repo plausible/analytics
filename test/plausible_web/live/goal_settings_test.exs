@@ -98,6 +98,44 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
     end
   end
 
+  on_ee do
+    describe "GET /:domain/settings/goals - consolidated views" do
+      setup [:create_user, :create_team, :log_in]
+
+      setup %{team: team} = context do
+        new_site(team: team)
+        new_site(team: team)
+
+        {:ok, Map.put(context, :consolidated_view, new_consolidated_view(team))}
+      end
+
+      test "no goals exist", %{conn: conn, consolidated_view: consolidated_view} do
+        conn = get(conn, "/#{consolidated_view.domain}/settings/goals")
+
+        assert resp = html_response(conn, 200)
+        assert resp =~ "Define actions that you want your users to take"
+        assert resp =~ "No goals configured for this site"
+        assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
+      end
+
+      test "lists goals", %{conn: conn, consolidated_view: consolidated_view} do
+        {:ok, g1} = Plausible.Goals.create(consolidated_view, %{"page_path" => "/go/to/blog/**"})
+        {:ok, g2} = Plausible.Goals.create(consolidated_view, %{"event_name" => "Register"})
+
+        conn = get(conn, "/#{consolidated_view.domain}/settings/goals")
+
+        assert resp = html_response(conn, 200)
+        assert resp =~ "Define actions that you want your users to take"
+        assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
+
+        assert resp =~ to_string(g1)
+        assert resp =~ "Pageview"
+        assert resp =~ to_string(g2)
+        assert resp =~ "Custom Event"
+      end
+    end
+  end
+
   describe "GoalSettings live view" do
     setup [:create_user, :log_in, :create_site]
 
@@ -210,6 +248,51 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       # All possible goals exist - no suggestions anymore
       refute html =~ "from the last 6 months"
+    end
+  end
+
+  describe "GoalSettings live view - consolidated views" do
+    setup [:create_user, :create_team, :log_in]
+
+    setup %{team: team} = context do
+      new_site(team: team)
+      new_site(team: team)
+
+      {:ok, Map.put(context, :consolidated_view, new_consolidated_view(team))}
+    end
+
+    test "allows goal deletion", %{conn: conn, consolidated_view: consolidated_view} do
+      {:ok, g1} = Plausible.Goals.create(consolidated_view, %{"page_path" => "/go/to/blog/**"})
+      {:ok, g2} = Plausible.Goals.create(consolidated_view, %{"event_name" => "Register"})
+
+      {lv, html} = get_liveview(conn, consolidated_view, with_html?: true)
+
+      assert html =~ to_string(g1)
+      assert html =~ to_string(g2)
+
+      html = lv |> element(~s/button#delete-goal-#{g1.id}/) |> render_click()
+
+      refute html =~ to_string(g1)
+      assert html =~ to_string(g2)
+
+      html = get(conn, "/#{consolidated_view.domain}/settings/goals") |> html_response(200)
+
+      refute html =~ to_string(g1)
+      assert html =~ to_string(g2)
+    end
+
+    test "allows list filtering / search", %{conn: conn, consolidated_view: consolidated_view} do
+      {:ok, g1} = Plausible.Goals.create(consolidated_view, %{"page_path" => "/go/to/blog/**"})
+      {:ok, g2} = Plausible.Goals.create(consolidated_view, %{"event_name" => "Register"})
+      {lv, html} = get_liveview(conn, consolidated_view, with_html?: true)
+
+      assert html =~ to_string(g1)
+      assert html =~ to_string(g2)
+
+      html = type_into_search(lv, to_string(g2))
+
+      refute html =~ to_string(g1)
+      assert html =~ to_string(g2)
     end
   end
 
