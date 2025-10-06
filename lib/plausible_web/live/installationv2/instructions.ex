@@ -138,7 +138,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
       <div class="mt-4">
         <.focus_list>
           <:item>
-            Copy your site's ScriptID:
+            Copy your site's Script ID:
             <.snippet_form
               text={@tracker_script_configuration_form.data.id}
               rows={1}
@@ -153,7 +153,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
           </:item>
 
           <:item>
-            Paste your ScriptID into the template and click the button below to verify your installation.
+            Paste your Script ID into the template and click the button below to verify your installation.
           </:item>
         </.focus_list>
       </div>
