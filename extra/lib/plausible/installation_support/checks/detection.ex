@@ -54,10 +54,10 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
   """
 
   # We define a timeout for the browserless endpoint call to avoid waiting too long for a response
-  @endpoint_timeout_ms 2_000
+  @endpoint_timeout_ms 3_000
 
   # This timeout determines how long we wait for window.plausible to be initialized on the page, used for detecting whether v1 installed
-  @plausible_window_check_timeout_ms 1_500
+  @plausible_window_check_timeout_ms 2_000
 
   # To support browserless API being unavailable or overloaded, we retry the endpoint call if it doesn't return a successful response
   @max_retries 1
