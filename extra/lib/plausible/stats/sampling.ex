@@ -3,10 +3,11 @@ defmodule Plausible.Stats.Sampling do
   Sampling related functions
   """
   @default_sample_threshold 10_000_000
+  @max_sample_threshold 100_000_000
 
   import Ecto.Query
 
-  alias Plausible.Stats.{Query, SamplingCache}
+  alias Plausible.Stats.Query
 
   def default_sample_threshold(), do: @default_sample_threshold
 
@@ -34,70 +35,43 @@ defmodule Plausible.Stats.Sampling do
     add_query_hint(query, @default_sample_threshold)
   end
 
-  @spec put_threshold(Plausible.Stats.Query.t(), Plausible.Site.t(), map()) ::
+  @spec put_threshold(Plausible.Stats.Query.t(), map()) ::
           Plausible.Stats.Query.t()
-  def put_threshold(query, site, params) do
+  def put_threshold(query, params) do
     sample_threshold =
       case params["sample_threshold"] do
         nil ->
-          decide_sample_rate(site, query)
+          fractional_sample_rate(query)
 
         "infinite" ->
           :no_sampling
 
         value_string ->
-          {value, _} = Float.parse(value_string)
+          {value, _} = Integer.parse(value_string)
           value
       end
 
     Map.put(query, :sample_threshold, sample_threshold)
   end
 
-  defp decide_sample_rate(site, query) do
-    if Plausible.Sites.consolidated?(site) and not Enum.empty?(query.consolidated_site_ids) do
-      query.consolidated_site_ids
-      |> SamplingCache.consolidated_get()
-      |> fractional_sample_rate(query)
-    else
-      site.id
-      |> SamplingCache.get()
-      |> fractional_sample_rate(query)
-    end
-  end
-
-  def fractional_sample_rate(nil = _traffic_30_day, _query),
+  def fractional_sample_rate(_query),
     do: :no_sampling
 
-  def fractional_sample_rate(traffic_30_day, query) do
+  def fractional_sample_rate(query) do
     date_range = Query.date_range(query)
     duration = Date.diff(date_range.last, date_range.first)
 
-    estimated_traffic = estimate_traffic(traffic_30_day, duration, query)
-
-    fraction =
-      if(estimated_traffic > 0,
-        do: Float.round(@default_sample_threshold / estimated_traffic, 2),
-        else: 1.0
-      )
-
-    cond do
-      # Don't sample small time ranges
-      duration < 1 -> :no_sampling
-      # If sampling doesn't have a significant effect, don't sample
-      fraction > 0.4 -> :no_sampling
-      true -> max(fraction, min_sample_rate())
+    if duration >= 1 do
+      min(@max_sample_threshold, adjust_sample_threshold(query.filters))
+    else
+      :no_sampling
     end
   end
 
-  defp min_sample_rate(), do: 0.013
+  @filter_traffic_multiplier 5.0
+  @max_filters 2
 
-  defp estimate_traffic(traffic_30_day, duration, query) do
-    duration_adjusted_traffic = traffic_30_day / 30.0 * duration
-
-    estimate_by_filters(duration_adjusted_traffic, query.filters)
+  defp adjust_sample_threshold(filters) do
+    @default_sample_threshold * @filter_traffic_multiplier ** min(length(filters), @max_filters)
   end
-
-  @filter_traffic_multiplier 1 / 20.0
-  defp estimate_by_filters(estimation, filters),
-    do: estimation * @filter_traffic_multiplier ** length(filters)
 end

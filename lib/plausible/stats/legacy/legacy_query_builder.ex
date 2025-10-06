@@ -36,7 +36,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> Query.set_time_on_page_data(site)
 
     on_ee do
-      query = Plausible.Stats.Sampling.put_threshold(query, site, params)
+      query = Plausible.Stats.Sampling.put_threshold(query, params)
     end
 
     query

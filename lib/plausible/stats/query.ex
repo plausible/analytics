@@ -52,7 +52,7 @@ defmodule Plausible.Stats.Query do
         |> put_imported_opts(site)
 
       on_ee do
-        query = Plausible.Stats.Sampling.put_threshold(query, site, params)
+        query = Plausible.Stats.Sampling.put_threshold(query, params)
       end
 
       {:ok, query}
