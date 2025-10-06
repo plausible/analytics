@@ -208,7 +208,7 @@ defmodule PlausibleWeb.Live.Sites do
     <li class="relative row-span-2 flex flex-col justify-between gap-6 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150">
       <div class="flex flex-col flex-1 justify-between gap-y-5">
         <div class="flex flex-col gap-y-2 mb-auto">
-          <span class="size-10 text-white p-2 rounded-xl bg-indigo-600">
+          <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <path
                 stroke="currentColor"
@@ -226,7 +226,7 @@ defmodule PlausibleWeb.Live.Sites do
               />
             </svg>
           </span>
-          <h3 class="text-gray-900 font-medium text-lg leading-tight dark:text-gray-100">
+          <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight dark:text-gray-100">
             All sites
           </h3>
         </div>
@@ -257,12 +257,12 @@ defmodule PlausibleWeb.Live.Sites do
           </svg>
         </span>
       </div>
-      <div class="flex flex-col flex-1 justify-between gap-y-5">
-        <div class="flex justify-between gap-x-2 flex-1 w-full">
+      <div class="flex flex-col flex-1 justify-between gap-y-2.5 sm:gap-y-5">
+        <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
           <.combined_view_stat value="103.9k" label="Unique visitors" change={3} />
           <.combined_view_stat value="198.4k" label="Total visits" change={1} />
         </div>
-        <div class="flex justify-between gap-x-2 flex-1 w-full">
+        <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
           <.combined_view_stat value="2.6M" label="Total pageviews" change={1} />
           <.combined_view_stat value="4.2" label="Views per visit" change={2} />
         </div>
@@ -281,12 +281,12 @@ defmodule PlausibleWeb.Live.Sites do
 
   def combined_view_stat(assigns) do
     ~H"""
-    <div class="flex flex-col flex-1 gap-y-1.5">
+    <div class="flex flex-col flex-1 sm:gap-y-1.5">
       <p class="text-sm text-gray-600 dark:text-gray-400">
         {@label}
       </p>
-      <div class="flex flex-col">
-        <p class="text-xl font-bold text-gray-900 dark:text-gray-100">
+      <div class="flex w-full justify-between items-baseline sm:flex-col sm:justify-start sm:items-start">
+        <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
           {@value}
         </p>
         <p class="text-sm text-gray-900 dark:text-gray-100">
@@ -326,7 +326,7 @@ defmodule PlausibleWeb.Live.Sites do
         <div class="w-full flex items-center justify-between gap-x-2.5">
           <.favicon domain={@site.domain} />
           <div class="flex-1 w-full truncate">
-            <h3 class="text-gray-900 font-medium text-lg leading-tight truncate dark:text-gray-100">
+            <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight truncate dark:text-gray-100">
               {@site.domain}
             </h3>
           </div>
@@ -368,7 +368,7 @@ defmodule PlausibleWeb.Live.Sites do
             <.favicon domain={@site.domain} />
             <div class="flex-1 w-full">
               <h3
-                class="text-gray-900 font-medium text-lg leading-tight truncate dark:text-gray-100"
+                class="text-gray-900 font-medium text-md sm:text-lg leading-tight truncate dark:text-gray-100"
                 style="width: calc(100% - 4rem)"
               >
                 {@site.domain}
@@ -486,7 +486,7 @@ defmodule PlausibleWeb.Live.Sites do
         </span>
         <div class="flex justify-between items-end">
           <div class="flex flex-col">
-            <p class="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
               {PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors)}
             </p>
             <p class="text-gray-600 dark:text-gray-400">
