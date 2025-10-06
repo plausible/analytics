@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       |> assign(:id, Ecto.UUID.generate())
 
     ~H"""
-    <svg viewBox={"0 -1 #{(@points_len - 1) * @tick} #{@height + 3}"} class="chart w-full mb-2">
+    <svg viewBox={"0 -1 #{(@points_len - 1) * @tick} #{@height + 3}"} class="w-full">
       <defs>
         <clipPath id={"gradient-cut-off-#{@id}"}>
           <polyline points={@clip_points} />
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
         fill="url(#chart-gradient-cut-off)"
         clip-path={"url(#gradient-cut-off-#{@id})"}
       />
-      <polyline fill="none" stroke="rgba(101,116,205)" stroke-width="2.6" points={@points} />
+      <polyline fill="none" stroke="currentColor" stroke-width="2.6" points={@points} />
     </svg>
     """
   end
@@ -62,8 +62,8 @@ defmodule PlausibleWeb.Live.Components.Visitors do
     <svg width="0" height="0">
       <defs class="text-white dark:text-indigo-800">
         <linearGradient id="chart-gradient-cut-off" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stop-color="rgba(101,116,205,0.2)" />
-          <stop offset="100%" stop-color="rgba(101,116,205,0)" />
+          <stop offset="0%" stop-color="rgba(97,95,255,0.16)" />
+          <stop offset="100%" stop-color="rgba(97,95,255,0)" />
         </linearGradient>
       </defs>
     </svg>
