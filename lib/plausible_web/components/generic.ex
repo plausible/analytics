@@ -543,7 +543,8 @@ defmodule PlausibleWeb.Components.Generic do
       "-translate-y-full",
       "z-[1000]",
       "sm:max-w-72",
-      "whitespace-nowrap"
+      "whitespace-normal",
+      "break-words"
     ]
 
     tooltip_position_classes =
