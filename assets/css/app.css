@@ -91,7 +91,7 @@
 }
 
 .button {
-  @apply inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+  @apply inline-flex justify-center px-3.5 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
 }
 
 .button[disabled] {
@@ -99,11 +99,7 @@
 }
 
 .button-outline {
-  @apply text-indigo-600 bg-transparent border border-indigo-600;
-}
-
-.button-outline:hover {
-  @apply text-white;
+  @apply text-indigo-600 bg-transparent border border-gray-300 dark:border-gray-600 dark:text-gray-100 hover:bg-transparent hover:text-indigo-700 dark:hover:text-white hover:border-gray-400/70 dark:hover:border-gray-500 transition-all duration-150;
 }
 
 .button-sm {

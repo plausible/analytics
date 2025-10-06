@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Live.Sites do
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
+      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate shrink-0">
           {Teams.name(@current_team)}
           <.unstyled_link
@@ -76,14 +76,14 @@ defmodule PlausibleWeb.Live.Sites do
 
       <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
-      <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
+      <div class="pt-4 sm:flex sm:items-center sm:justify-between">
         <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
         <p :if={not @has_sites?} class="dark:text-gray-100">
           You don't have any sites yet.
         </p>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
           <a href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"} class="button">
-            + Add Website
+            + Add website
           </a>
         </div>
       </div>
@@ -107,6 +107,8 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <!-- Insert upgrade_card here -->
+          <.combined_view_card />
           <%= for site <- @sites.entries do %>
             <.site
               :if={site.entry_type in ["pinned_site", "site"]}
@@ -174,6 +176,140 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  def upgrade_card(assigns) do
+    ~H"""
+    <li class="relative col-span-1 flex flex-col justify-between bg-white p-6 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl">
+      <div class="flex flex-col">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Introducing
+        </p>
+        <h3 class="text-[1.35rem] font-bold text-gray-900 leading-tighter dark:text-gray-100">
+          Combined view
+        </h3>
+      </div>
+      <p class="text-gray-900 dark:text-gray-100 leading-tighter mb-2.5">
+        See stats for all your sites in one single dashboard.
+      </p>
+      <div class="flex gap-x-2">
+        <a href="#" class="button">
+          Upgrade
+        </a>
+        <a href="#" class="button button-outline">
+          Learn more
+        </a>
+      </div>
+      <Heroicons.x_mark class="absolute top-6 right-6 size-5 text-gray-400 transition-colors duration-150 cursor-pointer dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" />
+    </li>
+    """
+  end
+
+  def combined_view_card(assigns) do
+    ~H"""
+    <li class="relative row-span-2 flex flex-col justify-between gap-6 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150">
+      <div class="flex flex-col flex-1 justify-between gap-y-5">
+        <div class="flex flex-col gap-y-2 mb-auto">
+          <span class="size-10 text-white p-2 rounded-xl bg-indigo-600">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M22 12H2M12 22c5.714-5.442 5.714-14.558 0-20M12 22C6.286 16.558 6.286 7.442 12 2"
+              />
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
+              />
+            </svg>
+          </span>
+          <h3 class="text-gray-900 font-medium text-lg leading-tight dark:text-gray-100">
+            All sites
+          </h3>
+        </div>
+        <span class="text-indigo-500 my-auto">
+          <svg viewBox="0 -1 500 83" class="w-full">
+            <defs>
+              <clipPath id="gradient-cut-off-6cb83a48-10a5-489c-a0fd-0811e39d5eaa">
+                <polyline points="0,81 0,29 20,7 40,0 60,29 80,36 100,44 120,36 140,7 160,29 180,51 200,58 220,51 240,51 260,36 280,36 300,65 320,65 340,73 360,44 380,44 400,44 420,58 440,22 460,51 480,80 500,80 500,81 0,81">
+                </polyline>
+              </clipPath>
+            </defs>
+            <rect
+              x="0"
+              y="1"
+              width="520"
+              height="80"
+              fill="url(#chart-gradient-cut-off)"
+              clip-path="url(#gradient-cut-off-6cb83a48-10a5-489c-a0fd-0811e39d5eaa)"
+            >
+            </rect>
+            <polyline
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.6"
+              points="0,29 20,7 40,0 60,29 80,36 100,44 120,36 140,7 160,29 180,51 200,58 220,51 240,51 260,36 280,36 300,65 320,65 340,73 360,44 380,44 400,44 420,58 440,22 460,51 480,80 500,80"
+            >
+            </polyline>
+          </svg>
+        </span>
+      </div>
+      <div class="flex flex-col flex-1 justify-between gap-y-5">
+        <div class="flex justify-between gap-x-2 flex-1 w-full">
+          <.combined_view_stat value="103.9k" label="Unique visitors" change={3} />
+          <.combined_view_stat value="198.4k" label="Total visits" change={1} />
+        </div>
+        <div class="flex justify-between gap-x-2 flex-1 w-full">
+          <.combined_view_stat value="2.6M" label="Total pageviews" change={1} />
+          <.combined_view_stat value="4.2" label="Views per visit" change={2} />
+        </div>
+      </div>
+      <div class="absolute right-1 top-3.5">
+        <!-- Replace with existing ellipsis_menu -->
+        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 size-5 text-gray-400 transition-colors duration-150 cursor-pointer dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" />
+      </div>
+    </li>
+    """
+  end
+
+  attr(:value, :string, required: true)
+  attr(:label, :string, required: true)
+  attr(:change, :integer, required: true)
+
+  def combined_view_stat(assigns) do
+    ~H"""
+    <div class="flex flex-col flex-1 gap-y-1.5">
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        {@label}
+      </p>
+      <div class="flex flex-col">
+        <p class="text-xl font-bold text-gray-900 dark:text-gray-100">
+          {@value}
+        </p>
+        <p class="text-sm text-gray-900 dark:text-gray-100">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            class="text-green-500 h-3 w-3 inline-block stroke-[1px] stroke-current"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8.25 3.75H19.5a.75.75 0 01.75.75v11.25a.75.75 0 01-1.5 0V6.31L5.03 20.03a.75.75 0 01-1.06-1.06L17.69 5.25H8.25a.75.75 0 010-1.5z"
+              clip-rule="evenodd"
+            >
+            </path>
+          </svg>
+          {@change}%
+        </p>
+      </div>
+    </div>
+    """
+  end
+
   attr(:site, Plausible.Site, required: true)
   attr(:invitation, :map, required: true)
   attr(:hourly_stats, :map, required: true)
@@ -181,25 +317,20 @@ defmodule PlausibleWeb.Live.Sites do
   def invitation(assigns) do
     ~H"""
     <li
-      class="group cursor-pointer"
+      class="group relative cursor-pointer"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
-      <div class="col-span-1 bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 group-hover:shadow-lg cursor-pointer transition duration-100">
-        <div class="w-full flex items-center justify-between space-x-4">
-          <img
-            src={"/favicon/sources/#{@site.domain}"}
-            onerror="this.onerror=null; this.src='/favicon/sources/placeholder';"
-            class="size-[1.15rem] shrink-0"
-          />
-          <div class="flex-1 truncate -mt-px">
-            <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100">
+      <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-800 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+        <div class="w-full flex items-center justify-between gap-x-2.5">
+          <.favicon domain={@site.domain} />
+          <div class="flex-1 w-full truncate">
+            <h3 class="text-gray-900 font-medium text-lg leading-tight truncate dark:text-gray-100">
               {@site.domain}
             </h3>
           </div>
-
-          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-green-100 text-green-800">
+          <span class="inline-flex items-center px-2 py-1 rounded-sm bg-green-100 text-green-800 text-xs font-medium leading-normal dark:bg-green-900/40 dark:text-green-400">
             Pending invitation
           </span>
         </div>
@@ -232,12 +363,12 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
-        <div class="col-span-1 bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 group-hover:shadow-lg cursor-pointer transition duration-100">
-          <div class="w-full flex items-center justify-between space-x-4">
+        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-800 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+          <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
-            <div class="flex-1 -mt-px w-full">
+            <div class="flex-1 w-full">
               <h3
-                class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
+                class="text-gray-900 font-medium text-lg leading-tight truncate dark:text-gray-100"
                 style="width: calc(100% - 4rem)"
               >
                 {@site.domain}
@@ -248,7 +379,7 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </.unstyled_link>
 
-      <div class="absolute right-0 top-2">
+      <div class="absolute right-1 top-3.5">
         <.ellipsis_menu site={@site} />
       </div>
     </li>
@@ -337,30 +468,35 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div class="md:h-[68px] sm:h-[58px] h-20 pl-8 pr-8 pt-2">
-      <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
-        <div class="md:h-[34px] sm:h-[30px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-        <div class="md:h-[26px] sm:h-[18px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-      </div>
-      <div
-        :if={is_map(@hourly_stats)}
-        class="hidden h-50px"
-        phx-mounted={JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})}
-      >
-        <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-          <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
-          <div class="flex justify-between items-center">
-            <p>
-              <span class="text-gray-800 dark:text-gray-200">
-                <b>{PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors)}</b>
-                visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
-              </span>
-            </p>
-
-            <.percentage_change change={@hourly_stats.change} />
-          </div>
+    <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
+      <div class="md:h-[34px] sm:h-[30px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+      <div class="md:h-[26px] sm:h-[18px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+    </div>
+    <div
+      :if={is_map(@hourly_stats)}
+      class="hidden"
+      phx-mounted={JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})}
+    >
+      <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
+        <span class="text-indigo-500">
+          <PlausibleWeb.Live.Components.Visitors.chart
+            intervals={@hourly_stats.intervals}
+            height={80}
+          />
         </span>
-      </div>
+        <div class="flex justify-between items-end">
+          <div class="flex flex-col">
+            <p class="text-xl font-bold text-gray-900 dark:text-gray-100">
+              {PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors)}
+            </p>
+            <p class="text-gray-600 dark:text-gray-400">
+              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
+            </p>
+          </div>
+
+          <.percentage_change change={@hourly_stats.change} />
+        </div>
+      </span>
     </div>
     """
   end
@@ -370,8 +506,7 @@ defmodule PlausibleWeb.Live.Sites do
   # Related React component: <ChangeArrow />
   def percentage_change(assigns) do
     ~H"""
-    <p class="dark:text-gray-100">
-      <span :if={@change == 0} class="font-semibold">〰</span>
+    <p class="text-gray-900 dark:text-gray-100">
       <svg
         :if={@change > 0}
         xmlns="http://www.w3.org/2000/svg"
@@ -570,11 +705,11 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def favicon(assigns) do
-    src = "/favicon/sources/#{assigns.domain}"
+    src = "/favicon/sources_globe/#{assigns.domain}"
     assigns = assign(assigns, :src, src)
 
     ~H"""
-    <img src={@src} class="w-4 h-4 shrink-0 mt-px" />
+    <img src={@src} class="size-[18px] shrink-0" />
     """
   end
 
