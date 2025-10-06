@@ -146,9 +146,11 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
     end
   end
 
-  defp handle_browserless_response(state, _body, status) do
+  defp handle_browserless_response(state, body, status) do
     error = "Unhandled browserless response with status: #{status}"
-    Logger.warning(warning_message(error, state))
+
+    warning_message("#{error}; body: #{inspect(body)}", state)
+    |> Logger.warning()
 
     put_diagnostics(state, service_error: error)
   end
