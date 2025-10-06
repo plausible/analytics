@@ -138,7 +138,7 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
       <div class="mt-4">
         <.focus_list>
           <:item>
-            Copy this site's ScriptID:
+            Copy your site's Script ID:
             <.snippet_form
               text={@tracker_script_configuration_form.data.id}
               rows={1}
@@ -147,13 +147,13 @@ defmodule PlausibleWeb.Live.InstallationV2.Instructions do
           </:item>
 
           <:item>
-            <.styled_link href="https://plausible.io/docs/google-tag-manager" new_tab={true}>
-              Read our Tag Manager guide
+            <.styled_link href="https://plausible.io/gtm-template" new_tab={true}>
+              Install the Plausible template in GTM
             </.styled_link>
           </:item>
 
           <:item>
-            Once done, click the button below to verify your installation.
+            Paste your Script ID into the template and click the button below to verify your installation.
           </:item>
         </.focus_list>
       </div>
