@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.Stats do
 
     socket =
       socket
-      |> assign(query: query, metric_names: metric_names, debug: Map.has_key?(params, "debug"))
+      |> assign(query: query, metric_names: metric_names)
       |> assign_async(:result, fn ->
         result = Plausible.Stats.query(site, query)
         {:ok, %{result: result}}
@@ -48,8 +48,6 @@ defmodule PlausibleWeb.Live.Stats do
   end
 
   def build_query(site, params) do
-    data = JSON.decode!(params["data"] || "{}")
-
     {:ok, query} =
       Query.build(
         site,
@@ -57,7 +55,7 @@ defmodule PlausibleWeb.Live.Stats do
         %{
           "site_id" => site.domain,
           "date_range" => params["date_range"],
-          "filters" => data["filters"] || [],
+          "filters" => dbg(url_filters_to_api_filters(JSON.decode!(params["filters"]))),
           # Placeholder metrics
           "metrics" => ["visitors"]
         },
@@ -76,21 +74,8 @@ defmodule PlausibleWeb.Live.Stats do
         <% end %>
       </.async_result>
     </div>
-    <div :if={@debug} class="container print:max-w-full mt-4">
-      <details class="bg-white rounded w-full mb-4">
-        <summary>Raw Query</summary>
-        <pre><%= inspect(@query, charlists: :as_lists, pretty: true) %></pre>
-      </details>
-
-      <details class="bg-white rounded w-full mb-4">
-        <summary>Raw Result</summary>
-        <pre><%= inspect(@result, charlists: :as_lists, pretty: true) %></pre>
-      </details>
-    </div>
     """
   end
-
-  defp top_stat_metric(%{value: nil} = _assigns), do: nil
 
   defp top_stat_metric(assigns) do
     # :TODO: Border classes depend on index, as in assets/js/dashboard/stats/graph/top-stats.js
@@ -135,11 +120,13 @@ defmodule PlausibleWeb.Live.Stats do
     """
   end
 
+  defp format_metric(metric, nil), do: "--"
+
   defp format_metric(metric, value) when metric in [:visitors, :visits, :pageviews] do
     PlausibleWeb.StatsView.large_number_format(value)
   end
 
-  defp format_metric(:bounce_rate, value) do
+  defp format_metric(metric, value) when metric in [:bounce_rate, :scroll_depth] do
     "#{value}%"
   end
 
@@ -219,5 +206,16 @@ defmodule PlausibleWeb.Live.Stats do
       max_depth: 0,
       behavioral_filters: :ignore
     )
+  end
+
+  @visit_props Filters.visit_props()
+  @event_props Filters.event_props()
+
+  defp url_filters_to_api_filters(filters) do
+    Filters.transform_filters(filters, fn
+      [op, dim, clause] when dim in @visit_props -> [[op, "visit:" <> dim, clause]]
+      [op, dim, clause] when dim in @event_props -> [[op, "event:" <> dim, clause]]
+      _ -> nil
+    end)
   end
 end

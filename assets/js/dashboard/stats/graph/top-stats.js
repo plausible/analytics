@@ -213,7 +213,7 @@ export default function TopStats({
     return (
       <LiveViewIframe
         className="w-full h-full border-0 overflow-hidden"
-        src={`${window.location.pathname}/live/top_stats?date_range=${query.period}`}
+        src={`${window.location.pathname}/live/top_stats?date_range=${query.period}&filters=${JSON.stringify(query.filters)}`}
       />
     )
   }
