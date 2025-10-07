@@ -46,10 +46,20 @@ defmodule Plausible.Stats.SamplingTest do
         assert fractional_sample_rate(@threshold * 50, query(30, filters: [])) == 0.02
 
         assert fractional_sample_rate(@threshold * 50, query(30, filters: [@filter])) ==
-                 0.40
+                 0.08
 
         assert fractional_sample_rate(
                  @threshold * 50,
+                 query(30, filters: [@filter, @filter])
+               ) == 0.32
+
+        assert fractional_sample_rate(
+                 @threshold * 50,
+                 query(30, filters: [@filter, @filter, @filter])
+               ) == 0.32
+
+        assert fractional_sample_rate(
+                 @threshold * 10,
                  query(30, filters: [@filter, @filter])
                ) == :no_sampling
       end

@@ -97,7 +97,9 @@ defmodule Plausible.Stats.Sampling do
     estimate_by_filters(duration_adjusted_traffic, query.filters)
   end
 
-  @filter_traffic_multiplier 1 / 20.0
+  @filter_traffic_multiplier 1 / 4.0
+  @max_filters 2
+
   defp estimate_by_filters(estimation, filters),
-    do: estimation * @filter_traffic_multiplier ** length(filters)
+    do: estimation * @filter_traffic_multiplier ** min(length(filters), @max_filters)
 end
