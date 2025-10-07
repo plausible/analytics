@@ -509,6 +509,7 @@ PlausibleWeb.Plugs.AuthorizeSiteAccess.html
 PlausibleWeb.Plugs.ErrorHandler.html
 PlausibleWeb.Plugs.MaybeDisableRegistration.html
 PlausibleWeb.Plugs.NoRobots.html
+PlausibleWeb.Plugs.SecureEmbedHeaders.html
 PlausibleWeb.Plugs.SecureSSO.html
 PlausibleWeb.Plugs.UserSessionTouch.html
 PlausibleWeb.RemoteIP.html
@@ -558,8 +559,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-91BD5C3C.js
-dist/sidebar_items-203B2C71.js
+dist/search_data-86B39366.js
+dist/sidebar_items-B3FB7FA6.js
 index.html
 readme.html
 search.html
