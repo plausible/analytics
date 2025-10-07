@@ -72,6 +72,13 @@ if (csrfToken && websocketUrl) {
     window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
   }
 
+  window.addEventListener('plausible:top_stats:select', (e) => {
+    top.postMessage(
+      { type: "EMBEDDED_LV_TOP_STATS_SELECT", metric: e.target.dataset.metric },
+      "*"
+    );
+  })
+
 
   liveSocket.connect()
   window.liveSocket = liveSocket

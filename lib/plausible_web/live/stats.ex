@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.Stats do
         %{
           "site_id" => site.domain,
           "date_range" => params["date_range"],
-          "filters" => dbg(url_filters_to_api_filters(JSON.decode!(params["filters"]))),
+          "filters" => url_filters_to_api_filters(JSON.decode!(params["filters"])),
           # Placeholder metrics
           "metrics" => ["visitors"]
         },
@@ -80,7 +80,11 @@ defmodule PlausibleWeb.Live.Stats do
   defp top_stat_metric(assigns) do
     # :TODO: Border classes depend on index, as in assets/js/dashboard/stats/graph/top-stats.js
     ~H"""
-    <div class="relative px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none cursor-pointer border-r lg:border-r-0">
+    <div
+      class="relative px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none cursor-pointer border-r lg:border-r-0"
+      phx-click={JS.dispatch("plausible:top_stats:select")}
+      data-metric={@metric}
+    >
       <div class="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent">
         {@name}
       </div>
@@ -164,11 +168,11 @@ defmodule PlausibleWeb.Live.Stats do
       #   goal_top_stats(site, query)
 
       true ->
-        other_top_stats(query, site)
+        other_top_stats(query)
     end
   end
 
-  defp other_top_stats(query, site) do
+  defp other_top_stats(query) do
     page_filter? =
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 

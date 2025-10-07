@@ -100,11 +100,11 @@ export default function TopStats({
     return graphableMetrics.includes(stat.graph_metric)
   }
 
-  function maybeUpdateMetric(stat) {
-    if (canMetricBeGraphed(stat)) {
-      storage.setItem(`metric__${site.domain}`, stat.graph_metric)
-      onMetricUpdate(stat.graph_metric)
-    }
+  function maybeUpdateMetric(metric) {
+    // if (canMetricBeGraphed(stat)) {
+      storage.setItem(`metric__${site.domain}`, metric)
+      onMetricUpdate(metric)
+    // }
   }
 
   function blinkingDot() {
@@ -209,10 +209,17 @@ export default function TopStats({
     )
   }
 
+  const onMessage = (data) => {
+    if (data.type === "EMBEDDED_LV_TOP_STATS_SELECT") {
+      maybeUpdateMetric(data.metric)
+    }
+  }
+
   if (true) {
     return (
       <LiveViewIframe
         className="w-full h-full border-0 overflow-hidden"
+        onMessage={onMessage}
         src={`${window.location.pathname}/live/top_stats?date_range=${query.period}&filters=${JSON.stringify(query.filters)}`}
       />
     )
