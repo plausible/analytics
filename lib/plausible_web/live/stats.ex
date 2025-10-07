@@ -11,13 +11,15 @@ defmodule PlausibleWeb.Live.Stats do
         socket
       ) do
     site =
-      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
-        :owner,
-        :admin,
-        :editor,
-        :super_admin,
-        :viewer
-      ])
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain,
+        roles: [
+          :owner,
+          :admin,
+          :editor,
+          :super_admin,
+          :viewer
+        ]
+      )
 
     {:ok,
      assign(socket,
@@ -54,7 +56,7 @@ defmodule PlausibleWeb.Live.Stats do
         :internal,
         %{
           "site_id" => site.domain,
-          "date_range" => data["date_range"] || "all",
+          "date_range" => params["date_range"],
           "filters" => data["filters"] || [],
           # Placeholder metrics
           "metrics" => ["visitors"]
