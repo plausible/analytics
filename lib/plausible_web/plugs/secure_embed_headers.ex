@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Plugs.SecureHeaders do
+defmodule PlausibleWeb.Plugs.SecureEmbedHeaders do
   @moduledoc """
   Sets secure headers tailored for embedded content.
   """
