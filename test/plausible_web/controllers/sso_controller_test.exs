@@ -65,7 +65,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html =~ "Enter your Single Sign-On email"
         assert element_exists?(html, "input[name=email]")
-        assert text_of_attr(html, "input[name=return_to]", "value") == ""
+        assert text_of_attr(html, ~s|input[name="return_to"]|, "value") == nil
       end
 
       test "renders autosubmit js snippet when instructed", %{conn: conn} do
@@ -420,13 +420,11 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert ["Grace Holmes", "Kate Loselet", "Frank Rubin", "Grace Holmes"] =
                  find(html, "table#sso-sessions-list tr td:nth-of-type(1)")
-                 |> Enum.map(&Floki.text/1)
-                 |> Enum.map(&String.trim/1)
+                 |> Enum.map(&text/1)
 
         assert ["Device 2", "Device 4", "Device 1", "Device 3"] =
                  find(html, "table#sso-sessions-list tr td:nth-of-type(2)")
-                 |> Enum.map(&Floki.text/1)
-                 |> Enum.map(&String.trim/1)
+                 |> Enum.map(&text/1)
       end
 
       test "shows empty state when there are no sessions", %{conn: conn} do

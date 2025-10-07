@@ -495,8 +495,7 @@ defmodule PlausibleWeb.Live.Sites do
               <p>
                 The site uses <span x-text="selectedInvitation && selectedInvitation.missing_features"></span>,
                 which your current subscription does not support. After accepting ownership of this site,
-                you will not be able to access them unless you
-                <.styled_link
+                you will not be able to access them unless you <.styled_link
                   class="inline-block"
                   href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
                 >

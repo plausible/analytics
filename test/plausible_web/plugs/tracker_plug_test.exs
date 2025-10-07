@@ -14,8 +14,8 @@ defmodule PlausibleWeb.TrackerPlugTest do
   do regenerate the files before running tests, so they're up to date.
   """
   use PlausibleWeb.ConnCase, async: true
-  use Plug.Test
   use Plausible.Teams.Test
+  import Plug.Test
 
   alias PlausibleWeb.Tracker
 

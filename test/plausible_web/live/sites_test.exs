@@ -73,29 +73,25 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
                "G.I. Jane has invited you to join the \"My Personal Sites\" as editor member."
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}"]|
+             )
     end
 
     test "renders metadata for invitation", %{
@@ -356,7 +352,8 @@ defmodule PlausibleWeb.Live.SitesTest do
         |> element(button_selector)
         |> render_click()
 
-      assert text(html) =~ "Looks like you've hit the pinned sites limit!"
+      assert html =~
+               LazyHTML.html_escape("Looks like you've hit the pinned sites limit!")
     end
 
     test "does not allow pinning site user doesn't have access to", %{conn: conn, user: user} do

@@ -421,7 +421,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert text_of_element(
                  html,
-                 ~s|select[name="enterprise_plan[billing_interval]"] option[selected="selected"]|
+                 ~s|select[name="enterprise_plan[billing_interval]"] option[selected]|
                ) ==
                  "monthly"
 
@@ -444,17 +444,17 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert element_exists?(
                  html,
-                 ~s|input[name="enterprise_plan[features[]][stats_api]"][checked="checked"]|
+                 ~s|input[name="enterprise_plan[features[]][stats_api]"][checked]|
                )
 
         assert element_exists?(
                  html,
-                 ~s|input[name="enterprise_plan[features[]][funnels]"][checked="checked"]|
+                 ~s|input[name="enterprise_plan[features[]][funnels]"][checked]|
                )
 
         refute element_exists?(
                  html,
-                 ~s|input[name="enterprise_plan[features[]][revenue_goals]"][checked="checked"]|
+                 ~s|input[name="enterprise_plan[features[]][revenue_goals]"][checked]|
                )
 
         assert text(html) =~ "Update Plan"
@@ -788,8 +788,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
           |> element(~s|button[phx-click="reveal-audit-entry"][phx-value-id="#{entry.id}"]|)
           |> render_click()
 
-        assert text_of_element(html, ~s|textarea|) ==
-                 "{ &amp;quot;foo&amp;quot;: &amp;quot;bar&amp;quot; }"
+        assert text_of_element(html, ~s|textarea|) == ~s|{ "foo": "bar" }|
       end
 
       test "shows audit entries when user id does not exists", %{conn: conn, user: user} do

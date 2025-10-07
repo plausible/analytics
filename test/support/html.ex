@@ -1,8 +1,6 @@
 defmodule Plausible.Test.Support.HTML do
-  Code.ensure_compiled!(Floki)
-
   @moduledoc """
-  Floki wrappers to help make assertions about HTML/DOM structures
+  LazyHTML wrappers to help make assertions about HTML/DOM structures
   """
 
   def element_exists?(html, selector) do
@@ -12,14 +10,10 @@ defmodule Plausible.Test.Support.HTML do
     |> Kernel.not()
   end
 
-  def find(html, value) when is_binary(html) do
+  def find(html, selector) do
     html
-    |> Floki.parse_document!()
-    |> Floki.find(value)
-  end
-
-  def find(html, value) do
-    Floki.find(html, value)
+    |> lazy_parse()
+    |> LazyHTML.query(selector)
   end
 
   def submit_button(html, form) do
@@ -30,17 +24,20 @@ defmodule Plausible.Test.Support.HTML do
     element_exists?(html, "form[action=\"" <> action_path <> "\"]")
   end
 
-  def text_of_element(html, element) do
+  def text_of_element(html, selector) do
     html
-    |> find(element)
-    |> Floki.text()
-    |> String.trim()
-    |> String.replace(~r/\s+/, " ")
+    |> find(selector)
+    |> text()
+  end
+
+  def elem_count(html, selector) do
+    find(html, selector) |> Enum.count()
   end
 
   def text(element) do
     element
-    |> Floki.text()
+    |> lazy_parse()
+    |> LazyHTML.text()
     |> String.trim()
     |> String.replace(~r/\s+/, " ")
   end
@@ -49,7 +46,7 @@ defmodule Plausible.Test.Support.HTML do
     empty? =
       html
       |> find(element)
-      |> Floki.attribute(attr)
+      |> LazyHTML.attribute(attr)
       |> Enum.empty?()
 
     not empty?
@@ -61,20 +58,34 @@ defmodule Plausible.Test.Support.HTML do
     |> text_of_attr("class")
   end
 
-  def text_of_attr(html, element, attr) do
+  def text_of_attr(html, selector, attr) do
     html
-    |> find(element)
+    |> find(selector)
     |> text_of_attr(attr)
   end
 
   def text_of_attr(element, attr) do
-    element
-    |> Floki.attribute(attr)
-    |> Floki.text()
-    |> String.trim()
+    case LazyHTML.attribute(lazy_parse(element), attr) do
+      [] ->
+        nil
+
+      [value] ->
+        value
+
+      [_ | _] ->
+        raise "Multiple attributes found. Narrow down the element you are looking for"
+    end
   end
 
   def name_of(element) do
-    List.first(Floki.attribute(element, "name"))
+    text_of_attr(element, "name")
+  end
+
+  defp lazy_parse(%LazyHTML{} = lazy) do
+    lazy
+  end
+
+  defp lazy_parse(element) when is_binary(element) do
+    LazyHTML.from_fragment(element)
   end
 end

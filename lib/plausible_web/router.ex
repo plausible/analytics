@@ -15,6 +15,7 @@ defmodule PlausibleWeb.Router do
     on_ee(do: plug(Plausible.Plugs.HandleExpiredSession))
     on_ee(do: plug(Plausible.Plugs.SSOTeamAccess))
     plug PlausibleWeb.Plugs.UserSessionTouch
+    plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
   on_ee do
@@ -28,6 +29,7 @@ defmodule PlausibleWeb.Router do
       plug PlausibleWeb.AuthPlug
       on_ee(do: plug(Plausible.Plugs.HandleExpiredSession))
       plug PlausibleWeb.Plugs.UserSessionTouch
+      plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
     end
   end
 
@@ -35,6 +37,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["html"]
     plug :put_secure_browser_headers
     plug PlausibleWeb.Plugs.NoRobots
+    plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
   pipeline :csrf do
