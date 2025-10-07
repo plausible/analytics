@@ -54,7 +54,7 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
   """
 
   # We define a timeout for the browserless endpoint call to avoid waiting too long for a response
-  @endpoint_timeout_ms 2_000
+  @endpoint_timeout_ms 3_000
 
   # This timeout determines how long we wait for window.plausible to be initialized on the page, used for detecting whether v1 installed
   @plausible_window_check_timeout_ms 1_500
@@ -121,9 +121,11 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
     end
   end
 
-  defp handle_browserless_response(state, _body, status) do
+  defp handle_browserless_response(state, body, status) do
     error = "Unhandled browserless response with status: #{status}"
-    Logger.warning(warning_message(error, state))
+
+    warning_message("#{error}; body: #{inspect(body)}", state)
+    |> Logger.warning()
 
     put_diagnostics(state, service_error: error)
   end
