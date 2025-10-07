@@ -103,7 +103,7 @@ defmodule PlausibleWeb.Live.Stats do
         <div>
           <span class="flex items-center justify-between whitespace-nowrap">
             <p class="font-bold text-xl dark:text-gray-100" id={@metric}>
-              {@value}
+              {format_metric(@metric, @value)}
             </p>
             <.change_arrow />
           </span>
@@ -133,6 +133,30 @@ defmodule PlausibleWeb.Live.Stats do
       41%
     </span>
     """
+  end
+
+  defp format_metric(metric, value) when metric in [:visitors, :visits, :pageviews] do
+    PlausibleWeb.StatsView.large_number_format(value)
+  end
+
+  defp format_metric(:bounce_rate, value) do
+    "#{value}%"
+  end
+
+  defp format_metric(:visit_duration, value) do
+    hours = trunc(value / 60 / 60)
+    minutes = rem(trunc(value / 60), 60)
+    seconds = trunc(value - minutes * 60 - hours * 60 * 60)
+
+    cond do
+      hours > 0 -> "#{hours}h #{minutes}m #{seconds}s"
+      minutes > 0 -> "#{minutes}m #{seconds}s"
+      true -> "#{seconds}s"
+    end
+  end
+
+  defp format_metric(metric, value) do
+    value
   end
 
   defp zip_metrics(metrics, %QueryResult{results: [%{metrics: values}]}) do
