@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_secure_browser_headers
+    plug PlausibleWeb.Plugs.SecureHeaders
     plug PlausibleWeb.Plugs.NoRobots
     on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
     plug PlausibleWeb.AuthPlug
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Router do
 
   pipeline :shared_link do
     plug :accepts, ["html"]
-    plug PlausibleWeb.Plugs.SecureEmbedHeaders
+    plug PlausibleWeb.Plugs.SecureHeaders
     plug PlausibleWeb.Plugs.NoRobots
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
