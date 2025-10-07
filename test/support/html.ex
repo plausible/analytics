@@ -30,6 +30,10 @@ defmodule Plausible.Test.Support.HTML do
     |> text()
   end
 
+  def elem_count(html, selector) do
+    find(html, selector) |> Enum.count()
+  end
+
   def text(element) do
     element
     |> lazy_parse()

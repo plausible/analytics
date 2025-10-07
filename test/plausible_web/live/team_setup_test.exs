@@ -196,14 +196,14 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert Enum.count(find(html, member_el())) == 1
+      assert elem_count(html, member_el()) == 1
 
       assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
 
       change_role(lv, 1, "viewer", guest_el())
       html = render(lv)
 
-      assert Enum.count(find(html, member_el())) == 2
+      assert elem_count(html, member_el()) == 2
       refute element_exists?(html, "#guest-list")
 
       save_layout(lv)
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = lv |> render()
 
-      assert Enum.count(find(html, "#{member_el()}:nth-of-type(1) a")) >= 2
+      assert element_exists?(html, "#{member_el()}:nth-of-type(1) a")
       refute element_exists?(html, "#{member_el()}:nth-of-type(2) a")
     end
 
@@ -288,8 +288,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert html |> find(member_el()) |> Enum.count() == 4
-      assert html |> find(guest_el()) |> Enum.count() == 1
+      assert elem_count(html, member_el()) == 4
+      assert elem_count(html, guest_el()) == 1
 
       pending = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       sent = find(html, "#{member_el()}:nth-of-type(2)") |> text()

@@ -926,8 +926,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      buttons = find(resp, ~s|a[data-method="delete"]|)
-      assert Enum.count(buttons) == 4
+      assert elem_count(resp, ~s|a[data-method="delete"]|) == 4
 
       assert resp =~ "Google Analytics (123456)"
       assert resp =~ "9.9k"
