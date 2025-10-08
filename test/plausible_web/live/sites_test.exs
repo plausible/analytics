@@ -94,22 +94,6 @@ defmodule PlausibleWeb.Live.SitesTest do
              )
     end
 
-    test "renders metadata for invitation", %{
-      conn: conn,
-      user: user
-    } do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-
-      invitation = invite_guest(site, user, inviter: inviter, role: :viewer)
-
-      {:ok, _lv, html} = live(conn, "/sites")
-
-      invitation_data = get_invitation_data(html)
-
-      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "invitation"])
-    end
-
     @tag :ee_only
     test "renders ownership transfer invitation for a case with no plan", %{
       conn: conn,
@@ -122,9 +106,10 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      invitation_data = get_invitation_data(html)
+      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
 
-      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "no_plan"])
+      assert text(template) =~
+               "You are unable to accept the ownership of this site because your account does not have a subscription"
     end
 
     @tag :ee_only
@@ -220,10 +205,9 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      invitation_data = get_invitation_data(html)
+      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
 
-      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "exceeded_limits"]) ==
-               "site limit"
+      assert text(template) =~ "Owning this site would exceed your site limit"
     end
 
     @tag :ee_only
@@ -240,10 +224,10 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      invitation_data = get_invitation_data(html)
+      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
 
-      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "missing_features"]) ==
-               "Custom Properties"
+      assert text(template) =~
+               "The site uses Custom Properties, which your current subscription does not support"
     end
 
     test "renders 24h visitors correctly", %{conn: conn, user: user} do
@@ -448,15 +432,5 @@ defmodule PlausibleWeb.Live.SitesTest do
     lv
     |> element("form")
     |> render_change(%{id => text})
-  end
-
-  defp get_invitation_data(html) do
-    html
-    |> text_of_attr("div[x-ref=\"invitation_data\"][x-data]", "x-data")
-    |> String.trim("dropdown")
-    |> String.replace("selectedInvitation:", "\"selectedInvitation\":")
-    |> String.replace("invitationOpen:", "\"invitationOpen\":")
-    |> String.replace("invitations:", "\"invitations\":")
-    |> Jason.decode!()
   end
 end

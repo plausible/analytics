@@ -81,6 +81,26 @@ defmodule Plausible.Test.Support.HTML do
     text_of_attr(element, "name")
   end
 
+  @doc """
+    When using liveview <.portal> element, it renders a <template> that gets rendered into DOM
+    by JS. In order to make assertions about portal contents, we need to find the <template> element
+    and get its contents. Unfortunately <template> elements are not treated like standard elements by LazyHTML.from_fragment(
+    Functions like LazyHTML.text() or LazyHTML.query() return nothing for <template> elemenets. So this function tricks LazyHTML by:
+      1. Finding the template element
+      2. Transforming it into a <div> so it can be used like a normal LazyHTML node
+  )
+  """
+  def find_portal_template(html, id) do
+    template_id = id <> "-portal"
+
+    [{"template", attrs, children}] =
+      lazy_parse(html)
+      |> find(template_id)
+      |> LazyHTML.to_tree()
+
+    LazyHTML.from_tree([{"div", attrs, children}])
+  end
+
   defp lazy_parse(%LazyHTML{} = lazy) do
     lazy
   end
