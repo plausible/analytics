@@ -1,11 +1,10 @@
 defmodule Plausible.Stats.SamplingCache do
   @moduledoc """
-  Cache storing estimation for events ingested by a team in the past month.
+  Cache storing estimation for events ingested by a site in the past month.
 
   Used for sampling rate calculations in Plausible.Stats.Sampling.
   """
   alias Plausible.Ingestion
-  alias Plausible.Stats.Sampling
 
   import Ecto.Query
   use Plausible.Cache
@@ -48,29 +47,10 @@ defmodule Plausible.Stats.SamplingCache do
     |> Map.get(site_id)
   end
 
-  @threshold Sampling.default_sample_threshold()
-
-  def get(key, opts) do
-    above_threshold_only? = Keyword.get(opts, :above_threshold_only?, true)
-
-    case super(key, opts) do
-      result when is_integer(result) and above_threshold_only? and result >= @threshold ->
-        result
-
-      # in case of consolidated gets we need to sum all values, in case only consolidated qualifies for threshold breach
-      result when is_integer(result) and not above_threshold_only? ->
-        result
-
-      _ ->
-        nil
-    end
-  end
-
   @spec consolidated_get(list(pos_integer()), Keyword.t()) :: pos_integer() | nil
   def consolidated_get(site_ids, opts \\ []) when is_list(site_ids) do
-    opts = Keyword.put(opts, :above_threshold_only?, false)
     events_ingested = Enum.sum_by(site_ids, &(get(&1, opts) || 0))
-    if events_ingested >= @threshold, do: events_ingested
+    if events_ingested > 0, do: events_ingested
   end
 
   defp thirty_days_ago() do

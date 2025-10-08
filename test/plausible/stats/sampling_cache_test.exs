@@ -80,7 +80,7 @@ defmodule Plausible.Stats.SamplingCacheTest do
 
         start_test_cache(test)
 
-        assert SamplingCache.get(@site_id1, force?: true, cache_name: test) == nil
+        assert SamplingCache.get(@site_id1, force?: true, cache_name: test) == 5_500_000
         assert SamplingCache.get(@site_id2, force?: true, cache_name: test) == 1.1 * @threshold
         assert SamplingCache.get(@site_id3, force?: true, cache_name: test) == nil
         assert SamplingCache.get(@site_id4, force?: true, cache_name: test) == nil
@@ -187,12 +187,10 @@ defmodule Plausible.Stats.SamplingCacheTest do
                  force?: true
                ) == @threshold
 
-        assert is_nil(
-                 SamplingCache.consolidated_get([@site_id9],
-                   cache_name: test,
-                   force?: true
-                 )
-               )
+        assert SamplingCache.consolidated_get([@site_id9],
+                 cache_name: test,
+                 force?: true
+               ) == div(@threshold, 2)
       end
 
       test "conslidated_get returns nil", %{test: test} do

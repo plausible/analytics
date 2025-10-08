@@ -5,16 +5,32 @@ defmodule Plausible.Stats.SamplingTest do
 
   on_ee do
     import Plausible.Stats.Sampling, only: [fractional_sample_rate: 2]
-    alias Plausible.Stats.{Query, DateTimeRange, Sampling}
+    alias Plausible.Stats.{Query, DateTimeRange}
 
     describe "&fractional_sample_rate/2" do
-      @threshold Sampling.default_sample_threshold()
+      @threshold Plausible.Sampling.default_sample_threshold()
 
       test "no traffic estimate" do
         assert fractional_sample_rate(nil, query(30)) == :no_sampling
       end
 
       test "scales sampling rate according to query duration" do
+        for n <- [1, 100, 1000, 10_000, 100_000, 1_000_000, 7_000_000] do
+          assert {n, fractional_sample_rate(n, query(1))} == {n, :no_sampling}
+          assert {n, fractional_sample_rate(n, query(5))} == {n, :no_sampling}
+          assert {n, fractional_sample_rate(n, query(10))} == {n, :no_sampling}
+          assert {n, fractional_sample_rate(n, query(15))} == {n, :no_sampling}
+          assert {n, fractional_sample_rate(n, query(30))} == {n, :no_sampling}
+          assert {n, fractional_sample_rate(n, query(60))} == {n, :no_sampling}
+          assert {n, fractional_sample_rate(n, query(100))} == {n, :no_sampling}
+        end
+
+        assert fractional_sample_rate(6_000_000, query(300)) == 0.17
+        assert fractional_sample_rate(7_500_000, query(100)) == 0.4
+        assert fractional_sample_rate(7_500_000, query(364)) == 0.11
+        assert fractional_sample_rate(7_500_000, query(900)) == 0.04
+        assert fractional_sample_rate(7_500_000, query(2900)) == 0.013
+
         assert fractional_sample_rate(@threshold * 2, query(30)) == :no_sampling
         assert fractional_sample_rate(@threshold * 2, query(60)) == 0.25
         assert fractional_sample_rate(@threshold * 2, query(100)) == 0.15
