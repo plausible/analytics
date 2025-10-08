@@ -281,7 +281,7 @@ defmodule Plausible.Application do
         persistor_url,
         Config.Reader.merge(
           default,
-          protocol: :http2,
+          protocols: [:http2],
           count: count,
           conn_opts: [transport_opts: [timeout: timeout_ms]]
         )
