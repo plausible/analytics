@@ -8,7 +8,7 @@ defmodule Plausible.Stats.SamplingTest do
     alias Plausible.Stats.{Query, DateTimeRange}
 
     describe "&fractional_sample_rate/2" do
-      @threshold Plausible.Sampling.default_sample_threshold()
+      @threshold Plausible.Stats.Sampling.default_sample_threshold()
 
       test "no traffic estimate" do
         assert fractional_sample_rate(nil, query(30)) == :no_sampling
