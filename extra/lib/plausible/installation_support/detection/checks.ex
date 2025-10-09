@@ -44,12 +44,12 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
     result = Detection.Diagnostics.interpret(state.diagnostics, state.url)
 
     case result.data do
-      %{unhandled: true, diagnostics: diagnostics, url: url} ->
+      %{unhandled: true} ->
         Sentry.capture_message("Unhandled case for detection",
           extra: %{
-            message: inspect(diagnostics),
-            url: url,
-            hash: :erlang.phash2(diagnostics)
+            message: inspect(state.diagnostics),
+            url: state.url,
+            hash: :erlang.phash2(state.diagnostics)
           }
         )
 
