@@ -196,6 +196,7 @@ defmodule Plausible.Application do
     setup_request_logging()
     setup_sentry()
     setup_opentelemetry()
+    Plausible.Ingestion.Persistor.TelemetryHandler.install()
 
     setup_geolocation()
     Location.load_all()
