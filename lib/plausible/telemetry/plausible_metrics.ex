@@ -278,32 +278,32 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         tags: [:result, :path]
       ),
       distribution(
-        metric_prefix ++ [:persistor, :remote, :connect, :duration, :microsecond],
+        metric_prefix ++ [:persistor, :remote, :connect, :duration, :millisecond],
         event_name: Persistor.TelemetryHandler.connect_event(),
         reporter_options: [
-          buckets: [10, 100, 500, 1_000, 5_000, 10_000, 30_000]
+          buckets: [1, 10, 50, 100, 500, 1_000, 10_000]
         ],
-        unit: {:native, :microsecond},
+        unit: {:native, :millisecond},
         measurement: :duration,
         tags: [:status]
       ),
       distribution(
-        metric_prefix ++ [:persistor, :remote, :send, :duration, :microsecond],
+        metric_prefix ++ [:persistor, :remote, :send, :duration, :millisecond],
         event_name: Persistor.TelemetryHandler.send_event(),
         reporter_options: [
-          buckets: [10, 100, 500, 1_000, 5_000, 10_000, 30_000]
+          buckets: [1, 10, 50, 100, 500, 1_000, 10_000]
         ],
-        unit: {:native, :microsecond},
+        unit: {:native, :millisecond},
         measurement: :duration,
         tags: [:status]
       ),
       distribution(
-        metric_prefix ++ [:persistor, :remote, :receive, :duration, :microsecond],
+        metric_prefix ++ [:persistor, :remote, :receive, :duration, :millisecond],
         event_name: Persistor.TelemetryHandler.receive_event(),
         reporter_options: [
           buckets: [10, 100, 500, 1_000, 5_000, 10_000, 30_000]
         ],
-        unit: {:native, :microsecond},
+        unit: {:native, :millisecond},
         measurement: :duration,
         tags: [:status]
       )
