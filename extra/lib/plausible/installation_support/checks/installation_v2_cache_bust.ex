@@ -20,20 +20,24 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2CacheBust do
 
   @impl true
   def perform(%State{url: url} = state) do
-    if InstallationSupport.Verification.Checks.interpret_diagnostics(state) ==
-         %InstallationSupport.Result{ok?: true} do
-      state
-    else
-      url_that_maybe_busts_cache =
-        Plausible.InstallationSupport.URL.bust_url(url)
+    case InstallationSupport.Verification.Checks.interpret_diagnostics(state, telemetry?: false) do
+      %InstallationSupport.Result{ok?: true} ->
+        state
 
-      state_after_cache_bust =
-        Plausible.InstallationSupport.Checks.InstallationV2.perform(%{
-          state
-          | url: url_that_maybe_busts_cache
-        })
+      %InstallationSupport.Result{data: %{unhandled: true}} ->
+        state
 
-      put_diagnostics(state_after_cache_bust, diagnostics_are_from_cache_bust: true)
+      _known_installation_failure ->
+        url_that_maybe_busts_cache =
+          Plausible.InstallationSupport.URL.bust_url(url)
+
+        state_after_cache_bust =
+          Plausible.InstallationSupport.Checks.InstallationV2.perform(%{
+            state
+            | url: url_that_maybe_busts_cache
+          })
+
+        put_diagnostics(state_after_cache_bust, diagnostics_are_from_cache_bust: true)
     end
   end
 end

@@ -260,15 +260,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       do: error_plausible_not_found(selected_installation_type)
 
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, url) do
-    Sentry.capture_message("Unhandled case for site verification (v2)",
-      extra: %{
-        message: inspect(diagnostics),
-        url: url,
-        hash: :erlang.phash2(diagnostics)
-      }
-    )
-
     error_plausible_not_found(diagnostics.selected_installation_type)
+    |> Map.put(:data, %{unhandled: true, diagnostics: diagnostics, url: url})
   end
 
   @message_plausible_not_found "We couldn't detect Plausible on your site"

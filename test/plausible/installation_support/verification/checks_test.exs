@@ -519,7 +519,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            )
                            |> Checks.interpret_diagnostics()
 
-          assert 2 == :atomics.get(verification_counter, 1)
+          assert 1 == :atomics.get(verification_counter, 1)
         end
       end
     end

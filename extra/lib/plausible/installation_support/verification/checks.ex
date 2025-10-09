@@ -38,11 +38,38 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
     )
   end
 
-  def interpret_diagnostics(%State{} = state) do
-    Verification.Diagnostics.interpret(
-      state.diagnostics,
-      state.data_domain,
-      state.url
-    )
+  def telemetry_event_handled(), do: [:plausible, :verification, :handled]
+  def telemetry_event_unhandled(), do: [:plausible, :verification, :unhandled]
+
+  def interpret_diagnostics(%State{} = state, opts \\ []) do
+    telemetry? = Keyword.get(opts, :telemetry?, true)
+
+    result =
+      Verification.Diagnostics.interpret(
+        state.diagnostics,
+        state.data_domain,
+        state.url
+      )
+
+    case {telemetry?, result.data} do
+      {false, _} ->
+        :skip
+
+      {_, %{unhandled: true, diagnostics: diagnostics, url: url}} ->
+        Sentry.capture_message("Unhandled case for site verification (v2)",
+          extra: %{
+            message: inspect(diagnostics),
+            url: url,
+            hash: :erlang.phash2(diagnostics)
+          }
+        )
+
+        :telemetry.execute(telemetry_event_unhandled(), %{})
+
+      _ ->
+        :telemetry.execute(telemetry_event_handled(), %{})
+    end
+
+    result
   end
 end

@@ -72,15 +72,11 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
     do: unhandled_case(diagnostics, url)
 
   defp unhandled_case(diagnostics, url) do
-    Sentry.capture_message("Unhandled case for detection",
-      extra: %{
-        message: inspect(diagnostics),
-        url: url,
-        hash: :erlang.phash2(diagnostics)
-      }
-    )
-
-    %Result{ok?: false, data: nil, errors: ["Unhandled detection case"]}
+    %Result{
+      ok?: false,
+      data: %{unhandled: true, diagnostics: diagnostics, url: url},
+      errors: ["Unhandled detection case"]
+    }
   end
 
   defp get_result(suggested_technology, diagnostics) do

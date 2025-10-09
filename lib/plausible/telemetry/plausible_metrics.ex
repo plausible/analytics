@@ -7,6 +7,10 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   alias Plausible.Site
   alias Plausible.Ingestion
 
+  on_ee do
+    alias Plausible.InstallationSupport
+  end
+
   @impl true
   def polling_metrics(opts) do
     poll_rate = Keyword.get(opts, :poll_rate, 5_000)
@@ -166,8 +170,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               metric_prefix ++ [:verification, :js_elixir_diff],
               event_name:
                 Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = true)
-            ),
-          else: nil
+            )
         ),
         on_ee(
           do:
@@ -175,8 +178,35 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               metric_prefix ++ [:verification, :js_elixir_match],
               event_name:
                 Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = false)
-            ),
-          else: nil
+            )
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:detection, :handled],
+              event_name: InstallationSupport.Detection.Checks.telemetry_event_handled()
+            )
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:detection, :unhandled],
+              event_name: InstallationSupport.Detection.Checks.telemetry_event_unhandled()
+            )
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:verification, :handled],
+              event_name: InstallationSupport.Verification.Checks.telemetry_event_handled()
+            )
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:verification, :unhandled],
+              event_name: InstallationSupport.Verification.Checks.telemetry_event_unhandled()
+            )
         )
       ]
       |> Enum.reject(&is_nil/1)
