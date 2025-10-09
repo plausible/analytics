@@ -170,8 +170,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               metric_prefix ++ [:verification, :js_elixir_diff],
               event_name:
                 Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = true)
-            ),
-          else: nil
+            )
         ),
         on_ee(
           do:
@@ -179,40 +178,35 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               metric_prefix ++ [:verification, :js_elixir_match],
               event_name:
                 Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = false)
-            ),
-          else: nil
+            )
         ),
         on_ee(
           do:
             counter(
               metric_prefix ++ [:detection, :handled],
               event_name: InstallationSupport.Detection.Checks.telemetry_event(:handled)
-            ),
-          else: nil
+            )
         ),
         on_ee(
           do:
             counter(
               metric_prefix ++ [:detection, :unhandled],
               event_name: InstallationSupport.Detection.Checks.telemetry_event(:unhandled)
-            ),
-          else: nil
+            )
         ),
         on_ee(
           do:
             counter(
               metric_prefix ++ [:verification, :handled],
               event_name: InstallationSupport.Verification.Checks.telemetry_event(:handled)
-            ),
-          else: nil
+            )
         ),
         on_ee(
           do:
             counter(
               metric_prefix ++ [:verification, :unhandled],
               event_name: InstallationSupport.Verification.Checks.telemetry_event(:unhandled)
-            ),
-          else: nil
+            )
         )
       ]
       |> Enum.reject(&is_nil/1)
