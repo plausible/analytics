@@ -6,26 +6,28 @@ defmodule Plausible.Ingestion.Persistor.TelemetryHandler do
   """
 
   @finch_request_event [:finch, :request, :stop]
-  @finch_queue_event [:finch, :queue, :stop]
   @finch_connect_event [:finch, :connect, :stop]
   @finch_send_event [:finch, :send, :stop]
-  @finch_receive_event [:finch, :receive, :stop]
+  @finch_receive_event [:finch, :recv, :stop]
 
   @persistor_request_event [:persistor, :remote, :request]
-  @persistor_queue_event [:persistor, :remote, :queue]
   @persistor_connect_event [:persistor, :remote, :connect]
   @persistor_send_event [:persistor, :remote, :send]
   @persistor_receive_event [:persistor, :remote, :receive]
 
   @telemetry_events [
     @finch_request_event,
-    @finch_queue_event,
     @finch_connect_event,
     @finch_send_event,
     @finch_receive_event
   ]
 
   @telemetry_handler &__MODULE__.handle_event/4
+
+  def request_event(), do: @persistor_request_event
+  def connect_event(), do: @persistor_connect_event
+  def send_event(), do: @persistor_send_event
+  def receive_event(), do: @persistor_receive_event
 
   @spec install() :: :ok
   def install() do
@@ -93,25 +95,6 @@ defmodule Plausible.Ingestion.Persistor.TelemetryHandler do
   end
 
   def handle_event(
-        @finch_queue_event,
-        %{duration: duration, idle_time: idle_time},
-        %{request: request, pool: pool_pid},
-        config
-      ) do
-    if request.host == config.remote_host do
-      pool = :erlang.phash2(pool_pid, config.pool_size) + 1
-
-      :telemetry.execute(
-        @persistor_queue_event,
-        %{duration: duration, idle_time: idle_time},
-        %{pool: pool}
-      )
-    end
-
-    :ok
-  end
-
-  def handle_event(
         @finch_connect_event,
         %{duration: duration},
         %{host: host} = meta,
@@ -130,14 +113,14 @@ defmodule Plausible.Ingestion.Persistor.TelemetryHandler do
 
   def handle_event(
         @finch_send_event,
-        %{duration: duration, idle_time: idle_time},
+        %{duration: duration},
         %{request: request} = meta,
         config
       ) do
     if request.host == config.remote_host do
       :telemetry.execute(
         @persistor_send_event,
-        %{duration: duration, idle_time: idle_time},
+        %{duration: duration},
         %{status: if(meta[:error], do: "error", else: "ok")}
       )
     end
@@ -147,15 +130,17 @@ defmodule Plausible.Ingestion.Persistor.TelemetryHandler do
 
   def handle_event(
         @finch_receive_event,
-        %{duration: duration, idle_time: idle_time},
+        %{duration: duration},
         %{request: request, status: status} = meta,
         config
       ) do
     if request.host == config.remote_host do
       :telemetry.execute(
         @persistor_receive_event,
-        %{duration: duration, idle_time: idle_time},
-        %{status: if(meta[:error] or status < 200 or status > 299, do: "error", else: "ok")}
+        %{duration: duration},
+        %{
+          status: if(meta[:error] || status < 200 || status > 299, do: "error", else: "ok")
+        }
       )
     end
 

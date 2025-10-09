@@ -6,6 +6,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   use PromEx.Plugin
   alias Plausible.Site
   alias Plausible.Ingestion
+  alias Plausible.Ingestion.Persistor
 
   on_ee do
     alias Plausible.InstallationSupport
@@ -209,6 +210,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
             )
         )
       ]
+      |> Enum.concat(persistor_metrics(metric_prefix))
       |> Enum.reject(&is_nil/1)
     )
   end
@@ -261,6 +263,51 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
     {duration, result} = time_it(fun)
     :telemetry.execute(event, %{duration: duration}, meta)
     result
+  end
+
+  defp persistor_metrics(metric_prefix) do
+    [
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :request, :duration, :millisecond],
+        event_name: Persistor.TelemetryHandler.request_event(),
+        reporter_options: [
+          buckets: [500, 1000, 2000, 5000, 10_000]
+        ],
+        unit: {:native, :millisecond},
+        measurement: :duration,
+        tags: [:result, :path]
+      ),
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :connect, :duration, :microsecond],
+        event_name: Persistor.TelemetryHandler.connect_event(),
+        reporter_options: [
+          buckets: [500, 1000, 2000, 5000, 10_000]
+        ],
+        unit: {:native, :microsecond},
+        measurement: :duration,
+        tags: [:status]
+      ),
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :send, :duration, :microsecond],
+        event_name: Persistor.TelemetryHandler.send_event(),
+        reporter_options: [
+          buckets: [500, 1000, 2000, 5000, 10_000]
+        ],
+        unit: {:native, :microsecond},
+        measurement: :duration,
+        tags: [:status]
+      ),
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :receive, :duration, :microsecond],
+        event_name: Persistor.TelemetryHandler.receive_event(),
+        reporter_options: [
+          buckets: [500, 1000, 2000, 5000, 10_000]
+        ],
+        unit: {:native, :microsecond},
+        measurement: :duration,
+        tags: [:status]
+      )
+    ]
   end
 
   defp time_it(fun) do
