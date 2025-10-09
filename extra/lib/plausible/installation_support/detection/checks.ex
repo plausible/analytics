@@ -42,10 +42,20 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
   def interpret_diagnostics(%State{} = state) do
     result = Detection.Diagnostics.interpret(state.diagnostics, state.url)
 
-    if result.data[:unhandled] do
-      :telemetry.execute(telemetry_event(:unhandled), %{})
-    else
-      :telemetry.execute(telemetry_event(:handled), %{})
+    case result.data do
+      %{unhandled: true, diagnostics: diagnostics, url: url} ->
+        Sentry.capture_message("Unhandled case for detection",
+          extra: %{
+            message: inspect(diagnostics),
+            url: url,
+            hash: :erlang.phash2(diagnostics)
+          }
+        )
+
+        :telemetry.execute(telemetry_event(:unhandled), %{})
+
+      _ ->
+        :telemetry.execute(telemetry_event(:handled), %{})
     end
 
     result

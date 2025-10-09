@@ -50,14 +50,22 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
         state.url
       )
 
-    cond do
-      not telemetry? ->
+    case {telemetry?, result.data} do
+      {false, _} ->
         :skip
 
-      result.data[:unhandled] ->
+      %{unhandled: true, diagnostics: diagnostics, url: url} ->
+        Sentry.capture_message("Unhandled case for site verification (v2)",
+          extra: %{
+            message: inspect(diagnostics),
+            url: url,
+            hash: :erlang.phash2(diagnostics)
+          }
+        )
+
         :telemetry.execute(telemetry_event(:unhandled), %{})
 
-      true ->
+      _ ->
         :telemetry.execute(telemetry_event(:handled), %{})
     end
 
