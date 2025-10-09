@@ -54,7 +54,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
       {false, _} ->
         :skip
 
-      %{unhandled: true, diagnostics: diagnostics, url: url} ->
+      {_, %{unhandled: true, diagnostics: diagnostics, url: url}} ->
         Sentry.capture_message("Unhandled case for site verification (v2)",
           extra: %{
             message: inspect(diagnostics),
