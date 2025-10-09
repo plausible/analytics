@@ -38,7 +38,8 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
     )
   end
 
-  def telemetry_event(name), do: [:plausible, :verification, name]
+  def telemetry_event_handled(), do: [:plausible, :verification, :handled]
+  def telemetry_event_unhandled(), do: [:plausible, :verification, :unhandled]
 
   def interpret_diagnostics(%State{} = state, opts \\ []) do
     telemetry? = Keyword.get(opts, :telemetry?, true)
@@ -63,10 +64,10 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
           }
         )
 
-        :telemetry.execute(telemetry_event(:unhandled), %{})
+        :telemetry.execute(telemetry_event_unhandled(), %{})
 
       _ ->
-        :telemetry.execute(telemetry_event(:handled), %{})
+        :telemetry.execute(telemetry_event_handled(), %{})
     end
 
     result
