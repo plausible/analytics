@@ -38,11 +38,29 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
     )
   end
 
-  def interpret_diagnostics(%State{} = state) do
-    Verification.Diagnostics.interpret(
-      state.diagnostics,
-      state.data_domain,
-      state.url
-    )
+  def telemetry_event(name), do: [:plausible, :verification, name]
+
+  def interpret_diagnostics(%State{} = state, opts \\ []) do
+    telemetry? = Keyword.get(opts, :telemetry?, true)
+
+    result =
+      Verification.Diagnostics.interpret(
+        state.diagnostics,
+        state.data_domain,
+        state.url
+      )
+
+    cond do
+      not telemetry? ->
+        :skip
+
+      result.data[:unhandled] ->
+        :telemetry.execute(telemetry_event(:unhandled), %{})
+
+      true ->
+        :telemetry.execute(telemetry_event(:handled), %{})
+    end
+
+    result
   end
 end

@@ -194,6 +194,22 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               event_name: InstallationSupport.Detection.Checks.telemetry_event(:unhandled)
             ),
           else: nil
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:verification, :handled],
+              event_name: InstallationSupport.Verification.Checks.telemetry_event(:handled)
+            ),
+          else: nil
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:verification, :unhandled],
+              event_name: InstallationSupport.Verification.Checks.telemetry_event(:unhandled)
+            ),
+          else: nil
         )
       ]
       |> Enum.reject(&is_nil/1)

@@ -269,6 +269,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     )
 
     error_plausible_not_found(diagnostics.selected_installation_type)
+    |> Map.put(:data, %{unhandled: true})
   end
 
   @message_plausible_not_found "We couldn't detect Plausible on your site"
