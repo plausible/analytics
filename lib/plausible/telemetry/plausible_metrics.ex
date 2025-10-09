@@ -6,7 +6,10 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   use PromEx.Plugin
   alias Plausible.Site
   alias Plausible.Ingestion
-  alias Plausible.InstallationSupport
+
+  on_ee do
+    alias Plausible.InstallationSupport
+  end
 
   @impl true
   def polling_metrics(opts) do
