@@ -80,7 +80,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
       }
     )
 
-    %Result{ok?: false, data: nil, errors: ["Unhandled detection case"]}
+    %Result{ok?: false, data: %{unhandled: true}, errors: ["Unhandled detection case"]}
   end
 
   defp get_result(suggested_technology, diagnostics) do

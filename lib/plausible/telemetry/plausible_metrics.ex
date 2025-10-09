@@ -6,6 +6,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   use PromEx.Plugin
   alias Plausible.Site
   alias Plausible.Ingestion
+  alias Plausible.InstallationSupport
 
   @impl true
   def polling_metrics(opts) do
@@ -175,6 +176,22 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               metric_prefix ++ [:verification, :js_elixir_match],
               event_name:
                 Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = false)
+            ),
+          else: nil
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:detection, :handled],
+              event_name: InstallationSupport.Detection.Checks.telemetry_event(:handled)
+            ),
+          else: nil
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:detection, :unhandled],
+              event_name: InstallationSupport.Detection.Checks.telemetry_event(:unhandled)
             ),
           else: nil
         )

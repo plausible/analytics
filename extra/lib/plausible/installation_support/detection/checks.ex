@@ -37,11 +37,18 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
     )
   end
 
+  def telemetry_event(name), do: [:plausible, :detection, name]
+
   def interpret_diagnostics(%State{} = state) do
-    Detection.Diagnostics.interpret(
-      state.diagnostics,
-      state.url
-    )
+    result = Detection.Diagnostics.interpret(state.diagnostics, state.url)
+
+    if result.data[:unhandled] do
+      :telemetry.execute(telemetry_event(:unhandled), %{})
+    else
+      :telemetry.execute(telemetry_event(:handled), %{})
+    end
+
+    result
   end
 
   @unthrottled_checks 3
