@@ -40,17 +40,25 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
   def telemetry_event_handled(), do: [:plausible, :detection, :handled]
   def telemetry_event_unhandled(), do: [:plausible, :detection, :unhandled]
 
-  def interpret_diagnostics(%State{} = state) do
-    result = Detection.Diagnostics.interpret(state.diagnostics, state.url)
+  def interpret_diagnostics(%State{
+        diagnostics: diagnostics,
+        data_domain: data_domain,
+        url: url
+      }) do
+    result = Detection.Diagnostics.interpret(diagnostics, url)
 
     case result.data do
-      %{unhandled: true, diagnostics: diagnostics, url: url} ->
+      %{unhandled: true} ->
         Sentry.capture_message("Unhandled case for detection",
           extra: %{
             message: inspect(diagnostics),
             url: url,
             hash: :erlang.phash2(diagnostics)
           }
+        )
+
+        Logger.warning(
+          "[DETECTION] Unhandled case (data_domain='#{data_domain}'): #{inspect(diagnostics)}"
         )
 
         :telemetry.execute(telemetry_event_unhandled(), %{})

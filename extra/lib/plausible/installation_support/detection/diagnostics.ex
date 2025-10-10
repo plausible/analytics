@@ -68,13 +68,12 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
       when service_error in [:domain_not_found, :invalid_url],
       do: %Result{ok?: false, data: nil, errors: [Atom.to_string(service_error)]}
 
-  def interpret(%__MODULE__{} = diagnostics, url),
-    do: unhandled_case(diagnostics, url)
+  def interpret(%__MODULE__{} = _diagnostics, _url), do: unhandled_case()
 
-  defp unhandled_case(diagnostics, url) do
+  defp unhandled_case() do
     %Result{
       ok?: false,
-      data: %{unhandled: true, diagnostics: diagnostics, url: url},
+      data: %{unhandled: true},
       errors: ["Unhandled detection case"]
     }
   end

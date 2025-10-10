@@ -41,27 +41,38 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
   def telemetry_event_handled(), do: [:plausible, :verification, :handled]
   def telemetry_event_unhandled(), do: [:plausible, :verification, :unhandled]
 
-  def interpret_diagnostics(%State{} = state, opts \\ []) do
+  def interpret_diagnostics(
+        %State{
+          diagnostics: diagnostics,
+          data_domain: data_domain,
+          url: url
+        },
+        opts \\ []
+      ) do
     telemetry? = Keyword.get(opts, :telemetry?, true)
 
     result =
       Verification.Diagnostics.interpret(
-        state.diagnostics,
-        state.data_domain,
-        state.url
+        diagnostics,
+        data_domain,
+        url
       )
 
     case {telemetry?, result.data} do
       {false, _} ->
         :skip
 
-      {_, %{unhandled: true, diagnostics: diagnostics, url: url}} ->
+      {_, %{unhandled: true}} ->
         Sentry.capture_message("Unhandled case for site verification (v2)",
           extra: %{
             message: inspect(diagnostics),
             url: url,
             hash: :erlang.phash2(diagnostics)
           }
+        )
+
+        Logger.warning(
+          "[VERIFICATION v2] Unhandled case (data_domain='#{data_domain}'): #{inspect(diagnostics)}"
         )
 
         :telemetry.execute(telemetry_event_unhandled(), %{})
