@@ -58,7 +58,7 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
         )
 
         Logger.warning(
-          "[DETECTION] Unhandled case (data_domain='#{data_domain}'); diagnostics: #{inspect(diagnostics)}"
+          "[DETECTION] Unhandled case (data_domain='#{data_domain}'): #{inspect(diagnostics)}"
         )
 
         :telemetry.execute(telemetry_event_unhandled(), %{})
