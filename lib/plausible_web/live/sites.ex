@@ -548,6 +548,7 @@ defmodule PlausibleWeb.Live.Sites do
               href="#"
               theme="bright"
               data-method="post"
+              class="w-full sm:w-auto mr-2 sm:text-sm"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
               x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/reject')"
             >
