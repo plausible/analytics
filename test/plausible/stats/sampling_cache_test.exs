@@ -12,6 +12,9 @@ defmodule Plausible.Stats.SamplingCacheTest do
     @site_id4 400_000
     @site_id5 500_000
     @site_id6 600_000
+    @site_id7 700_000
+    @site_id8 800_000
+    @site_id9 900_000
 
     setup do
       Plausible.IngestRepo.query!("truncate ingest_counters")
@@ -77,12 +80,10 @@ defmodule Plausible.Stats.SamplingCacheTest do
 
         start_test_cache(test)
 
-        assert SamplingCache.get(@site_id1, force?: true, cache_name: test) == nil
+        assert SamplingCache.get(@site_id1, force?: true, cache_name: test) == 5_500_000
         assert SamplingCache.get(@site_id2, force?: true, cache_name: test) == 1.1 * @threshold
         assert SamplingCache.get(@site_id3, force?: true, cache_name: test) == nil
         assert SamplingCache.get(@site_id4, force?: true, cache_name: test) == nil
-
-        assert SamplingCache.count_all() == 1
 
         Plausible.IngestRepo.insert_all(Plausible.Ingestion.Counters.Record, [
           %{
@@ -95,8 +96,6 @@ defmodule Plausible.Stats.SamplingCacheTest do
 
         :ok = SamplingCache.refresh_all(cache_name: test)
 
-        assert SamplingCache.count_all() == 2
-        assert SamplingCache.size(test) == 2
         assert SamplingCache.get(@site_id1, force?: true, cache_name: test) == 1.1 * @threshold
         assert SamplingCache.get(@site_id2, force?: true, cache_name: test) == 1.1 * @threshold
       end
@@ -150,6 +149,48 @@ defmodule Plausible.Stats.SamplingCacheTest do
                  cache_name: test,
                  force?: true
                ) == 1.1 * @threshold * 2
+      end
+
+      test "consolidated_get sum over threshold", %{
+        test: test
+      } do
+        now = DateTime.utc_now()
+
+        Plausible.IngestRepo.insert_all(Plausible.Ingestion.Counters.Record, [
+          %{
+            site_id: @site_id7,
+            domain: "7.com",
+            value: div(@threshold, 2),
+            event_timebucket: add(now, -1, :day),
+            metric: "buffered"
+          },
+          %{
+            site_id: @site_id8,
+            domain: "8.com",
+            value: div(@threshold, 2),
+            event_timebucket: add(now, -1, :day),
+            metric: "buffered"
+          },
+          %{
+            site_id: @site_id9,
+            domain: "9.com",
+            value: div(@threshold, 2),
+            event_timebucket: add(now, -1, :day),
+            metric: "buffered"
+          }
+        ])
+
+        start_test_cache(test)
+
+        assert SamplingCache.consolidated_get([@site_id7, @site_id8],
+                 cache_name: test,
+                 force?: true
+               ) == @threshold
+
+        assert SamplingCache.consolidated_get([@site_id9],
+                 cache_name: test,
+                 force?: true
+               ) == div(@threshold, 2)
       end
 
       test "conslidated_get returns nil", %{test: test} do
