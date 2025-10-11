@@ -121,10 +121,15 @@ defmodule Plausible.Billing.PaddleApi do
 
   def fetch_prices([_ | _] = product_ids, customer_ip) do
     params = %{product_ids: Enum.join(product_ids, ","), customer_ip: customer_ip}
-
     case HTTPClient.impl().get(prices_url(), @headers, params) do
-      {:ok, %{body: %{"success" => true, "response" => %{"products" => products}}}} ->
-        products =
+      {:ok,
+       %{
+         body: %{
+           "success" => true,
+           "response" => %{"products" => products, "customer_country" => customer_country}
+         }
+       }} ->
+        products_map =
           Enum.into(products, %{}, fn %{
                                         "currency" => currency,
                                         "price" => %{"net" => net_price},
@@ -133,7 +138,15 @@ defmodule Plausible.Billing.PaddleApi do
             {Integer.to_string(product_id), Money.from_float!(currency, net_price)}
           end)
 
-        {:ok, products}
+        if Enum.every(product_ids, fn product_id -> Map.has_key?(products_map, product_id) end) do
+          # cache the prices on the server by the following keys: sorted product ids list and customer_country for X mins
+        else
+          # get from cache by sorted product ids list and customer country
+          # if cached value found, return the cached prices
+          # if no cached value found, refetch (run this function again)
+        end
+
+        {:ok, products_map}
 
       {:ok, %{body: body}} ->
         Sentry.capture_message("Paddle API: Unexpected response when fetching prices",
