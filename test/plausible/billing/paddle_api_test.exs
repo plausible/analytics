@@ -11,9 +11,11 @@ defmodule Plausible.Billing.PaddleApiTest do
       expect(
         Plausible.HTTPClient.Mock,
         :get,
-        fn "https://checkout.paddle.com/api/2.0/prices",
+        fn "https://checkout.paddle.com/api/2.0/prices" <> query,
            [{"content-type", "application/json"}, {"accept", "application/json"}],
-           %{product_ids: "19878,20127,20657,20658"} ->
+           _ ->
+          assert query =~ "product_ids=#{URI.encode_www_form("19878,20127,20657,20658")}"
+
           {:ok,
            %Finch.Response{
              status: 200,
