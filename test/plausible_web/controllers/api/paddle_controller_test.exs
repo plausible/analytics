@@ -102,9 +102,9 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
       expect(
         Plausible.HTTPClient.Mock,
         :get,
-        fn "https://checkout.paddle.com/api/2.0/prices",
-           _,
-           %{customer_ip: _customer_ip, product_ids: "857097"} ->
+        fn "https://checkout.paddle.com/api/2.0/prices" <> query, _, _ ->
+          assert query =~ "product_ids=857097"
+
           send(test, :paddle_queried)
 
           {:ok,
