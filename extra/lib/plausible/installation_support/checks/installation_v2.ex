@@ -91,20 +91,20 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   def perform(%State{url: url} = state) do
     opts = [
       headers: %{content_type: "application/json"},
-      body:
-        JSON.encode!(%{
-          code: @puppeteer_wrapper_code,
-          context: %{
-            maxAttempts: @max_attempts,
-            timeoutMs: @plausible_window_check_timeout_ms,
-            timeoutBetweenAttemptsMs: @timeout_between_attempts_ms,
-            cspHostToCheck: PlausibleWeb.Endpoint.host(),
-            url: Plausible.InstallationSupport.URL.bust_url(url),
-            userAgent: Plausible.InstallationSupport.user_agent(),
-            debug: Application.get_env(:plausible, :environment) == "dev"
-          }
-        }),
-      params: %{timeout: @endpoint_timeout_ms},
+      # body:
+      #   JSON.encode!(%{
+      #     code: @puppeteer_wrapper_code,
+      #     context: %{
+      #       maxAttempts: @max_attempts,
+      #       timeoutMs: @plausible_window_check_timeout_ms,
+      #       timeoutBetweenAttemptsMs: @timeout_between_attempts_ms,
+      #       cspHostToCheck: PlausibleWeb.Endpoint.host(),
+      #       url: Plausible.InstallationSupport.URL.bust_url(url),
+      #       userAgent: Plausible.InstallationSupport.user_agent(),
+      #       debug: Application.get_env(:plausible, :environment) == "dev"
+      #     }
+      #   }),
+      # params: %{timeout: @endpoint_timeout_ms},
       retry: &BrowserlessConfig.retry_browserless_request/2,
       retry_log_level: :warning,
       max_retries: @max_retries
@@ -113,10 +113,49 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
     opts = Keyword.merge(opts, extra_opts)
 
-    case Req.post(BrowserlessConfig.browserless_function_api_endpoint(), opts) do
-      {:ok, %{body: body, status: status}} ->
-        handle_browserless_response(state, body, status)
-
+    with {:ok, %{body: %{"id" => _session_id, "browserQL" => browser_ql_url, "stop" => stop_url}}} <-
+           Req.post(
+             BrowserlessConfig.browserless_session_api_endpoint(),
+             Keyword.merge(opts,
+               body: JSON.encode!(%{ttl: 20_000, stealth: true})
+             )
+           ),
+         {:ok, %{body: body, status: status}} <-
+           Req.post(
+             browser_ql_url,
+             Keyword.merge(opts,
+               body:
+                 JSON.encode!(%{
+                   variables: %{
+                     eval1: "(() => {#{@verifier_code}})()",
+                     eval2:
+                       "JSON.stringify(await window.verifyPlausibleInstallation({cspHostToCheck: \"#{PlausibleWeb.Endpoint.host()}\", responseHeaders: {}, timeoutMs: 500, debug: true}))"
+                   },
+                   query: """
+                    mutation Verify($eval1: String!, $eval2: String!) {
+                      goto(url: "#{Plausible.InstallationSupport.URL.bust_url(url)}") {
+                        status
+                      }
+                      title {
+                        title
+                      }
+                      url {
+                        url
+                      }
+                      evaluate1: evaluate(content: $eval1) {
+                        value
+                      }
+                      evaluate2: evaluate(content: $eval2) {
+                        value
+                      }
+                    }
+                   """
+                 })
+             )
+           ),
+         {:ok, _} <- Req.post(stop_url, opts) do
+      handle_browserless_response(state, body, status)
+    else
       {:error, %{reason: reason}} ->
         Logger.warning(warning_message("Browserless request error: #{inspect(reason)}", state))
 
@@ -126,23 +165,30 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
 
   defp handle_browserless_response(
          state,
-         %{"data" => %{"completed" => completed} = data},
+         %{"data" => %{"evaluate2" => %{"value" => eval2_value}}},
          _status
        ) do
-    if completed do
-      put_diagnostics(
-        state,
-        parse_to_diagnostics(data)
-      )
-    else
-      Logger.warning(
-        warning_message(
-          "Browserless function returned with completed: false, error.message: #{inspect(data["error"]["message"])}",
-          state
-        )
-      )
+    case JSON.decode(eval2_value) do
+      {:ok, %{"data" => data}} ->
+        if data["completed"] do
+          put_diagnostics(state, parse_to_diagnostics(data))
+        else
+          Logger.warning(
+            warning_message(
+              "Browserless function returned with completed: false, error.message: #{inspect(data["error"]["message"])}",
+              state
+            )
+          )
 
-      put_diagnostics(state, service_error: data["error"]["message"])
+          put_diagnostics(state, service_error: data["error"]["message"])
+        end
+
+      {:error, _} ->
+        Logger.warning(
+          warning_message("Browserless function returned with unparseable data", state)
+        )
+
+        put_diagnostics(state, service_error: "Unparseable verifyPlausibleInstallation result")
     end
   end
 

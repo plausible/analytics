@@ -16,6 +16,13 @@ defmodule Plausible.InstallationSupport.BrowserlessConfig do
   end
 
   on_ee do
+    def browserless_session_api_endpoint() do
+      config = Application.fetch_env!(:plausible, __MODULE__)
+      token = Keyword.fetch!(config, :token)
+      endpoint = Keyword.fetch!(config, :endpoint)
+      Path.join(endpoint, "session?token=#{token}")
+    end
+
     def browserless_function_api_endpoint() do
       config = Application.fetch_env!(:plausible, __MODULE__)
       token = Keyword.fetch!(config, :token)
