@@ -13,6 +13,7 @@ defmodule Plausible.InstallationSupport.Check do
   """
   @type state() :: Plausible.InstallationSupport.State.t()
   @callback report_progress_as() :: String.t()
+  @callback timeout_ms() :: integer()
   @callback perform(state()) :: state()
 
   defmacro __using__(_) do
@@ -24,8 +25,28 @@ defmodule Plausible.InstallationSupport.Check do
 
       @behaviour Plausible.InstallationSupport.Check
 
+      def timeout_ms, do: 10_000
+
+      defoverridable timeout_ms: 0
+
       def perform_safe(state) do
-        perform(state)
+        task = Task.async(fn -> perform(state) end)
+
+        result =
+          try do
+            Task.await(task, timeout_ms())
+          catch
+            :exit, {:timeout, _} ->
+              Task.shutdown(task, :brutal_kill)
+
+              Logger.warning(
+                "Check #{inspect(__MODULE__)} timed out after #{timeout_ms()} ms on #{state.url}"
+              )
+
+              put_diagnostics(%State{state | skip_further_checks?: true}, service_error: :timeout)
+          end
+
+        result
       catch
         _, e ->
           Logger.error(

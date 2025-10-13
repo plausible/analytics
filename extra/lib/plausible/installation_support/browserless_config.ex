@@ -8,8 +8,8 @@ defmodule Plausible.InstallationSupport.BrowserlessConfig do
     case status do
       # rate limit
       429 -> {:delay, 1000}
-      # timeout
-      408 -> {:delay, 500}
+      # unexpected but we've manually verified these requests can succeed on retry
+      400 -> {:delay, 500}
       # other errors
       _ -> false
     end
