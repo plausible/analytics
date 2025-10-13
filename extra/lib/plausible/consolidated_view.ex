@@ -12,7 +12,7 @@ defmodule Plausible.ConsolidatedView do
 
   alias Plausible.Teams
   alias Plausible.Teams.Team
-  alias Plausible.{Repo, Site}
+  alias Plausible.{Repo, Site, Auth.User}
 
   import Ecto.Query
 
@@ -70,8 +70,10 @@ defmodule Plausible.ConsolidatedView do
     site_ids(team.identifier)
   end
 
-  @spec get(Team.t() | String.t()) :: Site.t() | nil
+  @spec get(Team.t() | String.t() | nil) :: Site.t() | nil
   def get(team_or_id)
+
+  def get(nil), do: nil
 
   def get(%Team{} = team) do
     team |> make_id() |> get()
@@ -96,6 +98,17 @@ defmodule Plausible.ConsolidatedView do
       |> Site.set_stats_start_date(start_date)
     else
       site_or_changeset
+    end
+  end
+
+  @spec can_manage?(Team.t(), User.t()) :: boolean()
+  def can_manage?(team, user) do
+    case Plausible.Teams.Memberships.team_role(team, user) do
+      {:ok, role} when role != :viewer ->
+        true
+
+      _ ->
+        false
     end
   end
 

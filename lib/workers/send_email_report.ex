@@ -79,7 +79,7 @@ defmodule Plausible.Workers.SendEmailReport do
     |> Map.put(:goals, goals)
   end
 
-  defp stats_aggreagates(site, date_range) do
+  defp stats_aggregates(site, date_range) do
     query =
       Query.build!(
         site,

@@ -5,10 +5,15 @@ defmodule PlausibleWeb.Live.Sites do
 
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Pagination
+  import PlausibleWeb.StatsView, only: [large_number_format: 1]
   require Logger
 
   alias Plausible.Sites
   alias Plausible.Teams
+
+  on_ee do
+    alias Plausible.ConsolidatedView
+  end
 
   def mount(params, _session, socket) do
     uri =
@@ -23,6 +28,19 @@ defmodule PlausibleWeb.Live.Sites do
         Teams.Invitations.all(socket.assigns.current_user)
       )
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
+
+    socket = assign(socket, :consolidated_view, nil)
+
+    on_ee do
+      consolidated_view = ConsolidatedView.get(socket.assigns.current_team)
+
+      socket =
+        if consolidated_view do
+          assign(socket, consolidated_view: consolidated_view, consolidated_stats: :loading)
+        else
+          socket
+        end
+    end
 
     {:ok, socket}
   end
@@ -108,7 +126,13 @@ defmodule PlausibleWeb.Live.Sites do
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <!-- Insert upgrade_card here -->
-          <.combined_view_card />
+          <.consolidated_view_card
+            :if={@consolidated_view}
+            consolidated_view={@consolidated_view}
+            consolidated_stats={@consolidated_stats}
+            current_user={@current_user}
+            current_team={@current_team}
+          />
           <%= for site <- @sites.entries do %>
             <.site
               :if={site.entry_type in ["pinned_site", "site"]}
@@ -184,7 +208,7 @@ defmodule PlausibleWeb.Live.Sites do
           Introducing
         </p>
         <h3 class="text-[1.35rem] font-bold text-gray-900 leading-tighter dark:text-gray-100">
-          Combined view
+          consolidated view
         </h3>
       </div>
       <p class="text-gray-900 dark:text-gray-100 leading-tighter mb-2.5">
@@ -203,9 +227,14 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  def combined_view_card(assigns) do
+  def consolidated_view_card(assigns) do
     ~H"""
-    <li class="relative row-span-2 flex flex-col justify-between gap-6 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150">
+    <li :if={@consolidated_stats == :loading} class="relative row-span-2 flex flex-col justify-between gap-6 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150 animate-pulse">
+      <div class="md:h-[220px] sm:h-[280px] h-[280px] dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+      TODO: make this nicer, halp
+    </li>
+    <li :if={is_map(@consolidated_stats)} class="relative row-span-2 flex flex-col justify-between gap-6 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150">
+      <.unstyled_link href={"/#{URI.encode_www_form(@consolidated_view.domain)}"}>
       <div class="flex flex-col flex-1 justify-between gap-y-5">
         <div class="flex flex-col gap-y-2 mb-auto">
           <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
@@ -231,45 +260,41 @@ defmodule PlausibleWeb.Live.Sites do
           </h3>
         </div>
         <span class="text-indigo-500 my-auto">
-          <svg viewBox="0 -1 500 83" class="w-full">
-            <defs>
-              <clipPath id="gradient-cut-off-6cb83a48-10a5-489c-a0fd-0811e39d5eaa">
-                <polyline points="0,81 0,29 20,7 40,0 60,29 80,36 100,44 120,36 140,7 160,29 180,51 200,58 220,51 240,51 260,36 280,36 300,65 320,65 340,73 360,44 380,44 400,44 420,58 440,22 460,51 480,80 500,80 500,81 0,81">
-                </polyline>
-              </clipPath>
-            </defs>
-            <rect
-              x="0"
-              y="1"
-              width="520"
-              height="80"
-              fill="url(#chart-gradient-cut-off)"
-              clip-path="url(#gradient-cut-off-6cb83a48-10a5-489c-a0fd-0811e39d5eaa)"
-            >
-            </rect>
-            <polyline
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.6"
-              points="0,29 20,7 40,0 60,29 80,36 100,44 120,36 140,7 160,29 180,51 200,58 220,51 240,51 260,36 280,36 300,65 320,65 340,73 360,44 380,44 400,44 420,58 440,22 460,51 480,80 500,80"
-            >
-            </polyline>
-          </svg>
+          <PlausibleWeb.Live.Components.Visitors.chart
+            intervals={@consolidated_stats.intervals}
+            height={80}
+          />
         </span>
       </div>
       <div class="flex flex-col flex-1 justify-between gap-y-2.5 sm:gap-y-5">
         <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
-          <.combined_view_stat value="103.9k" label="Unique visitors" change={3} />
-          <.combined_view_stat value="198.4k" label="Total visits" change={1} />
+          <.consolidated_view_stat
+            value={large_number_format(@consolidated_stats.visitors)}
+            label="Unique visitors"
+            change={@consolidated_stats.visitors_change}
+          />
+          <.consolidated_view_stat
+            value={large_number_format(@consolidated_stats.visits)}
+            label="Total visits"
+            change={@consolidated_stats.visits_change}
+          />
         </div>
         <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
-          <.combined_view_stat value="2.6M" label="Total pageviews" change={1} />
-          <.combined_view_stat value="4.2" label="Views per visit" change={2} />
+          <.consolidated_view_stat
+            value={large_number_format(@consolidated_stats.pageviews)}
+            label="Total pageviews"
+            change={@consolidated_stats.pageviews_change}
+          />
+          <.consolidated_view_stat
+            value={@consolidated_stats.views_per_visit}
+            label="Views per visit"
+            change={1}
+          />
         </div>
       </div>
-      <div class="absolute right-1 top-3.5">
-        <!-- Replace with existing ellipsis_menu -->
-        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 size-5 text-gray-400 transition-colors duration-150 cursor-pointer dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" />
+    </.unstyled_link>
+      <div class="absolute right-1 top-3.5" :if={ConsolidatedView.can_manage?(@current_team, @current_user)}>
+        <.ellipsis_menu site={@consolidated_view} can_manage?={true} />
       </div>
     </li>
     """
@@ -279,7 +304,7 @@ defmodule PlausibleWeb.Live.Sites do
   attr(:label, :string, required: true)
   attr(:change, :integer, required: true)
 
-  def combined_view_stat(assigns) do
+  def consolidated_view_stat(assigns) do
     ~H"""
     <div class="flex flex-col flex-1 sm:gap-y-1.5">
       <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -289,22 +314,8 @@ defmodule PlausibleWeb.Live.Sites do
         <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
           {@value}
         </p>
-        <p class="text-sm text-gray-900 dark:text-gray-100">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            class="text-green-500 h-3 w-3 inline-block stroke-[1px] stroke-current"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M8.25 3.75H19.5a.75.75 0 01.75.75v11.25a.75.75 0 01-1.5 0V6.31L5.03 20.03a.75.75 0 01-1.06-1.06L17.69 5.25H8.25a.75.75 0 010-1.5z"
-              clip-rule="evenodd"
-            >
-            </path>
-          </svg>
-          {@change}%
-        </p>
+
+        <.percentage_change change={@change} />
       </div>
     </div>
     """
@@ -380,7 +391,7 @@ defmodule PlausibleWeb.Live.Sites do
       </.unstyled_link>
 
       <div class="absolute right-1 top-3.5">
-        <.ellipsis_menu site={@site} />
+        <.ellipsis_menu site={@site} can_manage?={List.first(@site.memberships).role != :viewer} />
       </div>
     </li>
     """
@@ -395,7 +406,7 @@ defmodule PlausibleWeb.Live.Sites do
       <:menu class="!mt-0 mr-4 min-w-40">
         <!-- adjust position because click area is much bigger than icon. Default positioning from click area looks weird -->
         <.dropdown_item
-          :if={List.first(@site.memberships).role != :viewer}
+          :if={@can_manage?}
           href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
           class="group/item !flex items-center gap-x-2"
         >
@@ -404,6 +415,7 @@ defmodule PlausibleWeb.Live.Sites do
         </.dropdown_item>
 
         <.dropdown_item
+          :if={Sites.regular?(@site)}
           href="#"
           x-on:click.prevent
           phx-click={
@@ -431,7 +443,7 @@ defmodule PlausibleWeb.Live.Sites do
           <span :if={!@site.pinned_at}>Pin site</span>
         </.dropdown_item>
         <.dropdown_item
-          :if={Application.get_env(:plausible, :environment) == "dev"}
+          :if={Application.get_env(:plausible, :environment) == "dev" and Sites.regular?(@site)}
           href={Routes.site_path(PlausibleWeb.Endpoint, :delete_site, @site.domain)}
           method="delete"
           class="group/item !flex items-center gap-x-2"
@@ -487,7 +499,7 @@ defmodule PlausibleWeb.Live.Sites do
         <div class="flex justify-between items-end">
           <div class="flex flex-col">
             <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
-              {PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors)}
+              {large_number_format(@hourly_stats.visitors)}
             </p>
             <p class="text-gray-600 dark:text-gray-400">
               visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
@@ -814,13 +826,21 @@ defmodule PlausibleWeb.Live.Sites do
         loading(sites)
       end
 
+    consolidated_stats =
+      on_ee do
+        if connected?(socket) and not is_nil(assigns.consolidated_view) do
+          Plausible.Stats.ConsolidatedView.overview_24h(assigns.consolidated_view)
+        end
+      end
+
     invitations = extract_invitations(sites.entries, assigns.current_team)
 
     assign(
       socket,
       sites: sites,
       invitations: invitations,
-      hourly_stats: hourly_stats
+      hourly_stats: hourly_stats,
+      consolidated_stats: consolidated_stats || Map.get(assigns, :consolidated_stats)
     )
   end
 
