@@ -47,8 +47,11 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp filter_site_id(query) do
     case query.consolidated_site_ids do
-      nil -> dynamic([x], x.site_id == ^query.site_id)
-      [_ | _] = ids -> dynamic([x], fragment("? in ?", x.site_id, ^ids))
+      nil ->
+        dynamic([x], x.site_id == ^query.site_id)
+
+      [_ | _] = ids ->
+        dynamic([x], fragment("? in ?", x.site_id, ^ids))
     end
   end
 
