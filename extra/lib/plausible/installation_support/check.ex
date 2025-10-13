@@ -30,30 +30,23 @@ defmodule Plausible.InstallationSupport.Check do
       defoverridable timeout_ms: 0
 
       def perform_safe(state) do
-        task = Task.async(fn -> perform(state) end)
+        task =
+          Task.async(fn ->
+            try do
+              perform(state)
+            catch
+              _, e ->
+                Logger.error(
+                  "Error running check #{inspect(__MODULE__)} on #{state.url}: #{inspect(e)}"
+                )
 
-        result =
-          try do
-            Task.await(task, timeout_ms())
-          catch
-            :exit, {:timeout, _} ->
-              Task.shutdown(task, :brutal_kill)
+                put_diagnostics(state, service_error: e)
+            end
+          end)
 
-              Logger.warning(
-                "Check #{inspect(__MODULE__)} timed out after #{timeout_ms()} ms on #{state.url}"
-              )
-
-              put_diagnostics(%State{state | skip_further_checks?: true}, service_error: :timeout)
-          end
-
-        result
+        Task.await(task, timeout_ms())
       catch
-        _, e ->
-          Logger.error(
-            "Error running check #{inspect(__MODULE__)} on #{state.url}: #{inspect(e)}"
-          )
-
-          put_diagnostics(state, service_error: e)
+        _ -> put_diagnostics(state, service_error: :check_timeout)
       end
     end
   end
