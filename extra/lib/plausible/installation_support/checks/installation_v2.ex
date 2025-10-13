@@ -111,7 +111,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
       retry: &BrowserlessConfig.retry_browserless_request/2,
       retry_log_level: :warning,
       max_retries: @max_retries,
-      receive_timeout: @endpoint_timeout_ms + 2000
+      receive_timeout: @endpoint_timeout_ms + 2_000
     ]
 
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
