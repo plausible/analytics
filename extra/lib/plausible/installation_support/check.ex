@@ -44,9 +44,13 @@ defmodule Plausible.InstallationSupport.Check do
             end
           end)
 
-        Task.await(task, timeout_ms())
-      catch
-        _ -> put_diagnostics(state, service_error: :check_timeout)
+        try do
+          Task.await(task, timeout_ms())
+        catch
+          :exit, {:timeout, _} ->
+            Task.shutdown(task, :brutal_kill)
+            put_diagnostics(state, service_error: :check_timeout)
+        end
       end
     end
   end

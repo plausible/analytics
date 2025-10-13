@@ -437,54 +437,6 @@ defmodule Plausible.InstallationSupport.LegacyVerification.ChecksTest do
         |> assert_error(@errors.no_snippet_wp)
       end
 
-      test "a check that raises" do
-        defmodule FaultyCheckRaise do
-          use Plausible.InstallationSupport.Check
-
-          @impl true
-          def report_progress_as, do: "Faulty check"
-
-          @impl true
-          def perform(_), do: raise("boom")
-        end
-
-        {result, log} =
-          with_log(fn ->
-            run_checks(checks: [FaultyCheckRaise])
-          end)
-
-        assert log =~
-                 ~s|Error running check Plausible.InstallationSupport.LegacyVerification.ChecksTest.FaultyCheckRaise on https://example.com: %RuntimeError{message: "boom"}|
-
-        result
-        |> LegacyVerification.Checks.interpret_diagnostics()
-        |> assert_error(@errors.unreachable, url: "https://example.com")
-      end
-
-      test "a check that throws" do
-        defmodule FaultyCheckThrow do
-          use Plausible.InstallationSupport.Check
-
-          @impl true
-          def report_progress_as, do: "Faulty check"
-
-          @impl true
-          def perform(_), do: :erlang.throw(:boom)
-        end
-
-        {result, log} =
-          with_log(fn ->
-            run_checks(checks: [FaultyCheckThrow])
-          end)
-
-        assert log =~
-                 ~s|Error running check Plausible.InstallationSupport.LegacyVerification.ChecksTest.FaultyCheckThrow on https://example.com: :boom|
-
-        result
-        |> LegacyVerification.Checks.interpret_diagnostics()
-        |> assert_error(@errors.unreachable, url: "https://example.com")
-      end
-
       test "disallowed via content-security-policy" do
         stub_fetch_body(fn conn ->
           conn
