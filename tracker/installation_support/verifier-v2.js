@@ -29,6 +29,7 @@ async function verifyPlausibleInstallation(options) {
 
   const disallowedByCsp = checkDisallowedByCSP(responseHeaders, cspHostToCheck)
 
+  stopAutoIgnore()
   const { stopRecording, getInterceptedFetch } = startRecordingEventFetchCalls()
 
   const {
@@ -276,6 +277,10 @@ async function testPlausibleFunction({ timeoutMs, debug }) {
       }
     })
   })
+}
+
+function stopAutoIgnore() {
+  window.__plausible = true
 }
 
 window.verifyPlausibleInstallation = verifyPlausibleInstallation
