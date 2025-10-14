@@ -67,7 +67,8 @@ async function verifyPlausibleInstallation(options) {
     plausibleVersion,
     plausibleVariant,
     testEvent: {
-      ...testEvent,
+      ...testEvent, // callbackResult
+      testPlausibleFunctionError,
       requestUrl: interceptedTestEvent?.request?.url,
       normalizedBody: interceptedTestEvent?.request?.normalizedBody,
       responseStatus: interceptedTestEvent?.response?.status,
@@ -243,7 +244,9 @@ async function testPlausibleFunction({ timeoutMs, debug }) {
         window.plausible('verification-agent-test', {
           callback: (testEventCallbackResult) => {
             resolve({
-              testEvent: { callbackResult: testEventCallbackResult }
+              testEvent: {
+                callbackResult: testEventCallbackResult ?? 'undefined or null'
+              }
             })
           }
         })

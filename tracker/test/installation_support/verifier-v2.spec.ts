@@ -70,7 +70,8 @@ test.describe('installed plausible web variant', () => {
             version
           },
           responseStatus: 202,
-          error: undefined
+          error: undefined,
+          testPlausibleFunctionError: undefined
         },
         cookiesConsentResult: incompleteCookiesConsentResult
       }
@@ -132,7 +133,8 @@ test.describe('installed plausible web variant', () => {
             version
           },
           responseStatus: undefined,
-          error: undefined
+          error: undefined,
+          testPlausibleFunctionError: 'Test Plausible function timeout exceeded'
         },
         cookiesConsentResult: incompleteCookiesConsentResult
       }
@@ -190,7 +192,8 @@ test.describe('installed plausible web variant', () => {
             version
           },
           responseStatus: 400,
-          error: undefined
+          error: undefined,
+          testPlausibleFunctionError: undefined
         },
         cookiesConsentResult: incompleteCookiesConsentResult
       }
@@ -229,11 +232,12 @@ test.describe('installed plausible web variant', () => {
         plausibleVersion: version,
         plausibleVariant: 'web',
         testEvent: {
-          callbackResult: undefined,
+          callbackResult: 'undefined or null',
           requestUrl: undefined,
           normalizedBody: undefined,
           responseStatus: undefined,
-          error: undefined
+          error: undefined,
+          testPlausibleFunctionError: undefined
         },
         cookiesConsentResult: incompleteCookiesConsentResult
       }
@@ -441,7 +445,8 @@ test.describe('installed plausible web variant', () => {
           error: undefined,
           normalizedBody: undefined,
           requestUrl: undefined,
-          responseStatus: undefined
+          responseStatus: undefined,
+          testPlausibleFunctionError: 'Test Plausible function timeout exceeded'
         },
         cookiesConsentResult: incompleteCookiesConsentResult
       }
@@ -503,7 +508,8 @@ test.describe('installed plausible web variant', () => {
           error: undefined,
           normalizedBody: undefined,
           requestUrl: undefined,
-          responseStatus: undefined
+          responseStatus: undefined,
+          testPlausibleFunctionError: 'Test Plausible function timeout exceeded'
         },
         cookiesConsentResult: incompleteCookiesConsentResult
       }
