@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
   The overlapped tests from that suite can be deleted once the feature flag is enabled globally.
   """
   use Plausible
-  use PlausibleWeb.ConnCase, async: false
+  use PlausibleWeb.ConnCase
   use Plausible.Repo
   use Plausible.Teams.Test
   use Bamboo.Test
