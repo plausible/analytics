@@ -108,7 +108,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
           }
         }),
       params: %{timeout: @endpoint_timeout_ms},
-      retry: &BrowserlessConfig.retry_browserless_request/2,
+      retry: BrowserlessConfig.retry_browserless_request([429, 408, 400]),
       retry_log_level: :warning,
       max_retries: @max_retries,
       receive_timeout: @endpoint_timeout_ms + 2_000

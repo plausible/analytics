@@ -85,7 +85,7 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
             }
           }),
         params: %{timeout: @endpoint_timeout_ms},
-        retry: &BrowserlessConfig.retry_browserless_request/2,
+        retry: BrowserlessConfig.retry_browserless_request([429, 400]),
         retry_log_level: :warning,
         max_retries: @max_retries
       ]

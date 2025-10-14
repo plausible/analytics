@@ -4,16 +4,39 @@ defmodule Plausible.InstallationSupport.BrowserlessConfig do
   """
   use Plausible
 
-  def retry_browserless_request(_request, %{status: status}) do
-    case status do
-      # rate limit
-      429 -> {:delay, 1000}
-      # timeout
-      408 -> {:delay, 500}
-      # unexpected but we've manually verified these requests can succeed on retry
-      400 -> {:delay, 500}
-      # other errors
-      _ -> false
+  @retry_policy_by_status %{
+    # rate limit
+    429 => {:delay, :timer.seconds(1)},
+    # timeout
+    408 => {:delay, :timer.seconds(0.5)},
+    # even 400 are verified manually to sometimes succeed on retry
+    400 => {:delay, :timer.seconds(0.5)}
+  }
+
+  @doc """
+  Examples:
+
+    iex> retry_browserless_request([429, 400]).(nil, %{status: 429})
+    {:delay, :timer.seconds(1)}
+
+    iex> retry_browserless_request([429, 400]).(nil, %{status: 400})
+    {:delay, :timer.seconds(0.5)}
+
+    iex> retry_browserless_request([429, 400]).(nil, %{status: 408})
+    nil
+
+    iex> retry_browserless_request([429, 400]).(nil, :some_error)
+    false
+  """
+
+  def retry_browserless_request(statuses_to_retry) do
+    policies = Map.take(@retry_policy_by_status, statuses_to_retry)
+
+    fn _request, response_or_error ->
+      case response_or_error do
+        %{status: status} -> Map.get(policies, status)
+        _ -> false
+      end
     end
   end
 
