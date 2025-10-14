@@ -67,11 +67,16 @@ defmodule PlausibleWeb.Live.Stats do
 
   def render(assigns) do
     ~H"""
-    <div class="bg-white dark:bg-gray-825 flex flex-wrap overflow-hidden h-full">
+    <div class="bg-white dark:bg-gray-825 h-full">
       <.async_result :let={result} assign={@result}>
-        <%= for {metric, value} <- zip_metrics(@query.metrics, result) do %>
-          <.top_stat_metric name={Map.fetch!(@metric_names, metric)} value={value} metric={metric} />
-        <% end %>
+        <div
+          class="flex flex-wrap overflow-hidden"
+          phx-mounted={JS.dispatch("plausible:top_stats:loading:success")}
+        >
+          <%= for {metric, value} <- zip_metrics(@query.metrics, result) do %>
+            <.top_stat_metric name={Map.fetch!(@metric_names, metric)} value={value} metric={metric} />
+          <% end %>
+        </div>
       </.async_result>
     </div>
     """
@@ -124,7 +129,7 @@ defmodule PlausibleWeb.Live.Stats do
     """
   end
 
-  defp format_metric(metric, nil), do: "--"
+  defp format_metric(_metric, nil), do: "--"
 
   defp format_metric(metric, value) when metric in [:visitors, :visits, :pageviews] do
     PlausibleWeb.StatsView.large_number_format(value)

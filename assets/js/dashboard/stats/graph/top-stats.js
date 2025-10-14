@@ -27,6 +27,7 @@ function topStatNumberLong(metric, value) {
 export default function TopStats({
   data,
   onMetricUpdate,
+  setTopStatsLoading,
   tooltipBoundary,
   graphableMetrics
 }) {
@@ -212,6 +213,8 @@ export default function TopStats({
   const onMessage = (data) => {
     if (data.type === "EMBEDDED_LV_TOP_STATS_SELECT") {
       maybeUpdateMetric(data.metric)
+    } else if (data.type === "EMBEDDED_LV_TOP_STATS_LOADING_SUCCESS") {
+      setTopStatsLoading(false)
     }
   }
 

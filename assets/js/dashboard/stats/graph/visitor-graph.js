@@ -84,31 +84,31 @@ export default function VisitorGraph({ updateImportedDataInView }) {
     }
   }, [query])
 
-  useEffect(() => {
-    if (topStatData) {
-      storeTopStatsContainerHeight()
-    }
-  }, [topStatData])
+  // useEffect(() => {
+  //   if (topStatData) {
+  //     storeTopStatsContainerHeight()
+  //   }
+  // }, [topStatData])
 
   async function fetchTopStatsAndGraphData() {
-    const response = await fetchTopStats(site, query)
+    // const response = await fetchTopStats(site, query)
 
     let metric = getStoredMetric()
-    const availableMetrics = response.graphable_metrics
+    // const availableMetrics = response.graphable_metrics
 
-    if (!availableMetrics.includes(metric)) {
-      metric = availableMetrics[0]
-      storage.setItem(`metric__${site.domain}`, metric)
-    }
+    // if (!availableMetrics.includes(metric)) {
+    //   metric = availableMetrics[0]
+    //   storage.setItem(`metric__${site.domain}`, metric)
+    // }
 
     const interval = getCurrentInterval(site, query)
 
-    if (response.updateImportedDataInView) {
-      updateImportedDataInView(response.includes_imported)
-    }
-
-    setTopStatData(response)
-    setTopStatsLoading(false)
+    // if (response.updateImportedDataInView) {
+    //   updateImportedDataInView(response.includes_imported)
+    // }
+    //
+    // setTopStatData(response)
+    // setTopStatsLoading(false)
 
     fetchGraphData(metric, interval)
   }
@@ -123,25 +123,6 @@ export default function VisitorGraph({ updateImportedDataInView }) {
 
   function getStoredMetric() {
     return storage.getItem(`metric__${site.domain}`)
-  }
-
-  function storeTopStatsContainerHeight() {
-    storage.setItem(
-      `topStatsHeight__${site.domain}`,
-      document.getElementById('top-stats-container').clientHeight
-    )
-  }
-
-  // This function is used for maintaining the main-graph/top-stats container height in the
-  // loading process. The container height depends on how many top stat metrics are returned
-  // from the API, but in the loading state, we don't know that yet. We can use localStorage
-  // to keep track of the Top Stats container height.
-  function getTopStatsHeight() {
-    if (topStatData) {
-      return 'auto'
-    } else {
-      return `${storage.getItem(`topStatsHeight__${site.domain}`) || 89}px`
-    }
   }
 
   function importedSwitchVisible() {
@@ -176,12 +157,13 @@ export default function VisitorGraph({ updateImportedDataInView }) {
         <div
           id="top-stats-container"
           className="flex flex-wrap"
-          ref={topStatsBoundary}
-          style={{ height: getTopStatsHeight() }}
+          // style={{ height: getTopStatsHeight() }}
         >
           <TopStats
             graphableMetrics={topStatData?.graphable_metrics || []}
+            ref={topStatsBoundary}
             data={topStatData}
+            setTopStatsLoading={setTopStatsLoading}
             onMetricUpdate={onMetricUpdate}
             tooltipBoundary={topStatsBoundary.current}
           />

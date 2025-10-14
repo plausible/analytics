@@ -79,6 +79,13 @@ if (csrfToken && websocketUrl) {
     );
   })
 
+  window.addEventListener('plausible:top_stats:loading:success', (e) => {
+    top.postMessage(
+      { type: "EMBEDDED_LV_TOP_STATS_LOADING_SUCCESS"},
+      "*"
+    );
+  })
+
 
   liveSocket.connect()
   window.liveSocket = liveSocket
