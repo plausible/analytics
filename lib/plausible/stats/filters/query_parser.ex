@@ -73,6 +73,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
+      dbg(query)
       {:ok, query}
     end
   end
@@ -378,7 +379,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp update_comparisons_date_range(%{comparisons: %{date_range: date_range}} = include, site) do
-    with {:ok, parsed_date_range} <- parse_date_range_pair(site, date_range) do
+    with {:ok, parsed_date_range} <- parse_time_range(site, date_range, nil, nil) do
       {:ok, put_in(include, [:comparisons, :date_range], parsed_date_range)}
     end
   end
