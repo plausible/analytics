@@ -59,7 +59,7 @@ defmodule PlausibleWeb.TrackerScriptCache do
     end)
   end
 
-  defp cache_content(tracker_script_configuration) do
+  def cache_content(tracker_script_configuration) do
     if ee?() do
       true
     else

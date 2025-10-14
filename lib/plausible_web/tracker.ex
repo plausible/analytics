@@ -67,6 +67,13 @@ defmodule PlausibleWeb.Tracker do
 
   def build_script(nil), do: nil
 
+  def broadcast_script_update(tracker_script_configuration) do
+    PlausibleWeb.TrackerScriptCache.broadcast_put(
+      tracker_script_configuration.id,
+      PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
+    )
+  end
+
   def update_script_configuration(site, config_update, changeset_type) do
     Repo.transact(fn ->
       with {:ok, original_config} <- get_or_create_tracker_script_configuration(site),
@@ -79,6 +86,8 @@ defmodule PlausibleWeb.Tracker do
           if should_purge_cache?(changeset) do
             purge_cache!(updated_config.id)
           end
+        else
+          :ok = broadcast_script_update(updated_config)
         end
 
         {:ok, updated_config}
@@ -133,6 +142,7 @@ defmodule PlausibleWeb.Tracker do
                  )
                ) do
           sync_goals(site, %{}, created_config)
+          :ok = broadcast_script_update(created_config)
           {:ok, created_config}
         end
       end)
