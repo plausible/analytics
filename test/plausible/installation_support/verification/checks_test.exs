@@ -54,32 +54,46 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
         stub_lookup_a_records(expected_domain)
 
-        verification_counter =
-          stub_verification_result_i(fn i ->
-            case i do
-              1 ->
-                %{
-                  "completed" => true,
-                  "trackerIsInHtml" => false,
-                  "plausibleIsOnWindow" => false,
-                  "plausibleIsInitialized" => false
-                }
+        counter = :atomics.new(1, [])
 
-              2 ->
-                %{
-                  "completed" => true,
-                  "trackerIsInHtml" => true,
-                  "plausibleIsOnWindow" => true,
-                  "plausibleIsInitialized" => true,
-                  "testEvent" => %{
-                    "normalizedBody" => %{
-                      "domain" => "example.com"
-                    },
-                    "responseStatus" => 200
-                  }
+        get_context_url_from_body = fn conn ->
+          {:ok, body, _conn} = Plug.Conn.read_body(conn)
+          JSON.decode!(body)["context"]["url"]
+        end
+
+        stub_verification_result(fn conn ->
+          js_data =
+            if :atomics.add_get(counter, 1, 1) == 1 do
+              assert get_context_url_from_body.(conn) == url_to_verify
+
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => false,
+                "plausibleIsOnWindow" => false,
+                "plausibleIsInitialized" => false
+              }
+            else
+              assert [_, "plausible_verification" <> _] =
+                       String.split(get_context_url_from_body.(conn), "?")
+
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => true,
+                "plausibleIsOnWindow" => true,
+                "plausibleIsInitialized" => true,
+                "testEvent" => %{
+                  "normalizedBody" => %{
+                    "domain" => "example.com"
+                  },
+                  "responseStatus" => 200
                 }
+              }
             end
-          end)
+
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+        end)
 
         assert_matches %Result{
                          ok?: false,
@@ -99,7 +113,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          )
                          |> Checks.interpret_diagnostics()
 
-        assert 2 == :atomics.get(verification_counter, 1)
+        assert 2 == :atomics.get(counter, 1)
       end
 
       for {installation_type, expected_recommendation} <- [
@@ -524,10 +538,10 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       end
     end
 
-    defp stub_verification_result(js_data) do
+    defp stub_verification_result(js_data) when is_map(js_data) do
       counter = :atomics.new(1, [])
 
-      Req.Test.stub(Plausible.InstallationSupport.Checks.InstallationV2, fn conn ->
+      stub_verification_result(fn conn ->
         :atomics.add_get(counter, 1, 1)
 
         conn
@@ -538,19 +552,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       counter
     end
 
-    defp stub_verification_result_i(get_js_data) do
-      counter = :atomics.new(1, [])
-
-      Req.Test.stub(Plausible.InstallationSupport.Checks.InstallationV2, fn conn ->
-        iteration = :atomics.add_get(counter, 1, 1)
-        js_data = get_js_data.(iteration)
-
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(200, Jason.encode!(%{"data" => js_data}))
-      end)
-
-      counter
+    defp stub_verification_result(f) do
+      Req.Test.stub(Plausible.InstallationSupport.Checks.InstallationV2, f)
     end
   end
 end
