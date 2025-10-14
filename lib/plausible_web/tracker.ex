@@ -67,12 +67,12 @@ defmodule PlausibleWeb.Tracker do
 
   def build_script(nil), do: nil
 
-  def broadcast_script_update(tracker_script_configuration) do
-    PlausibleWeb.TrackerScriptCache.broadcast_put(
-      tracker_script_configuration.id,
-      PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
-    )
-  end
+  def broadcast_script_update(tracker_script_configuration),
+    do:
+      PlausibleWeb.TrackerScriptCache.broadcast_put(
+        tracker_script_configuration.id,
+        PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
+      )
 
   def update_script_configuration(site, config_update, changeset_type) do
     Repo.transact(fn ->
