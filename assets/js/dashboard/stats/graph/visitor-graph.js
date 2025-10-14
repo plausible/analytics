@@ -93,7 +93,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   async function fetchTopStatsAndGraphData() {
     // const response = await fetchTopStats(site, query)
 
-    let metric = getStoredMetric()
+    let metric = getStoredMetric() || 'visitors'
     // const availableMetrics = response.graphable_metrics
 
     // if (!availableMetrics.includes(metric)) {
