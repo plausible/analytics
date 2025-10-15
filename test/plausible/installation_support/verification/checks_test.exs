@@ -116,6 +116,53 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         assert 2 == :atomics.get(counter, 1)
       end
 
+      test "cache bust diagnostics fully replace the initial installation check diagnostics" do
+        expected_domain = "example.com"
+        url_to_verify = "https://#{expected_domain}"
+
+        stub_lookup_a_records(expected_domain)
+
+        counter = :atomics.new(1, [])
+
+        stub_verification_result(fn conn ->
+          if :atomics.add_get(counter, 1, 1) == 1 do
+            js_data =
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => false,
+                "plausibleIsOnWindow" => false,
+                "plausibleIsInitialized" => false
+              }
+
+            conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+          else
+            conn
+            |> put_resp_content_type("text/html")
+            |> send_resp(408, "Request has timed out")
+          end
+        end)
+
+        state =
+          Checks.run(url_to_verify, expected_domain, "manual",
+            report_to: nil,
+            async?: false,
+            slowdown: 0
+          )
+
+        assert is_nil(state.diagnostics.tracker_is_in_html)
+        assert is_nil(state.diagnostics.plausible_is_on_window)
+        assert is_nil(state.diagnostics.plausible_is_initialized)
+        assert state.diagnostics.service_error =~ "408"
+
+        # Browserless gets called 3 times:
+        #   1) initial/regular installation check
+        #   2) cache bust installation check
+        #   3) retry due to #2 responding with 408
+        assert 3 == :atomics.get(counter, 1)
+      end
+
       for {installation_type, expected_recommendation} <- [
             {"wordpress",
              "Please check that you've installed the WordPress plugin correctly, or verify your installation manually"},
