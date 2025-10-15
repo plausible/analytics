@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Live.InstallationV2Test do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase
   use Plausible
   use Plausible.Test.Support.DNS
 

@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Live.VerificationV2Test do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase
 
   use Plausible.Test.Support.DNS
 
@@ -293,7 +293,6 @@ defmodule PlausibleWeb.Live.VerificationV2Test do
 
   defp get_lv(conn, site, qs \\ nil) do
     {:ok, lv, html} = conn |> no_slowdown() |> live("/#{site.domain}/verification#{qs}")
-
     {lv, html}
   end
 
