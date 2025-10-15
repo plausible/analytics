@@ -229,12 +229,8 @@ defmodule PlausibleWeb.Live.Sites do
 
   def consolidated_view_card(assigns) do
     ~H"""
-    <li :if={@consolidated_stats == :loading} class="relative row-span-2 flex flex-col justify-between gap-6 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150 animate-pulse">
-      <div class="md:h-[220px] sm:h-[280px] h-[280px] dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-      TODO: make this nicer, halp
-    </li>
-    <li :if={is_map(@consolidated_stats)} class="relative row-span-2 flex flex-col justify-between gap-6 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150">
-      <.unstyled_link href={"/#{URI.encode_www_form(@consolidated_view.domain)}"}>
+    <li class="relative row-span-2 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150">
+      <.unstyled_link href={"/#{URI.encode_www_form(@consolidated_view.domain)}"} class="flex flex-col justify-between gap-6 h-full">
       <div class="flex flex-col flex-1 justify-between gap-y-5">
         <div class="flex flex-col gap-y-2 mb-auto">
           <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
@@ -259,14 +255,14 @@ defmodule PlausibleWeb.Live.Sites do
             All sites
           </h3>
         </div>
-        <span class="text-indigo-500 my-auto">
+        <span :if={is_map(@consolidated_stats)} class="h-[54px] text-indigo-500 my-auto">
           <PlausibleWeb.Live.Components.Visitors.chart
             intervals={@consolidated_stats.intervals}
             height={80}
           />
         </span>
       </div>
-      <div class="flex flex-col flex-1 justify-between gap-y-2.5 sm:gap-y-5">
+      <div :if={is_map(@consolidated_stats)} class="flex flex-col flex-1 justify-between gap-y-2.5 sm:gap-y-5">
         <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
           <.consolidated_view_stat
             value={large_number_format(@consolidated_stats.visitors)}
@@ -290,6 +286,13 @@ defmodule PlausibleWeb.Live.Sites do
             label="Views per visit"
             change={1}
           />
+        </div>
+      </div>
+      <div :if={@consolidated_stats == :loading} class="flex flex-col gap-y-2 min-h-[254px] h-full text-center animate-pulse">
+        <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+        <div class="flex-1 flex flex-col gap-y-2">
+          <div class="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+          <div class="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-md"></div>
         </div>
       </div>
     </.unstyled_link>
@@ -337,11 +340,11 @@ defmodule PlausibleWeb.Live.Sites do
         <div class="w-full flex items-center justify-between gap-x-2.5">
           <.favicon domain={@site.domain} />
           <div class="flex-1 w-full truncate">
-            <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight truncate dark:text-gray-100">
+            <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-[22px] truncate dark:text-gray-100">
               {@site.domain}
             </h3>
           </div>
-          <span class="inline-flex items-center px-2 py-1 rounded-sm bg-green-100 text-green-800 text-xs font-medium leading-normal dark:bg-green-900/40 dark:text-green-400">
+          <span class="inline-flex items-center -my-1 px-2 py-1 rounded-sm bg-green-100 text-green-800 text-xs font-medium leading-normal dark:bg-green-900/40 dark:text-green-400">
             Pending invitation
           </span>
         </div>
@@ -379,7 +382,7 @@ defmodule PlausibleWeb.Live.Sites do
             <.favicon domain={@site.domain} />
             <div class="flex-1 w-full">
               <h3
-                class="text-gray-900 font-medium text-md sm:text-lg leading-tight truncate dark:text-gray-100"
+                class="text-gray-900 font-medium text-md sm:text-lg leading-[22px] truncate dark:text-gray-100"
                 style="width: calc(100% - 4rem)"
               >
                 {@site.domain}
@@ -480,9 +483,9 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
-      <div class="md:h-[34px] sm:h-[30px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-      <div class="md:h-[26px] sm:h-[18px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+    <div :if={@hourly_stats == :loading} class="flex flex-col gap-y-2 h-[122px] text-center animate-pulse">
+      <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+      <div class="flex-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
     </div>
     <div
       :if={is_map(@hourly_stats)}
@@ -490,7 +493,7 @@ defmodule PlausibleWeb.Live.Sites do
       phx-mounted={JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})}
     >
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
-        <span class="text-indigo-500">
+        <span class="h-[54px] text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
             intervals={@hourly_stats.intervals}
             height={80}
