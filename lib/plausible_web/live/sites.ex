@@ -29,15 +29,22 @@ defmodule PlausibleWeb.Live.Sites do
       )
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
 
-    socket = assign(socket, :consolidated_view, nil)
+    socket = assign(socket, consolidated_view: nil, can_manage_consolidated_view?: false)
 
     on_ee do
       consolidated_view =
         socket.assigns.current_team && ConsolidatedView.get(socket.assigns.current_team)
 
+      can_manage_consolidated_view? =
+        ConsolidatedView.can_manage?(socket.assigns.current_team, socket.assigns.current_user)
+
       socket =
         if consolidated_view do
-          assign(socket, consolidated_view: consolidated_view, consolidated_stats: :loading)
+          assign(socket,
+            consolidated_view: consolidated_view,
+            consolidated_stats: :loading,
+            can_manage_consolidated_view?: can_manage_consolidated_view?
+          )
         else
           socket
         end
@@ -129,6 +136,7 @@ defmodule PlausibleWeb.Live.Sites do
           <!-- Insert upgrade_card here -->
           <.consolidated_view_card
             :if={@consolidated_view}
+            can_manage_consolidated_view?={@can_manage_consolidated_view?}
             consolidated_view={@consolidated_view}
             consolidated_stats={@consolidated_stats}
             current_user={@current_user}
@@ -297,7 +305,7 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </div>
     </.unstyled_link>
-      <div class="absolute right-1 top-3.5" :if={ConsolidatedView.can_manage?(@current_team, @current_user)}>
+      <div class="absolute right-1 top-3.5" :if={@can_manage_consolidated_view?}>
         <.ellipsis_menu site={@consolidated_view} can_manage?={true} />
       </div>
     </li>
