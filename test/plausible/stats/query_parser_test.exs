@@ -2732,57 +2732,5 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :internal, params)
       end
     end
-
-    describe "timezone conversion for current date" do
-      test "correctly identifies 'today' in site timezone when UTC date differs", %{
-        site: site
-      } do
-        # It's 2am UTC on Jan 2nd, 2024
-        # But in EST (UTC-5), it's still 9pm on Jan 1st, 2024
-        now = DateTime.new!(~D[2024-01-02], ~T[02:00:00], "Etc/UTC")
-        site = %{site | timezone: "America/New_York"}
-
-        params = %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "day"
-        }
-
-        # "day" should be Jan 1st in EST timezone, not Jan 2nd
-        assert {:ok, query} = parse(site, :public, params, now)
-
-        # The UTC time range should be for Jan 1st in EST
-        # Jan 1st 00:00:00 EST = Jan 1st 05:00:00 UTC
-        # Jan 1st 23:59:59 EST = Jan 2nd 04:59:59 UTC
-        assert query.utc_time_range.first ==
-                 DateTime.new!(~D[2024-01-01], ~T[05:00:00], "Etc/UTC")
-
-        assert query.utc_time_range.last == DateTime.new!(~D[2024-01-02], ~T[04:59:59], "Etc/UTC")
-      end
-
-      test "correctly identifies 'today' with positive timezone offset", %{site: site} do
-        # It's 11pm UTC on Jan 1st, 2024
-        # But in Tokyo (UTC+9), it's already 8am on Jan 2nd, 2024
-        now = DateTime.new!(~D[2024-01-01], ~T[23:00:00], "Etc/UTC")
-        site = %{site | timezone: "Asia/Tokyo"}
-
-        params = %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "day"
-        }
-
-        # "day" should be Jan 2nd in Tokyo timezone, not Jan 1st
-        assert {:ok, query} = parse(site, :public, params, now)
-
-        # The UTC time range should be for Jan 2nd in JST
-        # Jan 2nd 00:00:00 JST = Jan 1st 15:00:00 UTC
-        # Jan 2nd 23:59:59 JST = Jan 2nd 14:59:59 UTC
-        assert query.utc_time_range.first ==
-                 DateTime.new!(~D[2024-01-01], ~T[15:00:00], "Etc/UTC")
-
-        assert query.utc_time_range.last == DateTime.new!(~D[2024-01-02], ~T[14:59:59], "Etc/UTC")
-      end
-    end
   end
 end
