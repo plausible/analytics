@@ -70,10 +70,8 @@ defmodule Plausible.ConsolidatedView do
     site_ids(team.identifier)
   end
 
-  @spec get(Team.t() | String.t() | nil) :: Site.t() | nil
+  @spec get(Team.t() | String.t()) :: Site.t() | nil
   def get(team_or_id)
-
-  def get(nil), do: nil
 
   def get(%Team{} = team) do
     team |> make_id() |> get()

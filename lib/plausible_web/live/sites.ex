@@ -32,7 +32,8 @@ defmodule PlausibleWeb.Live.Sites do
     socket = assign(socket, :consolidated_view, nil)
 
     on_ee do
-      consolidated_view = ConsolidatedView.get(socket.assigns.current_team)
+      consolidated_view =
+        socket.assigns.current_team && ConsolidatedView.get(socket.assigns.current_team)
 
       socket =
         if consolidated_view do
