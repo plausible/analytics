@@ -102,7 +102,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
             timeoutMs: @plausible_window_check_timeout_ms,
             timeoutBetweenAttemptsMs: @timeout_between_attempts_ms,
             cspHostToCheck: PlausibleWeb.Endpoint.host(),
-            url: Plausible.InstallationSupport.URL.bust_url(url),
+            url: url,
             userAgent: Plausible.InstallationSupport.user_agent(),
             debug: Application.get_env(:plausible, :environment) == "dev"
           }

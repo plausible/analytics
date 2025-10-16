@@ -6,7 +6,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
   on_ee do
     import Plausible.AssertMatches
-    alias Plausible.InstallationSupport.Verification.Checks
+    alias Plausible.InstallationSupport.Verification.{Checks, Diagnostics}
     alias Plausible.InstallationSupport.Result
     use Plausible.Test.Support.DNS
     import Plug.Conn
@@ -54,32 +54,46 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
         stub_lookup_a_records(expected_domain)
 
-        verification_counter =
-          stub_verification_result_i(fn i ->
-            case i do
-              1 ->
-                %{
-                  "completed" => true,
-                  "trackerIsInHtml" => false,
-                  "plausibleIsOnWindow" => false,
-                  "plausibleIsInitialized" => false
-                }
+        counter = :atomics.new(1, [])
 
-              2 ->
-                %{
-                  "completed" => true,
-                  "trackerIsInHtml" => true,
-                  "plausibleIsOnWindow" => true,
-                  "plausibleIsInitialized" => true,
-                  "testEvent" => %{
-                    "normalizedBody" => %{
-                      "domain" => "example.com"
-                    },
-                    "responseStatus" => 200
-                  }
+        get_context_url_from_body = fn conn ->
+          {:ok, body, _conn} = Plug.Conn.read_body(conn)
+          JSON.decode!(body)["context"]["url"]
+        end
+
+        stub_verification_result(fn conn ->
+          js_data =
+            if :atomics.add_get(counter, 1, 1) == 1 do
+              assert get_context_url_from_body.(conn) == url_to_verify
+
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => false,
+                "plausibleIsOnWindow" => false,
+                "plausibleIsInitialized" => false
+              }
+            else
+              assert [_, "plausible_verification" <> _] =
+                       String.split(get_context_url_from_body.(conn), "?")
+
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => true,
+                "plausibleIsOnWindow" => true,
+                "plausibleIsInitialized" => true,
+                "testEvent" => %{
+                  "normalizedBody" => %{
+                    "domain" => "example.com"
+                  },
+                  "responseStatus" => 200
                 }
+              }
             end
-          end)
+
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+        end)
 
         assert_matches %Result{
                          ok?: false,
@@ -99,7 +113,56 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          )
                          |> Checks.interpret_diagnostics()
 
-        assert 2 == :atomics.get(verification_counter, 1)
+        assert 2 == :atomics.get(counter, 1)
+      end
+
+      test "cache bust diagnostics fully replace the initial installation check diagnostics" do
+        expected_domain = "example.com"
+        url_to_verify = "https://#{expected_domain}"
+
+        stub_lookup_a_records(expected_domain)
+
+        counter = :atomics.new(1, [])
+
+        stub_verification_result(fn conn ->
+          if :atomics.add_get(counter, 1, 1) == 1 do
+            js_data =
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => false,
+                "plausibleIsOnWindow" => false,
+                "plausibleIsInitialized" => false
+              }
+
+            conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+          else
+            conn
+            |> put_resp_content_type("text/html")
+            |> send_resp(408, "Request has timed out")
+          end
+        end)
+
+        state =
+          Checks.run(url_to_verify, expected_domain, "manual",
+            report_to: nil,
+            async?: false,
+            slowdown: 0
+          )
+
+        assert_matches %Diagnostics{
+                         tracker_is_in_html: nil,
+                         plausible_is_on_window: nil,
+                         plausible_is_initialized: nil,
+                         service_error: ^any(:string, ~r/.*408.*/)
+                       } = state.diagnostics
+
+        # Browserless gets called 3 times:
+        #   1) initial/regular installation check
+        #   2) cache bust installation check
+        #   3) retry due to #2 responding with 408
+        assert 3 == :atomics.get(counter, 1)
       end
 
       for {installation_type, expected_recommendation} <- [
@@ -524,10 +587,10 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       end
     end
 
-    defp stub_verification_result(js_data) do
+    defp stub_verification_result(js_data) when is_map(js_data) do
       counter = :atomics.new(1, [])
 
-      Req.Test.stub(Plausible.InstallationSupport.Checks.InstallationV2, fn conn ->
+      stub_verification_result(fn conn ->
         :atomics.add_get(counter, 1, 1)
 
         conn
@@ -538,19 +601,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       counter
     end
 
-    defp stub_verification_result_i(get_js_data) do
-      counter = :atomics.new(1, [])
-
-      Req.Test.stub(Plausible.InstallationSupport.Checks.InstallationV2, fn conn ->
-        iteration = :atomics.add_get(counter, 1, 1)
-        js_data = get_js_data.(iteration)
-
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(200, Jason.encode!(%{"data" => js_data}))
-      end)
-
-      counter
+    defp stub_verification_result(f) do
+      Req.Test.stub(Plausible.InstallationSupport.Checks.InstallationV2, f)
     end
   end
 end

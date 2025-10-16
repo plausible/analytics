@@ -31,16 +31,15 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2CacheBust do
         state
 
       _known_installation_failure ->
-        url_that_maybe_busts_cache =
-          Plausible.InstallationSupport.URL.bust_url(url)
+        reset_diagnostics = %InstallationSupport.Verification.Diagnostics{
+          selected_installation_type: state.diagnostics.selected_installation_type
+        }
 
-        state_after_cache_bust =
-          Plausible.InstallationSupport.Checks.InstallationV2.perform(%{
-            state
-            | url: url_that_maybe_busts_cache
-          })
-
-        put_diagnostics(state_after_cache_bust, diagnostics_are_from_cache_bust: true)
+        state
+        |> struct!(diagnostics: reset_diagnostics)
+        |> struct!(url: InstallationSupport.URL.bust_url(url))
+        |> InstallationSupport.Checks.InstallationV2.perform()
+        |> put_diagnostics(diagnostics_are_from_cache_bust: true)
     end
   end
 end
