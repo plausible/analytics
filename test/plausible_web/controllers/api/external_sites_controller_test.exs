@@ -1961,7 +1961,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert json_response(conn, 200) == %{
                  "domain" => "new.example.com",
-                 "timezone" => "UTC",
+                 "timezone" => "Etc/UTC",
                  "custom_properties" => []
                }
 

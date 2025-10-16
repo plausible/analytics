@@ -736,7 +736,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
 
         assert_matches ^strict_map(%{
                          "domain" => "new.example.com",
-                         "timezone" => "UTC",
+                         "timezone" => "Etc/UTC",
                          "custom_properties" => [],
                          "tracker_script_configuration" =>
                            ^strict_map(%{
@@ -772,7 +772,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
 
         assert_matches ^strict_map(%{
                          "domain" => ^site.domain,
-                         "timezone" => "UTC",
+                         "timezone" => "Etc/UTC",
                          "custom_properties" => [],
                          "tracker_script_configuration" =>
                            ^strict_map(%{
@@ -807,7 +807,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
 
         assert_matches ^strict_map(%{
                          "domain" => "new.example.com",
-                         "timezone" => "UTC",
+                         "timezone" => "Etc/UTC",
                          "custom_properties" => [],
                          "tracker_script_configuration" =>
                            ^strict_map(%{
