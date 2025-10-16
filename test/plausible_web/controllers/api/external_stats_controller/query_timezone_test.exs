@@ -164,6 +164,46 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimezoneTest do
       context
     end
 
+    test "uses site timezone for legacy_time_on_page_cutoff conversion", %{
+      conn: conn,
+      site: site
+    } do
+      # Set site to EST timezone (UTC-5)
+      site = Plausible.Repo.update!(Ecto.Changeset.change(site, timezone: "America/New_York"))
+      # Cutoff at 2024-01-01 in EST = 2024-01-01 05:00:00 UTC
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2024-01-01])
+
+      populate_stats(site, [
+        # 2024-01-01 03:00:00 UTC = 2023-12-31 22:00:00 EST (before cutoff in EST)
+        build(:pageview, user_id: 1, timestamp: ~N[2024-01-01 03:00:00]),
+        build(:pageview, user_id: 1, pathname: "/exit", timestamp: ~N[2024-01-01 03:10:00]),
+        # 2024-01-01 06:00:00 UTC = 2024-01-01 01:00:00 EST (after cutoff in EST)
+        build(:pageview, user_id: 2, timestamp: ~N[2024-01-01 06:00:00]),
+        build(:engagement,
+          user_id: 2,
+          timestamp: ~N[2024-01-01 06:05:00],
+          engagement_time: 90_000
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"]
+        })
+
+      response = json_response(conn, 200)
+
+      # First pageview (03:00 < 05:00) uses legacy: 600s
+      # Second pageview (06:00 > 05:00) uses new metric: merged (600 + 90) / 2 = 345s
+      assert [
+               %{"metrics" => [345], "dimensions" => ["/"]},
+               %{"metrics" => [nil], "dimensions" => ["/exit"]}
+             ] = response["results"]
+    end
+
     test "handles timezone gap in legacy_time_on_page_cutoff date", %{
       conn: conn,
       site: site
