@@ -1,5 +1,5 @@
 <.settings_tiles>
-  <.tile docs="change-domain-name">
+  <.tile :if={Plausible.Sites.regular?(@site)} docs="change-domain-name">
     <:title>
       Site domain
     </:title>
@@ -30,7 +30,7 @@
       </.button>
     </.form>
   </.tile>
-  <.tile docs="plausible-script">
+  <.tile :if={Plausible.Sites.regular?(@site)} docs="plausible-script">
     <:title>Site installation</:title>
     <:subtitle>
       Control what data is collected and verify your installation.

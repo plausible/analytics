@@ -4,7 +4,7 @@ defmodule PlausibleWeb.CustomerSupport.Live do
 
   Provides:
   - Standard mount/3 and handle_info/2 implementations
-  - Tab navigation components and routing utilities  
+  - Tab navigation components and routing utilities
   - Common aliases and imports for Customer Support LiveViews
   - Convenience API for flashes and redirects
   """
@@ -84,7 +84,7 @@ defmodule PlausibleWeb.CustomerSupport.Live do
       patch={"?tab=#{@to}"}
       class={[
         @link_class,
-        "group relative min-w-0 flex-1 overflow-hidden bg-white dark:bg-gray-800 py-4 px-6 text-center text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-750 focus:z-10 first:rounded-l-lg last:rounded-r-lg"
+        "group relative min-w-0 flex-1 overflow-hidden bg-white dark:bg-gray-800 py-4 px-6 text-center text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-10 first:rounded-l-lg last:rounded-r-lg"
       ]}
     >
       {render_slot(@inner_block)}
