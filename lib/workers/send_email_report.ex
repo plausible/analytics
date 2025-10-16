@@ -80,19 +80,17 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp stats_aggregates(site, date_range) do
-    {:ok, query} =
-      Query.build(
+    query =
+      Query.build!(
         site,
         :internal,
         %{
-          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
           "site_id" => site.domain,
           "metrics" => ["pageviews", "visitors", "bounce_rate"],
           "date_range" => date_range,
           "include" => %{"comparisons" => %{"mode" => "previous_period"}},
           "pagination" => %{"limit" => 5}
-        },
-        %{}
+        }
       )
 
     %QueryResult{
@@ -114,19 +112,17 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp pages(site, date_range) do
-    {:ok, query} =
-      Query.build(
+    query =
+      Query.build!(
         site,
         :internal,
         %{
-          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "dimensions" => ["event:page"],
           "date_range" => date_range,
           "pagination" => %{"limit" => 5}
-        },
-        %{}
+        }
       )
 
     site
@@ -141,20 +137,18 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp sources(site, date_range) do
-    {:ok, query} =
-      Query.build(
+    query =
+      Query.build!(
         site,
         :internal,
         %{
-          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "filters" => [["is_not", "visit:source", ["Direct / None"]]],
           "dimensions" => ["visit:source"],
           "date_range" => date_range,
           "pagination" => %{"limit" => 5}
-        },
-        %{}
+        }
       )
 
     site
@@ -169,19 +163,17 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp goals(site, date_range) do
-    {:ok, query} =
-      Query.build(
+    query =
+      Query.build!(
         site,
         :internal,
         %{
-          # site_id parameter is required, but it doesn't matter what we pass here since the query is executed against a specific site later on
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "dimensions" => ["event:goal"],
           "date_range" => date_range,
           "pagination" => %{"limit" => 5}
-        },
-        %{}
+        }
       )
 
     site

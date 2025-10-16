@@ -92,7 +92,7 @@ defmodule Plausible.Teams.Sites.TransferTest do
         site = new_site(owner: user)
         team = team_of(user)
 
-        assert {:ok, _} = ConsolidatedView.enable(team)
+        new_consolidated_view(team)
         assert ConsolidatedView.enabled?(team)
 
         another_owner = new_user()

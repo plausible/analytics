@@ -349,16 +349,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         steps
       )
 
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
           "site_id" => site.domain,
           "date_range" => "month",
           "metrics" => ["pageviews"]
-        },
-        %{}
+        }
       )
 
     {:ok, {definition, query}}
