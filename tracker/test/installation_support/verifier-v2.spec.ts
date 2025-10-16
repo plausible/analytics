@@ -834,6 +834,64 @@ test.describe('installed plausible esm variant', () => {
   })
 })
 
+test.describe('installed legacy .compat script', () => {
+  test('with masked events endpoint', async ({ page }, { testId }) => {
+    await mockManyRequests({
+      page,
+      path: `https://example.com/any/masked/events/endpoint`,
+      awaitedRequestCount: 1,
+      fulfill: {
+        status: 202,
+        contentType: 'text/plain',
+        body: 'ok'
+      }
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: /* HTML */ `<script
+        id="plausible"
+        data-domain="example.com"
+        data-api="https://example.com/any/masked/events/endpoint"
+        src="/tracker/js/plausible.compat.local.manual.js"
+      ></script>`,
+      bodyContent: ''
+    })
+
+    const response = await page.goto(url)
+    const responseHeaders = response?.headers() ?? {}
+
+    const result = await executeVerifyV2(page, {
+      ...DEFAULT_VERIFICATION_OPTIONS,
+      responseHeaders
+    })
+
+    expect(result).toEqual({
+      data: {
+        attempts: 1,
+        completed: true,
+        trackerIsInHtml: false,
+        plausibleIsInitialized: true,
+        plausibleIsOnWindow: true,
+        disallowedByCsp: false,
+        plausibleVersion: version,
+        plausibleVariant: undefined,
+        testEvent: {
+          callbackResult: {
+            status: 202
+          },
+          normalizedBody: {
+            __legacyCompatInstallation: true,
+            domain: 'example.com'
+          },
+          responseStatus: 202
+        },
+        cookiesConsentResult: incompleteCookiesConsentResult
+      }
+    })
+  })
+})
+
 test.describe('opts in on cookie banners', () => {
   for (const { url, expectedCookiesConsentResult } of [
     {
