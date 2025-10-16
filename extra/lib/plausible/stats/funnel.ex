@@ -5,6 +5,8 @@ defmodule Plausible.Stats.Funnel do
   """
 
   @funnel_window_duration 86_400
+  @enter_offset 40
+  @max_steps 32
 
   alias Plausible.Funnel
   alias Plausible.Funnels
@@ -32,28 +34,33 @@ defmodule Plausible.Stats.Funnel do
       query
       |> Base.base_event_query()
       |> query_funnel(funnel)
+      |> Enum.into(%{})
 
     # Funnel definition steps are 1-indexed, if there's index 0 in the resulting query,
     # it signifies the number of visitors that haven't entered the funnel.
-    not_entering_visitors =
-      case funnel_data do
-        [{0, count} | _] -> count
-        _ -> 0
-      end
+    not_entering_visitors = funnel_data[@enter_offset] || 0
 
-    all_visitors = Enum.reduce(funnel_data, 0, fn {_, n}, acc -> acc + n end)
-    steps = backfill_steps(funnel_data, funnel)
+    all_visitors =
+      Enum.reduce(funnel_data, 0, fn {step, n}, acc ->
+        if step >= @enter_offset do
+          acc + n
+        else
+          acc
+        end
+      end)
 
-    visitors_at_first_step = List.first(steps).visitors
+    entering_visitors = all_visitors - not_entering_visitors
+
+    steps = backfill_steps(funnel_data, funnel, entering_visitors)
 
     {:ok,
      %{
        name: funnel.name,
        steps: steps,
        all_visitors: all_visitors,
-       entering_visitors: visitors_at_first_step,
-       entering_visitors_percentage: percentage(visitors_at_first_step, all_visitors),
-       never_entering_visitors: all_visitors - visitors_at_first_step,
+       entering_visitors: entering_visitors,
+       entering_visitors_percentage: percentage(entering_visitors, all_visitors),
+       never_entering_visitors: all_visitors - entering_visitors,
        never_entering_visitors_percentage: percentage(not_entering_visitors, all_visitors)
      }}
   end
@@ -77,7 +84,15 @@ defmodule Plausible.Stats.Funnel do
     ClickhouseRepo.all(query)
   end
 
+  defp select_funnel(db_query, %{open: true} = funnel_definition) do
+    select_open_funnel(db_query, funnel_definition)
+  end
+
   defp select_funnel(db_query, funnel_definition) do
+    select_closed_funnel(db_query, funnel_definition)
+  end
+
+  defp select_closed_funnel(db_query, funnel_definition) do
     window_funnel_steps =
       Enum.reduce(funnel_definition.steps, nil, fn step, acc ->
         goal_condition = Plausible.Stats.Goals.goal_condition(step.goal)
@@ -89,10 +104,25 @@ defmodule Plausible.Stats.Funnel do
         end
       end)
 
+    funnel_steps =
+      dynamic(
+        [q],
+        fragment(
+          "if(length(range(1, windowFunnel(?)(timestamp, ?) + 1) AS funArr) > 0, funArr, ?)",
+          @funnel_window_duration,
+          ^window_funnel_steps,
+          ^[0]
+        )
+      )
+
     dynamic_window_funnel =
       dynamic(
         [q],
-        fragment("windowFunnel(?)(timestamp, ?)", @funnel_window_duration, ^window_funnel_steps)
+        fragment(
+          "arrayJoin(arrayConcat(?, [funArr[1] + ?]))",
+          ^funnel_steps,
+          @enter_offset
+        )
       )
 
     from(q in db_query,
@@ -103,7 +133,89 @@ defmodule Plausible.Stats.Funnel do
     )
   end
 
-  defp backfill_steps(funnel_result, funnel) do
+  defp select_open_funnel(db_query, funnel_definition) do
+    steps_count = length(funnel_definition.steps)
+
+    window_funnel_steps =
+      Enum.map(funnel_definition.steps, &Plausible.Stats.Goals.goal_condition(&1.goal))
+
+    offset_funnels =
+      Enum.map(steps_count..1//-1, fn idx ->
+        offset_steps =
+          window_funnel_steps
+          |> Enum.drop(idx - 1)
+          |> Enum.reduce(nil, fn step, acc ->
+            if acc do
+              dynamic([q], fragment("?, ?", ^acc, ^step))
+            else
+              dynamic([q], fragment("?", ^step))
+            end
+          end)
+
+        {nested_funnel(offset_steps, idx), idx}
+      end)
+
+    funnel_reduction =
+      Enum.reduce(offset_funnels, dynamic([q], fragment("array()")), fn {funnel_expr, idx}, acc ->
+        nested_funnel_conditional(funnel_expr, acc, idx, steps_count)
+      end)
+
+    longest_funnel =
+      dynamic([q], fragment("arraySort(x -> length(x), ?)[-1]", ^funnel_reduction))
+
+    dynamic_open_window_funnel =
+      dynamic([q], fragment("? AS funSteps", ^longest_funnel))
+
+    full_open_window_funnel =
+      dynamic(
+        [q],
+        fragment(
+          "arrayJoin(arrayPushBack(?, funSteps[1] + ?))",
+          ^dynamic_open_window_funnel,
+          @enter_offset
+        )
+      )
+
+    from(q in db_query,
+      select_merge:
+        ^%{
+          step: full_open_window_funnel
+        }
+    )
+  end
+
+  for idx <- 1..@max_steps do
+    fragment_str = "range(#{idx}, windowFunnel(?)(timestamp, ?) + #{idx}) as funArr#{idx}"
+
+    defp nested_funnel(steps, unquote(idx)) do
+      dynamic(
+        [q],
+        fragment(
+          unquote(fragment_str),
+          @funnel_window_duration,
+          ^steps
+        )
+      )
+    end
+  end
+
+  for idx <- 1..@max_steps, steps <- 1..@max_steps do
+    fragment_str =
+      "if(length(?) >= #{steps - idx + 1}, [funArr#{idx}], arrayPushBack(?, funArr#{idx}))"
+
+    defp nested_funnel_conditional(current_expr, inner_expr, unquote(idx), unquote(steps)) do
+      dynamic(
+        [q],
+        fragment(
+          unquote(fragment_str),
+          ^current_expr,
+          ^inner_expr
+        )
+      )
+    end
+  end
+
+  defp backfill_steps(funnel_result, funnel, entering_visitors) do
     # Directly from ClickHouse we only get {step_idx(), visitor_count()} tuples.
     # but no totals including previous steps are aggregated.
     # Hence we need to perform the appropriate backfill
@@ -111,32 +223,22 @@ defmodule Plausible.Stats.Funnel do
     # In case ClickHouse returns 0-index funnel result, we're going to ignore it
     # anyway, since we fold over steps as per definition, that are always
     # indexed starting from 1.
-    funnel_result = Enum.into(funnel_result, %{})
-    max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
 
     funnel
     |> Map.fetch!(:steps)
-    |> Enum.reduce({nil, nil, []}, fn step, {total_visitors, visitors_at_previous, acc} ->
+    |> Enum.reduce({nil, []}, fn step, {visitors_at_previous, acc} ->
       # first step contains the total number of all visitors qualifying for the funnel,
       # with each subsequent step needing to accumulate sum of the previous one(s)
-      visitors_at_step =
-        step.step_order..max_step
-        |> Enum.map(&Map.get(funnel_result, &1, 0))
-        |> Enum.sum()
+      visitors_at_step = Map.get(funnel_result, step.step_order, 0)
 
       # accumulate current_visitors for the next iteration
       current_visitors = visitors_at_step
-
-      # First step contains the total number of visitors that we base percentage dropoff on
-      total_visitors =
-        total_visitors ||
-          current_visitors
 
       # Dropoff is 0 for the first step, otherwise we subtract current from previous
       dropoff = if visitors_at_previous, do: visitors_at_previous - current_visitors, else: 0
 
       dropoff_percentage = percentage(dropoff, visitors_at_previous)
-      conversion_rate = percentage(current_visitors, total_visitors)
+      conversion_rate = percentage(current_visitors, entering_visitors)
       conversion_rate_step = percentage(current_visitors, visitors_at_previous)
 
       step = %{
@@ -148,9 +250,9 @@ defmodule Plausible.Stats.Funnel do
         label: to_string(step.goal)
       }
 
-      {total_visitors, current_visitors, [step | acc]}
+      {current_visitors, [step | acc]}
     end)
-    |> elem(2)
+    |> elem(1)
     |> Enum.reverse()
   end
 

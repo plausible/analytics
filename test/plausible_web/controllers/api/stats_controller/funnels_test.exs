@@ -80,6 +80,70 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                } = resp
       end
 
+      test "computes _open_ funnel for a day", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+        funnel = funnel |> Ecto.Changeset.change(open: true) |> Plausible.Repo.update!()
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/some/irrelevant", user_id: 9_999_999),
+          build(:pageview, pathname: "/blog/announcement", user_id: @user_id),
+          # build(:pageview, pathname: "/blog/announcement", user_id: @other_user_id),
+          build(:event, name: "Signup", user_id: @user_id),
+          build(:event, name: "Signup", user_id: @other_user_id),
+          build(:pageview, pathname: "/cart/add/product", user_id: @user_id),
+          build(:pageview, pathname: "/cart/add/product", user_id: @other_user_id),
+          build(:event, name: "Purchase", user_id: @user_id)
+        ])
+
+        resp =
+          conn
+          |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day")
+          |> json_response(200)
+
+        assert %{
+                 "name" => "Test funnel",
+                 "all_visitors" => 3,
+                 "entering_visitors" => 2,
+                 "entering_visitors_percentage" => "66.67",
+                 "never_entering_visitors" => 1,
+                 "never_entering_visitors_percentage" => "33.33",
+                 "steps" => [
+                   %{
+                     "conversion_rate" => "50",
+                     "conversion_rate_step" => "0",
+                     "dropoff" => 0,
+                     "dropoff_percentage" => "0",
+                     "label" => "Visit /blog/announcement",
+                     "visitors" => 1
+                   },
+                   %{
+                     "conversion_rate" => "100",
+                     "conversion_rate_step" => "200",
+                     "dropoff" => -1,
+                     "dropoff_percentage" => "-100.00",
+                     "label" => "Signup",
+                     "visitors" => 2
+                   },
+                   %{
+                     "conversion_rate" => "100",
+                     "conversion_rate_step" => "100",
+                     "dropoff" => 0,
+                     "dropoff_percentage" => "0",
+                     "label" => "Visit /cart/add/product",
+                     "visitors" => 2
+                   },
+                   %{
+                     "conversion_rate" => "50",
+                     "conversion_rate_step" => "50",
+                     "dropoff" => 1,
+                     "dropoff_percentage" => "50",
+                     "label" => "Purchase",
+                     "visitors" => 1
+                   }
+                 ]
+               } = resp
+      end
+
       test "404 for unknown funnel", %{site: site, conn: conn} do
         resp =
           conn
@@ -172,8 +236,135 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                } = resp
       end
 
+      test "computes all-time _open_ funnel with filters", %{conn: conn, user: user} do
+        site = new_site(stats_start_date: ~D[2020-01-01], owner: user)
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+        funnel = funnel |> Ecto.Changeset.change(open: true) |> Plausible.Repo.update!()
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/blog/announcement", user_id: @user_id),
+          build(:event, name: "Signup", user_id: @user_id),
+          build(:event,
+            name: "Signup",
+            user_id: @other_user_id,
+            timestamp: ~N[2021-01-01 12:01:00],
+            utm_medium: "social"
+          ),
+          build(:pageview, pathname: "/cart/add/product", user_id: @user_id),
+          build(:pageview,
+            pathname: "/cart/add/product",
+            user_id: @other_user_id,
+            timestamp: ~N[2021-01-01 12:02:00]
+          ),
+          build(:event, name: "Purchase", user_id: @user_id)
+        ])
+
+        filters = Jason.encode!([[:is, "visit:utm_medium", ["social"]]])
+
+        resp =
+          conn
+          |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=all&filters=#{filters}")
+          |> json_response(200)
+
+        assert %{
+                 "name" => "Test funnel",
+                 "all_visitors" => 1,
+                 "entering_visitors" => 1,
+                 "entering_visitors_percentage" => "100",
+                 "never_entering_visitors" => 0,
+                 "never_entering_visitors_percentage" => "0",
+                 "steps" => [
+                   %{
+                     "conversion_rate" => "0",
+                     "conversion_rate_step" => "0",
+                     "dropoff" => 0,
+                     "dropoff_percentage" => "0",
+                     "label" => "Visit /blog/announcement",
+                     "visitors" => 0
+                   },
+                   %{
+                     "conversion_rate" => "100",
+                     "conversion_rate_step" => "0",
+                     "dropoff" => -1,
+                     "dropoff_percentage" => "0",
+                     "label" => "Signup",
+                     "visitors" => 1
+                   },
+                   %{
+                     "conversion_rate" => "100",
+                     "conversion_rate_step" => "100",
+                     "dropoff" => 0,
+                     "dropoff_percentage" => "0",
+                     "label" => "Visit /cart/add/product",
+                     "visitors" => 1
+                   },
+                   %{
+                     "conversion_rate" => "0",
+                     "conversion_rate_step" => "0",
+                     "dropoff" => 1,
+                     "dropoff_percentage" => "100",
+                     "label" => "Purchase",
+                     "visitors" => 0
+                   }
+                 ]
+               } = resp
+      end
+
       test "computes an empty funnel", %{conn: conn, site: site} do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+
+        resp =
+          conn
+          |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day")
+          |> json_response(200)
+
+        assert %{
+                 "name" => "Test funnel",
+                 "all_visitors" => 0,
+                 "entering_visitors" => 0,
+                 "entering_visitors_percentage" => "0",
+                 "never_entering_visitors" => 0,
+                 "never_entering_visitors_percentage" => "0",
+                 "steps" => [
+                   %{
+                     "conversion_rate" => "0",
+                     "conversion_rate_step" => "0",
+                     "dropoff" => 0,
+                     "dropoff_percentage" => "0",
+                     "label" => "Visit /blog/announcement",
+                     "visitors" => 0
+                   },
+                   %{
+                     "conversion_rate" => "0",
+                     "conversion_rate_step" => "0",
+                     "dropoff" => 0,
+                     "dropoff_percentage" => "0",
+                     "label" => "Signup",
+                     "visitors" => 0
+                   },
+                   %{
+                     "conversion_rate" => "0",
+                     "conversion_rate_step" => "0",
+                     "dropoff" => 0,
+                     "dropoff_percentage" => "0",
+                     "label" => "Visit /cart/add/product",
+                     "visitors" => 0
+                   },
+                   %{
+                     "conversion_rate" => "0",
+                     "conversion_rate_step" => "0",
+                     "dropoff" => 0,
+                     "dropoff_percentage" => "0",
+                     "label" => "Purchase",
+                     "visitors" => 0
+                   }
+                 ]
+               } = resp
+      end
+
+      test "computes an empty _open_ funnel", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+        funnel = funnel |> Ecto.Changeset.change(open: true) |> Plausible.Repo.update!()
 
         resp =
           conn

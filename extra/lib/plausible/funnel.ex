@@ -41,6 +41,7 @@ defmodule Plausible.Funnel do
   @type t() :: %__MODULE__{}
   schema "funnels" do
     field :name, :string
+    field :open, :boolean, default: false
     belongs_to :site, Plausible.Site
 
     has_many :steps, Step,
