@@ -207,6 +207,12 @@ defmodule Plausible.Stats.Funnel do
     )
   end
 
+  # Fragment expressions must be precompiled as `fragment` does compile-time
+  # checks on them - for instance it does not allow string interpolation. 
+  # We must work around that in order to avoid calling `windowFunnel`
+  # with the same parameters multiple times and use alias instead. Ecto does not
+  # allow `selected_as` aliases anywhere below top level of `select`, `where` etc.
+
   for idx <- 1..@max_steps do
     fragment_str = "range(#{idx}, windowFunnel(?)(timestamp, ?) + #{idx}) as funArr#{idx}"
 
