@@ -21,13 +21,7 @@ defmodule Plausible.Ingestion.Persistor.Remote do
       {"x-previous-user-id", previous_user_id}
     ]
 
-    case Req.post(persistor_url(override_url),
-           finch: Plausible.Finch,
-           body: encode_payload(event, session_attrs),
-           headers: headers,
-           retry: &handle_transient_error/2,
-           max_retries: @max_transient_retries
-         ) do
+    case request(override_url, event, session_attrs, headers) do
       {:ok, %{status: 200, body: event_payload}} ->
         case decode_payload(event_payload) do
           {:ok, event} ->
@@ -53,6 +47,25 @@ defmodule Plausible.Ingestion.Persistor.Remote do
 
         {:error, :persist_error}
     end
+  end
+
+  def telemetry_request_duration() do
+    [:plausible, :remote_ingest, :request, :duration]
+  end
+
+  defp request(override_url, event, session_attrs, headers) do
+    Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
+      telemetry_request_duration(),
+      fn ->
+        Req.post(persistor_url(override_url),
+          finch: Plausible.Finch,
+          body: encode_payload(event, session_attrs),
+          headers: headers,
+          retry: &handle_transient_error/2,
+          max_retries: @max_transient_retries
+        )
+      end
+    )
   end
 
   defp handle_transient_error(_request, %Req.HTTPError{protocol: :http2, reason: :disconnected}) do
