@@ -1615,8 +1615,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
 
       assert json_response(conn, 200)["query"]["date_range"] == [
-               "2021-01-01T00:00:00+00:00",
-               "2021-01-15T23:59:59+00:00"
+               "2021-01-01T00:00:00Z",
+               "2021-01-15T23:59:59Z"
              ]
     end
 

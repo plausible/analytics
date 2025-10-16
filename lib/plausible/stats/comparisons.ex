@@ -128,7 +128,7 @@ defmodule Plausible.Stats.Comparisons do
   end
 
   defp get_comparison_date_range(source_query, %{mode: "custom"} = options) do
-    DateTimeRange.to_date_range(options.date_range, source_query.timezone)
+    DateTimeRange.new!(options.date_range.first, options.date_range.last, source_query.timezone)
   end
 
   defp maybe_match_day_of_week(comparison_date_range, source_date_range, options) do

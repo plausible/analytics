@@ -98,16 +98,11 @@
                   "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
                 },
                 "date_range": {
-                  "type": "array",
-                  "additionalItems": false,
-                  "minItems": 2,
-                  "maxItems": 2,
-                  "items": {
-                    "type": "string",
-                    "format": "date"
-                  },
-                  "description": "If custom period. A list of two ISO8601 dates or timestamps to compare against.",
-                  "examples": [["2024-01-01", "2024-01-31"]]
+                  "oneOf": [
+                    { "$ref": "#/definitions/date_time_range" },
+                    { "$ref": "#/definitions/date_range" }
+                  ],
+                  "description": "If custom period. A list of two ISO8601 dates or timestamps to compare against."
                 }
               },
               "required": ["mode", "date_range"],
