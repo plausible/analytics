@@ -64,7 +64,7 @@ defmodule Plausible.Cache do
       alias Plausible.Cache.Adapter
       require Logger
 
-      @spec broadcast_put(any(), Keyword.t()) :: :ok
+      @spec broadcast_put(any(), any(), Keyword.t()) :: :ok
       def broadcast_put(key, value, opts \\ []) do
         cache_name = Keyword.get(opts, :cache_name, name())
         multicall_timeout = Keyword.get(opts, :multicall_timeout, :timer.seconds(5))
