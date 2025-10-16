@@ -14,8 +14,8 @@ defmodule Plausible.CondolidatedView.CacheTest do
       {s3, s4, s5} = {new_site(owner: owner2), new_site(owner: owner2), new_site(owner: owner2)}
       team2 = team_of(owner2)
 
-      {:ok, consolidated_view1} = ConsolidatedView.enable(team1)
-      {:ok, consolidated_view2} = ConsolidatedView.enable(team2)
+      consolidated_view1 = new_consolidated_view(team1)
+      consolidated_view2 = new_consolidated_view(team2)
 
       start_test_cache(test)
 
@@ -66,7 +66,7 @@ defmodule Plausible.CondolidatedView.CacheTest do
 
       team = team_of(owner)
 
-      {:ok, consolidated_view} = ConsolidatedView.enable(team)
+      consolidated_view = new_consolidated_view(team)
 
       :ok = Cache.refresh_updated_recently(cache_name: test)
 
@@ -78,7 +78,7 @@ defmodule Plausible.CondolidatedView.CacheTest do
       new_site(owner: user)
       new_site(owner: user)
       team = team_of(user)
-      {:ok, consolidated_view} = ConsolidatedView.enable(team)
+      consolidated_view = new_consolidated_view(team)
 
       start_test_cache(test)
       :ok = Cache.refresh_all(cache_name: test)

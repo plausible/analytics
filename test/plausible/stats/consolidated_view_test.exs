@@ -26,7 +26,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
         build(:pageview, timestamp: ~N[2023-10-25 13:58:00])
       ])
 
-      {:ok, view} = Plausible.ConsolidatedView.enable(team_of(owner))
+      view = new_consolidated_view(team_of(owner))
 
       result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
 

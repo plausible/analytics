@@ -4,20 +4,23 @@ defmodule Plausible.ConsolidatedViewTest do
   on_ee do
     use Plausible.DataCase, async: true
     import Ecto.Query
-    alias Plausible.ConsolidatedView
     import Plausible.Teams.Test
+    alias Plausible.ConsolidatedView
+    alias Plausible.Teams
 
     describe "enable/1 and enabled?/1" do
       setup [:create_user, :create_team]
 
       test "creates and persists a new consolidated site instance", %{team: team} do
         new_site(team: team)
+        team = Teams.complete_setup(team)
         assert {:ok, %Plausible.Site{consolidated: true}} = ConsolidatedView.enable(team)
         assert ConsolidatedView.enabled?(team)
       end
 
       test "is idempotent", %{team: team} do
         new_site(team: team)
+        team = Teams.complete_setup(team)
         assert {:ok, s1} = ConsolidatedView.enable(team)
         assert {:ok, s2} = ConsolidatedView.enable(team)
 
@@ -29,7 +32,13 @@ defmodule Plausible.ConsolidatedViewTest do
       end
 
       test "returns {:error, :no_sites} when the team does not have any sites", %{team: team} do
+        team = Teams.complete_setup(team)
         assert {:error, :no_sites} = ConsolidatedView.enable(team)
+        refute ConsolidatedView.enabled?(team)
+      end
+
+      test "returns {:error, :team_not_setup} when the team is not set up", %{team: team} do
+        assert {:error, :team_not_setup} = ConsolidatedView.enable(team)
         refute ConsolidatedView.enabled?(team)
       end
 
@@ -37,6 +46,8 @@ defmodule Plausible.ConsolidatedViewTest do
       test "returns {:error, :upgrade_required} when team ineligible for this feature"
 
       test "creates consolidated view with stats start dates of the oldest site", %{team: team} do
+        team = Teams.complete_setup(team)
+
         datetimes = [
           ~N[2024-01-01 12:00:00],
           ~N[2024-01-01 11:00:00],
@@ -53,6 +64,7 @@ defmodule Plausible.ConsolidatedViewTest do
       end
 
       test "enable/1 updates cache", %{team: team} do
+        team = Teams.complete_setup(team)
         site = new_site(team: team)
         {:ok, _} = ConsolidatedView.enable(team)
 
@@ -66,7 +78,7 @@ defmodule Plausible.ConsolidatedViewTest do
       setup [:create_user, :create_team, :create_site]
 
       setup %{team: team} do
-        ConsolidatedView.enable(team)
+        new_consolidated_view(team)
         :ok
       end
 
@@ -97,7 +109,7 @@ defmodule Plausible.ConsolidatedViewTest do
         team: team,
         site: site
       } do
-        ConsolidatedView.enable(team)
+        new_consolidated_view(team)
         assert ConsolidatedView.site_ids(team) == {:ok, [site.id]}
       end
     end
@@ -107,13 +119,13 @@ defmodule Plausible.ConsolidatedViewTest do
 
       test "can get by team", %{team: team} do
         assert is_nil(ConsolidatedView.get(team))
-        ConsolidatedView.enable(team)
+        new_consolidated_view(team)
         assert %Plausible.Site{} = ConsolidatedView.get(team)
       end
 
       test "can get by team.identifier", %{team: team} do
         assert is_nil(ConsolidatedView.get(team.identifier))
-        ConsolidatedView.enable(team)
+        new_consolidated_view(team)
         assert %Plausible.Site{} = ConsolidatedView.get(team.identifier)
       end
     end

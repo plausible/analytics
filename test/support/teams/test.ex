@@ -25,6 +25,7 @@ defmodule Plausible.Teams.Test do
 
   on_ee do
     def new_consolidated_view(team) do
+      team = Teams.complete_setup(team)
       {:ok, site} = Plausible.ConsolidatedView.enable(team)
       site
     end
