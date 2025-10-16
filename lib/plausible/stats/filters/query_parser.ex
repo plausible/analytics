@@ -73,7 +73,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
          :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
-      dbg(query)
       {:ok, query}
     end
   end
