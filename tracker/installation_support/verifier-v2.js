@@ -72,14 +72,15 @@ async function verifyPlausibleInstallation(options) {
       'script[data-domain][src]'
     )
     if (firstLegacySnippet) {
+      // legacy installations may list multiple domains in a comma-separated list
       const domainString = firstLegacySnippet.getAttribute('data-domain')
-      const domain = domainString && domainString.split(',').shift()
+      const firstDomain = domainString && domainString.split(',').shift()
 
       interceptedTestEvent = {
         request: {
           normalizedBody: {
             __legacyCompatInstallation: true,
-            domain
+            domain: firstDomain
           }
         },
         response: { status: testEvent.callbackResult.status }
