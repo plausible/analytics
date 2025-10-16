@@ -72,9 +72,8 @@ async function verifyPlausibleInstallation(options) {
       'script[data-domain][src]'
     )
     if (firstLegacySnippet) {
-      const domain =
-        firstLegacySnippet.getAttribute('data-domain') &&
-        String.split(domain, ',').shift()
+      const domainString = firstLegacySnippet.getAttribute('data-domain')
+      const domain = domainString && String.split(domainString, ',').shift()
 
       interceptedTestEvent = {
         request: {
