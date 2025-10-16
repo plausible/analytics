@@ -155,4 +155,102 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimezoneTest do
       assert pageview_count == 2
     end
   end
+
+  describe "legacy_time_on_page_cutoff timezone handling" do
+    setup [:create_user, :create_site, :create_api_key, :use_api_key]
+
+    setup %{site: site} = context do
+      FunWithFlags.enable(:new_time_on_page, for_actor: site)
+      context
+    end
+
+    test "handles timezone gap in legacy_time_on_page_cutoff date", %{
+      conn: conn,
+      site: site
+    } do
+      # On 2022-09-11 in America/Santiago, midnight doesn't exist (gap)
+      # When converting 00:00:00 on 2022-09-11 to datetime, it should use just_before
+      # which is 2022-09-10 23:59:59.999999-04:00 CLT
+      site = Plausible.Repo.update!(Ecto.Changeset.change(site, timezone: "America/Santiago"))
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2022-09-11])
+
+      populate_stats(site, [
+        # Before cutoff (03:30 < 03:59:59) - will use legacy time_on_page (based on exit)
+        build(:pageview, user_id: 1, timestamp: ~N[2022-09-11 03:30:00]),
+        build(:pageview, user_id: 1, pathname: "/exit", timestamp: ~N[2022-09-11 03:40:00]),
+        # After cutoff (05:00 > 03:59:59) - will use new time_on_page (based on engagement)
+        build(:pageview, user_id: 2, timestamp: ~N[2022-09-11 05:00:00]),
+        build(:engagement,
+          user_id: 2,
+          timestamp: ~N[2022-09-11 05:05:00],
+          engagement_time: 60_000
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"]
+        })
+
+      response = json_response(conn, 200)
+
+      # First pageview (before cutoff) uses legacy: 600s
+      # Second pageview (after cutoff) uses new metric but it merges both: (600 + 60) / 2 = 330s
+      assert [
+               %{"metrics" => [330], "dimensions" => ["/"]},
+               %{"metrics" => [nil], "dimensions" => ["/exit"]}
+             ] = response["results"]
+    end
+
+    test "handles ambiguous datetime in legacy_time_on_page_cutoff date", %{
+      conn: conn,
+      site: site
+    } do
+      # On 2023-11-05 in America/Havana, 00:00:00 happens twice (ambiguous)
+      # When converting 00:00:00 to datetime, it should use first_datetime
+      # first_datetime = 2023-11-05 00:00:00-04:00 CDT = 2023-11-05 04:00:00 UTC
+      site = Plausible.Repo.update!(Ecto.Changeset.change(site, timezone: "America/Havana"))
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2023-11-05])
+
+      populate_stats(site, [
+        # Before cutoff (03:30 < 04:00) - will use legacy time_on_page
+        build(:pageview, user_id: 1, timestamp: ~N[2023-11-05 03:30:00]),
+        build(:pageview, user_id: 1, pathname: "/exit", timestamp: ~N[2023-11-05 03:40:00]),
+        # After cutoff (04:30 > 04:00) - will use new time_on_page
+        build(:pageview, user_id: 2, timestamp: ~N[2023-11-05 04:30:00]),
+        build(:engagement,
+          user_id: 2,
+          timestamp: ~N[2023-11-05 04:35:00],
+          engagement_time: 90_000
+        ),
+        # Also after cutoff (05:30 > 04:00) - will use new time_on_page
+        build(:pageview, user_id: 3, timestamp: ~N[2023-11-05 05:30:00]),
+        build(:engagement,
+          user_id: 3,
+          timestamp: ~N[2023-11-05 05:35:00],
+          engagement_time: 30_000
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"]
+        })
+
+      response = json_response(conn, 200)
+
+      # First pageview (before cutoff) uses legacy: 600s
+      # Other pageviews (after cutoff) use new metric, merged: (600 + 90 + 30) / 3 = 240s
+      assert [
+               %{"metrics" => [240], "dimensions" => ["/"]},
+               %{"metrics" => [nil], "dimensions" => ["/exit"]}
+             ] = response["results"]
+    end
+  end
 end
