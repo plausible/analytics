@@ -72,7 +72,9 @@ async function verifyPlausibleInstallation(options) {
       'script[data-domain][src]'
     )
     if (firstLegacySnippet) {
-      const domain = firstLegacySnippet.getAttribute('data-domain')
+      const domain =
+        firstLegacySnippet.getAttribute('data-domain') &&
+        String.split(domain, ',').shift()
 
       interceptedTestEvent = {
         request: {
@@ -85,8 +87,6 @@ async function verifyPlausibleInstallation(options) {
       }
     }
   }
-
-  log(interceptedTestEvent)
 
   const diagnostics = {
     disallowedByCsp,
