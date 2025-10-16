@@ -54,10 +54,38 @@ async function verifyPlausibleInstallation(options) {
 
   stopRecording()
 
-  const interceptedTestEvent = getInterceptedFetch('verification-agent-test')
+  let interceptedTestEvent = getInterceptedFetch('verification-agent-test')
 
   if (!interceptedTestEvent) {
     log(`No test event request was among intercepted requests`)
+  }
+
+  // this can be removed once most sites have migrated to v2 and WP plugin is migrated to v2
+  if (
+    !interceptedTestEvent &&
+    [200, 202].includes(testEvent.callbackResult?.status)
+  ) {
+    log(
+      `The callback result indicates a successful request, assuming legacy .compat installation that uses XMLHttpRequest`
+    )
+    const firstLegacySnippet = document.querySelector(
+      'script[data-domain][src]'
+    )
+    if (firstLegacySnippet) {
+      // legacy installations may list multiple domains in a comma-separated list
+      const domainString = firstLegacySnippet.getAttribute('data-domain')
+      const firstDomain = domainString && domainString.split(',').shift()
+
+      interceptedTestEvent = {
+        request: {
+          normalizedBody: {
+            __legacyCompatInstallation: true,
+            domain: firstDomain
+          }
+        },
+        response: { status: testEvent.callbackResult.status }
+      }
+    }
   }
 
   const diagnostics = {
