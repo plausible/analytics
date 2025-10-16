@@ -79,6 +79,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               label="Funnel Name"
             />
 
+            <.input
+              type="checkbox"
+              field={f[:open]}
+              label="Open funnel"
+            />
+
             <div id="steps-builder" class="mt-6">
               <.label>
                 Funnel Steps
@@ -245,7 +251,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       socket.assigns.site
       |> Funnels.create_changeset(
         params["name"],
-        steps_from_assigns
+        steps_from_assigns,
+        open?: params["open"] == "true"
       )
       |> Map.put(:action, :validate)
 
@@ -262,10 +269,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     save_fn =
       case funnel do
         %Plausible.Funnel{} ->
-          fn -> Funnels.update(funnel, params["name"], steps) end
+          fn -> Funnels.update(funnel, params["name"], steps, open?: params["open"] == "true") end
 
         nil ->
-          fn -> Funnels.create(site, params["name"], steps) end
+          fn -> Funnels.create(site, params["name"], steps, open?: params["open"] == "true") end
       end
 
     case save_fn.() do
@@ -423,7 +430,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       funnel
       |> Funnels.edit_changeset(
         funnel.name,
-        Enum.map(funnel.steps, &%{goal_id: &1.goal.id})
+        Enum.map(funnel.steps, &%{goal_id: &1.goal.id}),
+        open?: funnel.open
       )
       |> to_form()
 

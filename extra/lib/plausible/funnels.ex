@@ -13,10 +13,12 @@ defmodule Plausible.Funnels do
 
   import Ecto.Query
 
-  @spec create(Plausible.Site.t(), String.t(), [map()]) ::
+  @spec create(Plausible.Site.t(), String.t(), [map()], Keyword.t()) ::
           {:ok, Funnel.t()}
           | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
-  def create(site, name, steps)
+  def create(site, name, steps, opts \\ [])
+
+  def create(site, name, steps, opts)
       when is_list(steps) and length(steps) in Funnel.min_steps()..Funnel.max_steps() do
     site = Plausible.Repo.preload(site, :team)
 
@@ -26,19 +28,19 @@ defmodule Plausible.Funnels do
 
       :ok ->
         site
-        |> create_changeset(name, steps)
+        |> create_changeset(name, steps, opts)
         |> Repo.insert()
     end
   end
 
-  def create(_site, _name, _goals) do
+  def create(_site, _name, _goals, _opts) do
     {:error, :invalid_funnel_size}
   end
 
-  @spec update(Funnel.t(), String.t(), [map()]) ::
+  @spec update(Funnel.t(), String.t(), [map()], Keyword.t()) ::
           {:ok, Funnel.t()}
           | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
-  def update(funnel, name, steps) do
+  def update(funnel, name, steps, opts \\ []) do
     site = Plausible.Repo.preload(funnel, site: :team).site
 
     case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
@@ -47,27 +49,29 @@ defmodule Plausible.Funnels do
 
       :ok ->
         funnel
-        |> Funnel.changeset(%{name: name, steps: steps})
+        |> edit_changeset(name, steps, opts)
         |> Repo.update()
     end
   end
 
-  @spec create_changeset(Plausible.Site.t(), String.t(), [map()]) ::
+  @spec create_changeset(Plausible.Site.t(), String.t(), [map()], Keyword.t()) ::
           Ecto.Changeset.t()
-  def create_changeset(site, name, steps) do
-    Funnel.changeset(%Funnel{site_id: site.id}, %{name: name, steps: steps})
+  def create_changeset(site, name, steps, opts \\ []) do
+    open? = Keyword.get(opts, :open?, false)
+    Funnel.changeset(%Funnel{site_id: site.id}, %{name: name, steps: steps, open: open?})
   end
 
-  @spec edit_changeset(Plausible.Funnel.t(), String.t(), [map()]) ::
+  @spec edit_changeset(Plausible.Funnel.t(), String.t(), [map()], Keyword.t()) ::
           Ecto.Changeset.t()
-  def edit_changeset(funnel, name, steps) do
-    Funnel.changeset(funnel, %{name: name, steps: steps})
+  def edit_changeset(funnel, name, steps, opts \\ []) do
+    open? = Keyword.get(opts, :open?, false)
+    Funnel.changeset(funnel, %{name: name, steps: steps, open: open?})
   end
 
-  @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()]) :: Funnel.t()
-  def ephemeral_definition(site, name, steps) do
+  @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()], Keyword.t()) :: Funnel.t()
+  def ephemeral_definition(site, name, steps, opts \\ []) do
     site
-    |> create_changeset(name, steps)
+    |> create_changeset(name, steps, opts)
     |> Ecto.Changeset.apply_changes()
   end
 

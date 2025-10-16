@@ -613,9 +613,12 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       {:ok, goals}
     end
 
-    defp setup_funnel(site, goal_names) do
+    defp setup_funnel(site, goal_names, open? \\ false) do
       {:ok, goals} = setup_goals(site, goal_names)
-      Plausible.Funnels.create(site, "Test funnel", Enum.map(goals, &%{"goal_id" => &1.id}))
+
+      Plausible.Funnels.create(site, "Test funnel", Enum.map(goals, &%{"goal_id" => &1.id}),
+        open?: open?
+      )
     end
   end
 end
