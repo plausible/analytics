@@ -36,7 +36,8 @@ defmodule PlausibleWeb.Live.Sites do
         socket.assigns.current_team && ConsolidatedView.get(socket.assigns.current_team)
 
       can_manage_consolidated_view? =
-        ConsolidatedView.can_manage?(socket.assigns.current_team, socket.assigns.current_user)
+        socket.assigns.current_team &&
+          ConsolidatedView.can_manage?(socket.assigns.current_team, socket.assigns.current_user)
 
       socket =
         if consolidated_view do
