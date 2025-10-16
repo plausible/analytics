@@ -92,6 +92,13 @@ defmodule Plausible.Stats.Funnel do
     select_closed_funnel(db_query, funnel_definition)
   end
 
+  # The closed funnel matches when a user completes 1 or more continuous steps, 
+  # starting from the first step.
+  #
+  # The select statement returns each completed step (1-indexed). Additionally
+  # it returns `@enter_offset + firstStep` special step, where `firstStep`
+  # is practically either 1 (user has entered the funnel) or 0 (user has
+  # not entered the funnel).
   defp select_closed_funnel(db_query, funnel_definition) do
     window_funnel_steps =
       Enum.reduce(funnel_definition.steps, nil, fn step, acc ->
@@ -133,6 +140,22 @@ defmodule Plausible.Stats.Funnel do
     )
   end
 
+  # The open funnel matches when a user completes 1 or more continuous steps,
+  # starting from any step in the funnel.
+  # 
+  # First, an array or funnel subsequences (arrays) is built. Subseqeuences
+  # are then checked starting from the 1st step, then from second, up until
+  # a sequence with last step of the funnel only.
+  #
+  # There's an optimization where we exit early if we match a funnel subsequence
+  # finishing at the last step of the funnel, as there's a guarantee that
+  # the further, shorter ones won't return a longer matched sequence.
+  #
+  # Next, the longest sequence out of the checked sequences is chosen. An
+  # additional step is appended computed as `@enter_offset + firstStep`
+  # where `firstStep` is the step index at which the user has entered the funnel.
+  # When `firstStep` is equal to 0, it means that the user has not entered
+  # the funnel.
   defp select_open_funnel(db_query, funnel_definition) do
     steps_count = length(funnel_definition.steps)
 
