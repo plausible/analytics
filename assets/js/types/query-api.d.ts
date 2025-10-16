@@ -213,11 +213,8 @@ export interface QueryApiSchema {
           match_day_of_week?: boolean;
           /**
            * If custom period. A list of two ISO8601 dates or timestamps to compare against.
-           *
-           * @minItems 2
-           * @maxItems 2
            */
-          date_range: [string, string];
+          date_range: DateTimeRange | DateRange;
         };
   };
   pagination?: {
