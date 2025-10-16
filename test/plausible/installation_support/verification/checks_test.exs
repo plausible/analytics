@@ -6,7 +6,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
   on_ee do
     import Plausible.AssertMatches
-    alias Plausible.InstallationSupport.Verification.Checks
+    alias Plausible.InstallationSupport.Verification.{Checks, Diagnostics}
     alias Plausible.InstallationSupport.Result
     use Plausible.Test.Support.DNS
     import Plug.Conn
@@ -151,10 +151,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
             slowdown: 0
           )
 
-        assert is_nil(state.diagnostics.tracker_is_in_html)
-        assert is_nil(state.diagnostics.plausible_is_on_window)
-        assert is_nil(state.diagnostics.plausible_is_initialized)
-        assert state.diagnostics.service_error =~ "408"
+        assert_matches %Diagnostics{
+                         tracker_is_in_html: nil,
+                         plausible_is_on_window: nil,
+                         plausible_is_initialized: nil,
+                         service_error: ^any(:string, ~r/.*408.*/)
+                       } = state.diagnostics
 
         # Browserless gets called 3 times:
         #   1) initial/regular installation check
