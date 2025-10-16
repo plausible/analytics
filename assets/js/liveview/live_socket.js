@@ -1,6 +1,6 @@
 /**
-  These 3 modules are resolved from '../deps' folder, 
-  which does not exist when running the lint command in Github CI 
+  These 3 modules are resolved from '../deps' folder,
+  which does not exist when running the lint command in Github CI
 */
 /* eslint-disable import/no-unresolved */
 import 'phoenix_html'
@@ -62,13 +62,30 @@ if (csrfToken && websocketUrl) {
     }
   })
 
-  topbar.config({
-    barColors: { 0: '#303f9f' },
-    shadowColor: 'rgba(0, 0, 0, .3)',
-    barThickness: 4
+  if (!document.currentScript.hasAttribute('skip-topbar')) {
+    topbar.config({
+      barColors: { 0: '#303f9f' },
+      shadowColor: 'rgba(0, 0, 0, .3)',
+      barThickness: 4
+    })
+    window.addEventListener('phx:page-loading-start', (_info) => topbar.show())
+    window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
+  }
+
+  window.addEventListener('plausible:top_stats:select', (e) => {
+    top.postMessage(
+      { type: "EMBEDDED_LV_TOP_STATS_SELECT", metric: e.target.dataset.metric },
+      "*"
+    );
   })
-  window.addEventListener('phx:page-loading-start', (_info) => topbar.show())
-  window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
+
+  window.addEventListener('plausible:top_stats:loading:success', (e) => {
+    top.postMessage(
+      { type: "EMBEDDED_LV_TOP_STATS_LOADING_SUCCESS"},
+      "*"
+    );
+  })
+
 
   liveSocket.connect()
   window.liveSocket = liveSocket
