@@ -15,8 +15,6 @@ defmodule Plausible.Stats.ConsolidatedView do
   def safe_overview_24h(nil), do: {:error, :not_found}
 
   def safe_overview_24h(%Site{} = view) do
-    Process.sleep(3000)
-
     try do
       {:ok, overview_24h(view)}
     catch
