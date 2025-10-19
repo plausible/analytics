@@ -1,11 +1,32 @@
 defmodule Plausible.Stats.ConsolidatedView do
   alias Plausible.{Site, Stats}
+  require Logger
 
+  @spec overview_24h(Site.t(), NaiveDateTime.t()) :: map()
   def overview_24h(%Site{consolidated: true} = view, now \\ NaiveDateTime.utc_now()) do
     stats = query_24h_stats(view, now)
     intervals = query_24h_intervals(view, now)
 
     Map.merge(stats, intervals)
+  end
+
+  @spec safe_overview_24h(Site.t()) ::
+          {:ok, map()} | {:error, :inaccessible} | {:error, :not_found}
+  def safe_overview_24h(nil), do: {:error, :not_found}
+
+  def safe_overview_24h(%Site{} = view) do
+    Process.sleep(3000)
+
+    try do
+      {:ok, overview_24h(view)}
+    catch
+      kind, value ->
+        Logger.error(
+          "Could not render 24h consolidated view stats: #{inspect(kind)} #{inspect(value)}"
+        )
+
+        {:error, :inaccessible}
+    end
   end
 
   defp empty_24h_intervals(now) do

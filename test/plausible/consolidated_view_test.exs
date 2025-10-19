@@ -98,6 +98,38 @@ defmodule Plausible.ConsolidatedViewTest do
       end
     end
 
+    describe "can_manage?/2" do
+      test "invalid membership" do
+        refute ConsolidatedView.can_manage?(%Plausible.Auth.User{id: 1}, %Plausible.Teams.Team{
+                 id: 1
+               })
+      end
+
+      test "viewer" do
+        team = new_site().team
+        viewer = add_member(team, role: :viewer)
+        refute ConsolidatedView.can_manage?(viewer, team)
+      end
+
+      test "not a viewer" do
+        team = new_site().team
+        viewer = add_member(team, role: :editor)
+        assert ConsolidatedView.can_manage?(viewer, team)
+      end
+
+      test "not a viewer + guest" do
+        site = new_site()
+        viewer = add_guest(site, role: :editor)
+        refute ConsolidatedView.can_manage?(viewer, site.team)
+      end
+
+      test "viewer + guest" do
+        site = new_site()
+        viewer = add_guest(site, role: :viewer)
+        refute ConsolidatedView.can_manage?(viewer, site.team)
+      end
+    end
+
     describe "site_ids/1" do
       setup [:create_user, :create_team, :create_site]
 

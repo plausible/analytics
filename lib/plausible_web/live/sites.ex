@@ -16,6 +16,9 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def mount(params, _session, socket) do
+    team = socket.assigns.current_team
+    user = socket.assigns.current_user
+
     uri =
       ("/sites?" <> URI.encode_query(Map.take(params, ["filter_text"])))
       |> URI.new!()
@@ -25,31 +28,10 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:uri, uri)
       |> assign(
         :team_invitations,
-        Teams.Invitations.all(socket.assigns.current_user)
+        Teams.Invitations.all(user)
       )
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
-
-    socket = assign(socket, consolidated_view: nil, can_manage_consolidated_view?: false)
-
-    on_ee do
-      consolidated_view =
-        socket.assigns.current_team && ConsolidatedView.get(socket.assigns.current_team)
-
-      can_manage_consolidated_view? =
-        socket.assigns.current_team &&
-          ConsolidatedView.can_manage?(socket.assigns.current_team, socket.assigns.current_user)
-
-      socket =
-        if consolidated_view do
-          assign(socket,
-            consolidated_view: consolidated_view,
-            consolidated_stats: :loading,
-            can_manage_consolidated_view?: can_manage_consolidated_view?
-          )
-        else
-          socket
-        end
-    end
+      |> assign(init_consolidated_view_assigns(user, team))
 
     {:ok, socket}
   end
@@ -239,74 +221,92 @@ defmodule PlausibleWeb.Live.Sites do
 
   def consolidated_view_card(assigns) do
     ~H"""
-    <li class="relative row-span-2 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150">
-      <.unstyled_link href={"/#{URI.encode_www_form(@consolidated_view.domain)}"} class="flex flex-col justify-between gap-6 h-full">
-      <div class="flex flex-col flex-1 justify-between gap-y-5">
-        <div class="flex flex-col gap-y-2 mb-auto">
-          <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d="M22 12H2M12 22c5.714-5.442 5.714-14.558 0-20M12 22C6.286 16.558 6.286 7.442 12 2"
-              />
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
-              />
-            </svg>
+    <li
+      data-test-id="consolidated-view-card"
+      class="relative row-span-2 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
+    >
+      <.unstyled_link
+        href={"/#{URI.encode_www_form(@consolidated_view.domain)}"}
+        class="flex flex-col justify-between gap-6 h-full"
+      >
+        <div class="flex flex-col flex-1 justify-between gap-y-5">
+          <div class="flex flex-col gap-y-2 mb-auto">
+            <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M22 12H2M12 22c5.714-5.442 5.714-14.558 0-20M12 22C6.286 16.558 6.286 7.442 12 2"
+                />
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
+                />
+              </svg>
+            </span>
+            <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight dark:text-gray-100">
+              All sites
+            </h3>
+          </div>
+          <span
+            :if={is_map(@consolidated_stats)}
+            class="h-[54px] text-indigo-500 my-auto"
+            data-test-id="consolidated-view-chart-loaded"
+          >
+            <PlausibleWeb.Live.Components.Visitors.chart
+              intervals={@consolidated_stats.intervals}
+              height={80}
+            />
           </span>
-          <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight dark:text-gray-100">
-            All sites
-          </h3>
         </div>
-        <span :if={is_map(@consolidated_stats)} class="h-[54px] text-indigo-500 my-auto">
-          <PlausibleWeb.Live.Components.Visitors.chart
-            intervals={@consolidated_stats.intervals}
-            height={80}
-          />
-        </span>
-      </div>
-      <div :if={is_map(@consolidated_stats)} class="flex flex-col flex-1 justify-between gap-y-2.5 sm:gap-y-5">
-        <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
-          <.consolidated_view_stat
-            value={large_number_format(@consolidated_stats.visitors)}
-            label="Unique visitors"
-            change={@consolidated_stats.visitors_change}
-          />
-          <.consolidated_view_stat
-            value={large_number_format(@consolidated_stats.visits)}
-            label="Total visits"
-            change={@consolidated_stats.visits_change}
-          />
+        <div
+          :if={is_map(@consolidated_stats)}
+          data-test-id="consolidated-view-stats-loaded"
+          class="flex flex-col flex-1 justify-between gap-y-2.5 sm:gap-y-5"
+        >
+          <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
+            <.consolidated_view_stat
+              value={large_number_format(@consolidated_stats.visitors)}
+              label="Unique visitors"
+              change={@consolidated_stats.visitors_change}
+            />
+            <.consolidated_view_stat
+              value={large_number_format(@consolidated_stats.visits)}
+              label="Total visits"
+              change={@consolidated_stats.visits_change}
+            />
+          </div>
+          <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
+            <.consolidated_view_stat
+              value={large_number_format(@consolidated_stats.pageviews)}
+              label="Total pageviews"
+              change={@consolidated_stats.pageviews_change}
+            />
+            <.consolidated_view_stat
+              value={@consolidated_stats.views_per_visit}
+              label="Views per visit"
+              change={1}
+            />
+          </div>
         </div>
-        <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
-          <.consolidated_view_stat
-            value={large_number_format(@consolidated_stats.pageviews)}
-            label="Total pageviews"
-            change={@consolidated_stats.pageviews_change}
-          />
-          <.consolidated_view_stat
-            value={@consolidated_stats.views_per_visit}
-            label="Views per visit"
-            change={1}
-          />
+        <div
+          :if={@consolidated_stats == :loading}
+          class="flex flex-col gap-y-2 min-h-[254px] h-full text-center animate-pulse"
+          data-test-id="consolidated-viw-stats-loading"
+        >
+          <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+          <div class="flex-1 flex flex-col gap-y-2">
+            <div class="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+            <div class="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+          </div>
         </div>
-      </div>
-      <div :if={@consolidated_stats == :loading} class="flex flex-col gap-y-2 min-h-[254px] h-full text-center animate-pulse">
-        <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-        <div class="flex-1 flex flex-col gap-y-2">
-          <div class="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-          <div class="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-        </div>
-      </div>
-    </.unstyled_link>
-      <div class="absolute right-1 top-3.5" :if={@can_manage_consolidated_view?}>
+      </.unstyled_link>
+      <div :if={@can_manage_consolidated_view?} class="absolute right-1 top-3.5">
         <.ellipsis_menu site={@consolidated_view} can_manage?={true} />
       </div>
     </li>
@@ -493,7 +493,10 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div :if={@hourly_stats == :loading} class="flex flex-col gap-y-2 h-[122px] text-center animate-pulse">
+    <div
+      :if={@hourly_stats == :loading}
+      class="flex flex-col gap-y-2 h-[122px] text-center animate-pulse"
+    >
       <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
       <div class="flex-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
     </div>
@@ -840,11 +843,9 @@ defmodule PlausibleWeb.Live.Sites do
       end
 
     consolidated_stats =
-      on_ee do
-        if connected?(socket) and not is_nil(assigns.consolidated_view) do
-          Plausible.Stats.ConsolidatedView.overview_24h(assigns.consolidated_view)
-        end
-      end
+      if connected?(socket),
+        do: load_consolidated_stats(assigns.consolidated_view),
+        else: :loading
 
     invitations = extract_invitations(sites.entries, assigns.current_team)
 
@@ -947,5 +948,40 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp hash_domain(domain) do
     :sha |> :crypto.hash(domain) |> Base.encode16()
+  end
+
+  @no_consolidated_view %{
+    consolidated_view: nil,
+    can_manage_consolidated_view?: false,
+    consolidated_stats: nil
+  }
+
+  on_ee do
+    defp init_consolidated_view_assigns(_user, nil), do: @no_consolidated_view
+
+    defp init_consolidated_view_assigns(user, team) do
+      if Teams.setup?(team) do
+        view = ConsolidatedView.get(team)
+
+        %{
+          consolidated_view: view,
+          can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+          consolidated_stats: :loading
+        }
+      else
+        @no_consolidated_view
+      end
+    end
+
+    defp load_consolidated_stats(consolidated_view) do
+      case Plausible.Stats.ConsolidatedView.safe_overview_24h(consolidated_view) do
+        {:ok, stats} -> stats
+        {:error, :not_found} -> nil
+        {:error, :inaccessible} -> :loading
+      end
+    end
+  else
+    defp init_consolidated_view_assigns(user, team), do: @no_consolidated_view
+    defp load_consolidated_stats(_consolidated_view), do: nil
   end
 end

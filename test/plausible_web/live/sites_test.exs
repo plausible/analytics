@@ -297,6 +297,58 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
   end
 
+  describe "consolidated views appearance" do
+    @tag :ee_only
+    test "consolidated view shows up", %{conn: conn, user: user} do
+      new_site(owner: user)
+      team = team_of(user)
+
+      conn = set_current_team(conn, team)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+
+      new_consolidated_view(team)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+      assert element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
+      assert element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
+    end
+
+    @tag :ee_only
+    test "consolidated view presents consolidated stats", %{conn: conn, user: user} do
+      site1 = new_site(owner: user)
+      site2 = new_site(owner: user)
+
+      populate_stats(site1, [
+        build(:pageview, user_id: 1),
+        build(:pageview, user_id: 1),
+        build(:pageview)
+      ])
+
+      populate_stats(site2, [
+        build(:pageview, user_id: 3)
+      ])
+
+      team = team_of(user)
+
+      conn = set_current_team(conn, team)
+
+      new_consolidated_view(team)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      stats = text_of_element(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
+      assert stats =~ "Unique visitors 3"
+      assert stats =~ "Total visits 3"
+      assert stats =~ "Total pageviews 4"
+      assert stats =~ "Views per visit 1.33"
+    end
+  end
+
   describe "pinning" do
     test "renders pin site option when site not pinned", %{conn: conn, user: user} do
       site = new_site(owner: user)

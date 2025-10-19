@@ -99,10 +99,10 @@ defmodule Plausible.ConsolidatedView do
     end
   end
 
-  @spec can_manage?(Team.t(), User.t()) :: boolean()
-  def can_manage?(team, user) do
+  @spec can_manage?(User.t(), Team.t()) :: boolean()
+  def can_manage?(user, team) do
     case Plausible.Teams.Memberships.team_role(team, user) do
-      {:ok, role} when role != :viewer ->
+      {:ok, role} when role not in [:viewer, :guest] ->
         true
 
       _ ->
