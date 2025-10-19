@@ -979,7 +979,7 @@ defmodule PlausibleWeb.Live.Sites do
       end
     end
   else
-    defp init_consolidated_view_assigns(user, team), do: @no_consolidated_view
+    defp init_consolidated_view_assigns(_user, _team), do: @no_consolidated_view
     defp load_consolidated_stats(_consolidated_view), do: nil
   end
 end
