@@ -303,7 +303,7 @@ native_stats_range2
       random_event_data.(another_site)
       |> Keyword.merge(user_id: user_id)
 
-    Enum.reduce(0..Enum.random(0..5), [], fn event_index, events ->
+    Enum.reduce(0..Enum.random(0..5), [], fn _event_index, events ->
       timestamp =
         case events do
           [] -> visit_start_timestamp
@@ -312,8 +312,7 @@ native_stats_range2
 
       event = Keyword.merge(event, timestamp: timestamp)
 
-      to_insert =
-        pageview = Plausible.Factory.build(:pageview, event)
+      pageview = Plausible.Factory.build(:pageview, event)
 
       engagement =
         Map.merge(pageview, %{
