@@ -161,15 +161,6 @@ defmodule Plausible.Stats.Clickhouse do
     result =
       current_q
       |> ClickhouseRepo.all()
-      #
-      # [
-      # %{total: 8, interval: ~N[2025-10-13 11:00:00], visitors: 1, site_id: 6},
-      # %{total: 8, interval: ~N[2025-10-13 13:00:00], visitors: 5, site_id: 6},
-      # %{total: 8, interval: ~N[2025-10-14 09:00:00], visitors: 3, site_id: 6},
-      # %{total: 2, interval: ~N[2025-10-13 11:00:00], visitors: 2, site_id: 7},
-      # %{total: 1, interval: ~N[2025-10-14 09:00:00], visitors: 1, site_id: 9}
-      # ]
-      # |> IO.inspect(label: :huh)
       |> Enum.group_by(& &1.site_id)
       |> Enum.map(fn {site_id, entries} ->
         %{total: visitors} = List.first(entries)
