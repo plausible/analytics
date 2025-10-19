@@ -298,6 +298,11 @@ defmodule PlausibleWeb.Live.SitesTest do
   end
 
   describe "consolidated views appearance" do
+    setup %{user: user} do
+      # this is temporary, instead of feature flag we'll only show consolidated views to super admins
+      patch_env(:super_admin_user_ids, [user.id])
+    end
+
     @tag :ee_only
     test "consolidated view shows up", %{conn: conn, user: user} do
       new_site(owner: user)

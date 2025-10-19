@@ -11,10 +11,6 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Sites
   alias Plausible.Teams
 
-  on_ee do
-    alias Plausible.ConsolidatedView
-  end
-
   def mount(params, _session, socket) do
     team = socket.assigns.current_team
     user = socket.assigns.current_user
@@ -118,7 +114,7 @@ defmodule PlausibleWeb.Live.Sites do
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <!-- Insert upgrade_card here -->
           <.consolidated_view_card
-            :if={@consolidated_view}
+            :if={@consolidated_view && Plausible.Auth.is_super_admin?(@current_user)}
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
             consolidated_view={@consolidated_view}
             consolidated_stats={@consolidated_stats}
@@ -957,6 +953,8 @@ defmodule PlausibleWeb.Live.Sites do
   }
 
   on_ee do
+    alias Plausible.ConsolidatedView
+
     defp init_consolidated_view_assigns(_user, nil), do: @no_consolidated_view
 
     defp init_consolidated_view_assigns(user, team) do
