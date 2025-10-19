@@ -175,6 +175,7 @@ defmodule Plausible.ConsolidatedViewTest do
       @tag :slow
       test "re-enables", %{team: team} do
         _site = new_site(team: team, native_stats_start_at: ~N[2024-01-01 12:00:00])
+        team = Teams.complete_setup(team)
 
         {:ok, first_enable} = ConsolidatedView.enable(team)
 
