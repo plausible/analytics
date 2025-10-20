@@ -1,11 +1,10 @@
 defmodule Plausible.Stats.SamplingCache do
   @moduledoc """
-  Cache storing estimation for events ingested by a team in the past month.
+  Cache storing estimation for events ingested by a site in the past month.
 
   Used for sampling rate calculations in Plausible.Stats.Sampling.
   """
   alias Plausible.Ingestion
-  alias Plausible.Stats.Sampling
 
   import Ecto.Query
   use Plausible.Cache
@@ -36,8 +35,7 @@ defmodule Plausible.Stats.SamplingCache do
         selected_as(fragment("sumIf(value, metric = 'buffered')"), :events_ingested)
       },
       where: fragment("toDate(event_timebucket) >= ?", ^thirty_days_ago()),
-      group_by: r.site_id,
-      having: selected_as(:events_ingested) > ^Sampling.default_sample_threshold()
+      group_by: r.site_id
     )
   end
 
