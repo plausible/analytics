@@ -351,6 +351,26 @@ defmodule PlausibleWeb.Live.SitesTest do
         assert stats =~ "Total pageviews 4"
         assert stats =~ "Views per visit 1.33"
       end
+
+      test "consolidated view does not show up for non-superadmin (temp)", %{conn: conn} do
+        user = new_user()
+        new_site(owner: user)
+        team = team_of(user)
+
+        conn = set_current_team(conn, team)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+
+        new_consolidated_view(team)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
+      end
     end
   end
 
