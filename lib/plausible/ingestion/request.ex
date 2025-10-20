@@ -68,7 +68,8 @@ defmodule Plausible.Ingestion.Request do
 
   @type t() :: %__MODULE__{}
 
-  @spec build(Plug.Conn.t(), NaiveDateTime.t()) :: {:ok, t()} | {:error, Changeset.t()}
+  @spec build(Plug.Conn.t(), NaiveDateTime.t()) ::
+          {:ok, t(), Plug.Conn.t()} | {:error, Changeset.t()}
   @doc """
   Builds and initially validates %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
   """
