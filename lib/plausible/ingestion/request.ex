@@ -68,7 +68,8 @@ defmodule Plausible.Ingestion.Request do
 
   @type t() :: %__MODULE__{}
 
-  @spec build(Plug.Conn.t(), NaiveDateTime.t()) :: {:ok, t()} | {:error, Changeset.t()}
+  @spec build(Plug.Conn.t(), NaiveDateTime.t()) ::
+          {:ok, t(), Plug.Conn.t()} | {:error, Changeset.t()}
   @doc """
   Builds and initially validates %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
   """
@@ -82,31 +83,40 @@ defmodule Plausible.Ingestion.Request do
       )
 
     case parse_body(conn) do
-      {:ok, request_body} ->
-        changeset
-        |> put_ip_classification(conn)
-        |> put_remote_ip(conn)
-        |> put_uri(request_body)
-        |> put_hostname()
-        |> put_user_agent(conn)
-        |> put_request_params(request_body)
-        |> put_referrer(request_body)
-        |> put_pathname()
-        |> put_props(request_body)
-        |> put_engagement_fields(request_body)
-        |> put_query_params()
-        |> put_revenue_source(request_body)
-        |> put_interactive(request_body)
-        |> put_tracker_script_version(request_body)
-        |> map_domains(request_body)
-        |> Changeset.validate_required([
-          :event_name,
-          :hostname,
-          :pathname,
-          :timestamp
-        ])
-        |> Changeset.validate_length(:event_name, max: 120)
-        |> Changeset.apply_action(nil)
+      {:ok, request_body, conn} ->
+        request =
+          changeset
+          |> put_ip_classification(conn)
+          |> put_remote_ip(conn)
+          |> put_uri(request_body)
+          |> put_hostname()
+          |> put_user_agent(conn)
+          |> put_request_params(request_body)
+          |> put_referrer(request_body)
+          |> put_pathname()
+          |> put_props(request_body)
+          |> put_engagement_fields(request_body)
+          |> put_query_params()
+          |> put_revenue_source(request_body)
+          |> put_interactive(request_body)
+          |> put_tracker_script_version(request_body)
+          |> map_domains(request_body)
+          |> Changeset.validate_required([
+            :event_name,
+            :hostname,
+            :pathname,
+            :timestamp
+          ])
+          |> Changeset.validate_length(:event_name, max: 120)
+          |> Changeset.apply_action(nil)
+
+        case request do
+          {:ok, request} ->
+            {:ok, request, conn}
+
+          {:error, _} = error ->
+            error
+        end
 
       {:error, :invalid_json} ->
         {:error, Changeset.add_error(changeset, :request, "Unable to parse request body as json")}
@@ -129,16 +139,16 @@ defmodule Plausible.Ingestion.Request do
     case conn.body_params do
       %Plug.Conn.Unfetched{} ->
         with max_length <- conn.assigns[:read_body_limit] || 1_000_000,
-             {:ok, body, _conn} <-
+             {:ok, body, conn} <-
                Plug.Conn.read_body(conn, length: max_length, read_length: max_length),
              {:ok, params} when is_map(params) <- Jason.decode(body) do
-          {:ok, params}
+          {:ok, params, conn}
         else
           _ -> {:error, :invalid_json}
         end
 
       params ->
-        {:ok, params}
+        {:ok, params, conn}
     end
   end
 

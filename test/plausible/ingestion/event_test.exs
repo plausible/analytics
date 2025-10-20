@@ -16,7 +16,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
   end
@@ -39,7 +39,7 @@ defmodule Plausible.Ingestion.EventTest do
         build_conn(:post, "/api/events", payload)
         |> Plug.Conn.put_req_header("user-agent", unquote(user_agent))
 
-      assert {:ok, request} = Request.build(conn)
+      assert {:ok, request, _conn} = Request.build(conn)
 
       assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
     end
@@ -74,7 +74,7 @@ defmodule Plausible.Ingestion.EventTest do
       |> build_conn("/api/events", payload)
       |> Plug.Conn.put_req_header("user-agent", :binary.copy("a", 1024 * 8))
 
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
     assert_receive :telemetry_handled
@@ -93,7 +93,7 @@ defmodule Plausible.Ingestion.EventTest do
         build_conn(:post, "/api/events", payload)
         |> Plug.Conn.put_req_header("user-agent", Plausible.InstallationSupport.user_agent())
 
-      assert {:ok, request} = Request.build(conn)
+      assert {:ok, request, _conn} = Request.build(conn)
 
       assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
       assert dropped.drop_reason == :verification_agent
@@ -107,7 +107,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :not_found
@@ -124,7 +124,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :spam_referrer
@@ -141,7 +141,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{dropped: [dropped, dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :spam_referrer
@@ -157,7 +157,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [_], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :not_found
@@ -173,7 +173,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
@@ -191,7 +191,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     conn = build_conn(:post, "/api/events", payload)
     conn = Plug.Conn.put_req_header(conn, "x-plausible-ip-type", "dc_ip")
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :dc_ip
@@ -208,7 +208,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     conn = build_conn(:post, "/api/events", payload)
     conn = Plug.Conn.put_req_header(conn, "x-plausible-ip-type", "threat_ip")
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :threat_ip
@@ -228,7 +228,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     {:ok, _} = Plausible.Shields.add_ip_rule(site, %{"inet" => "127.7.7.7"})
 
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :site_ip_blocklist
@@ -249,7 +249,7 @@ defmodule Plausible.Ingestion.EventTest do
     %{country_code: cc} = Plausible.Ingestion.Geolocation.lookup("216.160.83.56")
     {:ok, _} = Plausible.Shields.add_country_rule(site, %{"country_code" => cc})
 
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :site_country_blocklist
@@ -268,7 +268,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     {:ok, _} = Plausible.Shields.add_page_rule(site, %{"page_path" => "/blocked/**"})
 
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :site_page_blocklist
@@ -287,7 +287,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     {:ok, _} = Plausible.Shields.add_hostname_rule(site, %{"hostname" => "subdomain.dummy.site"})
 
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :site_hostname_allowlist
@@ -306,7 +306,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     {:ok, _} = Plausible.Shields.add_hostname_rule(site, %{"hostname" => "subdomain.dummy.site"})
 
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
   end
@@ -324,7 +324,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :payment_required
@@ -348,7 +348,7 @@ defmodule Plausible.Ingestion.EventTest do
         d: "#{site.domain}"
       })
 
-    assert {:ok, first_request} = Request.build(first_conn)
+    assert {:ok, first_request, _conn} = Request.build(first_conn)
 
     second_conn =
       build_conn(:post, "/api/events", %{
@@ -357,7 +357,7 @@ defmodule Plausible.Ingestion.EventTest do
         d: "#{site.domain}"
       })
 
-    assert {:ok, second_request} = Request.build(second_conn)
+    assert {:ok, second_request, _conn} = Request.build(second_conn)
 
     Task.start(fn ->
       assert {:ok, %{buffered: [_event], dropped: []}} =
@@ -390,7 +390,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     conn = build_conn(:post, "/api/events", payload)
 
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :no_session_for_engagement
   end
@@ -407,7 +407,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
     assert Decimal.eq?(event.clickhouse_event.revenue_source_amount, Decimal.new("10.2"))
@@ -423,7 +423,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
     assert event.clickhouse_event.revenue_source_amount == nil
@@ -438,7 +438,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
     assert event.clickhouse_event.hostname == "192.168.0.1"
@@ -453,7 +453,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
     assert event.clickhouse_event.hostname == "foo.netlify.app"
@@ -469,7 +469,7 @@ defmodule Plausible.Ingestion.EventTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
     assert event.clickhouse_event.hostname == "(none)"
