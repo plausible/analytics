@@ -64,7 +64,7 @@ defmodule Plausible.Ingestion.PersistorTest do
         url: "http://dummy.site"
       })
 
-    {:ok, request} = Plausible.Ingestion.Request.build(conn)
+    {:ok, request, _conn} = Plausible.Ingestion.Request.build(conn)
 
     event = build(:event, name: "pageview")
 
