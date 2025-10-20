@@ -53,8 +53,8 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
   }
   """
 
-  # We define a timeout for the browserless endpoint call to avoid waiting too long for a response
-  @endpoint_timeout_ms 5_000
+  # We define a timeout for the Browserless endpoint call to avoid waiting too long for a response
+  @req_timeout 5_000
 
   # This timeout determines how long we wait for window.plausible to be initialized on the page, used for detecting whether v1 installed
   @plausible_window_check_timeout_ms 1_500
@@ -84,8 +84,13 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
               debug: Application.get_env(:plausible, :environment) == "dev"
             }
           }),
-        params: %{timeout: @endpoint_timeout_ms},
-        retry: BrowserlessConfig.retry_browserless_request([429, 400]),
+        retry: fn _request, response_or_error ->
+          case response_or_error do
+            %{status: status} -> Map.get(BrowserlessConfig.retry_policy(), status, false)
+            _ -> false
+          end
+        end,
+        receive_timeout: @req_timeout,
         retry_log_level: :warning,
         max_retries: @max_retries
       ]

@@ -138,9 +138,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
             |> put_resp_content_type("application/json")
             |> send_resp(200, Jason.encode!(%{"data" => js_data}))
           else
-            conn
-            |> put_resp_content_type("text/html")
-            |> send_resp(408, "Request has timed out")
+            Req.Test.transport_error(conn, :timeout)
           end
         end)
 
@@ -155,14 +153,39 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          tracker_is_in_html: nil,
                          plausible_is_on_window: nil,
                          plausible_is_initialized: nil,
-                         service_error: ^any(:string, ~r/.*408.*/)
+                         service_error: :timeout
                        } = state.diagnostics
 
         # Browserless gets called 3 times:
         #   1) initial/regular installation check
         #   2) cache bust installation check
-        #   3) retry due to #2 responding with 408
+        #   3) retry due to #2 timing out
         assert 3 == :atomics.get(counter, 1)
+      end
+
+      test "retries on timeout and skips cache bust when retry also times out" do
+        expected_domain = "example.com"
+        url_to_verify = "https://#{expected_domain}"
+
+        stub_lookup_a_records(expected_domain)
+
+        counter = :atomics.new(1, [])
+
+        stub_verification_result(fn conn ->
+          :atomics.add_get(counter, 1, 1)
+          Req.Test.transport_error(conn, :timeout)
+        end)
+
+        state =
+          Checks.run(url_to_verify, expected_domain, "manual",
+            report_to: nil,
+            async?: false,
+            slowdown: 0
+          )
+
+        assert_matches %Diagnostics{service_error: :timeout} = state.diagnostics
+
+        assert 2 == :atomics.get(counter, 1)
       end
 
       for {installation_type, expected_recommendation} <- [
