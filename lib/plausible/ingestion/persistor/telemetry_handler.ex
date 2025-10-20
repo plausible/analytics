@@ -131,10 +131,12 @@ defmodule Plausible.Ingestion.Persistor.TelemetryHandler do
   def handle_event(
         @finch_receive_event,
         %{duration: duration},
-        %{request: request, status: status} = meta,
+        %{request: request} = meta,
         config
       ) do
     if request.host == config.remote_host do
+      status = meta[:status] || 0
+
       :telemetry.execute(
         @persistor_receive_event,
         %{duration: duration},
