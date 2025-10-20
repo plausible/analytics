@@ -49,7 +49,11 @@ defmodule Plausible.InstallationSupport.Check do
         catch
           :exit, {:timeout, _} ->
             Task.shutdown(task, :brutal_kill)
-            put_diagnostics(state, service_error: :check_timeout)
+            check_name = __MODULE__ |> Atom.to_string() |> String.split(".") |> List.last()
+
+            put_diagnostics(state,
+              service_error: "Check timed out after #{timeout_ms()}ms (#{check_name})"
+            )
         end
       end
     end

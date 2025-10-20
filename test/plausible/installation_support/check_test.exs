@@ -91,7 +91,9 @@ defmodule Plausible.InstallationSupport.CheckTest do
       result =
         FaultyCheckTimeout.perform_safe(state)
 
-      assert_matches %Verification.Diagnostics{service_error: :check_timeout} = result.diagnostics
+      assert_matches %Verification.Diagnostics{
+                       service_error: "Check timed out after 100ms (FaultyCheckTimeout)"
+                     } = result.diagnostics
     end
   end
 end
