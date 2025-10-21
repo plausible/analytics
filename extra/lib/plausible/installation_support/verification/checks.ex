@@ -62,8 +62,13 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
       {false, _} ->
         :skip
 
-      {_, %{unhandled: true}} ->
-        Sentry.capture_message("Unhandled case for site verification (v2)",
+      {_, %{unhandled: true, browserless_issue: browserless_issue}} ->
+        sentry_msg =
+          if browserless_issue,
+            do: "Browserless failure in verification (v2)",
+            else: "Unhandled case for site verification (v2)"
+
+        Sentry.capture_message(sentry_msg,
           extra: %{
             message: inspect(diagnostics),
             url: url,

@@ -238,7 +238,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   def interpret(%__MODULE__{service_error: %{code: code}}, _expected_domain, _url)
       when code in [:bad_browserless_response, :browserless_timeout] do
-    unhandled_error(@error_browserless_temporary)
+    unhandled_error(@error_browserless_temporary, browserless_issue: true)
   end
 
   @error_unexpected_page_response Error.new!(%{
@@ -377,10 +377,12 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     }
   end
 
-  defp unhandled_error(%Error{} = error) do
+  defp unhandled_error(%Error{} = error, opts \\ []) do
+    browserless_issue = Keyword.get(opts, :browserless_issue, false)
+
     %Result{
       ok?: false,
-      data: %{unhandled: true},
+      data: %{unhandled: true, browserless_issue: browserless_issue},
       errors: [error.message],
       recommendations: [%{text: error.recommendation, url: error.url}]
     }
