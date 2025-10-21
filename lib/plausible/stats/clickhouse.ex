@@ -212,7 +212,7 @@ defmodule Plausible.Stats.Clickhouse do
       end)
 
     from e in "events_v2",
-      where: e.name == "pageview",
+      where: e.name != "engagement",
       where: e.site_id in ^Enum.map(sites, & &1.id),
       where: ^cutoff_times_condition
   end
