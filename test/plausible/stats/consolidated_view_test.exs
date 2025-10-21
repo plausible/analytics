@@ -91,9 +91,11 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
         build(:pageview, user_id: session2, timestamp: ~N[2025-10-20 12:05:00]),
         # session 3 starts the day before, still within query range
         build(:pageview, user_id: session3, timestamp: ~N[2025-10-19 12:51:00]),
-        # session 4 starts the day before, still within query range
+        # session 4 crosses time slot per hour boundaries
+        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 11:50:00]),
+        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 12:10:00]),
+        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 12:30:00]),
         build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 12:51:00]),
-        # session4 continues within next hour
         build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 13:01:00]),
         # session 5 should never appear
         build(:pageview, user_id: session5, timestamp: ~N[2025-10-19 12:48:00]),
@@ -124,11 +126,13 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
 
       assert %{
                visitors: 5,
-               intervals: individual_inervals
+               intervals: individual_intervals
              } = result_individual
 
+      assert length(consolidated_intervals) == length(individual_intervals)
+
       consolidated_result = filter_only_non_zero_intervals(consolidated_intervals)
-      individual_result = filter_only_non_zero_intervals(individual_inervals)
+      individual_result = filter_only_non_zero_intervals(individual_intervals)
 
       assert consolidated_result == expected_non_zero_intervals
       assert individual_result == expected_non_zero_intervals

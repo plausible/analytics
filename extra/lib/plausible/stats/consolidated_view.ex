@@ -124,7 +124,13 @@ defmodule Plausible.Stats.ConsolidatedView do
       )
       |> Enum.into(%{})
 
-    graph_data = Map.merge(placeholder, results)
+    graph_data =
+      placeholder
+      |> Enum.reduce([], fn {interval, 0}, acc ->
+        [{interval, results[interval] || 0} | acc]
+      end)
+      |> Enum.reverse()
+      |> Enum.into(%{})
 
     %{
       intervals: Enum.map(graph_data, fn {k, v} -> %{interval: k, visitors: v} end)
