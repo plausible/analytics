@@ -40,6 +40,17 @@ defmodule PlausibleWeb.Router do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
+  on_ee do
+    pipeline :helpscout do
+      plug :accepts, ["html"]
+      plug :fetch_session
+      plug PlausibleWeb.Plugs.SecureEmbedHeaders
+      plug PlausibleWeb.Plugs.NoRobots
+      plug PlausibleWeb.AuthPlug
+      plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
+    end
+  end
+
   pipeline :csrf do
     plug :protect_from_forgery
   end
@@ -503,6 +514,14 @@ defmodule PlausibleWeb.Router do
       get "/logout", AuthController, :logout
       get "/team/select", AuthController, :select_team
     end
+
+    scope "/", PlausibleWeb do
+      pipe_through [:helpscout, :csrf]
+
+      get "/helpscout/callback", HelpScoutController, :callback
+      get "/helpscout/show", HelpScoutController, :show
+      get "/helpscout/search", HelpScoutController, :search
+    end
   end
 
   scope "/", PlausibleWeb do
@@ -516,12 +535,6 @@ defmodule PlausibleWeb.Router do
     delete "/me", AuthController, :delete_me
 
     get "/auth/google/callback", AuthController, :google_auth_callback
-
-    on_ee do
-      get "/helpscout/callback", HelpScoutController, :callback
-      get "/helpscout/show", HelpScoutController, :show
-      get "/helpscout/search", HelpScoutController, :search
-    end
 
     get "/", PageController, :index
 

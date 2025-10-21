@@ -50,6 +50,8 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
             "/helpscout/callback?conversation-id=123&customer-id=500&X-HelpScout-Signature=#{signature}"
           )
 
+        assert [] = Plug.Conn.get_resp_header(conn, "content-security-policy")
+
         assert html_response(conn, 200) =~
                  Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, user.id)
       end
