@@ -40,7 +40,7 @@ defmodule Plausible.InstallationSupport.Check do
                   "Error running check #{inspect(__MODULE__)} on #{state.url}: #{inspect(e)}"
                 )
 
-                put_diagnostics(state, service_error: e)
+                put_diagnostics(state, service_error: %{code: :internal_check_error, extra: e})
             end
           end)
 
@@ -52,7 +52,10 @@ defmodule Plausible.InstallationSupport.Check do
             check_name = __MODULE__ |> Atom.to_string() |> String.split(".") |> List.last()
 
             put_diagnostics(state,
-              service_error: "Check timed out after #{timeout_ms()}ms (#{check_name})"
+              service_error: %{
+                code: :internal_check_timeout,
+                extra: "#{check_name} timed out after #{timeout_ms()}ms"
+              }
             )
         end
       end

@@ -194,8 +194,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                             url: @verify_manually_url
                           })
 
-  def interpret(%__MODULE__{service_error: service_error}, expected_domain, url)
-      when service_error in [:domain_not_found, :invalid_url] do
+  def interpret(%__MODULE__{service_error: %{code: code}}, expected_domain, url)
+      when code in [:domain_not_found, :invalid_url] do
     attempted_url = if url, do: url, else: "https://#{expected_domain}"
 
     @error_domain_not_found
@@ -211,7 +211,11 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                url: @verify_manually_url
                              })
 
-  def interpret(%__MODULE__{service_error: "net::" <> _}, _expected_domain, url)
+  def interpret(
+        %__MODULE__{service_error: %{code: :browserless_client_error, extra: "net::" <> _}},
+        _expected_domain,
+        url
+      )
       when is_binary(url) do
     attempted_url = shorten_url(url)
 

@@ -100,10 +100,13 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
       {:ok, %{body: body, status: status}} ->
         handle_browserless_response(state, body, status)
 
+      {:error, %Req.TransportError{reason: :timeout}} ->
+        put_diagnostics(state, service_error: %{code: :browserless_timeout})
+
       {:error, %{reason: reason}} ->
         Logger.warning(warning_message("Browserless request error: #{inspect(reason)}", state))
 
-        put_diagnostics(state, service_error: reason)
+        put_diagnostics(state, service_error: %{code: :req_error, extra: reason})
     end
   end
 
@@ -125,7 +128,9 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
         )
       )
 
-      put_diagnostics(state, service_error: data["error"]["message"])
+      put_diagnostics(state,
+        service_error: %{code: :browserless_client_error, extra: data["error"]["message"]}
+      )
     end
   end
 
@@ -135,7 +140,7 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
     warning_message("#{error}; body: #{inspect(body)}", state)
     |> Logger.warning()
 
-    put_diagnostics(state, service_error: error)
+    put_diagnostics(state, service_error: %{code: :bad_browserless_response, extra: status})
   end
 
   defp warning_message(message, state) do

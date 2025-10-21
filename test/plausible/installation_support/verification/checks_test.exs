@@ -153,7 +153,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          tracker_is_in_html: nil,
                          plausible_is_on_window: nil,
                          plausible_is_initialized: nil,
-                         service_error: :timeout
+                         service_error: %{code: :browserless_timeout}
                        } = state.diagnostics
 
         # Browserless gets called 3 times:
@@ -183,7 +183,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
             slowdown: 0
           )
 
-        assert_matches %Diagnostics{service_error: :timeout} = state.diagnostics
+        assert_matches %Diagnostics{service_error: %{code: :browserless_timeout}} =
+                         state.diagnostics
 
         assert 2 == :atomics.get(counter, 1)
       end

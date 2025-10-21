@@ -22,12 +22,12 @@ defmodule Plausible.InstallationSupport.Checks.Url do
     else
       {:error, :no_a_record} ->
         put_diagnostics(%State{state | skip_further_checks?: true},
-          service_error: :domain_not_found
+          service_error: %{code: :domain_not_found}
         )
 
       _ ->
         put_diagnostics(%State{state | skip_further_checks?: true},
-          service_error: :invalid_url
+          service_error: %{code: :invalid_url}
         )
     end
   end
@@ -39,7 +39,7 @@ defmodule Plausible.InstallationSupport.Checks.Url do
 
       {:error, :domain_not_found} ->
         put_diagnostics(%State{state | url: nil, skip_further_checks?: true},
-          service_error: :domain_not_found
+          service_error: %{code: :domain_not_found}
         )
     end
   end
