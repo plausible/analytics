@@ -88,7 +88,14 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
         # session 1 ends outside of query range
         build(:pageview, user_id: session1, timestamp: ~N[2025-10-20 13:00:00]),
         # session 2 starts within query range
-        build(:pageview, user_id: session2, timestamp: ~N[2025-10-20 12:05:00]),
+        build(:pageview, user_id: session2, timestamp: ~N[2025-10-20 10:50:00]),
+        build(:engagement,
+          user_id: session2,
+          pathname: "/blog",
+          timestamp: ~N[2025-10-20 11:03:01],
+          scroll_depth: 20,
+          engagement_time: 50_000
+        ),
         # session 3 starts the day before, still within query range
         build(:pageview, user_id: session3, timestamp: ~N[2025-10-19 12:51:00]),
         # session 4 crosses time slot per hour boundaries
@@ -111,7 +118,8 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       expected_non_zero_intervals = [
         {~N[2025-10-19 12:00:00], 3},
         {~N[2025-10-19 13:00:00], 1},
-        {~N[2025-10-20 12:00:00], 2}
+        {~N[2025-10-20 10:00:00], 1},
+        {~N[2025-10-20 12:00:00], 1}
       ]
 
       assert %{
