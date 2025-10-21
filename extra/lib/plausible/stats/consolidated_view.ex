@@ -130,7 +130,6 @@ defmodule Plausible.Stats.ConsolidatedView do
         [{interval, results[interval] || 0} | acc]
       end)
       |> Enum.sort_by(fn {interval, _} -> interval end, NaiveDateTime)
-      |> Enum.into(%{})
 
     %{
       intervals: Enum.map(graph_data, fn {k, v} -> %{interval: k, visitors: v} end)
