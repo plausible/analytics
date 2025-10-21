@@ -82,6 +82,9 @@ defmodule PlausibleWeb.Tracker do
              Repo.update(changeset) do
         sync_goals(site, original_config, updated_config)
 
+        updated_config =
+          Repo.preload(updated_config, :site)
+
         on_ee do
           if should_purge_cache?(changeset) do
             purge_cache!(updated_config.id)
@@ -141,7 +144,11 @@ defmodule PlausibleWeb.Tracker do
                    params
                  )
                ) do
+          created_config =
+            Repo.preload(created_config, :site)
+
           sync_goals(site, %{}, created_config)
+
           :ok = broadcast_script_update(created_config)
           {:ok, created_config}
         end
