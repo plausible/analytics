@@ -82,7 +82,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       )
       when response_status in [200, 202] and
              domain == expected_domain,
-      do: error(@error_succeeds_only_after_cache_bust)
+      do: handled_error(@error_succeeds_only_after_cache_bust)
 
   def interpret(
         %__MODULE__{
@@ -116,8 +116,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _url
       )
       when response_status in [200, 202] and
-             domain != expected_domain,
-      do: error_unexpected_domain(selected_installation_type)
+             domain != expected_domain do
+    error_unexpected_domain(selected_installation_type)
+    |> handled_error()
+  end
 
   @error_proxy_network_error Error.new!(%{
                                message:
@@ -148,9 +150,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     proxying? = not String.starts_with?(request_url, PlausibleWeb.Endpoint.url())
 
     if proxying? do
-      error(@error_proxy_network_error)
+      handled_error(@error_proxy_network_error)
     else
-      error(@error_plausible_network_error)
+      handled_error(@error_plausible_network_error)
     end
   end
 
@@ -166,8 +168,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _url
       )
       when plausible_is_on_window != true and
-             plausible_is_initialized != true,
-      do: error_plausible_not_found("manual")
+             plausible_is_initialized != true do
+    error_plausible_not_found("manual")
+    |> handled_error()
+  end
 
   @error_csp_disallowed Error.new!(%{
                           message:
@@ -185,7 +189,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _expected_domain,
         _url
       ),
-      do: error(@error_csp_disallowed)
+      do: handled_error(@error_csp_disallowed)
 
   @error_domain_not_found Error.new!(%{
                             message: "We couldn't find your website at <%= @attempted_url %>",
@@ -199,7 +203,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     attempted_url = if url, do: url, else: "https://#{expected_domain}"
 
     @error_domain_not_found
-    |> error(attempted_url: attempted_url)
+    |> handled_error(attempted_url: attempted_url)
     |> struct!(data: %{offer_custom_url_input: true})
   end
 
@@ -220,8 +224,21 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     attempted_url = shorten_url(url)
 
     @error_browserless_network
-    |> error(attempted_url: attempted_url)
+    |> handled_error(attempted_url: attempted_url)
     |> struct!(data: %{offer_custom_url_input: true})
+  end
+
+  @error_browserless_temporary Error.new!(%{
+                                 message:
+                                   "Our verification tool encountered a temporary service error",
+                                 recommendation:
+                                   "Please try again in a few minutes or verify your installation manually",
+                                 url: @verify_manually_url
+                               })
+
+  def interpret(%__MODULE__{service_error: %{code: code}}, _expected_domain, _url)
+      when code in [:bad_browserless_response, :browserless_timeout] do
+    unhandled_error(@error_browserless_temporary)
   end
 
   @error_unexpected_page_response Error.new!(%{
@@ -248,7 +265,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     attempted_url = shorten_url(url)
 
     @error_unexpected_page_response
-    |> error(attempted_url: attempted_url, page_response_status: page_response_status)
+    |> handled_error(attempted_url: attempted_url, page_response_status: page_response_status)
     |> struct!(data: %{offer_custom_url_input: true})
   end
 
@@ -260,12 +277,14 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         },
         _expected_domain,
         _url
-      ),
-      do: error_plausible_not_found(selected_installation_type)
+      ) do
+    error_plausible_not_found(selected_installation_type)
+    |> handled_error()
+  end
 
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, _url) do
     error_plausible_not_found(diagnostics.selected_installation_type)
-    |> Map.put(:data, %{unhandled: true})
+    |> unhandled_error()
   end
 
   @message_plausible_not_found "We couldn't detect Plausible on your site"
@@ -295,10 +314,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                            })
   defp error_plausible_not_found(selected_installation_type) do
     case selected_installation_type do
-      "npm" -> error(@error_plausible_not_found_for_npm)
-      "gtm" -> error(@error_plausible_not_found_for_gtm)
-      "wordpress" -> error(@error_plausible_not_found_for_wordpress)
-      _ -> error(@error_plausible_not_found_for_manual)
+      "npm" -> @error_plausible_not_found_for_npm
+      "gtm" -> @error_plausible_not_found_for_gtm
+      "wordpress" -> @error_plausible_not_found_for_wordpress
+      _ -> @error_plausible_not_found_for_manual
     end
   end
 
@@ -332,10 +351,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                          })
   defp error_unexpected_domain(selected_installation_type) do
     case selected_installation_type do
-      "npm" -> error(@error_unexpected_domain_for_npm)
-      "gtm" -> error(@error_unexpected_domain_for_gtm)
-      "wordpress" -> error(@error_unexpected_domain_for_wordpress)
-      _ -> error(@error_unexpected_domain_for_manual)
+      "npm" -> @error_unexpected_domain_for_npm
+      "gtm" -> @error_unexpected_domain_for_gtm
+      "wordpress" -> @error_unexpected_domain_for_wordpress
+      _ -> @error_unexpected_domain_for_manual
     end
   end
 
@@ -347,7 +366,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     %Result{ok?: true}
   end
 
-  defp error(%Error{} = error, assigns \\ []) do
+  defp handled_error(%Error{} = error, assigns \\ []) do
     message = EEx.eval_string(error.message, assigns: assigns)
     recommendation = EEx.eval_string(error.recommendation, assigns: assigns)
 
@@ -355,6 +374,15 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       ok?: false,
       errors: [message],
       recommendations: [%{text: recommendation, url: error.url}]
+    }
+  end
+
+  defp unhandled_error(%Error{} = error) do
+    %Result{
+      ok?: false,
+      data: %{unhandled: true},
+      errors: [error.message],
+      recommendations: [%{text: error.recommendation, url: error.url}]
     }
   end
 end

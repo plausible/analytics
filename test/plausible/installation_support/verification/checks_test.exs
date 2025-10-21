@@ -163,7 +163,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         assert 3 == :atomics.get(counter, 1)
       end
 
-      test "retries on timeout and skips cache bust when retry also times out" do
+      test "timeouts are retried, cache bust skipped, interpreted as temporary errors" do
         expected_domain = "example.com"
         url_to_verify = "https://#{expected_domain}"
 
@@ -186,7 +186,67 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         assert_matches %Diagnostics{service_error: %{code: :browserless_timeout}} =
                          state.diagnostics
 
+        assert_matches %Result{
+                         ok?: false,
+                         errors: [^any(:string, ~r/.*temporary service error.*/)],
+                         recommendations: [
+                           %{
+                             text: ^any(:string, ~r/.*in a few minutes.*/),
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                           }
+                         ]
+                       } = Checks.interpret_diagnostics(state)
+
         assert 2 == :atomics.get(counter, 1)
+      end
+
+      for status <- [400, 429] do
+        test "#{status} responses are retried, cache bust skipped, intepreted as temporary errors" do
+          expected_domain = "example.com"
+          url_to_verify = "https://#{expected_domain}"
+
+          stub_lookup_a_records(expected_domain)
+
+          counter = :atomics.new(1, [])
+
+          stub_verification_result(fn conn ->
+            :atomics.add_get(counter, 1, 1)
+
+            conn
+            |> put_resp_content_type("text/html")
+            |> send_resp(unquote(status), "some error message")
+          end)
+
+          state =
+            Checks.run(url_to_verify, expected_domain, "manual",
+              report_to: nil,
+              async?: false,
+              slowdown: 0
+            )
+
+          assert_matches %Diagnostics{
+                           service_error: %{
+                             code: :bad_browserless_response,
+                             extra: ^unquote(status)
+                           }
+                         } =
+                           state.diagnostics
+
+          assert_matches %Result{
+                           ok?: false,
+                           errors: [^any(:string, ~r/.*temporary service error.*/)],
+                           recommendations: [
+                             %{
+                               text: ^any(:string, ~r/.*in a few minutes.*/),
+                               url:
+                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                             }
+                           ]
+                         } = Checks.interpret_diagnostics(state)
+
+          assert 2 == :atomics.get(counter, 1)
+        end
       end
 
       for {installation_type, expected_recommendation} <- [
