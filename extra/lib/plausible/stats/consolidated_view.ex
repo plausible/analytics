@@ -129,7 +129,7 @@ defmodule Plausible.Stats.ConsolidatedView do
       |> Enum.reduce([], fn {interval, 0}, acc ->
         [{interval, results[interval] || 0} | acc]
       end)
-      |> Enum.reverse()
+      |> Enum.sort_by(fn {interval, _} -> interval end, NaiveDateTime)
       |> Enum.into(%{})
 
     %{
