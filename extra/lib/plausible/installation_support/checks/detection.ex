@@ -77,7 +77,7 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
           Jason.encode!(%{
             code: @puppeteer_wrapper_code,
             context: %{
-              url: url,
+              url: Plausible.InstallationSupport.URL.bust_url(url),
               userAgent: Plausible.InstallationSupport.user_agent(),
               detectV1: detect_v1?,
               timeoutMs: @plausible_window_check_timeout_ms,
