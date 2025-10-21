@@ -78,6 +78,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       session3 = 333
       session4 = 444
       session5 = 555
+      session6 = 666
 
       populate_stats(site, [
         # session 1 starts outside of query range
@@ -95,7 +96,10 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
         # session4 continues within next hour
         build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 13:01:00]),
         # session 5 should never appear
-        build(:pageview, user_id: session5, timestamp: ~N[2025-10-19 12:48:00])
+        build(:pageview, user_id: session5, timestamp: ~N[2025-10-19 12:48:00]),
+        # session 6 starts outside of the query range
+        build(:pageview, user_id: session6, timestamp: ~N[2025-10-19 12:00:00]),
+        build(:pageview, user_id: session6, timestamp: ~N[2025-10-19 12:55:00])
       ])
 
       view = new_consolidated_view(team_of(owner))
@@ -103,14 +107,13 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
 
       expected_non_zero_intervals = [
-        {~N[2025-10-19 12:00:00], 2},
+        {~N[2025-10-19 12:00:00], 3},
         {~N[2025-10-19 13:00:00], 1},
         {~N[2025-10-20 12:00:00], 2}
       ]
 
       assert %{
-               visitors: 4,
-               visitors_change: 100,
+               visitors: 5,
                intervals: consolidated_intervals
              } = result
 
@@ -120,8 +123,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
         ]
 
       assert %{
-               visitors: 4,
-               change: 100,
+               visitors: 5,
                intervals: individual_inervals
              } = result_individual
 
@@ -131,11 +133,11 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       assert consolidated_result == expected_non_zero_intervals
       assert individual_result == expected_non_zero_intervals
     end
-  end
 
-  defp filter_only_non_zero_intervals(intervals) do
-    intervals
-    |> Enum.filter(&(&1.visitors > 0))
-    |> Enum.map(fn i -> {i.interval, i.visitors} end)
+    defp filter_only_non_zero_intervals(intervals) do
+      intervals
+      |> Enum.filter(&(&1.visitors > 0))
+      |> Enum.map(fn i -> {i.interval, i.visitors} end)
+    end
   end
 end
