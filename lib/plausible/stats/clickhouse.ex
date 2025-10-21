@@ -217,11 +217,11 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp empty_24h_intervals(now) do
-    first = NaiveDateTime.add(now, -23, :hour)
+    first = NaiveDateTime.add(now, -24, :hour)
     {:ok, time} = Time.new(first.hour, 0, 0)
     first = NaiveDateTime.new!(NaiveDateTime.to_date(first), time)
 
-    for offset <- 0..23 do
+    for offset <- 0..24 do
       %{
         interval: NaiveDateTime.add(first, offset, :hour),
         visitors: 0

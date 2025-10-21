@@ -23,6 +23,7 @@ defmodule Plausible.Stats.ClickhouseTest do
                    change: 0,
                    visitors: 0,
                    intervals: [
+                     %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
                      %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
                      %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
                      %{interval: ~N[2023-10-25 13:00:00], visitors: 0},
@@ -71,6 +72,7 @@ defmodule Plausible.Stats.ClickhouseTest do
                change: 100,
                visitors: 5,
                intervals: [
+                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 11:00:00], visitors: 1},
                  %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 13:00:00], visitors: 2},
@@ -125,6 +127,7 @@ defmodule Plausible.Stats.ClickhouseTest do
                change: 100,
                visitors: 1,
                intervals: [
+                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 13:00:00], visitors: 0},
@@ -156,6 +159,7 @@ defmodule Plausible.Stats.ClickhouseTest do
                change: 100,
                visitors: 3,
                intervals: [
+                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 13:00:00], visitors: 2},
@@ -276,6 +280,7 @@ defmodule Plausible.Stats.ClickhouseTest do
                change: 100,
                visitors: 3,
                intervals: [
+                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 13:00:00], visitors: 2},

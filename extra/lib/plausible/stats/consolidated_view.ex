@@ -28,11 +28,11 @@ defmodule Plausible.Stats.ConsolidatedView do
   end
 
   defp empty_24h_intervals(now) do
-    first = NaiveDateTime.add(now, -23, :hour)
+    first = NaiveDateTime.add(now, -24, :hour)
     {:ok, time} = Time.new(first.hour, 0, 0)
     first = NaiveDateTime.new!(NaiveDateTime.to_date(first), time)
 
-    for offset <- 0..23, into: %{} do
+    for offset <- 0..24, into: %{} do
       {NaiveDateTime.add(first, offset, :hour), 0}
     end
   end
@@ -91,24 +91,29 @@ defmodule Plausible.Stats.ConsolidatedView do
 
   defp query_24h_intervals(view, now) do
     graph_query =
-      Stats.Query.build!(view, :internal, %{
-        "site_id" => view.domain,
-        "metrics" => ["visitors"],
-        "date_range" => [
-          NaiveDateTime.shift(now, hour: -24)
-          |> DateTime.from_naive!("Etc/UTC")
-          |> DateTime.to_iso8601(),
-          now
-          |> DateTime.from_naive!("Etc/UTC")
-          |> DateTime.to_iso8601()
-        ],
-        "dimensions" => ["time:hour"],
-        "order_by" => [["time:hour", "asc"]]
-      })
+      Stats.Query.build!(
+        view,
+        :internal,
+        %{
+          "site_id" => view.domain,
+          "metrics" => ["visitors"],
+          "date_range" => [
+            NaiveDateTime.shift(now, hour: -24)
+            |> DateTime.from_naive!("Etc/UTC")
+            |> DateTime.to_iso8601(),
+            now
+            |> DateTime.from_naive!("Etc/UTC")
+            |> DateTime.to_iso8601()
+          ],
+          "dimensions" => ["time:hour"],
+          "order_by" => [["time:hour", "asc"]]
+        }
+      )
 
     %Stats.QueryResult{results: results} = Stats.query(view, graph_query)
 
-    placeholder = empty_24h_intervals(now)
+    placeholder =
+      empty_24h_intervals(now)
 
     results =
       Enum.map(

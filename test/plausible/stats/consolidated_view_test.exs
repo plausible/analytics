@@ -39,6 +39,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
                pageviews: 6,
                views_per_visit: 1.2,
                intervals: [
+                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 11:00:00], visitors: 1},
                  %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
                  %{interval: ~N[2023-10-25 13:00:00], visitors: 2},
@@ -66,5 +67,75 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
                ]
              } = result
     end
+
+    test "compatibility with individual site stats" do
+      fixed_now = ~N[2025-10-20 12:49:15]
+      owner = new_user()
+      site = new_site(owner: owner)
+
+      session1 = 111
+      session2 = 222
+      session3 = 333
+      session4 = 444
+      session5 = 555
+
+      populate_stats(site, [
+        # session 1 starts outside of query range
+        build(:pageview, user_id: session1, timestamp: ~N[2025-10-19 11:00:00]),
+        # session 1 continues within query range
+        build(:pageview, user_id: session1, timestamp: ~N[2025-10-20 12:00:00]),
+        # session 1 ends outside of query range
+        build(:pageview, user_id: session1, timestamp: ~N[2025-10-20 13:00:00]),
+        # session 2 starts within query range
+        build(:pageview, user_id: session2, timestamp: ~N[2025-10-20 12:05:00]),
+        # session 3 starts the day before, still within query range
+        build(:pageview, user_id: session3, timestamp: ~N[2025-10-19 12:51:00]),
+        # session 4 starts the day before, still within query range
+        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 12:51:00]),
+        # session4 continues within next hour
+        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 13:01:00]),
+        # session 5 should never appear
+        build(:pageview, user_id: session5, timestamp: ~N[2025-10-19 12:48:00])
+      ])
+
+      view = new_consolidated_view(team_of(owner))
+
+      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+
+      expected_non_zero_intervals = [
+        {~N[2025-10-19 12:00:00], 2},
+        {~N[2025-10-19 13:00:00], 1},
+        {~N[2025-10-20 12:00:00], 2}
+      ]
+
+      assert %{
+               visitors: 4,
+               visitors_change: 100,
+               intervals: consolidated_intervals
+             } = result
+
+      result_individual =
+        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals([site], fixed_now)[
+          site.domain
+        ]
+
+      assert %{
+               visitors: 4,
+               change: 100,
+               intervals: individual_inervals
+             } = result_individual
+
+      consolidated_result = filter_only_non_zero_intervals(consolidated_intervals)
+      individual_result = filter_only_non_zero_intervals(individual_inervals)
+
+      assert consolidated_result == expected_non_zero_intervals
+      assert individual_result == expected_non_zero_intervals
+    end
+  end
+
+  defp filter_only_non_zero_intervals(intervals) do
+    intervals
+    |> Enum.filter(&(&1.visitors > 0))
+    |> Enum.map(fn i -> {i.interval, i.visitors} end)
   end
 end
