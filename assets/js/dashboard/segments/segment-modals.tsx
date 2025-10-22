@@ -531,7 +531,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
             {data?.segment_data ? SEGMENT_TYPE_LABELS[data.type] : false}
           </Placeholder>
         </div>
-        <div className="my-4 border-b border-gray-300" />
+        <div className="my-4 border-b border-gray-300 dark:border-gray-700" />
         {!!data?.segment_data && (
           <>
             <FiltersInSegment segment_data={data.segment_data} />

@@ -340,7 +340,7 @@ export default function PlausibleCombobox({
   }
 
   const defaultBoxClass =
-    'pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500'
+    'pl-2 pr-8 py-1 w-full dark:bg-gray-750 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-750 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500'
   const finalBoxClass = classNames(boxClass || defaultBoxClass, {
     'border-indigo-500 ring-1 ring-indigo-500': isOpen
   })

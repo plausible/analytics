@@ -237,7 +237,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               value={@cost_estimate}
             />
 
-            <.button theme="bright" phx-click="hide-plan-form" phx-target={@myself}>
+            <.button theme="secondary" phx-click="hide-plan-form" phx-target={@myself}>
               Cancel
             </.button>
 

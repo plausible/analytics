@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input name="my-input" errors={["oh no!"]} />
   """
 
-  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-900 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-750 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-800 transition-all duration-150 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
 
   attr(:id, :any, default: nil)
   attr(:name, :any)
@@ -130,7 +130,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         id={@id}
         name={@name}
         checked={assigns[:checked]}
-        class="block dark:bg-gray-900 h-4 w-4 mt-[0.15rem] cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
+        class="block dark:bg-gray-900 size-4 mt-[0.15rem] cursor-pointer text-indigo-600 border-gray-400 dark:border-gray-600 checked:border-indigo-600 dark:checked:border-white focus:ring-indigo-500"
         {@rest}
       />
       <.label :if={@label} class="flex flex-col flex-inline" for={@id}>
@@ -230,9 +230,9 @@ defmodule PlausibleWeb.Live.Components.Form do
         <a
           onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
           href="javascript:void(0)"
-          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline top-3 right-4"
+          class="absolute flex items-center text-xs font-medium text-indigo-600 dark:text-indigo-500 no-underline hover:text-indigo-700 dark:hover:text-indigo-400 top-3 right-4 transition-colors duration-150"
         >
-          <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
+          <Heroicons.document_duplicate class="pr-1 size-5" />
           <span>
             COPY
           </span>

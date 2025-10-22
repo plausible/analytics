@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           x-data
           x-on:click={Modal.JS.preopen("goals-form-modal")}
         >
-          Add Goal
+          Add goal
         </.button>
       </.filter_bar>
 
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               <span :if={goal.page_path && goal.scroll_threshold == -1}>Pageview</span>
               <span :if={goal.event_name && !goal.currency}>Custom Event</span>
               <span :if={goal.currency}>Revenue Goal ({goal.currency})</span>
-              <span :if={not Enum.empty?(goal.funnels)} class="text-gray-400 dark:text-gray-600">
+              <span :if={not Enum.empty?(goal.funnels)} class="text-gray-400 dark:text-gray-500">
                 <br />Belongs to funnel(s)
               </span>
             </.td>
@@ -127,19 +127,19 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
     ~H"""
     <span
       :if={@goal.page_path && @goal.scroll_threshold > -1}
-      class="block truncate text-gray-400 dark:text-gray-600"
+      class="block truncate text-gray-400 dark:text-gray-500"
     >
       {page_scroll_description(@goal)}
     </span>
 
     <span
       :if={@goal.page_path && @goal.scroll_threshold == -1}
-      class="block truncate text-gray-400 dark:text-gray-600"
+      class="block truncate text-gray-400 dark:text-gray-500"
     >
       {pageview_description(@goal)}
     </span>
 
-    <span :if={@goal.event_name} class="block truncate text-gray-400 dark:text-gray-600">
+    <span :if={@goal.event_name} class="block truncate text-gray-400 dark:text-gray-500">
       {custom_event_description(@goal)}
     </span>
     """

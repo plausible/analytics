@@ -69,7 +69,7 @@
               <.button type="submit">Save</.button>
             </.form>
           <% {:error, error} -> %>
-            <.notice title="Integration Error" theme={:red} class="mt-8">
+            <.notice title="Integration error" theme={:red} class="mt-8">
               <%= case error do %>
                 <% "invalid_grant" -> %>
                   Invalid Grant error returned from Google.

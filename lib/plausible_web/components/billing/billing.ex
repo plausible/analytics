@@ -178,7 +178,7 @@ defmodule PlausibleWeb.Components.Billing do
   def usage_and_limits_table(assigns) do
     ~H"""
     <table class="min-w-full text-gray-900 dark:text-gray-100" {@rest}>
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
         {render_slot(@inner_block)}
       </tbody>
     </table>
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <div
       id="monthly-quota-box"
-      class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-900 w-max-md"
+      class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-800 w-max-md"
     >
       <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
       <div class="py-2 text-xl font-medium dark:text-gray-100">
@@ -276,7 +276,7 @@ defmodule PlausibleWeb.Components.Billing do
       id={@id}
       onclick={"if (#{@confirmed}) {#{@js_action_expr}}"}
       class={[
-        "text-sm w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white",
+        "text-sm w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white transition-colors duration-150",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
         @checkout_disabled && "pointer-events-none bg-gray-400 dark:bg-gray-600"
       ]}

@@ -84,7 +84,7 @@ class LineGraph extends React.Component {
             suggestedMax: calculateMaximumY(dataSet),
             ticks: {
               callback: MetricFormatterShort[metric],
-              color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
+              color: this.props.darkTheme ? 'rgb(161, 161, 170)' : undefined
             },
             grid: {
               zeroLineColor: 'transparent',
@@ -144,7 +144,7 @@ class LineGraph extends React.Component {
                   shouldShowYear
                 })(this.getLabelForValue(val))
               },
-              color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
+              color: this.props.darkTheme ? 'rgb(161, 161, 170)' : undefined
             }
           }
         },

@@ -241,7 +241,7 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
     <div class="relative">
       <textarea
         id="snippet"
-        class={"w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 #{if !@resizable, do: "resize-none"}"}
+        class={"w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 #{if !@resizable, do: "resize-none"}"}
         rows={@rows}
         readonly
       ><%= @text %></textarea>
