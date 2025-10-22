@@ -13,7 +13,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksTest do
     @moduletag :capture_log
 
     describe "running detection" do
-      test "handles wordpress detection, retrying once one 429" do
+      test "handles wordpress detection, retrying on 429" do
         expected_domain = "example.com"
         url_to_verify = nil
         test = self()
