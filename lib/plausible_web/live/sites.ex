@@ -722,11 +722,9 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr(:rest, :global)
-
   def globe_icon(assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {@rest}>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <path
         stroke="currentColor"
         stroke-linecap="round"
