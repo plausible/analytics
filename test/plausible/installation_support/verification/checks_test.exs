@@ -12,48 +12,33 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
     import Plug.Conn
     @moduletag :capture_log
 
+    @expected_domain "example.com"
+    @url_to_verify "https://#{@expected_domain}"
+
     describe "running verification" do
       for status <- [200, 202] do
         test "returns success if test event response status is #{status} and domain is as expected" do
-          expected_domain = "example.com"
-          url_to_verify = "https://#{expected_domain}"
-
-          stub_lookup_a_records(expected_domain)
-
-          verification_counter =
-            stub_verification_result(%{
+          verification_stub =
+            json_response_verification_stub(%{
               "completed" => true,
               "trackerIsInHtml" => true,
               "plausibleIsOnWindow" => true,
               "plausibleIsInitialized" => true,
               "testEvent" => %{
                 "normalizedBody" => %{
-                  "domain" => "example.com"
+                  "domain" => @expected_domain
                 },
                 "responseStatus" => unquote(status)
               }
             })
 
-          assert %Result{
-                   ok?: true
-                 } ==
-                   Checks.run(url_to_verify, expected_domain, "manual",
-                     report_to: nil,
-                     async?: false,
-                     slowdown: 0
-                   )
+          assert %Result{ok?: true} ==
+                   run_checks(verification_stub, expected_req_count: 1)
                    |> Checks.interpret_diagnostics()
-
-          assert 1 == :atomics.get(verification_counter, 1)
         end
       end
 
       test "returns error when it 'succeeds', but only after cache bust" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}"
-
-        stub_lookup_a_records(expected_domain)
-
         counter = :atomics.new(1, [])
 
         get_context_url_from_body = fn conn ->
@@ -61,10 +46,10 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
           JSON.decode!(body)["context"]["url"]
         end
 
-        stub_verification_result(fn conn ->
+        verification_stub = fn conn ->
           js_data =
             if :atomics.add_get(counter, 1, 1) == 1 do
-              assert get_context_url_from_body.(conn) == url_to_verify
+              assert get_context_url_from_body.(conn) == @url_to_verify
 
               %{
                 "completed" => true,
@@ -93,7 +78,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
           conn
           |> put_resp_content_type("application/json")
           |> send_resp(200, Jason.encode!(%{"data" => js_data}))
-        end)
+        end
 
         assert_matches %Result{
                          ok?: false,
@@ -105,26 +90,15 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                                "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
                            }
                          ]
-                       } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
-                         |> Checks.interpret_diagnostics()
+                       } = run_checks(verification_stub) |> Checks.interpret_diagnostics()
 
         assert 2 == :atomics.get(counter, 1)
       end
 
       test "cache bust diagnostics fully replace the initial installation check diagnostics" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}"
-
-        stub_lookup_a_records(expected_domain)
-
         counter = :atomics.new(1, [])
 
-        stub_verification_result(fn conn ->
+        verification_stub = fn conn ->
           if :atomics.add_get(counter, 1, 1) == 1 do
             js_data =
               %{
@@ -140,14 +114,9 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
           else
             Req.Test.transport_error(conn, :timeout)
           end
-        end)
+        end
 
-        state =
-          Checks.run(url_to_verify, expected_domain, "manual",
-            report_to: nil,
-            async?: false,
-            slowdown: 0
-          )
+        state = run_checks(verification_stub)
 
         assert_matches %Diagnostics{
                          tracker_is_in_html: nil,
@@ -164,24 +133,11 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       end
 
       test "timeouts are retried, cache bust skipped, interpreted as temporary errors" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}"
-
-        stub_lookup_a_records(expected_domain)
-
-        counter = :atomics.new(1, [])
-
-        stub_verification_result(fn conn ->
-          :atomics.add_get(counter, 1, 1)
+        verification_stub = fn conn ->
           Req.Test.transport_error(conn, :timeout)
-        end)
+        end
 
-        state =
-          Checks.run(url_to_verify, expected_domain, "manual",
-            report_to: nil,
-            async?: false,
-            slowdown: 0
-          )
+        state = run_checks(verification_stub, expected_req_count: 2)
 
         assert_matches %Diagnostics{service_error: %{code: :browserless_timeout}} =
                          state.diagnostics
@@ -197,41 +153,24 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } = Checks.interpret_diagnostics(state)
-
-        assert 2 == :atomics.get(counter, 1)
       end
 
       for status <- [400, 429] do
         test "#{status} responses are retried, cache bust skipped, intepreted as temporary errors" do
-          expected_domain = "example.com"
-          url_to_verify = "https://#{expected_domain}"
-
-          stub_lookup_a_records(expected_domain)
-
-          counter = :atomics.new(1, [])
-
-          stub_verification_result(fn conn ->
-            :atomics.add_get(counter, 1, 1)
-
+          verification_stub = fn conn ->
             conn
             |> put_resp_content_type("text/html")
             |> send_resp(unquote(status), "some error message")
-          end)
+          end
 
-          state =
-            Checks.run(url_to_verify, expected_domain, "manual",
-              report_to: nil,
-              async?: false,
-              slowdown: 0
-            )
+          state = run_checks(verification_stub, expected_req_count: 2)
 
           assert_matches %Diagnostics{
                            service_error: %{
                              code: :bad_browserless_response,
                              extra: ^unquote(status)
                            }
-                         } =
-                           state.diagnostics
+                         } = state.diagnostics
 
           assert_matches %Result{
                            ok?: false,
@@ -244,8 +183,6 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                              }
                            ]
                          } = Checks.interpret_diagnostics(state)
-
-          assert 2 == :atomics.get(counter, 1)
         end
       end
 
@@ -260,12 +197,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
              "Please check that the snippet on your site matches the installation instructions exactly, or verify your installation manually"}
           ] do
         test "returns error when test event domain doesn't match the expected domain, with recommendation for installation type: #{installation_type}" do
-          expected_domain = "example.com"
-          url_to_verify = "https://#{expected_domain}"
-          stub_lookup_a_records(expected_domain)
-
-          verification_counter =
-            stub_verification_result(%{
+          verification_stub =
+            json_response_verification_stub(%{
               "completed" => true,
               "trackerIsInHtml" => true,
               "plausibleIsOnWindow" => true,
@@ -289,24 +222,17 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                              }
                            ]
                          } =
-                           Checks.run(url_to_verify, expected_domain, unquote(installation_type),
-                             report_to: nil,
-                             async?: false,
-                             slowdown: 0
+                           run_checks(verification_stub,
+                             installation_type: unquote(installation_type),
+                             expected_req_count: 2
                            )
                            |> Checks.interpret_diagnostics()
-
-          assert 2 == :atomics.get(verification_counter, 1)
         end
       end
 
       test "returns error when proxy network error occurs" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}"
-        stub_lookup_a_records(expected_domain)
-
-        verification_counter =
-          stub_verification_result(%{
+        verification_stub =
+          json_response_verification_stub(%{
             "completed" => true,
             "trackerIsInHtml" => true,
             "plausibleIsOnWindow" => true,
@@ -330,23 +256,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
+                         run_checks(verification_stub, expected_req_count: 2)
                          |> Checks.interpret_diagnostics()
-
-        assert 2 == :atomics.get(verification_counter, 1)
       end
 
       test "returns error when Plausible network error occurs" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}"
-        stub_lookup_a_records(expected_domain)
-
-        verification_counter =
-          stub_verification_result(%{
+        verification_stub =
+          json_response_verification_stub(%{
             "completed" => true,
             "trackerIsInHtml" => true,
             "plausibleIsOnWindow" => true,
@@ -371,23 +287,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
+                         run_checks(verification_stub, expected_req_count: 2)
                          |> Checks.interpret_diagnostics()
-
-        assert 2 == :atomics.get(verification_counter, 1)
       end
 
       test "returns error when the snippet is not found for manual installation method, it has priority over CSP-related error" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}"
-        stub_lookup_a_records(expected_domain)
-
-        verification_counter =
-          stub_verification_result(%{
+        verification_stub =
+          json_response_verification_stub(%{
             "completed" => true,
             "trackerIsInHtml" => false,
             "plausibleIsOnWindow" => nil,
@@ -407,23 +313,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
+                         run_checks(verification_stub, expected_req_count: 2)
                          |> Checks.interpret_diagnostics()
-
-        assert 2 == :atomics.get(verification_counter, 1)
       end
 
       test "returns error when Plausible domain is disallowed by CSP" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}"
-        stub_lookup_a_records(expected_domain)
-
-        verification_counter =
-          stub_verification_result(%{
+        verification_stub =
+          json_response_verification_stub(%{
             "completed" => true,
             "trackerIsInHtml" => true,
             "plausibleIsOnWindow" => nil,
@@ -445,20 +341,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
+                         run_checks(verification_stub, expected_req_count: 2)
                          |> Checks.interpret_diagnostics()
-
-        assert 2 == :atomics.get(verification_counter, 1)
       end
 
       test "returns error when DNS check fails with domain not found error, offers custom URL input" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}"
-        stub_lookup_a_records(expected_domain, [])
+        url_to_verify = "https://#{@expected_domain}"
+        stub_lookup_a_records(@expected_domain, [])
 
         assert_matches %Result{
                          ok?: false,
@@ -475,7 +364,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
+                         Checks.run(url_to_verify, @expected_domain, "manual",
                            report_to: nil,
                            async?: false,
                            slowdown: 0
@@ -484,9 +373,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       end
 
       test "returns error when DNS check fails with invalid URL error, offers custom URL input" do
-        expected_domain = "example.com"
-        url_to_verify = "file://#{expected_domain}"
-        stub_lookup_a_records(expected_domain, [])
+        url_to_verify = "file://#{@expected_domain}"
+        stub_lookup_a_records(@expected_domain, [])
 
         assert_matches %Result{
                          ok?: false,
@@ -503,7 +391,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
+                         Checks.run(url_to_verify, @expected_domain, "manual",
                            report_to: nil,
                            async?: false,
                            slowdown: 0
@@ -512,14 +400,10 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       end
 
       test "returns error when there's a network error during verification, offers custom URL input" do
-        expected_domain = "example.com"
-        url_to_verify = "https://example.com?plausible_verification=123123123"
-        stub_lookup_a_records(expected_domain)
-
-        verification_counter =
-          stub_verification_result(%{
+        verification_stub =
+          json_response_verification_stub(%{
             "completed" => false,
-            "error" => %{"message" => "net::ERR_CONNECTION_CLOSED at #{url_to_verify}"}
+            "error" => %{"message" => "net::ERR_CONNECTION_CLOSED at #{@url_to_verify}"}
           })
 
         assert_matches %Result{
@@ -537,23 +421,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
+                         run_checks(verification_stub, expected_req_count: 2)
                          |> Checks.interpret_diagnostics()
-
-        assert 2 == :atomics.get(verification_counter, 1)
       end
 
       test "returns error when Plausible not installed and website response status is not 200, offers custom URL input" do
-        expected_domain = "example.com"
-        url_to_verify = "https://#{expected_domain}?plausible_verification=123123123"
-        stub_lookup_a_records(expected_domain)
-
-        verification_counter =
-          stub_verification_result(%{
+        verification_stub =
+          json_response_verification_stub(%{
             "completed" => true,
             "responseStatus" => 403,
             "trackerIsInHtml" => nil,
@@ -577,14 +451,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            }
                          ]
                        } =
-                         Checks.run(url_to_verify, expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
+                         run_checks(verification_stub, expected_req_count: 2)
                          |> Checks.interpret_diagnostics()
-
-        assert 2 == :atomics.get(verification_counter, 1)
       end
 
       for {installation_type, expected_recommendation} <- [
@@ -598,12 +466,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
              "Please make sure you've copied the snippet to the head of your site, or verify your installation manually"}
           ] do
         test "returns error \"We couldn't detect Plausible on your site\" when plausible_is_on_window is false (with best guess recommendation for installation type: #{installation_type})" do
-          expected_domain = "example.com"
-          url_to_verify = "https://#{expected_domain}"
-          stub_lookup_a_records(expected_domain)
-
-          verification_counter =
-            stub_verification_result(%{
+          verification_stub =
+            json_response_verification_stub(%{
               "completed" => true,
               "responseStatus" => 200,
               "trackerIsInHtml" => false,
@@ -623,23 +487,16 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                              }
                            ]
                          } =
-                           Checks.run(url_to_verify, expected_domain, unquote(installation_type),
-                             report_to: nil,
-                             async?: false,
-                             slowdown: 0
+                           run_checks(verification_stub,
+                             installation_type: unquote(installation_type),
+                             expected_req_count: 2
                            )
                            |> Checks.interpret_diagnostics()
-
-          assert 2 == :atomics.get(verification_counter, 1)
         end
 
         test "falls back to error \"We couldn't detect Plausible on your site\" when no other case matches (with best guess recommendation for installation type: #{installation_type}), sends diagnostics to Sentry" do
-          expected_domain = "example.com"
-          url_to_verify = "https://#{expected_domain}"
-          stub_lookup_a_records(expected_domain)
-
-          verification_counter =
-            stub_verification_result(%{
+          verification_stub =
+            json_response_verification_stub(%{
               "completed" => true,
               "responseStatus" => nil,
               "trackerIsInHtml" => nil,
@@ -659,30 +516,56 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                              }
                            ]
                          } =
-                           Checks.run(url_to_verify, expected_domain, unquote(installation_type),
-                             report_to: nil,
-                             async?: false,
-                             slowdown: 0
+                           run_checks(verification_stub,
+                             installation_type: unquote(installation_type),
+                             expected_req_count: 1
                            )
                            |> Checks.interpret_diagnostics()
-
-          assert 1 == :atomics.get(verification_counter, 1)
         end
       end
     end
 
-    defp stub_verification_result(js_data) when is_map(js_data) do
-      counter = :atomics.new(1, [])
-
-      stub_verification_result(fn conn ->
-        :atomics.add_get(counter, 1, 1)
-
+    defp json_response_verification_stub(js_data) do
+      fn conn ->
         conn
         |> put_resp_content_type("application/json")
         |> send_resp(200, Jason.encode!(%{"data" => js_data}))
-      end)
+      end
+    end
 
-      counter
+    defp run_checks(verification_stub, opts \\ []) do
+      installation_type = Keyword.get(opts, :installation_type, "manual")
+      expected_req_count = Keyword.get(opts, :expected_req_count)
+
+      stub_lookup_a_records(@expected_domain)
+
+      if is_integer(expected_req_count) do
+        counter = :atomics.new(1, [])
+
+        stub_verification_result(fn conn ->
+          :atomics.add_get(counter, 1, 1)
+          verification_stub.(conn)
+        end)
+
+        state =
+          Checks.run(@url_to_verify, @expected_domain, installation_type,
+            report_to: nil,
+            async?: false,
+            slowdown: 0
+          )
+
+        assert expected_req_count == :atomics.get(counter, 1)
+
+        state
+      else
+        stub_verification_result(verification_stub)
+
+        Checks.run(@url_to_verify, @expected_domain, installation_type,
+          report_to: nil,
+          async?: false,
+          slowdown: 0
+        )
+      end
     end
 
     defp stub_verification_result(f) do
