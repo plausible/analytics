@@ -26,6 +26,7 @@ defmodule PlausibleWeb.Live.Sites do
         :team_invitations,
         Teams.Invitations.all(user)
       )
+      |> assign(:hourly_stats, %{})
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
       |> assign(init_consolidated_view_assigns(user, team))
 
@@ -125,13 +126,13 @@ defmodule PlausibleWeb.Live.Sites do
             <.site
               :if={site.entry_type in ["pinned_site", "site"]}
               site={site}
-              hourly_stats={@hourly_stats[site.domain]}
+              hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
             />
             <.invitation
               :if={site.entry_type == "invitation"}
               site={site}
               invitation={hd(site.invitations)}
-              hourly_stats={@hourly_stats[site.domain]}
+              hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
             />
           <% end %>
         </ul>
@@ -814,13 +815,6 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
-  defp loading(sites) do
-    sites.entries
-    |> Enum.into(%{}, fn site ->
-      {site.domain, :loading}
-    end)
-  end
-
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
       Sites.list_with_invitations(assigns.current_user, assigns.params,
@@ -838,10 +832,10 @@ defmodule PlausibleWeb.Live.Sites do
               "Could not render 24h visitors hourly intervals: #{inspect(kind)} #{inspect(value)}"
             )
 
-            loading(sites)
+            %{}
         end
       else
-        loading(sites)
+        %{}
       end
 
     consolidated_stats =
