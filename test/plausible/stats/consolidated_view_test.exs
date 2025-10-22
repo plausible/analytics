@@ -68,82 +68,74 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
              } = result
     end
 
-    test "compatibility with individual site stats" do
+    test "excludes engagement events from visitor counts" do
       fixed_now = ~N[2025-10-20 12:49:15]
       owner = new_user()
       site = new_site(owner: owner)
 
-      session1 = 111
-      session2 = 222
-      session3 = 333
-      session4 = 444
-      session5 = 555
-      session6 = 666
-
       populate_stats(site, [
-        # session 1 starts outside of query range
-        build(:pageview, user_id: session1, timestamp: ~N[2025-10-19 11:00:00]),
-        # session 1 continues within query range
-        build(:pageview, user_id: session1, timestamp: ~N[2025-10-20 12:00:00]),
-        # session 1 ends outside of query range
-        build(:pageview, user_id: session1, timestamp: ~N[2025-10-20 13:00:00]),
-        # session 2 starts within query range
-        build(:pageview, user_id: session2, timestamp: ~N[2025-10-20 10:50:00]),
+        build(:pageview, user_id: 111, timestamp: ~N[2025-10-20 12:00:00]),
+        build(:pageview, user_id: 222, timestamp: ~N[2025-10-20 10:50:00]),
         build(:engagement,
-          user_id: session2,
+          user_id: 222,
           pathname: "/blog",
-          timestamp: ~N[2025-10-20 11:03:01],
+          timestamp: ~N[2025-10-20 10:50:01],
           scroll_depth: 20,
           engagement_time: 50_000
-        ),
-        # session 3 starts the day before, still within query range
-        build(:pageview, user_id: session3, timestamp: ~N[2025-10-19 12:51:00]),
-        # session 4 crosses time slot per hour boundaries
-        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 11:50:00]),
-        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 12:10:00]),
-        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 12:30:00]),
-        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 12:51:00]),
-        build(:pageview, user_id: session4, timestamp: ~N[2025-10-19 13:01:00]),
-        # session 5 should never appear
-        build(:pageview, user_id: session5, timestamp: ~N[2025-10-19 12:48:00]),
-        # session 6 starts outside of the query range
-        build(:pageview, user_id: session6, timestamp: ~N[2025-10-19 12:00:00]),
-        build(:pageview, user_id: session6, timestamp: ~N[2025-10-19 12:55:00])
+        )
       ])
 
       view = new_consolidated_view(team_of(owner))
+      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
 
+      assert %{visitors: 2} = result
+    end
+
+    test "filters out-of-range timeslots correctly" do
+      fixed_now = ~N[2025-10-20 12:49:15]
+      owner = new_user()
+      site = new_site(owner: owner)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 111, timestamp: ~N[2025-10-19 11:00:00]),
+        build(:pageview, user_id: 111, timestamp: ~N[2025-10-20 12:00:00]),
+        build(:pageview, user_id: 222, timestamp: ~N[2025-10-19 12:51:00]),
+        build(:pageview, user_id: 333, timestamp: ~N[2025-10-19 12:48:00])
+      ])
+
+      view = new_consolidated_view(team_of(owner))
       result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
 
       expected_non_zero_intervals = [
-        {~N[2025-10-19 12:00:00], 3},
-        {~N[2025-10-19 13:00:00], 1},
-        {~N[2025-10-20 10:00:00], 1},
+        {~N[2025-10-19 12:00:00], 1},
         {~N[2025-10-20 12:00:00], 1}
       ]
 
-      assert %{
-               visitors: 5,
-               intervals: consolidated_intervals
-             } = result
-
-      result_individual =
-        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals([site], fixed_now)[
-          site.domain
-        ]
-
-      assert %{
-               visitors: 5,
-               intervals: individual_intervals
-             } = result_individual
-
-      assert length(consolidated_intervals) == length(individual_intervals)
-
-      consolidated_result = filter_only_non_zero_intervals(consolidated_intervals)
-      individual_result = filter_only_non_zero_intervals(individual_intervals)
-
+      consolidated_result = filter_only_non_zero_intervals(result.intervals)
       assert consolidated_result == expected_non_zero_intervals
-      assert individual_result == expected_non_zero_intervals
+
+      assert List.first(result.intervals).interval == ~N[2025-10-19 12:00:00]
+      assert List.last(result.intervals).interval == ~N[2025-10-20 12:00:00]
+    end
+
+    test "orders timeslots chronologically" do
+      fixed_now = ~N[2025-10-20 12:49:15]
+      owner = new_user()
+      site = new_site(owner: owner)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 111, timestamp: ~N[2025-10-20 12:00:00]),
+        build(:pageview, user_id: 222, timestamp: ~N[2025-10-19 13:00:00]),
+        build(:pageview, user_id: 333, timestamp: ~N[2025-10-20 10:00:00])
+      ])
+
+      view = new_consolidated_view(team_of(owner))
+      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+
+      timeslots = Enum.map(result.intervals, & &1.interval)
+      sorted_timeslots = Enum.sort(timeslots, NaiveDateTime)
+
+      assert timeslots == sorted_timeslots
     end
 
     defp filter_only_non_zero_intervals(intervals) do

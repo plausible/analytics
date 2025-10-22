@@ -1,5 +1,6 @@
 defmodule Plausible.Stats.ClickhouseTest do
   use Plausible.DataCase, async: true
+  import Plausible.Teams.Test
 
   import Plausible.TestUtils
   alias Plausible.Stats.Clickhouse
@@ -11,7 +12,7 @@ defmodule Plausible.Stats.ClickhouseTest do
 
     test "returns empty intervals placeholder on no clickhouse stats" do
       fixed_now = ~N[2023-10-26 10:00:15]
-      site = insert(:site)
+      site = new_site()
       domain = site.domain
 
       assert Clickhouse.last_24h_visitors_hourly_intervals(
@@ -55,7 +56,7 @@ defmodule Plausible.Stats.ClickhouseTest do
 
     test "returns clickhouse data merged with placeholder" do
       fixed_now = ~N[2023-10-26 10:00:15]
-      site = insert(:site)
+      site = new_site()
 
       user_id = 111
 
@@ -190,9 +191,9 @@ defmodule Plausible.Stats.ClickhouseTest do
 
     test "returns clickhouse data merged with placeholder for multiple sites" do
       fixed_now = ~N[2023-10-26 10:00:15]
-      site1 = insert(:site)
-      site2 = insert(:site)
-      site3 = insert(:site)
+      site1 = new_site()
+      site2 = new_site()
+      site3 = new_site()
 
       user_id = 111
 
@@ -232,7 +233,7 @@ defmodule Plausible.Stats.ClickhouseTest do
 
     test "returns calculated change" do
       fixed_now = ~N[2023-10-26 10:00:15]
-      site = insert(:site)
+      site = new_site()
 
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2023-10-24 11:58:00]),
@@ -250,7 +251,7 @@ defmodule Plausible.Stats.ClickhouseTest do
 
     test "calculates uniques correctly across hour boundaries" do
       fixed_now = ~N[2023-10-26 10:00:15]
-      site = insert(:site)
+      site = new_site()
 
       user_id = 111
 
@@ -265,7 +266,7 @@ defmodule Plausible.Stats.ClickhouseTest do
 
     test "another one" do
       fixed_now = ~N[2023-10-26 10:00:15]
-      site = insert(:site)
+      site = new_site()
 
       user_id = 111
 
@@ -308,11 +309,32 @@ defmodule Plausible.Stats.ClickhouseTest do
                ]
              } = Clickhouse.last_24h_visitors_hourly_intervals([site], fixed_now)[site.domain]
     end
+
+    test "excludes engagement events from visitor counts" do
+      fixed_now = ~N[2025-10-20 12:49:15]
+      site = new_site()
+
+      populate_stats(site, [
+        build(:pageview, user_id: 111, timestamp: ~N[2025-10-20 12:00:00]),
+        build(:pageview, user_id: 222, timestamp: ~N[2025-10-20 10:50:00]),
+        build(:engagement,
+          user_id: 222,
+          pathname: "/blog",
+          timestamp: ~N[2025-10-20 10:50:01],
+          scroll_depth: 20,
+          engagement_time: 50_000
+        )
+      ])
+
+      result = Clickhouse.last_24h_visitors_hourly_intervals([site], fixed_now)[site.domain]
+
+      assert %{visitors: 2} = result
+    end
   end
 
   describe "imported_pageview_counts/1" do
     test "gets pageview counts for each of sites' imports" do
-      site = insert(:site)
+      site = new_site()
 
       import1 = insert(:site_import, site: site)
       import2 = insert(:site_import, site: site)
