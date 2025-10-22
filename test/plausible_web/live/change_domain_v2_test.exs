@@ -364,7 +364,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
   end
 
   defp stub_detection_result(js_data) do
-    Req.Test.stub(:global, fn conn ->
+    Req.Test.stub(Plausible.InstallationSupport.Checks.Detection, fn conn ->
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(200, Jason.encode!(%{"data" => Map.put(js_data, "completed", true)}))
@@ -372,7 +372,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2Test do
   end
 
   defp stub_detection_error do
-    Req.Test.stub(:global, fn conn ->
+    Req.Test.stub(Plausible.InstallationSupport.Checks.Detection, fn conn ->
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(
