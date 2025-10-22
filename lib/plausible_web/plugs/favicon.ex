@@ -29,10 +29,8 @@ defmodule PlausibleWeb.Favicon do
   import Plug.Conn
   alias Plausible.HTTPClient
 
-  @globe_placeholder_icon_location "priv/globe_favicon.svg"
-  @globe_placeholder_icon File.read!(@globe_placeholder_icon_location)
-  @link_placeholder_icon_location "priv/link_favicon.svg"
-  @link_placeholder_icon File.read!(@link_placeholder_icon_location)
+  @placeholder_icon_location "priv/link_favicon.svg"
+  @placeholder_icon File.read!(@placeholder_icon_location)
   @custom_icons %{
     "Brave" => "search.brave.com",
     "Sogou" => "sogou.com",
@@ -93,51 +91,40 @@ defmodule PlausibleWeb.Favicon do
   def call(conn, favicon_domains: favicon_domains) do
     case conn.request_path do
       "/favicon/sources/placeholder" ->
-        send_placeholder(conn, @link_placeholder_icon)
-
-      "/favicon/sources_globe/" <> domain ->
-        fetch_favicon_with_fallback(conn, favicon_domains, domain, fn conn ->
-          send_placeholder(conn, @globe_placeholder_icon)
-        end)
+        send_placeholder(conn)
 
       "/favicon/sources/" <> domain ->
-        fetch_favicon_with_fallback(conn, favicon_domains, domain, fn conn ->
-          send_placeholder(conn, @link_placeholder_icon)
-        end)
+        domain = URI.decode_www_form(domain)
+
+        domain =
+          Map.get(favicon_domains, domain, domain)
+          |> String.split("/", parts: 2)
+          |> hd()
+
+        case HTTPClient.impl().get("https://icons.duckduckgo.com/ip3/#{domain}.ico") do
+          {:ok, %Finch.Response{status: 200, body: body, headers: headers}}
+          when body != @ddg_broken_icon ->
+            conn
+            |> forward_headers(headers)
+            |> maybe_override_content_type(body)
+            |> prevent_javascript_execution()
+            |> send_resp(200, body)
+            |> halt()
+
+          _ ->
+            send_placeholder(conn)
+        end
 
       _ ->
         conn
     end
   end
 
-  defp fetch_favicon_with_fallback(conn, favicon_domains, domain, fallback_fn) do
-    domain = URI.decode_www_form(domain)
-
-    domain =
-      Map.get(favicon_domains, domain, domain)
-      |> String.split("/", parts: 2)
-      |> hd()
-
-    case HTTPClient.impl().get("https://icons.duckduckgo.com/ip3/#{domain}.ico") do
-      {:ok, %Finch.Response{status: 200, body: body, headers: headers}}
-      when body != @ddg_broken_icon ->
-        conn
-        |> forward_headers(headers)
-        |> maybe_override_content_type(body)
-        |> prevent_javascript_execution()
-        |> send_resp(200, body)
-        |> halt()
-
-      _ ->
-        fallback_fn.(conn)
-    end
-  end
-
-  defp send_placeholder(conn, icon) do
+  defp send_placeholder(conn) do
     conn
     |> put_resp_content_type("image/svg+xml")
     |> put_resp_header("cache-control", "public, max-age=2592000")
-    |> send_resp(200, icon)
+    |> send_resp(200, @placeholder_icon)
     |> halt
   end
 
