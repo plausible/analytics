@@ -475,10 +475,10 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div
-      :if={@hourly_stats == :loading}
-      class="flex flex-col gap-y-2 h-[122px] text-center animate-pulse"
-    >
+    <div class={[
+      "flex flex-col gap-y-2 h-[122px] text-center animate-pulse",
+      is_map(@hourly_stats) && " hidden"
+    ]}>
       <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
       <div class="flex-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
     </div>
