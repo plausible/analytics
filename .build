@@ -248,6 +248,7 @@ Plausible.Stats.Breakdown.html
 Plausible.Stats.Clickhouse.html
 Plausible.Stats.Compare.html
 Plausible.Stats.Comparisons.html
+Plausible.Stats.ConsolidatedView.html
 Plausible.Stats.CurrentVisitors.html
 Plausible.Stats.CustomProps.html
 Plausible.Stats.DateTimeRange.html
@@ -560,8 +561,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-E01908D8.js
-dist/sidebar_items-A822863E.js
+dist/search_data-3BD35555.js
+dist/sidebar_items-71B8FA0D.js
 index.html
 readme.html
 search.html
