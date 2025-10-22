@@ -12,7 +12,7 @@ defmodule Plausible.ConsolidatedView do
 
   alias Plausible.Teams
   alias Plausible.Teams.Team
-  alias Plausible.{Repo, Site}
+  alias Plausible.{Repo, Site, Auth.User}
 
   import Ecto.Query
 
@@ -41,7 +41,7 @@ defmodule Plausible.ConsolidatedView do
     from(s in q, where: s.consolidated == true)
   end
 
-  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :no_sites}
+  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :no_sites | :team_not_setup}
   def enable(%Team{} = team) do
     with :ok <- ensure_eligible(team), do: do_enable(team)
   end
@@ -99,6 +99,17 @@ defmodule Plausible.ConsolidatedView do
     end
   end
 
+  @spec can_manage?(User.t(), Team.t()) :: boolean()
+  def can_manage?(user, team) do
+    case Plausible.Teams.Memberships.team_role(team, user) do
+      {:ok, role} when role not in [:viewer, :guest] ->
+        true
+
+      _ ->
+        false
+    end
+  end
+
   defp bump_updated_at(struct_or_changeset) do
     Ecto.Changeset.change(struct_or_changeset, updated_at: NaiveDateTime.utc_now(:second))
   end
@@ -128,7 +139,11 @@ defmodule Plausible.ConsolidatedView do
   # TODO: Only active trials and business subscriptions should be eligible.
   # This function should also call a new underlying feature module.
   defp ensure_eligible(%Team{} = team) do
-    if has_sites_to_consolidate?(team), do: :ok, else: {:error, :no_sites}
+    cond do
+      not Teams.setup?(team) -> {:error, :team_not_setup}
+      not has_sites_to_consolidate?(team) -> {:error, :no_sites}
+      true -> :ok
+    end
   end
 
   defp native_stats_start_at(%Team{} = team) do

@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       end
 
       test "can create a consolidated view for team", %{conn: conn, user: user} do
-        team = team_of(user)
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
 
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
       test "renders existing consolidated view", %{conn: conn, user: user} do
         team = team_of(user)
-        Plausible.ConsolidatedView.enable(team)
+        new_consolidated_view(team)
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
         html = render(lv)
@@ -224,7 +224,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
       test "can delete consolidated view", %{conn: conn, user: user} do
         team = team_of(user)
-        Plausible.ConsolidatedView.enable(team)
+        new_consolidated_view(team)
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
 
