@@ -10,6 +10,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
     alias Plausible.InstallationSupport.Result
     use Plausible.Test.Support.DNS
     import Plug.Conn
+    import ExUnit.CaptureLog
     @moduletag :capture_log
 
     @expected_domain "example.com"
@@ -525,6 +526,99 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            ]
                          } = Checks.interpret_diagnostics(state)
         end
+      end
+    end
+
+    describe "observability" do
+      setup %{test: test, test_pid: test_pid} do
+        :telemetry.attach_many(
+          "#{test}-telemetry-handler",
+          [
+            Checks.telemetry_event_handled(),
+            Checks.telemetry_event_unhandled()
+          ],
+          fn event, %{}, _, _ ->
+            send(test_pid, {:telemetry_event, event})
+          end,
+          %{}
+        )
+      end
+
+      test "known installation issue detected is considered handled" do
+        wrong_domain_verification_stub =
+          json_response_verification_stub(%{
+            "completed" => true,
+            "trackerIsInHtml" => true,
+            "plausibleIsOnWindow" => true,
+            "plausibleIsInitialized" => true,
+            "testEvent" => %{
+              "normalizedBody" => %{
+                "domain" => "wrong-domain.com"
+              },
+              "responseStatus" => 200
+            }
+          })
+
+        state = run_checks(wrong_domain_verification_stub)
+
+        log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
+
+        assert log == ""
+
+        assert_receive {:telemetry_event, telemetry_event}
+        assert telemetry_event == Checks.telemetry_event_handled()
+      end
+
+      test "unhandled verification case" do
+        verification_stub =
+          json_response_verification_stub(%{
+            "completed" => true,
+            "trackerIsInHtml" => true,
+            "plausibleIsOnWindow" => true,
+            "plausibleIsInitialized" => true,
+            "testEvent" => %{}
+          })
+
+        state = run_checks(verification_stub)
+
+        log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
+
+        assert log =~ "[VERIFICATION v2] Unhandled case (data_domain='#{@expected_domain}')"
+        assert log =~ "test_event: %{}"
+
+        assert_receive {:telemetry_event, telemetry_event}
+        assert telemetry_event == Checks.telemetry_event_unhandled()
+      end
+
+      test "browserless request timing out is considered unhandled" do
+        verification_stub = fn conn -> Req.Test.transport_error(conn, :timeout) end
+        state = run_checks(verification_stub)
+
+        log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
+
+        assert log =~ "[VERIFICATION v2] Unhandled case (data_domain='#{@expected_domain}')"
+        assert log =~ "service_error: %{code: :browserless_timeout}"
+
+        assert_receive {:telemetry_event, telemetry_event}
+        assert telemetry_event == Checks.telemetry_event_unhandled()
+      end
+
+      test "flaky Browserless response is considered unhandled" do
+        verification_stub = fn conn ->
+          conn
+          |> put_resp_content_type("text/html")
+          |> send_resp(400, "some error message")
+        end
+
+        state = run_checks(verification_stub)
+
+        log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
+
+        assert log =~ "[VERIFICATION v2] Unhandled case (data_domain='#{@expected_domain}')"
+        assert log =~ "service_error: %{code: :bad_browserless_response, extra: 400}"
+
+        assert_receive {:telemetry_event, telemetry_event}
+        assert telemetry_event == Checks.telemetry_event_unhandled()
       end
     end
 
