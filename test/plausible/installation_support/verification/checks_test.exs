@@ -15,7 +15,62 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
     @expected_domain "example.com"
     @url_to_verify "https://#{@expected_domain}"
 
-    describe "running verification" do
+    describe "URL check" do
+      test "returns error when DNS check fails with domain not found error, offers custom URL input" do
+        stub_lookup_a_records(@expected_domain, [])
+
+        assert_matches %Result{
+                         ok?: false,
+                         data: %{offer_custom_url_input: true},
+                         errors: [
+                           ^any(:string, ~r/We couldn't find your website at #{@url_to_verify}$/)
+                         ],
+                         recommendations: [
+                           %{
+                             text:
+                               "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                           }
+                         ]
+                       } =
+                         Checks.run(@url_to_verify, @expected_domain, "manual",
+                           report_to: nil,
+                           async?: false,
+                           slowdown: 0
+                         )
+                         |> Checks.interpret_diagnostics()
+      end
+
+      test "returns error when DNS check fails with invalid URL error, offers custom URL input" do
+        url_to_verify = "file://#{@expected_domain}"
+        stub_lookup_a_records(@expected_domain, [])
+
+        assert_matches %Result{
+                         ok?: false,
+                         data: %{offer_custom_url_input: true},
+                         errors: [
+                           ^any(:string, ~r/We couldn't find your website at #{url_to_verify}$/)
+                         ],
+                         recommendations: [
+                           %{
+                             text:
+                               "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                           }
+                         ]
+                       } =
+                         Checks.run(url_to_verify, @expected_domain, "manual",
+                           report_to: nil,
+                           async?: false,
+                           slowdown: 0
+                         )
+                         |> Checks.interpret_diagnostics()
+      end
+    end
+
+    describe "InstallationV2 check" do
       for status <- [200, 202] do
         test "returns success if test event response status is #{status} and domain is as expected" do
           verification_stub =
@@ -35,154 +90,6 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
           assert %Result{ok?: true} ==
                    run_checks(verification_stub, expected_req_count: 1)
                    |> Checks.interpret_diagnostics()
-        end
-      end
-
-      test "returns error when it 'succeeds', but only after cache bust" do
-        counter = :atomics.new(1, [])
-
-        get_context_url_from_body = fn conn ->
-          {:ok, body, _conn} = Plug.Conn.read_body(conn)
-          JSON.decode!(body)["context"]["url"]
-        end
-
-        verification_stub = fn conn ->
-          js_data =
-            if :atomics.add_get(counter, 1, 1) == 1 do
-              assert get_context_url_from_body.(conn) == @url_to_verify
-
-              %{
-                "completed" => true,
-                "trackerIsInHtml" => false,
-                "plausibleIsOnWindow" => false,
-                "plausibleIsInitialized" => false
-              }
-            else
-              assert [_, "plausible_verification" <> _] =
-                       String.split(get_context_url_from_body.(conn), "?")
-
-              %{
-                "completed" => true,
-                "trackerIsInHtml" => true,
-                "plausibleIsOnWindow" => true,
-                "plausibleIsInitialized" => true,
-                "testEvent" => %{
-                  "normalizedBody" => %{
-                    "domain" => "example.com"
-                  },
-                  "responseStatus" => 200
-                }
-              }
-            end
-
-          conn
-          |> put_resp_content_type("application/json")
-          |> send_resp(200, Jason.encode!(%{"data" => js_data}))
-        end
-
-        assert_matches %Result{
-                         ok?: false,
-                         errors: [^any(:string, ~r/.*cache.*/)],
-                         recommendations: [
-                           %{
-                             text: ^any(:string, ~r/.*cache.*/),
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
-                           }
-                         ]
-                       } = run_checks(verification_stub) |> Checks.interpret_diagnostics()
-
-        assert 2 == :atomics.get(counter, 1)
-      end
-
-      test "cache bust diagnostics fully replace the initial installation check diagnostics" do
-        counter = :atomics.new(1, [])
-
-        verification_stub = fn conn ->
-          if :atomics.add_get(counter, 1, 1) == 1 do
-            js_data =
-              %{
-                "completed" => true,
-                "trackerIsInHtml" => false,
-                "plausibleIsOnWindow" => false,
-                "plausibleIsInitialized" => false
-              }
-
-            conn
-            |> put_resp_content_type("application/json")
-            |> send_resp(200, Jason.encode!(%{"data" => js_data}))
-          else
-            Req.Test.transport_error(conn, :timeout)
-          end
-        end
-
-        state = run_checks(verification_stub)
-
-        assert_matches %Diagnostics{
-                         tracker_is_in_html: nil,
-                         plausible_is_on_window: nil,
-                         plausible_is_initialized: nil,
-                         service_error: %{code: :browserless_timeout}
-                       } = state.diagnostics
-
-        # Browserless gets called 3 times:
-        #   1) initial/regular installation check
-        #   2) cache bust installation check
-        #   3) retry due to #2 timing out
-        assert 3 == :atomics.get(counter, 1)
-      end
-
-      test "timeouts are retried, cache bust skipped, interpreted as temporary errors" do
-        verification_stub = fn conn ->
-          Req.Test.transport_error(conn, :timeout)
-        end
-
-        state = run_checks(verification_stub, expected_req_count: 2)
-
-        assert_matches %Diagnostics{service_error: %{code: :browserless_timeout}} =
-                         state.diagnostics
-
-        assert_matches %Result{
-                         ok?: false,
-                         errors: [^any(:string, ~r/.*temporary service error.*/)],
-                         recommendations: [
-                           %{
-                             text: ^any(:string, ~r/.*in a few minutes.*/),
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                           }
-                         ]
-                       } = Checks.interpret_diagnostics(state)
-      end
-
-      for status <- [400, 429] do
-        test "#{status} responses are retried, cache bust skipped, intepreted as temporary errors" do
-          verification_stub = fn conn ->
-            conn
-            |> put_resp_content_type("text/html")
-            |> send_resp(unquote(status), "some error message")
-          end
-
-          state = run_checks(verification_stub, expected_req_count: 2)
-
-          assert_matches %Diagnostics{
-                           service_error: %{
-                             code: :bad_browserless_response,
-                             extra: ^unquote(status)
-                           }
-                         } = state.diagnostics
-
-          assert_matches %Result{
-                           ok?: false,
-                           errors: [^any(:string, ~r/.*temporary service error.*/)],
-                           recommendations: [
-                             %{
-                               text: ^any(:string, ~r/.*in a few minutes.*/),
-                               url:
-                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                             }
-                           ]
-                         } = Checks.interpret_diagnostics(state)
         end
       end
 
@@ -345,60 +252,6 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          |> Checks.interpret_diagnostics()
       end
 
-      test "returns error when DNS check fails with domain not found error, offers custom URL input" do
-        url_to_verify = "https://#{@expected_domain}"
-        stub_lookup_a_records(@expected_domain, [])
-
-        assert_matches %Result{
-                         ok?: false,
-                         data: %{offer_custom_url_input: true},
-                         errors: [
-                           ^any(:string, ~r/We couldn't find your website at #{url_to_verify}$/)
-                         ],
-                         recommendations: [
-                           %{
-                             text:
-                               "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                           }
-                         ]
-                       } =
-                         Checks.run(url_to_verify, @expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
-                         |> Checks.interpret_diagnostics()
-      end
-
-      test "returns error when DNS check fails with invalid URL error, offers custom URL input" do
-        url_to_verify = "file://#{@expected_domain}"
-        stub_lookup_a_records(@expected_domain, [])
-
-        assert_matches %Result{
-                         ok?: false,
-                         data: %{offer_custom_url_input: true},
-                         errors: [
-                           ^any(:string, ~r/We couldn't find your website at #{url_to_verify}$/)
-                         ],
-                         recommendations: [
-                           %{
-                             text:
-                               "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
-                           }
-                         ]
-                       } =
-                         Checks.run(url_to_verify, @expected_domain, "manual",
-                           report_to: nil,
-                           async?: false,
-                           slowdown: 0
-                         )
-                         |> Checks.interpret_diagnostics()
-      end
-
       test "returns error when there's a network error during verification, offers custom URL input" do
         verification_stub =
           json_response_verification_stub(%{
@@ -521,6 +374,156 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                              expected_req_count: 1
                            )
                            |> Checks.interpret_diagnostics()
+        end
+      end
+    end
+
+    describe "InstallationV2 & InstallationV2CacheBust" do
+      test "returns error when it 'succeeds', but only after cache bust" do
+        counter = :atomics.new(1, [])
+
+        get_context_url_from_body = fn conn ->
+          {:ok, body, _conn} = Plug.Conn.read_body(conn)
+          JSON.decode!(body)["context"]["url"]
+        end
+
+        verification_stub = fn conn ->
+          js_data =
+            if :atomics.add_get(counter, 1, 1) == 1 do
+              assert get_context_url_from_body.(conn) == @url_to_verify
+
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => false,
+                "plausibleIsOnWindow" => false,
+                "plausibleIsInitialized" => false
+              }
+            else
+              assert [_, "plausible_verification" <> _] =
+                       String.split(get_context_url_from_body.(conn), "?")
+
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => true,
+                "plausibleIsOnWindow" => true,
+                "plausibleIsInitialized" => true,
+                "testEvent" => %{
+                  "normalizedBody" => %{
+                    "domain" => "example.com"
+                  },
+                  "responseStatus" => 200
+                }
+              }
+            end
+
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+        end
+
+        assert_matches %Result{
+                         ok?: false,
+                         errors: [^any(:string, ~r/.*cache.*/)],
+                         recommendations: [
+                           %{
+                             text: ^any(:string, ~r/.*cache.*/),
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
+                           }
+                         ]
+                       } = run_checks(verification_stub) |> Checks.interpret_diagnostics()
+
+        assert 2 == :atomics.get(counter, 1)
+      end
+
+      test "cache bust diagnostics fully replace the initial installation check diagnostics" do
+        counter = :atomics.new(1, [])
+
+        verification_stub = fn conn ->
+          if :atomics.add_get(counter, 1, 1) == 1 do
+            js_data =
+              %{
+                "completed" => true,
+                "trackerIsInHtml" => false,
+                "plausibleIsOnWindow" => false,
+                "plausibleIsInitialized" => false
+              }
+
+            conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+          else
+            Req.Test.transport_error(conn, :timeout)
+          end
+        end
+
+        state = run_checks(verification_stub)
+
+        assert_matches %Diagnostics{
+                         tracker_is_in_html: nil,
+                         plausible_is_on_window: nil,
+                         plausible_is_initialized: nil,
+                         service_error: %{code: :browserless_timeout}
+                       } = state.diagnostics
+
+        # Browserless gets called 3 times:
+        #   1) initial/regular installation check
+        #   2) cache bust installation check
+        #   3) retry due to #2 timing out
+        assert 3 == :atomics.get(counter, 1)
+      end
+
+      test "timeouts are retried, cache bust skipped, interpreted as temporary errors" do
+        verification_stub = fn conn ->
+          Req.Test.transport_error(conn, :timeout)
+        end
+
+        state = run_checks(verification_stub, expected_req_count: 2)
+
+        assert_matches %Diagnostics{service_error: %{code: :browserless_timeout}} =
+                         state.diagnostics
+
+        assert_matches %Result{
+                         ok?: false,
+                         errors: [^any(:string, ~r/.*temporary service error.*/)],
+                         recommendations: [
+                           %{
+                             text: ^any(:string, ~r/.*in a few minutes.*/),
+                             url:
+                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                           }
+                         ]
+                       } = Checks.interpret_diagnostics(state)
+      end
+
+      for status <- [400, 429] do
+        test "#{status} responses are retried, cache bust skipped, intepreted as temporary errors" do
+          verification_stub = fn conn ->
+            conn
+            |> put_resp_content_type("text/html")
+            |> send_resp(unquote(status), "some error message")
+          end
+
+          state = run_checks(verification_stub, expected_req_count: 2)
+
+          assert_matches %Diagnostics{
+                           service_error: %{
+                             code: :bad_browserless_response,
+                             extra: ^unquote(status)
+                           }
+                         } = state.diagnostics
+
+          assert_matches %Result{
+                           ok?: false,
+                           errors: [^any(:string, ~r/.*temporary service error.*/)],
+                           recommendations: [
+                             %{
+                               text: ^any(:string, ~r/.*in a few minutes.*/),
+                               url:
+                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                             }
+                           ]
+                         } = Checks.interpret_diagnostics(state)
         end
       end
     end
