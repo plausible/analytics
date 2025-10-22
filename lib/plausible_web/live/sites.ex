@@ -482,11 +482,7 @@ defmodule PlausibleWeb.Live.Sites do
       <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
       <div class="flex-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
     </div>
-    <div
-      :if={is_map(@hourly_stats)}
-      class="hidden"
-      phx-mounted={JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})}
-    >
+    <div :if={is_map(@hourly_stats)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
         <span class="h-[54px] text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
