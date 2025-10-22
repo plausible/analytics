@@ -312,7 +312,7 @@ defmodule PlausibleWeb.Live.Installation do
           id={"check-#{@variant}"}
           name={@variant}
           checked={Map.get(@config, @variant, false)}
-          class="block h-5 w-5 rounded-sm dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
+          class="block size-5 rounded-sm dark:bg-gray-750 border-gray-300 dark:border-gray-750 text-indigo-600 focus:ring-indigo-600 mr-2"
         />
         <label for={"check-#{@variant}"}>
           {@label}
@@ -321,7 +321,7 @@ defmodule PlausibleWeb.Live.Installation do
           <.tooltip sticky?={false}>
             <:tooltip_content>
               {@tooltip}
-              <br /><br />Click to learn more.
+              <br />Click to learn more.
             </:tooltip_content>
             <a href={@learn_more} target="_blank" rel="noopener noreferrer">
               <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
@@ -344,7 +344,7 @@ defmodule PlausibleWeb.Live.Installation do
       <div class="relative">
         <textarea
           id="snippet"
-          class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
+          class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-750 dark:bg-gray-750 dark:text-gray-300"
           rows="5"
           readonly
         ><%= render_snippet(@installation_type, @domain, @config) %></textarea>
@@ -352,9 +352,9 @@ defmodule PlausibleWeb.Live.Installation do
         <a
           onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
           href="javascript:void(0)"
-          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline bottom-2 right-4 p-2 bg-white dark:bg-gray-900"
+          class="absolute flex items-center text-xs font-medium text-indigo-600 dark:text-indigo-500 no-underline hover:text-indigo-700 dark:hover:text-indigo-400 bottom-2 right-4 p-2"
         >
-          <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
+          <Heroicons.document_duplicate class="pr-1 size-5" />
           <span>
             COPY
           </span>

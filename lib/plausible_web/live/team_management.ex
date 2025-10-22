@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
           </div>
 
           <.dropdown id="input-role-picker">
-            <:button class="role border rounded-sm border-indigo-700 bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
+            <:button class="role inline-flex items-center gap-x-2 font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
               {@input_role |> Atom.to_string() |> String.capitalize()}
               <Heroicons.chevron_down mini class="size-4 mt-0.5" />
             </:button>
@@ -132,11 +132,11 @@ defmodule PlausibleWeb.Live.TeamManagement do
       </div>
 
       <div :if={Layout.has_guests?(@layout)} class="flex items-center mt-4 mb-4" id="guests-hr">
-        <hr class="grow border-t border-gray-200 dark:border-gray-600" />
+        <hr class="grow border-t border-gray-200 dark:border-gray-700" />
         <span class="mx-4 text-gray-500 text-sm">
           Guests
         </span>
-        <hr class="grow border-t border-gray-200 dark:border-gray-600" />
+        <hr class="grow border-t border-gray-200 dark:border-gray-700" />
       </div>
 
       <div :if={Layout.has_guests?(@layout)} id="guest-list">

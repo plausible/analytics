@@ -74,7 +74,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
             class="float-right pt-4 text-sm"
           >
             &larr; Return
-            <kbd class="rounded border border-gray-200 dark:border-gray-600 px-2 font-mono font-normal text-xs text-gray-400">
+            <kbd class="rounded border border-gray-200 dark:border-gray-600 px-1.5 font-medium text-xs text-gray-400">
               ESC
             </kbd>
           </.styled_link>
@@ -131,7 +131,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
           phx-value-before={@audit_page.metadata.before}
           phx-value-limit={@current_limit}
           phx-target={@myself}
-          theme="bright"
+          theme="secondary"
         >
           &larr; Prev
         </.button>
@@ -143,7 +143,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
           phx-value-after={@audit_page.metadata.after}
           phx-value-limit={@current_limit}
           phx-target={@myself}
-          theme="bright"
+          theme="secondary"
         >
           Next &rarr;
         </.button>

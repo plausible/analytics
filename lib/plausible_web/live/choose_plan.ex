@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="mt-6 w-full md:flex">
           <a
             href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="hidden md:flex md:w-1/6 h-max md:mt-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-semibold gap-1 items-center"
+            class="hidden md:flex md:w-1/6 h-max md:mt-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 text-sm font-semibold gap-1 items-center transition-colors duration-150"
           >
             <span>←</span>
             <p>Back to settings</p>
@@ -222,7 +222,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               title="What's my current usage?"
               title_class="text-gray-900 dark:text-gray-200"
             >
-              <p class="text-gray-600 dark:text-gray-300">
+              <p class="text-gray-600 dark:text-gray-400">
                 <.render_usage pageview_usage={@usage.monthly_pageviews} />
               </p>
             </.accordion_item>
@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               title="What happens if I go over my monthly pageview limit?"
               title_class="text-gray-900 dark:text-gray-200"
             >
-              <p class="text-gray-600 dark:text-gray-300">
+              <p class="text-gray-600 dark:text-gray-400">
                 You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly. If your pageviews exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
               </p>
             </.accordion_item>
@@ -258,7 +258,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     </span>
     Please see your full usage report (including sites and team members) under the
     <a
-      class="text-indigo-600 inline hover:underline"
+      class="inline font-medium text-indigo-600 dark:text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors duration-150"
       href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
     >
       "Subscription" section
@@ -361,8 +361,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <div class="mt-16 -mb-16 text-center">
       Any other questions?
-      <a class="text-indigo-600 hover:underline" href={contact_link()}>Contact us</a>
-      or see <a class="text-indigo-600 hover:underline" href={billing_faq_link()}>billing FAQ</a>
+      <a class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" href={contact_link()}>Contact us</a>
+      or see <a class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" href={billing_faq_link()}>billing FAQ</a>
     </div>
     """
   end

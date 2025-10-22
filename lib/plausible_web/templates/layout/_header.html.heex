@@ -30,7 +30,7 @@
       <div class="absolute inset-y-0 right-0 flex items-center justify-end">
         <%= cond do %>
           <% @conn.assigns[:current_user] -> %>
-            <ul class="flex items-center w-full sm:w-auto">
+            <ul class="flex items-center gap-2 w-full sm:w-auto">
               <li :if={
                 ee?() && @conn.assigns[:site] &&
                   Plausible.Auth.is_super_admin?(@conn.assigns[:current_user])
@@ -45,10 +45,10 @@
               </li>
               <li
                 :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team])}
-                class="hidden mr-6 sm:block"
+                class="hidden sm:block"
               >
                 <.styled_link
-                  class="text-sm text-yellow-900 dark:text-yellow-900 rounded-sm px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
+                  class="flex items-center h-[40px] px-3 py-2 text-sm text-yellow-700 hover:text-yellow-800 dark:text-yellow-500 dark:hover:text-yellow-500 font-medium rounded-md bg-yellow-100 dark:bg-yellow-800/40 dark:hover:bg-yellow-800/50 transition-colors duration-150"
                   href={Routes.settings_path(@conn, :subscription)}
                 >
                   {trial_notification(@conn.assigns[:current_team])}
@@ -56,13 +56,13 @@
               </li>
               <li class="w-full sm:w-auto">
                 <.dropdown>
-                  <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                    <span class="font-medium truncate dark:text-gray-100 hidden md:block">
+                  <:button class="flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-md transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <span class="hidden md:block text-sm font-medium truncate dark:text-gray-100">
                       {@conn.assigns[:current_user].name}
                     </span>
                     <img
                       src={Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user])}
-                      class="w-7 rounded-full"
+                      class="-my-0.5 w-7 rounded-full"
                     />
                   </:button>
                   <:menu>

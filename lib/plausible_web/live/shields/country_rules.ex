@@ -106,9 +106,9 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
               for={@form}
               phx-submit="save-country-rule"
               phx-target={@myself}
-              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+              class="max-w-md w-full mx-auto"
             >
-              <.title>Add Country to Block List</.title>
+              <.title>Add country to block list</.title>
 
               <.live_component
                 class="mt-4"
@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                 Once added, we will start rejecting traffic from this country within a few minutes.
               </p>
               <.button type="submit" class="w-full">
-                Add Country
+                Add country
               </.button>
             </.form>
           </.live_component>

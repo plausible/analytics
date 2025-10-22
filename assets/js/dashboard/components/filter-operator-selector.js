@@ -28,7 +28,7 @@ export default function FilterOperatorSelector(props) {
             <BlurMenuButtonOnEscape targetRef={buttonRef} />
             <Popover.Button
               ref={buttonRef}
-              className="relative flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-500 shadow-xs px-4 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500 text-left"
+              className="relative flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-750 px-4 py-2 bg-white dark:bg-gray-750 text-sm text-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500 text-left"
             >
               {FILTER_OPERATIONS_DISPLAY_NAMES[props.selectedType]}
               <ChevronDownIcon

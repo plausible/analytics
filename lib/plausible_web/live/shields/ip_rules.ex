@@ -121,9 +121,9 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               for={@form}
               phx-submit="save-ip-rule"
               phx-target={@myself}
-              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+              class="max-w-md w-full mx-auto"
             >
-              <.title>Add IP to Block List</.title>
+              <.title>Add IP to block list</.title>
 
               <div class="mt-4">
                 <p
@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 <.input
                   autofocus
                   field={f[:inet]}
-                  label="IP Address"
+                  label="IP address"
                   placeholder="e.g. 192.168.127.12"
                 />
               </div>
@@ -155,7 +155,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 Once added, we will start rejecting traffic from this IP within a few minutes.
               </p>
               <.button type="submit" class="w-full">
-                Add IP Address →
+                Add IP address
               </.button>
             </.form>
           </.live_component>
