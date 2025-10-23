@@ -30,6 +30,7 @@ defmodule PlausibleWeb.TrackerScriptCacheTest do
         assert result == true
       else
         assert is_binary(result)
+        assert result =~ ~r/domain:\"#{site.domain}\"/
       end
 
       refute TrackerScriptCache.get("nonexistent", cache_name: test, force?: true)

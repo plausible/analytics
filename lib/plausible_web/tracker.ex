@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Tracker do
   use Plausible
   use Plausible.Repo
   alias Plausible.Site.TrackerScriptConfiguration
+  import Ecto.Query
 
   path = Application.app_dir(:plausible, "priv/tracker/js/plausible-web.js")
   # On CI, the file might not be present for static checks so we create an empty one
@@ -37,7 +38,9 @@ defmodule PlausibleWeb.Tracker do
   end
 
   # Exposed for testing
-  def plausible_main_config(tracker_script_configuration) do
+  def plausible_main_config(
+        %TrackerScriptConfiguration{site: %{domain: _domain}} = tracker_script_configuration
+      ) do
     %{
       domain: tracker_script_configuration.site.domain,
       endpoint: tracker_ingestion_endpoint(),
@@ -47,7 +50,9 @@ defmodule PlausibleWeb.Tracker do
     }
   end
 
-  def build_script(%TrackerScriptConfiguration{} = tracker_script_configuration) do
+  def build_script(
+        %TrackerScriptConfiguration{site: %{domain: _domain}} = tracker_script_configuration
+      ) do
     config_js_content =
       tracker_script_configuration
       |> plausible_main_config()
@@ -67,12 +72,39 @@ defmodule PlausibleWeb.Tracker do
 
   def build_script(nil), do: nil
 
-  def broadcast_script_update(tracker_script_configuration),
-    do:
+  on_ee do
+    defp broadcast_script_upsert(tracker_script_configuration, _site) do
       PlausibleWeb.TrackerScriptCache.broadcast_put(
         tracker_script_configuration.id,
         PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
       )
+    end
+  else
+    defp broadcast_script_upsert(tracker_script_configuration, site) do
+      tracker_script_configuration =
+        enrich_tracker_script_configuration_with_site(tracker_script_configuration, site)
+
+      PlausibleWeb.TrackerScriptCache.broadcast_put(
+        tracker_script_configuration.id,
+        PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
+      )
+    end
+
+    # This function enriches tracker script configuration with site domain if the site association has not been loaded.
+    # This can happen when the tracker script configuration is the output of update or insert queries.
+    defp enrich_tracker_script_configuration_with_site(tracker_script_configuration, site) do
+      case tracker_script_configuration do
+        %TrackerScriptConfiguration{site: %{domain: _domain}} ->
+          tracker_script_configuration
+
+        %TrackerScriptConfiguration{site_id: site_id} when site_id == site.id ->
+          struct(tracker_script_configuration, site: Map.take(site, [:domain]))
+
+        _ ->
+          tracker_script_configuration
+      end
+    end
+  end
 
   def update_script_configuration(site, config_update, changeset_type) do
     Repo.transact(fn ->
@@ -82,15 +114,12 @@ defmodule PlausibleWeb.Tracker do
              Repo.update(changeset) do
         sync_goals(site, original_config, updated_config)
 
-        updated_config =
-          Repo.preload(updated_config, :site)
-
         on_ee do
           if should_purge_cache?(changeset) do
             purge_cache!(updated_config.id)
           end
         else
-          :ok = broadcast_script_update(updated_config)
+          :ok = broadcast_script_upsert(updated_config, site)
         end
 
         {:ok, updated_config}
@@ -144,12 +173,9 @@ defmodule PlausibleWeb.Tracker do
                    params
                  )
                ) do
-          created_config =
-            Repo.preload(created_config, :site)
-
           sync_goals(site, %{}, created_config)
 
-          :ok = broadcast_script_update(created_config)
+          :ok = broadcast_script_upsert(created_config, site)
           {:ok, created_config}
         end
       end)
@@ -175,17 +201,17 @@ defmodule PlausibleWeb.Tracker do
     "manual"
   end
 
-  on_ee do
-    import Ecto.Query
+  def get_tracker_script_configuration_base_query() do
+    from(t in TrackerScriptConfiguration,
+      join: s in assoc(t, :site),
+      select: %{t | site: %{domain: s.domain}}
+    )
+  end
 
-    defp get_tracker_script_configuration_by_id(id) do
-      from(t in TrackerScriptConfiguration,
-        where: t.id == ^id,
-        join: s in assoc(t, :site),
-        preload: [site: s]
-      )
-      |> Plausible.Repo.one()
-    end
+  def get_tracker_script_configuration_by_id(id) do
+    get_tracker_script_configuration_base_query()
+    |> where([t], t.id == ^id)
+    |> Plausible.Repo.one()
   end
 
   # Sync plausible goals with the updated script config
