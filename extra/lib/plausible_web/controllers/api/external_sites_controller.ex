@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     case Repo.transact(fn ->
            with {:ok, %{site: site}} <- Sites.create(user, params, team),
                 {:ok, tracker_script_configuration} <-
-                  get_or_create_config(site, params["tracker_script_configuration"] || %{}, user) do
+                  get_or_create_config(site, params["tracker_script_configuration"] || %{}) do
              {:ok,
               struct(site,
                 tracker_script_configuration: tracker_script_configuration
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
            end
          end) do
       {:ok, site} ->
-        json(conn, get_site_response(site, user))
+        json(conn, get_site_response(site))
 
       {:error, {_, {:over_limit, limit}, _}} ->
         conn
@@ -176,16 +176,10 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     team = conn.assigns.current_team
 
     with {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]),
-         {:ok, tracker_script_configuration} <- get_or_create_config(site, %{}, user) do
+         {:ok, tracker_script_configuration} <- get_or_create_config(site, %{}) do
       site = struct(site, tracker_script_configuration: tracker_script_configuration)
 
-      json(
-        conn,
-        get_site_response(
-          site,
-          user
-        )
-      )
+      json(conn, get_site_response(site))
     else
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
@@ -212,8 +206,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     with {:ok, params} <- validate_update_payload(params),
          {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
-         {:ok, site} <- do_update_site(site, params, user) do
-      json(conn, get_site_response(site, user))
+         {:ok, site} <- do_update_site(site, params) do
+      json(conn, get_site_response(site))
     else
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
@@ -246,7 +240,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  defp do_update_site(site, params, user) do
+  defp do_update_site(site, params) do
     Repo.transact(fn ->
       with {:ok, site} <-
              if(params["domain"],
@@ -255,8 +249,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
              ),
            {:ok, tracker_script_configuration} <-
              if(params["tracker_script_configuration"],
-               do: update_config(site, params["tracker_script_configuration"], user),
-               else: get_or_create_config(site, %{}, user)
+               do: update_config(site, params["tracker_script_configuration"]),
+               else: get_or_create_config(site, %{})
              ) do
         {:ok, struct(site, tracker_script_configuration: tracker_script_configuration)}
       end
@@ -581,31 +575,23 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  defp get_or_create_config(site, params, user) do
-    if PlausibleWeb.Tracker.scriptv2?(site, user) do
-      case PlausibleWeb.Tracker.get_or_create_tracker_script_configuration(site, params) do
-        {:ok, tracker_script_configuration} ->
-          {:ok, tracker_script_configuration}
+  defp get_or_create_config(site, params) do
+    case PlausibleWeb.Tracker.get_or_create_tracker_script_configuration(site, params) do
+      {:ok, tracker_script_configuration} ->
+        {:ok, tracker_script_configuration}
 
-        {:error, %Ecto.Changeset{} = changeset} ->
-          {:error, {:tracker_script_configuration_invalid, changeset}}
-      end
-    else
-      {:ok, %{}}
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, {:tracker_script_configuration_invalid, changeset}}
     end
   end
 
-  defp update_config(site, params, user) do
-    if PlausibleWeb.Tracker.scriptv2?(site, user) do
-      case PlausibleWeb.Tracker.update_script_configuration(site, params, :installation) do
-        {:ok, tracker_script_configuration} ->
-          {:ok, tracker_script_configuration}
+  defp update_config(site, params) do
+    case PlausibleWeb.Tracker.update_script_configuration(site, params, :installation) do
+      {:ok, tracker_script_configuration} ->
+        {:ok, tracker_script_configuration}
 
-        {:error, %Ecto.Changeset{} = changeset} ->
-          {:error, {:tracker_script_configuration_invalid, changeset}}
-      end
-    else
-      {:ok, %{}}
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, {:tracker_script_configuration_invalid, changeset}}
     end
   end
 
@@ -613,15 +599,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     site |> Map.take([:domain, :timezone])
   end
 
-  defp get_site_response(site, user) do
-    serializable_properties =
-      if(PlausibleWeb.Tracker.scriptv2?(site, user),
-        do: [:domain, :timezone, :tracker_script_configuration],
-        else: [:domain, :timezone]
-      )
-
+  defp get_site_response(site) do
     site
-    |> Map.take(serializable_properties)
+    |> Map.take([:domain, :timezone, :tracker_script_configuration])
     # remap to `custom_properties`
     |> Map.put(:custom_properties, site.allowed_event_props || [])
   end

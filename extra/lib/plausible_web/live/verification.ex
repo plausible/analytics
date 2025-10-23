@@ -38,8 +38,7 @@ defmodule PlausibleWeb.Live.Verification do
     super_admin? = Plausible.Auth.is_super_admin?(current_user)
     has_pageviews? = has_pageviews?(site)
 
-    custom_url_input? =
-      PlausibleWeb.Tracker.scriptv2?(site, current_user) and params["custom_url"] == "true"
+    custom_url_input? = params["custom_url"] == "true"
 
     socket =
       assign(socket,
@@ -49,7 +48,7 @@ defmodule PlausibleWeb.Live.Verification do
         domain: domain,
         has_pageviews?: has_pageviews?,
         component: @component,
-        installation_type: get_installation_type(params, site, current_user),
+        installation_type: get_installation_type(params, site),
         report_to: self(),
         delay: private[:delay] || 500,
         slowdown: private[:slowdown] || 500,
@@ -181,20 +180,16 @@ defmodule PlausibleWeb.Live.Verification do
 
   @supported_installation_types_atoms PlausibleWeb.Tracker.supported_installation_types()
                                       |> Enum.map(&String.to_atom/1)
-  defp get_installation_type(params, site, current_user) do
-    if PlausibleWeb.Tracker.scriptv2?(site, current_user) do
-      cond do
-        params["installation_type"] in PlausibleWeb.Tracker.supported_installation_types() ->
-          params["installation_type"]
+  defp get_installation_type(params, site) do
+    cond do
+      params["installation_type"] in PlausibleWeb.Tracker.supported_installation_types() ->
+        params["installation_type"]
 
-        (saved_installation_type = get_saved_installation_type(site)) in @supported_installation_types_atoms ->
-          Atom.to_string(saved_installation_type)
+      (saved_installation_type = get_saved_installation_type(site)) in @supported_installation_types_atoms ->
+        Atom.to_string(saved_installation_type)
 
-        true ->
-          PlausibleWeb.Tracker.fallback_installation_type()
-      end
-    else
-      params["installation_type"]
+      true ->
+        PlausibleWeb.Tracker.fallback_installation_type()
     end
   end
 

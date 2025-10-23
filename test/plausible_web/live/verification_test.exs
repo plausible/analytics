@@ -17,12 +17,6 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @awaiting ~s|#verification-ui span#awaiting|
   @heading ~s|#verification-ui h2|
 
-  setup %{site: site} do
-    FunWithFlags.enable(:scriptv2, for_actor: site)
-
-    :ok
-  end
-
   describe "GET /:domain" do
     @tag :ee_only
     test "static verification screen renders", %{conn: conn, site: site} do
