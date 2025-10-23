@@ -27,6 +27,24 @@
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+
+  *:focus-visible {
+    @apply ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900 outline-none;
+  }
+}
+
+@layer components {
+  /* Replace Tailwind form plugin's focus with focus-visible */
+  [type='checkbox']:focus,
+  [type='radio']:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  [type='checkbox']:focus-visible,
+  [type='radio']:focus-visible {
+    @apply ring-2 ring-indigo-500 ring-offset-2 outline-none;
+  }
 }
 
 @theme {
@@ -77,8 +95,8 @@
   --color-gray-850: rgb(34, 34, 38);
 
   /* Set v3 default ring behavior */
-  --default-ring-width: 3px;
-  --default-ring-color: var(--color-blue-500);
+  --default-ring-width: 2px;
+  --default-ring-color: var(--color-indigo-500);
 }
 
 @media print {
@@ -103,7 +121,7 @@
 }
 
 .button {
-  @apply inline-flex justify-center px-3.5 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+  @apply inline-flex justify-center px-3.5 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700;
 }
 
 .button[disabled] {

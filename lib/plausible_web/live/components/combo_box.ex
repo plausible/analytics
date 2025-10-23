@@ -90,7 +90,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       <div class="relative w-full">
         <div
           @click.away="close"
-          class="pl-2 pr-8 py-1 w-full dark:bg-gray-750 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-750 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+          class="pl-2 pr-8 py-1 w-full dark:bg-gray-750 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-750 focus-within:outline-none focus-within:ring-3 focus-within:ring-indigo-500/20 dark:focus-within:ring-indigo-500/25 focus-within:border-indigo-500"
         >
           <input
             type="text"
@@ -242,7 +242,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         @creatable && "creatable"
       ]}
       @mouseenter={"setFocus(#{@idx})"}
-      x-bind:class={ "{'text-white bg-indigo-500': focus === #{@idx}}" }
+      x-bind:class={ "{'bg-gray-100 dark:bg-gray-700': focus === #{@idx}}" }
       id={"dropdown-#{@ref}-option-#{@idx}"}
     >
       <a

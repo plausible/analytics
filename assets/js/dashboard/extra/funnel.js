@@ -97,11 +97,11 @@ export default function Funnel({ funnelName, tabs }) {
   const getPalette = () => {
     if (isDarkMode()) {
       return {
-        dataLabelBackground: 'rgba(25, 30, 56, 0.97)',
-        dataLabelTextColor: 'rgb(243, 244, 246)',
+        dataLabelBackground: 'rgb(9, 9, 11)',
+        dataLabelTextColor: 'rgb(244, 244, 245)',
         visitorsBackground: 'rgb(99, 102, 241)',
-        dropoffBackground: '#2F3949',
-        dropoffStripes: 'rgb(25, 30, 56)',
+        dropoffBackground: 'rgb(63, 63, 70)',
+        dropoffStripes: 'rgb(9, 9, 11)',
         stepNameLegendColor: 'rgb(228, 228, 231)',
         visitorsLegendClass: 'bg-indigo-500',
         dropoffLegendClass: 'bg-gray-600',
@@ -109,12 +109,12 @@ export default function Funnel({ funnelName, tabs }) {
       }
     } else {
       return {
-        dataLabelBackground: 'rgba(25, 30, 56, 0.97)',
-        dataLabelTextColor: 'rgb(243, 244, 246)',
+        dataLabelBackground: 'rgb(39, 39, 42)',
+        dataLabelTextColor: 'rgb(244, 244, 245)',
         visitorsBackground: 'rgb(99, 102, 241)',
         dropoffBackground: 'rgb(224, 231, 255)',
         dropoffStripes: 'rgb(255, 255, 255)',
-        stepNameLegendColor: 'rgb(12, 24, 39)',
+        stepNameLegendColor: 'rgb(24, 24, 27)',
         visitorsLegendClass: 'bg-indigo-500',
         dropoffLegendClass: 'bg-indigo-100',
         smallBarClass: 'bg-indigo-300'

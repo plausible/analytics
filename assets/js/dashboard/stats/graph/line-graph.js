@@ -88,7 +88,8 @@ class LineGraph extends React.Component {
             },
             grid: {
               zeroLineColor: 'transparent',
-              drawBorder: false
+              drawBorder: false,
+              color: this.props.darkTheme ? 'rgba(39, 39, 42, 0.75)' : 'rgb(236, 236, 238)'
             }
           },
           yComparison: {
