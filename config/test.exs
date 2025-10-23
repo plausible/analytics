@@ -57,9 +57,9 @@ config :plausible, Plausible.InstallationSupport.Checks.Detection,
     plug: {Req.Test, Plausible.InstallationSupport.Checks.Detection}
   ]
 
-config :plausible, Plausible.InstallationSupport.Checks.InstallationV2,
+config :plausible, Plausible.InstallationSupport.Checks.VerifyInstallation,
   req_opts: [
-    plug: {Req.Test, Plausible.InstallationSupport.Checks.InstallationV2}
+    plug: {Req.Test, Plausible.InstallationSupport.Checks.VerifyInstallation}
   ]
 
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)

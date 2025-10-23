@@ -71,7 +71,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       end
     end
 
-    describe "InstallationV2 check" do
+    describe "VerifyInstallation check" do
       for status <- [200, 202] do
         test "returns success if test event response status is #{status} and domain is as expected" do
           verification_stub =
@@ -379,7 +379,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       end
     end
 
-    describe "InstallationV2 & InstallationV2CacheBust" do
+    describe "VerifyInstallation & VerifyInstallationCacheBust" do
       test "returns error when it 'succeeds', but only after cache bust" do
         counter = :atomics.new(1, [])
 
@@ -666,7 +666,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
     end
 
     defp stub_verification_result(f) do
-      Req.Test.stub(Plausible.InstallationSupport.Checks.InstallationV2, f)
+      Req.Test.stub(Plausible.InstallationSupport.Checks.VerifyInstallation, f)
     end
   end
 end

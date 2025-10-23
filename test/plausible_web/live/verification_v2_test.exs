@@ -312,7 +312,7 @@ defmodule PlausibleWeb.Live.VerificationV2Test do
   end
 
   defp stub_verification_result(js_data) do
-    Req.Test.stub(Plausible.InstallationSupport.Checks.InstallationV2, fn conn ->
+    Req.Test.stub(Plausible.InstallationSupport.Checks.VerifyInstallation, fn conn ->
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(200, Jason.encode!(%{"data" => js_data}))

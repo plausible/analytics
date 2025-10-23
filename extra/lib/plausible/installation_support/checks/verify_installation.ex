@@ -1,4 +1,4 @@
-defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
+defmodule Plausible.InstallationSupport.Checks.VerifyInstallation do
   @moduledoc """
   Calls the browserless.io service (local instance can be spawned with `make browserless`)
   and runs verifier script via the [function API](https://docs.browserless.io/HTTP-APIs/function).

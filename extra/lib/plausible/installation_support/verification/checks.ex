@@ -11,8 +11,8 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
 
   @checks [
     Checks.Url,
-    Checks.InstallationV2,
-    Checks.InstallationV2CacheBust
+    Checks.VerifyInstallation,
+    Checks.VerifyInstallationCacheBust
   ]
 
   @spec run(String.t(), String.t(), String.t(), Keyword.t()) :: :ok
