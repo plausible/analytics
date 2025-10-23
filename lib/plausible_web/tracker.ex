@@ -72,38 +72,11 @@ defmodule PlausibleWeb.Tracker do
 
   def build_script(nil), do: nil
 
-  on_ee do
-    defp broadcast_script_upsert(tracker_script_configuration, _site) do
-      PlausibleWeb.TrackerScriptCache.broadcast_put(
-        tracker_script_configuration.id,
-        PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
-      )
-    end
-  else
-    defp broadcast_script_upsert(tracker_script_configuration, site) do
-      tracker_script_configuration =
-        enrich_tracker_script_configuration_with_site(tracker_script_configuration, site)
-
-      PlausibleWeb.TrackerScriptCache.broadcast_put(
-        tracker_script_configuration.id,
-        PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
-      )
-    end
-
-    # This function enriches tracker script configuration with site domain if the site association has not been loaded.
-    # This can happen when the tracker script configuration is the output of update or insert queries.
-    defp enrich_tracker_script_configuration_with_site(tracker_script_configuration, site) do
-      case tracker_script_configuration do
-        %TrackerScriptConfiguration{site: %{domain: _domain}} ->
-          tracker_script_configuration
-
-        %TrackerScriptConfiguration{site_id: site_id} when site_id == site.id ->
-          struct(tracker_script_configuration, site: Map.take(site, [:domain]))
-
-        _ ->
-          tracker_script_configuration
-      end
-    end
+  defp broadcast_script_upsert(tracker_script_configuration) do
+    PlausibleWeb.TrackerScriptCache.broadcast_put(
+      tracker_script_configuration.id,
+      PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
+    )
   end
 
   def update_script_configuration(site, config_update, changeset_type) do
@@ -111,18 +84,20 @@ defmodule PlausibleWeb.Tracker do
       with {:ok, original_config} <- get_or_create_tracker_script_configuration(site),
            changeset <- changeset(original_config, config_update, changeset_type),
            {:ok, updated_config} <-
-             Repo.update(changeset) do
-        sync_goals(site, original_config, updated_config)
+             Repo.update(changeset),
+           %TrackerScriptConfiguration{} = reloaded_config <-
+             maybe_reload_tracker_script_configuration(updated_config) do
+        sync_goals(site, original_config, reloaded_config)
 
         on_ee do
           if should_purge_cache?(changeset) do
-            purge_cache!(updated_config.id)
+            purge_cache!(reloaded_config.id)
           end
         else
-          :ok = broadcast_script_upsert(updated_config, site)
+          :ok = broadcast_script_upsert(reloaded_config)
         end
 
-        {:ok, updated_config}
+        {:ok, reloaded_config}
       end
     end)
   end
@@ -172,11 +147,13 @@ defmodule PlausibleWeb.Tracker do
                    %TrackerScriptConfiguration{site_id: site.id},
                    params
                  )
-               ) do
-          sync_goals(site, %{}, created_config)
+               ),
+             %TrackerScriptConfiguration{} = reloaded_config <-
+               maybe_reload_tracker_script_configuration(created_config) do
+          sync_goals(site, %{}, reloaded_config)
 
-          :ok = broadcast_script_upsert(created_config, site)
-          {:ok, created_config}
+          :ok = broadcast_script_upsert(reloaded_config)
+          {:ok, reloaded_config}
         end
       end)
     end
@@ -212,6 +189,15 @@ defmodule PlausibleWeb.Tracker do
     get_tracker_script_configuration_base_query()
     |> where([t], t.id == ^id)
     |> Plausible.Repo.one()
+  end
+
+  on_ee do
+    defp maybe_reload_tracker_script_configuration(tracker_script_configuration),
+      do: tracker_script_configuration
+  else
+    # This loads the necessary associations (:site), that aren't returned with inserts and updates
+    defp maybe_reload_tracker_script_configuration(tracker_script_configuration),
+      do: get_tracker_script_configuration_by_id(tracker_script_configuration.id)
   end
 
   # Sync plausible goals with the updated script config
