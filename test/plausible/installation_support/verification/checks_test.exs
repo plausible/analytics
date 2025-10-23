@@ -498,7 +498,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       end
 
       for status <- [400, 429] do
-        test "#{status} responses are retried, cache bust skipped, intepreted as temporary errors" do
+        test "#{status} responses are retried, cache bust skipped, interpreted as temporary errors" do
           verification_stub = fn conn ->
             conn
             |> put_resp_content_type("text/html")
