@@ -483,19 +483,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:domain/installation" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "static render - spinner determining installation type", %{
-      conn: conn,
-      site: site
-    } do
-      conn = get(conn, "/#{site.domain}/installation")
-
-      assert html_response(conn, 200) =~ "Determining installation type"
-    end
-  end
-
   describe "GET /:domain/settings/general" do
     setup [:create_user, :log_in, :create_site]
 
@@ -1871,15 +1858,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "Site domain"
       assert resp =~ "Change domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
-    end
-
-    test "domain change form renders", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
-      resp = html_response(conn, 200)
-      assert resp =~ Routes.site_path(conn, :change_domain_submit, site.domain)
-
-      assert resp =~
-               "Once you change your domain, you <i>must</i>\n    update Plausible Installation on your site within 72 hours"
     end
 
     test "domain change form submission when no change is made", %{conn: conn, site: site} do

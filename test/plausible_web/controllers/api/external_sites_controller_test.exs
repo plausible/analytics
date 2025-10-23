@@ -113,11 +113,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "timezone" => "Europe/Tallinn"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn",
-                 "custom_properties" => []
-               }
+        assert_matches %{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => []
+                       } = json_response(conn, 200)
       end
 
       test "can't create site in a team where not permitted to", %{conn: conn, user: user} do
@@ -156,11 +156,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "timezone" => "Europe/Tallinn"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn",
-                 "custom_properties" => []
-               }
+        assert_matches %{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => []
+                       } = json_response(conn, 200)
 
         assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == team.id
       end
@@ -188,11 +188,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "timezone" => "Europe/Tallinn"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn",
-                 "custom_properties" => []
-               }
+        assert_matches %{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => []
+                       } = json_response(conn, 200)
 
         assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == another_team.id
       end
@@ -215,11 +215,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "domain" => "some-site.domain"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Etc/UTC",
-                 "custom_properties" => []
-               }
+        assert_matches %{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Etc/UTC",
+                         "custom_properties" => []
+                       } = json_response(conn, 200)
       end
 
       test "domain is required", %{conn: conn} do
@@ -1617,11 +1617,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         conn = get(conn, "/api/v1/sites/" <> site.domain)
 
-        assert json_response(conn, 200) == %{
-                 "domain" => site.domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => ["logged_in", "author"]
-               }
+        assert_matches %{
+                         "domain" => ^site.domain,
+                         "timezone" => ^site.timezone,
+                         "custom_properties" => ["logged_in", "author"]
+                       } = json_response(conn, 200)
       end
 
       test "get a site by old site_id after domain change", %{conn: conn, site: site} do
@@ -1632,11 +1632,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         conn = get(conn, "/api/v1/sites/" <> old_domain)
 
-        assert json_response(conn, 200) == %{
-                 "domain" => new_domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => []
-               }
+        assert_matches %{
+                         "domain" => ^new_domain,
+                         "timezone" => ^site.timezone,
+                         "custom_properties" => []
+                       } = json_response(conn, 200)
       end
 
       test "get a site for user with read-only scope", %{conn: conn, user: user, site: site} do
@@ -1647,11 +1647,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
           |> get("/api/v1/sites/" <> site.domain)
 
-        assert json_response(conn, 200) == %{
-                 "domain" => site.domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => []
-               }
+        assert_matches %{
+                         "domain" => ^site.domain,
+                         "timezone" => ^site.timezone,
+                         "custom_properties" => []
+                       } = json_response(conn, 200)
       end
 
       test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
@@ -1959,11 +1959,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "domain" => "new.example.com"
           })
 
-        assert json_response(conn, 200) == %{
-                 "domain" => "new.example.com",
-                 "timezone" => "Etc/UTC",
-                 "custom_properties" => []
-               }
+        assert_matches %{
+                         "domain" => "new.example.com",
+                         "timezone" => "Etc/UTC",
+                         "custom_properties" => []
+                       } = json_response(conn, 200)
 
         site = Repo.reload!(site)
 

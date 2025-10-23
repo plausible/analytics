@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.InstallationV2 do
+defmodule PlausibleWeb.Live.Installation do
   @moduledoc """
   User assistance module around Plausible installation instructions/onboarding
   """
@@ -10,8 +10,8 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   alias PlausibleWeb.Flows
   alias Phoenix.LiveView.AsyncResult
-  alias PlausibleWeb.Live.InstallationV2.Icons
-  alias PlausibleWeb.Live.InstallationV2.Instructions
+  alias PlausibleWeb.Live.Installation.Icons
+  alias PlausibleWeb.Live.Installation.Instructions
 
   on_ee do
     alias Plausible.InstallationSupport.{Detection, Result}

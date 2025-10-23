@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.InstallationV2Test do
+defmodule PlausibleWeb.Live.InstallationTest do
   use PlausibleWeb.ConnCase
   use Plausible
   use Plausible.Test.Support.DNS
@@ -13,22 +13,17 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
 
   setup [:create_user, :log_in, :create_site]
 
-  setup %{site: site} do
-    FunWithFlags.enable(:scriptv2, for_actor: site)
-    :ok
-  end
-
-  describe "GET /:domain/installationv2" do
+  describe "GET /:domain/installation" do
     @tag :ee_only
     test "renders loading installation screen on EE", %{conn: conn, site: site} do
-      resp = get(conn, "/#{site.domain}/installationv2") |> html_response(200)
+      resp = get(conn, "/#{site.domain}/installation") |> html_response(200)
 
       assert resp =~ "animate-spin"
     end
 
     @tag :ce_build_only
     test "no loading spinner, no GTM tab on CE", %{conn: conn, site: site} do
-      resp = get(conn, "/#{site.domain}/installationv2") |> html_response(200)
+      resp = get(conn, "/#{site.domain}/installation") |> html_response(200)
 
       tabs_text = text_of_element(resp, "a[data-phx-link='patch']")
 
@@ -706,7 +701,7 @@ defmodule PlausibleWeb.Live.InstallationV2Test do
   end
 
   defp get_lv(conn, site, qs \\ nil) do
-    {:ok, lv, html} = live(conn, "/#{site.domain}/installationv2#{qs}")
+    {:ok, lv, html} = live(conn, "/#{site.domain}/installation#{qs}")
 
     {lv, html}
   end
