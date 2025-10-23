@@ -81,11 +81,14 @@ function ReferrerDrilldownModal() {
   }
 
   const renderIcon = useCallback((listItem) => {
+    const sourceName = listItem.name.toLowerCase()
+    const needsWhiteBg = sourceName.includes('github') || sourceName.includes('chatgpt.com')
+    
     return (
       <img
         alt=""
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        className="h-4 w-4 mr-2 align-middle inline"
+        className={`h-4 w-4 mr-2 align-middle inline ${needsWhiteBg ? 'dark:bg-white dark:border dark:border-white dark:rounded-full' : ''}`}
       />
     )
   }, [])

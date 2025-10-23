@@ -63,11 +63,14 @@ function AllSources({ afterFetchData }) {
   }
 
   function renderIcon(listItem) {
+    const sourceName = listItem.name.toLowerCase()
+    const needsWhiteBg = sourceName.includes('github') || sourceName.includes('chatgpt.com')
+    
     return (
       <img
         alt=""
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        className="w-4 h-4 mr-2"
+        className={`w-4 h-4 mr-2 ${needsWhiteBg ? 'dark:bg-white dark:border dark:border-white dark:rounded-full ' : ''}`}
       />
     )
   }
