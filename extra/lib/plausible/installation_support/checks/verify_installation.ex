@@ -8,7 +8,7 @@ defmodule Plausible.InstallationSupport.Checks.VerifyInstallation do
   use Plausible.InstallationSupport.Check
   alias Plausible.InstallationSupport.BrowserlessConfig
 
-  @verifier_code_path "priv/tracker/installation_support/verifier-v2.js"
+  @verifier_code_path "priv/tracker/installation_support/verifier.js"
   @external_resource @verifier_code_path
 
   # On CI, the file might not be present for static checks so we default to empty string
