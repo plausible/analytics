@@ -284,7 +284,7 @@ defmodule Plausible.Application do
           default,
           protocols: [:http2],
           count: count,
-          conn_opts: [transport_opts: [timeout: timeout_ms]]
+          conn_opts: [transport_opts: [timeout: timeout_ms, nodelay: false]]
         )
       )
     else
