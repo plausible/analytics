@@ -53,6 +53,10 @@ defmodule Plausible.Ingestion.Persistor.Remote do
     [:plausible, :remote_ingest, :request, :duration]
   end
 
+  def telemetry_decode_duration() do
+    [:plausible, :remote_ingest, :decode, :duration]
+  end
+
   defp request(override_url, event, session_attrs, headers) do
     Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
       telemetry_request_duration(),
@@ -90,16 +94,21 @@ defmodule Plausible.Ingestion.Persistor.Remote do
   end
 
   defp decode_payload(payload) do
-    case Base.decode64(payload, padding: false) do
-      {:ok, data} ->
-        event_data = :erlang.binary_to_term(data)
-        event = struct(Plausible.ClickhouseEventV2, event_data)
+    Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
+      telemetry_decode_duration(),
+      fn ->
+        case Base.decode64(payload, padding: false) do
+          {:ok, data} ->
+            event_data = :erlang.binary_to_term(data)
+            event = struct(Plausible.ClickhouseEventV2, event_data)
 
-        {:ok, event}
+            {:ok, event}
 
-      _ ->
-        {:error, :invalid_web_encoding}
-    end
+          _ ->
+            {:error, :invalid_web_encoding}
+        end
+      end
+    )
   catch
     _, _ ->
       {:error, :invalid_payload}
