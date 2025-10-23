@@ -170,7 +170,7 @@ defmodule Plausible.InstallationSupport.Checks.VerifyInstallation do
   end
 
   defp warning_message(message, state) do
-    "[VERIFICATION v2] #{message} (data_domain='#{state.data_domain}')"
+    "[VERIFICATION] #{message} (data_domain='#{state.data_domain}')"
   end
 
   defp parse_to_diagnostics(data),

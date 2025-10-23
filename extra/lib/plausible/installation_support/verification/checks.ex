@@ -65,8 +65,8 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
       {_, %{unhandled: true, browserless_issue: browserless_issue}} ->
         sentry_msg =
           if browserless_issue,
-            do: "Browserless failure in verification (v2)",
-            else: "Unhandled case for site verification (v2)"
+            do: "Browserless failure in verification",
+            else: "Unhandled case for site verification"
 
         Sentry.capture_message(sentry_msg,
           extra: %{
@@ -77,7 +77,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
         )
 
         Logger.warning(
-          "[VERIFICATION v2] Unhandled case (data_domain='#{data_domain}'): #{inspect(diagnostics)}"
+          "[VERIFICATION] Unhandled case (data_domain='#{data_domain}'): #{inspect(diagnostics)}"
         )
 
         :telemetry.execute(telemetry_event_unhandled(), %{})

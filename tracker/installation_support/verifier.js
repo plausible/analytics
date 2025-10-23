@@ -24,7 +24,7 @@ async function verifyPlausibleInstallation(options) {
   }
 
   function log(message) {
-    if (debug) console.log('[VERIFICATION v2]', message)
+    if (debug) console.log('[VERIFICATION]', message)
   }
 
   const disallowedByCsp = checkDisallowedByCSP(responseHeaders, cspHostToCheck)

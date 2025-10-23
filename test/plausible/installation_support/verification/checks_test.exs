@@ -583,7 +583,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
         log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
 
-        assert log =~ "[VERIFICATION v2] Unhandled case (data_domain='#{@expected_domain}')"
+        assert log =~ "[VERIFICATION] Unhandled case (data_domain='#{@expected_domain}')"
         assert log =~ "test_event: %{}"
 
         assert_receive {:telemetry_event, telemetry_event}
@@ -596,7 +596,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
         log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
 
-        assert log =~ "[VERIFICATION v2] Unhandled case (data_domain='#{@expected_domain}')"
+        assert log =~ "[VERIFICATION] Unhandled case (data_domain='#{@expected_domain}')"
         assert log =~ "service_error: %{code: :browserless_timeout}"
 
         assert_receive {:telemetry_event, telemetry_event}
@@ -614,7 +614,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
         log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
 
-        assert log =~ "[VERIFICATION v2] Unhandled case (data_domain='#{@expected_domain}')"
+        assert log =~ "[VERIFICATION] Unhandled case (data_domain='#{@expected_domain}')"
         assert log =~ "service_error: %{code: :bad_browserless_response, extra: 400}"
 
         assert_receive {:telemetry_event, telemetry_event}
