@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
   @moduledoc """
-  Tests for Sites create/read/update/delete API with `scriptv2` feature flag enabled.
-  It has overlap with some of the tests in `PlausibleWeb.Api.ExternalSitesControllerTest` test suite.
-  The overlapped tests from that suite can be deleted once the feature flag is enabled globally.
+  Tests for Sites create/read/update/delete API.
   """
   use Plausible
   use PlausibleWeb.ConnCase
@@ -464,6 +462,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         site2 = new_site(owner: user)
 
         _unrelated_site = new_site()
+        _consolidated_excluded = new_site(owner: user, consolidated: true)
 
         conn = get(conn, "/api/v1/sites")
 
