@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.ChangeDomainV2.Form do
+defmodule PlausibleWeb.Live.ChangeDomain.Form do
   @moduledoc """
   Live component for the change domain form
   """

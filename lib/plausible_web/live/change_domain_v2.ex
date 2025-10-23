@@ -1,12 +1,12 @@
-defmodule PlausibleWeb.Live.ChangeDomainV2 do
+defmodule PlausibleWeb.Live.ChangeDomain do
   @moduledoc """
-  LiveView for the change domain v2 flow.
+  LiveView for the change domain flow.
   """
   use Plausible
   use PlausibleWeb, :live_view
 
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias PlausibleWeb.Live.ChangeDomainV2.Form
+  alias PlausibleWeb.Live.ChangeDomain.Form
   alias Phoenix.LiveView.AsyncResult
 
   on_ee do
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Live.ChangeDomainV2 do
     end
   end
 
-  def render(%{live_action: :change_domain_v2} = assigns) do
+  def render(%{live_action: :change_domain} = assigns) do
     render_form_step(assigns)
   end
 
