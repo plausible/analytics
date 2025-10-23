@@ -290,7 +290,7 @@ const SeeMoreMenu = ({
               <div className="py-4 px-4">
                 <AppliedFilterPillsList
                   direction="vertical"
-                  pillClassName="dark:!shadow-gray-950/60"
+                  pillClassName="!shadow-none !bg-gray-100 dark:!bg-gray-700"
                   slice={{
                     type: 'no-render-outside',
                     start: visibleFiltersCount
@@ -298,7 +298,7 @@ const SeeMoreMenu = ({
                 />
               </div>
               {showSomeActions && (
-                <div className="mb-1 border-gray-200 dark:border-gray-500 border-b"></div>
+                <div className="mb-1 border-gray-200 dark:border-gray-700 border-b"></div>
               )}
             </>
           )}
