@@ -58,6 +58,49 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
                        }) = response
       end
 
+      test "can create more sites than their Enterprise plans is limited to (we sort the bills post-fact)",
+           %{conn: conn} do
+        user =
+          new_user()
+          |> subscribe_to_enterprise_plan(
+            features: [
+              Plausible.Billing.Feature.StatsAPI,
+              Plausible.Billing.Feature.SitesAPI
+            ],
+            site_limit: 10
+          )
+
+        sites = for _ <- 1..10, do: new_site(owner: user)
+        assert 10 == length(sites)
+
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn"
+          })
+
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
+      end
+
       test "can create a site with a specific tracker script configuration", %{conn: conn} do
         payload = %{
           "domain" => "some-site.domain",
