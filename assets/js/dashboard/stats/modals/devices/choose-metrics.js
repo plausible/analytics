@@ -2,9 +2,13 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../../util/filters'
+import { revenueAvailable } from '../../../query'
 import * as metrics from '../../reports/metrics'
 
-export default function chooseMetrics(query) {
+export default function chooseMetrics(query, site) {
+  /*global BUILD_EXTRA*/
+  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
+
   if (hasConversionGoalFilter(query)) {
     return [
       metrics.createTotalVisitors(),
@@ -12,8 +16,10 @@ export default function chooseMetrics(query) {
         renderLabel: (_query) => 'Conversions',
         width: 'w-28'
       }),
-      metrics.createConversionRate()
-    ]
+      metrics.createConversionRate(),
+      showRevenueMetrics && metrics.createTotalRevenue(),
+      showRevenueMetrics && metrics.createAverageRevenue()
+    ].filter((metric) => !!metric)
   }
 
   if (isRealTimeDashboard(query)) {
