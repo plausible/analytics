@@ -9,7 +9,21 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
     sites = Teams.owned_sites(team, 100)
     sites_count = Teams.owned_sites_count(team)
 
-    {:ok, assign(socket, team: team, sites: sites, sites_count: sites_count)}
+    hourly_stats =
+      if connected?(socket) do
+        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites)
+        |> dbg()
+      else
+        %{}
+      end
+
+    {:ok,
+     assign(socket,
+       team: team,
+       sites: sites,
+       sites_count: sites_count,
+       hourly_stats: hourly_stats
+     )}
   end
 
   def render(assigns) do
@@ -25,6 +39,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
           <.th>Timezone</.th>
           <.th invisible>Settings</.th>
           <.th invisible>Dashboard</.th>
+          <.th invisible></.th>
         </:thead>
         <:tbody :let={site}>
           <.td>
@@ -59,6 +74,15 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
             >
               Settings
             </.styled_link>
+            <.td>
+              <span class="h-[24px] text-indigo-500">
+                <PlausibleWeb.Live.Components.Visitors.chart
+                  :if={is_map(@hourly_stats[site.domain])}
+                  intervals={@hourly_stats[site.domain].intervals}
+                  height={20}
+                />
+              </span>
+            </.td>
           </.td>
         </:tbody>
       </.table>
