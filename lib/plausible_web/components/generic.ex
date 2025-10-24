@@ -489,7 +489,7 @@ defmodule PlausibleWeb.Components.Generic do
         <.title>
           {render_slot(@title)}
 
-          <.docs_info :if={@docs} slug={@docs} class="absolute top-4 right-4" />
+          <.docs_info :if={@docs} slug={@docs} class="absolute top-4 right-4 z-1" />
         </.title>
         <div :if={@subtitle != []} class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           {render_slot(@subtitle)}
