@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden">
       <div class="w-1/2 h-full">
         <div
-          class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded-sm px-8 pt-6 pb-8 mb-4 mt-8"
+          class="max-w-md w-full mx-auto bg-white dark:bg-gray-900 shadow-md rounded-sm px-8 pt-6 pb-8 mb-4 mt-8"
           phx-click-away="close-token-modal"
         >
           <%= if @token_generated do %>
@@ -67,21 +67,22 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
               />
             </div>
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
-              Please copy the token and store it in a secure place as it won't be shown again.
+              Copy the token and store it in a secure place, as it won't be shown again.
               <span :if={@token_description == "WordPress"}>
                 You'll need to paste the token in the settings area of the Plausible WordPress plugin.
               </span>
             </p>
             <.button
+              theme="secondary"
               phx-click="close-token-modal"
-              class="w-full border !border-gray-300 dark:!border-gray-500 !text-gray-700 dark:!text-gray-300 !bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-850"
+              class="w-full"
             >
               Close modal
             </.button>
           <% else %>
             <.form :let={f} for={@form} phx-submit="generate-token">
               <.title>
-                Create Plugin Token for {@domain}
+                Create plugin token for {@domain}
               </.title>
 
               <div class="mt-4">
@@ -100,7 +101,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
                 Once created, we will display the token so it can be copied.
               </p>
               <.button type="submit" class="w-full">
-                Create Plugin Token
+                Create plugin token
               </.button>
             </.form>
           <% end %>

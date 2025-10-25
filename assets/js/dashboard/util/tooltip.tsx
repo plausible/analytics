@@ -99,7 +99,7 @@ function TooltipMessage({
       ref={setPopperElement}
       style={popperStyle}
       {...popperAttributes}
-      className="z-50 p-2 rounded-sm text-sm text-gray-100 font-bold popper-tooltip"
+      className="z-50 p-2 rounded-sm text-sm text-gray-100 font-bold bg-gray-800 dark:bg-gray-700"
       role="tooltip"
     >
       {children}

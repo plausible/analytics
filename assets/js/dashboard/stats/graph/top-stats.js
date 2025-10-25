@@ -128,7 +128,7 @@ export default function TopStats({
     const statDisplayNameClass = classNames(
       'text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-fit border-b',
       {
-        'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500':
+        'text-indigo-600 dark:text-indigo-500 border-indigo-600 dark:border-indigo-500':
           isSelected,
         'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent':
           !isSelected
@@ -153,7 +153,7 @@ export default function TopStats({
       'px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none',
       {
         'cursor-pointer': canMetricBeGraphed(stat),
-        'lg:border-l border-gray-300': index > 0,
+        'lg:border-l border-gray-300 dark:border-gray-700': index > 0,
         'border-r lg:border-r-0': index % 2 === 0
       }
     )

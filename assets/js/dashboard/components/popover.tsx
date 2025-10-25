@@ -32,14 +32,15 @@ const panel = {
 
 const toggleButton = {
   classNames: {
-    rounded: 'flex items-center rounded text-sm leading-tight h-9',
+    rounded:
+      'flex items-center rounded text-sm leading-tight h-9 transition-all duration-150',
     shadow:
-      'bg-white dark:bg-gray-800 shadow-sm text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900',
+      'bg-white dark:bg-gray-750 shadow-sm text-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
     ghost:
       'text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900',
     truncatedText: 'truncate block font-medium',
     linkLike:
-      'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600'
+      'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-150'
   }
 }
 
@@ -54,12 +55,12 @@ const items = {
     hoverLink: classNames(
       'hover:bg-gray-100',
       'hover:text-gray-900',
-      'dark:hover:bg-gray-900',
+      'dark:hover:bg-gray-700',
       'dark:hover:text-gray-100',
 
       'focus-within:bg-gray-100',
       'focus-within:text-gray-900',
-      'dark:focus-within:bg-gray-900',
+      'dark:focus-within:bg-gray-700',
       'dark:focus-within:text-gray-100'
     ),
     roundedStart: 'first-of-type:rounded-t-md',

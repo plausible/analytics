@@ -5,6 +5,11 @@ import { METRIC_LABELS, hasMultipleYears } from './graph-util'
 import { MetricFormatterShort } from '../reports/metric-formatter'
 import { ChangeArrow } from '../reports/change-arrow'
 
+// Function to detect if dark mode is active
+const isDarkMode = () => {
+  return document.documentElement.classList.contains('dark')
+}
+
 const renderBucketLabel = function (
   query,
   graphData,
@@ -117,6 +122,9 @@ export default function GraphTooltip(graphData, metric, query) {
       tooltipRoot = createRoot(tooltipEl)
     }
 
+    const bgClass = isDarkMode() ? 'bg-gray-950' : 'bg-gray-800'
+    tooltipEl.className = `absolute text-sm font-normal py-3 px-4 pointer-events-none rounded-md z-[100] min-w-[180px] ${bgClass}`
+
     if (tooltipEl && offset && window.innerWidth < 768) {
       tooltipEl.style.top =
         offset.y + offset.height + window.scrollY + 15 + 'px'
@@ -139,9 +147,9 @@ export default function GraphTooltip(graphData, metric, query) {
       )
 
       tooltipRoot.render(
-        <aside className="text-gray-100 flex flex-col">
+        <aside className="text-gray-100 flex flex-col gap-1.5">
           <div className="flex justify-between items-center">
-            <span className="font-semibold mr-4 text-lg">
+            <span className="font-semibold mr-4 text-xs uppercase">
               {METRIC_LABELS[metric]}
             </span>
             {tooltipData.comparisonDifference ? (
@@ -156,26 +164,24 @@ export default function GraphTooltip(graphData, metric, query) {
 
           {tooltipData.label ? (
             <div className="flex flex-col">
-              <div className="flex flex-row justify-between items-center">
+              <div className="flex flex-row justify-between items-center text-sm">
                 <span className="flex items-center mr-4">
                   <div
-                    className="w-3 h-3 mr-1 rounded-full"
+                    className="size-2 mr-2 rounded-full"
                     style={{ backgroundColor: 'rgba(101,116,205)' }}
                   ></div>
                   <span>{tooltipData.label}</span>
                 </span>
-                <span className="text-base font-bold">
-                  {tooltipData.formattedValue}
-                </span>
+                <span className="font-bold">{tooltipData.formattedValue}</span>
               </div>
 
               {tooltipData.comparisonLabel ? (
-                <div className="flex flex-row justify-between items-center">
+                <div className="flex flex-row justify-between items-center text-sm">
                   <span className="flex items-center mr-4">
-                    <div className="w-3 h-3 mr-1 rounded-full bg-gray-500"></div>
+                    <div className="size-2 mr-2 rounded-full bg-gray-500"></div>
                     <span>{tooltipData.comparisonLabel}</span>
                   </span>
-                  <span className="text-base font-bold">
+                  <span className="font-bold">
                     {tooltipData.formattedComparisonValue}
                   </span>
                 </div>
@@ -183,12 +189,14 @@ export default function GraphTooltip(graphData, metric, query) {
             </div>
           ) : null}
 
-          {graphData.interval === 'month' ? (
-            <span className="font-semibold italic">Click to view month</span>
-          ) : null}
-          {graphData.interval === 'day' ? (
-            <span className="font-semibold italic">Click to view day</span>
-          ) : null}
+          {['month', 'day'].includes(graphData.interval) && (
+            <>
+              <hr className="border-gray-600 dark:border-gray-800 my-1" />
+              <span className="text-gray-300 dark:text-gray-400 text-xs">
+                Click to view {graphData.interval}
+              </span>
+            </>
+          )}
         </aside>
       )
     }

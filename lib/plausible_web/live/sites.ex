@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Live.Sites do
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center justify-between">
         <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate shrink-0">
           {Teams.name(@current_team)}
           <.unstyled_link
@@ -154,11 +154,11 @@ defmodule PlausibleWeb.Live.Sites do
 
   def upgrade_nag_screen(assigns) do
     ~H"""
-    <div class="rounded-md bg-yellow-100 p-4">
+    <div class="rounded-md bg-yellow-100 dark:bg-yellow-900/40 p-5">
       <div class="flex">
         <div class="shrink-0">
           <svg
-            class="h-5 w-5 text-yellow-400"
+            class="size-5 mt-0.5 text-yellow-500"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
@@ -171,11 +171,11 @@ defmodule PlausibleWeb.Live.Sites do
             />
           </svg>
         </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-yellow-800">
+        <div class="ml-2">
+          <h3 class="font-medium text-gray-900 dark:text-gray-100">
             Payment required
           </h3>
-          <div class="mt-2 text-sm text-yellow-700">
+          <div class="mt-1 text-sm text-gray-900/80 dark:text-gray-100/60">
             <p>
               To access the sites you own, you need to subscribe to a monthly or yearly payment plan.
               <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}>
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       data-test-id="consolidated-view-card"
-      class="relative row-span-2 bg-white p-6 dark:bg-gray-800 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
+      class="relative row-span-2 bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
     >
       <.unstyled_link
         href={"/#{URI.encode_www_form(@consolidated_view.domain)}"}
@@ -281,10 +281,10 @@ defmodule PlausibleWeb.Live.Sites do
           class="flex flex-col gap-y-2 min-h-[254px] h-full text-center animate-pulse"
           data-test-id="consolidated-viw-stats-loading"
         >
-          <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+          <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
           <div class="flex-1 flex flex-col gap-y-2">
-            <div class="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-            <div class="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+            <div class="w-full h-full dark:bg-gray-750 bg-gray-100 rounded-md"></div>
+            <div class="w-full h-full dark:bg-gray-750 bg-gray-100 rounded-md"></div>
           </div>
         </div>
       </.unstyled_link>
@@ -328,7 +328,7 @@ defmodule PlausibleWeb.Live.Sites do
       data-domain={@site.domain}
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
-      <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-800 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+      <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
         <div class="w-full flex items-center justify-between gap-x-2.5">
           <.favicon domain={@site.domain} />
           <div class="flex-1 w-full truncate">
@@ -369,7 +369,7 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
-        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-800 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
             <div class="flex-1 w-full">
@@ -479,8 +479,8 @@ defmodule PlausibleWeb.Live.Sites do
       "flex flex-col gap-y-2 h-[122px] text-center animate-pulse",
       is_map(@hourly_stats) && " hidden"
     ]}>
-      <div class="flex-2 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-      <div class="flex-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+      <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
+      <div class="flex-1 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
     </div>
     <div :if={is_map(@hourly_stats)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
@@ -687,7 +687,7 @@ defmodule PlausibleWeb.Live.Sites do
             </.button_link>
             <.button_link
               href="#"
-              theme="bright"
+              theme="secondary"
               data-method="post"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
               x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/reject')"

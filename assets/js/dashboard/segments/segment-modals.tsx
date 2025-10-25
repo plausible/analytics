@@ -42,13 +42,13 @@ interface SegmentModalProps {
 const primaryNeutralButtonClassName = 'button !px-3'
 
 const primaryNegativeButtonClassName = classNames(
-  'button !px-3',
+  'button !px-3.5',
   'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
 )
 
 const secondaryButtonClassName = classNames(
-  'button !px-3',
-  'border !border-gray-300 dark:!border-gray-500 !text-gray-700 dark:!text-gray-300 !bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-850'
+  'button !px-3.5',
+  'border !border-gray-300 dark:!border-gray-700 !bg-white dark:!bg-gray-700 !text-gray-800 dark:!text-gray-100 hover:!text-gray-900 hover:!shadow-sm dark:hover:!bg-gray-600 dark:hover:!text-white'
 )
 
 const SegmentActionModal = ({
@@ -200,7 +200,9 @@ export const DeleteSegmentModal = ({
 }
 
 const FormTitle = ({ children }: { children?: ReactNode }) => (
-  <h1 className="text-xl font-bold dark:text-gray-100 mb-2">{children}</h1>
+  <h1 className="text-lg font-medium text-gray-900 dark:text-gray-100 leading-7 mb-8">
+    {children}
+  </h1>
 )
 
 const ButtonsRow = ({
@@ -210,7 +212,7 @@ const ButtonsRow = ({
   className?: string
   children?: ReactNode
 }) => (
-  <div className={classNames('mt-8 flex gap-x-4 items-center', className)}>
+  <div className={classNames('mt-8 flex gap-x-3 items-center', className)}>
     {children}
   </div>
 )
@@ -228,7 +230,7 @@ const SegmentNameInput = ({
     <>
       <label
         htmlFor="name"
-        className="block text-md font-medium text-gray-700 dark:text-gray-300"
+        className="block mb-1.5 text-sm font-medium dark:text-gray-100 text-gray-700 dark:text-gray-300"
       >
         Segment name
       </label>
@@ -238,7 +240,7 @@ const SegmentNameInput = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={namePlaceholder}
         id="name"
-        className="block mt-2 p-2 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+        className="block px-3.5 py-2.5 w-full text-sm dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
       />
     </>
   )
@@ -265,7 +267,7 @@ const SegmentTypeSelector = ({
   ]
 
   return (
-    <div className="mt-4 flex flex-col gap-y-4">
+    <div className="mt-6 flex flex-col gap-y-4">
       {options.map(({ type, name, description }) => (
         <div key={type}>
           <div className="flex">
@@ -275,14 +277,16 @@ const SegmentTypeSelector = ({
               type="radio"
               value=""
               onChange={() => onChange(type)}
-              className="mt-4 w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:border-gray-600"
+              className="mt-px size-4.5 cursor-pointer text-indigo-600 dark:bg-transparent border-gray-400 dark:border-gray-600 checked:border-indigo-600 dark:checked:border-white"
             />
             <label
               htmlFor={`segment-type-${type}`}
-              className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+              className="block ml-3 text-sm font-medium dark:text-gray-100 flex flex-col flex-inline"
             >
-              <div className="font-bold">{name}</div>
-              <div className="mt-1">{description}</div>
+              <div>{name}</div>
+              <div className="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+                {description}
+              </div>
             </label>
           </div>
         </div>
@@ -531,7 +535,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
             {data?.segment_data ? SEGMENT_TYPE_LABELS[data.type] : false}
           </Placeholder>
         </div>
-        <div className="my-4 border-b border-gray-300" />
+        <div className="my-4 border-b border-gray-300 dark:border-gray-700" />
         {!!data?.segment_data && (
           <>
             <FiltersInSegment segment_data={data.segment_data} />

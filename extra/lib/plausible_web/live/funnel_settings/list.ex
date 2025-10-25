@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
     <div>
       <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
         <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>
-          Add Funnel
+          Add funnel
         </.button>
       </.filter_bar>
 

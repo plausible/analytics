@@ -174,7 +174,7 @@ class FilterModal extends React.Component {
           Filter by {formatFilterGroup(this.props.modalType)}
         </h1>
 
-        <div className="mt-4 border-b border-gray-300"></div>
+        <div className="mt-4 border-b border-gray-300 dark:border-gray-700"></div>
         <main className="modal__content">
           <form
             className="flex flex-col"

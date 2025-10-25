@@ -32,9 +32,10 @@ const TabButtonText = ({
   active: boolean
 }) => (
   <span
-    className={classNames('truncate text-left', {
-      'hover:text-indigo-600 cursor-pointer': !active,
-      'text-indigo-700 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-700 dark:decoration-indigo-500':
+    className={classNames('truncate text-left transition-colors duration-150', {
+      'hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer':
+        !active,
+      'text-indigo-600 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-600 dark:decoration-indigo-500':
         active
     })}
   >

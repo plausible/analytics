@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Components.Layout do
     <% else %>
       <.settings_tab icon={@icon} text={@text} />
 
-      <div class="ml-6">
+      <div class="flex flex-col gap-0.5 ml-7">
         <.settings_tab
           :for={%{key: key, value: value} = opts <- @value}
           selected_fn={@selected_fn}
@@ -128,9 +128,9 @@ defmodule PlausibleWeb.Components.Layout do
       class={[
         "text-sm flex items-center px-2 py-2 leading-5 font-medium rounded-md outline-none focus:outline-none transition ease-in-out duration-150",
         @current_tab? &&
-          "text-gray-900 dark:text-gray-100 bg-gray-150 font-semibold dark:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-100 focus:bg-gray-200 dark:focus:bg-gray-800",
+          "text-gray-900 dark:text-gray-100 bg-gray-150 font-semibold dark:bg-gray-850 hover:text-gray-900 dark:hover:text-gray-100 focus:bg-gray-200 dark:focus:bg-gray-800",
         @value && not @current_tab? &&
-          "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 focus:text-gray-900 focus:bg-gray-50 dark:focus:text-gray-100 dark:focus:bg-gray-800",
+          "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-850 focus:text-gray-900 focus:bg-gray-50 dark:focus:text-gray-100 dark:focus:bg-gray-800",
         !@value && "text-gray-600 dark:text-gray-300"
       ]}
     >

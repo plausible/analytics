@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       conn = get(conn, "/#{site.domain}/settings/properties")
 
       resp = html_response(conn, 200)
-      assert resp =~ "Attach Custom Properties"
+      assert resp =~ "Attach custom properties"
 
       assert element_exists?(
                resp,
@@ -182,7 +182,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       lv = get_liveview(conn, site)
       html = lv |> element(~s/button[phx-click="add-prop"]/) |> render_click()
 
-      assert html =~ "Add Property for #{site.domain}"
+      assert html =~ "Add property for #{site.domain}"
 
       assert element_exists?(
                html,
