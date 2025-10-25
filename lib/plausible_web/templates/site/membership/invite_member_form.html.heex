@@ -4,7 +4,9 @@
   </:title>
 
   <:subtitle>
-    Enter their email and role, and we'll email them an invite to join <span class="font-bold">{@site.domain}</span> analytics. Invitations expire after 48 hours.
+    Enter their email and role, and we'll email them an invite to join
+    <span class="font-bold">{@site.domain}</span>
+    analytics. Invitations expire after 48 hours.
   </:subtitle>
 
   <.form :let={f} for={@conn} action={Routes.membership_path(@conn, :invite_member, @site.domain)}>

@@ -62,7 +62,6 @@
   --color-yellow-800: var(--color-amber-800);
   --color-yellow-900: var(--color-amber-900);
   --color-yellow-950: var(--color-amber-950);
-
   --color-green-50: var(--color-emerald-50);
   --color-green-100: var(--color-emerald-100);
   --color-green-200: var(--color-emerald-200);
@@ -89,10 +88,10 @@
   --color-gray-950: var(--color-zinc-950);
 
   /* Custom gray shades from config (override some slate values) */
-  --color-gray-150: rgb(236, 236, 238);
-  --color-gray-750: rgb(50, 50, 54);
-  --color-gray-825: rgb(35, 35, 38);
-  --color-gray-850: rgb(34, 34, 38);
+  --color-gray-150: rgb(236 236 238);
+  --color-gray-750: rgb(50 50 54);
+  --color-gray-825: rgb(35 35 38);
+  --color-gray-850: rgb(34 34 38);
 
   /* Set v3 default ring behavior */
   --default-ring-width: 2px;

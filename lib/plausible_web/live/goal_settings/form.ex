@@ -496,7 +496,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-value-tab={@tab_value}
       phx-target={@myself}
     >
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </a>
     """
   end

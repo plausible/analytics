@@ -142,7 +142,12 @@ defmodule PlausibleWeb.Components.Generic do
         <:tooltip_content>
           <span>Learn more</span>
         </:tooltip_content>
-        <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank" class="inline-block">
+        <a
+          href={"https://plausible.io/docs/#{@slug}"}
+          rel="noopener noreferrer"
+          target="_blank"
+          class="inline-block"
+        >
           <Heroicons.information_circle class="text-gray-400 dark:text-indigo-500 size-5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" />
         </a>
       </.tooltip>
