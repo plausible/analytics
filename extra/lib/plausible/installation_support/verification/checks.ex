@@ -11,11 +11,11 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
 
   @checks [
     Checks.Url,
-    Checks.InstallationV2,
-    Checks.InstallationV2CacheBust
+    Checks.VerifyInstallation,
+    Checks.VerifyInstallationCacheBust
   ]
 
-  @spec run(String.t(), String.t(), String.t(), Keyword.t()) :: :ok
+  @spec run(String.t(), String.t(), String.t(), Keyword.t()) :: {:ok, pid()} | State.t()
   def run(url, data_domain, installation_type, opts \\ []) do
     report_to = Keyword.get(opts, :report_to, self())
     async? = Keyword.get(opts, :async?, true)
@@ -65,8 +65,8 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
       {_, %{unhandled: true, browserless_issue: browserless_issue}} ->
         sentry_msg =
           if browserless_issue,
-            do: "Browserless failure in verification (v2)",
-            else: "Unhandled case for site verification (v2)"
+            do: "Browserless failure in verification",
+            else: "Unhandled case for site verification"
 
         Sentry.capture_message(sentry_msg,
           extra: %{
@@ -77,7 +77,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
         )
 
         Logger.warning(
-          "[VERIFICATION v2] Unhandled case (data_domain='#{data_domain}'): #{inspect(diagnostics)}"
+          "[VERIFICATION] Unhandled case (data_domain='#{data_domain}'): #{inspect(diagnostics)}"
         )
 
         :telemetry.execute(telemetry_event_unhandled(), %{})

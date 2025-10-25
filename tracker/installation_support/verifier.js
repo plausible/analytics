@@ -1,12 +1,12 @@
-/** @typedef {import('../test/support/types').VerifyV2Args} VerifyV2Args */
-/** @typedef {import('../test/support/types').VerifyV2Result} VerifyV2Result */
+/** @typedef {import('../test/support/types').VerifierArgs} VerifierArgs */
+/** @typedef {import('../test/support/types').VerifierResult} VerifierResult */
 import { initializeCookieConsentEngine } from './autoconsent-to-cookies'
 import { checkDisallowedByCSP } from './check-disallowed-by-csp'
 
 /**
  * Function that verifies if Plausible is installed correctly.
- * @param {VerifyV2Args}
- * @returns {Promise<VerifyV2Result>}
+ * @param {VerifierArgs}
+ * @returns {Promise<VerifierResult>}
  */
 
 const DEFAULT_TRACKER_SCRIPT_SELECTOR = 'script[src^="https://plausible.io/js"]'
@@ -24,7 +24,7 @@ async function verifyPlausibleInstallation(options) {
   }
 
   function log(message) {
-    if (debug) console.log('[VERIFICATION v2]', message)
+    if (debug) console.log('[VERIFICATION]', message)
   }
 
   const disallowedByCsp = checkDisallowedByCSP(responseHeaders, cspHostToCheck)

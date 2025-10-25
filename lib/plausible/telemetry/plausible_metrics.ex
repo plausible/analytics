@@ -168,22 +168,6 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         on_ee(
           do:
             counter(
-              metric_prefix ++ [:verification, :js_elixir_diff],
-              event_name:
-                Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = true)
-            )
-        ),
-        on_ee(
-          do:
-            counter(
-              metric_prefix ++ [:verification, :js_elixir_match],
-              event_name:
-                Plausible.InstallationSupport.Checks.Installation.telemetry_event(_diff = false)
-            )
-        ),
-        on_ee(
-          do:
-            counter(
               metric_prefix ++ [:detection, :handled],
               event_name: InstallationSupport.Detection.Checks.telemetry_event_handled()
             )

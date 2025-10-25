@@ -483,30 +483,21 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:domain/installation" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "static render - spinner determining installation type", %{
-      conn: conn,
-      site: site
-    } do
-      conn = get(conn, "/#{site.domain}/installation")
-
-      assert html_response(conn, 200) =~ "Determining installation type"
-    end
-  end
-
   describe "GET /:domain/settings/general" do
     setup [:create_user, :log_in, :create_site]
 
     setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
 
     test "shows settings form", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/settings/general")
+      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
 
-      assert resp =~ "Site timezone"
       assert resp =~ "Site domain"
+      assert resp =~ "Change domain"
+      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
+
+      assert resp =~ "Site timezone"
+
       assert resp =~ "Site installation"
     end
 
@@ -1858,104 +1849,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/#{site.domain}/settings/forget-imported")
 
       assert Repo.reload(job).state == "cancelled"
-    end
-  end
-
-  describe "domain change" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "shows domain change in the settings form", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
-      resp = html_response(conn, 200)
-
-      assert resp =~ "Site domain"
-      assert resp =~ "Change domain"
-      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
-    end
-
-    test "domain change form renders", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
-      resp = html_response(conn, 200)
-      assert resp =~ Routes.site_path(conn, :change_domain_submit, site.domain)
-
-      assert resp =~
-               "Once you change your domain, you <i>must</i>\n    update Plausible Installation on your site within 72 hours"
-    end
-
-    test "domain change form submission when no change is made", %{conn: conn, site: site} do
-      conn =
-        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => site.domain}
-        })
-
-      resp = html_response(conn, 200)
-      assert resp =~ "New domain must be different than the current one"
-    end
-
-    test "domain change form submission to an existing domain", %{conn: conn, site: site} do
-      another_site = insert(:site)
-
-      conn =
-        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => another_site.domain}
-        })
-
-      resp = html_response(conn, 200)
-      assert resp =~ "This domain cannot be registered"
-
-      site = Repo.reload!(site)
-      assert site.domain != another_site.domain
-      assert is_nil(site.domain_changed_from)
-    end
-
-    test "domain change form submission to a domain in transition period", %{
-      conn: conn,
-      site: site
-    } do
-      another_site = insert(:site, domain_changed_from: "foo.example.com")
-
-      conn =
-        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => "foo.example.com"}
-        })
-
-      resp = html_response(conn, 200)
-      assert resp =~ "This domain cannot be registered"
-
-      site = Repo.reload!(site)
-      assert site.domain != another_site.domain
-      assert is_nil(site.domain_changed_from)
-    end
-
-    test "domain change successful form submission redirects to installation", %{
-      conn: conn,
-      site: site
-    } do
-      original_domain = site.domain
-      new_domain = "â-example.com"
-
-      conn =
-        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => new_domain}
-        })
-
-      assert redirected_to(conn) ==
-               Routes.site_path(conn, :installation, new_domain,
-                 flow: PlausibleWeb.Flows.domain_change()
-               )
-
-      site = Repo.reload!(site)
-      assert site.domain == new_domain
-      assert site.domain_changed_from == original_domain
-    end
-
-    test "change_domain redirects to v2 when scriptv2 flag is enabled", %{conn: conn, site: site} do
-      FunWithFlags.enable(:scriptv2, for_actor: site)
-
-      conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
-
-      assert redirected_to(conn) ==
-               Routes.site_path(conn, :change_domain_v2, site.domain)
     end
   end
 

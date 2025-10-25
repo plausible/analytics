@@ -17,7 +17,7 @@ export type ScriptConfig = {
   endpoint: string
 } & Partial<Options>
 
-export type VerifyV2Args = {
+export type VerifierArgs = {
   debug: boolean
   responseHeaders: Record<string, string>
   timeoutMs: number
@@ -43,7 +43,7 @@ type ConsentResult =
       engineLifecycle: string
     }
 
-export type VerifyV2Result = {
+export type VerifierResult = {
   data:
     | {
         completed: true

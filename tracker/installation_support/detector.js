@@ -1,4 +1,4 @@
-import { waitForPlausibleFunction } from './plausible-function-check'
+import { waitForPlausibleFunction } from './wait-for-plausible-function'
 import { checkWordPress } from './check-wordpress'
 import { checkGTM } from './check-gtm'
 import { checkNPM } from './check-npm'

@@ -1,6 +1,6 @@
-defmodule PlausibleWeb.Live.InstallationV2.Instructions do
+defmodule PlausibleWeb.Live.Installation.Instructions do
   @moduledoc """
-  Instruction forms and components for InstallationV2 module
+  Instruction forms and components for the Installation module
   """
   use PlausibleWeb, :component
 

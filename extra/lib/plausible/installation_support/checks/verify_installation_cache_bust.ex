@@ -1,8 +1,8 @@
-defmodule Plausible.InstallationSupport.Checks.InstallationV2CacheBust do
+defmodule Plausible.InstallationSupport.Checks.VerifyInstallationCacheBust do
   @moduledoc """
   If the output of previous checks can not be interpreted as successful,
   as a last resort, we try to bust the cache of the site under test by adding a query parameter to the URL,
-  and running InstallationV2 again.
+  and running VerifyInstallation again.
 
   Whatever the result from the rerun, that is what we use to interpret the installation.
 
@@ -38,7 +38,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2CacheBust do
         state
         |> struct!(diagnostics: reset_diagnostics)
         |> struct!(url: InstallationSupport.URL.bust_url(url))
-        |> InstallationSupport.Checks.InstallationV2.perform()
+        |> InstallationSupport.Checks.VerifyInstallation.perform()
         |> put_diagnostics(diagnostics_are_from_cache_bust: true)
     end
   end

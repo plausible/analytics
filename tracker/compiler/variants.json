@@ -38,15 +38,9 @@
       "globals": {}
     },
     {
-      "name": "verifier-v1.js",
-      "entry_point": "installation_support/verifier-v1.js",
-      "output_path": "priv/tracker/installation_support/verifier-v1.js",
-      "globals": {}
-    },
-    {
-      "name": "verifier-v2.js",
-      "entry_point": "installation_support/verifier-v2.js",
-      "output_path": "priv/tracker/installation_support/verifier-v2.js",
+      "name": "verifier.js",
+      "entry_point": "installation_support/verifier.js",
+      "output_path": "priv/tracker/installation_support/verifier.js",
       "globals": {}
     }
   ],
