@@ -361,8 +361,19 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <div class="mt-16 -mb-16 text-center">
       Any other questions?
-      <a class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" href={contact_link()}>Contact us</a>
-      or see <a class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" href={billing_faq_link()}>billing FAQ</a>
+      <a
+        class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150"
+        href={contact_link()}
+      >
+        Contact us
+      </a>
+      or see
+      <a
+        class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150"
+        href={billing_faq_link()}
+      >
+        billing FAQ
+      </a>
     </div>
     """
   end
