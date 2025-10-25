@@ -172,9 +172,7 @@ export default function GraphTooltip(graphData, metric, query) {
                   ></div>
                   <span>{tooltipData.label}</span>
                 </span>
-                <span className="font-bold">
-                  {tooltipData.formattedValue}
-                </span>
+                <span className="font-bold">{tooltipData.formattedValue}</span>
               </div>
 
               {tooltipData.comparisonLabel ? (

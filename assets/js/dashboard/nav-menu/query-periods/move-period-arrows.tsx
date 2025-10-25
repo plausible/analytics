@@ -37,12 +37,20 @@ const ArrowKeybind = ({
   )
 }
 
-function ArrowIcon({ direction, disabled = false }: { direction: 'left' | 'right'; disabled?: boolean }) {
+function ArrowIcon({
+  direction,
+  disabled = false
+}: {
+  direction: 'left' | 'right'
+  disabled?: boolean
+}) {
   return (
     <svg
       className={classNames(
-        "feather size-4",
-        disabled ? "text-gray-400 dark:text-gray-600" : "text-gray-700 dark:text-gray-300"
+        'feather size-4',
+        disabled
+          ? 'text-gray-400 dark:text-gray-600'
+          : 'text-gray-700 dark:text-gray-300'
       )}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
@@ -77,7 +85,8 @@ export function MovePeriodArrows({ className }: { className?: string }) {
   const canGoForward =
     getDateForShiftedPeriod({ site, query, direction: 1 }) !== null
 
-  const sharedClass = 'flex items-center px-1 sm:px-2 dark:text-gray-100 transition-colors duration-150'
+  const sharedClass =
+    'flex items-center px-1 sm:px-2 dark:text-gray-100 transition-colors duration-150'
   const enabledClass = 'hover:bg-gray-100 dark:hover:bg-gray-700'
   const disabledClass = 'bg-gray-200 dark:bg-gray-850 cursor-not-allowed'
 
