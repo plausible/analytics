@@ -74,7 +74,8 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   # To support browserless API being unavailable or overloaded, we retry the endpoint call if it doesn't return a successful response
   @max_retries 1
 
-  # We define a timeout for the Browserless endpoint call to avoid waiting too long for a response
+  # We rely on Req's `:receive_timeout` to avoid waiting too long for a response. We also pass the same timeout (+ 1s) via a query
+  # param to the Browserless /function API to not waste resources.
   @req_timeout 15_000
 
   # This timeout determines how long we wait for window.plausible to be initialized on the page, including sending the test event
@@ -107,6 +108,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
             debug: Application.get_env(:plausible, :environment) == "dev"
           }
         }),
+      params: %{timeout: @req_timeout + 1000},
       retry: fn _request, response_or_error ->
         case response_or_error do
           %{status: status} -> Map.get(BrowserlessConfig.retry_policy(), status, false)
