@@ -12,9 +12,8 @@ defmodule Plausible.InstallationSupport.Checks.Url do
   def report_progress_as, do: "We're trying to reach your website"
 
   @impl true
-  @spec perform(Plausible.InstallationSupport.State.t()) ::
-          Plausible.InstallationSupport.State.t()
-  def perform(%State{url: url} = state) when is_binary(url) do
+  @spec perform(State.t(), Keyword.t()) :: State.t()
+  def perform(%State{url: url} = state, _opts) when is_binary(url) do
     with {:ok, %URI{scheme: scheme} = uri} when scheme in ["http", "https"] <- URI.new(url),
          :ok <- check_domain(uri.host) do
       stripped_url = URI.to_string(%URI{uri | query: nil, fragment: nil})
@@ -32,7 +31,7 @@ defmodule Plausible.InstallationSupport.Checks.Url do
     end
   end
 
-  def perform(%State{data_domain: domain} = state) when is_binary(domain) do
+  def perform(%State{data_domain: domain} = state, _opts) when is_binary(domain) do
     case find_working_url(domain) do
       {:ok, working_url} ->
         %State{state | url: working_url}

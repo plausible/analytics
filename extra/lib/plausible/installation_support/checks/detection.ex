@@ -67,7 +67,7 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
   def report_progress_as, do: "We're checking your site to recommend the best installation method"
 
   @impl true
-  def perform(%State{url: url, assigns: %{detect_v1?: detect_v1?}} = state) do
+  def perform(%State{url: url, assigns: %{detect_v1?: detect_v1?}} = state, _opts) do
     opts =
       [
         headers: %{content_type: "application/json"},

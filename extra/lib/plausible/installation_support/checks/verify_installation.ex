@@ -89,7 +89,7 @@ defmodule Plausible.InstallationSupport.Checks.VerifyInstallation do
   def report_progress_as, do: "We're verifying that your visitors are being counted correctly"
 
   @impl true
-  def perform(%State{url: url} = state) do
+  def perform(%State{url: url} = state, _opts) do
     opts = [
       headers: %{content_type: "application/json"},
       body:

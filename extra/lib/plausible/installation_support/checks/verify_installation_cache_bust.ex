@@ -19,7 +19,7 @@ defmodule Plausible.InstallationSupport.Checks.VerifyInstallationCacheBust do
   def report_progress_as, do: "We're verifying that your visitors are being counted correctly"
 
   @impl true
-  def perform(%State{url: url} = state) do
+  def perform(%State{url: url} = state, _opts) do
     case InstallationSupport.Verification.Checks.interpret_diagnostics(state, telemetry?: false) do
       %InstallationSupport.Result{ok?: true} ->
         state
@@ -35,7 +35,7 @@ defmodule Plausible.InstallationSupport.Checks.VerifyInstallationCacheBust do
         state
         |> struct!(diagnostics: reset_diagnostics)
         |> struct!(url: InstallationSupport.URL.bust_url(url))
-        |> InstallationSupport.Checks.VerifyInstallation.perform()
+        |> InstallationSupport.Checks.VerifyInstallation.perform([])
         |> put_diagnostics(diagnostics_are_from_cache_bust: true)
     end
   end

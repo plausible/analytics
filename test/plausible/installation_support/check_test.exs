@@ -19,7 +19,7 @@ defmodule Plausible.InstallationSupport.CheckTest do
         def report_progress_as, do: "Faulty check"
 
         @impl true
-        def perform(_), do: raise("boom")
+        def perform(_, _), do: raise("boom")
       end
 
       state = %State{
@@ -53,7 +53,7 @@ defmodule Plausible.InstallationSupport.CheckTest do
         def report_progress_as, do: "Faulty check"
 
         @impl true
-        def perform(_), do: :erlang.throw(:boom)
+        def perform(_, _), do: :erlang.throw(:boom)
       end
 
       state = %State{
@@ -83,7 +83,7 @@ defmodule Plausible.InstallationSupport.CheckTest do
         def report_progress_as, do: "Faulty check"
 
         @impl true
-        def perform(_), do: :timer.sleep(500)
+        def perform(_, _), do: :timer.sleep(500)
       end
 
       state = %State{
