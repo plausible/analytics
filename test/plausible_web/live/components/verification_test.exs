@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           diagnostics: %Verification.Diagnostics{
             plausible_is_on_window: false,
             plausible_is_initialized: false,
-            service_error: :domain_not_found
+            service_error: %{code: :domain_not_found}
           }
         })
 

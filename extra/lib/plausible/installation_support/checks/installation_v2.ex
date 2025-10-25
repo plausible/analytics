@@ -74,8 +74,9 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   # To support browserless API being unavailable or overloaded, we retry the endpoint call if it doesn't return a successful response
   @max_retries 1
 
-  # We define a timeout for the browserless endpoint call to avoid waiting too long for a response
-  @endpoint_timeout_ms 15_000
+  # We rely on Req's `:receive_timeout` to avoid waiting too long for a response. We also pass the same timeout (+ 1s) via a query
+  # param to the Browserless /function API to not waste resources.
+  @req_timeout 15_000
 
   # This timeout determines how long we wait for window.plausible to be initialized on the page, including sending the test event
   @plausible_window_check_timeout_ms 4_000
@@ -107,11 +108,17 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
             debug: Application.get_env(:plausible, :environment) == "dev"
           }
         }),
-      params: %{timeout: @endpoint_timeout_ms},
-      retry: BrowserlessConfig.retry_browserless_request([429, 408, 400]),
+      params: %{timeout: @req_timeout + 1000},
+      retry: fn _request, response_or_error ->
+        case response_or_error do
+          %{status: status} -> Map.get(BrowserlessConfig.retry_policy(), status, false)
+          %Req.TransportError{reason: :timeout} -> {:delay, 500}
+          _ -> false
+        end
+      end,
       retry_log_level: :warning,
       max_retries: @max_retries,
-      receive_timeout: @endpoint_timeout_ms + 2_000
+      receive_timeout: @req_timeout
     ]
 
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
@@ -121,10 +128,13 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
       {:ok, %{body: body, status: status}} ->
         handle_browserless_response(state, body, status)
 
+      {:error, %Req.TransportError{reason: :timeout}} ->
+        put_diagnostics(state, service_error: %{code: :browserless_timeout})
+
       {:error, %{reason: reason}} ->
         Logger.warning(warning_message("Browserless request error: #{inspect(reason)}", state))
 
-        put_diagnostics(state, service_error: reason)
+        put_diagnostics(state, service_error: %{code: :req_error, extra: reason})
     end
   end
 
@@ -146,7 +156,9 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
         )
       )
 
-      put_diagnostics(state, service_error: data["error"]["message"])
+      put_diagnostics(state,
+        service_error: %{code: :browserless_client_error, extra: data["error"]["message"]}
+      )
     end
   end
 
@@ -156,7 +168,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
     warning_message("#{error}; body: #{inspect(body)}", state)
     |> Logger.warning()
 
-    put_diagnostics(state, service_error: error)
+    put_diagnostics(state, service_error: %{code: :bad_browserless_response, extra: status})
   end
 
   defp warning_message(message, state) do
