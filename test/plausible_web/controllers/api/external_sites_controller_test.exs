@@ -1,4 +1,25 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
+  @moduledoc """
+  Tests for the following endpoints
+
+  GET /api/v1/sites/teams
+
+  GET /api/v1/sites/guests
+  PUT /api/v1/sites/guests
+  DELETE /api/v1/sites/guests
+
+  PUT /api/v1/sites/shared-links
+
+  GET /api/v1/custom-props
+  PUT /api/v1/sites/custom-props
+  DELETE /api/v1/sites/custom-props/:property
+
+  GET /api/v1/goals
+  PUT /api/v1/sites/goals
+  DELETE /api/v1/sites/goals/:goal_id
+
+  Site CRUD endpoints tests are in ExternalSitesControllerSitesCrudApiTest
+  """
   use Plausible
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
@@ -101,23 +122,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                    "after" => nil,
                    "limit" => 100
                  }
-               }
-      end
-    end
-
-    describe "POST /api/v1/sites" do
-      test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
-        for _ <- 1..10, do: new_site(owner: user)
-
-        conn =
-          post(conn, "/api/v1/sites", %{
-            "domain" => "some-site.domain",
-            "timezone" => "Europe/Tallinn"
-          })
-
-        assert json_response(conn, 402) == %{
-                 "error" =>
-                   "Your account has reached the limit of 10 sites. To unlock more sites, please upgrade your subscription."
                }
       end
     end
@@ -1232,20 +1236,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
     end
 
-    describe "GET /api/v1/sites/:site_id" do
-      setup :create_site
-
-      @tag :capture_log
-      test "is 401 when user is not a member of the site", %{conn: conn} do
-        site = new_site()
-
-        conn = get(conn, "/api/v1/sites/" <> site.domain)
-
-        assert %{"error" => error} = json_response(conn, 401)
-        assert error =~ "Invalid API key"
-      end
-    end
-
     describe "GET /api/v1/custom-props" do
       setup :create_site
 
@@ -1499,27 +1489,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert %{"error" => error} = json_response(conn, 401)
         assert error =~ "Invalid API key"
-      end
-    end
-
-    describe "PUT /api/v1/sites/:site_id" do
-      setup :create_site
-
-      setup %{user: user} do
-        subscribe_to_enterprise_plan(user,
-          features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
-        )
-
-        :ok
-      end
-
-      test "domain parameter is required", %{conn: conn, site: site} do
-        conn = put(conn, "/api/v1/sites/#{site.domain}", %{})
-
-        assert json_response(conn, 400) == %{
-                 "error" =>
-                   "Payload must contain at least one of the parameters 'domain', 'tracker_script_configuration'"
-               }
       end
     end
   end
