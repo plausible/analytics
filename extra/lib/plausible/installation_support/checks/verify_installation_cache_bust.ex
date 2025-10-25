@@ -16,9 +16,6 @@ defmodule Plausible.InstallationSupport.Checks.VerifyInstallationCacheBust do
   use Plausible.InstallationSupport.Check
 
   @impl true
-  def timeout_ms, do: 20_000
-
-  @impl true
   def report_progress_as, do: "We're verifying that your visitors are being counted correctly"
 
   @impl true

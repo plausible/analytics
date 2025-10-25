@@ -86,9 +86,6 @@ defmodule Plausible.InstallationSupport.Checks.VerifyInstallation do
   @timeout_between_attempts_ms 500
 
   @impl true
-  def timeout_ms, do: 20_000
-
-  @impl true
   def report_progress_as, do: "We're verifying that your visitors are being counted correctly"
 
   @impl true

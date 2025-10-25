@@ -10,9 +10,9 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
   require Logger
 
   @checks [
-    Checks.Url,
-    Checks.VerifyInstallation,
-    Checks.VerifyInstallationCacheBust
+    {Checks.Url, []},
+    {Checks.VerifyInstallation, [timeout: 20_000]},
+    {Checks.VerifyInstallationCacheBust, [timeout: 20_000]}
   ]
 
   @spec run(String.t(), String.t(), String.t(), Keyword.t()) :: {:ok, pid()} | State.t()

@@ -11,8 +11,8 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
   require Logger
 
   @checks [
-    Checks.Url,
-    Checks.Detection
+    {Checks.Url, []},
+    {Checks.Detection, [timeout: 6000]}
   ]
 
   def run(url, data_domain, opts \\ []) do
