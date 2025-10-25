@@ -52,29 +52,41 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def site_settings_sidebar(conn) do
+    regular_site? = Plausible.Sites.regular?(conn.assigns.site)
+
     [
       %{key: "General", value: "general", icon: :rocket_launch},
-      %{key: "People", value: "people", icon: :users},
-      %{key: "Visibility", value: "visibility", icon: :eye},
+      if regular_site? do
+        %{key: "People", value: "people", icon: :users}
+      end,
+      if regular_site? do
+        %{key: "Visibility", value: "visibility", icon: :eye}
+      end,
       %{key: "Goals", value: "goals", icon: :check_circle},
       on_ee do
-        %{key: "Funnels", value: "funnels", icon: :funnel}
+        if regular_site? do
+          %{key: "Funnels", value: "funnels", icon: :funnel}
+        end
       end,
       %{key: "Custom properties", value: "properties", icon: :document_text},
       %{key: "Integrations", value: "integrations", icon: :puzzle_piece},
-      %{key: "Imports & exports", value: "imports-exports", icon: :arrow_down_tray},
-      %{
-        key: "Shields",
-        icon: :shield_exclamation,
-        value: [
-          %{key: "IP addresses", value: "shields/ip_addresses"},
-          %{key: "Countries", value: "shields/countries"},
-          %{key: "Pages", value: "shields/pages"},
-          %{key: "Hostnames", value: "shields/hostnames"}
-        ]
-      },
+      if regular_site? do
+        %{key: "Imports & exports", value: "imports-exports", icon: :arrow_down_tray}
+      end,
+      if regular_site? do
+        %{
+          key: "Shields",
+          icon: :shield_exclamation,
+          value: [
+            %{key: "IP addresses", value: "shields/ip_addresses"},
+            %{key: "Countries", value: "shields/countries"},
+            %{key: "Pages", value: "shields/pages"},
+            %{key: "Hostnames", value: "shields/hostnames"}
+          ]
+        }
+      end,
       %{key: "Email reports", value: "email-reports", icon: :envelope},
-      if conn.assigns[:site_role] in [:owner, :admin] do
+      if regular_site? and conn.assigns[:site_role] in [:owner, :admin] do
         %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]

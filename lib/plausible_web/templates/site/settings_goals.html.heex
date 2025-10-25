@@ -13,7 +13,7 @@
       <p>
         Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
       </p>
-      <p :if={ee?()}>
+      <p :if={ee?() and Plausible.Sites.regular?(@site)} data-test-id="setup-funnels-cta">
         You can also
         <.styled_link href={Routes.site_path(@conn, :settings_funnels, @site.domain)}>
           compose goals into funnels.
