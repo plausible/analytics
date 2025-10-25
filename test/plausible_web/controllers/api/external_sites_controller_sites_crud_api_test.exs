@@ -740,7 +740,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
       end
 
       @tag :capture_log
-      test "is 404 when user is not a member of the site", %{conn: conn} do
+      test "is 401 when user is not a member of the site", %{conn: conn} do
         site = new_site()
 
         conn = get(conn, "/api/v1/sites/" <> site.domain)
