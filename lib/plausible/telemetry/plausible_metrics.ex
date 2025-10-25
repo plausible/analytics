@@ -277,6 +277,15 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         measurement: :duration
       ),
       distribution(
+        metric_prefix ++ [:persistor, :remote, :decode, :duration, :millisecond],
+        event_name: Persistor.Remote.telemetry_decode_duration(),
+        reporter_options: [
+          buckets: [1, 10, 25, 50, 75, 100, 250, 350, 500, 750, 1_000, 5_000, 10_000, 30_000]
+        ],
+        unit: {:native, :millisecond},
+        measurement: :duration
+      ),
+      distribution(
         metric_prefix ++ [:persistor, :remote, :request, :duration, :millisecond],
         event_name: Persistor.TelemetryHandler.request_event(),
         reporter_options: [
