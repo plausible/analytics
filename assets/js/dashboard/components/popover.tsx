@@ -32,7 +32,8 @@ const panel = {
 
 const toggleButton = {
   classNames: {
-    rounded: 'flex items-center rounded text-sm leading-tight h-9 transition-all duration-150',
+    rounded:
+      'flex items-center rounded text-sm leading-tight h-9 transition-all duration-150',
     shadow:
       'bg-white dark:bg-gray-750 shadow-sm text-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
     ghost:

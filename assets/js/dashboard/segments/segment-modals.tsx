@@ -200,7 +200,9 @@ export const DeleteSegmentModal = ({
 }
 
 const FormTitle = ({ children }: { children?: ReactNode }) => (
-  <h1 className="text-lg font-medium text-gray-900 dark:text-gray-100 leading-7 mb-8">{children}</h1>
+  <h1 className="text-lg font-medium text-gray-900 dark:text-gray-100 leading-7 mb-8">
+    {children}
+  </h1>
 )
 
 const ButtonsRow = ({
@@ -282,7 +284,9 @@ const SegmentTypeSelector = ({
               className="block ml-3 text-sm font-medium dark:text-gray-100 flex flex-col flex-inline"
             >
               <div>{name}</div>
-              <div className="text-gray-500 dark:text-gray-400 mb-2 text-sm">{description}</div>
+              <div className="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+                {description}
+              </div>
             </label>
           </div>
         </div>

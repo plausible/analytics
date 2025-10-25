@@ -35,10 +35,11 @@ export function FeatureSetupNotice({
 
   function renderCallToAction() {
     return (
-      <a href={callToAction.link} className="flex items-center gap-x-1.5 ml-2 sm:ml-4 button px-2 sm:px-4">
-        <p className="text-xs sm:text-sm font-medium">
-          {callToAction.action}
-        </p>
+      <a
+        href={callToAction.link}
+        className="flex items-center gap-x-1.5 ml-2 sm:ml-4 button px-2 sm:px-4"
+      >
+        <p className="text-xs sm:text-sm font-medium">{callToAction.action}</p>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

@@ -82,8 +82,9 @@ function ReferrerDrilldownModal() {
 
   const renderIcon = useCallback((listItem) => {
     const sourceName = listItem.name.toLowerCase()
-    const needsWhiteBg = sourceName.includes('github') || sourceName.includes('chatgpt.com')
-    
+    const needsWhiteBg =
+      sourceName.includes('github') || sourceName.includes('chatgpt.com')
+
     return (
       <img
         alt=""

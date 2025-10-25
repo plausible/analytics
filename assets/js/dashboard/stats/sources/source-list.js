@@ -64,8 +64,9 @@ function AllSources({ afterFetchData }) {
 
   function renderIcon(listItem) {
     const sourceName = listItem.name.toLowerCase()
-    const needsWhiteBg = sourceName.includes('github') || sourceName.includes('chatgpt.com')
-    
+    const needsWhiteBg =
+      sourceName.includes('github') || sourceName.includes('chatgpt.com')
+
     return (
       <img
         alt=""
