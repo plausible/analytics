@@ -94,21 +94,16 @@ defmodule Plausible.Ingestion.Persistor.Remote do
   end
 
   defp decode_payload(payload) do
-    Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
-      telemetry_decode_duration(),
-      fn ->
-        case Base.decode64(payload, padding: false) do
-          {:ok, data} ->
-            event_data = :erlang.binary_to_term(data)
-            event = struct(Plausible.ClickhouseEventV2, event_data)
+    case Base.decode64(payload, padding: false) do
+      {:ok, data} ->
+        event_data = :erlang.binary_to_term(data)
+        event = struct(Plausible.ClickhouseEventV2, event_data)
 
-            {:ok, event}
+        {:ok, event}
 
-          _ ->
-            {:error, :invalid_web_encoding}
-        end
-      end
-    )
+      _ ->
+        {:error, :invalid_web_encoding}
+    end
   catch
     _, _ ->
       {:error, :invalid_payload}
