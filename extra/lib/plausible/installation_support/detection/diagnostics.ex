@@ -61,7 +61,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
 
   def interpret(%__MODULE__{service_error: %{code: code}}, _url)
       when code in [:domain_not_found, :invalid_url] do
-    failure(:client_issue)
+    failure(:customer_website_issue)
   end
 
   def interpret(%__MODULE__{service_error: %{code: code}}, _url)
@@ -74,9 +74,14 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
         _url
       ) do
     cond do
-      String.contains?(extra, "net::") -> failure(:client_issue)
-      String.contains?(String.downcase(extra), "execution context") -> failure(:client_issue)
-      true -> failure(:unknown_issue)
+      String.contains?(extra, "net::") ->
+        failure(:customer_website_issue)
+
+      String.contains?(String.downcase(extra), "execution context") ->
+        failure(:customer_website_issue)
+
+      true ->
+        failure(:unknown_issue)
     end
   end
 

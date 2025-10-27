@@ -127,7 +127,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksTest do
         assert telemetry_event == Checks.telemetry_event_success()
       end
 
-      test "domain not found -> client issue" do
+      test "domain not found -> customer website issue" do
         stub_lookup_a_records(@expected_domain, [])
 
         detection_counter =
@@ -146,7 +146,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksTest do
 
         assert detection_counter
 
-        assert log =~ "[DETECTION] Failed due to a client issue"
+        assert log =~ "[DETECTION] Failed due to an issue with the customer website"
         assert log =~ "service_error: %{code: :domain_not_found}"
 
         assert_receive {:telemetry_event, telemetry_event}
@@ -154,7 +154,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksTest do
       end
 
       for msg <- ["Execution context destroyed", "net::ERR_CONNECTION_REFUSED"] do
-        test "failure due to a known :browserless_client_error (#{msg}) -> client issue" do
+        test "failure due to a known :browserless_client_error (#{msg}) -> customer website issue" do
           stub_lookup_a_records(@expected_domain)
 
           detection_stub =
@@ -167,7 +167,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksTest do
 
           log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
 
-          assert log =~ "[DETECTION] Failed due to a client issue"
+          assert log =~ "[DETECTION] Failed due to an issue with the customer website"
           assert log =~ "code: :browserless_client_error"
           assert log =~ ~s|extra: "#{unquote(msg)}"|
 

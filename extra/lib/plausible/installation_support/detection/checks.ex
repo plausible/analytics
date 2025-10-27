@@ -52,8 +52,8 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
         %{ok?: true} ->
           {false, false, nil}
 
-        %{data: %{failure: :client_issue}} ->
-          {true, false, "Failed due to a client issue"}
+        %{data: %{failure: :customer_website_issue}} ->
+          {true, false, "Failed due to an issue with the customer website"}
 
         %{data: %{failure: :browserless_issue}} ->
           {true, true, "Failed due to a Browserless issue"}
