@@ -100,12 +100,6 @@ defmodule Plausible.ConsolidatedView do
     end
   end
 
-  @spec change_timezone(Site.t() | Ecto.Changeset.t(), String.t()) ::
-          Ecto.Changeset.t() | Site.t()
-  def change_timezone(site_or_changeset, timezone) do
-    Ecto.Changeset.change(site_or_changeset, timezone: timezone)
-  end
-
   @spec can_manage?(User.t(), Team.t()) :: boolean()
   def can_manage?(user, team) do
     case Plausible.Teams.Memberships.team_role(team, user) do
@@ -115,6 +109,10 @@ defmodule Plausible.ConsolidatedView do
       _ ->
         false
     end
+  end
+
+  defp change_timezone(site_or_changeset, timezone) do
+    Ecto.Changeset.change(site_or_changeset, timezone: timezone)
   end
 
   defp bump_updated_at(struct_or_changeset) do
@@ -128,9 +126,9 @@ defmodule Plausible.ConsolidatedView do
           team
           |> Site.new_for_team(%{
             consolidated: true,
-            domain: make_id(team),
-            timezone: majority_sites_timezone(team)
+            domain: make_id(team)
           })
+          |> change_timezone(majority_sites_timezone(team))
           |> change_stats_dates(team)
           |> Repo.insert()
 
