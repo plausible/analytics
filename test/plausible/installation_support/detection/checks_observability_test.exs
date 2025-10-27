@@ -241,23 +241,23 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
       assert_receive {:telemetry_event, telemetry_event}
       assert telemetry_event == Checks.telemetry_event_failure()
     end
-  end
 
-  defp json_response_detection_stub(js_data) do
-    fn conn ->
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+    defp json_response_detection_stub(js_data) do
+      fn conn ->
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+      end
     end
-  end
 
-  defp run_checks(detection_stub) do
-    Req.Test.stub(Plausible.InstallationSupport.Checks.Detection, detection_stub)
+    defp run_checks(detection_stub) do
+      Req.Test.stub(Plausible.InstallationSupport.Checks.Detection, detection_stub)
 
-    Checks.run(@working_url, @expected_domain,
-      report_to: nil,
-      async?: false,
-      slowdown: 0
-    )
+      Checks.run(@working_url, @expected_domain,
+        report_to: nil,
+        async?: false,
+        slowdown: 0
+      )
+    end
   end
 end

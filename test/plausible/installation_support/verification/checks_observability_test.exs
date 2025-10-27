@@ -161,28 +161,28 @@ defmodule Plausible.InstallationSupport.Verification.ChecksObservabilityTest do
       assert [sentry_event] = Sentry.Test.pop_sentry_reports()
       assert sentry_event.message.formatted == "Browserless failure in verification"
     end
-  end
 
-  defp json_response_verification_stub(js_data) do
-    fn conn ->
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+    defp json_response_verification_stub(js_data) do
+      fn conn ->
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(200, Jason.encode!(%{"data" => js_data}))
+      end
     end
-  end
 
-  defp run_checks(verification_stub) do
-    stub_lookup_a_records(@expected_domain)
-    stub_verification_result(verification_stub)
+    defp run_checks(verification_stub) do
+      stub_lookup_a_records(@expected_domain)
+      stub_verification_result(verification_stub)
 
-    Checks.run(@url_to_verify, @expected_domain, "manual",
-      report_to: nil,
-      async?: false,
-      slowdown: 0
-    )
-  end
+      Checks.run(@url_to_verify, @expected_domain, "manual",
+        report_to: nil,
+        async?: false,
+        slowdown: 0
+      )
+    end
 
-  defp stub_verification_result(f) do
-    Req.Test.stub(Plausible.InstallationSupport.Checks.VerifyInstallation, f)
+    defp stub_verification_result(f) do
+      Req.Test.stub(Plausible.InstallationSupport.Checks.VerifyInstallation, f)
+    end
   end
 end
