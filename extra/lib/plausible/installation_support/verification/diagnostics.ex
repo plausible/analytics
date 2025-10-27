@@ -237,7 +237,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                })
 
   def interpret(%__MODULE__{service_error: %{code: code}}, _expected_domain, _url)
-      when code in [:bad_browserless_response, :browserless_timeout] do
+      when code in [:bad_browserless_response, :browserless_timeout, :internal_check_timeout] do
     unhandled_error(@error_browserless_temporary, browserless_issue: true)
   end
 

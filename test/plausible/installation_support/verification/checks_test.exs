@@ -620,6 +620,33 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         assert_receive {:telemetry_event, telemetry_event}
         assert telemetry_event == Checks.telemetry_event_unhandled()
       end
+
+      test "internal_check_timeout is considered unhandled" do
+        verification_stub = fn _conn ->
+          # times out
+          Process.sleep(1000)
+        end
+
+        stub_lookup_a_records(@expected_domain)
+        stub_verification_result(verification_stub)
+
+        state =
+          Checks.run(@url_to_verify, @expected_domain, "manual",
+            verify_installation_check_timeout: 100,
+            report_to: nil,
+            async?: false,
+            slowdown: 0
+          )
+
+        log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
+
+        assert log =~ "[VERIFICATION] Unhandled case (data_domain='#{@expected_domain}')"
+        assert log =~ "code: :internal_check_timeout"
+        assert log =~ ~s|extra: "VerifyInstallation timed out after 100ms"|
+
+        assert_receive {:telemetry_event, telemetry_event}
+        assert telemetry_event == Checks.telemetry_event_unhandled()
+      end
     end
 
     defp json_response_verification_stub(js_data) do

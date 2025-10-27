@@ -9,14 +9,17 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
 
   require Logger
 
-  @checks [
-    {Checks.Url, []},
-    {Checks.VerifyInstallation, [timeout: 20_000]},
-    {Checks.VerifyInstallationCacheBust, [timeout: 20_000]}
-  ]
+  @verify_installation_check_timeout 20_000
 
   @spec run(String.t(), String.t(), String.t(), Keyword.t()) :: {:ok, pid()} | State.t()
   def run(url, data_domain, installation_type, opts \\ []) do
+    # Timeout option for testing purposes
+    verify_installation_check_timeout =
+      case Keyword.get(opts, :verify_installation_check_timeout) do
+        int when is_integer(int) -> int
+        _ -> @verify_installation_check_timeout
+      end
+
     report_to = Keyword.get(opts, :report_to, self())
     async? = Keyword.get(opts, :async?, true)
     slowdown = Keyword.get(opts, :slowdown, 500)
@@ -31,7 +34,13 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
         }
       }
 
-    CheckRunner.run(init_state, @checks,
+    checks = [
+      {Checks.Url, []},
+      {Checks.VerifyInstallation, [timeout: verify_installation_check_timeout]},
+      {Checks.VerifyInstallationCacheBust, [timeout: verify_installation_check_timeout]}
+    ]
+
+    CheckRunner.run(init_state, checks,
       async?: async?,
       report_to: report_to,
       slowdown: slowdown
