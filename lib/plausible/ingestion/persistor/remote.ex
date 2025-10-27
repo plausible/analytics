@@ -53,6 +53,10 @@ defmodule Plausible.Ingestion.Persistor.Remote do
     [:plausible, :remote_ingest, :request, :duration]
   end
 
+  def telemetry_decode_duration() do
+    [:plausible, :remote_ingest, :decode, :duration]
+  end
+
   defp request(override_url, event, session_attrs, headers) do
     Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
       telemetry_request_duration(),

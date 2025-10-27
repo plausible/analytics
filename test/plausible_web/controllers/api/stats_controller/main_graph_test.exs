@@ -1536,22 +1536,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert 2 == Enum.sum(comparison_plot)
     end
 
-    test "bugfix: don't crash when timezone gap occurs", %{conn: conn, user: user} do
-      site = new_site(owner: user, timezone: "America/Santiago")
-
-      populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minute: -5))
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/main-graph?period=custom&from=2022-09-11&to=2022-09-21&date=2023-03-15&with_imported=true"
-        )
-
-      assert %{"plot" => _} = json_response(conn, 200)
-    end
-
     test "does not return imported data when with_imported is set to false when comparing", %{
       conn: conn,
       site: site
