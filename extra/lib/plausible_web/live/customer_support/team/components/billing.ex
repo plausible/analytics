@@ -222,6 +222,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           />
 
           <div class="mt-8 flex align-center gap-x-4">
+            <.input
+              type="checkbox"
+              field={f[:managed_proxy_price_modifier]}
+              label="Managed proxy"
+            />
+          </div>
+
+          <div class="mt-8 flex align-center gap-x-4">
             <.input_with_clipboard
               id="cost-estimate"
               name="cost-estimate"
@@ -277,16 +285,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     params = update_features_to_list(params)
 
     form = to_form(EnterprisePlan.changeset(%EnterprisePlan{}, params))
+
     params = sanitize_params(params)
 
     cost_estimate =
       Plausible.CustomerSupport.EnterprisePlan.estimate(
-        params["billing_interval"],
-        get_int_param(params, "monthly_pageview_limit"),
-        get_int_param(params, "site_limit"),
-        get_int_param(params, "team_member_limit"),
-        get_int_param(params, "hourly_api_request_limit"),
-        params["features"]
+        billing_interval: params["billing_interval"],
+        pageviews_per_month: get_int_param(params, "monthly_pageview_limit"),
+        sites_limit: get_int_param(params, "site_limit"),
+        team_members_limit: get_int_param(params, "team_member_limit"),
+        api_calls_limit: get_int_param(params, "hourly_api_request_limit"),
+        features: params["features"],
+        managed_proxy_price_modifier: params["managed_proxy_price_modifier"] == "true"
       )
 
     {:noreply, assign(socket, cost_estimate: cost_estimate, plan_form: form)}
