@@ -10,12 +10,15 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
 
   require Logger
 
-  @checks [
-    {Checks.Url, []},
-    {Checks.Detection, [timeout: 6000]}
-  ]
+  @detection_check_timeout 6000
 
   def run(url, data_domain, opts \\ []) do
+    detection_check_timeout =
+      case Keyword.get(opts, :detection_check_timeout) do
+        int when is_integer(int) -> int
+        _ -> @detection_check_timeout
+      end
+
     report_to = Keyword.get(opts, :report_to, self())
     async? = Keyword.get(opts, :async?, true)
     slowdown = Keyword.get(opts, :slowdown, 500)
@@ -30,7 +33,12 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
         assigns: %{detect_v1?: detect_v1?}
       }
 
-    CheckRunner.run(init_state, @checks,
+    checks = [
+      {Checks.Url, []},
+      {Checks.Detection, [timeout: detection_check_timeout]}
+    ]
+
+    CheckRunner.run(init_state, checks,
       async?: async?,
       report_to: report_to,
       slowdown: slowdown

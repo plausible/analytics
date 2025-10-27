@@ -65,7 +65,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
   end
 
   def interpret(%__MODULE__{service_error: %{code: code}}, _url)
-      when code in [:bad_browserless_response, :browserless_timeout] do
+      when code in [:bad_browserless_response, :browserless_timeout, :internal_check_timeout] do
     failure(:browserless_issue)
   end
 

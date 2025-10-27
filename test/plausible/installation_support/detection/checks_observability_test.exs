@@ -211,6 +211,36 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
       assert_receive {:telemetry_event, telemetry_event}
       assert telemetry_event == Checks.telemetry_event_failure()
     end
+
+    test "failure due to internal_check_timeout -> browserless issue" do
+      stub_lookup_a_records(@expected_domain)
+
+      detection_stub = fn _conn ->
+        # times out
+        Process.sleep(1000)
+      end
+
+      Req.Test.stub(Plausible.InstallationSupport.Checks.Detection, detection_stub)
+
+      state =
+        Checks.run(@working_url, @expected_domain,
+          detection_check_timeout: 100,
+          report_to: nil,
+          async?: false,
+          slowdown: 0
+        )
+
+      log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
+
+      assert log =~ "[DETECTION] Failed due to a Browserless issue"
+      assert log =~ "code: :internal_check_timeout"
+
+      assert [sentry_event] = Sentry.Test.pop_sentry_reports()
+      assert sentry_event.message.formatted == "[DETECTION] Failed due to a Browserless issue"
+
+      assert_receive {:telemetry_event, telemetry_event}
+      assert telemetry_event == Checks.telemetry_event_failure()
+    end
   end
 
   defp json_response_detection_stub(js_data) do
