@@ -6,6 +6,7 @@ defmodule PlausibleWeb.TrackerScriptCache do
   On EE instances, we cache valid tracker script ids to avoid database lookups.
   """
   alias Plausible.Site.TrackerScriptConfiguration
+  alias PlausibleWeb.Tracker
 
   import Ecto.Query
   use Plausible
@@ -19,28 +20,29 @@ defmodule PlausibleWeb.TrackerScriptCache do
   @impl true
   def child_id(), do: :cache_tracker_script
 
+  on_ee do
+    @doc "Caches that the config exists"
+    def cache_content(%TrackerScriptConfiguration{} = _tracker_script_configuration), do: true
+  else
+    @doc "Caches the full tracker script"
+    def cache_content(
+          %TrackerScriptConfiguration{site: %{domain: _domain}} = tracker_script_configuration
+        ),
+        do: Tracker.build_script(tracker_script_configuration)
+  end
+
   @impl true
   def count_all() do
     Plausible.Repo.aggregate(TrackerScriptConfiguration, :count)
   end
 
   @impl true
-  def base_db_query() do
-    from(
-      t in TrackerScriptConfiguration,
-      join: s in assoc(t, :site),
-      preload: [site: s]
-    )
-  end
+  def base_db_query(), do: Tracker.get_tracker_script_configuration_base_query()
 
   @impl true
   def get_from_source(id) do
-    query =
-      base_db_query()
-      |> where([t], t.id == ^id)
-
-    case Plausible.Repo.one(query) do
-      %TrackerScriptConfiguration{} = tracker_script_configuration ->
+    case Tracker.get_tracker_script_configuration_by_id(id) do
+      %TrackerScriptConfiguration{site: %{domain: _domain}} = tracker_script_configuration ->
         cache_content(tracker_script_configuration)
 
       _ ->
@@ -57,13 +59,5 @@ defmodule PlausibleWeb.TrackerScriptCache do
           | acc
         ]
     end)
-  end
-
-  defp cache_content(tracker_script_configuration) do
-    if ee?() do
-      true
-    else
-      PlausibleWeb.Tracker.build_script(tracker_script_configuration)
-    end
   end
 end

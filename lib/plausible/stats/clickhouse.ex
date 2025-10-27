@@ -217,7 +217,7 @@ defmodule Plausible.Stats.Clickhouse do
       where: ^cutoff_times_condition
   end
 
-  defp empty_24h_intervals(now) do
+  def empty_24h_intervals(now \\ NaiveDateTime.utc_now()) do
     first = NaiveDateTime.add(now, -24, :hour)
     {:ok, time} = Time.new(first.hour, 0, 0)
     first = NaiveDateTime.new!(NaiveDateTime.to_date(first), time)
