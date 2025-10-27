@@ -26,6 +26,7 @@ defmodule Plausible.ConsolidatedView do
         if has_sites_to_consolidate?(team) do
           consolidated_view
           |> change_stats_dates(team)
+          |> change_timezone(majority_sites_timezone(team))
           |> bump_updated_at()
           |> Repo.update!()
         else
@@ -99,6 +100,12 @@ defmodule Plausible.ConsolidatedView do
     end
   end
 
+  @spec change_timezone(Site.t() | Ecto.Changeset.t(), String.t()) ::
+          Ecto.Changeset.t() | Site.t()
+  def change_timezone(site_or_changeset, timezone) do
+    Ecto.Changeset.change(site_or_changeset, timezone: timezone)
+  end
+
   @spec can_manage?(User.t(), Team.t()) :: boolean()
   def can_manage?(user, team) do
     case Plausible.Teams.Memberships.team_role(team, user) do
@@ -119,7 +126,11 @@ defmodule Plausible.ConsolidatedView do
       nil ->
         {:ok, consolidated_view} =
           team
-          |> Site.new_for_team(%{consolidated: true, domain: make_id(team)})
+          |> Site.new_for_team(%{
+            consolidated: true,
+            domain: make_id(team),
+            timezone: majority_sites_timezone(team)
+          })
           |> change_stats_dates(team)
           |> Repo.insert()
 
@@ -159,5 +170,22 @@ defmodule Plausible.ConsolidatedView do
 
   defp has_sites_to_consolidate?(%Team{} = team) do
     Teams.owned_sites_count(team) > 0
+  end
+
+  defp majority_sites_timezone(%Team{} = team) do
+    q =
+      from(sr in Site.regular(),
+        where: sr.team_id == ^team.id,
+        group_by: sr.timezone,
+        select: {sr.timezone, count(sr.id)},
+        order_by: [desc: count(sr.id), asc: sr.timezone],
+        limit: 1
+      )
+
+    case Repo.one(q) do
+      {"UTC", _count} -> "Etc/UTC"
+      {timezone, _count} -> timezone
+      nil -> "Etc/UTC"
+    end
   end
 end
