@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D559746B.js"></script>
+    <script src="dist/sidebar_items-D498B315.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -1541,94 +1541,12 @@ correctly.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Checks.CSP.html" translate="no">Plausible.InstallationSupport.Checks.CSP</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Scans the Content Security Policy header to ensure that the Plausible domain is allowed.
-See <a href="Plausible.InstallationSupport.LegacyVerification.Checks.html"><code class="inline">Plausible.InstallationSupport.LegacyVerification.Checks</code></a> for the execution sequence.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Plausible.InstallationSupport.Checks.Detection.html" translate="no">Plausible.InstallationSupport.Checks.Detection</a>
 
   </div>
 
     <div class="summary-synopsis"><p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
 and runs detector script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Checks.FetchBody.html" translate="no">Plausible.InstallationSupport.Checks.FetchBody</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Fetches the body of the site and extracts the HTML document, if available, for
-further processing. See <a href="Plausible.InstallationSupport.LegacyVerification.Checks.html"><code class="inline">Plausible.InstallationSupport.LegacyVerification.Checks</code></a>
-for the execution sequence.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Checks.Installation.html" translate="no">Plausible.InstallationSupport.Checks.Installation</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
-and runs verifier script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Checks.InstallationV2.html" translate="no">Plausible.InstallationSupport.Checks.InstallationV2</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
-and runs verifier script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Checks.InstallationV2CacheBust.html" translate="no">Plausible.InstallationSupport.Checks.InstallationV2CacheBust</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>If the output of previous checks can not be interpreted as successful,
-as a last resort, we try to bust the cache of the site under test by adding a query parameter to the URL,
-and running InstallationV2 again.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Checks.ScanBody.html" translate="no">Plausible.InstallationSupport.Checks.ScanBody</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Naive way of detecting GTM and WordPress powered sites.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Checks.Snippet.html" translate="no">Plausible.InstallationSupport.Checks.Snippet</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>The check looks for Plausible snippets and tries to address the common
-integration issues, such as bad placement, data-domain typos, unknown
-attributes frequently added by performance optimization plugins, etc.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.Checks.SnippetCacheBust.html" translate="no">Plausible.InstallationSupport.Checks.SnippetCacheBust</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A naive way of trying to figure out whether the latest site contents
-is wrapped with some CDN/caching layer.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1641,6 +1559,27 @@ is wrapped with some CDN/caching layer.</p></div>
 If not, checks if prepending <code class="inline">www.</code> helps,
 because we have specifically requested customers to register the domain with <code class="inline">www.</code> prefix.
 If not, skips all further checks.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.VerifyInstallation.html" translate="no">Plausible.InstallationSupport.Checks.VerifyInstallation</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
+and runs verifier script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Checks.VerifyInstallationCacheBust.html" translate="no">Plausible.InstallationSupport.Checks.VerifyInstallationCacheBust</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>If the output of previous checks can not be interpreted as successful,
+as a last resort, we try to bust the cache of the site under test by adding a query parameter to the URL,
+and running VerifyInstallation again.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1660,33 +1599,6 @@ methods and whether v1 is used on the site.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Module responsible for translating diagnostics to user-friendly errors and recommendations.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.LegacyVerification.Checks.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Checks</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Checks that are performed during v1 site verification.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.LegacyVerification.Diagnostics.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Diagnostics</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Module responsible for translating diagnostics to user-friendly errors and recommendations.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.InstallationSupport.LegacyVerification.Errors.html" translate="no">Plausible.InstallationSupport.LegacyVerification.Errors</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A go-to definition of all legacy verification errors</p></div>
 
 </div>
 <div class="summary-row">
@@ -3672,16 +3584,16 @@ data contains a valid token.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Live.ChangeDomainV2.html" translate="no">PlausibleWeb.Live.ChangeDomainV2</a>
+    <a href="PlausibleWeb.Live.ChangeDomain.html" translate="no">PlausibleWeb.Live.ChangeDomain</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>LiveView for the change domain v2 flow.</p></div>
+    <div class="summary-synopsis"><p>LiveView for the change domain flow.</p></div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Live.ChangeDomainV2.Form.html" translate="no">PlausibleWeb.Live.ChangeDomainV2.Form</a>
+    <a href="PlausibleWeb.Live.ChangeDomain.Form.html" translate="no">PlausibleWeb.Live.ChangeDomain.Form</a>
 
   </div>
 
@@ -3894,29 +3806,20 @@ and the number of steps they have.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Live.InstallationV2.html" translate="no">PlausibleWeb.Live.InstallationV2</a>
+    <a href="PlausibleWeb.Live.Installation.Icons.html" translate="no">PlausibleWeb.Live.Installation.Icons</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>User assistance module around Plausible installation instructions/onboarding</p></div>
+    <div class="summary-synopsis"><p>Icon components for the Installation module</p></div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Live.InstallationV2.Icons.html" translate="no">PlausibleWeb.Live.InstallationV2.Icons</a>
+    <a href="PlausibleWeb.Live.Installation.Instructions.html" translate="no">PlausibleWeb.Live.Installation.Instructions</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>Icon components for InstallationV2 module</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="PlausibleWeb.Live.InstallationV2.Instructions.html" translate="no">PlausibleWeb.Live.InstallationV2.Instructions</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Instruction forms and components for InstallationV2 module</p></div>
+    <div class="summary-synopsis"><p>Instruction forms and components for the Installation module</p></div>
 
 </div>
 <div class="summary-row">

@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.InstallationSupport.Checks.InstallationV2CacheBust — Plausible v0.0.1</title>
+    <title>Plausible.InstallationSupport.Checks.VerifyInstallation — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D559746B.js"></script>
+    <script src="dist/sidebar_items-D498B315.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -126,21 +126,20 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/installation_support/checks/installation_v2_cache_bust.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/installation_support/checks/verify_installation.ex#L1" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
-    <span translate="no">Plausible.InstallationSupport.Checks.InstallationV2CacheBust</span> 
+    <span translate="no">Plausible.InstallationSupport.Checks.VerifyInstallation</span> 
     <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>If the output of previous checks can not be interpreted as successful,
-as a last resort, we try to bust the cache of the site under test by adding a query parameter to the URL,
-and running InstallationV2 again.</p><p>Whatever the result from the rerun, that is what we use to interpret the installation.</p><p>The idea is to make sure that any issues we detect will be about the latest version of their website.</p><p>We also want to avoid reporting a successful installation if it took a special cache-busting action to make it work.</p>
+<p>Calls the browserless.io service (local instance can be spawned with <code class="inline">make browserless</code>)
+and runs verifier script via the <a href="https://docs.browserless.io/HTTP-APIs/function">function API</a>.</p>
     </section>
 
 </div>
@@ -186,7 +185,7 @@ and running InstallationV2 again.</p><p>Whatever the result from the rerun, that
     </a>
     <h1 class="signature" translate="no">perform_safe(state)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/installation_support/checks/installation_v2_cache_bust.ex#L16" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/installation_support/checks/verify_installation.ex#L8" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
