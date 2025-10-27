@@ -23,7 +23,7 @@ defmodule Plausible.CondolidatedView.CacheTestSync do
 
       assert [
                %{
-                 extra: %{key: "key", sites: 20000},
+                 extra: %{key: "key", sites: 20_000},
                  message: %{formatted: "Consolidated View crop warning"}
                }
              ] = Sentry.Test.pop_sentry_reports()
