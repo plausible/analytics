@@ -85,7 +85,24 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           metric_prefix ++ [:remote_ingest, :events, :pipeline, :steps],
           event_name: Ingestion.Persistor.EmbeddedWithRelay.telemetry_pipeline_step_duration(),
           reporter_options: [
-            buckets: [10, 50, 100, 250, 350, 500, 1000, 5000, 10_000, 100_000, 500_000]
+            buckets: [
+              10,
+              50,
+              100,
+              250,
+              350,
+              500,
+              1000,
+              5000,
+              7_000,
+              10_000,
+              15_000,
+              20_000,
+              35_000,
+              50_000,
+              100_000,
+              500_000
+            ]
           ],
           unit: {:native, :microsecond},
           measurement: :duration,
@@ -271,16 +288,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         metric_prefix ++ [:persistor, :remote, :request, :total_duration, :millisecond],
         event_name: Persistor.Remote.telemetry_request_duration(),
         reporter_options: [
-          buckets: [1, 10, 25, 50, 75, 100, 250, 350, 500, 750, 1_000, 5_000, 10_000, 30_000]
-        ],
-        unit: {:native, :millisecond},
-        measurement: :duration
-      ),
-      distribution(
-        metric_prefix ++ [:persistor, :remote, :decode, :duration, :millisecond],
-        event_name: Persistor.Remote.telemetry_decode_duration(),
-        reporter_options: [
-          buckets: [1, 10, 25, 50, 75, 100, 250, 350, 500, 750, 1_000, 5_000, 10_000, 30_000]
+          buckets: [1, 3, 5, 7, 10, 13, 15, 20, 25, 50, 75, 100, 500, 1_000, 10_000, 30_000]
         ],
         unit: {:native, :millisecond},
         measurement: :duration
@@ -289,7 +297,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         metric_prefix ++ [:persistor, :remote, :request, :duration, :millisecond],
         event_name: Persistor.TelemetryHandler.request_event(),
         reporter_options: [
-          buckets: [1, 10, 25, 50, 75, 100, 250, 350, 500, 750, 1_000, 5_000, 10_000, 30_000]
+          buckets: [1, 3, 5, 7, 10, 13, 15, 20, 25, 50, 75, 100, 500, 1_000, 10_000, 30_000]
         ],
         unit: {:native, :millisecond},
         measurement: :duration,
