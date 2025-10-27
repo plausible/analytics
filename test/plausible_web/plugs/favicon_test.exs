@@ -6,8 +6,6 @@ defmodule PlausibleWeb.FaviconTest do
   import Mox
   setup :verify_on_exit!
 
-  @placeholder_icon File.read!("priv/link_favicon.svg")
-
   setup_all do
     opts = PlausibleWeb.Favicon.init(nil)
 
@@ -147,6 +145,8 @@ defmodule PlausibleWeb.FaviconTest do
   end
 
   describe "Fallback to placeholder icon" do
+    @placeholder_icon File.read!("priv/link_favicon.svg")
+
     test "falls back to placeholder when DDG returns a non-2xx response", %{plug_opts: plug_opts} do
       expect(
         Plausible.HTTPClient.Mock,
