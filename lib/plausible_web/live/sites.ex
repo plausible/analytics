@@ -572,12 +572,12 @@ defmodule PlausibleWeb.Live.Sites do
             class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
           >
             <span class="sr-only">Close</span>
-            <Heroicons.x_mark class="h-6 w-6" />
+            <Heroicons.x_mark class="size-6" />
           </button>
         </div>
         <div class="sm:flex sm:items-start">
           <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-            <Heroicons.user_group class="h-6 w-6" />
+            <Heroicons.user_group class="size-6" />
           </div>
           <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
             <PlausibleWeb.Live.Components.PrimaModal.modal_title>
