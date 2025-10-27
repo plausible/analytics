@@ -26,19 +26,19 @@ defmodule PlausibleWeb.Components.FlowProgress do
           <div class="flex items-center text-base">
             <div
               :if={idx < @current_step_idx}
-              class="w-5 h-5 bg-green-500 dark:bg-green-600 text-white rounded-full flex items-center justify-center"
+              class="size-6 bg-green-500 dark:bg-green-600 text-white rounded-full flex items-center justify-center"
             >
-              <Heroicons.check class="w-4 h-4" />
+              <Heroicons.check class="size-4" />
             </div>
             <div
               :if={idx == @current_step_idx}
-              class="w-5 h-5 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold"
+              class="size-6 bg-indigo-600 text-xs text-white font-bold rounded-full flex items-center justify-center"
             >
               {idx + 1}
             </div>
             <div
               :if={idx > @current_step_idx}
-              class="w-5 h-5 bg-gray-300 text-white dark:bg-gray-800 rounded-full flex items-center justify-center"
+              class="size-6 bg-gray-300 text-xs text-white font-bold dark:bg-gray-800 rounded-full flex items-center justify-center"
             >
               {idx + 1}
             </div>

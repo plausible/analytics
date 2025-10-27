@@ -485,9 +485,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <a
       class={[
-        "flex-1 text-center py-2.5 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150",
+        "flex-1 text-center py-2.5 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150",
         "cursor-pointer",
-        @selected? && "bg-gray-150 dark:bg-gray-750 text-gray-800 dark:text-white",
+        @selected? && "bg-gray-150 dark:bg-gray-700 text-gray-800 dark:text-white",
         !@selected? && "dark:text-gray-200 text-gray-600 hover:text-gray-800 dark:hover:text-white"
       ]}
       id={@id}
