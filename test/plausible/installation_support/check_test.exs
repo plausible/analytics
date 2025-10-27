@@ -30,7 +30,7 @@ defmodule Plausible.InstallationSupport.CheckTest do
 
       {result, log} =
         with_log(fn ->
-          FaultyCheckRaise.perform_safe(state)
+          FaultyCheckRaise.perform_safe(state, [])
         end)
 
       assert log =~
@@ -64,7 +64,7 @@ defmodule Plausible.InstallationSupport.CheckTest do
 
       {result, log} =
         with_log(fn ->
-          FaultyCheckThrow.perform_safe(state)
+          FaultyCheckThrow.perform_safe(state, [])
         end)
 
       assert log =~
@@ -80,9 +80,6 @@ defmodule Plausible.InstallationSupport.CheckTest do
         use Plausible.InstallationSupport.Check
 
         @impl true
-        def timeout_ms, do: 100
-
-        @impl true
         def report_progress_as, do: "Faulty check"
 
         @impl true
@@ -95,8 +92,7 @@ defmodule Plausible.InstallationSupport.CheckTest do
         diagnostics: %Verification.Diagnostics{}
       }
 
-      result =
-        FaultyCheckTimeout.perform_safe(state)
+      result = FaultyCheckTimeout.perform_safe(state, timeout: 100)
 
       assert_matches %Verification.Diagnostics{
                        service_error: %{

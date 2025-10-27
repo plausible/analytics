@@ -13,7 +13,6 @@ defmodule Plausible.InstallationSupport.Check do
   """
   @type state() :: Plausible.InstallationSupport.State.t()
   @callback report_progress_as() :: String.t()
-  @callback timeout_ms() :: integer()
   @callback perform(state()) :: state()
 
   defmacro __using__(_) do
@@ -25,11 +24,9 @@ defmodule Plausible.InstallationSupport.Check do
 
       @behaviour Plausible.InstallationSupport.Check
 
-      def timeout_ms, do: 10_000
+      def perform_safe(state, opts) do
+        timeout = Keyword.get(opts, :timeout, 10_000)
 
-      defoverridable timeout_ms: 0
-
-      def perform_safe(state) do
         task =
           Task.async(fn ->
             try do
@@ -45,7 +42,7 @@ defmodule Plausible.InstallationSupport.Check do
           end)
 
         try do
-          Task.await(task, timeout_ms())
+          Task.await(task, timeout)
         catch
           :exit, {:timeout, _} ->
             Task.shutdown(task, :brutal_kill)
@@ -54,7 +51,7 @@ defmodule Plausible.InstallationSupport.Check do
             put_diagnostics(state,
               service_error: %{
                 code: :internal_check_timeout,
-                extra: "#{check_name} timed out after #{timeout_ms()}ms"
+                extra: "#{check_name} timed out after #{timeout}ms"
               }
             )
         end

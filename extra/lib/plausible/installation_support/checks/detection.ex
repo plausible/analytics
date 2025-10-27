@@ -64,9 +64,6 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
   @max_retries 1
 
   @impl true
-  def timeout_ms, do: 6_000
-
-  @impl true
   def report_progress_as, do: "We're checking your site to recommend the best installation method"
 
   @impl true
