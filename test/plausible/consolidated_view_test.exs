@@ -72,6 +72,34 @@ defmodule Plausible.ConsolidatedViewTest do
                  {ConsolidatedView.Cache.get(team.identifier) == [site.id], :ok}
                end)
       end
+
+      test "sets Etc/UTC by default", %{team: team} do
+        new_site(team: team)
+        team = Teams.complete_setup(team)
+
+        assert {:ok, %Plausible.Site{timezone: "Etc/UTC"}} =
+                 ConsolidatedView.enable(team)
+      end
+
+      test "sets Etc/UTC for UTC sites", %{team: team} do
+        new_site(team: team, timezone: "UTC")
+        team = Teams.complete_setup(team)
+
+        assert {:ok, %Plausible.Site{timezone: "Etc/UTC"}} =
+                 ConsolidatedView.enable(team)
+      end
+
+      test "sets majority timezone by default", %{team: team} do
+        new_site(team: team, timezone: "Etc/UTC")
+        new_site(team: team, timezone: "Europe/Tallinn")
+        new_site(team: team, timezone: "Europe/Warsaw")
+        new_site(team: team, timezone: "Europe/Tallinn")
+
+        team = Teams.complete_setup(team)
+
+        assert {:ok, %Plausible.Site{timezone: "Europe/Tallinn"}} =
+                 ConsolidatedView.enable(team)
+      end
     end
 
     describe "disable/1" do
@@ -174,12 +202,23 @@ defmodule Plausible.ConsolidatedViewTest do
 
       @tag :slow
       test "re-enables", %{team: team} do
-        _site = new_site(team: team, native_stats_start_at: ~N[2024-01-01 12:00:00])
+        _site =
+          new_site(
+            team: team,
+            native_stats_start_at: ~N[2024-01-01 12:00:00],
+            timezone: "Europe/Warsaw"
+          )
+
         team = Teams.complete_setup(team)
 
         {:ok, first_enable} = ConsolidatedView.enable(team)
 
-        another_site = new_site(team: team, native_stats_start_at: ~N[2024-01-01 10:00:00])
+        another_site =
+          new_site(
+            team: team,
+            native_stats_start_at: ~N[2024-01-01 10:00:00],
+            timezone: "Europe/Tallinn"
+          )
 
         Process.sleep(1_000)
 
@@ -189,6 +228,7 @@ defmodule Plausible.ConsolidatedViewTest do
         consolidated_view = ConsolidatedView.get(team)
         assert consolidated_view.native_stats_start_at == another_site.native_stats_start_at
         assert NaiveDateTime.after?(consolidated_view.updated_at, first_enable.updated_at)
+        assert consolidated_view.timezone == "Europe/Tallinn"
       end
     end
   end
