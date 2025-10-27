@@ -58,6 +58,19 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           }
         }
       </script>
+
+      <div class="flex">
+        <.button
+          :if={!@show_plan_form?}
+          id="new-custom-plan"
+          phx-click="show-plan-form"
+          phx-target={@myself}
+          class="ml-auto"
+        >
+          New Custom Plan
+        </.button>
+      </div>
+
       <div class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
         <h1 class="text-xs font-semibold">Usage</h1>
         <.table rows={monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)}>
@@ -217,15 +230,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.button>
           </div>
         </.form>
-
-        <.button
-          :if={!@show_plan_form?}
-          id="new-custom-plan"
-          phx-click="show-plan-form"
-          phx-target={@myself}
-        >
-          New Custom Plan
-        </.button>
       </div>
     </div>
     """
