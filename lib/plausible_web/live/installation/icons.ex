@@ -1,6 +1,6 @@
-defmodule PlausibleWeb.Live.InstallationV2.Icons do
+defmodule PlausibleWeb.Live.Installation.Icons do
   @moduledoc """
-  Icon components for InstallationV2 module
+  Icon components for the Installation module
   """
   use Phoenix.Component
 

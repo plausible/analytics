@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { executeVerifyV2 } from '../support/installation-support-playwright-wrappers'
+import { executeVerifier } from '../support/installation-support-playwright-wrappers'
 import { initializePageDynamically } from '../support/initialize-page-dynamically'
 import { mockManyRequests } from '../support/mock-many-requests'
 import { LOCAL_SERVER_ADDR } from '../support/server'
@@ -46,7 +46,7 @@ test.describe('installed plausible web variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -108,7 +108,7 @@ test.describe('installed plausible web variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders,
       timeoutMs
@@ -168,7 +168,7 @@ test.describe('installed plausible web variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -216,7 +216,7 @@ test.describe('installed plausible web variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -270,7 +270,7 @@ test.describe('installed plausible web variant', () => {
     await expect(page.getByText('alfa')).toBeVisible()
 
     const [result, _] = await Promise.all([
-      executeVerifyV2(page, {
+      executeVerifier(page, {
         ...DEFAULT_VERIFICATION_OPTIONS,
         timeoutMs: 1500,
         responseHeaders
@@ -350,7 +350,7 @@ test.describe('installed plausible web variant', () => {
     await expect(page.getByText('alfa')).toBeVisible()
 
     const [result] = await Promise.all([
-      executeVerifyV2(page, {
+      executeVerifier(page, {
         ...DEFAULT_VERIFICATION_OPTIONS,
         timeoutMs: 1500,
         timeoutBetweenAttemptsMs: 100,
@@ -426,7 +426,7 @@ test.describe('installed plausible web variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -488,7 +488,7 @@ test.describe('installed plausible web variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       cspHostToCheck,
       responseHeaders
@@ -551,7 +551,7 @@ test.describe('installed plausible web variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       cspHostToCheck,
       responseHeaders
@@ -616,7 +616,7 @@ test.describe('installed plausible esm variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -681,7 +681,7 @@ test.describe('installed plausible esm variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -746,7 +746,7 @@ test.describe('installed plausible esm variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -800,7 +800,7 @@ test.describe('installed plausible esm variant', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -861,7 +861,7 @@ test.describe('installed legacy .compat script', () => {
     const response = await page.goto(url)
     const responseHeaders = response?.headers() ?? {}
 
-    const result = await executeVerifyV2(page, {
+    const result = await executeVerifier(page, {
       ...DEFAULT_VERIFICATION_OPTIONS,
       responseHeaders
     })
@@ -929,7 +929,7 @@ test.describe('opts in on cookie banners', () => {
       const response = await page.goto(url)
       const responseHeaders = response?.headers() ?? {}
 
-      const result = await executeVerifyV2(page, {
+      const result = await executeVerifier(page, {
         ...DEFAULT_VERIFICATION_OPTIONS,
         timeoutMs: 2000,
         responseHeaders

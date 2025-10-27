@@ -1,4 +1,4 @@
-defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
+defmodule Plausible.InstallationSupport.Checks.VerifyInstallation do
   @moduledoc """
   Calls the browserless.io service (local instance can be spawned with `make browserless`)
   and runs verifier script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
@@ -8,7 +8,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   use Plausible.InstallationSupport.Check
   alias Plausible.InstallationSupport.BrowserlessConfig
 
-  @verifier_code_path "priv/tracker/installation_support/verifier-v2.js"
+  @verifier_code_path "priv/tracker/installation_support/verifier.js"
   @external_resource @verifier_code_path
 
   # On CI, the file might not be present for static checks so we default to empty string
@@ -172,7 +172,7 @@ defmodule Plausible.InstallationSupport.Checks.InstallationV2 do
   end
 
   defp warning_message(message, state) do
-    "[VERIFICATION v2] #{message} (data_domain='#{state.data_domain}')"
+    "[VERIFICATION] #{message} (data_domain='#{state.data_domain}')"
   end
 
   defp parse_to_diagnostics(data),

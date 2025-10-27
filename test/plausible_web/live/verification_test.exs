@@ -1,5 +1,7 @@
 defmodule PlausibleWeb.Live.VerificationTest do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase
+
+  use Plausible.Test.Support.DNS
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
@@ -41,8 +43,12 @@ defmodule PlausibleWeb.Live.VerificationTest do
   describe "LiveView" do
     @tag :ee_only
     test "LiveView mounts", %{conn: conn, site: site} do
-      stub_fetch_body(200, "")
-      stub_installation()
+      stub_lookup_a_records(site.domain)
+
+      stub_verification_result(%{
+        "completed" => false,
+        "error" => %{"message" => "Error"}
+      })
 
       {_, html} = get_lv(conn, site)
 
@@ -59,35 +65,50 @@ defmodule PlausibleWeb.Live.VerificationTest do
     end
 
     @tag :ee_only
-    test "ignores v2 verification custom URL input", %{conn: conn, site: site} do
-      stub_fetch_body(200, source(site.domain))
-      stub_installation()
+    test "from custom URL input form to verification", %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+
+      stub_verification_result(%{
+        "completed" => false,
+        "error" => %{"message" => "Error"}
+      })
 
       # Get liveview with ?custom_url=true query param
       {:ok, lv, html} =
         conn |> no_slowdown() |> live("/#{site.domain}/verification?custom_url=true")
 
+      verifying_installation_text = "Verifying your installation"
+
+      # Assert form is rendered instead of kicking off verification automatically
+      assert html =~ "Enter Your Custom URL"
+      assert html =~ ~s[value="https://#{site.domain}"]
+      assert html =~ ~s[placeholder="https://#{site.domain}"]
+      refute html =~ verifying_installation_text
+
+      # Submit custom URL form
+      html = lv |> element("form") |> render_submit(%{"custom_url" => "https://abc.de"})
+
+      # Should now show verification progress and hide custom URL form
+      assert html =~ verifying_installation_text
       refute html =~ "Enter Your Custom URL"
-
-      assert eventually(fn ->
-               html = render(lv)
-
-               {
-                 text_of_element(html, @awaiting) =~
-                   "Awaiting your first pageview",
-                 html
-               }
-             end)
-
-      html = render(lv)
-      assert html =~ "Success!"
-      assert html =~ "Awaiting your first pageview"
     end
 
     @tag :ee_only
     test "eventually verifies installation", %{conn: conn, site: site} do
-      stub_fetch_body(200, source(site.domain))
-      stub_installation()
+      stub_lookup_a_records(site.domain)
+
+      stub_verification_result(%{
+        "completed" => true,
+        "trackerIsInHtml" => true,
+        "plausibleIsOnWindow" => true,
+        "plausibleIsInitialized" => true,
+        "testEvent" => %{
+          "normalizedBody" => %{
+            "domain" => site.domain
+          },
+          "responseStatus" => 200
+        }
+      })
 
       {:ok, lv} = kick_off_live_verification(conn, site)
 
@@ -112,8 +133,20 @@ defmodule PlausibleWeb.Live.VerificationTest do
         build(:pageview)
       ])
 
-      stub_fetch_body(200, source(site.domain))
-      stub_installation()
+      stub_lookup_a_records(site.domain)
+
+      stub_verification_result(%{
+        "completed" => true,
+        "trackerIsInHtml" => true,
+        "plausibleIsOnWindow" => true,
+        "plausibleIsInitialized" => true,
+        "testEvent" => %{
+          "normalizedBody" => %{
+            "domain" => site.domain
+          },
+          "responseStatus" => 200
+        }
+      })
 
       {:ok, lv} = kick_off_live_verification(conn, site)
 
@@ -133,8 +166,20 @@ defmodule PlausibleWeb.Live.VerificationTest do
     end
 
     test "will redirect when first pageview arrives", %{conn: conn, site: site} do
-      stub_fetch_body(200, source(site.domain))
-      stub_installation()
+      stub_lookup_a_records(site.domain)
+
+      stub_verification_result(%{
+        "completed" => true,
+        "trackerIsInHtml" => true,
+        "plausibleIsOnWindow" => true,
+        "plausibleIsInitialized" => true,
+        "testEvent" => %{
+          "normalizedBody" => %{
+            "domain" => site.domain
+          },
+          "responseStatus" => 200
+        }
+      })
 
       {:ok, lv} = kick_off_live_verification(conn, site)
 
@@ -166,40 +211,89 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert_redirect(lv, "/#{URI.encode_www_form(site.domain)}/")
     end
 
-    @tag :ee_only
-    test "eventually fails to verify installation", %{conn: conn, site: site} do
-      stub_fetch_body(200, "")
-      stub_installation(200, plausible_installed(false))
+    for {installation_type_param, expected_text, saved_installation_type} <- [
+          {"manual",
+           "Please make sure you've copied the snippet to the head of your site, or verify your installation manually.",
+           nil},
+          {"npm",
+           "Please make sure you've initialized Plausible on your site, or verify your installation manually.",
+           nil},
+          {"gtm",
+           "Please make sure you've configured the GTM template correctly, or verify your installation manually.",
+           nil},
+          {"wordpress",
+           "Please make sure you've enabled the plugin, or verify your installation manually.",
+           nil},
+          # trusts param over saved installation type
+          {"wordpress",
+           "Please make sure you've enabled the plugin, or verify your installation manually.",
+           "npm"},
+          # falls back to saved installation type if no param
+          {"",
+           "Please make sure you've initialized Plausible on your site, or verify your installation manually.",
+           "npm"},
+          # falls back to manual if no param and no saved installation type
+          {"",
+           "Please make sure you've copied the snippet to the head of your site, or verify your installation manually.",
+           nil}
+        ] do
+      @tag :ee_only
+      test "eventually fails to verify installation (?installation_type=#{installation_type_param}) if saved installation type is #{inspect(saved_installation_type)}",
+           %{
+             conn: conn,
+             site: site
+           } do
+        stub_lookup_a_records(site.domain)
 
-      {:ok, lv} = kick_off_live_verification(conn, site)
+        stub_verification_result(%{
+          "completed" => true,
+          "trackerIsInHtml" => false,
+          "plausibleIsOnWindow" => false,
+          "plausibleIsInitialized" => false
+        })
 
-      assert html =
-               eventually(fn ->
-                 html = render(lv)
-                 {html =~ "", html}
+        if unquote(saved_installation_type) do
+          PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+            "installation_type" => unquote(saved_installation_type)
+          })
+        end
 
-                 {
-                   text_of_element(html, @heading) =~
-                     "We couldn't find the Plausible snippet",
-                   html
-                 }
-               end)
+        {:ok, lv} =
+          kick_off_live_verification(
+            conn,
+            site,
+            "?installation_type=#{unquote(installation_type_param)}"
+          )
 
-      assert element_exists?(html, @retry_button)
+        assert html =
+                 eventually(fn ->
+                   html = render(lv)
+                   {html =~ "", html}
 
-      assert html =~ "Please insert the snippet into your site"
-      refute element_exists?(html, "#super-admin-report")
+                   {
+                     text_of_element(html, @heading) =~
+                       "We couldn't detect Plausible on your site",
+                     html
+                   }
+                 end)
+
+        assert element_exists?(html, @retry_button)
+
+        assert html =~ htmlize_quotes(unquote(expected_text))
+        refute element_exists?(html, "#super-admin-report")
+      end
     end
   end
 
-  defp get_lv(conn, site) do
-    {:ok, lv, html} = conn |> no_slowdown() |> live("/#{site.domain}/verification")
-
+  defp get_lv(conn, site, qs \\ nil) do
+    {:ok, lv, html} = conn |> no_slowdown() |> live("/#{site.domain}/verification#{qs}")
     {lv, html}
   end
 
-  defp kick_off_live_verification(conn, site) do
-    {:ok, lv, _html} = conn |> no_slowdown() |> no_delay() |> live("/#{site.domain}/verification")
+  defp kick_off_live_verification(conn, site, qs \\ nil) do
+    {:ok, lv, _html} =
+      conn |> no_slowdown() |> no_delay() |> live("/#{site.domain}/verification#{qs}")
+
     {:ok, lv}
   end
 
@@ -211,47 +305,11 @@ defmodule PlausibleWeb.Live.VerificationTest do
     Plug.Conn.put_private(conn, :delay, 0)
   end
 
-  defp stub_fetch_body(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.InstallationSupport.Checks.FetchBody, f)
-  end
-
-  defp stub_installation(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.InstallationSupport.Checks.Installation, f)
-  end
-
-  defp stub_fetch_body(status, body) do
-    stub_fetch_body(fn conn ->
-      conn
-      |> put_resp_content_type("text/html")
-      |> send_resp(status, body)
-    end)
-  end
-
-  defp stub_installation(status \\ 200, json \\ plausible_installed()) do
-    stub_installation(fn conn ->
+  defp stub_verification_result(js_data) do
+    Req.Test.stub(Plausible.InstallationSupport.Checks.VerifyInstallation, fn conn ->
       conn
       |> put_resp_content_type("application/json")
-      |> send_resp(status, Jason.encode!(json))
+      |> send_resp(200, Jason.encode!(%{"data" => js_data}))
     end)
-  end
-
-  defp plausible_installed(bool \\ true, callback_status \\ 202) do
-    %{
-      "data" => %{
-        "completed" => true,
-        "snippetsFoundInHead" => 0,
-        "snippetsFoundInBody" => 0,
-        "plausibleInstalled" => bool,
-        "callbackStatus" => callback_status
-      }
-    }
-  end
-
-  defp source(domain) do
-    """
-    <head>
-    <script defer data-domain="#{domain}" src="http://localhost:8000/js/script.js"></script>
-    </head>
-    """
   end
 end
