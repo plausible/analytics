@@ -8,6 +8,7 @@ import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsuppor
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { referrersDrilldownRoute } from '../../router'
+import { SourceFavicon } from './source-favicon'
 
 const NO_REFERRER = 'Direct / None'
 
@@ -51,16 +52,10 @@ export default function Referrers({ source }) {
   }
 
   function renderIcon(listItem) {
-    const sourceName = listItem.name.toLowerCase()
-    const needsWhiteBg =
-      sourceName.includes('github') || sourceName.includes('chatgpt.com')
-
     return (
-      <img
-        alt=""
-        src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        referrerPolicy="no-referrer"
-        className={`inline w-4 h-4 mr-2 -mt-px align-middle ${needsWhiteBg ? 'dark:bg-white dark:border dark:border-white dark:rounded-full' : ''}`}
+      <SourceFavicon
+        name={listItem.name}
+        className="inline size-4 mr-2 -mt-px align-middle"
       />
     )
   }
