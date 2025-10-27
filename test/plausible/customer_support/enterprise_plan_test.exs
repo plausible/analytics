@@ -10,12 +10,12 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "calculates cost for business plan with monthly billing" do
         result =
           EnterprisePlan.estimate(
-            "monthly",
-            20_000_000,
-            1000,
-            30,
-            1_000,
-            ["sites_api"]
+            billing_interval: "monthly",
+            pageviews_per_month: 20_000_000,
+            sites_limit: 1000,
+            team_members_limit: 30,
+            api_calls_limit: 1_000,
+            features: ["sites_api"]
           )
 
         assert result == Decimal.new("1238.00")
@@ -24,12 +24,12 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "calculates cost for business plan with monthly billing, SSO enabled and extra members" do
         result =
           EnterprisePlan.estimate(
-            "monthly",
-            20_000_000,
-            1000,
-            30,
-            1_000,
-            ["sites_api", "sso"]
+            billing_interval: "monthly",
+            pageviews_per_month: 20_000_000,
+            sites_limit: 1000,
+            team_members_limit: 30,
+            api_calls_limit: 1_000,
+            features: ["sites_api", "sso"]
           )
 
         assert result == Decimal.new("1537.00")
@@ -38,12 +38,12 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "bugfix - from float" do
         result =
           EnterprisePlan.estimate(
-            "monthly",
-            20_000_000,
-            0,
-            0,
-            0,
-            ["sites_api"]
+            billing_interval: "monthly",
+            pageviews_per_month: 20_000_000,
+            sites_limit: 0,
+            team_members_limit: 0,
+            api_calls_limit: 0,
+            features: ["sites_api"]
           )
 
         assert result == Decimal.new("738.00")
@@ -52,12 +52,12 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "Bogdan's example (https://3.basecamp.com/5308029/buckets/26383192/card_tables/cards/8506177450#__recording_8689686259)" do
         result =
           EnterprisePlan.estimate(
-            "monthly",
-            10_000,
-            500,
-            15,
-            600,
-            []
+            billing_interval: "monthly",
+            pageviews_per_month: 10_000,
+            sites_limit: 500,
+            team_members_limit: 15,
+            api_calls_limit: 600,
+            features: []
           )
 
         assert result == Decimal.new("144.00")
@@ -66,15 +66,30 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "calculates cost for business plan with yearly billing" do
         result =
           EnterprisePlan.estimate(
-            "yearly",
-            20_000_000,
-            1000,
-            30,
-            1_000,
-            ["sites_api"]
+            billing_interval: "yearly",
+            pageviews_per_month: 20_000_000,
+            sites_limit: 1000,
+            team_members_limit: 30,
+            api_calls_limit: 1_000,
+            features: ["sites_api"]
           )
 
         assert result == Decimal.new("12380.00")
+      end
+
+      test "Marko's managed proxy request (https://3.basecamp.com/5308029/buckets/26383192/card_tables/cards/9113635206)" do
+        result =
+          EnterprisePlan.estimate(
+            billing_interval: "monthly",
+            pageviews_per_month: 10_000,
+            sites_limit: 500,
+            team_members_limit: 15,
+            api_calls_limit: 600,
+            features: [],
+            managed_proxy_price_modifier: true
+          )
+
+        assert result == Decimal.new("343.00")
       end
     end
 

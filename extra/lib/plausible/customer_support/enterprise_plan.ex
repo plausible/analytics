@@ -2,35 +2,32 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   @moduledoc """
   Custom plan price estimation
   """
-  @spec estimate(
-          String.t(),
-          pos_integer(),
-          pos_integer(),
-          pos_integer(),
-          pos_integer(),
-          list(String.t())
-        ) :: Decimal.t()
-  def estimate(
-        billing_interval,
-        pageviews_per_month,
-        sites_limit,
-        team_members_limit,
-        api_calls_limit,
-        features
-      ) do
+  @spec estimate(Keyword.t()) :: Decimal.t()
+  def estimate(basis) do
+    basis =
+      Keyword.validate!(basis, [
+        :billing_interval,
+        :pageviews_per_month,
+        :sites_limit,
+        :team_members_limit,
+        :api_calls_limit,
+        :features,
+        :managed_proxy_price_modifier
+      ])
+
     pv_rate =
-      pv_rate(pageviews_per_month)
+      pv_rate(basis[:pageviews_per_month])
 
     sites_rate =
-      sites_rate(sites_limit)
+      sites_rate(basis[:sites_limit])
 
-    team_members_rate = team_members_rate(team_members_limit)
+    team_members_rate = team_members_rate(basis[:team_members_limit])
 
     api_calls_rate =
-      api_calls_rate(api_calls_limit)
+      api_calls_rate(basis[:api_calls_limit])
 
     features_rate =
-      features_rate(features)
+      features_rate(basis[:features])
 
     cost_per_month =
       Decimal.from_float(
@@ -38,16 +35,20 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
            sites_rate +
            team_members_rate +
            api_calls_rate +
-           features_rate) * 1.0
+           features_rate + managed_proxy_price_modifier(basis[:managed_proxy_price_modifier])) *
+          1.0
       )
       |> Decimal.round(2)
 
-    if billing_interval == "monthly" do
+    if basis[:billing_interval] == "monthly" do
       cost_per_month
     else
       cost_per_month |> Decimal.mult(10) |> Decimal.round(2)
     end
   end
+
+  def managed_proxy_price_modifier(true), do: 199.0
+  def managed_proxy_price_modifier(_), do: 0
 
   def pv_rate(pvs) when pvs <= 10_000, do: 19
   def pv_rate(pvs) when pvs <= 100_000, do: 39
