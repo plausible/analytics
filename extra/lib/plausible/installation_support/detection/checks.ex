@@ -37,8 +37,8 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
     )
   end
 
-  def telemetry_event_handled(), do: [:plausible, :detection, :handled]
-  def telemetry_event_unhandled(), do: [:plausible, :detection, :unhandled]
+  def telemetry_event_success(), do: [:plausible, :detection, :success]
+  def telemetry_event_failure(), do: [:plausible, :detection, :failure]
 
   def interpret_diagnostics(%State{
         diagnostics: diagnostics,
@@ -47,24 +47,36 @@ defmodule Plausible.InstallationSupport.Detection.Checks do
       }) do
     result = Detection.Diagnostics.interpret(diagnostics, url)
 
-    case result.data do
-      %{unhandled: true} ->
-        Sentry.capture_message("Unhandled case for detection",
-          extra: %{
-            message: inspect(diagnostics),
-            url: url,
-            hash: :erlang.phash2(diagnostics)
-          }
-        )
+    {failed?, trigger_sentry?, msg} =
+      case result do
+        %{ok?: true} ->
+          {false, false, nil}
 
-        Logger.warning(
-          "[DETECTION] Unhandled case (data_domain='#{data_domain}'): #{inspect(diagnostics)}"
-        )
+        %{data: %{failure: :customer_website_issue}} ->
+          {true, false, "Failed due to an issue with the customer website"}
 
-        :telemetry.execute(telemetry_event_unhandled(), %{})
+        %{data: %{failure: :browserless_issue}} ->
+          {true, true, "Failed due to a Browserless issue"}
 
-      _ ->
-        :telemetry.execute(telemetry_event_handled(), %{})
+        _unknown_failure ->
+          {true, true, "Unknown failure"}
+      end
+
+    if failed? do
+      :telemetry.execute(telemetry_event_failure(), %{})
+      Logger.warning("[DETECTION] #{msg} (data_domain='#{data_domain}'): #{inspect(diagnostics)}")
+    else
+      :telemetry.execute(telemetry_event_success(), %{})
+    end
+
+    if trigger_sentry? do
+      Sentry.capture_message("[DETECTION] #{msg}",
+        extra: %{
+          message: inspect(diagnostics),
+          url: url,
+          hash: :erlang.phash2(diagnostics)
+        }
+      )
     end
 
     result

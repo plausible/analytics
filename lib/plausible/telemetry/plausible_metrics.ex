@@ -185,15 +185,15 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         on_ee(
           do:
             counter(
-              metric_prefix ++ [:detection, :handled],
-              event_name: InstallationSupport.Detection.Checks.telemetry_event_handled()
+              metric_prefix ++ [:detection, :success],
+              event_name: InstallationSupport.Detection.Checks.telemetry_event_success()
             )
         ),
         on_ee(
           do:
             counter(
-              metric_prefix ++ [:detection, :unhandled],
-              event_name: InstallationSupport.Detection.Checks.telemetry_event_unhandled()
+              metric_prefix ++ [:detection, :failure],
+              event_name: InstallationSupport.Detection.Checks.telemetry_event_failure()
             )
         ),
         on_ee(
