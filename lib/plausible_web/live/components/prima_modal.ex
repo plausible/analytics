@@ -36,4 +36,14 @@ defmodule PlausibleWeb.Live.Components.PrimaModal do
     </Modal.modal>
     """
   end
+
+  slot :inner_block, required: true
+
+  def modal_title(assigns) do
+    ~H"""
+    <Modal.modal_title as={&h2/1}>
+      {render_slot(@inner_block)}
+    </Modal.modal_title>
+    """
+  end
 end

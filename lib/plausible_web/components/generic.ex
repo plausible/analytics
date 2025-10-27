@@ -1060,10 +1060,11 @@ defmodule PlausibleWeb.Components.Generic do
 
   slot :inner_block, required: true
   attr :class, :any, default: nil
+  attr :rest, :global
 
   def h2(assigns) do
     ~H"""
-    <h2 class={[@class || "font-semibold leading-6 text-gray-900 dark:text-gray-100"]}>
+    <h2 class={[@class || "font-semibold leading-6 text-gray-900 dark:text-gray-100"]} {@rest}>
       {render_slot(@inner_block)}
     </h2>
     """

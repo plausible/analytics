@@ -580,12 +580,9 @@ defmodule PlausibleWeb.Live.Sites do
             <Heroicons.user_group class="h-6 w-6" />
           </div>
           <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-            <h3
-              class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100"
-              id={@id <> "modal-title"}
-            >
+            <PlausibleWeb.Live.Components.PrimaModal.modal_title>
               Invitation for {@site.domain}
-            </h3>
+            </PlausibleWeb.Live.Components.PrimaModal.modal_title>
             <div class="mt-2">
               <p class="text-sm text-gray-500 dark:text-gray-200">
                 You've been invited to the {@site.domain} analytics dashboard as <b class="capitalize">{@invitation.invitation.role}</b>.
@@ -650,6 +647,7 @@ defmodule PlausibleWeb.Live.Sites do
           data-method="post"
           data-csrf={Plug.CSRFProtection.get_csrf_token()}
           data-to={"/sites/invitations/#{@invitation.invitation.invitation_id}/accept"}
+          data-autofocus
         >
           Accept &amp; Continue
         </.button>
@@ -658,6 +656,7 @@ defmodule PlausibleWeb.Live.Sites do
           mt?={false}
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
           class="sm:ml-3 w-full sm:w-auto sm:text-sm"
+          data-autofocus
         >
           Upgrade
         </.button_link>
