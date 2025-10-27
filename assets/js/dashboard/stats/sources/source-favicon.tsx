@@ -6,10 +6,7 @@ interface SourceFaviconProps {
   className?: string
 }
 
-export const SourceFavicon = ({
-  name,
-  className
-}: SourceFaviconProps) => {
+export const SourceFavicon = ({ name, className }: SourceFaviconProps) => {
   const sourceName = name.toLowerCase()
   const needsWhiteBg =
     sourceName.includes('github') || sourceName.includes('chatgpt.com')
@@ -21,7 +18,8 @@ export const SourceFavicon = ({
       referrerPolicy="no-referrer"
       className={classNames(
         className,
-        needsWhiteBg && 'dark:bg-white dark:border dark:border-white dark:rounded-full'
+        needsWhiteBg &&
+          'dark:bg-white dark:border dark:border-white dark:rounded-full'
       )}
     />
   )

@@ -64,12 +64,7 @@ function AllSources({ afterFetchData }) {
   }
 
   function renderIcon(listItem) {
-    return (
-      <SourceFavicon
-        name={listItem.name}
-        className="size-4 mr-2"
-      />
-    )
+    return <SourceFavicon name={listItem.name} className="size-4 mr-2" />
   }
 
   function chooseMetrics() {
