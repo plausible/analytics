@@ -114,11 +114,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             <.td class="align-top">
               {plan.billing_interval}
             </.td>
-            <.td class="align-top">
+            <.td class="align-top" data-test-id={"plan-entry-#{plan.paddle_plan_id}"}>
               {plan.paddle_plan_id}
 
               <span
-                :if={(@team.subscription && @team.subscription.paddle_plan_id) == plan.paddle_plan_id}
+                :if={current_plan?(@team, plan.paddle_plan_id)}
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-red-100 text-red-800"
               >
                 CURRENT
@@ -142,6 +142,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
             <.td class="align-top">
               <.edit_button phx-click="edit-plan" phx-value-id={plan.id} phx-target={@myself} />
+              <.delete_button
+                :if={not current_plan?(@team, plan.paddle_plan_id)}
+                data-test-id={"delete-plan-#{plan.paddle_plan_id}"}
+                data-confirm="Are you sure you want to delete this plan?"
+                phx-click="delete-plan"
+                phx-value-id={plan.id}
+                phx-target={@myself}
+              />
             </.td>
           </:tbody>
         </.table>
@@ -235,7 +243,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     """
   end
 
-  # Event handlers
   def handle_event("show-plan-form", _, socket) do
     {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
   end
@@ -250,6 +257,16 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     else
       {:noreply, socket}
     end
+  end
+
+  def handle_event("delete-plan", %{"id" => plan_id}, socket) do
+    plan = Plausible.Repo.get(EnterprisePlan, plan_id)
+
+    if not current_plan?(socket.assigns.team, plan.paddle_plan_id),
+      do: Plausible.Repo.delete(plan)
+
+    plans = get_plans(socket.assigns.team.id)
+    {:noreply, assign(socket, plans: plans)}
   end
 
   def handle_event("hide-plan-form", _, socket) do
@@ -430,4 +447,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     />
     """
   end
+
+  defp current_plan?(%{subscription: %{paddle_plan_id: id}}, id), do: true
+  defp current_plan?(_, _), do: false
 end
