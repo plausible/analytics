@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
   @moduledoc """
-  Tests for Sites create/read/update/delete API with `scriptv2` feature flag enabled.
-  It has overlap with some of the tests in `PlausibleWeb.Api.ExternalSitesControllerTest` test suite.
-  The overlapped tests from that suite can be deleted once the feature flag is enabled globally.
+  Tests for Sites create/read/update/delete API.
   """
   use Plausible
   use PlausibleWeb.ConnCase
@@ -14,7 +12,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
     setup :create_user
 
     setup %{conn: conn, user: user} do
-      FunWithFlags.enable(:scriptv2, for_actor: user)
       api_key = insert(:api_key, user: user, scopes: ["sites:provision:*"])
       conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
       {:ok, api_key: api_key, conn: conn}
@@ -33,6 +30,49 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
       end
 
       test "can create a site", %{conn: conn} do
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn"
+          })
+
+        response = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "domain" => "some-site.domain",
+                         "timezone" => "Europe/Tallinn",
+                         "custom_properties" => [],
+                         "tracker_script_configuration" =>
+                           ^strict_map(%{
+                             "id" => ^any(:string),
+                             "installation_type" => nil,
+                             "track_404_pages" => false,
+                             "hash_based_routing" => false,
+                             "outbound_links" => false,
+                             "file_downloads" => false,
+                             "revenue_tracking" => false,
+                             "tagged_events" => false,
+                             "form_submissions" => false,
+                             "pageview_props" => false
+                           })
+                       }) = response
+      end
+
+      test "can create more sites than their Enterprise plans is limited to (we sort the bills post-fact)",
+           %{conn: conn} do
+        user =
+          new_user()
+          |> subscribe_to_enterprise_plan(
+            features: [
+              Plausible.Billing.Feature.StatsAPI,
+              Plausible.Billing.Feature.SitesAPI
+            ],
+            site_limit: 10
+          )
+
+        sites = for _ <- 1..10, do: new_site(owner: user)
+        assert 10 == length(sites)
+
         conn =
           post(conn, "/api/v1/sites", %{
             "domain" => "some-site.domain",
@@ -464,6 +504,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         site2 = new_site(owner: user)
 
         _unrelated_site = new_site()
+        _consolidated_excluded = new_site(owner: user, consolidated: true)
 
         conn = get(conn, "/api/v1/sites")
 
@@ -699,7 +740,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
       end
 
       @tag :capture_log
-      test "is 404 when user is not a member of the site", %{conn: conn} do
+      test "is 401 when user is not a member of the site", %{conn: conn} do
         site = new_site()
 
         conn = get(conn, "/api/v1/sites/" <> site.domain)
