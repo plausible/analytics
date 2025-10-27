@@ -3,7 +3,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
   Tests for capturing logs/telemetry/Sentry upon detection diagnostics interpretation.
   Needs to be synchronous due to Sentry assertions, hence a separate module.
   """
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase, async: false
 
   @moduletag :ee_only
 
@@ -29,9 +29,21 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
         end,
         %{}
       )
+
+      Sentry.put_config(:test_mode, true)
+      Sentry.put_config(:send_result, :sync)
+      Sentry.put_config(:dedup_events, false)
+
+      assert :ok = Sentry.Test.start_collecting(owner: test_pid)
+
+      on_exit(fn ->
+        Sentry.put_config(:test_mode, false)
+        Sentry.put_config(:send_result, :none)
+        Sentry.put_config(:dedup_events, true)
+      end)
     end
 
-    test "successful detection -> no logs, telemetry :success" do
+    test "successful detection -> no logs, no sentry, telemetry :success" do
       stub_lookup_a_records(@expected_domain)
 
       detection_stub =
@@ -49,6 +61,8 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
       log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
 
       assert log == ""
+
+      assert [] = Sentry.Test.pop_sentry_reports()
 
       assert_receive {:telemetry_event, telemetry_event}
       assert telemetry_event == Checks.telemetry_event_success()
@@ -76,6 +90,8 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
       assert log =~ "[DETECTION] Failed due to an issue with the customer website"
       assert log =~ "service_error: %{code: :domain_not_found}"
 
+      assert [] = Sentry.Test.pop_sentry_reports()
+
       assert_receive {:telemetry_event, telemetry_event}
       assert telemetry_event == Checks.telemetry_event_failure()
     end
@@ -97,6 +113,8 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
         assert log =~ "[DETECTION] Failed due to an issue with the customer website"
         assert log =~ "code: :browserless_client_error"
         assert log =~ ~s|extra: "#{unquote(msg)}"|
+
+        assert [] = Sentry.Test.pop_sentry_reports()
 
         assert_receive {:telemetry_event, telemetry_event}
         assert telemetry_event == Checks.telemetry_event_failure()
@@ -120,6 +138,9 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
       assert log =~ "code: :browserless_client_error"
       assert log =~ ~s|extra: "something unexpected"|
 
+      assert [sentry_event] = Sentry.Test.pop_sentry_reports()
+      assert sentry_event.message.formatted == "[DETECTION] Unknown failure"
+
       assert_receive {:telemetry_event, telemetry_event}
       assert telemetry_event == Checks.telemetry_event_failure()
     end
@@ -138,6 +159,9 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
       assert log =~ "[DETECTION] Unknown failure"
       assert log =~ "code: :req_error"
       assert log =~ ~s|extra: :econnrefused|
+
+      assert [sentry_event] = Sentry.Test.pop_sentry_reports()
+      assert sentry_event.message.formatted == "[DETECTION] Unknown failure"
 
       assert_receive {:telemetry_event, telemetry_event}
       assert telemetry_event == Checks.telemetry_event_failure()
@@ -160,6 +184,9 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
       assert log =~ "code: :bad_browserless_response"
       assert log =~ "extra: 400"
 
+      assert [sentry_event] = Sentry.Test.pop_sentry_reports()
+      assert sentry_event.message.formatted == "[DETECTION] Failed due to a Browserless issue"
+
       assert_receive {:telemetry_event, telemetry_event}
       assert telemetry_event == Checks.telemetry_event_failure()
     end
@@ -177,6 +204,9 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
 
       assert log =~ "[DETECTION] Failed due to a Browserless issue"
       assert log =~ "code: :browserless_timeout"
+
+      assert [sentry_event] = Sentry.Test.pop_sentry_reports()
+      assert sentry_event.message.formatted == "[DETECTION] Failed due to a Browserless issue"
 
       assert_receive {:telemetry_event, telemetry_event}
       assert telemetry_event == Checks.telemetry_event_failure()
