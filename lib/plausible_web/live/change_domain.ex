@@ -68,6 +68,8 @@ defmodule PlausibleWeb.Live.ChangeDomain do
   end
 
   defp render_form_step(assigns) do
+    assigns = assign(assigns, docs_link: @change_domain_docs_link)
+
     ~H"""
     <.focus_box>
       <:title>Change your website domain</:title>
@@ -78,7 +80,13 @@ defmodule PlausibleWeb.Live.ChangeDomain do
       <:footer>
         <.focus_list>
           <:item>
-            Changed your mind? Go back to
+            See our
+            <.styled_link new_tab={true} href={@docs_link}>
+              domain change documentation
+            </.styled_link>
+          </:item>
+          <:item>
+            Return to
             <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
               Site Settings
             </.styled_link>
@@ -92,6 +100,8 @@ defmodule PlausibleWeb.Live.ChangeDomain do
   end
 
   defp render_success_step(assigns) do
+    assigns = assign(assigns, docs_link: @change_domain_docs_link)
+
     ~H"""
     <.focus_box>
       <:title>Domain Changed Successfully</:title>
@@ -102,9 +112,20 @@ defmodule PlausibleWeb.Live.ChangeDomain do
       </:subtitle>
 
       <:footer>
-        <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
-          ← Back to Site Settings
-        </.styled_link>
+        <.focus_list>
+          <:item>
+            See our
+            <.styled_link new_tab={true} href={@docs_link}>
+              domain change documentation
+            </.styled_link>
+          </:item>
+          <:item>
+            Return to
+            <.styled_link href={Routes.site_path(@socket, :settings_general, @site.domain)}>
+              Site Settings
+            </.styled_link>
+          </:item>
+        </.focus_list>
       </:footer>
       <%= on_ee do %>
         <.async_result :let={detection_result} assign={@detection_result}>
