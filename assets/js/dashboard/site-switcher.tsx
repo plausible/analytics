@@ -233,6 +233,7 @@ export const SiteSwitcher = () => {
                 </div>
               )}
               {user.team.hasConsolidatedView && user.team.identifier && <a
+                data-selected={currentSite.isConsolidatedView}
                 className={menuItemClassName}
                 href={getSwitchToSiteURL(currentSite, { domain: user.team.identifier }) ?? '#'}
                 onClick={() => closePopover()}
