@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   def render(assigns) do
     class = [
-      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-lg px-8 pt-6 pb-8 top-24",
+      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-900 shadow-xl rounded-lg px-8 pt-6 pb-8 top-24",
       assigns.class
     ]
 

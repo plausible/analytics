@@ -25,7 +25,7 @@ export default function MoreLink({ linkProps, list, className, onClick }) {
       <div className={`w-full text-center ${className ? className : ''}`}>
         <AppNavigationLink
           {...linkProps}
-          className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
+          className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 tracking-wide"
           onClick={onClick}
         >
           {detailsIcon()}

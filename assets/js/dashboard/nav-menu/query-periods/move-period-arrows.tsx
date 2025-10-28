@@ -37,10 +37,21 @@ const ArrowKeybind = ({
   )
 }
 
-function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
+function ArrowIcon({
+  direction,
+  disabled = false
+}: {
+  direction: 'left' | 'right'
+  disabled?: boolean
+}) {
   return (
     <svg
-      className="feather h-4 w-4"
+      className={classNames(
+        'feather size-4',
+        disabled
+          ? 'text-gray-400 dark:text-gray-600'
+          : 'text-gray-700 dark:text-gray-300'
+      )}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
@@ -74,14 +85,15 @@ export function MovePeriodArrows({ className }: { className?: string }) {
   const canGoForward =
     getDateForShiftedPeriod({ site, query, direction: 1 }) !== null
 
-  const sharedClass = 'flex items-center px-1 sm:px-2 dark:text-gray-100'
-  const enabledClass = 'hover:bg-gray-100 dark:hover:bg-gray-900'
-  const disabledClass = 'bg-gray-300 dark:bg-gray-950 cursor-not-allowed'
+  const sharedClass =
+    'flex items-center px-1 sm:px-2 dark:text-gray-100 transition-colors duration-150'
+  const enabledClass = 'hover:bg-gray-100 dark:hover:bg-gray-700'
+  const disabledClass = 'bg-gray-200 dark:bg-gray-850 cursor-not-allowed'
 
   return (
     <div
       className={classNames(
-        'flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer focus:z-10 dark:bg-gray-800',
+        'flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer focus:z-10 dark:bg-gray-750',
         className
       )}
     >
@@ -102,7 +114,7 @@ export function MovePeriodArrows({ className }: { className?: string }) {
             : (search) => search
         }
       >
-        <ArrowIcon direction="left" />
+        <ArrowIcon direction="left" disabled={!canGoBack} />
       </AppNavigationLink>
       <AppNavigationLink
         className={classNames(sharedClass, 'rounded-r', {
@@ -120,7 +132,7 @@ export function MovePeriodArrows({ className }: { className?: string }) {
             : (search) => search
         }
       >
-        <ArrowIcon direction="right" />
+        <ArrowIcon direction="right" disabled={!canGoForward} />
       </AppNavigationLink>
       {!!dashboardRouteMatch && <ArrowKeybind keyboardKey="ArrowLeft" />}
       {!!dashboardRouteMatch && <ArrowKeybind keyboardKey="ArrowRight" />}

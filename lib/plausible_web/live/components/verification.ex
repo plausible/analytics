@@ -180,7 +180,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
           <a
             href="#"
             @click.prevent="showDiagnostics = !showDiagnostics"
-            class="bg-yellow-100 dark:text-gray-800"
+            class="bg-yellow-100 dark:bg-yellow-800/40"
           >
             As a super-admin, you're eligible to see diagnostics details. Click to expand.
           </a>

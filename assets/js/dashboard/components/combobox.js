@@ -12,10 +12,9 @@ import { useMountedEffect, useDebounce } from '../custom-hooks'
 
 function Option({ isHighlighted, onClick, onMouseEnter, text, id }) {
   const className = classNames(
-    'relative cursor-pointer select-none py-2 px-3',
+    'relative cursor-pointer select-none py-2 px-3 text-gray-900 dark:text-gray-300',
     {
-      'text-gray-900 dark:text-gray-300': !isHighlighted,
-      'bg-indigo-600 text-white': isHighlighted
+      'bg-gray-100 dark:bg-gray-700': isHighlighted
     }
   )
 
@@ -340,9 +339,10 @@ export default function PlausibleCombobox({
   }
 
   const defaultBoxClass =
-    'pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500'
+    'pl-2 pr-8 py-1 w-full dark:bg-gray-750 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-750'
   const finalBoxClass = classNames(boxClass || defaultBoxClass, {
-    'border-indigo-500 ring-1 ring-indigo-500': isOpen
+    'ring-3 ring-indigo-500/20 dark:ring-indigo-500/25 border !border-indigo-500':
+      isOpen
   })
 
   return (
@@ -365,7 +365,7 @@ export default function PlausibleCombobox({
         >
           <ul
             ref={listRef}
-            className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1/5 ring-black focus:outline-hidden sm:text-sm dark:bg-gray-900"
+            className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1/5 ring-black focus:outline-hidden sm:text-sm dark:bg-gray-800"
           >
             {renderDropDownContent()}
           </ul>

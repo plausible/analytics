@@ -19,7 +19,7 @@
     <.form :let={f} for={@changeset} action={"/#{URI.encode_www_form(@site.domain)}/settings"}>
       <.input
         field={f[:timezone]}
-        label="Reporting Timezone"
+        label="Reporting timezone"
         type="select"
         options={Plausible.Timezones.options()}
         width="w-1/2"

@@ -1605,7 +1605,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "shows form for new shared link", %{conn: conn, site: site} do
       conn = get(conn, "/sites/#{site.domain}/shared-links/new")
 
-      assert html_response(conn, 200) =~ "New Shared Link"
+      assert html_response(conn, 200) =~ "New shared link"
     end
   end
 

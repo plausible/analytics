@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
     <div>
       <.filter_bar filter_text={@filter_text} placeholder="Search Properties">
         <.button phx-click="add-prop" mt?={false}>
-          Add Property
+          Add property
         </.button>
       </.filter_bar>
       <%= if is_list(@props) && length(@props) > 0 do %>

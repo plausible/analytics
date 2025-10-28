@@ -33,7 +33,7 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
           'relative top-0 py-2 sm:py-3 z-10',
           !site.embedded &&
             !inView &&
-            'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-850'
+            'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-950'
         )}
       >
         {children}
