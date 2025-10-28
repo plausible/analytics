@@ -8,7 +8,7 @@ export interface PlausibleConfig {
   /** Your site's domain, as declared by you in Plausible's settings. */
   domain: string
 
-  /** 
+  /**
    * The URL of the Plausible API endpoint. Defaults to https://plausible.io/api/event
    * See proxying guide at https://plausible.io/docs/proxy/introduction
    */
@@ -17,7 +17,7 @@ export interface PlausibleConfig {
   /** Whether to automatically capture pageviews. Defaults to true. */
   autoCapturePageviews?: boolean
 
-  /** 
+  /**
    * Whether the page uses hash based routing. Defaults to false.
    * Read more at https://plausible.io/docs/hash-based-routing
    */
@@ -38,7 +38,7 @@ export interface PlausibleConfig {
   /** Whether to log on ignored events. Defaults to true. */
   logging?: boolean
 
-  /** 
+  /**
    * Custom properties to add to all events tracked.
    * If passed as a function, it will be called when `track` is called.
    */
@@ -46,10 +46,10 @@ export interface PlausibleConfig {
     | CustomProperties
     | ((eventName: string) => CustomProperties)
 
-  /** 
+  /**
    * A function that can be used to transform the payload before it is sent to the API.
    * If the function returns null or any other falsy value, the event will be ignored.
-   * 
+   *
    * This can be used to avoid sending certain types of events, or modifying any event
    * parameters, e.g. to clean URLs of values that should not be recorded.
    */
@@ -57,7 +57,7 @@ export interface PlausibleConfig {
     payload: PlausibleRequestPayload
   ) => PlausibleRequestPayload | null
 
-  /** 
+  /**
    * If enabled (the default), the script will set `window.plausible` after `init` is called.
    * This is used by the verifier to detect if the script is loaded from npm package.
    */
@@ -65,25 +65,25 @@ export interface PlausibleConfig {
 }
 
 export interface PlausibleEventOptions {
-  /** 
+  /**
    * Custom properties to add to the event.
    * Read more at https://plausible.io/docs/custom-props/introduction
    */
   props?: CustomProperties
 
-  /** 
+  /**
    * Whether the tracked event is interactive. Defaults to true.
    * By marking a custom event as non-interactive, it will not be counted towards bounce rate calculations.
    */
   interactive?: boolean
 
-  /** 
+  /**
    * Revenue data to add to the event.
    * Read more at https://plausible.io/docs/ecommerce-revenue-tracking
    */
   revenue?: PlausibleEventRevenue
 
-  /** 
+  /**
    * Called when request to `endpoint` completes or is ignored.
    * When request is ignored, the result will be undefined.
    * When request was delivered, the result will be an object with the response status code of the request.
@@ -93,7 +93,7 @@ export interface PlausibleEventOptions {
     result?: { status: number } | { error: unknown } | undefined
   ) => void
 
-  /** 
+  /**
    * Overrides the URL of the page that the event is being tracked on.
    * If not provided, `location.href` will be used.
    */
