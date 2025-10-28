@@ -9,6 +9,7 @@ import FadeIn from '../../fade-in'
 import classNames from 'classnames'
 import { hasConversionGoalFilter } from '../../util/filters'
 import { MetricFormatterShort } from '../reports/metric-formatter'
+import { UIMode, useTheme } from '../../theme-context'
 
 const calculateMaximumY = function (dataset) {
   const yAxisValues = dataset
@@ -40,7 +41,7 @@ class LineGraph extends React.Component {
   }
 
   regenerateChart() {
-    const { graphData, query } = this.props
+    const { graphData, query, theme } = this.props
     const metric = this.getGraphMetric()
     const graphEl = document.getElementById('main-graph-canvas')
     this.ctx = graphEl.getContext('2d')
@@ -67,7 +68,7 @@ class LineGraph extends React.Component {
             mode: 'index',
             intersect: false,
             position: 'average',
-            external: GraphTooltip(graphData, metric, query)
+            external: GraphTooltip(graphData, metric, query, theme)
           }
         },
         responsive: true,
@@ -84,14 +85,16 @@ class LineGraph extends React.Component {
             suggestedMax: calculateMaximumY(dataSet),
             ticks: {
               callback: MetricFormatterShort[metric],
-              color: this.props.darkTheme ? 'rgb(161, 161, 170)' : undefined
+              color:
+                theme.mode === UIMode.dark ? 'rgb(161, 161, 170)' : undefined
             },
             grid: {
               zeroLineColor: 'transparent',
               drawBorder: false,
-              color: this.props.darkTheme
-                ? 'rgba(39, 39, 42, 0.75)'
-                : 'rgb(236, 236, 238)'
+              color:
+                theme.mode === UIMode.dark
+                  ? 'rgba(39, 39, 42, 0.75)'
+                  : 'rgb(236, 236, 238)'
             }
           },
           yComparison: {
@@ -147,7 +150,8 @@ class LineGraph extends React.Component {
                   shouldShowYear
                 })(this.getLabelForValue(val))
               },
-              color: this.props.darkTheme ? 'rgb(161, 161, 170)' : undefined
+              color:
+                theme.mode === UIMode.dark ? 'rgb(161, 161, 170)' : undefined
             }
           }
         },
@@ -183,12 +187,12 @@ class LineGraph extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { graphData, darkTheme } = this.props
+    const { graphData, theme } = this.props
     const tooltip = document.getElementById('chartjs-tooltip-main')
 
     if (
       graphData !== prevProps.graphData ||
-      darkTheme !== prevProps.darkTheme
+      theme.mode !== prevProps.theme.mode
     ) {
       if (graphData) {
         if (this.chart) {
@@ -271,5 +275,8 @@ class LineGraph extends React.Component {
 export default function LineGraphWrapped(props) {
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
-  return <LineGraph {...props} navigate={navigate} query={query} />
+  const theme = useTheme()
+  return (
+    <LineGraph {...props} navigate={navigate} query={query} theme={theme} />
+  )
 }
