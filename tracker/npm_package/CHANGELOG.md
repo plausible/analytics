@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Changed
 - Convert all TypeScript definition comments from `//` style to JSDoc `/** */` style for better IDE integration and TypeScript tooling support
 
 ## [0.4.3] - 2025-09-15
