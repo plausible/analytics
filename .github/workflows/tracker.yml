@@ -49,7 +49,7 @@ jobs:
         run: npm --prefix ./tracker test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
       - name: Upload blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: blob-report-${{ matrix.shardIndex }}
           path: tracker/blob-report
