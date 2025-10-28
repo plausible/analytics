@@ -4,11 +4,7 @@ import dateFormatter from './date-formatter'
 import { METRIC_LABELS, hasMultipleYears } from './graph-util'
 import { MetricFormatterShort } from '../reports/metric-formatter'
 import { ChangeArrow } from '../reports/change-arrow'
-
-// Function to detect if dark mode is active
-const isDarkMode = () => {
-  return document.documentElement.classList.contains('dark')
-}
+import { UIMode } from '../../theme-context'
 
 const renderBucketLabel = function (
   query,
@@ -104,7 +100,7 @@ const buildTooltipData = function (query, graphData, metric, tooltipModel) {
 
 let tooltipRoot
 
-export default function GraphTooltip(graphData, metric, query) {
+export default function GraphTooltip(graphData, metric, query, theme) {
   return (context) => {
     const tooltipModel = context.tooltip
     const offset = document
@@ -122,7 +118,7 @@ export default function GraphTooltip(graphData, metric, query) {
       tooltipRoot = createRoot(tooltipEl)
     }
 
-    const bgClass = isDarkMode() ? 'bg-gray-950' : 'bg-gray-800'
+    const bgClass = theme.mode === UIMode.dark ? 'bg-gray-950' : 'bg-gray-800'
     tooltipEl.className = `absolute text-sm font-normal py-3 px-4 pointer-events-none rounded-md z-[100] min-w-[180px] ${bgClass}`
 
     if (tooltipEl && offset && window.innerWidth < 768) {

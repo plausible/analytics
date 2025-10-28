@@ -34,8 +34,6 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   const site = useSiteContext()
 
   const isRealtime = query.period === 'realtime'
-  const isDarkTheme =
-    document.querySelector('html').classList.contains('dark') || false
 
   const topStatsBoundary = useRef(null)
 
@@ -209,7 +207,6 @@ export default function VisitorGraph({ updateImportedDataInView }) {
               ...graphData,
               interval: getCurrentInterval(site, query)
             }}
-            darkTheme={isDarkTheme}
           />
         </div>
       </FadeIn>
