@@ -173,7 +173,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
 
       html = render_async(lv, 500)
-      assert html =~ "<i>must</i>"
+      assert html =~ "using our WordPress plugin"
       assert html =~ "also update the site"
       assert html =~ "Plausible Wordpress Plugin settings"
       assert html =~ "within 72 hours"
@@ -206,11 +206,11 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
 
       html = render_async(lv, 500)
-      assert html =~ "<i>must</i>"
-      assert html =~ "also update the site"
-      assert html =~ "Plausible Installation"
+      assert html =~ "using our legacy script"
+      assert html =~ "update the site domain"
+      assert html =~ "Plausible installation"
       assert html =~ "within 72 hours"
-      refute html =~ "Wordpress Plugin"
+      refute html =~ "Wordpress"
 
       assert element_exists?(
                html,
@@ -219,7 +219,10 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
     end
 
     @tag :ee_only
-    test "success page shows no notice when no v1 tracking detected", %{conn: conn, site: site} do
+    test "success page shows 'tracking works' notice when no v1 tracking detected", %{
+      conn: conn,
+      site: site
+    } do
       stub_detection_result(%{
         "v1Detected" => false,
         "gtmLikely" => false,
@@ -237,18 +240,17 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
 
       html = render_async(lv, 500)
-      refute html =~ "Additional Steps Required"
-      refute html =~ "<i>must</i>"
-      refute html =~ "also update the site"
+      assert html =~ "Your new domain should be tracking nicely"
+      assert html =~ "domain change checklist"
 
-      refute element_exists?(
+      assert element_exists?(
                html,
                "a[href='#{PlausibleWeb.Live.ChangeDomain.change_domain_docs_link()}']"
              )
     end
 
     @tag :ee_only
-    test "success page shows generic npm notice when detected", %{conn: conn, site: site} do
+    test "success page shows npm notice when detected", %{conn: conn, site: site} do
       stub_detection_result(%{
         "v1Detected" => false,
         "gtmLikely" => false,
@@ -267,9 +269,8 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
 
       html = render_async(lv, 500)
-      assert html =~ "<i>must</i>"
-      assert html =~ "also update the site"
-      assert html =~ "Plausible Installation"
+      assert html =~ "using our npm package"
+      assert html =~ "Plausible installation"
       assert html =~ "within 72 hours"
 
       assert element_exists?(
@@ -311,10 +312,13 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
 
       html = render_async(lv, 500)
-      assert html =~ "Additional Steps Required"
-      assert html =~ "<i>must</i>"
-      assert html =~ "also update the site"
-      assert html =~ "Plausible Installation"
+      assert html =~ "We could not reach your new domain"
+      assert html =~ "Additional action may be required"
+
+      assert element_exists?(
+               html,
+               "a[href='#{PlausibleWeb.Live.ChangeDomain.change_domain_docs_link()}']"
+             )
     end
 
     @tag ee_only: true, capture_log: true
@@ -331,10 +335,13 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
 
       html = render_async(lv, 500)
-      assert html =~ "Additional Steps Required"
-      assert html =~ "<i>must</i>"
-      assert html =~ "also update the site"
-      assert html =~ "Plausible Installation"
+      assert html =~ "We could not reach your new domain"
+      assert html =~ "Additional action may be required"
+
+      assert element_exists?(
+               html,
+               "a[href='#{PlausibleWeb.Live.ChangeDomain.change_domain_docs_link()}']"
+             )
     end
 
     @tag :ce_build_only

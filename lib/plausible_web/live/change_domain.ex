@@ -139,10 +139,26 @@ defmodule PlausibleWeb.Live.ChangeDomain do
           </:loading>
 
           <:failed>
-            <.generic_notice />
+            <div class="flex items-center">
+              <Heroicons.x_mark class="w-4 h-4 mr-2 font-bold text-red-500" />
+              <span class="text-sm font-bold">
+                We could not reach your new domain
+              </span>
+            </div>
+
+            <p class="mt-4 text-sm">
+              Additional action may be required. If you're using our legacy snippet (i.e. your
+              Plausible snippet includes the data-domain attribute) or the NPM package, you must
+              also update the site domain of your Plausible installation within 72 hours to match
+              the updated domain in order to guarantee continuous tracking.
+            </p>
           </:failed>
 
-          <.success_notice :if={detection_result} detection_result={detection_result} />
+          <.render_detection_result
+            :if={detection_result}
+            detection_result={detection_result}
+            site={@site}
+          />
         </.async_result>
       <% else %>
         <.ce_generic_notice />
@@ -152,46 +168,104 @@ defmodule PlausibleWeb.Live.ChangeDomain do
   end
 
   on_ee do
-    defp success_notice(assigns) do
+    defp render_detection_result(assigns) do
       case assigns.detection_result do
-        %{v1_detected: true, wordpress_plugin: true} -> wordpress_plugin_notice(assigns)
-        %{v1_detected: true, wordpress_plugin: false} -> generic_notice(assigns)
-        %{v1_detected: false, npm: true} -> generic_notice(assigns)
-        _ -> ~H""
+        %{v1_detected: true, wordpress_plugin: true} ->
+          ~H"""
+          <.additional_action_required />
+          <.v1_wordpress_plugin_notice />
+          """
+
+        %{v1_detected: true} ->
+          ~H"""
+          <.additional_action_required />
+          <.v1_generic_notice site={@site} />
+          """
+
+        %{v1_detected: false, npm: true} ->
+          ~H"""
+          <.additional_action_required />
+          <.npm_notice />
+          """
+
+        _ ->
+          ~H"""
+          <.success_notice />
+          <.tracking_works_notice />
+          """
       end
     end
 
-    defp wordpress_plugin_notice(assigns) do
-      assigns = assign(assigns, docs_link: @change_domain_docs_link)
-
+    defp success_notice(assigns) do
       ~H"""
-      <.notice class="mt-4" title="Additional Steps Required">
-        To guarantee continuous tracking, you <i>must</i>
-        also update the site <code>domain</code>
-        in your Plausible Wordpress Plugin settings within 72 hours
-        to match the updated domain. See
-        <.styled_link new_tab href={@docs_link}>
-          documentation
-        </.styled_link>
-        for details.
-      </.notice>
+      <div class="flex items-center">
+        <Heroicons.check class="w-4 h-4 mr-2 text-green-500" />
+        <span class="text-sm font-bold">
+          Your new domain should be tracking nicely
+        </span>
+      </div>
       """
     end
 
-    defp generic_notice(assigns) do
-      assigns = assign(assigns, docs_link: @change_domain_docs_link)
-
+    defp additional_action_required(assigns) do
       ~H"""
-      <.notice class="mt-4" title="Additional Steps Required">
-        To guarantee continuous tracking, you <i>must</i>
-        also update the site <code>domain</code>
-        of your Plausible Installation within 72 hours
-        to match the updated domain. See
-        <.styled_link new_tab href={@docs_link}>
-          documentation
+      <div class="flex items-center">
+        <Heroicons.exclamation_triangle class="w-4 h-4 mr-2 text-yellow-500" />
+        <span class="text-sm font-bold">
+          Additional action required
+        </span>
+      </div>
+      """
+    end
+
+    defp v1_wordpress_plugin_notice(assigns) do
+      # A v2 tracker based WordPress plugin is not yet ready so the WP plugin users
+      # need to change their site domain instead of upgrading to script v2.
+      ~H"""
+      <p class="mt-4 text-sm">
+        We've detected you're using our WordPress plugin. To guarantee continuous tracking,
+        you must also update the site domain in your Plausible Wordpress Plugin settings
+        within 72 hours to match the updated domain.
+      </p>
+      """
+    end
+
+    defp v1_generic_notice(assigns) do
+      ~H"""
+      <p class="mt-4 text-sm">
+        We've detected you're using our legacy script. This means that you'll also need
+        to update the site domain of your Plausible installation within 72 hours to guarantee
+        continuous tracking. The easiest way to fix that is to simply follow your
+        <.styled_link
+          new_tab
+          href={Routes.site_path(PlausibleWeb.Endpoint, :installation, @site.domain)}
+        >
+          installation instructions
         </.styled_link>
-        for details.
-      </.notice>
+        and upgrade to our new, more powerful tracking script.
+      </p>
+      """
+    end
+
+    defp npm_notice(assigns) do
+      ~H"""
+      <p class="mt-4 text-sm">
+        We've detected you're using our npm package. This means that you'll also need
+        to update the site domain of your Plausible installation within 72 hours to
+        guarantee continuous tracking.
+      </p>
+      """
+    end
+
+    defp tracking_works_notice(assigns) do
+      ~H"""
+      <p class="mt-4 text-sm">
+        Take a quick look at our
+        <.styled_link new_tab href="https://plausible.io/docs/todo-link-me">
+          domain change checklist
+        </.styled_link>
+        to make sure no further action is needed.
+      </p>
       """
     end
 
@@ -227,7 +301,7 @@ defmodule PlausibleWeb.Live.ChangeDomain do
         our NPM package, you <i>must</i>
         also update the site <code>domain</code>
         of
-        your Plausible Installation within 72 hours to match the updated domain. See
+        your Plausible installation within 72 hours to match the updated domain. See
         <.styled_link new_tab href={@docs_link}>
           documentation
         </.styled_link>
