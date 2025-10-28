@@ -61,8 +61,8 @@ defmodule PlausibleWeb.StatsController do
     demo = site.domain == "plausible.io"
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
 
-    consolidated_view? = Plausible.Sites.consolidated?(site)
-    team_has_consolidated_view? = Plausible.ConsolidatedView.enabled?(site.team)
+    consolidated_view? = on_ee do: Plausible.Sites.consolidated?(site), else: false
+    team_has_consolidated_view? = on_ee do: Plausible.ConsolidatedView.enabled?(site.team), else: false
     team_identifier = site.team.identifier
 
     skip_to_dashboard? =
