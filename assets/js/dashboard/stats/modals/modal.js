@@ -81,7 +81,7 @@ class Modal extends React.Component {
             <button className="modal__close"></button>
             <div
               ref={this.node}
-              className="modal__container dark:bg-gray-800 focus:outline-hidden"
+              className="modal__container dark:bg-gray-900 focus:outline-hidden"
               style={this.getStyle()}
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}

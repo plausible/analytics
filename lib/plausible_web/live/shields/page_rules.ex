@@ -115,9 +115,9 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
               for={@form}
               phx-submit="save-page-rule"
               phx-target={@myself}
-              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+              class="max-w-md w-full mx-auto"
             >
-              <.title>Add Page to Block List</.title>
+              <.title>Add page to block list</.title>
 
               <.live_component
                 class="mt-4"
@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 Once added, we will start rejecting traffic from this page within a few minutes.
               </p>
               <.button type="submit" class="w-full">
-                Add Page
+                Add page
               </.button>
             </.form>
           </.live_component>
@@ -220,8 +220,8 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
   end
 
   def suggest_page_paths(input, _options, site, page_rules) do
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
@@ -229,8 +229,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
           "date_range" => "all",
           "metrics" => ["pageviews"],
           "filters" => [["is_not", "event:page", Enum.map(page_rules, & &1.page_path)]]
-        },
-        %{}
+        }
       )
 
     site

@@ -64,7 +64,7 @@ defmodule Plausible.Cache do
       alias Plausible.Cache.Adapter
       require Logger
 
-      @spec broadcast_put(any(), Keyword.t()) :: :ok
+      @spec broadcast_put(any(), any(), Keyword.t()) :: :ok
       def broadcast_put(key, value, opts \\ []) do
         cache_name = Keyword.get(opts, :cache_name, name())
         multicall_timeout = Keyword.get(opts, :multicall_timeout, :timer.seconds(5))
@@ -78,7 +78,9 @@ defmodule Plausible.Cache do
       end
 
       @spec get(any(), Keyword.t()) :: any() | nil
-      def get(key, opts \\ []) when is_list(opts) do
+      def get(key, opts \\ [])
+
+      def get(key, opts) when is_list(opts) do
         cache_name = Keyword.get(opts, :cache_name, name())
         force? = Keyword.get(opts, :force?, false)
 
@@ -88,6 +90,8 @@ defmodule Plausible.Cache do
           get_from_source(key)
         end
       end
+
+      defoverridable get: 2
 
       @spec get_or_store(any(), (-> any()), Keyword.t()) :: any() | nil
       def get_or_store(key, fallback_fn, opts \\ [])

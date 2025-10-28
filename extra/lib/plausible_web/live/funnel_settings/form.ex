@@ -64,10 +64,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             phx-target="#funnel-form"
             phx-click-away="cancel-add-funnel"
             onkeydown="return event.key != 'Enter';"
-            class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
+            class="bg-white dark:bg-gray-900 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
           >
             <.title class="mb-6">
-              {if @funnel, do: "Edit", else: "Add"} Funnel
+              {if @funnel, do: "Edit", else: "Add"} funnel
             </.title>
 
             <.input
@@ -76,12 +76,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               autocomplete="off"
               placeholder="e.g. From Blog to Purchase"
               autofocus
-              label="Funnel Name"
+              label="Funnel name"
             />
 
             <div id="steps-builder" class="mt-6">
               <.label>
-                Funnel Steps
+                Funnel steps
               </.label>
 
               <div :for={step_idx <- @step_ids} class="flex mb-3 mt-3">
@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                     length(@step_ids) > map_size(@selections_made)
                 }
               >
-                <span>{if @funnel, do: "Update", else: "Add"} Funnel</span>
+                <span>{if @funnel, do: "Update", else: "Add"} funnel</span>
               </.button>
             </div>
           </.form>
@@ -349,16 +349,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         steps
       )
 
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
           "site_id" => site.domain,
           "date_range" => "month",
           "metrics" => ["pageviews"]
-        },
-        %{}
+        }
       )
 
     {:ok, {definition, query}}

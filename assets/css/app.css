@@ -4,7 +4,6 @@
 @import './loader.css' layer(components);
 @import './tooltip.css' layer(components);
 @import './flatpickr-colors.css' layer(components);
-@import './chartjs.css' layer(components);
 
 @plugin "@tailwindcss/forms";
 
@@ -28,6 +27,24 @@
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+
+  *:focus-visible {
+    @apply ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900 outline-none;
+  }
+}
+
+@layer components {
+  /* Replace Tailwind form plugin's focus with focus-visible */
+  [type='checkbox']:focus,
+  [type='radio']:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  [type='checkbox']:focus-visible,
+  [type='radio']:focus-visible {
+    @apply ring-2 ring-indigo-500 ring-offset-2 outline-none;
+  }
 }
 
 @theme {
@@ -46,27 +63,41 @@
   --color-yellow-900: var(--color-amber-900);
   --color-yellow-950: var(--color-amber-950);
 
-  /* gray: colors.slate - Map gray to slate colors */
-  --color-gray-50: var(--color-slate-50);
-  --color-gray-100: var(--color-slate-100);
-  --color-gray-200: var(--color-slate-200);
-  --color-gray-300: var(--color-slate-300);
-  --color-gray-400: var(--color-slate-400);
-  --color-gray-500: var(--color-slate-500);
-  --color-gray-600: var(--color-slate-600);
-  --color-gray-700: var(--color-slate-700);
-  --color-gray-800: var(--color-slate-800);
-  --color-gray-900: var(--color-slate-900);
+  /* green: colors.emerald - Map green to emerald colors */
+  --color-green-50: var(--color-emerald-50);
+  --color-green-100: var(--color-emerald-100);
+  --color-green-200: var(--color-emerald-200);
+  --color-green-300: var(--color-emerald-300);
+  --color-green-400: var(--color-emerald-400);
+  --color-green-500: var(--color-emerald-500);
+  --color-green-600: var(--color-emerald-600);
+  --color-green-700: var(--color-emerald-700);
+  --color-green-800: var(--color-emerald-800);
+  --color-green-900: var(--color-emerald-900);
+  --color-green-950: var(--color-emerald-950);
 
-  /* Custom gray shades from config (override some slate values) */
-  --color-gray-150: rgb(234 238 244);
-  --color-gray-825: rgb(37 47 63);
-  --color-gray-850: rgb(26 32 44);
-  --color-gray-950: rgb(13 18 30);
+  /* gray: colors.zinc - Map gray to zinc colors */
+  --color-gray-50: var(--color-zinc-50);
+  --color-gray-100: var(--color-zinc-100);
+  --color-gray-200: var(--color-zinc-200);
+  --color-gray-300: var(--color-zinc-300);
+  --color-gray-400: var(--color-zinc-400);
+  --color-gray-500: var(--color-zinc-500);
+  --color-gray-600: var(--color-zinc-600);
+  --color-gray-700: var(--color-zinc-700);
+  --color-gray-800: var(--color-zinc-800);
+  --color-gray-900: var(--color-zinc-900);
+  --color-gray-950: var(--color-zinc-950);
+
+  /* Custom gray shades from config (override some zinc values) */
+  --color-gray-150: rgb(236 236 238);
+  --color-gray-750: rgb(50 50 54);
+  --color-gray-825: rgb(35 35 38);
+  --color-gray-850: rgb(34 34 38);
 
   /* Set v3 default ring behavior */
-  --default-ring-width: 3px;
-  --default-ring-color: var(--color-blue-500);
+  --default-ring-width: 2px;
+  --default-ring-color: var(--color-indigo-500);
 }
 
 @media print {
@@ -91,7 +122,7 @@
 }
 
 .button {
-  @apply inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+  @apply inline-flex justify-center px-3.5 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700;
 }
 
 .button[disabled] {
@@ -99,11 +130,7 @@
 }
 
 .button-outline {
-  @apply text-indigo-600 bg-transparent border border-indigo-600;
-}
-
-.button-outline:hover {
-  @apply text-white;
+  @apply text-indigo-600 bg-transparent border border-gray-300 dark:border-gray-600 dark:text-gray-100 hover:bg-transparent hover:text-indigo-700 dark:hover:text-white hover:border-gray-400/70 dark:hover:border-gray-500 transition-all duration-150;
 }
 
 .button-sm {
@@ -268,15 +295,15 @@ blockquote {
 }
 
 .table-striped tbody tr:nth-child(odd) {
-  background-color: #f1f5f8;
+  background-color: var(--color-gray-100);
 }
 
 .dark .table-striped tbody tr:nth-child(odd) {
-  background-color: rgb(37 47 63);
+  background-color: var(--color-gray-800);
 }
 
 .dark .table-striped tbody tr:nth-child(even) {
-  background-color: rgb(26 32 44);
+  background-color: var(--color-gray-900);
 }
 
 .fade-enter {
@@ -302,10 +329,6 @@ blockquote {
   background-color: inherit;
 }
 
-.dark .fullwidth-shadow::before {
-  box-shadow: 0 4px 2px -2px rgb(200 200 200 / 10%);
-}
-
 iframe[hidden] {
   display: none;
 }
@@ -319,10 +342,6 @@ iframe[hidden] {
 /* prettier-ignore */
 .date-option-group { }
 /* stylelint-enable */
-
-.popper-tooltip {
-  background-color: rgba(25 30 56);
-}
 
 .tooltip-arrow,
 .tooltip-arrow::before {

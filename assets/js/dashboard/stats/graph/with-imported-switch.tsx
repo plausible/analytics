@@ -31,6 +31,7 @@ export default function WithImportedSwitch({
             ? (search) => search
             : (search) => ({ ...search, with_imported: !importsSwitchedOn })
         }
+        className="flex items-center justify-center"
       >
         <BarsArrowUpIcon className={iconClass} />
       </AppNavigationLink>

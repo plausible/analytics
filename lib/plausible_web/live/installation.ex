@@ -2,32 +2,20 @@ defmodule PlausibleWeb.Live.Installation do
   @moduledoc """
   User assistance module around Plausible installation instructions/onboarding
   """
+
+  use Plausible
   use PlausibleWeb, :live_view
 
+  require Logger
+
+  alias PlausibleWeb.Flows
+  alias Phoenix.LiveView.AsyncResult
+  alias PlausibleWeb.Live.Installation.Icons
+  alias PlausibleWeb.Live.Installation.Instructions
+
   on_ee do
-    alias Plausible.InstallationSupport.{State, Checks, LegacyVerification}
+    alias Plausible.InstallationSupport.{Detection, Result}
   end
-
-  @script_extension_params %{
-    "outbound_links" => "outbound-links",
-    "tagged_events" => "tagged-events",
-    "file_downloads" => "file-downloads",
-    "hash_based_routing" => "hash",
-    "pageview_props" => "pageview-props",
-    "revenue_tracking" => "revenue"
-  }
-
-  @script_config_params ["track_404_pages" | Map.keys(@script_extension_params)]
-
-  @installation_types [
-    "gtm",
-    "manual",
-    "wordpress"
-  ]
-
-  @valid_qs_params @script_config_params ++ ["installation_type", "flow"]
-
-  def script_extension_params, do: @script_extension_params
 
   def mount(
         %{"domain" => domain} = params,
@@ -45,506 +33,319 @@ defmodule PlausibleWeb.Live.Installation do
         ]
       )
 
-    if PlausibleWeb.Tracker.scriptv2?(site) do
-      {:ok,
-       redirect(socket,
-         to:
-           Routes.site_path(
-             socket,
-             :installation_v2,
-             site.domain,
-             [flow: params["flow"], type: params["installation_type"]]
-             |> Keyword.filter(fn {_k, v} -> not is_nil(v) and v != "" end)
-           )
-       )}
-    else
-      flow = params["flow"]
+    flow = params["flow"] || Flows.provisioning()
 
-      tracker_script_configuration =
-        PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site)
-
-      installation_type = get_installation_type(flow, tracker_script_configuration, params)
-
-      config =
-        Map.new(@script_config_params, fn key ->
-          string_key = String.to_existing_atom(key)
-          {key, Map.get(tracker_script_configuration, string_key)}
-        end)
-
+    socket =
       on_ee do
-        if connected?(socket) and is_nil(installation_type) do
-          LegacyVerification.Checks.run("https://#{domain}", domain,
-            checks: [
-              Checks.FetchBody,
-              Checks.ScanBody
+        if connected?(socket) do
+          assign_async(
+            socket,
+            [
+              :recommended_installation_type,
+              :installation_type,
+              :tracker_script_configuration_form,
+              :v1_detected
             ],
-            report_to: self(),
-            async?: true,
-            slowdown: 0
+            fn -> initialize_installation_data(flow, site, params) end
           )
+        else
+          assign_loading_states(socket)
         end
+      else
+        # On Community Edition, there's no v1 detection, nor pre-installation
+        # site scan - we just default the pre-selected tab to "manual".
+
+        # Although it's functionally unnecessary, we stick to using `%AsyncResult{}`
+        # for these assigns to minimize branching out the CE code and maintain only
+        # a single `render` function.
+
+        {:ok, installation_data} = initialize_installation_data(flow, site, params)
+
+        assign(socket,
+          recommended_installation_type: %AsyncResult{
+            result: installation_data.recommended_installation_type,
+            ok?: true
+          },
+          installation_type: %AsyncResult{
+            result: installation_data.installation_type,
+            ok?: true
+          },
+          tracker_script_configuration_form: %AsyncResult{
+            result: installation_data.tracker_script_configuration_form,
+            ok?: true
+          },
+          v1_detected: %AsyncResult{
+            result: installation_data.v1_detected,
+            ok?: true
+          }
+        )
       end
 
-      {:ok,
-       assign(socket,
-         uri_params: Map.take(params, @valid_qs_params),
-         connected?: connected?(socket),
-         site: site,
-         site_created?: params["site_created"] == "true",
-         flow: flow,
-         installation_type: installation_type,
-         initial_installation_type: installation_type,
-         domain: domain,
-         config: config
-       )}
-    end
+    {:ok,
+     assign(socket,
+       site: site,
+       flow: flow
+     )}
   end
 
-  on_ee do
-    def handle_info({:all_checks_done, %State{} = state}, socket) do
-      installation_type =
-        case state.diagnostics do
-          %{wordpress_likely?: true} -> "wordpress"
-          %{gtm_likely?: true} -> "gtm"
-          _ -> "manual"
-        end
+  def handle_params(params, _url, socket) do
+    socket =
+      if connected?(socket) && socket.assigns.recommended_installation_type.result &&
+           params["type"] in PlausibleWeb.Tracker.supported_installation_types() do
+        assign(socket,
+          installation_type: %AsyncResult{result: params["type"]}
+        )
+      else
+        socket
+      end
 
-      {:noreply,
-       assign(socket,
-         initial_installation_type: installation_type,
-         installation_type: installation_type
-       )}
-    end
-
-    def handle_info(_msg, socket) do
-      {:noreply, socket}
-    end
+    {:noreply, socket}
   end
 
   def render(assigns) do
     ~H"""
     <div>
-      <.flash_messages flash={@flash} />
-      <PlausibleWeb.Components.FirstDashboardLaunchBanner.set :if={@site_created?} site={@site} />
       <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Install Plausible" />
 
       <.focus_box>
-        <:title :if={is_nil(@installation_type)}>
-          <div class="flex w-full mx-auto justify-center">
-            <.spinner class="spinner block text-center h-8 w-8" />
-          </div>
-        </:title>
-        <:title :if={@installation_type == "wordpress"}>
-          Install WordPress plugin
-        </:title>
-        <:title :if={@installation_type == "gtm"}>
-          Install Google Tag Manager
-        </:title>
-        <:title :if={@installation_type == "manual"}>
-          Manual installation
-        </:title>
+        <.async_result :let={recommended_installation_type} assign={@recommended_installation_type}>
+          <:loading>
+            <div class="text-center text-gray-500">
+              {if(@flow == Flows.review(),
+                do: "Scanning your site to detect how Plausible is integrated...",
+                else: "Determining the simplest integration path for your website..."
+              )}
+            </div>
+            <div class="flex items-center justify-center py-8">
+              <.spinner class="w-6 h-6" />
+            </div>
+          </:loading>
 
-        <:subtitle :if={is_nil(@installation_type)}>
-          <div class="text-center mt-8">
-            Determining installation type...
-            <.styled_link
-              :if={@connected?}
-              href="#"
-              phx-click="switch-installation-type"
-              phx-value-method="manual"
+          <div class="grid grid-cols-2 sm:flex sm:flex-row gap-1 rounded-md">
+            <.tab
+              patch={"?type=manual&flow=#{@flow}"}
+              selected={@installation_type.result == "manual"}
             >
-              Skip
-            </.styled_link>
-          </div>
-        </:subtitle>
-
-        <:subtitle :if={@flow == PlausibleWeb.Flows.domain_change()}>
-          <p class="mb-4">
-            Your domain has been changed.
-            <strong>
-              You must update the Plausible Installation on your site within 72 hours to guarantee continuous tracking.
-            </strong>
-            <br />
-            <br /> If you're using the API, please also make sure to update your API credentials.
-          </p>
-        </:subtitle>
-
-        <:subtitle :if={@flow == PlausibleWeb.Flows.review() and not is_nil(@installation_type)}>
-          <p class="mb-4">
-            Review your existing installation. You can skip this step and proceed to verifying your installation.
-          </p>
-        </:subtitle>
-
-        <:subtitle :if={@installation_type == "wordpress"}>
-          We've detected your website is using WordPress. Here's how to integrate Plausible:
-          <.focus_list>
-            <:item>
-              <.styled_link href="https://plausible.io/wordpress-analytics-plugin" new_tab={true}>
-                Install our WordPress plugin
-              </.styled_link>
-            </:item>
-            <:item>
-              After activating our plugin, click the button below to verify your installation
-            </:item>
-          </.focus_list>
-        </:subtitle>
-        <:subtitle :if={@installation_type == "gtm"}>
-          We've detected your website is using Google Tag Manager. Here's how to integrate Plausible:
-          <.focus_list>
-            <:item>
-              <.styled_link href="https://plausible.io/docs/google-tag-manager" new_tab={true}>
-                Read our Tag Manager guide
-              </.styled_link>
-            </:item>
-            <:item>
-              Paste this snippet into GTM's Custom HTML section. Once done, click the button below to verify your installation.
-            </:item>
-          </.focus_list>
-        </:subtitle>
-
-        <:subtitle :if={@installation_type == "manual"}>
-          Paste this snippet into the <code>&lt;head&gt;</code>
-          section of your site. See our
-          <.styled_link href="https://plausible.io/docs/integration-guides" new_tab={true}>
-            installation guides.
-          </.styled_link>
-          Once done, click the button below to verify your installation.
-        </:subtitle>
-
-        <div :if={@installation_type in ["manual", "gtm"]}>
-          <.snippet_form installation_type={@installation_type} config={@config} domain={@domain} />
-        </div>
-
-        <.button_link
-          :if={not is_nil(@installation_type)}
-          href={"/#{URI.encode_www_form(@domain)}/verification?#{URI.encode_query(@uri_params)}"}
-          type="submit"
-          class="w-full mt-8"
-        >
-          <%= if @flow == PlausibleWeb.Flows.domain_change() do %>
-            I understand, I'll update my website
-          <% else %>
-            <%= if @flow == PlausibleWeb.Flows.review() do %>
-              Verify your installation
-            <% else %>
-              Start collecting data
+              <Icons.script_icon /> Script
+            </.tab>
+            <.tab
+              patch={"?type=wordpress&flow=#{@flow}"}
+              selected={@installation_type.result == "wordpress"}
+            >
+              <Icons.wordpress_icon /> WordPress
+            </.tab>
+            <%= on_ee do %>
+              <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type.result == "gtm"}>
+                <Icons.tag_manager_icon /> Tag Manager
+              </.tab>
             <% end %>
+            <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type.result == "npm"}>
+              <Icons.npm_icon /> NPM
+            </.tab>
+          </div>
+
+          <%= on_ee do %>
+            <.outdated_script_notice
+              :if={@v1_detected.result == true}
+              recommended_installation_type={@recommended_installation_type}
+              installation_type={@installation_type}
+            />
           <% end %>
-        </.button_link>
 
-        <:footer :if={@initial_installation_type == "wordpress" and @installation_type == "manual"}>
-          <.styled_link href={} phx-click="switch-installation-type" phx-value-method="wordpress">
-            Click here
-          </.styled_link>
-          if you prefer WordPress installation method.
-        </:footer>
+          <.form for={@tracker_script_configuration_form.result} phx-submit="submit" class="mt-4">
+            <.input
+              type="hidden"
+              field={@tracker_script_configuration_form.result[:installation_type]}
+              value={@installation_type.result}
+            />
+            <Instructions.manual_instructions
+              :if={@installation_type.result == "manual"}
+              tracker_script_configuration_form={@tracker_script_configuration_form.result}
+            />
 
-        <:footer :if={
-          (@initial_installation_type == "gtm" and @installation_type == "manual") or
-            (@initial_installation_type == "manual" and @installation_type == "manual")
-        }>
-          <.styled_link href={} phx-click="switch-installation-type" phx-value-method="gtm">
-            Click here
-          </.styled_link>
-          if you prefer Google Tag Manager installation method.
-        </:footer>
+            <Instructions.wordpress_instructions
+              :if={@installation_type.result == "wordpress"}
+              flow={@flow}
+              recommended_installation_type={recommended_installation_type}
+            />
+            <%= on_ee do %>
+              <Instructions.gtm_instructions
+                :if={@installation_type.result == "gtm"}
+                recommended_installation_type={recommended_installation_type}
+                tracker_script_configuration_form={@tracker_script_configuration_form.result}
+              />
+            <% end %>
+            <Instructions.npm_instructions :if={@installation_type.result == "npm"} />
 
-        <:footer :if={not is_nil(@installation_type) and @installation_type != "manual"}>
-          <.styled_link href={} phx-click="switch-installation-type" phx-value-method="manual">
-            Click here
-          </.styled_link>
-          if you prefer manual installation method.
+            <.button type="submit" class="w-full mt-8">
+              {verify_cta(@installation_type.result)}
+            </.button>
+          </.form>
+        </.async_result>
+        <:footer :if={ce?() and @installation_type.result == "manual"}>
+          <.focus_list>
+            <:item>
+              Still using the legacy snippet with the data-domain attribute? See
+              <.styled_link href="https://plausible.io/docs/script-update-guide">
+                migration guide
+              </.styled_link>
+            </:item>
+          </.focus_list>
         </:footer>
       </.focus_box>
     </div>
     """
   end
 
-  defp render_snippet("manual", domain, %{"track_404_pages" => true} = script_config) do
-    script_config = Map.put(script_config, "track_404_pages", false)
+  defp verify_cta("manual"), do: "Verify Script installation"
+  defp verify_cta("wordpress"), do: "Verify WordPress installation"
+  defp verify_cta("gtm"), do: "Verify Tag Manager installation"
+  defp verify_cta("npm"), do: "Verify NPM installation"
 
-    """
-    #{render_snippet("manual", domain, script_config)}
-    #{render_snippet_404()}
-    """
-  end
-
-  defp render_snippet("manual", domain, script_config) do
-    ~s|<script defer data-domain="#{domain}" src="#{tracker_url(script_config)}"></script>|
-  end
-
-  defp render_snippet("gtm", domain, %{"track_404_pages" => true} = script_config) do
-    script_config = Map.put(script_config, "track_404_pages", false)
-
-    """
-    #{render_snippet("gtm", domain, script_config)}
-    #{render_snippet_404("gtm")}
-    """
-  end
-
-  defp render_snippet("gtm", domain, script_config) do
-    """
-    <script>
-    var script = document.createElement('script');
-    script.defer = true;
-    script.dataset.domain = "#{domain}";
-    script.dataset.api = "https://plausible.io/api/event";
-    script.src = "#{tracker_url(script_config)}";
-    document.getElementsByTagName('head')[0].appendChild(script);
-    </script>
-    """
-  end
-
-  def render_snippet_404() do
-    "<script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
-  end
-
-  def render_snippet_404("gtm") do
-    render_snippet_404()
-  end
-
-  defp script_extension_control(assigns) do
-    ~H"""
-    <div class="mt-2 p-1 text-sm">
-      <div class="flex items-center">
-        <input
-          type="checkbox"
-          id={"check-#{@variant}"}
-          name={@variant}
-          checked={Map.get(@config, @variant, false)}
-          class="block h-5 w-5 rounded-sm dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
-        />
-        <label for={"check-#{@variant}"}>
-          {@label}
-        </label>
-        <div class="ml-2 collapse md:visible">
-          <.tooltip sticky?={false}>
-            <:tooltip_content>
-              {@tooltip}
-              <br /><br />Click to learn more.
-            </:tooltip_content>
-            <a href={@learn_more} target="_blank" rel="noopener noreferrer">
-              <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
-            </a>
-          </.tooltip>
-        </div>
-        <div class="ml-2 visible md:invisible">
-          <a href={@learn_more} target="_blank" rel="noopener noreferrer">
-            <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
-          </a>
-        </div>
-      </div>
-    </div>
-    """
-  end
-
-  defp snippet_form(assigns) do
-    ~H"""
-    <form id="snippet-form" phx-change="update-script-config">
-      <div class="relative">
-        <textarea
-          id="snippet"
-          class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
-          rows="5"
-          readonly
-        ><%= render_snippet(@installation_type, @domain, @config) %></textarea>
-
-        <a
-          onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
-          href="javascript:void(0)"
-          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline bottom-2 right-4 p-2 bg-white dark:bg-gray-900"
-        >
-          <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
-          <span>
-            COPY
-          </span>
-        </a>
-      </div>
-
-      <.h2 class="mt-8 text-sm font-medium">Enable optional measurements:</.h2>
-      <.script_extension_control
-        config={@config}
-        variant="outbound_links"
-        label="Outbound links"
-        tooltip="Automatically track clicks on external links. These count towards your billable pageviews."
-        learn_more="https://plausible.io/docs/outbound-link-click-tracking"
-      />
-      <.script_extension_control
-        config={@config}
-        variant="file_downloads"
-        label="File downloads"
-        tooltip="Automatically track file downloads. These count towards your billable pageviews."
-        learn_more="https://plausible.io/docs/file-downloads-tracking"
-      />
-      <.script_extension_control
-        config={@config}
-        variant="track_404_pages"
-        label="404 error pages"
-        tooltip="Find 404 error pages on your site. These count towards your billable pageviews. Additional action required."
-        learn_more="https://plausible.io/docs/error-pages-tracking-404"
-      />
-      <.script_extension_control
-        config={@config}
-        variant="hash_based_routing"
-        label="Hashed page paths"
-        tooltip="Automatically track page paths that use a # in the URL."
-        learn_more="https://plausible.io/docs/hash-based-routing"
-      />
-      <.script_extension_control
-        config={@config}
-        variant="tagged_events"
-        label="Custom events"
-        tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
-        learn_more="https://plausible.io/docs/custom-event-goals"
-      />
-      <.script_extension_control
-        config={@config}
-        variant="pageview_props"
-        label="Custom properties"
-        tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required."
-        learn_more="https://plausible.io/docs/custom-props/introduction"
-      />
-      <.script_extension_control
-        config={@config}
-        variant="revenue_tracking"
-        label="Ecommerce revenue"
-        tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
-        learn_more="https://plausible.io/docs/ecommerce-revenue-tracking"
-      />
-    </form>
-    """
-  end
-
-  def handle_event("switch-installation-type", %{"method" => method}, socket)
-      when method in @installation_types do
-    socket = update_uri_params(socket, %{"installation_type" => method})
-    {:noreply, socket}
-  end
-
-  def handle_event("update-script-config", params, socket) do
-    new_config =
-      @script_config_params
-      |> Map.new(fn key -> {key, Map.get(params, key) == "on"} end)
-
-    flash = snippet_change_flash(socket.assigns.config, new_config)
-
-    socket =
-      if flash do
-        put_live_flash(socket, :success, flash)
+  on_ee do
+    defp detect_recommended_installation_type(flow, site) do
+      with {:ok, detection_result} <-
+             Detection.Checks.run_with_rate_limit(nil, site.domain,
+               detect_v1?: flow == Flows.review(),
+               report_to: nil,
+               slowdown: 0,
+               async?: false
+             ),
+           %Result{ok?: true, data: data} <-
+             Detection.Checks.interpret_diagnostics(detection_result) do
+        {data.suggested_technology, data.v1_detected}
       else
-        socket
+        _ -> {PlausibleWeb.Tracker.fallback_installation_type(), false}
+      end
+    end
+  else
+    defp detect_recommended_installation_type(_flow, _site) do
+      {PlausibleWeb.Tracker.fallback_installation_type(), false}
+    end
+  end
+
+  on_ee do
+    defp outdated_script_notice(assigns) do
+      ~H"""
+      <div :if={
+        @recommended_installation_type.result == "manual" and
+          @installation_type.result == "manual"
+      }>
+        <.notice class="mt-4" theme={:yellow}>
+          Your website is running an outdated version of the tracking script. Please
+          <.styled_link new_tab href="https://plausible.io/docs/script-update-guide">
+            update
+          </.styled_link>
+          your tracking script before continuing
+        </.notice>
+      </div>
+
+      <div :if={
+        @recommended_installation_type.result == "gtm" and
+          @installation_type.result == "gtm"
+      }>
+        <.notice class="mt-4" theme={:yellow}>
+          Your website might be using an outdated version of our Google Tag Manager template.
+          If so,
+          <.styled_link new_tab href="https://plausible.io/docs/script-update-guide#gtm">
+            update
+          </.styled_link>
+          your Google Tag Manager template before continuing
+        </.notice>
+      </div>
+      """
+    end
+
+    defp assign_loading_states(socket) do
+      assign(socket,
+        recommended_installation_type: AsyncResult.loading(),
+        v1_detected: AsyncResult.loading(),
+        installation_type: AsyncResult.loading(),
+        tracker_script_configuration_form: AsyncResult.loading()
+      )
+    end
+  end
+
+  attr :selected, :boolean, default: false
+  attr :patch, :string, required: true
+  slot :inner_block, required: true
+
+  defp tab(assigns) do
+    base_classes =
+      "rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center flex-1 justify-center whitespace-nowrap hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150"
+
+    selected_class =
+      if assigns[:selected] do
+        "bg-gray-150 dark:bg-gray-700"
+      else
+        "bg-transparent cursor-pointer"
       end
 
-    socket = update_uri_params(socket, new_config)
-    {:noreply, socket}
+    assigns = assign(assigns, class: "#{selected_class} #{base_classes}")
+
+    ~H"""
+    <.link patch={@patch} class={@class}>
+      {render_slot(@inner_block)}
+    </.link>
+    """
   end
 
-  def handle_params(params, _uri, socket) do
-    socket =
-      socket
-      |> update_installation_type(params)
-      |> update_script_config(params)
-      |> persist_tracker_script_configuration()
+  def handle_event("submit", %{"tracker_script_configuration" => params}, socket) do
+    config =
+      PlausibleWeb.Tracker.update_script_configuration!(
+        socket.assigns.site,
+        params,
+        :installation
+      )
 
-    {:noreply, socket}
+    {:noreply,
+     push_navigate(socket,
+       to:
+         Routes.site_path(socket, :verification, socket.assigns.site.domain,
+           flow: socket.assigns.flow,
+           installation_type: config.installation_type
+         )
+     )}
   end
 
-  defp update_installation_type(socket, %{"installation_type" => installation_type})
-       when installation_type in @installation_types do
-    assign(socket,
-      installation_type: installation_type,
-      uri_params: Map.put(socket.assigns.uri_params, "installation_type", installation_type)
-    )
-  end
+  defp initialize_installation_data(flow, site, params) do
+    {recommended_installation_type, v1_detected} =
+      detect_recommended_installation_type(flow, site)
 
-  defp update_installation_type(socket, _params), do: socket
-
-  defp update_script_config(socket, params) do
-    configuration_update =
-      @script_config_params
-      |> Enum.filter(&Map.has_key?(params, &1))
-      |> Map.new(fn key -> {key, Map.get(params, key) == "true"} end)
-
-    assign(socket,
-      config: Map.merge(socket.assigns.config, configuration_update)
-    )
-  end
-
-  defp update_uri_params(socket, params) when is_map(params) do
-    uri_params = Map.merge(socket.assigns.uri_params, params)
-
-    socket
-    |> assign(uri_params: uri_params)
-    |> push_patch(
-      to:
-        Routes.site_path(
-          socket,
-          :installation,
-          socket.assigns.domain,
-          uri_params
-        ),
-      replace: true
-    )
-  end
-
-  @domain_change PlausibleWeb.Flows.domain_change()
-  defp get_installation_type(@domain_change, tracker_script_configuration, params) do
-    case tracker_script_configuration.installation_type do
-      nil ->
-        get_installation_type(nil, nil, params)
-
-      installation_type ->
-        Atom.to_string(installation_type)
-    end
-  end
-
-  defp get_installation_type(_type, _tracker_script_configuration, params) do
-    Enum.find(@installation_types, &(&1 == params["installation_type"]))
-  end
-
-  defp tracker_url(script_config) do
-    extensions =
-      @script_extension_params
-      |> Enum.flat_map(fn {key, extension} ->
-        if(Map.get(script_config, key), do: [extension], else: [])
-      end)
-
-    tracker = Enum.join(["script" | extensions], ".")
-
-    "#{PlausibleWeb.Endpoint.url()}/js/#{tracker}.js"
-  end
-
-  defp persist_tracker_script_configuration(socket) do
-    tracker_script_config_update =
-      Map.merge(socket.assigns.config, %{
-        "site_id" => socket.assigns.site.id,
-        "installation_type" => socket.assigns.installation_type
+    tracker_script_configuration =
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+        outbound_links: true,
+        form_submissions: true,
+        file_downloads: true,
+        track_404_pages: true,
+        installation_type: recommended_installation_type
       })
 
-    PlausibleWeb.Tracker.update_script_configuration!(
-      socket.assigns.site,
-      tracker_script_config_update,
-      :installation
-    )
+    selected_installation_type =
+      cond do
+        params["type"] in PlausibleWeb.Tracker.supported_installation_types() ->
+          params["type"]
 
-    socket
-  end
+        flow == Flows.review() and
+            not is_nil(tracker_script_configuration.installation_type) ->
+          Atom.to_string(tracker_script_configuration.installation_type)
 
-  defp snippet_change_flash(old_config, new_config) do
-    change =
-      Enum.find(new_config, fn {key, new_value} ->
-        Map.get(old_config, key) != new_value
-      end)
+        true ->
+          recommended_installation_type
+      end
 
-    case change do
-      nil ->
-        nil
-
-      {k, false} when k in ["outbound_links", "file_downloads", "track_404_pages"] ->
-        "Snippet updated and goal deleted. Please insert the newest snippet into your site"
-
-      {_, _} ->
-        "Snippet updated. Please insert the newest snippet into your site"
-    end
+    {:ok,
+     %{
+       recommended_installation_type: recommended_installation_type,
+       v1_detected: v1_detected,
+       installation_type: selected_installation_type,
+       tracker_script_configuration_form:
+         to_form(
+           Plausible.Site.TrackerScriptConfiguration.installation_changeset(
+             tracker_script_configuration,
+             %{}
+           )
+         )
+     }}
   end
 end

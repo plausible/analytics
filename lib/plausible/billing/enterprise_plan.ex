@@ -23,6 +23,7 @@ defmodule Plausible.Billing.EnterprisePlan do
     field :team_member_limit, Plausible.Billing.Ecto.Limit
     field :features, {:array, Plausible.Billing.Ecto.Feature}, default: []
     field :hourly_api_request_limit, :integer
+    field :managed_proxy_price_modifier, :boolean, default: false, virtual: true
 
     belongs_to :team, Plausible.Teams.Team
 

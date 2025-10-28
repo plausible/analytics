@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
@@ -23,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Special path-based events like "404" don't need `event.props.path` to be explicitly defined when tracking: it is set to be the same as `event.pathname` in event ingestion. If it is explicitly defined, it is not overridden for backwards compatibility.
 - Main graph no longer shows empty values after current time for `day`, `month` and `year` periods.
 - Include `bounce_rate` metric in Entry Pages breakdown.
+- Dark mode theme has been refined with darker color scheme and better visual hierarchy.
 
 ### Fixed
 
@@ -37,6 +39,7 @@ All notable changes to this project will be documented in this file.
 ## v3.0.0 - 2025-04-11
 
 ### Added
+
 - Ability to sort by and compare the `exit_rate` metric in the dashboard Exit Pages > Details report
 - Add top 3 pages into the traffic spike email
 - Two new shorthand time periods `28d` and `91d` available on both dashboard and in public API
@@ -138,6 +141,7 @@ All notable changes to this project will be documented in this file.
 ## v2.1.3 - 2024-09-26
 
 ### Fixed
+
 - Change cookie key to resolve login issue plausible/analytics#4621
 - Set secure attribute on cookies when BASE_URL has HTTPS scheme plausible/analytics#4623
 - Don't track custom events in CE plausible/analytics#4627
@@ -145,6 +149,7 @@ All notable changes to this project will be documented in this file.
 ## v2.1.2 - 2024-09-24
 
 ### Added
+
 - UI to edit goals along with display names
 - Support contains filter for goals
 - UI to edit funnels
@@ -163,11 +168,13 @@ All notable changes to this project will be documented in this file.
 - Make details views on dashboard sortable
 
 ### Removed
+
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245
 - Remove support for importing data from no longer available Universal Analytics
 - Soft-deprecate `DATABASE_SOCKET_DIR` plausible/analytics#4202
 
 ### Changed
+
 - Support Unix sockets in `DATABASE_URL` plausible/analytics#4202
 - Realtime and hourly graphs now show visits lasting their whole duration instead when specific events occur
 - Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
@@ -212,6 +219,7 @@ All notable changes to this project will be documented in this file.
 ## v2.1.0 - 2024-05-23
 
 ### Added
+
 - Hostname Allow List in Site Settings
 - Pages Block List in Site Settings
 - Add `conversion_rate` to Stats API Timeseries and on the main graph
@@ -258,6 +266,7 @@ All notable changes to this project will be documented in this file.
 - Add custom events support to CSV export and import
 
 ### Removed
+
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
 - Removed the `prop_names` returned in the Stats API `event:goal` breakdown response
 - Removed the `prop-breakdown.csv` file from CSV export
@@ -266,6 +275,7 @@ All notable changes to this project will be documented in this file.
 - Remove `DISABLE_AUTH` deprecation warning plausible/analytics#3904
 
 ### Changed
+
 - A visits `entry_page` and `exit_page` is only set and updated for pageviews, not custom events
 - Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
 - Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
@@ -278,6 +288,7 @@ All notable changes to this project will be documented in this file.
 - default `MAILER_ADAPTER` has been changed to `Bamboo.Mua` plausible/analytics#4538
 
 ### Fixed
+
 - Creating many sites no longer leads to cookie overflow
 - Ignore sessions without pageviews for `entry_page` and `exit_page` breakdowns
 - Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
@@ -306,6 +317,7 @@ All notable changes to this project will be documented in this file.
 ## v2.0.0 - 2023-07-12
 
 ### Added
+
 - Call to action for tracking Goal Conversions and an option to hide the section from the dashboard
 - Add support for `with_imported=true` in Stats API aggregate endpoint
 - Ability to use '--' instead of '=' sign in the `tagged-events` classnames
@@ -319,6 +331,7 @@ All notable changes to this project will be documented in this file.
 - Allow optional IPv6 for clickhouse repo plausible/analytics#2970
 
 ### Fixed
+
 - Fix tracker bug - call callback function even when event is ignored
 - Make goal-filtered CSV export return only unique_conversions timeseries in the 'visitors.csv' file
 - Stop treating page filter as an entry page filter
@@ -339,6 +352,7 @@ All notable changes to this project will be documented in this file.
 - Fix a bug where the country name was not shown when [filtering through the map](https://github.com/plausible/analytics/issues/3086)
 
 ### Changed
+
 - Treat page filter as entry page filter for `bounce_rate`
 - Reject events with long URIs and data URIs plausible/analytics#2536
 - Always show direct traffic in sources reports plausible/analytics#2531
@@ -349,6 +363,7 @@ All notable changes to this project will be documented in this file.
 - Disable registration in self-hosted setups by default plausible/analytics#3014
 
 ### Removed
+
 - Remove Firewall plug and `IP_BLOCKLIST` environment variable
 - Remove the ability to collapse the main graph plausible/analytics#2627
 - Remove `custom_dimension_filter` feature flag plausible/analytics#2996
@@ -356,12 +371,14 @@ All notable changes to this project will be documented in this file.
 ## v1.5.1 - 2022-12-06
 
 ### Fixed
+
 - Return empty list when breaking down by event:page without events plausible/analytics#2530
 - Fallback to empty build metadata when failing to parse $BUILD_METADATA plausible/analytics#2503
 
 ## v1.5.0 - 2022-12-02
 
 ### Added
+
 - Set a different interval on the top graph plausible/analytics#1574 (thanks to @Vigasaurus for this feature)
 - A `tagged-events` script extension for out-of-the-box custom event tracking
 - The ability to escape `|` characters with `\` in Stats API filter values
@@ -402,6 +419,7 @@ All notable changes to this project will be documented in this file.
 - Fix ownership transfer invitation link in self-hosted deployments
 
 ### Fixed
+
 - Plausible script does not prevent default if it's been prevented by an external script [plausible/analytics#1941](https://github.com/plausible/analytics/issues/1941)
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
@@ -420,6 +438,7 @@ All notable changes to this project will be documented in this file.
 - Ensure newlines from settings files are trimmed [plausible/analytics#2480](https://github.com/plausible/analytics/pull/2480)
 
 ### Changed
+
 - `script.file-downloads.outbound-links.js` only sends an outbound link event when an outbound download link is clicked
 - Plausible script now uses callback navigation (instead of waiting for 150ms every time) when sending custom events
 - Cache the tracking script for 24 hours
@@ -432,16 +451,19 @@ All notable changes to this project will be documented in this file.
 - Add fallback icon for when DDG favicon cannot be fetched [PR#2279](https://github.com/plausible/analytics#2279)
 
 ### Security
+
 - Add Content-Security-Policy header to favicon path
 
 ## v1.4.1 - 2021-11-29
 
 ### Fixed
+
 - Fixes database error when pathname contains a question mark
 
 ## v1.4.0 - 2021-10-27
 
 ### Added
+
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
 - CSV export now includes pageviews, bounce rate and visit duration in addition to visitors plausible/analytics#952
 - Send stats to multiple dashboards by configuring a comma-separated list of domains plausible/analytics#968
@@ -459,6 +481,7 @@ All notable changes to this project will be documented in this file.
 - Add ability to view more than 100 custom goal properties plausible/analytics#1382
 
 ### Fixed
+
 - Fix weekly report time range plausible/analytics#951
 - Make sure embedded dashboards can run when user has blocked third-party cookies plausible/analytics#971
 - Sites listing page will paginate if the user has a lot of sites plausible/analytics#994
@@ -475,14 +498,17 @@ All notable changes to this project will be documented in this file.
 - Respect the `path` component of BASE_URL to allow subfolder installatons
 
 ### Removed
+
 - Removes AppSignal monitoring package
 
 ### Changes
+
 - Disable email verification by default. Added a configuration option `ENABLE_EMAIL_VERIFICATION=true` if you want to keep the old behaviour
 
 ## [1.3] - 2021-04-14
 
 ### Added
+
 - Stats API [currently in beta] plausible/analytics#679
 - Ability to view and filter by entry and exit pages, in addition to regular page hits plausible/analytics#712
 - 30 day and 6 month keybindings (`T` and `S`, respectively) plausible/analytics#709
@@ -493,6 +519,7 @@ All notable changes to this project will be documented in this file.
 - Add name/label to shared links plausible/analytics#910
 
 ### Fixed
+
 - Capitalized date/time selection keybinds not working plausible/analytics#709
 - Invisible text on Google Search Console settings page in dark mode plausible/analytics#759
 - Disable analytics tracking when running Cypress tests
@@ -504,8 +531,9 @@ All notable changes to this project will be documented in this file.
 ## [1.2] - 2021-01-26
 
 ### Added
+
 - Ability to add event metadata plausible/analytics#381
-- Add tracker module to automatically track outbound links  plausible/analytics#389
+- Add tracker module to automatically track outbound links plausible/analytics#389
 - Display weekday on the visitor graph plausible/analytics#175
 - Collect and display browser & OS versions plausible/analytics#397
 - Simple notifications around traffic spikes plausible/analytics#453
@@ -518,6 +546,7 @@ All notable changes to this project will be documented in this file.
 - Keybindings for selecting dates/ranges plausible/analytics#630
 
 ### Changed
+
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
 - Ignore automated browsers (Phantom, Selenium, Headless Chrome, etc)
 - Display domain's favicon on the home page
@@ -534,6 +563,7 @@ All notable changes to this project will be documented in this file.
 - Changed caret/chevron color in datepicker and filters dropdown
 
 ### Fixed
+
 - Do not error when activating an already activated account plausible/analytics#370
 - Ignore arrow keys when modifier keys are pressed plausible/analytics#363
 - Show correct stats when goal filter is combined with source plausible/analytics#374
@@ -547,20 +577,24 @@ All notable changes to this project will be documented in this file.
 - Various UI/UX issues plausible/analytics#503
 
 ### Security
+
 - Do not run the plausible Docker container as root plausible/analytics#362
 
 ## [1.1.1] - 2020-10-14
 
 ### Fixed
+
 - Revert Dockerfile change that introduced a regression
 
 ## [1.1.0] - 2020-10-14
 
 ### Added
+
 - Linkify top pages [plausible/analytics#91](https://github.com/plausible/analytics/issues/91)
-- Filter by country, screen size, browser and operating system  [plausible/analytics#303](https://github.com/plausible/analytics/issues/303)
+- Filter by country, screen size, browser and operating system [plausible/analytics#303](https://github.com/plausible/analytics/issues/303)
 
 ### Fixed
+
 - Fix issue with creating a PostgreSQL database when `?ssl=true` [plausible/analytics#347](https://github.com/plausible/analytics/issues/347)
 - Do no disclose current URL to DuckDuckGo's favicon service [plausible/analytics#343](https://github.com/plausible/analytics/issues/343)
 - Updated UAInspector database to detect newer devices [plausible/analytics#309](https://github.com/plausible/analytics/issues/309)
@@ -568,9 +602,11 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2020-10-06
 
 ### Added
+
 - Collect and present link tags (`utm_medium`, `utm_source`, `utm_campaign`) in the dashboard
 
 ### Changed
+
 - Replace configuration parameters `CLICKHOUSE_DATABASE_{HOST,NAME,USER,PASSWORD}` with a single `CLICKHOUSE_DATABASE_URL` [plausible/analytics#317](https://github.com/plausible/analytics/pull/317)
 - Disable subscriptions by default
 - Remove `CLICKHOUSE_DATABASE_POOLSIZE`, `DATABASE_POOLSIZE` and `DATABASE_TLS_ENABLED` parameters. Use query parameters in `CLICKHOUSE_DATABASE_URL` and `DATABASE_URL` instead.

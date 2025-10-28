@@ -7,6 +7,7 @@ defmodule Plausible.Stats.Clickhouse do
   import Ecto.Query, only: [from: 2, dynamic: 1, dynamic: 2]
 
   alias Plausible.Timezones
+  alias Plausible.Stats
 
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
   def pageview_start_date_local(site) do
@@ -76,11 +77,11 @@ defmodule Plausible.Stats.Clickhouse do
   def usage_breakdown([], _date_range), do: {0, 0}
 
   def current_visitors(site) do
-    Plausible.Stats.current_visitors(site)
+    Stats.current_visitors(site)
   end
 
   def current_visitors_12h(site) do
-    Plausible.Stats.current_visitors(site, Duration.new!(hour: -12))
+    Stats.current_visitors(site, Duration.new!(hour: -12))
   end
 
   def has_pageviews?(site) do
@@ -211,12 +212,13 @@ defmodule Plausible.Stats.Clickhouse do
       end)
 
     from e in "events_v2",
+      where: e.name != "engagement",
       where: e.site_id in ^Enum.map(sites, & &1.id),
       where: ^cutoff_times_condition
   end
 
-  defp empty_24h_intervals(now) do
-    first = NaiveDateTime.add(now, -23, :hour)
+  def empty_24h_intervals(now \\ NaiveDateTime.utc_now()) do
+    first = NaiveDateTime.add(now, -24, :hour)
     {:ok, time} = Time.new(first.hour, 0, 0)
     first = NaiveDateTime.new!(NaiveDateTime.to_date(first), time)
 

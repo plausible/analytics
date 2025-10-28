@@ -35,17 +35,18 @@ export function FeatureSetupNotice({
 
   function renderCallToAction() {
     return (
-      <a href={callToAction.link} className="ml-2 sm:ml-4 button px-2 sm:px-4">
-        <p className="flex flex-col justify-center text-xs sm:text-sm">
-          {callToAction.action}
-        </p>
+      <a
+        href={callToAction.link}
+        className="flex items-center gap-x-1.5 ml-2 sm:ml-4 button px-2 sm:px-4"
+      >
+        <p className="text-xs sm:text-sm font-medium">{callToAction.action}</p>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="ml-2 w-5 h-5"
+          className="size-4"
         >
           <path
             strokeLinecap="round"
@@ -61,7 +62,7 @@ export function FeatureSetupNotice({
     return (
       <button
         onClick={requestHideSection}
-        className="inline-block px-2 sm:px-4 py-2 border border-gray-300 dark:border-gray-500 leading-5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition ease-in-out duration-150"
+        className="inline-block px-2 sm:px-4 py-2 font-medium leading-5 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white hover:shadow-sm transition-all duration-150"
       >
         Hide this report
       </button>
@@ -71,11 +72,11 @@ export function FeatureSetupNotice({
   return (
     <div className="sm:mx-32 mt-6 mb-3">
       <div className="py-3">
-        <div className="text-center mt-2 text-gray-800 dark:text-gray-200">
+        <div className="text-center text-pretty mt-2 text-gray-800 dark:text-gray-200 font-medium">
           {title}
         </div>
 
-        <div className="text-justify mt-4 font-small text-sm text-gray-500 dark:text-gray-200">
+        <div className="text-center text-pretty mt-4 font-small text-sm text-gray-500 dark:text-gray-200">
           {info}
         </div>
 

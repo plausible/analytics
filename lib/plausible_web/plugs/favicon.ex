@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Favicon do
   import Plug.Conn
   alias Plausible.HTTPClient
 
-  @placeholder_icon_location "priv/placeholder_favicon.svg"
+  @placeholder_icon_location "priv/link_favicon.svg"
   @placeholder_icon File.read!(@placeholder_icon_location)
   @custom_icons %{
     "Brave" => "search.brave.com",

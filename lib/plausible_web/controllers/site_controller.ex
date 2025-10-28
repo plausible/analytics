@@ -747,41 +747,6 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def change_domain(conn, _params) do
-    if PlausibleWeb.Tracker.scriptv2?(conn.assigns.site) do
-      redirect(conn,
-        to: Routes.site_path(conn, :change_domain_v2, conn.assigns.site.domain)
-      )
-    else
-      changeset = Plausible.Site.update_changeset(conn.assigns.site)
-
-      render(conn, "change_domain.html",
-        skip_plausible_tracking: true,
-        changeset: changeset
-      )
-    end
-  end
-
-  def change_domain_submit(conn, %{"site" => %{"domain" => new_domain}}) do
-    case Plausible.Site.Domain.change(conn.assigns.site, new_domain) do
-      {:ok, updated_site} ->
-        conn
-        |> put_flash(:success, "Website domain changed successfully")
-        |> redirect(
-          to:
-            Routes.site_path(conn, :installation, updated_site.domain,
-              flow: PlausibleWeb.Flows.domain_change()
-            )
-        )
-
-      {:error, changeset} ->
-        render(conn, "change_domain.html",
-          skip_plausible_tracking: true,
-          changeset: changeset
-        )
-    end
-  end
-
   defp tolerate_unique_contraint_violation(result, name) do
     case result do
       {:ok, _} ->

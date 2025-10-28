@@ -43,7 +43,12 @@
             </:tbody>
             <tr :if={length(invoice_list) > 12}>
               <td colspan="3" class="text-center pt-8 pb-4">
-                <.button_link href={} theme="bright" x-on:click="showAll = true" x-show="!showAll">
+                <.button_link
+                  href={}
+                  theme="secondary"
+                  x-on:click="showAll = true"
+                  x-show="!showAll"
+                >
                   Show more
                 </.button_link>
               </td>

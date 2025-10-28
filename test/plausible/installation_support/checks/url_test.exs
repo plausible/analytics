@@ -83,7 +83,7 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
           })
 
         assert state.url == nil
-        assert state.diagnostics.service_error == :domain_not_found
+        assert state.diagnostics.service_error == %{code: :domain_not_found}
         assert state.skip_further_checks?
       end
     end
@@ -119,7 +119,7 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
           })
 
         assert state.url == "file://example.com/archives/news?p=any#fragment"
-        assert state.diagnostics.service_error == :invalid_url
+        assert state.diagnostics.service_error == %{code: :invalid_url}
         assert state.skip_further_checks?
       end
 
@@ -140,7 +140,7 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
           })
 
         assert state.url == url
-        assert state.diagnostics.service_error == :domain_not_found
+        assert state.diagnostics.service_error == %{code: :domain_not_found}
         assert state.skip_further_checks?
       end
     end

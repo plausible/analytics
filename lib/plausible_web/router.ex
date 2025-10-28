@@ -40,6 +40,17 @@ defmodule PlausibleWeb.Router do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
+  on_ee do
+    pipeline :helpscout do
+      plug :accepts, ["html"]
+      plug :fetch_session
+      plug PlausibleWeb.Plugs.SecureEmbedHeaders
+      plug PlausibleWeb.Plugs.NoRobots
+      plug PlausibleWeb.AuthPlug
+      plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
+    end
+  end
+
   pipeline :csrf do
     plug :protect_from_forgery
   end
@@ -503,6 +514,14 @@ defmodule PlausibleWeb.Router do
       get "/logout", AuthController, :logout
       get "/team/select", AuthController, :select_team
     end
+
+    scope "/", PlausibleWeb do
+      pipe_through [:helpscout, :csrf]
+
+      get "/helpscout/callback", HelpScoutController, :callback
+      get "/helpscout/show", HelpScoutController, :show
+      get "/helpscout/search", HelpScoutController, :search
+    end
   end
 
   scope "/", PlausibleWeb do
@@ -516,12 +535,6 @@ defmodule PlausibleWeb.Router do
     delete "/me", AuthController, :delete_me
 
     get "/auth/google/callback", AuthController, :google_auth_callback
-
-    on_ee do
-      get "/helpscout/callback", HelpScoutController, :callback
-      get "/helpscout/show", HelpScoutController, :show
-      get "/helpscout/search", HelpScoutController, :search
-    end
 
     get "/", PageController, :index
 
@@ -541,8 +554,6 @@ defmodule PlausibleWeb.Router do
 
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
-    get "/sites/:domain/change-domain", SiteController, :change_domain
-    put "/sites/:domain/change-domain", SiteController, :change_domain_submit
     post "/sites/:domain/make-public", SiteController, :make_public
     post "/sites/:domain/make-private", SiteController, :make_private
     post "/sites/:domain/weekly-report/enable", SiteController, :enable_weekly_report
@@ -624,12 +635,6 @@ defmodule PlausibleWeb.Router do
       end
 
       scope assigns: %{
-              dogfood_page_path: "/:website/installationv2"
-            } do
-        live "/:domain/installationv2", InstallationV2, :installation_v2, as: :site
-      end
-
-      scope assigns: %{
               dogfood_page_path: "/:website/verification"
             } do
         live "/:domain/verification",
@@ -639,10 +644,10 @@ defmodule PlausibleWeb.Router do
       end
 
       scope assigns: %{
-              dogfood_page_path: "/:website/change-domain-v2"
+              dogfood_page_path: "/:website/change-domain"
             } do
-        live "/:domain/change-domain-v2", ChangeDomainV2, :change_domain_v2, as: :site
-        live "/:domain/change-domain-v2/success", ChangeDomainV2, :success, as: :site
+        live "/:domain/change-domain", ChangeDomain, :change_domain, as: :site
+        live "/:domain/change-domain/success", ChangeDomain, :success, as: :site
       end
     end
 

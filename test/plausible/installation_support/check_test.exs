@@ -30,13 +30,18 @@ defmodule Plausible.InstallationSupport.CheckTest do
 
       {result, log} =
         with_log(fn ->
-          FaultyCheckRaise.perform_safe(state)
+          FaultyCheckRaise.perform_safe(state, [])
         end)
 
       assert log =~
                ~s|Error running check Plausible.InstallationSupport.CheckTest.FaultyCheckRaise on https://example.com: %RuntimeError{message: "boom"}|
 
-      assert_matches %Verification.Diagnostics{service_error: %RuntimeError{message: "boom"}} =
+      assert_matches %Verification.Diagnostics{
+                       service_error: %{
+                         code: :internal_check_error,
+                         extra: %RuntimeError{message: "boom"}
+                       }
+                     } =
                        result.diagnostics
     end
 
@@ -59,21 +64,20 @@ defmodule Plausible.InstallationSupport.CheckTest do
 
       {result, log} =
         with_log(fn ->
-          FaultyCheckThrow.perform_safe(state)
+          FaultyCheckThrow.perform_safe(state, [])
         end)
 
       assert log =~
                ~s|Error running check Plausible.InstallationSupport.CheckTest.FaultyCheckThrow on https://example.com: :boom|
 
-      assert_matches %Verification.Diagnostics{service_error: :boom} = result.diagnostics
+      assert_matches %Verification.Diagnostics{
+                       service_error: %{code: :internal_check_error, extra: :boom}
+                     } = result.diagnostics
     end
 
     test "a check that times out" do
       defmodule FaultyCheckTimeout do
         use Plausible.InstallationSupport.Check
-
-        @impl true
-        def timeout_ms, do: 100
 
         @impl true
         def report_progress_as, do: "Faulty check"
@@ -88,10 +92,14 @@ defmodule Plausible.InstallationSupport.CheckTest do
         diagnostics: %Verification.Diagnostics{}
       }
 
-      result =
-        FaultyCheckTimeout.perform_safe(state)
+      result = FaultyCheckTimeout.perform_safe(state, timeout: 100)
 
-      assert_matches %Verification.Diagnostics{service_error: :check_timeout} = result.diagnostics
+      assert_matches %Verification.Diagnostics{
+                       service_error: %{
+                         code: :internal_check_timeout,
+                         extra: "FaultyCheckTimeout timed out after 100ms"
+                       }
+                     } = result.diagnostics
     end
   end
 end

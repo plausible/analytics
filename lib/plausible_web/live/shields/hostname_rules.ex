@@ -120,9 +120,9 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
               for={@form}
               phx-submit="save-hostname-rule"
               phx-target={@myself}
-              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+              class="max-w-md w-full mx-auto"
             >
-              <.title>Add Hostname to Allow List</.title>
+              <.title>Add hostname to allow list</.title>
 
               <.live_component
                 class="mt-8"
@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                 <% end %>
               </p>
               <.button type="submit" class="w-full">
-                Add Hostname
+                Add hostname
               </.button>
             </.form>
           </.live_component>
@@ -227,16 +227,15 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
   end
 
   def suggest_hostnames(input, _options, site) do
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
           "site_id" => site.domain,
           "date_range" => "all",
           "metrics" => ["pageviews"]
-        },
-        %{}
+        }
       )
 
     site

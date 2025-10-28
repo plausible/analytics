@@ -7,10 +7,27 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   use PlausibleWeb, :live_component
   import PlausibleWeb.CustomerSupport.Live
   alias Plausible.ConsolidatedView
+  alias Plausible.Stats
 
   def update(%{team: team}, socket) do
-    consolidated_views = ConsolidatedView.get(team) |> List.wrap()
-    {:ok, assign(socket, team: team, consolidated_views: consolidated_views)}
+    consolidated_view = ConsolidatedView.get(team)
+
+    hourly_stats =
+      with true <- connected?(socket),
+           {:ok, hourly_stats} <- Stats.ConsolidatedView.safe_overview_24h(consolidated_view) do
+        hourly_stats.intervals
+      else
+        _ ->
+          Stats.ConsolidatedView.empty_24h_intervals()
+          |> Enum.map(fn {i, v} -> %{interval: i, visitors: v} end)
+      end
+
+    {:ok,
+     assign(socket,
+       team: team,
+       consolidated_views: List.wrap(consolidated_view),
+       hourly_stats: hourly_stats
+     )}
   end
 
   def render(assigns) do
@@ -29,6 +46,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
             <.th>Domain</.th>
             <.th>Timezone</.th>
             <.th invisible>Dashboard</.th>
+            <.th invisible>24H</.th>
             <.th invisible>Delete</.th>
           </:thead>
 
@@ -42,6 +60,15 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
               >
                 Dashboard
               </.styled_link>
+            </.td>
+
+            <.td>
+              <span class="h-[24px] text-indigo-500">
+                <PlausibleWeb.Live.Components.Visitors.chart
+                  intervals={@hourly_stats}
+                  height={20}
+                />
+              </span>
             </.td>
             <.td>
               <.delete_button

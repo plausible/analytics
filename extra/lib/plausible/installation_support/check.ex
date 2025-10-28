@@ -13,7 +13,6 @@ defmodule Plausible.InstallationSupport.Check do
   """
   @type state() :: Plausible.InstallationSupport.State.t()
   @callback report_progress_as() :: String.t()
-  @callback timeout_ms() :: integer()
   @callback perform(state()) :: state()
 
   defmacro __using__(_) do
@@ -25,11 +24,9 @@ defmodule Plausible.InstallationSupport.Check do
 
       @behaviour Plausible.InstallationSupport.Check
 
-      def timeout_ms, do: 10_000
+      def perform_safe(state, opts) do
+        timeout = Keyword.get(opts, :timeout, 10_000)
 
-      defoverridable timeout_ms: 0
-
-      def perform_safe(state) do
         task =
           Task.async(fn ->
             try do
@@ -40,16 +37,23 @@ defmodule Plausible.InstallationSupport.Check do
                   "Error running check #{inspect(__MODULE__)} on #{state.url}: #{inspect(e)}"
                 )
 
-                put_diagnostics(state, service_error: e)
+                put_diagnostics(state, service_error: %{code: :internal_check_error, extra: e})
             end
           end)
 
         try do
-          Task.await(task, timeout_ms())
+          Task.await(task, timeout)
         catch
           :exit, {:timeout, _} ->
             Task.shutdown(task, :brutal_kill)
-            put_diagnostics(state, service_error: :check_timeout)
+            check_name = __MODULE__ |> Atom.to_string() |> String.split(".") |> List.last()
+
+            put_diagnostics(state,
+              service_error: %{
+                code: :internal_check_timeout,
+                extra: "#{check_name} timed out after #{timeout}ms"
+              }
+            )
         end
       end
     end

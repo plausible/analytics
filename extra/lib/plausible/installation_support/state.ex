@@ -14,8 +14,7 @@ defmodule Plausible.InstallationSupport.State do
             skip_further_checks?: false
 
   @type diagnostics_type ::
-          Plausible.InstallationSupport.LegacyVerification.Diagnostics.t()
-          | Plausible.InstallationSupport.Verification.Diagnostics.t()
+          Plausible.InstallationSupport.Verification.Diagnostics.t()
           | Plausible.InstallationSupport.Detection.Diagnostics.t()
 
   @type t :: %__MODULE__{

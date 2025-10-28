@@ -12,6 +12,8 @@ defmodule Plausible.ConsolidatedView.Cache do
   use Plausible.Cache
 
   @cache_name :consolidated_views
+  @large_view_alert_threshold 12_000
+  @max_sites_per_view 14_000
 
   @impl true
   def name(), do: @cache_name
@@ -81,5 +83,22 @@ defmodule Plausible.ConsolidatedView.Cache do
     Enum.reduce(items, [], fn row, acc ->
       [{row.consolidated_view_id, row.site_ids} | acc]
     end)
+  end
+
+  def get(key, opts) do
+    case super(key, opts) do
+      nil ->
+        []
+
+      site_ids when length(site_ids) > @large_view_alert_threshold ->
+        Sentry.capture_message("Consolidated View crop warning",
+          extra: %{sites: length(site_ids), key: key}
+        )
+
+        Enum.take(site_ids, @max_sites_per_view)
+
+      site_ids ->
+        site_ids
+    end
   end
 end

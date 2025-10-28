@@ -59,7 +59,7 @@ defmodule Plausible.Site.SiteRemovalTest do
       site = new_site(owner: owner)
       team = team_of(owner)
 
-      {:ok, _} = Plausible.ConsolidatedView.enable(team)
+      new_consolidated_view(team)
       assert Plausible.ConsolidatedView.enabled?(team)
 
       assert {:ok, _} = Removal.run(site)
@@ -76,7 +76,7 @@ defmodule Plausible.Site.SiteRemovalTest do
 
       team = team_of(owner)
 
-      {:ok, _} = Plausible.ConsolidatedView.enable(team)
+      new_consolidated_view(team)
       assert Plausible.ConsolidatedView.enabled?(team)
 
       assert {:ok, _} = Removal.run(site)

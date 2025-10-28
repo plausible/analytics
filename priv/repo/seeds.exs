@@ -25,6 +25,12 @@ native_stats_range =
     Date.utc_today()
   )
 
+native_stats_range2 =
+  Date.range(
+    Date.add(Date.utc_today(), -320),
+    Date.utc_today()
+  )
+
 imported_stats_range =
   Date.range(
     Date.add(native_stats_range.first, -180),
@@ -61,6 +67,16 @@ site =
 
 add_guest(site, user: new_user(name: "Arnold Wallaby", password: "plausible"), role: :viewer)
 add_guest(site, user: new_user(name: "Lois Lane", password: "plausible"), role: :editor)
+
+another_site =
+  new_site(
+    domain: "another.site",
+    team: [
+      native_stats_start_at: NaiveDateTime.new!(native_stats_range2.first, ~T[00:00:00]),
+      stats_start_date: NaiveDateTime.new!(native_stats_range2.first, ~T[00:00:00])
+    ],
+    owner: user
+  )
 
 user2 = new_user(name: "Mary Jane", email: "user2@plausible.test", password: "plausible")
 site2 = new_site(domain: "computer.example.com", owner: user2)
@@ -175,12 +191,13 @@ utm_medium = %{
   "Twitter" => ["social"]
 }
 
-random_event_data = fn ->
+random_event_data = fn site ->
+  domain = site.domain
   referrer_source = Enum.random(sources)
 
   [
     site_id: site.id,
-    hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
+    hostname: Enum.random(["en.#{domain}", "es.#{domain}", domain]),
     referrer_source: referrer_source,
     browser: Enum.random(["Microsoft Edge", "Chrome", "curl", "Safari", "Firefox", "Vivaldi"]),
     browser_version: to_string(Enum.random(0..50)),
@@ -224,7 +241,7 @@ native_stats_range
     user_id = :rand.uniform(clickhouse_max_uint64)
 
     event =
-      random_event_data.()
+      random_event_data.(site)
       |> Keyword.merge(user_id: user_id)
 
     Enum.reduce(0..Enum.random(0..5), [], fn event_index, events ->
@@ -268,6 +285,43 @@ native_stats_range
         end
 
       to_insert ++ events
+    end)
+    |> Enum.reverse()
+  end)
+end)
+|> Plausible.TestUtils.populate_stats()
+
+native_stats_range2
+|> Enum.flat_map(fn date ->
+  n_visitors = 10 + :rand.uniform(70)
+
+  Enum.flat_map(0..n_visitors, fn _ ->
+    visit_start_timestamp = with_random_time.(date)
+    user_id = :rand.uniform(clickhouse_max_uint64)
+
+    event =
+      random_event_data.(another_site)
+      |> Keyword.merge(user_id: user_id)
+
+    Enum.reduce(0..Enum.random(0..5), [], fn _event_index, events ->
+      timestamp =
+        case events do
+          [] -> visit_start_timestamp
+          [event | _] -> next_event_timestamp.(event.timestamp)
+        end
+
+      event = Keyword.merge(event, timestamp: timestamp)
+
+      pageview = Plausible.Factory.build(:pageview, event)
+
+      engagement =
+        Map.merge(pageview, %{
+          name: "engagement",
+          engagement_time: Enum.random(300..10000),
+          scroll_depth: Enum.random(1..100)
+        })
+
+      [engagement, pageview] ++ events
     end)
     |> Enum.reverse()
   end)

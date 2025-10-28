@@ -58,6 +58,19 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           }
         }
       </script>
+
+      <div class="flex">
+        <.button
+          :if={!@show_plan_form?}
+          id="new-custom-plan"
+          phx-click="show-plan-form"
+          phx-target={@myself}
+          class="ml-auto"
+        >
+          New Custom Plan
+        </.button>
+      </div>
+
       <div class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
         <h1 class="text-xs font-semibold">Usage</h1>
         <.table rows={monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)}>
@@ -101,11 +114,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             <.td class="align-top">
               {plan.billing_interval}
             </.td>
-            <.td class="align-top">
+            <.td class="align-top" data-test-id={"plan-entry-#{plan.paddle_plan_id}"}>
               {plan.paddle_plan_id}
 
               <span
-                :if={(@team.subscription && @team.subscription.paddle_plan_id) == plan.paddle_plan_id}
+                :if={current_plan?(@team, plan.paddle_plan_id)}
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-red-100 text-red-800"
               >
                 CURRENT
@@ -129,6 +142,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
             <.td class="align-top">
               <.edit_button phx-click="edit-plan" phx-value-id={plan.id} phx-target={@myself} />
+              <.delete_button
+                :if={not current_plan?(@team, plan.paddle_plan_id)}
+                data-test-id={"delete-plan-#{plan.paddle_plan_id}"}
+                data-confirm="Are you sure you want to delete this plan?"
+                phx-click="delete-plan"
+                phx-value-id={plan.id}
+                phx-target={@myself}
+              />
             </.td>
           </:tbody>
         </.table>
@@ -201,6 +222,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           />
 
           <div class="mt-8 flex align-center gap-x-4">
+            <.input
+              type="checkbox"
+              field={f[:managed_proxy_price_modifier]}
+              label="Managed proxy"
+            />
+          </div>
+
+          <div class="mt-8 flex align-center gap-x-4">
             <.input_with_clipboard
               id="cost-estimate"
               name="cost-estimate"
@@ -208,7 +237,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               value={@cost_estimate}
             />
 
-            <.button theme="bright" phx-click="hide-plan-form" phx-target={@myself}>
+            <.button theme="secondary" phx-click="hide-plan-form" phx-target={@myself}>
               Cancel
             </.button>
 
@@ -217,21 +246,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.button>
           </div>
         </.form>
-
-        <.button
-          :if={!@show_plan_form?}
-          id="new-custom-plan"
-          phx-click="show-plan-form"
-          phx-target={@myself}
-        >
-          New Custom Plan
-        </.button>
       </div>
     </div>
     """
   end
 
-  # Event handlers
   def handle_event("show-plan-form", _, socket) do
     {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
   end
@@ -248,6 +267,16 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     end
   end
 
+  def handle_event("delete-plan", %{"id" => plan_id}, socket) do
+    plan = Plausible.Repo.get(EnterprisePlan, plan_id)
+
+    if not current_plan?(socket.assigns.team, plan.paddle_plan_id),
+      do: Plausible.Repo.delete(plan)
+
+    plans = get_plans(socket.assigns.team.id)
+    {:noreply, assign(socket, plans: plans)}
+  end
+
   def handle_event("hide-plan-form", _, socket) do
     {:noreply, assign(socket, show_plan_form?: false, editing_plan: nil)}
   end
@@ -256,16 +285,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     params = update_features_to_list(params)
 
     form = to_form(EnterprisePlan.changeset(%EnterprisePlan{}, params))
+
     params = sanitize_params(params)
 
     cost_estimate =
       Plausible.CustomerSupport.EnterprisePlan.estimate(
-        params["billing_interval"],
-        get_int_param(params, "monthly_pageview_limit"),
-        get_int_param(params, "site_limit"),
-        get_int_param(params, "team_member_limit"),
-        get_int_param(params, "hourly_api_request_limit"),
-        params["features"]
+        billing_interval: params["billing_interval"],
+        pageviews_per_month: get_int_param(params, "monthly_pageview_limit"),
+        sites_limit: get_int_param(params, "site_limit"),
+        team_members_limit: get_int_param(params, "team_member_limit"),
+        api_calls_limit: get_int_param(params, "hourly_api_request_limit"),
+        features: params["features"],
+        managed_proxy_price_modifier: params["managed_proxy_price_modifier"] == "true"
       )
 
     {:noreply, assign(socket, cost_estimate: cost_estimate, plan_form: form)}
@@ -426,4 +457,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     />
     """
   end
+
+  defp current_plan?(%{subscription: %{paddle_plan_id: id}}, id), do: true
+  defp current_plan?(_, _), do: false
 end

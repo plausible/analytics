@@ -30,14 +30,14 @@ defmodule Plausible.InstallationSupport.CheckRunner do
       Enum.reduce_while(
         checks,
         state,
-        fn check, state ->
+        fn {check, check_opts}, state ->
           if state.skip_further_checks? do
             {:halt, state}
           else
             {:cont,
              state
              |> notify_check_start(check, slowdown)
-             |> check.perform_safe()}
+             |> check.perform_safe(check_opts)}
           end
         end
       )

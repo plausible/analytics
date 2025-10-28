@@ -24,7 +24,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
         } = diagnostics,
         _url
       ) do
-    get_result("gtm", diagnostics)
+    success("gtm", diagnostics)
   end
 
   def interpret(
@@ -34,7 +34,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
         } = diagnostics,
         _url
       ) do
-    get_result(
+    success(
       "wordpress",
       diagnostics
     )
@@ -47,7 +47,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
         } = diagnostics,
         _url
       ) do
-    get_result("npm", diagnostics)
+    success("npm", diagnostics)
   end
 
   def interpret(
@@ -56,29 +56,46 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
         } = diagnostics,
         _url
       ) do
-    get_result(PlausibleWeb.Tracker.fallback_installation_type(), diagnostics)
+    success(PlausibleWeb.Tracker.fallback_installation_type(), diagnostics)
+  end
+
+  def interpret(%__MODULE__{service_error: %{code: code}}, _url)
+      when code in [:domain_not_found, :invalid_url] do
+    failure(:customer_website_issue)
+  end
+
+  def interpret(%__MODULE__{service_error: %{code: code}}, _url)
+      when code in [:bad_browserless_response, :browserless_timeout, :internal_check_timeout] do
+    failure(:browserless_issue)
   end
 
   def interpret(
-        %__MODULE__{
-          service_error: service_error
-        },
+        %__MODULE__{service_error: %{code: :browserless_client_error, extra: extra}},
         _url
-      )
-      when service_error in [:domain_not_found, :invalid_url],
-      do: %Result{ok?: false, data: nil, errors: [Atom.to_string(service_error)]}
+      ) do
+    cond do
+      String.contains?(extra, "net::") ->
+        failure(:customer_website_issue)
 
-  def interpret(%__MODULE__{} = _diagnostics, _url), do: unhandled_case()
+      String.contains?(String.downcase(extra), "execution context") ->
+        failure(:customer_website_issue)
 
-  defp unhandled_case() do
+      true ->
+        failure(:unknown_issue)
+    end
+  end
+
+  def interpret(%__MODULE__{} = _diagnostics, _url), do: failure(:unknown_issue)
+
+  defp failure(reason) do
     %Result{
       ok?: false,
-      data: %{unhandled: true},
-      errors: ["Unhandled detection case"]
+      data: %{failure: reason},
+      errors: [reason]
     }
   end
 
-  defp get_result(suggested_technology, diagnostics) do
+  defp success(suggested_technology, diagnostics) do
     %Result{
       ok?: true,
       data: %{

@@ -176,19 +176,17 @@ defmodule Plausible.SitesTest do
     end
 
     on_ee do
-      alias Plausible.ConsolidatedView
-
       test "resets consolidated view stats dates every time" do
         owner = new_user()
         new_site(owner: owner)
         team = team_of(owner)
 
-        {:ok, consolidated_view} = ConsolidatedView.enable(team)
+        consolidated_view = new_consolidated_view(team)
 
         assert consolidated_view.stats_start_date == ~D[2000-01-01]
         assert Sites.stats_start_date(consolidated_view) == ~D[2000-01-01]
 
-        new_site(owner: owner, native_stats_start_at: ~N[1999-01-01 12:00:00])
+        new_site(team: team, native_stats_start_at: ~N[1999-01-01 12:00:00])
 
         assert Sites.stats_start_date(consolidated_view) == ~D[1999-01-01]
       end

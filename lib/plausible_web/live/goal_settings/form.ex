@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def edit_form(assigns) do
     ~H"""
     <.form :let={f} for={@form} phx-submit="save-goal" phx-target={@myself}>
-      <.title>Edit Goal for {@domain}</.title>
+      <.title>Edit goal for {@domain}</.title>
 
       <.custom_event_fields
         :if={@selected_tab == "custom_events"}
@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       />
 
       <.button type="submit" class="w-full">
-        Update Goal
+        Update goal
       </.button>
     </.form>
     """
@@ -111,9 +111,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-submit="save-goal"
       phx-target={@myself}
     >
-      <.spinner class="spinner block absolute right-9 top-8" x-show="tabSelectionInProgress" />
-
-      <.title>Add Goal for {@domain}</.title>
+      <.title>Add goal for {@domain}</.title>
 
       <.tabs current_user={@current_user} site={@site} selected_tab={@selected_tab} myself={@myself} />
 
@@ -149,7 +147,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
       <div x-show="!tabSelectionInProgress">
         <.button type="submit" class="w-full">
-          Add Goal
+          Add goal
         </.button>
       </div>
 
@@ -190,7 +188,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       </div>
 
       <.label for={"page_path_input_#{@suffix}"}>
-        Page Path
+        Page path
       </.label>
 
       <.live_component
@@ -211,7 +209,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       </.error>
 
       <.input
-        label="Display Name"
+        label="Display name"
         id="pageview_display_name_input"
         field={@f[:display_name]}
         type="text"
@@ -268,7 +266,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       </div>
 
       <.label for={"scroll_threshold_input_#{@suffix}"}>
-        Scroll Percentage Threshold (1-100)
+        Scroll percentage threshold (1-100)
       </.label>
 
       <.input
@@ -284,7 +282,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       />
 
       <.label for={"scroll_page_path_input_#{@suffix}"} class="mt-3">
-        Page Path
+        Page path
       </.label>
 
       <.live_component
@@ -305,7 +303,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       </.error>
 
       <.input
-        label="Display Name"
+        label="Display name"
         id="scroll_display_name_input"
         field={@f[:display_name]}
         type="text"
@@ -344,7 +342,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
         <div>
           <.label for={"event_name_input_#{@suffix}"}>
-            Event Name
+            Event name
           </.label>
 
           <.live_component
@@ -369,7 +367,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
         <div class="mt-2">
           <.input
-            label="Display Name"
+            label="Display name"
             id="custom_event_display_name_input"
             field={@f[:display_name]}
             type="text"
@@ -447,69 +445,58 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def tabs(assigns) do
     ~H"""
-    <div class="text-sm mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
-    <div class="my-2 text-sm w-full flex rounded-sm border border-gray-300 dark:border-gray-500 overflow-hidden">
-      <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
-      <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
-      <.scroll_tab selected?={@selected_tab == "scroll"} myself={@myself} />
+    <div class="text-sm mt-6 font-medium dark:text-gray-100">Goal trigger</div>
+    <div class="my-2 text-sm w-full flex gap-1 overflow-hidden">
+      <.tab
+        id="event-tab"
+        tab_value="custom_events"
+        selected?={@selected_tab == "custom_events"}
+        myself={@myself}
+      >
+        Custom event
+      </.tab>
+      <.tab
+        id="pageview-tab"
+        tab_value="pageviews"
+        selected?={@selected_tab == "pageviews"}
+        myself={@myself}
+      >
+        Pageview
+      </.tab>
+      <.tab
+        id="scroll-tab"
+        tab_value="scroll"
+        selected?={@selected_tab == "scroll"}
+        myself={@myself}
+      >
+        Scroll depth
+      </.tab>
     </div>
     """
   end
 
-  defp custom_events_tab(assigns) do
+  attr(:id, :string, required: true)
+  attr(:tab_value, :string, required: true)
+  attr(:selected?, :boolean, required: true)
+  attr(:myself, :any, required: true)
+  slot(:inner_block, required: true)
+
+  defp tab(assigns) do
     ~H"""
     <a
       class={[
-        "flex-1 text-center py-2.5 border-r dark:border-gray-500",
+        "flex-1 text-center py-2.5 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150",
         "cursor-pointer",
-        @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
-        !@selected? && "dark:text-gray-100 text-gray-800"
+        @selected? && "bg-gray-150 dark:bg-gray-700 text-gray-800 dark:text-white",
+        !@selected? && "dark:text-gray-200 text-gray-600 hover:text-gray-800 dark:hover:text-white"
       ]}
-      id="event-tab"
+      id={@id}
       x-on:click={!@selected? && "tabSelectionInProgress = true"}
       phx-click="switch-tab"
-      phx-value-tab="custom_events"
+      phx-value-tab={@tab_value}
       phx-target={@myself}
     >
-      Custom Event
-    </a>
-    """
-  end
-
-  def pageviews_tab(assigns) do
-    ~H"""
-    <a
-      class={[
-        "flex-1 text-center py-2.5 cursor-pointer",
-        @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
-        !@selected? && "dark:text-gray-100 text-gray-800"
-      ]}
-      id="pageview-tab"
-      x-on:click={!@selected? && "tabSelectionInProgress = true"}
-      phx-click="switch-tab"
-      phx-value-tab="pageviews"
-      phx-target={@myself}
-    >
-      Pageview
-    </a>
-    """
-  end
-
-  def scroll_tab(assigns) do
-    ~H"""
-    <a
-      class={[
-        "flex-1 text-center py-2.5 cursor-pointer border-l dark:border-gray-500",
-        @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
-        !@selected? && "dark:text-gray-100 text-gray-800"
-      ]}
-      id="scroll-tab"
-      x-on:click={!@selected? && "tabSelectionInProgress = true"}
-      phx-click="switch-tab"
-      phx-value-tab="scroll"
-      phx-target={@myself}
-    >
-      Scroll Depth
+      {render_slot(@inner_block)}
     </a>
     """
   end
@@ -559,8 +546,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def suggest_page_paths(input, site) do
-    {:ok, query} =
-      Plausible.Stats.Query.build(
+    query =
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{
@@ -568,8 +555,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           "date_range" => "all",
           "metrics" => ["pageviews"],
           "include" => %{"imports" => true}
-        },
-        %{}
+        }
       )
 
     site
@@ -629,7 +615,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             else: "text-gray-500 dark:text-gray-400"
           )
         ]}>
-          Enable Revenue Tracking
+          Enable revenue tracking
         </span>
       </div>
     </.tooltip>

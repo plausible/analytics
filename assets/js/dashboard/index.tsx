@@ -17,7 +17,7 @@ function DashboardStats({
   updateImportedDataInView?: (v: boolean) => void
 }) {
   const statsBoxClass =
-    'relative min-h-[436px] w-full mt-5 p-4 flex flex-col bg-white dark:bg-gray-825 shadow-sm rounded-md md:min-h-initial md:h-27.25rem md:w-[calc(50%-10px)] md:ml-[10px] md:mr-[10px] first:ml-0 last:mr-0'
+    'relative min-h-[436px] w-full mt-5 p-4 flex flex-col bg-white dark:bg-gray-900 shadow-sm rounded-md md:min-h-initial md:h-27.25rem md:w-[calc(50%-10px)] md:ml-[10px] md:mr-[10px] first:ml-0 last:mr-0'
 
   return (
     <>

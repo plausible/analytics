@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       end
 
       test "can create a consolidated view for team", %{conn: conn, user: user} do
-        team = team_of(user)
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
 
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
       test "renders existing consolidated view", %{conn: conn, user: user} do
         team = team_of(user)
-        Plausible.ConsolidatedView.enable(team)
+        new_consolidated_view(team)
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
         html = render(lv)
@@ -224,7 +224,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
       test "can delete consolidated view", %{conn: conn, user: user} do
         team = team_of(user)
-        Plausible.ConsolidatedView.enable(team)
+        new_consolidated_view(team)
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
 
@@ -645,6 +645,76 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
                  ~s|input[name="enterprise_plan[monthly_pageview_limit]"]|,
                  "value"
                ) == "5000000"
+      end
+
+      test "current plan is annotated and delete button is available", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        user
+        |> subscribe_to_enterprise_plan(
+          team_member_limit: :unlimited,
+          paddle_plan_id: "plan-current"
+        )
+
+        insert(:enterprise_plan,
+          team: team,
+          paddle_plan_id: "plan-another",
+          monthly_pageview_limit: 1_000_000
+        )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        html = render(lv)
+
+        current_selector = ~s|[data-test-id="plan-entry-plan-current"]|
+        other_selector = ~s|[data-test-id="plan-entry-plan-another"]|
+
+        assert element_exists?(html, current_selector)
+        assert element_exists?(html, other_selector)
+
+        current = text_of_element(html, current_selector)
+        other = text_of_element(html, other_selector)
+
+        assert current =~ "CURRENT"
+        refute other =~ "CURRENT"
+
+        refute element_exists?(
+                 html,
+                 ~s|button[phx-click="delete-plan"][data-test-id="delete-plan-plan-current"]|
+               )
+
+        assert element_exists?(
+                 html,
+                 ~s|button[phx-click="delete-plan"][data-test-id="delete-plan-plan-another"]|
+               )
+      end
+
+      test "plan can be deleted", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        user |> subscribe_to_enterprise_plan(team_member_limit: :unlimited)
+
+        inactive_plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "plan-another",
+            monthly_pageview_limit: 1_000_000
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        html = render(lv)
+
+        assert element_exists?(html, ~s|[data-test-id="plan-entry-plan-another"]|)
+
+        lv
+        |> element(~s|button[phx-click="delete-plan"][data-test-id="delete-plan-plan-another"]|)
+        |> render_click()
+
+        html = render(lv)
+
+        refute Plausible.Repo.get(Plausible.Billing.EnterprisePlan, inactive_plan.id)
+        refute element_exists?(html, ~s|[data-test-id="plan-entry-plan-another"]|)
       end
 
       defp open_custom_plan(conn, team) do

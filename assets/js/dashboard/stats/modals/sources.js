@@ -11,6 +11,7 @@ import { addFilter } from '../../query'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { SortDirection } from '../../hooks/use-order-by'
+import { SourceFavicon } from '../sources/source-favicon'
 
 const VIEWS = {
   sources: {
@@ -23,10 +24,9 @@ const VIEWS = {
     },
     renderIcon: (listItem) => {
       return (
-        <img
-          alt=""
-          src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-          className="h-4 w-4 mr-2 align-middle inline"
+        <SourceFavicon
+          name={listItem.name}
+          className="size-4 mr-2 align-middle inline"
         />
       )
     }

@@ -1,5 +1,5 @@
 {
-  "tracker_script_version": 32,
+  "tracker_script_version": 33,
   "type": "module",
   "scripts": {
     "lint": "eslint",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
-    "@playwright/test": "^1.52.0",
+    "@playwright/test": "^1.56.1",
     "@types/node": "^22.13.4",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",

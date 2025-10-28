@@ -4,8 +4,9 @@
   </:title>
 
   <:subtitle>
-    Enter the email address and role of the person you want to invite. We will contact them over email to offer them access to {@site.domain} analytics.<br /><br />
-    The invitation will expire in 48 hours
+    Enter their email and role, and we'll email them an invite to join
+    <span class="font-bold">{@site.domain}</span>
+    analytics. Invitations expire after 48 hours.
   </:subtitle>
 
   <.form :let={f} for={@conn} action={Routes.membership_path(@conn, :invite_member, @site.domain)}>
@@ -31,13 +32,13 @@
       <% end %>
     </div>
 
-    <fieldset x-data="{selectedOption: null}">
+    <fieldset x-data="{selectedOption: null}" class="flex flex-col gap-y-4">
       <.label for={f[:role].id}>
         Role
       </.label>
-      <div class="mt-1 bg-white rounded-md -space-y-px dark:bg-gray-800">
+      <div class="flex flex-col gap-y-4">
         <label
-          class="border-gray-200 dark:border-gray-500 rounded-tl-md rounded-tr-md relative border p-4 flex cursor-pointer"
+          class="relative flex cursor-pointer"
           x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'editor', 'border-gray-200': selectedOption !== 'editor'}"
         >
           <.input
@@ -67,7 +68,7 @@
         </label>
 
         <label
-          class="border-gray-200 dark:border-gray-500 rounded-bl-md rounded-br-md relative border p-4 flex cursor-pointer"
+          class="relative flex cursor-pointer"
           x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'viewer', 'border-gray-200': selectedOption !== 'viewer'}"
         >
           <.input

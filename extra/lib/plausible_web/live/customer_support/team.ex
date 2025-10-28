@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         <.tab to="sites" tab={@tab}>
           Sites ({number_format(@usage.sites)}/{number_format(@limits.sites)})
         </.tab>
-        <.tab to="consolidated_views" tab={@tab}>
+        <.tab :if={Plausible.Teams.setup?(@team)} to="consolidated_views" tab={@tab}>
           Consolidated Views
         </.tab>
         <.tab :if={has_sso_integration?(@team)} to="sso" tab={@tab}>SSO</.tab>

@@ -6,7 +6,9 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     import Phoenix.LiveViewTest, only: [render_component: 2]
     import Plausible.Test.Support.HTML
 
-    alias Plausible.InstallationSupport.{State, LegacyVerification, Verification}
+    alias Plausible.InstallationSupport.{State, Verification}
+
+    @moduletag :capture_log
 
     @component PlausibleWeb.Live.Components.Verification
     @progress ~s|#verification-ui p#progress|
@@ -41,9 +43,10 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
     test "renders diagnostic interpretation" do
       interpretation =
-        LegacyVerification.Checks.interpret_diagnostics(%State{
-          url: "example.com",
-          diagnostics: %LegacyVerification.Diagnostics{}
+        Verification.Checks.interpret_diagnostics(%State{
+          url: "https://example.com",
+          data_domain: "example.com",
+          diagnostics: %Verification.Diagnostics{service_error: %{code: :domain_not_found}}
         })
 
       html =
@@ -54,23 +57,20 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           interpretation: interpretation
         )
 
-      recommendations = html |> find(@recommendations) |> Enum.map(&text/1)
-
-      assert recommendations == [
-               "If your site is running at a different location, please manually check your integration.  Learn more"
-             ]
+      assert [recommendation] = html |> find(@recommendations) |> Enum.map(&text/1)
+      assert recommendation =~ "check that the domain you entered is correct"
 
       refute element_exists?(html, @super_admin_report)
     end
 
     test "renders super-admin report" do
       state = %State{
-        url: "example.com",
-        diagnostics: %LegacyVerification.Diagnostics{}
+        url: "https://example.com",
+        data_domain: "example.com",
+        diagnostics: %Verification.Diagnostics{}
       }
 
-      interpretation =
-        LegacyVerification.Checks.interpret_diagnostics(state)
+      interpretation = Verification.Checks.interpret_diagnostics(state)
 
       html =
         render_component(@component,
@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
         )
 
       assert element_exists?(html, @super_admin_report)
-      assert text_of_element(html, @super_admin_report) =~ "Snippets found in body: 0"
+      assert text_of_element(html, @super_admin_report) =~ "Plausible is on window: nil"
     end
 
     test "hides pulsating circle when finished, shows check circle" do
@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           diagnostics: %Verification.Diagnostics{
             plausible_is_on_window: false,
             plausible_is_initialized: false,
-            service_error: :domain_not_found
+            service_error: %{code: :domain_not_found}
           }
         })
 
