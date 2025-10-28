@@ -84,7 +84,7 @@ defmodule Plausible.Test.Support.HTML do
   @doc """
     When using liveview <.portal> element, it renders a <template> that gets rendered into DOM
     by JS. In order to make assertions about portal contents, we need to find the <template> element
-    and get its contents. Unfortunately <template> elements are not treated like standard elements by LazyHTML.from_fragment(
+    and get its contents. Unfortunately <template> elements are not treated like standard elements by LazyHTML.
     Functions like LazyHTML.text() or LazyHTML.query() return nothing for <template> elemenets. So this function tricks LazyHTML by:
       1. Finding the template element
       2. Transforming it into a <div> so it can be used like a normal LazyHTML node
