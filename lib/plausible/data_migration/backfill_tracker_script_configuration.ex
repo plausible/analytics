@@ -72,8 +72,20 @@ defmodule Plausible.DataMigration.BackfillTrackerScriptConfiguration do
 
   defp tracker_script_configuration(site, now) do
     installation_meta = site.installation_meta
-    installation_type = if(installation_meta, do: installation_meta.installation_type, else: nil)
-    script_config = if(installation_meta, do: installation_meta.script_config, else: %{})
+
+    installation_type =
+      if(installation_meta,
+        do:
+          Map.get(installation_meta, "installation_type", false) ||
+            installation_meta.installation_type,
+        else: nil
+      )
+
+    script_config =
+      if(installation_meta,
+        do: Map.get(installation_meta, "script_config", false) || installation_meta.script_config,
+        else: %{}
+      )
 
     %{
       id: Nanoid.generate(),
