@@ -61,8 +61,12 @@ defmodule PlausibleWeb.StatsController do
     demo = site.domain == "plausible.io"
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
 
+    consolidated_view? = Plausible.Sites.consolidated?(site)
+    team_has_consolidated_view? = Plausible.ConsolidatedView.enabled?(site.team)
+    team_identifier = site.team.identifier
+
     skip_to_dashboard? =
-      conn.params["skip_to_dashboard"] == "true" or Plausible.Sites.consolidated?(site)
+      conn.params["skip_to_dashboard"] == "true" or consolidated_view?
 
     {:ok, segments} = Plausible.Segments.get_all_for_site(site, site_role)
 
@@ -87,7 +91,10 @@ defmodule PlausibleWeb.StatsController do
           is_dbip: is_dbip(),
           segments: segments,
           load_dashboard_js: true,
-          hide_footer?: if(ce?() || demo, do: false, else: site_role != :public)
+          hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
+          consolidated_view?: consolidated_view?,
+          team_has_consolidated_view?: team_has_consolidated_view?,
+          team_identifier: team_identifier
         )
 
       !stats_start_date && can_see_stats? ->

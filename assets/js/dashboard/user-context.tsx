@@ -12,10 +12,14 @@ export enum Role {
 const userContextDefaultValue = {
   loggedIn: false,
   id: null,
-  role: Role.public
+  role: Role.public,
+  team: {
+    identifier: null,
+    hasConsolidatedView: false
+  }
 } as
-  | { loggedIn: false; id: null; role: Role }
-  | { loggedIn: true; id: number; role: Role }
+  | { loggedIn: false; id: null; role: Role; team: { identifier: null; hasConsolidatedView: false } }
+  | { loggedIn: true; id: number; role: Role; team: { identifier: string | null; hasConsolidatedView: boolean } }
 
 export type UserContextValue = typeof userContextDefaultValue
 
