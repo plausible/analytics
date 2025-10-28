@@ -177,6 +177,7 @@ defmodule PlausibleWeb.Live.ChangeDomain do
     defp run_detection(domain) do
       with {:ok, detection_result} <-
              Detection.Checks.run_with_rate_limit(nil, domain,
+               detection_check_timeout: 11_000,
                detect_v1?: true,
                report_to: nil,
                async?: false,
