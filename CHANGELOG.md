@@ -6,36 +6,43 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Custom events can now be marked as non-interactive in events API and tracker script. Events marked as non-interactive are not counted towards bounce rate.
+- Custom events can now be marked as non-interactive in events API and tracker script: events marked as non-interactive are not counted towards bounce rate
 - Ability to leave team via Team Settings > Leave Team
-- Stats APIv2 now supports `include.trim_relative_date_range`. This option allows trimming empty values after current time for `day`, `month` and `year` date_range values.
+- Stats APIv2 now supports `include.trim_relative_date_range` - this option allows trimming empty values after current time for `day`, `month` and `year` date_range values
 - Properties are now included in full site exports done via Site Settings > Imports & Exports
 - Google Search Console integration settings: properties can be dynamically sought
 - Weekly/monthly e-mail reports now contain top goal conversions
+- Newly created sites are offered a new dynamic tracking script and snippet that's specific to the site
+- Old sites that go to "Review installation" flow are offered the new script and snippet, along with a migration guide from legacy snippets, legacy snippets continue to function as before
+- The new tracker script allows configuring `transformRequest` function to change event payloads before they're sent
+- The new tracker script allows configuring `customProperties` function hook to derive custom props for events on the fly
+- The new tracker script supports tracking form submissions if enabled
+- The new tracker script automatically updates to respect site domain if it's changed in "Change domain" flow
+- The new tracker script automatically updates to respect the following configuration options available in "New site" flows and "Review installation" flows: whether to track outbound links, file downloads, form submissions
+- The new tracker script allows overriding almost all options by changing the snippet on the website, with the function `plausible.init({ ...your overrides... })` - this can be unique page-by-page
+- A new `@plausible-analytics/tracker` ESM module is available on NPM - it has near-identical configuration API and identical tracking logic as the script and it receives bugfixes and updates concurrently with the new tracker script
 
 ### Removed
 
-- `pageleave` tracker script variant is no longer compiled but is still available from /js endpoint.
-
 ### Changed
 
-- A session is now marked as a bounce if it has less than 2 pageviews and no interactive custom events.
+- A session is now marked as a bounce if it has less than 2 pageviews and no interactive custom events
 - All dropmenus on dashboard are navigable with Tab (used to be a mix between tab and arrow keys), and no two dropmenus can be open at once on the dashboard
-- Special path-based events like "404" don't need `event.props.path` to be explicitly defined when tracking: it is set to be the same as `event.pathname` in event ingestion. If it is explicitly defined, it is not overridden for backwards compatibility.
-- Main graph no longer shows empty values after current time for `day`, `month` and `year` periods.
-- Include `bounce_rate` metric in Entry Pages breakdown.
-- Dark mode theme has been refined with darker color scheme and better visual hierarchy.
+- Special path-based events like "404" don't need `event.props.path` to be explicitly defined when tracking: it is set to be the same as `event.pathname` in event ingestion; if it is explicitly defined, it is not overridden for backwards compatibility
+- Main graph no longer shows empty values after current time for `day`, `month` and `year` periods
+- Include `bounce_rate` metric in Entry Pages breakdown
+- Dark mode theme has been refined with darker color scheme and better visual hierarchy
 
 ### Fixed
 
 - Make clicking Compare / Disable Comparison in period picker menu close the menu
 - Do not log page views for hidden pages (prerendered pages and new tabs), until pages are viewed
 - Password-authenticated shared links now carry over dashboard params properly
-- Realtime and hourly graphs of visit duration, views per visit no longer overcount due to long-lasting sessions, instead showing each visit
-  when they occurred.
+- Realtime and hourly graphs of visit duration, views per visit no longer overcount due to long-lasting sessions, instead showing each visit when they occurred
 - Fixed realtime and hourly graphs of visits overcounting
-- When reporting only `visitors` and `visits` per hour, count visits in each hour they were active in.
-- Remove Subscription and Invoices menu from CE 
+- When reporting only `visitors` and `visits` per hour, count visits in each hour they were active in
+- Fixed unhandled tracker-related exceptions on link clicks within svgs
+- Remove Subscription and Invoices menu from CE
 - Fix email sending error "Mua.SMTPError" 503 Bad sequence of commands
 
 ## v3.0.0 - 2025-04-11
