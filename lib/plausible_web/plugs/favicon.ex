@@ -31,6 +31,7 @@ defmodule PlausibleWeb.Favicon do
 
   @placeholder_icon_location "priv/link_favicon.svg"
   @placeholder_icon File.read!(@placeholder_icon_location)
+  @external_resource @placeholder_icon_location
   @custom_icons %{
     "Brave" => "search.brave.com",
     "Sogou" => "sogou.com",
