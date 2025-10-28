@@ -62,6 +62,8 @@
   --color-yellow-800: var(--color-amber-800);
   --color-yellow-900: var(--color-amber-900);
   --color-yellow-950: var(--color-amber-950);
+
+  /* green: colors.emerald - Map green to emerald colors */
   --color-green-50: var(--color-emerald-50);
   --color-green-100: var(--color-emerald-100);
   --color-green-200: var(--color-emerald-200);
@@ -74,7 +76,7 @@
   --color-green-900: var(--color-emerald-900);
   --color-green-950: var(--color-emerald-950);
 
-  /* gray: colors.slate - Map gray to slate colors */
+  /* gray: colors.zinc - Map gray to zinc colors */
   --color-gray-50: var(--color-zinc-50);
   --color-gray-100: var(--color-zinc-100);
   --color-gray-200: var(--color-zinc-200);
@@ -87,7 +89,7 @@
   --color-gray-900: var(--color-zinc-900);
   --color-gray-950: var(--color-zinc-950);
 
-  /* Custom gray shades from config (override some slate values) */
+  /* Custom gray shades from config (override some zinc values) */
   --color-gray-150: rgb(236 236 238);
   --color-gray-750: rgb(50 50 54);
   --color-gray-825: rgb(35 35 38);
