@@ -25,8 +25,7 @@ import { useSearchableItems } from '../../hooks/use-searchable-items'
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
-  popover.items.classNames.hoverLink,
-  popover.items.classNames.groupRoundedEnd
+  popover.items.classNames.hoverLink
 )
 
 const INITIAL_SEGMENTS_SHOWN = 5

@@ -26,7 +26,7 @@ const transition = {
 const panel = {
   classNames: {
     roundedSheet:
-      'focus:outline-hidden rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black/5 font-medium text-gray-800 dark:text-gray-200'
+      'flex flex-col gap-0.5 p-1 focus:outline-hidden rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black/5 font-medium text-gray-800 dark:text-gray-200'
   }
 }
 
@@ -48,10 +48,16 @@ const items = {
   classNames: {
     navigationLink: classNames(
       'flex items-center justify-between',
-      'px-4 py-2 text-sm leading-tight',
+      'px-4 py-2.5 text-sm leading-tight rounded-md',
       'cursor-pointer'
     ),
-    selectedOption: classNames('data-[selected=true]:font-bold'),
+    selectedOption: classNames(
+      'data-[selected=true]:bg-gray-100',
+      'data-[selected=true]:dark:bg-gray-700',
+      'data-[selected=true]:text-gray-900',
+      'data-[selected=true]:dark:text-gray-100',
+      'data-[selected=true]:font-semibold'
+    ),
     hoverLink: classNames(
       'hover:bg-gray-100',
       'hover:text-gray-900',
@@ -62,10 +68,7 @@ const items = {
       'focus-within:text-gray-900',
       'dark:focus-within:bg-gray-700',
       'dark:focus-within:text-gray-100'
-    ),
-    roundedStart: 'first-of-type:rounded-t-md',
-    roundedEnd: 'last-of-type:rounded-b-md',
-    groupRoundedEnd: 'group-last-of-type:rounded-b-md'
+    )
   }
 }
 

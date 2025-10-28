@@ -4,7 +4,7 @@
 import React, { useRef } from 'react'
 import { Popover, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { Cog8ToothIcon } from '@heroicons/react/24/outline'
+import { Cog8ToothIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 import { isModifierPressed, isTyping, Keybind, KeybindHint } from './keybinding'
 import { popover, BlurMenuButtonOnEscape } from './components/popover'
@@ -39,12 +39,44 @@ const Favicon = ({
   />
 )
 
+const GlobeIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M22 12H2M12 22c5.714-5.442 5.714-14.558 0-20M12 22C6.286 16.558 6.286 7.442 12 2"
+    />
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
+    />
+  </svg>
+)
+
 const menuItemClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
-  popover.items.classNames.hoverLink,
-  popover.items.classNames.roundedStart,
-  popover.items.classNames.roundedEnd
+  popover.items.classNames.hoverLink
+)
+
+const buttonLinkClassName = classNames(
+  'flex-1 flex items-center justify-center',
+  'my-1 mx-1',
+  'border border-gray-300 dark:border-gray-700',
+  'px-3 py-2 text-sm font-medium rounded-md',
+  'bg-white text-gray-700 dark:text-gray-300 dark:bg-gray-700',
+  'transition-all duration-200',
+  'hover:text-gray-900 hover:border-gray-400/70 dark:hover:bg-gray-600 dark:hover:border-gray-600 dark:hover:text-white'
 )
 
 const getSwitchToSiteURL = (
@@ -140,18 +172,24 @@ export const SiteSwitcher = () => {
               data-testid="sitemenu"
               className={classNames(popover.panel.classNames.roundedSheet)}
             >
-              {canSeeSiteSettings && (
-                <>
+              <div className="flex">
+                {canSeeViewAllSites && (
+                  <a className={buttonLinkClassName} href={`/sites`}>
+                    <ArrowLeftIcon className="size-4 mr-1.5" />
+                    Back to sites
+                  </a>
+                )}
+                {canSeeSiteSettings && (
                   <a
-                    className={menuItemClassName}
+                    className={buttonLinkClassName}
                     href={`/${encodeURIComponent(currentSite.domain)}/settings/general`}
                   >
-                    <Cog8ToothIcon className="h-4 w-4 block mr-2" />
-                    <span className="mr-auto">Site settings</span>
+                    <Cog8ToothIcon className="size-4 mr-1.5" />
+                    Site settings
                   </a>
-                  <MenuSeparator />
-                </>
-              )}
+                )}
+              </div>
+              {(canSeeSiteSettings || canSeeViewAllSites) && <MenuSeparator />}
               {sitesQuery.isLoading && (
                 <div className="px-3 py-2">
                   <div className="loading sm">
@@ -167,6 +205,15 @@ export const SiteSwitcher = () => {
                   />
                 </div>
               )}
+              <a
+                className={menuItemClassName}
+                href="/sites"
+                onClick={() => closePopover()}
+              >
+                <GlobeIcon className="size-4 block mr-2 text-indigo-600 dark:text-white" />
+                <span className="truncate mr-auto">All sites</span>
+                <KeybindHint>0</KeybindHint>
+              </a>
               {!!sitesInDropdown &&
                 sitesInDropdown.map(({ domain }, index) => (
                   <a
@@ -187,14 +234,6 @@ export const SiteSwitcher = () => {
                     )}
                   </a>
                 ))}
-              {canSeeViewAllSites && (
-                <>
-                  <MenuSeparator />
-                  <a className={menuItemClassName} href={`/sites`}>
-                    View all
-                  </a>
-                </>
-              )}
             </Popover.Panel>
           </Transition>
         </>
