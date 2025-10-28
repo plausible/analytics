@@ -63,12 +63,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     ~H"""
     <.flash_messages flash={@flash} />
-    <div
-      x-ref="invitation_data"
-      x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Jason.encode!(@invitations_map)}}"}
-      x-on:keydown.escape.window="invitationOpen = false"
-      class="container pt-6"
-    >
+    <div class="container pt-6">
       <PlausibleWeb.Live.Components.Visitors.gradient_defs />
       <.upgrade_nag_screen :if={
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
