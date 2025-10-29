@@ -245,6 +245,11 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
 
       assert element_exists?(
                html,
+               "a[href='#{PlausibleWeb.Live.ChangeDomain.change_domain_checklist_docs_link()}']"
+             )
+
+      assert element_exists?(
+               html,
                "a[href='#{PlausibleWeb.Live.ChangeDomain.change_domain_docs_link()}']"
              )
     end

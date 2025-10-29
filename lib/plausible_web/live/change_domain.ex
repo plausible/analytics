@@ -14,8 +14,11 @@ defmodule PlausibleWeb.Live.ChangeDomain do
   end
 
   @change_domain_docs_link "https://plausible.io/docs/change-domain-name"
+  @change_domain_checklist_docs_link "https://plausible.io/docs/change-domain-name#domain-change-checklist"
 
   def change_domain_docs_link(), do: @change_domain_docs_link
+
+  def change_domain_checklist_docs_link(), do: @change_domain_checklist_docs_link
 
   def mount(
         %{"domain" => domain},
@@ -258,10 +261,12 @@ defmodule PlausibleWeb.Live.ChangeDomain do
     end
 
     defp tracking_works_notice(assigns) do
+      assigns = assign(assigns, :docs_link, @change_domain_checklist_docs_link)
+
       ~H"""
       <p class="mt-4 text-sm">
         Take a quick look at our
-        <.styled_link new_tab href="https://plausible.io/docs/todo-link-me">
+        <.styled_link new_tab href={@docs_link}>
           domain change checklist
         </.styled_link>
         to make sure no further action is needed.
