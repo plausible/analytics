@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Live.Installation do
             </div>
           </:loading>
 
-          <div class="grid grid-cols-2 sm:flex sm:flex-row gap-1 rounded-md">
+          <div class="grid grid-cols-2 sm:flex sm:flex-row gap-1 rounded-lg p-1 border border-gray-300 dark:border-gray-700">
             <.tab
               patch={"?type=manual&flow=#{@flow}"}
               selected={@installation_type.result == "manual"}
@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Live.Installation do
 
   defp tab(assigns) do
     base_classes =
-      "rounded-md px-3.5 py-2.5 text-sm font-medium flex items-center flex-1 justify-center whitespace-nowrap hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150"
+      "rounded-md px-3 py-2 text-sm font-medium flex items-center flex-1 justify-center whitespace-nowrap hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150"
 
     selected_class =
       if assigns[:selected] do
