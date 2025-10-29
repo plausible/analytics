@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Live.Sites do
             <.consolidated_view_stat
               value={@consolidated_stats.views_per_visit}
               label="Views per visit"
-              change={1}
+              change={@consolidated_stats.views_per_visit_change}
             />
           </div>
         </div>
