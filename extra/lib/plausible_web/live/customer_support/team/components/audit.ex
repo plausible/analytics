@@ -109,7 +109,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
           <.td actions>
             <.edit_button
               phx-click="reveal-audit-entry"
-              icon={:magnifying_glass_plus}
               phx-value-id={entry.id}
               phx-target={@myself}
             />

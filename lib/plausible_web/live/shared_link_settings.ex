@@ -40,7 +40,12 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
     <div id="shared-link-settings-main">
       <.flash_messages flash={@flash} />
 
-      <.live_component :let={modal_unique_id} module={Modal} preload?={false} id="shared-links-form-modal">
+      <.live_component
+        :let={modal_unique_id}
+        module={Modal}
+        preload?={false}
+        id="shared-links-form-modal"
+      >
         <.live_component
           module={PlausibleWeb.Live.SharedLinkSettings.Form}
           id={"shared-links-form-#{modal_unique_id}"}
@@ -136,7 +141,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
       {1, _} ->
         socket =
           socket
-          |> put_live_flash(:success, "Shared link deleted successfully")
+          |> put_live_flash(:success, "Shared link deleted")
           |> assign(shared_links: Enum.reject(socket.assigns.shared_links, &(&1.slug == slug)))
 
         {:noreply, socket}
@@ -166,7 +171,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
         shared_links: shared_links,
         form_shared_link: nil
       )
-      |> put_live_flash(:success, "Shared link saved successfully")
+      |> put_live_flash(:success, "Shared link saved")
 
     {:noreply, socket}
   end

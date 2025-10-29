@@ -561,63 +561,6 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: Routes.site_path(conn, :settings_email_reports, site.domain))
   end
 
-  def create_shared_link(conn, %{"shared_link" => link}) do
-    site = conn.assigns[:site]
-
-    case Sites.create_shared_link(site, link["name"], password: link["password"]) do
-      {:ok, _created} ->
-        redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
-
-      {:error, :upgrade_required} ->
-        conn
-        |> put_flash(:error, "Your current subscription plan does not include Shared Links")
-        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
-
-      {:error, changeset} ->
-        conn
-        |> put_flash(:error, "Failed to create shared link")
-        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
-    end
-  end
-
-  def update_shared_link(conn, %{"slug" => slug, "shared_link" => params}) do
-    site = conn.assigns[:site]
-    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-    changeset = Plausible.Site.SharedLink.changeset(shared_link, params)
-
-    case Repo.update(changeset) do
-      {:ok, _updated} ->
-        redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
-
-      {:error, changeset} ->
-        conn
-        |> put_flash(:error, "Failed to update shared link")
-        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
-    end
-  end
-
-  def delete_shared_link(conn, %{"slug" => slug}) do
-    site = conn.assigns[:site]
-    site_id = site.id
-
-    case Repo.delete_all(
-           from(l in Plausible.Site.SharedLink,
-             where: l.slug == ^slug,
-             where: l.site_id == ^site_id
-           )
-         ) do
-      {1, _} ->
-        conn
-        |> put_flash(:success, "Shared Link deleted")
-        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
-
-      {0, _} ->
-        conn
-        |> put_flash(:error, "Could not find Shared Link")
-        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
-    end
-  end
-
   def forget_import(conn, %{"import_id" => import_id}) do
     site = conn.assigns.site
 

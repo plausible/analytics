@@ -91,7 +91,6 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
         socket =
           socket
           |> put_flash(:error, "Your current subscription plan does not include Shared Links")
-          |> socket.assigns.on_save_shared_link.(nil, socket)
 
         {:noreply, socket}
 
