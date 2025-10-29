@@ -115,7 +115,7 @@ defmodule PlausibleWeb.Live.Sites do
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <!-- Insert upgrade_card here -->
           <.consolidated_view_card
-            :if={@consolidated_view && Plausible.Auth.is_super_admin?(@current_user)}
+            :if={@consolidated_view && consolidated_view_ok_to_display?(@current_team, @current_user)}
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
             consolidated_view={@consolidated_view}
             consolidated_stats={@consolidated_stats}
@@ -951,6 +951,10 @@ defmodule PlausibleWeb.Live.Sites do
   on_ee do
     alias Plausible.ConsolidatedView
 
+    defp consolidated_view_ok_to_display?(team, user) do
+      ConsolidatedView.ok_to_display?(team, user)
+    end
+
     defp init_consolidated_view_assigns(_user, nil), do: @no_consolidated_view
 
     defp init_consolidated_view_assigns(user, team) do
@@ -975,6 +979,7 @@ defmodule PlausibleWeb.Live.Sites do
       end
     end
   else
+    defp consolidated_view_ok_to_display?(_team, _user), do: false
     defp init_consolidated_view_assigns(_user, _team), do: @no_consolidated_view
     defp load_consolidated_stats(_consolidated_view), do: nil
   end

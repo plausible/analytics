@@ -64,7 +64,7 @@ defmodule PlausibleWeb.StatsController do
     consolidated_view? = on_ee(do: Plausible.Sites.consolidated?(site), else: false)
 
     team_has_consolidated_view? =
-      on_ee(do: Plausible.ConsolidatedView.enabled?(site.team), else: false)
+      on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team, current_user), else: false)
 
     team_identifier = site.team.identifier
 
@@ -406,7 +406,10 @@ defmodule PlausibleWeb.StatsController do
           on_ee(do: Plausible.Sites.consolidated?(shared_link.site), else: false)
 
         team_has_consolidated_view? =
-          on_ee(do: Plausible.ConsolidatedView.enabled?(shared_link.site.team), else: false)
+          on_ee(
+            do: Plausible.ConsolidatedView.ok_to_display?(shared_link.site.team, current_user),
+            else: false
+          )
 
         team_identifier = shared_link.site.team.identifier
 
