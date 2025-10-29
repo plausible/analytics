@@ -446,7 +446,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def tabs(assigns) do
     ~H"""
     <div class="text-sm mt-6 font-medium dark:text-gray-100">Goal trigger</div>
-    <div class="my-2 text-sm w-full flex gap-1 overflow-hidden">
+    <div class="my-2 p-1 text-sm w-full flex gap-1 overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
       <.tab
         id="event-tab"
         tab_value="custom_events"
@@ -485,7 +485,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <a
       class={[
-        "flex-1 text-center py-2.5 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150",
+        "flex-1 text-center py-2 px-3 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150",
         "cursor-pointer",
         @selected? && "bg-gray-150 dark:bg-gray-700 text-gray-800 dark:text-white",
         !@selected? && "dark:text-gray-200 text-gray-600 hover:text-gray-800 dark:hover:text-white"
