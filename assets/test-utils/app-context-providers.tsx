@@ -69,12 +69,14 @@ export const TestContextProviders = ({
     // <ThemeContextProvider> not interactive component, default value is suitable
     <SiteContextProvider site={site}>
       <UserContextProvider
-        user={user ?? { 
-          role: Role.editor, 
-          loggedIn: true, 
-          id: 1,
-          team: { identifier: null, hasConsolidatedView: false }
-        }}
+        user={
+          user ?? {
+            role: Role.editor,
+            loggedIn: true,
+            id: 1,
+            team: { identifier: null, hasConsolidatedView: false }
+          }
+        }
       >
         <SegmentsContextProvider preloadedSegments={preloaded?.segments ?? []}>
           <MemoryRouter

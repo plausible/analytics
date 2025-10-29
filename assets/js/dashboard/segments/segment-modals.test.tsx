@@ -50,9 +50,9 @@ describe('Segment details modal - errors', () => {
       case: 'segment is not in list',
       segments: [anyPersonalSegment, anySiteSegment],
       segmentId: 202020,
-      user: { 
-        loggedIn: true, 
-        id: 1, 
+      user: {
+        loggedIn: true,
+        id: 1,
         role: Role.owner,
         team: { identifier: null, hasConsolidatedView: false }
       },
@@ -63,9 +63,9 @@ describe('Segment details modal - errors', () => {
       case: 'site segment is in list but not listable because site segments are not available',
       segments: [anyPersonalSegment, anySiteSegment],
       segmentId: anySiteSegment.id,
-      user: { 
-        loggedIn: true, 
-        id: 1, 
+      user: {
+        loggedIn: true,
+        id: 1,
         role: Role.owner,
         team: { identifier: null, hasConsolidatedView: false }
       },
@@ -76,9 +76,9 @@ describe('Segment details modal - errors', () => {
       case: 'personal segment is in list but not listable because it is a public dashboard',
       segments: [{ ...anyPersonalSegment, owner_id: null, owner_name: null }],
       segmentId: anyPersonalSegment.id,
-      user: { 
-        loggedIn: false, 
-        id: null, 
+      user: {
+        loggedIn: false,
+        id: null,
         role: Role.public,
         team: { identifier: null, hasConsolidatedView: false }
       },
@@ -89,9 +89,9 @@ describe('Segment details modal - errors', () => {
       case: 'segment is in list and listable, but detailed view is not available because user is not logged in',
       segments: [{ ...anySiteSegment, owner_id: null, owner_name: null }],
       segmentId: anySiteSegment.id,
-      user: { 
-        loggedIn: false, 
-        id: null, 
+      user: {
+        loggedIn: false,
+        id: null,
         role: Role.public,
         team: { identifier: null, hasConsolidatedView: false }
       },
@@ -138,9 +138,9 @@ describe('Segment details modal - other cases', () => {
     render(<SegmentModal id={anySiteSegment.id} />, {
       wrapper: (props) => (
         <TestContextProviders
-          user={{ 
-            loggedIn: true, 
-            role: Role.editor, 
+          user={{
+            loggedIn: true,
+            role: Role.editor,
             id: 1,
             team: { identifier: null, hasConsolidatedView: false }
           }}

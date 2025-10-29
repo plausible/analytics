@@ -90,9 +90,9 @@ describe(`${isListableSegment.name}`, () => {
   const site: Pick<PlausibleSite, 'siteSegmentsAvailable'> = {
     siteSegmentsAvailable: true
   }
-  const user: UserContextValue = { 
-    loggedIn: true, 
-    id: 1, 
+  const user: UserContextValue = {
+    loggedIn: true,
+    id: 1,
     role: Role.editor,
     team: { identifier: null, hasConsolidatedView: false }
   }
@@ -108,9 +108,9 @@ describe(`${isListableSegment.name}`, () => {
       isListableSegment({
         segment,
         site,
-        user: { 
-          loggedIn: false, 
-          role: Role.public, 
+        user: {
+          loggedIn: false,
+          role: Role.public,
           id: null,
           team: { identifier: null, hasConsolidatedView: false }
         }
@@ -185,9 +185,9 @@ describe(`${resolveFilters.name}`, () => {
 
 describe(`${canSeeSegmentDetails.name}`, () => {
   it('should return true if the user is logged in and not a public role', () => {
-    const user: UserContextValue = { 
-      loggedIn: true, 
-      role: Role.admin, 
+    const user: UserContextValue = {
+      loggedIn: true,
+      role: Role.admin,
       id: 1,
       team: { identifier: null, hasConsolidatedView: false }
     }
@@ -205,9 +205,9 @@ describe(`${canSeeSegmentDetails.name}`, () => {
   })
 
   it('should return false if the user has a public role', () => {
-    const user: UserContextValue = { 
-      loggedIn: true, 
-      role: Role.public, 
+    const user: UserContextValue = {
+      loggedIn: true,
+      role: Role.public,
       id: 1,
       team: { identifier: null, hasConsolidatedView: false }
     }

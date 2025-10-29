@@ -144,26 +144,27 @@ export const SiteSwitcher = () => {
 
           {!!dashboardRouteMatch &&
             !modal &&
-            user.team?.hasConsolidatedView && 
-            user.team.identifier &&
-
-            <Keybind
-              key={user.team.identifier}
-              keyboardKey="0"
-              type="keydown"
-              handler={() => {
-                const url = getSwitchToSiteURL(currentSite, { domain: user.team.identifier! })
-                if (!url) {
-                  closePopover()
-                } else {
-                  closePopover()
-                  window.location.assign(url)
-                }
-              }}
-              shouldIgnoreWhen={[isModifierPressed, isTyping]}
-              targetRef="document"
-            />
-          }
+            user.team?.hasConsolidatedView &&
+            user.team.identifier && (
+              <Keybind
+                key={user.team.identifier}
+                keyboardKey="0"
+                type="keydown"
+                handler={() => {
+                  const url = getSwitchToSiteURL(currentSite, {
+                    domain: user.team.identifier!
+                  })
+                  if (!url) {
+                    closePopover()
+                  } else {
+                    closePopover()
+                    window.location.assign(url)
+                  }
+                }}
+                shouldIgnoreWhen={[isModifierPressed, isTyping]}
+                targetRef="document"
+              />
+            )}
 
           <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
@@ -183,7 +184,9 @@ export const SiteSwitcher = () => {
               />
             )}
             <span className={'truncate hidden sm:block sm:mr-1 lg:mr-0'}>
-              {currentSite.isConsolidatedView ? "All sites" : currentSite.domain}
+              {currentSite.isConsolidatedView
+                ? 'All sites'
+                : currentSite.domain}
             </span>
             <ChevronDownIcon className="hidden lg:block h-5 w-5 ml-2 dark:text-gray-100" />
           </Popover.Button>
@@ -232,16 +235,22 @@ export const SiteSwitcher = () => {
                   />
                 </div>
               )}
-              {user.team.hasConsolidatedView && user.team.identifier && <a
-                data-selected={currentSite.isConsolidatedView}
-                className={menuItemClassName}
-                href={getSwitchToSiteURL(currentSite, { domain: user.team.identifier }) ?? '#'}
-                onClick={() => closePopover()}
-              >
-                <GlobeIcon className="size-4 block mr-2 text-indigo-600 dark:text-white" />
-                <span className="truncate mr-auto">All sites</span>
-                <KeybindHint>0</KeybindHint>
-              </a>}
+              {user.team.hasConsolidatedView && user.team.identifier && (
+                <a
+                  data-selected={currentSite.isConsolidatedView}
+                  className={menuItemClassName}
+                  href={
+                    getSwitchToSiteURL(currentSite, {
+                      domain: user.team.identifier
+                    }) ?? '#'
+                  }
+                  onClick={() => closePopover()}
+                >
+                  <GlobeIcon className="size-4 block mr-2 text-indigo-600 dark:text-white" />
+                  <span className="truncate mr-auto">All sites</span>
+                  <KeybindHint>0</KeybindHint>
+                </a>
+              )}
               {!!sitesInDropdown &&
                 sitesInDropdown.map(({ domain }, index) => (
                   <a

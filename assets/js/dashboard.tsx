@@ -67,7 +67,8 @@ if (container && container.dataset) {
                       role: container.dataset.currentUserRole as Role,
                       team: {
                         identifier: container.dataset.teamIdentifier ?? null,
-                        hasConsolidatedView: container.dataset.teamHasConsolidatedView === 'true'
+                        hasConsolidatedView:
+                          container.dataset.teamHasConsolidatedView === 'true'
                       }
                     }
                   : {

@@ -18,8 +18,18 @@ const userContextDefaultValue = {
     hasConsolidatedView: false
   }
 } as
-  | { loggedIn: false; id: null; role: Role; team: { identifier: null; hasConsolidatedView: false } }
-  | { loggedIn: true; id: number; role: Role; team: { identifier: string | null; hasConsolidatedView: boolean } }
+  | {
+      loggedIn: false
+      id: null
+      role: Role
+      team: { identifier: null; hasConsolidatedView: false }
+    }
+  | {
+      loggedIn: true
+      id: number
+      role: Role
+      team: { identifier: string | null; hasConsolidatedView: boolean }
+    }
 
 export type UserContextValue = typeof userContextDefaultValue
 
