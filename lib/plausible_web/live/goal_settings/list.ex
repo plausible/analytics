@@ -68,13 +68,14 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 x-on:click={Modal.JS.preopen("goals-form-modal")}
                 phx-click="edit-goal"
                 phx-value-goal-id={goal.id}
+                class="mt-1"
                 id={"edit-goal-#{goal.id}"}
               />
               <.edit_button
                 :if={goal.currency && !@revenue_goals_enabled?}
                 id={"edit-goal-#{goal.id}-disabled"}
                 disabled
-                class="cursor-not-allowed"
+                class="cursor-not-allowed mt-1"
               />
               <.delete_button
                 id={"delete-goal-#{goal.id}"}
@@ -82,6 +83,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 phx-value-goal-id={goal.id}
                 phx-value-goal-name={goal.event_name}
                 data-confirm={delete_confirmation_text(goal)}
+                class="mt-1"
               />
             </.td>
           </:tbody>

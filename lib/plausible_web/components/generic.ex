@@ -795,7 +795,7 @@ defmodule PlausibleWeb.Components.Generic do
       ]}
       {@rest}
     >
-      <div :if={@actions} class="flex gap-2">
+      <div :if={@actions} class="flex gap-1">
         {render_slot(@inner_block)}
       </div>
       <div :if={!@actions}>
@@ -865,26 +865,24 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :href, :string, default: nil
-  attr :icon, :atom, default: :pencil_square
+  attr :class, :any, default: nil
   attr :rest, :global, include: ~w(method disabled)
 
   def edit_button(assigns) do
     if assigns[:href] do
       ~H"""
-      <.unstyled_link href={@href} {@rest}>
-        <.dynamic_icon
-          name={@icon}
-          class="size-5 text-indigo-700 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
-        />
+      <.unstyled_link href={@href} class={["group/edit w-fit h-fit p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors duration-150", @class]} {@rest}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="size-4 text-indigo-700 group-hover/edit:text-indigo-600 dark:text-indigo-500 dark:group-hover/edit:text-indigo-400 transition-colors duration-150">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m13.25 6.25 2.836-2.836a2 2 0 0 1 2.828 0l1.672 1.672a2 2 0 0 1 0 2.828L17.75 10.75m-4.5-4.5-9.914 9.914a2 2 0 0 0-.586 1.415v3.671h3.672a2 2 0 0 0 1.414-.586l9.914-9.914m-4.5-4.5 4.5 4.5"/>
+        </svg>
       </.unstyled_link>
       """
     else
       ~H"""
-      <button {@rest}>
-        <.dynamic_icon
-          name={@icon}
-          class="size-5 text-indigo-700 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
-        />
+      <button class={["group/edit w-fit h-fit p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors duration-150", @class]} {@rest}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="size-4 text-indigo-700 group-hover/edit:text-indigo-600 dark:text-indigo-500 dark:group-hover/edit:text-indigo-400 transition-colors duration-150">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m13.25 6.25 2.836-2.836a2 2 0 0 1 2.828 0l1.672 1.672a2 2 0 0 1 0 2.828L17.75 10.75m-4.5-4.5-9.914 9.914a2 2 0 0 0-.586 1.415v3.671h3.672a2 2 0 0 0 1.414-.586l9.914-9.914m-4.5-4.5 4.5 4.5"/>
+        </svg>
       </button>
       """
     end
@@ -893,23 +891,24 @@ defmodule PlausibleWeb.Components.Generic do
   attr :href, :string, default: nil
   attr :icon, :atom, default: :trash
   attr :rest, :global, include: ~w(method disabled)
+  attr :class, :any, default: nil
 
   def delete_button(assigns) do
     if assigns[:href] do
       ~H"""
-      <.unstyled_link href={@href} {@rest}>
+      <.unstyled_link href={@href} class={["group/delete w-fit h-fit p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors duration-150", @class]} {@rest}>
         <.dynamic_icon
           name={@icon}
-          class="size-5 text-red-700 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
+          class="size-4 text-red-700 group-hover/delete:text-red-500 dark:text-red-500 dark:group-hover/delete:text-red-400 transition-colors duration-150"
         />
       </.unstyled_link>
       """
     else
       ~H"""
-      <button {@rest}>
+      <button class={["group/delete w-fit h-fit p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors duration-150", @class]} {@rest}>
         <.dynamic_icon
           name={@icon}
-          class="size-5 text-red-700 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
+          class="size-4 text-red-700 group-hover/delete:text-red-500 dark:text-red-500 dark:group-hover/delete:text-red-400 transition-colors duration-150"
         />
       </button>
       """

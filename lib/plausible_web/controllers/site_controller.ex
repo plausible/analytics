@@ -163,19 +163,11 @@ defmodule PlausibleWeb.SiteController do
   def settings_visibility(conn, _params) do
     site = conn.assigns[:site]
 
-    shared_links =
-      Repo.all(
-        from(l in Plausible.Site.SharedLink,
-          where:
-            l.site_id == ^site.id and l.name not in ^Plausible.Sites.shared_link_special_names()
-        )
-      )
-
     conn
     |> render("settings_visibility.html",
       site: site,
-      shared_links: shared_links,
       dogfood_page_path: "/:dashboard/settings/visibility",
+      connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -569,18 +561,6 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: Routes.site_path(conn, :settings_email_reports, site.domain))
   end
 
-  def new_shared_link(conn, _params) do
-    site = conn.assigns[:site]
-    changeset = Plausible.Site.SharedLink.changeset(%Plausible.Site.SharedLink{}, %{})
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("new_shared_link.html",
-      site: site,
-      changeset: changeset
-    )
-  end
-
   def create_shared_link(conn, %{"shared_link" => link}) do
     site = conn.assigns[:site]
 
@@ -595,25 +575,9 @@ defmodule PlausibleWeb.SiteController do
 
       {:error, changeset} ->
         conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("new_shared_link.html",
-          site: site,
-          changeset: changeset
-        )
+        |> put_flash(:error, "Failed to create shared link")
+        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
     end
-  end
-
-  def edit_shared_link(conn, %{"slug" => slug}) do
-    site = conn.assigns[:site]
-    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-    changeset = Plausible.Site.SharedLink.changeset(shared_link, %{})
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("edit_shared_link.html",
-      site: site,
-      changeset: changeset
-    )
   end
 
   def update_shared_link(conn, %{"slug" => slug, "shared_link" => params}) do
@@ -627,11 +591,8 @@ defmodule PlausibleWeb.SiteController do
 
       {:error, changeset} ->
         conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("edit_shared_link.html",
-          site: site,
-          changeset: changeset
-        )
+        |> put_flash(:error, "Failed to update shared link")
+        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
     end
   end
 
