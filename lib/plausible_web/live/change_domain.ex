@@ -291,22 +291,19 @@ defmodule PlausibleWeb.Live.ChangeDomain do
     end
   else
     defp ce_generic_notice(assigns) do
-      assigns = assign(assigns, docs_link: @change_domain_docs_link)
-
       ~H"""
-      <.notice data-testid="ce-generic-notice" class="mt-4" title="Additional steps may be required">
-        If you're using our legacy script (i.e. your Plausible snippet includes the
-        <code>data-domain</code>
-        attribute), OR if you've installed Plausible using
-        our NPM package, you <i>must</i>
-        also update the site <code>domain</code>
-        of
-        your Plausible installation within 72 hours to match the updated domain. See
-        <.styled_link new_tab href={@docs_link}>
-          documentation
-        </.styled_link>
-        for details.
-      </.notice>
+      <div class="flex items-center">
+        <Heroicons.exclamation_triangle class="w-4 h-4 mr-2 text-yellow-500" />
+        <span class="text-sm font-bold">
+          Additional action may be required
+        </span>
+      </div>
+      <p class="mt-4 text-sm">
+        If you're using our legacy snippet (i.e. your Plausible snippet includes the
+        data-domain attribute) or the NPM package, you must also update the site domain
+        of your Plausible installation within 72 hours to match the updated domain in
+        order to guarantee continuous tracking.
+      </p>
       """
     end
   end

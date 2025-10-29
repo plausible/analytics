@@ -359,9 +359,11 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
 
       html = render_async(lv, 500)
-      notice = text_of_element(html, "div[data-testid='ce-generic-notice']")
 
-      assert notice =~ "Additional steps may be required"
+      assert html =~ "Additional action may be required"
+      assert html =~ "using our legacy snippet"
+      assert html =~ "must also update the site domain"
+      assert html =~ "72 hours"
 
       assert element_exists?(
                html,
