@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.StatsController do
-  sit
   use Plausible
 
   @moduledoc """
