@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.StatsController do
+  sit
   use Plausible
 
   @moduledoc """
@@ -61,7 +62,7 @@ defmodule PlausibleWeb.StatsController do
     demo = site.domain == "plausible.io"
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
 
-    consolidated_view? = on_ee(do: Plausible.Sites.consolidated?(site), else: false)
+    consolidated_view? = Plausible.Sites.consolidated?(site)
 
     team_has_consolidated_view? =
       on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team, current_user), else: false)
@@ -402,8 +403,7 @@ defmodule PlausibleWeb.StatsController do
 
         embedded? = conn.params["embed"] == "true"
 
-        consolidated_view? =
-          on_ee(do: Plausible.Sites.consolidated?(shared_link.site), else: false)
+        consolidated_view? = Plausible.Sites.consolidated?(shared_link.site)
 
         team_has_consolidated_view? =
           on_ee(
