@@ -64,12 +64,21 @@ if (container && container.dataset) {
                   ? {
                       loggedIn: true,
                       id: parseInt(container.dataset.currentUserId!, 10),
-                      role: container.dataset.currentUserRole as Role
+                      role: container.dataset.currentUserRole as Role,
+                      team: {
+                        identifier: container.dataset.teamIdentifier ?? null,
+                        hasConsolidatedView:
+                          container.dataset.teamHasConsolidatedView === 'true'
+                      }
                     }
                   : {
                       loggedIn: false,
                       id: null,
-                      role: container.dataset.currentUserRole as Role
+                      role: container.dataset.currentUserRole as Role,
+                      team: {
+                        identifier: null,
+                        hasConsolidatedView: false
+                      }
                     }
               }
             >

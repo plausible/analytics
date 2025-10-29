@@ -67,7 +67,8 @@ describe('parseSiteFromDataset', () => {
       realtime: ['minute'],
       year: ['day', 'week', 'month']
     },
-    shared: false
+    shared: false,
+    isConsolidatedView: false
   }
 
   it('parses from dom string map correctly', () => {

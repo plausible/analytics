@@ -309,10 +309,6 @@ const SeeMoreMenu = ({
                   popover.items.classNames.navigationLink,
                   popover.items.classNames.selectedOption,
                   popover.items.classNames.hoverLink,
-                  {
-                    [popover.items.classNames.roundedStart]: !showMoreFilters // rounded start is needed when there's no filters panel above
-                  },
-                  popover.items.classNames.roundedEnd,
                   'whitespace-nowrap'
                 )
 

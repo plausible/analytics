@@ -49,6 +49,9 @@
     data-valid-intervals-by-period={
       Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()
     }
+    data-is-consolidated-view={Jason.encode!(@consolidated_view?)}
+    data-team-has-consolidated-view={Jason.encode!(@team_has_consolidated_view?)}
+    data-team-identifier={@team_identifier}
   >
   </div>
   <div id="modal_root"></div>

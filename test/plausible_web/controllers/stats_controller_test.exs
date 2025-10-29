@@ -29,6 +29,9 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
       assert text_of_attr(resp, @react_container, "data-embedded") == ""
+      assert text_of_attr(resp, @react_container, "data-is-consolidated-view") == "false"
+      assert text_of_attr(resp, @react_container, "data-team-has-consolidated-view") == "false"
+      assert text_of_attr(resp, @react_container, "data-team-identifier") == site.team.identifier
 
       assert "noindex, nofollow" ==
                resp

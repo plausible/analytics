@@ -60,12 +60,12 @@ test('user can open and close site switcher', async () => {
       .map((el) => ({ text: el.textContent, href: el.getAttribute('href') }))
   ).toEqual(
     [
+      { text: ['Back to sites'], href: '/sites' },
       { text: ['Site settings'], href: `/${domain}/settings/general` },
       { text: ['dummy.site', '1'], href: '#' },
       { text: ['example.com', '2'], href: `/example.com` },
       { text: ['blog.example.com', '3'], href: `/blog.example.com` },
-      { text: ['aççented.ca', '4'], href: `/a%C3%A7%C3%A7ented.ca` },
-      { text: ['View all'], href: '/sites' }
+      { text: ['aççented.ca', '4'], href: `/a%C3%A7%C3%A7ented.ca` }
     ].map((l) => ({ ...l, text: l.text.join('') }))
   )
 

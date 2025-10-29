@@ -16,6 +16,20 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
+  @spec ok_to_display?(Team.t() | nil, User.t() | nil) :: boolean()
+  def ok_to_display?(team, user) do
+    with %Team{} <- team,
+         %User{} <- user,
+         true <- Plausible.Auth.is_super_admin?(user),
+         true <- enabled?(team),
+         true <- has_sites_to_consolidate?(team) do
+      true
+    else
+      _ ->
+        false
+    end
+  end
+
   @spec reset_if_enabled(Team.t()) :: :ok
   def reset_if_enabled(%Team{} = team) do
     case get(team) do

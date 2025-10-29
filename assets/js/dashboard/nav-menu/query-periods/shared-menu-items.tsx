@@ -7,9 +7,7 @@ import { Popover, Transition } from '@headlessui/react'
 export const linkClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
-  popover.items.classNames.hoverLink,
-  popover.items.classNames.roundedStart,
-  popover.items.classNames.roundedEnd
+  popover.items.classNames.hoverLink
 )
 
 export const datemenuButtonClassName = classNames(

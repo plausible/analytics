@@ -76,9 +76,7 @@ export default function FilterOperatorSelector(props) {
                         'w-full text-left ',
                         popover.items.classNames.navigationLink,
                         popover.items.classNames.selectedOption,
-                        popover.items.classNames.hoverLink,
-                        popover.items.classNames.roundedStart,
-                        popover.items.classNames.roundedEnd
+                        popover.items.classNames.hoverLink
                       )}
                     >
                       {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}
