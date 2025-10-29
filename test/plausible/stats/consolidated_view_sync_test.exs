@@ -8,11 +8,11 @@ defmodule Plausible.Stats.ConsolidatedViewSyncTest do
     describe "ok_to_display?/2" do
       setup [:create_user, :create_team]
 
-      test "no user", %{team: team}  do
+      test "no user", %{team: team} do
         refute ok_to_display?(team, nil)
       end
 
-      test "no team", %{user: user}  do
+      test "no team", %{user: user} do
         refute ok_to_display?(nil, user)
       end
 
@@ -50,9 +50,6 @@ defmodule Plausible.Stats.ConsolidatedViewSyncTest do
 
         refute ok_to_display?(team, user)
       end
-
-
     end
   end
-
 end
