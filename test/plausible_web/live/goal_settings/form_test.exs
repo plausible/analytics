@@ -15,6 +15,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       html = lv |> render()
 
+      assert html =~ "Add goal for #{site.domain}"
       assert element_exists?(html, ~s/a#pageview-tab/)
       assert element_exists?(html, ~s/a#event-tab/)
 
@@ -134,6 +135,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       lv = get_liveview(conn, site)
 
+      assert render(lv) =~ "Add goal for consolidated view"
       refute element_exists?(render(lv), @revenue_goal_settings)
 
       lv

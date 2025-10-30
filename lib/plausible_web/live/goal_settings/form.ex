@@ -111,7 +111,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-submit="save-goal"
       phx-target={@myself}
     >
-      <.title>Add goal for {@domain}</.title>
+      <.title>
+        Add goal for {if(Plausible.Sites.regular?(@site), do: @domain, else: "consolidated view")}
+      </.title>
 
       <.tabs current_user={@current_user} site={@site} selected_tab={@selected_tab} myself={@myself} />
 
