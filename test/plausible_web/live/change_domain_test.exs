@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
 
       html = render_async(lv, 500)
-      assert html =~ "using our npm package"
+      assert html =~ "using our @plausible-analytics/tracker module"
       assert html =~ "Plausible installation"
       assert html =~ "within 72 hours"
 

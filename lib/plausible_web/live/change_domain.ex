@@ -253,7 +253,7 @@ defmodule PlausibleWeb.Live.ChangeDomain do
     defp npm_notice(assigns) do
       ~H"""
       <p class="mt-4 text-sm">
-        We've detected you're using our npm package. This means that you'll also need
+        We've detected you're using our @plausible-analytics/tracker module. This means that you'll also need
         to update the site domain of your Plausible installation within 72 hours to
         guarantee continuous tracking.
       </p>
