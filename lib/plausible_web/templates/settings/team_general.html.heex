@@ -48,7 +48,7 @@
       <a id="force-2fa">Force Two-Factor Authentication (2FA)</a>
     </:title>
     <:subtitle>
-      Improve security within your team by enforcing enabling 2FA by every current and future team member.
+      Increase account security by requiring all team members to enable 2FA.
     </:subtitle>
 
     <div
@@ -73,23 +73,23 @@
           state_param="dsiableTeamForce2FAOpen"
           form_data={@conn.params}
           form_target={Routes.settings_path(@conn, :disable_team_force_2fa)}
-          title="Stop Forcing Two-Factor Authentication?"
+          title="Stop enforcing 2FA?"
         >
           <:icon>
             <Heroicons.shield_exclamation class="h-6 w-6" />
           </:icon>
           <:buttons>
             <.button type="submit" class="w-full sm:w-auto">
-              Stop Forcing 2FA
+              Stop enforcing 2FA
             </.button>
           </:buttons>
 
           <div class="text-sm mt-2">
-            Current and future team members will no longer be required to have 2FA setup at all times when accessing this team.
+            This will remove the 2FA requirement for all team members.
           </div>
 
           <div class="text-sm mt-2">
-            Enter your password to stop forcing 2FA.
+            Enter your password to stop enforcing 2FA.
           </div>
 
           <div class="mt-3">
@@ -113,11 +113,11 @@
         method="post"
       >
         <.button
-          data-confirm="All team members will be required to setup 2FA, including you. Are you sure you want to force 2FA?"
+          data-confirm="All team members, including you, will need to set up 2FA. Are you sure you want to enforce it?"
           type="submit"
           mt?={false}
         >
-          Force 2FA
+          Enforce 2FA
         </.button>
       </.form>
     </div>

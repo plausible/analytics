@@ -68,12 +68,12 @@ defmodule PlausibleWeb.SettingsController do
     case Teams.enable_force_2fa(conn.assigns.current_team) do
       {:ok, _} ->
         conn
-        |> put_flash(:success, "The team is now enforcing 2FA for all members")
+        |> put_flash(:success, "2FA is now required for all team members.")
         |> redirect(to: Routes.settings_path(conn, :team_general))
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "Failed to enable enforcing 2FA for the team members")
+        |> put_flash(:error, "Failed to enforce 2FA for all team members.")
         |> redirect(to: Routes.settings_path(conn, :team_general))
     end
   end
@@ -85,17 +85,17 @@ defmodule PlausibleWeb.SettingsController do
     case Teams.disable_force_2fa(team, user, password) do
       {:ok, _} ->
         conn
-        |> put_flash(:success, "Disabled enforcing 2FA for the team members")
+        |> put_flash(:success, "2FA is no longer enforced for team members.")
         |> redirect(to: Routes.settings_path(conn, :team_general))
 
       {:error, :invalid_password} ->
         conn
-        |> put_flash(:error, "Incorrect password provided")
+        |> put_flash(:error, "Incorrect password provided.")
         |> redirect(to: Routes.settings_path(conn, :team_general))
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "Failed to disable enforcing 2FA for the team members")
+        |> put_flash(:error, "Failed to disable enforcing 2FA for all team members.")
         |> redirect(to: Routes.settings_path(conn, :team_general))
     end
   end
