@@ -164,6 +164,18 @@ defmodule Plausible.GoalsTest do
   end
 
   @tag :ee_only
+  test "create/2 returns error when creating a revenue goal for consolidated view" do
+    user = new_user()
+    new_site(owner: user)
+    new_site(owner: user)
+    {:ok, team} = Plausible.Teams.get_or_create(user)
+    site = new_consolidated_view(team)
+
+    {:error, :revenue_goals_unavailable} =
+      Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
+  end
+
+  @tag :ee_only
   test "create/2 fails for unknown currency code" do
     site = new_site()
 
