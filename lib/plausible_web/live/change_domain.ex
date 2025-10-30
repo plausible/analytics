@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Live.ChangeDomain do
 
           <:failed>
             <div class="flex items-center">
-              <Heroicons.x_mark class="w-4 h-4 mr-2 font-bold text-red-500" />
+              <Heroicons.exclamation_triangle class="w-4 h-4 mr-2 text-yellow-500" />
               <span class="text-sm font-bold">
                 We could not reach your new domain
               </span>
