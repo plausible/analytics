@@ -20,6 +20,15 @@ defmodule Plausible.Ingestion.PersistorSyncTest do
     operating_system_version: "11"
   }
 
+  setup do
+    on_exit(fn ->
+      Application.put_env(:plausible, Persistor,
+        backend_percent_enabled: 0,
+        backend: Persistor.Embedded
+      )
+    end)
+  end
+
   describe "backend_percent_enabled" do
     test "ingests with embedded persistor when backend set to 100% and left on default" do
       Application.put_env(:plausible, Persistor,
