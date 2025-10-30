@@ -53,10 +53,6 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
   }
   """
 
-  # We rely on Req's `:receive_timeout` to avoid waiting too long for a response. We also pass the same timeout (+ 1s) via a query
-  # param to the Browserless /function API to not waste resources.
-  @req_timeout 5_000
-
   # This timeout determines how long we wait for window.plausible to be initialized on the page, used for detecting whether v1 installed
   @plausible_window_check_timeout_ms 1_500
 
@@ -67,7 +63,15 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
   def report_progress_as, do: "We're checking your site to recommend the best installation method"
 
   @impl true
-  def perform(%State{url: url, assigns: %{detect_v1?: detect_v1?}} = state) do
+  def perform(%State{url: url, assigns: %{detect_v1?: detect_v1?}} = state, opts) do
+    check_timeout = Keyword.fetch!(opts, :timeout)
+
+    # We rely on Req's `:receive_timeout` to avoid waiting too long for a response, but
+    # we also pass the same timeout (+ 1s) via a query param to the Browserless /function API
+    # to not waste resources and leave a redundant process running there.
+    req_timeout = check_timeout - 1000
+    browserless_api_timeout = check_timeout
+
     opts =
       [
         headers: %{content_type: "application/json"},
@@ -82,14 +86,14 @@ defmodule Plausible.InstallationSupport.Checks.Detection do
               debug: Application.get_env(:plausible, :environment) == "dev"
             }
           }),
-        params: %{timeout: @req_timeout + 1000},
+        params: %{timeout: browserless_api_timeout},
         retry: fn _request, response_or_error ->
           case response_or_error do
             %{status: status} -> Map.get(BrowserlessConfig.retry_policy(), status, false)
             _ -> false
           end
         end,
-        receive_timeout: @req_timeout,
+        receive_timeout: req_timeout,
         retry_log_level: :warning,
         max_retries: @max_retries
       ]

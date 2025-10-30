@@ -13,7 +13,7 @@ defmodule Plausible.InstallationSupport.Check do
   """
   @type state() :: Plausible.InstallationSupport.State.t()
   @callback report_progress_as() :: String.t()
-  @callback perform(state()) :: state()
+  @callback perform(state(), Keyword.t()) :: state()
 
   defmacro __using__(_) do
     quote do
@@ -30,7 +30,7 @@ defmodule Plausible.InstallationSupport.Check do
         task =
           Task.async(fn ->
             try do
-              perform(state)
+              perform(state, opts)
             catch
               _, e ->
                 Logger.error(

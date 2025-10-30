@@ -30,11 +30,14 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
           end)
 
           state =
-            @check.perform(%State{
-              data_domain: unquote(site_domain),
-              url: nil,
-              diagnostics: %Verification.Diagnostics{}
-            })
+            @check.perform(
+              %State{
+                data_domain: unquote(site_domain),
+                url: nil,
+                diagnostics: %Verification.Diagnostics{}
+              },
+              []
+            )
 
           assert state.url == "https://#{unquote(site_domain)}"
           refute state.diagnostics.service_error
@@ -54,11 +57,14 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
         end)
 
         state =
-          @check.perform(%State{
-            data_domain: site_domain,
-            url: nil,
-            diagnostics: %Verification.Diagnostics{}
-          })
+          @check.perform(
+            %State{
+              data_domain: site_domain,
+              url: nil,
+              diagnostics: %Verification.Diagnostics{}
+            },
+            []
+          )
 
         assert state.url == "https://www.example.com/any/deeper/path"
         refute state.diagnostics.service_error
@@ -76,11 +82,14 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
         domain = "any.example.com"
 
         state =
-          @check.perform(%State{
-            data_domain: domain,
-            url: nil,
-            diagnostics: %Verification.Diagnostics{}
-          })
+          @check.perform(
+            %State{
+              data_domain: domain,
+              url: nil,
+              diagnostics: %Verification.Diagnostics{}
+            },
+            []
+          )
 
         assert state.url == nil
         assert state.diagnostics.service_error == %{code: :domain_not_found}
@@ -99,11 +108,14 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
         end)
 
         state =
-          @check.perform(%State{
-            data_domain: site_domain,
-            url: url,
-            diagnostics: %Verification.Diagnostics{}
-          })
+          @check.perform(
+            %State{
+              data_domain: site_domain,
+              url: url,
+              diagnostics: %Verification.Diagnostics{}
+            },
+            []
+          )
 
         assert state.url == "https://blog.example.com/recipes"
         refute state.diagnostics.service_error
@@ -112,11 +124,14 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
 
       test "rejects file:// scheme, does not check domain" do
         state =
-          @check.perform(%State{
-            data_domain: "example-com-rollup",
-            url: "file://example.com/archives/news?p=any#fragment",
-            diagnostics: %Verification.Diagnostics{}
-          })
+          @check.perform(
+            %State{
+              data_domain: "example-com-rollup",
+              url: "file://example.com/archives/news?p=any#fragment",
+              diagnostics: %Verification.Diagnostics{}
+            },
+            []
+          )
 
         assert state.url == "file://example.com/archives/news?p=any#fragment"
         assert state.diagnostics.service_error == %{code: :invalid_url}
@@ -133,11 +148,14 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
         end)
 
         state =
-          @check.perform(%State{
-            data_domain: site_domain,
-            url: url,
-            diagnostics: %Verification.Diagnostics{}
-          })
+          @check.perform(
+            %State{
+              data_domain: site_domain,
+              url: url,
+              diagnostics: %Verification.Diagnostics{}
+            },
+            []
+          )
 
         assert state.url == url
         assert state.diagnostics.service_error == %{code: :domain_not_found}
