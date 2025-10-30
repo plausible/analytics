@@ -1,7 +1,10 @@
 defmodule PlausibleWeb.Live.GoalSettings.FormTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
+  import Plausible.Teams.Test
   import Plausible.Test.Support.HTML
+
+  @revenue_goal_settings ~s|div[data-test-id="revenue-goal-settings"]|
 
   describe "integration - live rendering" do
     setup [:create_user, :log_in, :create_site]
@@ -122,10 +125,32 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert html =~ "Custom Event"
     end
 
+    test "creates a custom event for consolidated view (revenue switch not available)", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      site = new_consolidated_view(team)
+
+      lv = get_liveview(conn, site)
+
+      refute element_exists?(render(lv), @revenue_goal_settings)
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{event_name: "SampleCustomEvent"}})
+
+      html = render(lv)
+      assert html =~ "SampleCustomEvent"
+      assert html =~ "Custom Event"
+    end
+
     @tag :ee_only
     test "creates a revenue goal", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
       refute render(lv) =~ "SampleRevenueGoal"
+
+      assert element_exists?(render(lv), @revenue_goal_settings)
 
       lv
       |> element("#goals-form-modalseq0 form")
@@ -192,7 +217,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       refute element_exists?(html, "#pageviews-form")
       assert element_exists?(html, "#custom-events-form")
-      assert element_exists?(html, ~s/[data-test=goal-currency-label]/)
+      assert element_exists?(html, ~s/[data-test-id=goal-currency-label]/)
     end
 
     test "updates a custom event", %{conn: conn, site: site} do
