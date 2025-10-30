@@ -492,6 +492,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
 
+      assert resp =~ "Settings for #{site.domain}"
       assert resp =~ "Site domain"
       assert resp =~ "Change domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
@@ -590,6 +591,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         resp
         |> find("[data-testid=site_settings_sidebar] a")
         |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
+
+      assert resp =~ "Settings for the consolidated view"
 
       assert items == [
                {"General", "/#{site.domain}/settings/general"},
