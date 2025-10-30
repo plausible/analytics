@@ -43,6 +43,85 @@
       session: %{"mode" => "team-management"}
     )}
   </.tile>
+  <.tile docs="force-2fa">
+    <:title>
+      <a id="force-2fa">Force Two-Factor Authentication (2FA)</a>
+    </:title>
+    <:subtitle>
+      Improve security within your team by enforcing enabling 2FA by every current and future team member.
+    </:subtitle>
+
+    <div
+      :if={@force_2fa_enabled? and @current_team_role in [:owner, :admin]}
+      x-data="{dsiableTeamForce2FAOpen: false}"
+    >
+      <.form
+        action={Routes.settings_path(@conn, :disable_team_force_2fa)}
+        for={@conn.params}
+        method="post"
+      >
+        <.button
+          theme="danger"
+          x-on:click="dsiableTeamForce2FAOpen = true; $refs.disableTeamForce2FAPassword.value = ''"
+          mt?={false}
+        >
+          Stop Forcing 2FA
+        </.button>
+
+        <PlausibleWeb.Components.TwoFactor.modal
+          id="disable-force-2fa-modal"
+          state_param="dsiableTeamForce2FAOpen"
+          form_data={@conn.params}
+          form_target={Routes.settings_path(@conn, :disable_team_force_2fa)}
+          title="Stop Forcing Two-Factor Authentication?"
+        >
+          <:icon>
+            <Heroicons.shield_exclamation class="h-6 w-6" />
+          </:icon>
+          <:buttons>
+            <.button type="submit" class="w-full sm:w-auto">
+              Stop Forcing 2FA
+            </.button>
+          </:buttons>
+
+          <div class="text-sm mt-2">
+            Current and future team members will no longer be required to have 2FA setup at all times when accessing this team.
+          </div>
+
+          <div class="text-sm mt-2">
+            Enter your password to stop forcing 2FA.
+          </div>
+
+          <div class="mt-3">
+            <.input
+              type="password"
+              id="disable_team_force_2fa_password"
+              name="password"
+              value=""
+              placeholder="Enter password"
+              x-ref="disableTeamForce2FAPassword"
+            />
+          </div>
+        </PlausibleWeb.Components.TwoFactor.modal>
+      </.form>
+    </div>
+
+    <div :if={not @force_2fa_enabled? and @current_team_role in [:owner, :admin]}>
+      <.form
+        action={Routes.settings_path(@conn, :enable_team_force_2fa)}
+        for={@conn.params}
+        method="post"
+      >
+        <.button
+          data-confirm="All team members will be required to setup 2FA, including you. Are you sure you want to force 2FA?"
+          type="submit"
+          mt?={false}
+        >
+          Force 2FA
+        </.button>
+      </.form>
+    </div>
+  </.tile>
   <.tile docs="users-roles#leaving-team">
     <:title>Leave team</:title>
     <:subtitle>Remove yourself from this team as a member.</:subtitle>

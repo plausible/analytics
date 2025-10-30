@@ -1,0 +1,28 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("initiate-2fa-form").submit();
+  });
+</script>
+
+<.focus_box>
+  <:title>
+    Setup Two-Factor Authentication
+  </:title>
+
+  <:subtitle>
+    You are being redirected to 2FA setup. Please wait or click the button below.
+  </:subtitle>
+
+  <div class="w-full">
+    <.form
+      id="initiate-2fa-form"
+      action={Routes.auth_path(@conn, :initiate_2fa_setup, force: "true")}
+      for={@conn.params}
+      method="post"
+    >
+      <.button type="submit" class="w-full" mt?={false}>
+        Proceed
+      </.button>
+    </.form>
+  </div>
+</.focus_box>

@@ -9,11 +9,23 @@ defmodule PlausibleWeb.RequireAccountPlug do
     ["me"]
   ]
 
+  @force_2fa_exceptions [
+    ["2fa", "setup", "force-initiate"],
+    ["2fa", "setup", "initiate"],
+    ["2fa", "setup", "verify"]
+  ]
+
   def init(options) do
     options
   end
 
   def call(conn, _opts) do
+    conn
+    |> require_verified_user()
+    |> maybe_force_2fa()
+  end
+
+  defp require_verified_user(conn) do
     user = conn.assigns[:current_user]
 
     cond do
@@ -33,6 +45,21 @@ defmodule PlausibleWeb.RequireAccountPlug do
     end
   end
 
+  defp maybe_force_2fa(%{halted: true} = conn), do: conn
+
+  defp maybe_force_2fa(conn) do
+    user = conn.assigns[:current_user]
+    team = conn.assigns[:current_team]
+
+    if must_enable_2fa?(user, team) and conn.path_info not in @force_2fa_exceptions do
+      conn
+      |> Phoenix.Controller.redirect(to: Routes.auth_path(conn, :force_initiate_2fa_setup))
+      |> halt()
+    else
+      conn
+    end
+  end
+
   defp redirect_to(%Plug.Conn{method: "GET"} = conn) do
     return_to =
       if conn.query_string && String.length(conn.query_string) > 0 do
@@ -45,4 +72,10 @@ defmodule PlausibleWeb.RequireAccountPlug do
   end
 
   defp redirect_to(conn), do: Routes.auth_path(conn, :login_form)
+
+  defp must_enable_2fa?(user, team) when is_nil(user) or is_nil(team), do: false
+
+  defp must_enable_2fa?(user, team) do
+    not Plausible.Auth.TOTP.enabled?(user) and Plausible.Teams.force_2fa_enabled?(team)
+  end
 end
