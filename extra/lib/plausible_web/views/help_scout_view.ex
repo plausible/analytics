@@ -1,13 +1,18 @@
 defmodule PlausibleWeb.HelpScoutView do
-  use PlausibleWeb, :view
+  use PlausibleWeb, :extra_view
 
   def render("callback.html", assigns) do
     ~H"""
     <.layout xhr?={assigns[:xhr?]}>
       <div class="search">
         <form action="/helpscout/search">
-          <p class="entry">
-            <input type="text" name="term" value={assigns[:email]} />
+          <p class="entry w-full">
+            <input
+              type="text"
+              name="term"
+              class="w-48 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+              value={assigns[:email]}
+            />
             <input type="submit" name="search" value="&nbsp;&#x1F50E;&nbsp;" />
           </p>
           <input type="hidden" name="token" value={@token} />
@@ -24,13 +29,21 @@ defmodule PlausibleWeb.HelpScoutView do
         <% @multiple_teams? -> %>
           <div class="teams">
             <p class="label">
-              <a href={@user_link} target="_blank">Owner</a> of teams:
+              <a
+                href={@user_link}
+                class="text-blue-600 dark:text-blue-500 hover:underline"
+                target="_blank"
+              >
+                Owner
+              </a>
+              of teams:
             </p>
 
             <div class="value">
               <ul>
                 <li :for={team <- @teams}>
                   <a
+                    class="text-blue-600 dark:text-blue-500 hover:underline"
                     onclick={"loadContent('/helpscout/show?#{URI.encode_query(
                     email: @email, 
                     conversation_id: @conversation_id, 
@@ -61,7 +74,13 @@ defmodule PlausibleWeb.HelpScoutView do
               Team name
             </p>
             <p class="value">
-              <a href={@status_link} target="_blank">{@team_name}</a>
+              <a
+                href={@status_link}
+                class="text-blue-600 dark:text-blue-500 hover:underline"
+                target="_blank"
+              >
+                {@team_name}
+              </a>
             </p>
           </div>
 
@@ -70,7 +89,13 @@ defmodule PlausibleWeb.HelpScoutView do
               Status
             </p>
             <p class="value">
-              <a href={@status_link} target="_blank">{@status_label}</a>
+              <a
+                href={@status_link}
+                class="text-blue-600 dark:text-blue-500 hover:underline"
+                target="_blank"
+              >
+                {@status_label}
+              </a>
             </p>
           </div>
 
@@ -79,7 +104,13 @@ defmodule PlausibleWeb.HelpScoutView do
               Plan
             </p>
             <p class="value">
-              <a href={@plan_link} target="_blank">{@plan_label}</a>
+              <a
+                href={@plan_link}
+                class="text-blue-600 dark:text-blue-500 hover:underline"
+                target="_blank"
+              >
+                {@plan_label}
+              </a>
             </p>
           </div>
 
@@ -115,7 +146,12 @@ defmodule PlausibleWeb.HelpScoutView do
         <div class="search">
           <form action="/helpscout/search">
             <p class="entry">
-              <input type="text" name="term" value={@term} />
+              <input
+                type="text"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                name="term"
+                value={@term}
+              />
               <input type="submit" name="search" value="&nbsp;&#x1F50E;&nbsp;" />
             </p>
             <input type="hidden" name="token" value={@token} />
@@ -126,6 +162,7 @@ defmodule PlausibleWeb.HelpScoutView do
             <li :for={user <- @users}>
               <a
                 onclick={"loadContent('/helpscout/show?#{URI.encode_query(email: user.email, conversation_id: @conversation_id, customer_id: @customer_id, token: @token)}')"}
+                class="text-blue-600 dark:text-blue-500 hover:underline"
                 href="#"
               >
                 {user.email} ({user.sites_count} sites)
