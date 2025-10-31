@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Components.Layout do
 
   def settings_sidebar(assigns) do
     ~H"""
-    <div class="flex flex-col gap-0.5 -ml-2">
+    <div class="flex flex-col gap-0.5 -ml-2" data-testid="settings-sidebar">
       <.settings_top_tab
         :for={%{key: key, value: value, icon: icon} = opts <- @options}
         selected_fn={@selected_fn}

@@ -1345,9 +1345,40 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  @menu_items [
+    preferences: {"Preferences", "/settings/preferences"},
+    security: {"Security", "/settings/security"},
+    subscription: {"Subscription", "/settings/billing/subscription"},
+    invoices: {"Invoices", "/settings/billing/invoices"},
+    api_keys: {"API keys", "/settings/api-keys"},
+    danger_zone: {"Danger zone", "/settings/danger-zone"},
+    team_general: {"General", "/settings/team/general"},
+    sso: {"Single Sign-On", "/settings/sso/info"},
+    team_danger_zone: {"Danger zone", "/settings/team/delete"}
+  ]
+
   on_ee do
     describe "Account Settings - SSO user" do
       setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "shows only expected menu items", %{conn: conn} do
+        conn = get(conn, Routes.settings_path(conn, :preferences))
+        assert html = html_response(conn, 200)
+
+        expected_account_menu = [:preferences, :security, :subscription, :api_keys]
+
+        html
+        |> refute_unexpected_menu_items([
+          :invoices,
+          :team_general,
+          :sso,
+          :team_danger_zone,
+          :danger_zone
+        ])
+        |> Floki.parse_document!()
+        |> assert_sidebar_menu(expected_account_menu)
+        |> assert_mobile_menu(expected_account_menu)
+      end
 
       test "does not allow to update name in preferences", %{conn: conn} do
         conn = get(conn, Routes.settings_path(conn, :preferences))
@@ -1375,67 +1406,69 @@ defmodule PlausibleWeb.SettingsControllerTest do
         assert html = html_response(conn, 200)
         assert text_of_element(html, "button[disabled]") =~ "Disable 2FA"
       end
-
-      test "does not show account danger zone", %{conn: conn} do
-        conn = get(conn, Routes.settings_path(conn, :preferences))
-        assert html = html_response(conn, 200)
-        refute html =~ "/settings/danger-zone"
-      end
     end
   end
 
   describe "Team Settings" do
     setup [:create_user, :log_in]
 
-    test "does not render team settings, when no team assigned", %{conn: conn} do
+    test "when no team is assigned & the user doesn't have a subscription, limited account menu is present",
+         %{conn: conn} do
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
       refute html =~ "Team"
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :subscription, :api_keys, :danger_zone],
+          else: [:preferences, :security, :api_keys, :danger_zone]
+        )
+
+      html
+      |> refute_unexpected_menu_items(
+        if(ee?(),
+          do: [:invoices, :team_general, :sso],
+          else: [:subscription, :invoices, :team_general, :sso]
+        )
+      )
+      |> Floki.parse_document!()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
     end
 
-    test "does not render invoices when no subscription present (no team assigned)", %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :preferences))
-      html = html_response(conn, 200)
-      refute html =~ Routes.settings_path(conn, :invoices)
-    end
-
-    test "does render invoices when subscription present (no team assigned)", %{
-      conn: conn,
-      user: user
-    } do
+    test "when no team is assigned & the user has a subscription, the account menu contains invoices",
+         %{
+           conn: conn,
+           user: user
+         } do
       subscribe_to_growth_plan(user)
-      conn = get(conn, Routes.settings_path(conn, :preferences))
-      html = html_response(conn, 200)
-      assert html =~ Routes.settings_path(conn, :invoices)
-    end
-
-    test "does not render invoices when no subscription (team set up)", %{
-      conn: conn,
-      user: user
-    } do
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-      team = Plausible.Teams.complete_setup(team)
-      conn = set_current_team(conn, team)
-      conn = get(conn, Routes.settings_path(conn, :preferences))
-      html = html_response(conn, 200)
-      refute html =~ Routes.settings_path(conn, :invoices)
-    end
-
-    test "does render invoices when subscription present (team assigned)", %{
-      conn: conn,
-      user: user
-    } do
-      subscribe_to_growth_plan(user)
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-      team = Plausible.Teams.complete_setup(team)
-      conn = set_current_team(conn, team)
 
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      assert html =~ Routes.settings_path(conn, :invoices)
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :subscription, :invoices, :api_keys, :danger_zone],
+          else: [:preferences, :security, :api_keys, :danger_zone]
+        )
+
+      html
+      |> refute_unexpected_menu_items(
+        if(ee?(),
+          do: [:team_general, :sso],
+          else: [:subscription, :invoices, :team_general, :sso]
+        )
+      )
+      |> Floki.parse_document!()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
     end
 
-    test "renders team settings, when team assigned and set up", %{conn: conn, user: user} do
+    test "when team is set up & there's no subscription, renders limited account & team menu",
+         %{
+           conn: conn,
+           user: user
+         } do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       team = Plausible.Teams.complete_setup(team)
       conn = set_current_team(conn, team)
@@ -1443,6 +1476,66 @@ defmodule PlausibleWeb.SettingsControllerTest do
       html = html_response(conn, 200)
       assert html =~ ~r/Team.*#{Regex.escape(team.name)}/s
       assert html =~ team.name
+
+      expected_account_menu = [
+        :preferences,
+        :security,
+        :danger_zone
+      ]
+
+      expected_team_menu =
+        if(ee?(),
+          do: [:team_general, :subscription, :api_keys, :sso, :team_danger_zone],
+          else: [:team_general, :api_keys, :team_danger_zone]
+        )
+
+      html
+      |> refute_unexpected_menu_items(
+        if(ee?(), do: [:invoices], else: [:subscription, :invoices])
+      )
+      |> Floki.parse_document!()
+      |> assert_sidebar_menu(expected_account_menu, expected_team_menu)
+      |> assert_mobile_menu(expected_account_menu, expected_team_menu)
+    end
+
+    test "when team is set up, and there's a subscription, renders account & team menu with invoices",
+         %{
+           conn: conn,
+           user: user
+         } do
+      subscribe_to_growth_plan(user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      assert html =~ ~r/Team.*#{Regex.escape(team.name)}/s
+      assert html =~ team.name
+
+      expected_account_menu = [
+        :preferences,
+        :security,
+        :danger_zone
+      ]
+
+      expected_team_menu =
+        if(ee?(),
+          do: [
+            :team_general,
+            :subscription,
+            :invoices,
+            :api_keys,
+            :sso,
+            :team_danger_zone
+          ],
+          else: [:team_general, :api_keys, :team_danger_zone]
+        )
+
+      html
+      |> Floki.parse_document!()
+      |> assert_sidebar_menu(expected_account_menu, expected_team_menu)
+      |> assert_mobile_menu(expected_account_menu, expected_team_menu)
     end
 
     test "does not render team settings, when team not set up", %{conn: conn, user: user} do
@@ -1645,4 +1738,73 @@ defmodule PlausibleWeb.SettingsControllerTest do
       )
     )
   end
+
+  defp assert_sidebar_menu(document, ordered_account_menu_keys, ordered_team_menu_keys \\ []) do
+    ordered_menu_keys = Enum.concat(ordered_account_menu_keys, ordered_team_menu_keys)
+    assert get_expected_menu(ordered_menu_keys) == get_sidebar_menu_items(document)
+
+    document
+  end
+
+  defp assert_mobile_menu(
+         document,
+         ordered_account_menu_keys,
+         ordered_team_menu_keys \\ []
+       ) do
+    expected_account_items =
+      ordered_account_menu_keys
+      |> get_expected_menu()
+      |> Enum.map(fn {text, "/settings/" <> path_fragment} ->
+        {"Account: #{text}", path_fragment}
+      end)
+
+    expected_team_items =
+      ordered_team_menu_keys
+      |> get_expected_menu()
+      |> Enum.map(fn {text, "/settings/" <> path_fragment} ->
+        {"Team: #{text}", path_fragment}
+      end)
+
+    assert Enum.concat(
+             expected_account_items,
+             expected_team_items
+           ) ==
+             get_mobile_menu_options(document)
+
+    document
+  end
+
+  defp get_expected_menu(ordered_menu_keys) do
+    ordered_menu_keys
+    |> Keyword.new(&{&1, nil})
+    |> Keyword.intersect(@menu_items)
+    |> Keyword.values()
+  end
+
+  defp refute_unexpected_menu_items(html, unexpected_menu_keys) do
+    refuted_menu_items = @menu_items |> Keyword.take(unexpected_menu_keys) |> Keyword.values()
+
+    for {text, link} <- refuted_menu_items do
+      refute html =~ text
+      refute html =~ link
+    end
+
+    html
+  end
+
+  defp get_mobile_menu_options(document) do
+    Floki.find(document, "[data-testid='mobile-nav-dropdown'] option")
+    |> Enum.map(&parse_option/1)
+  end
+
+  defp parse_option(option),
+    do: {Floki.text(option), Floki.attribute(option, "value") |> List.first()}
+
+  defp get_sidebar_menu_items(document) do
+    Floki.find(document, "[data-testid='settings-sidebar'] a")
+    |> Enum.map(&parse_link/1)
+  end
+
+  defp parse_link(link),
+    do: {Floki.text(link) |> String.trim(), Floki.attribute(link, "href") |> List.first()}
 end
