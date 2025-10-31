@@ -35,6 +35,12 @@ const ALL_VARIANTS = variantsFile.legacyVariants.concat(
   variantsFile.manualVariants
 )
 
+function shouldCompileVariant(variant) {
+  const IS_CE = ['ce', 'ce_test', 'ce_dev'].includes(process.env.MIX_ENV)
+  const shouldCompileVariant = IS_CE && variant.ee_only ? false : true
+  return shouldCompileVariant
+}
+
 export async function compileAll(options = {}) {
   if (process.env.NODE_ENV === 'dev' && canSkipCompile()) {
     console.info(
@@ -46,16 +52,17 @@ export async function compileAll(options = {}) {
   const bundledCode = await bundleCode()
 
   const startTime = Date.now()
-  console.log(`Starting compilation of ${ALL_VARIANTS.length} variants...`)
+  const variantsToCompile = ALL_VARIANTS.filter(shouldCompileVariant)
+  console.log(`Starting compilation of ${variantsToCompile.length} variants...`)
 
   const bar = new progress.SingleBar(
     { clearOnComplete: true },
     progress.Presets.shades_classic
   )
-  bar.start(ALL_VARIANTS.length, 0)
+  bar.start(variantsToCompile.length, 0)
 
   const workerPool = Pool(() => spawn(new Worker('./worker-thread.js')))
-  ALL_VARIANTS.forEach((variant) => {
+  variantsToCompile.forEach((variant) => {
     workerPool.queue(async (worker) => {
       await worker.compileFile(variant, { ...options, bundledCode })
       bar.increment()
@@ -67,7 +74,7 @@ export async function compileAll(options = {}) {
   bar.stop()
 
   console.log(
-    `Completed compilation of ${ALL_VARIANTS.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`
+    `Completed compilation of ${variantsToCompile.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`
   )
 }
 

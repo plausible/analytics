@@ -32,12 +32,14 @@
       "npm_package": "esm"
     },
     {
+      "ee_only": true,
       "name": "detector.js",
       "entry_point": "installation_support/detector.js",
       "output_path": "priv/tracker/installation_support/detector.js",
       "globals": {}
     },
     {
+      "ee_only": true,
       "name": "verifier.js",
       "entry_point": "installation_support/verifier.js",
       "output_path": "priv/tracker/installation_support/verifier.js",
