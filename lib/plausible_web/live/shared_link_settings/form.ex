@@ -42,12 +42,6 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
       <.title>Edit shared link</.title>
 
       <.input field={f[:name]} label="Name" required="required" autocomplete="off" />
-      <.input
-        field={f[:password]}
-        label="Password (optional)"
-        type="password"
-        autocomplete="new-password"
-      />
 
       <.button type="submit" class="w-full">
         Update shared link

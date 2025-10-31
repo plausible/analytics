@@ -22,7 +22,8 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
         Plausible.Repo.all(
           from(l in Plausible.Site.SharedLink,
             where:
-              l.site_id == ^site.id and l.name not in ^Plausible.Sites.shared_link_special_names()
+              l.site_id == ^site.id and l.name not in ^Plausible.Sites.shared_link_special_names(),
+            order_by: [desc: l.id]
           )
         )
       end)
@@ -161,7 +162,8 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
         from(l in Plausible.Site.SharedLink,
           where:
             l.site_id == ^socket.assigns.site.id and
-              l.name not in ^Plausible.Sites.shared_link_special_names()
+              l.name not in ^Plausible.Sites.shared_link_special_names(),
+          order_by: [desc: l.id]
         )
       )
 
