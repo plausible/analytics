@@ -17,7 +17,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
             :admin,
             :editor,
             :super_admin
-          ]
+          ],
+          include_consolidated?: true
         )
       end)
       |> assign_new(:all_props, fn %{site: site} ->
