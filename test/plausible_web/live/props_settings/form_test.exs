@@ -2,6 +2,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
+  import Plausible.Teams.Test
 
   describe "Props submission" do
     setup [:create_user, :log_in, :create_site]
@@ -107,6 +108,73 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
         |> render()
 
       refute element_exists?(html, ~s/button[phx-click="allow-existing-props"]/)
+    end
+  end
+
+  describe "Props submission for consolidated views" do
+    setup [:create_user, :create_team, :log_in]
+
+    setup %{team: team} = context do
+      new_site(team: team)
+      new_site(team: team)
+
+      {:ok, Map.put(context, :consolidated_view, new_consolidated_view(team))}
+    end
+
+    test "renders form fields", %{conn: conn, consolidated_view: consolidated_view} do
+      lv = get_liveview(conn, consolidated_view)
+      html = render(lv)
+
+      assert html =~ "Add property for consolidated view"
+      assert element_exists?(html, "form input[type=text][name=display-prop_input]")
+      assert element_exists?(html, "form input[type=hidden][name=prop]")
+    end
+
+    test "allowing a single property", %{conn: conn, consolidated_view: consolidated_view} do
+      {parent, lv} = get_liveview(conn, consolidated_view, with_parent?: true)
+      refute render(parent) =~ "foobarbaz"
+      lv |> element("form") |> render_submit(%{prop: "foobarbaz"})
+      parent_html = render(parent)
+      assert text_of_element(parent_html, "#prop-0") == "foobarbaz"
+
+      consolidated_view = Plausible.Repo.reload!(consolidated_view)
+      assert consolidated_view.allowed_event_props == ["foobarbaz"]
+    end
+
+    test "allowing existing properties", %{conn: conn, consolidated_view: consolidated_view} do
+      {:ok, site_ids} = Plausible.ConsolidatedView.site_ids(consolidated_view.domain)
+      [site1, site2] = Enum.map(site_ids, &Plausible.Repo.get(Plausible.Site, &1))
+
+      populate_stats(site1, [
+        build(:pageview, "meta.key": ["a"], "meta.value": ["a"]),
+        build(:pageview, "meta.key": ["b"], "meta.value": ["b"])
+      ])
+
+      populate_stats(site2, [
+        build(:pageview, "meta.key": ["c"], "meta.value": ["c"])
+      ])
+
+      list_item_selectors = ["#prop-0", "#prop-1", "#prop-2"]
+
+      {parent, lv} = get_liveview(conn, consolidated_view, with_parent?: true)
+      parent_html = render(parent)
+
+      Enum.each(list_item_selectors, fn list_item ->
+        refute element_exists?(parent_html, list_item)
+      end)
+
+      lv
+      |> element(~s/button[phx-click="allow-existing-props"]/)
+      |> render_click()
+
+      parent_html = render(parent)
+
+      allowed_props = Enum.map(list_item_selectors, &text_of_element(parent_html, &1))
+
+      assert Enum.sort(allowed_props) == ["a", "b", "c"]
+
+      consolidated_view = Plausible.Repo.reload!(consolidated_view)
+      assert Enum.sort(consolidated_view.allowed_event_props) == ["a", "b", "c"]
     end
   end
 
