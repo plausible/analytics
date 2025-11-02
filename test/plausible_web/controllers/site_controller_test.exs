@@ -598,7 +598,6 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"General", "/#{site.domain}/settings/general"},
                {"Goals", "/#{site.domain}/settings/goals"},
                {"Custom properties", "/#{site.domain}/settings/properties"},
-               {"Integrations", "/#{site.domain}/settings/integrations"},
                {"Email reports", "/#{site.domain}/settings/email-reports"}
              ]
     end

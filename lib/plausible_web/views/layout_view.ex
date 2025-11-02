@@ -69,7 +69,9 @@ defmodule PlausibleWeb.LayoutView do
         end
       end,
       %{key: "Custom properties", value: "properties", icon: :document_text},
-      %{key: "Integrations", value: "integrations", icon: :puzzle_piece},
+      if regular_site? do
+        %{key: "Integrations", value: "integrations", icon: :puzzle_piece}
+      end,
       if regular_site? do
         %{key: "Imports & exports", value: "imports-exports", icon: :arrow_down_tray}
       end,
