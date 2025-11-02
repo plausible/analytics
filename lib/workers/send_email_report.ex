@@ -14,7 +14,7 @@ defmodule Plausible.Workers.SendEmailReport do
     site =
       Plausible.Site
       |> Repo.get(site_id)
-      |> Repo.preload(report_type)
+      |> Repo.preload([report_type, :team])
 
     report = site && Map.get(site, report_type)
 

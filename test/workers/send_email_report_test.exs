@@ -107,6 +107,56 @@ defmodule Plausible.Workers.SendEmailReportTest do
       assert text_of_element(html_body, ".page-count") == "2"
     end
 
+    test "includes the correct stats for consolidated view" do
+      now = NaiveDateTime.utc_now(:second)
+      {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+
+      site1 =
+        new_site(
+          domain: "testsite1.com",
+          team: team,
+          inserted_at: NaiveDateTime.shift(now, day: -8)
+        )
+
+      site2 =
+        new_site(
+          domain: "testsite2.com",
+          team: team,
+          inserted_at: NaiveDateTime.shift(now, day: -8)
+        )
+
+      consolidated_view = new_consolidated_view(team)
+
+      insert(:weekly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+      populate_stats(site1, [
+        build(:pageview,
+          user_id: 123,
+          timestamp: NaiveDateTime.shift(now, day: -7),
+          referrer_source: "Google"
+        ),
+        build(:pageview, user_id: 123, timestamp: NaiveDateTime.shift(now, day: -7))
+      ])
+
+      populate_stats(site2, [
+        build(:pageview, timestamp: NaiveDateTime.shift(now, day: -7))
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => consolidated_view.id, "interval" => "weekly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      assert text_of_element(html_body, ".visitors") == "2"
+      assert text_of_element(html_body, ".pageviews") == "3"
+      assert text_of_element(html_body, ".referrer-name") == "Google"
+      assert text_of_element(html_body, ".referrer-count") == "1"
+      assert text_of_element(html_body, ".page-name") == "/"
+      assert text_of_element(html_body, ".page-count") == "2"
+    end
+
     test "renders correct signs (+/-) and trend colors for positive percentage changes" do
       now = NaiveDateTime.utc_now(:second)
       week_ago = now |> NaiveDateTime.shift(day: -7)
@@ -410,6 +460,76 @@ defmodule Plausible.Workers.SendEmailReportTest do
         subject: "#{last_month} report for #{site.domain}",
         to: [nil: "user@email.com"]
       )
+    end
+
+    test "includes goal conversions when goals exist on a consolidate view" do
+      beginning_of_last_month =
+        Date.utc_today()
+        |> Date.shift(month: -1)
+        |> Date.beginning_of_month()
+        |> NaiveDateTime.new!(~T[00:00:00])
+
+      {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+
+      [site1, site2] =
+        for _ <- 1..2 do
+          new_site(team: team, inserted_at: NaiveDateTime.shift(beginning_of_last_month, day: -1))
+        end
+
+      consolidated_view = new_consolidated_view(team)
+
+      insert(:monthly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+      _goal1 = insert(:goal, site: consolidated_view, event_name: "Signup")
+      _goal2 = insert(:goal, site: consolidated_view, event_name: "Purchase")
+      _goal3 = insert(:goal, site: consolidated_view, page_path: "/thank-you")
+
+      populate_stats(site1, [
+        build(:pageview,
+          user_id: 123,
+          timestamp: beginning_of_last_month
+        ),
+        build(:event,
+          user_id: 123,
+          name: "Signup",
+          timestamp: beginning_of_last_month
+        ),
+        build(:event,
+          user_id: 125,
+          name: "Purchase",
+          timestamp: NaiveDateTime.shift(beginning_of_last_month, day: 2)
+        )
+      ])
+
+      populate_stats(site2, [
+        build(:pageview,
+          user_id: 124,
+          timestamp: NaiveDateTime.shift(beginning_of_last_month, day: 1)
+        ),
+        build(:event,
+          user_id: 124,
+          name: "Signup",
+          timestamp: NaiveDateTime.shift(beginning_of_last_month, day: 1)
+        ),
+        build(:pageview,
+          user_id: 126,
+          pathname: "/thank-you",
+          timestamp: NaiveDateTime.shift(beginning_of_last_month, day: 3)
+        )
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => consolidated_view.id, "interval" => "monthly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      goal_names = find(html_body, ".goal-name") |> Enum.map(&text/1)
+      goal_conversions = find(html_body, ".goal-conversions") |> Enum.map(&text/1)
+
+      assert goal_names == ["Signup", "Purchase", "Visit /thank-you"]
+      assert goal_conversions == ["2", "1", "1"]
     end
   end
 end
