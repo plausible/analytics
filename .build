@@ -431,6 +431,8 @@ PlausibleWeb.Live.RegisterForm.html
 PlausibleWeb.Live.ResetPasswordForm.html
 PlausibleWeb.Live.SSOManagement.html
 PlausibleWeb.Live.SentryContext.html
+PlausibleWeb.Live.SharedLinkSettings.Form.html
+PlausibleWeb.Live.SharedLinkSettings.html
 PlausibleWeb.Live.Shields.Countries.html
 PlausibleWeb.Live.Shields.CountryRules.html
 PlausibleWeb.Live.Shields.HostnameRules.html
@@ -551,8 +553,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-80E2E82A.js
-dist/sidebar_items-422F60C3.js
+dist/search_data-9DBE326A.js
+dist/sidebar_items-E948D0F1.js
 index.html
 readme.html
 search.html
