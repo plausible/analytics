@@ -43,7 +43,7 @@
       session: %{"mode" => "team-management"}
     )}
   </.tile>
-  <.tile docs="force-2fa">
+  <.tile :if={@current_team_role == :owner} docs="force-2fa">
     <:title>
       <a id="force-2fa">Force Two-Factor Authentication (2FA)</a>
     </:title>

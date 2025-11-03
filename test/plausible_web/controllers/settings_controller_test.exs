@@ -1874,6 +1874,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = get(conn, Routes.settings_path(conn, :team_general))
       html = html_response(conn, 200)
 
+      refute element_exists?(html, "div#force-2fa")
       refute element_exists?(html, "div#enable-force-2fa")
       refute element_exists?(html, "div#disable-force-2fa")
     end
@@ -1919,6 +1920,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = get(conn, Routes.settings_path(conn, :team_general))
       html = html_response(conn, 200)
 
+      refute element_exists?(html, "div#force-2fa")
       refute element_exists?(html, "div#enable-force-2fa")
       refute element_exists?(html, "div#disable-force-2fa")
     end
