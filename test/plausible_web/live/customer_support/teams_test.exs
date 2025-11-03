@@ -173,7 +173,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
       test "lists sites belonging to a team", %{conn: conn, user: user} do
         team = team_of(user)
-        new_site(owner: user, domain: "primary.example.com")
+        new_site(owner: user, domain: "primary.example.com/test")
         new_site(owner: user, domain: "consolidated.example.com", consolidated: true)
         new_site(owner: user, domain: "secondary.example.com")
         # other
@@ -183,7 +183,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         html = render(lv)
         text = text(html)
 
-        assert text =~ "primary.example.com"
+        assert element_exists?(html, ~s|a[href="/primary.example.com%2Ftest/"]|)
+        assert element_exists?(html, ~s|a[href="/primary.example.com%2Ftest/settings/general"]|)
+
+        assert text =~ "primary.example.com/test"
         assert text =~ "secondary.example.com"
         refute text =~ "condolidated.example.com"
         refute text =~ "other.example.com"
