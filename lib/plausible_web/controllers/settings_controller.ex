@@ -10,13 +10,19 @@ defmodule PlausibleWeb.SettingsController do
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner, :admin]
-       when action in [:update_team_name, :enable_team_force_2fa, :disable_team_force_2fa]
+       when action in [:update_team_name]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner, :billing] when action in [:subscription, :invoices]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
-       [:owner] when action in [:team_danger_zone, :delete_team]
+       [:owner]
+       when action in [
+              :team_danger_zone,
+              :delete_team,
+              :enable_team_force_2fa,
+              :disable_team_force_2fa
+            ]
 
   plug Plausible.Plugs.RestrictUserType,
        [deny: :sso] when action in [:update_name, :update_email, :update_password]
