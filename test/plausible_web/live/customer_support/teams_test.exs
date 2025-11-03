@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         lv
         |> element("form")
         |> render_submit(%{
-          "team" => %{"trial_expiry_date" =>  "2029-01-01"}
+          "team" => %{"trial_expiry_date" => "2029-01-01"}
         })
 
         html = render(lv)
