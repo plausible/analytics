@@ -12,14 +12,13 @@ export const linkClassName = classNames(
 
 export const datemenuButtonClassName = classNames(
   popover.toggleButton.classNames.rounded,
-  popover.toggleButton.classNames.shadow,
-  'justify-between px-2 w-full'
+  popover.toggleButton.classNames.ghost
 )
 
 export const hiddenCalendarButtonClassName = 'flex h-9 w-0 outline-none'
 
 export const DateMenuChevron = () => (
-  <ChevronDownIcon className="hidden lg:inline-block h-4 w-4 md:h-5 md:w-5 ml-1 md:ml-2 text-gray-500" />
+  <ChevronDownIcon className="hidden lg:inline-block size-4.5 ml-2 text-gray-500" />
 )
 
 export interface PopoverMenuProps {

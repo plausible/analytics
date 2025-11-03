@@ -106,16 +106,6 @@ export default function TopStats({
     }
   }
 
-  function blinkingDot() {
-    return (
-      <div
-        key="dot"
-        className="block pulsating-circle"
-        style={{ left: '125px', top: '52px' }}
-      ></div>
-    )
-  }
-
   function getStoredMetric() {
     return storage.getItem(`metric__${site.domain}`)
   }
@@ -126,11 +116,11 @@ export default function TopStats({
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
     const statDisplayNameClass = classNames(
-      'text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-fit border-b',
+      'text-xs font-bold text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-fit',
       {
-        'text-indigo-600 dark:text-indigo-500 border-indigo-600 dark:border-indigo-500':
+        'text-gray-900 dark:text-gray-100':
           isSelected,
-        'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent':
+        'group-hover:text-gray-900 dark:group-hover:text-gray-100 border-transparent':
           !isSelected
       }
     )
@@ -149,12 +139,13 @@ export default function TopStats({
   }
 
   function renderStat(stat, index) {
+    const isSelected = stat.graph_metric === getStoredMetric()
+
     const className = classNames(
-      'px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none',
+      'group flex-1 -mb-px p-5 w-1/2 lg:w-auto hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-b-2 hover:border-b-gray-250 dark:hover:border-b-gray-500 active:bg-gray-100 dark:active:bg-gray-700 transition-all duration-150 select-none',
       {
         'cursor-pointer': canMetricBeGraphed(stat),
-        'lg:border-l border-gray-300 dark:border-gray-700': index > 0,
-        'border-r lg:border-r-0': index % 2 === 0
+        'border-b-2 border-b-gray-800 dark:border-b-gray-500': isSelected
       }
     )
 
@@ -167,11 +158,12 @@ export default function TopStats({
           maybeUpdateMetric(stat)
         }}
         boundary={tooltipBoundary}
+        delayed
       >
         {renderStatName(stat)}
-        <div className="my-1 space-y-2">
+        <div className="mt-1.5 space-y-2">
           <div>
-            <span className="flex items-center justify-between whitespace-nowrap">
+            <span className="flex items-baseline gap-x-2 whitespace-nowrap">
               <p
                 className="font-bold text-xl dark:text-gray-100"
                 id={stat.graph_metric}
@@ -182,12 +174,12 @@ export default function TopStats({
                 <ChangeArrow
                   metric={stat.graph_metric}
                   change={stat.change}
-                  className="pl-2 text-xs dark:text-gray-100"
+                  className="text-xs dark:text-gray-100"
                 />
               ) : null}
             </span>
             {isComparison ? (
-              <p className="text-xs dark:text-gray-100">
+              <p className="text-xs font-medium dark:text-gray-100">
                 {formatDateRange(site, data.from, data.to)}
               </p>
             ) : null}
@@ -198,7 +190,7 @@ export default function TopStats({
               <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
                 {topStatNumberShort(stat.graph_metric, stat.comparison_value)}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 {formatDateRange(site, data.comparing_from, data.comparing_to)}
               </p>
             </div>
@@ -210,10 +202,6 @@ export default function TopStats({
 
   const stats =
     data && data.top_stats.filter((stat) => stat.value !== null).map(renderStat)
-
-  if (stats && query.period === 'realtime') {
-    stats.push(blinkingDot())
-  }
 
   return stats || null
 }

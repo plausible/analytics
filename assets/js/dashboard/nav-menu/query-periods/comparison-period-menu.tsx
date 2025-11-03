@@ -29,6 +29,7 @@ import {
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 import { MenuSeparator } from '../nav-menu-components'
+import { CalendarIcon } from '@heroicons/react/24/outline'
 
 export const ComparisonPeriodMenuItems = ({
   closeDropdown,
@@ -123,7 +124,14 @@ export const ComparisonPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
+      <Popover.Button
+        className={classNames(
+          datemenuButtonClassName,
+          'bg-gray-150 dark:bg-gray-800'
+        )}
+        ref={buttonRef}
+      >
+        <CalendarIcon className="mr-1.5 size-4 stroke-2 text-gray-500" />
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentComparisonPeriodDisplayName({ site, query })}
         </span>

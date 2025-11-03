@@ -19,7 +19,8 @@ import {
   QueryPeriod,
   getCurrentPeriodDisplayName,
   getSearchToApplyCustomDates,
-  isComparisonForbidden
+  isComparisonForbidden,
+  isComparisonEnabled
 } from '../../query-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
@@ -36,6 +37,7 @@ import {
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 import { MenuSeparator } from '../nav-menu-components'
+import { CalendarIcon } from '@heroicons/react/24/outline'
 
 function QueryPeriodMenuKeybinds({
   closeDropdown,
@@ -85,6 +87,7 @@ export const QueryPeriodMenu = ({
 }: PopoverMenuProps) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
+  const isComparing = isComparisonEnabled(query.comparison)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const toggleCalendar = () => {
     if (typeof calendarButtonRef.current?.click === 'function') {
@@ -95,7 +98,14 @@ export const QueryPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
+      <Popover.Button
+        ref={buttonRef}
+        className={classNames(
+          datemenuButtonClassName,
+          isComparing && 'bg-gray-150 dark:bg-gray-800'
+        )}
+      >
+        <CalendarIcon className="mr-1.5 size-4 stroke-2 text-gray-500" />
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentPeriodDisplayName({ query, site })}
         </span>
@@ -155,7 +165,7 @@ const QueryPeriodMenuInner = ({
         {...popover.transition.props}
         className={classNames(
           popover.transition.classNames.fullwidth,
-          'mt-2 md:w-56 md:left-auto md:origin-top-right'
+          'mt-2 -mr-3 md:w-56 md:left-auto md:origin-top-right'
         )}
       >
         <Popover.Panel

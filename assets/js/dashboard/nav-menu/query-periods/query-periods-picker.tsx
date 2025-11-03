@@ -9,6 +9,7 @@ import {
   ComparisonPeriodMenu
 } from './comparison-period-menu'
 import { Popover } from '@headlessui/react'
+import { ArrowRightIcon } from '@heroicons/react/20/solid'
 
 export function QueryPeriodsPicker({ className }: { className?: string }) {
   const { query } = useQueryContext()
@@ -19,7 +20,7 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
   return (
     <div className={classNames('flex shrink-0', className)}>
       <MovePeriodArrows className={isComparing ? 'hidden md:flex' : ''} />
-      <Popover className="min-w-36 md:relative lg:w-48">
+      <Popover>
         {({ close }) => (
           <QueryPeriodMenu
             closeDropdown={close}
@@ -38,9 +39,9 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
       {isComparing && (
         <>
           <div className="my-auto px-1 text-sm font-medium text-gray-800 dark:text-gray-200">
-            <span className="px-1">vs.</span>
+            <ArrowRightIcon className="mx-1 size-4 text-gray-500" />
           </div>
-          <Popover className="min-w-36 md:relative lg:w-48">
+          <Popover>
             {({ close }) => (
               <ComparisonPeriodMenu
                 closeDropdown={close}

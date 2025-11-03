@@ -36,45 +36,54 @@ export default function CurrentVisitors({
   }, [query, updateCount])
 
   if (currentVisitors !== null && query.filters.length === 0) {
-    return (
-      <Tooltip
-        info={
-          <div>
-            <p className="whitespace-nowrap text-small">
-              Last updated{' '}
-              <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp} />s
-              ago
-            </p>
-            <p className="whitespace-nowrap font-normal text-xs">
-              Click to view realtime dashboard
-            </p>
-          </div>
-        }
-        boundary={tooltipBoundaryRef.current}
+    const link = (
+      <AppNavigationLink
+        search={(prev) => {
+          if (prev.period === 'realtime') {
+            const { period, ...rest } = prev
+            return rest
+          } else {
+            return { ...prev, period: 'realtime' }
+          }
+        }}
+        className={classNames(
+          'py-2.5 px-3 flex items-center rounded-md text-xs md:text-sm font-medium',
+          'text-gray-500 dark:text-gray-300 hover:bg-gray-150 hover:text-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-100 active:bg-gray-100 dark:active:bg-gray-700 transition-all duration-150',
+          className
+        )}
       >
-        <AppNavigationLink
-          search={(prev) => ({ ...prev, period: 'realtime' })}
-          className={classNames(
-            'h-9 flex items-center text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300',
-            className
-          )}
-        >
-          <svg
-            className="inline-block w-2 mr-1 text-green-500 fill-current"
-            viewBox="0 0 16 16"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="8" cy="8" r="8" />
-          </svg>
-          <div className="inline-block">
-            {currentVisitors}
-            <span className="hidden lg:inline">
-              {' '}
-              current visitor{currentVisitors === 1 ? '' : 's'}
-            </span>
-          </div>
-        </AppNavigationLink>
+        <span className="relative flex size-2 mr-2.5">
+          <span className={classNames("absolute inline-flex h-full w-full scale-120 rounded-full bg-green-500", query.period === 'realtime' && 'animate-ping')}></span>
+          <span className="relative inline-flex size-2 rounded-full bg-green-500"></span>
+        </span>
+        <div className="inline-block">
+          {currentVisitors}
+          <span className="hidden lg:inline">
+            {' '}
+            current visitor{currentVisitors === 1 ? '' : 's'}
+          </span>
+        </div>
+        {query.period === 'realtime' && (
+          <span className="ml-1.5 inline-flex items-center text-xs md:text-sm text-gray-400 dark:text-gray-400">
+            •{' '}
+            <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp} />
+            s ago
+          </span>
+        )}
+      </AppNavigationLink>
+    )
+
+    return query.period !== 'realtime' ? (
+      <Tooltip
+        info={"Click to view realtime dashboard"}
+        boundary={tooltipBoundaryRef.current}
+        disableOverflow
+        delayed
+      >
+        {link}
       </Tooltip>
+    ) : (
+      link
     )
   } else {
     return null

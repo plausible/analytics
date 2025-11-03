@@ -170,8 +170,8 @@ export const SiteSwitcher = () => {
           <Popover.Button
             ref={buttonRef}
             className={classNames(
-              'flex items-center rounded h-9 leading-5 font-bold dark:text-gray-100',
-              'hover:bg-gray-100 dark:hover:bg-gray-800'
+              'flex items-center py-2.5 px-3 rounded-md text-sm leading-5 font-medium dark:text-gray-100',
+              'hover:bg-gray-150 dark:hover:bg-gray-800'
             )}
             title={currentSite.domain}
           >
@@ -180,7 +180,7 @@ export const SiteSwitcher = () => {
             ) : (
               <Favicon
                 domain={currentSite.domain}
-                className="block h-4 w-4 mx-1"
+                className="block size-4 mr-1.5"
               />
             )}
             <span className={'truncate hidden sm:block sm:mr-1 lg:mr-0'}>
@@ -188,14 +188,14 @@ export const SiteSwitcher = () => {
                 ? 'All sites'
                 : currentSite.domain}
             </span>
-            <ChevronDownIcon className="hidden lg:block h-5 w-5 ml-2 dark:text-gray-100" />
+            <ChevronDownIcon className="hidden lg:block size-4.5 ml-2 dark:text-gray-100" />
           </Popover.Button>
           <Transition
             as="div"
             {...popover.transition.props}
             className={classNames(
               popover.transition.classNames.fullwidth,
-              'mt-2 md:w-80 md:right-auto md:origin-top-left'
+              'mt-2 -ml-3 md:w-80 md:right-auto md:origin-top-left'
             )}
           >
             <Popover.Panel

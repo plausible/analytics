@@ -264,7 +264,7 @@ class LineGraph extends React.Component {
 
     return (
       <FadeIn show={graphData}>
-        <div className="relative h-96 print:h-auto print:pb-8 w-full z-0">
+        <div className="relative h-96 print:h-auto mt-14 print:pb-8 w-full z-0">
           <canvas id="main-graph-canvas" className={canvasClass}></canvas>
         </div>
       </FadeIn>

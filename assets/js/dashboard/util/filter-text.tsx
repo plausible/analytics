@@ -16,7 +16,7 @@ export function styledFilterText(
     const propKey = getPropertyKeyFromFilterKey(filterKey)
     return (
       <>
-        Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
+        Property <span className="text-indigo-600">{propKey}</span> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
         {formatClauses(clauses)}
       </>
     )
@@ -52,7 +52,7 @@ function formatClauses(labels: Array<string | number>): ReactNode[] {
   return labels.map((label, index) => (
     <Fragment key={index}>
       {index > 0 && ' or '}
-      <b>{label}</b>
+      <span className="text-indigo-600 font-semibold">{label}</span>
     </Fragment>
   ))
 }

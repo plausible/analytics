@@ -17,7 +17,6 @@ import { SearchInput } from '../../components/search-input'
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import { popover } from '../../components/popover'
 import { AppNavigationLink } from '../../navigation/use-app-navigate'
-import { MenuSeparator } from '../nav-menu-components'
 import { Role, useUserContext } from '../../user-context'
 import { useSegmentsContext } from '../../filtering/segments-context'
 import { useSearchableItems } from '../../hooks/use-searchable-items'
@@ -75,9 +74,8 @@ export const SearchableSegmentsSection = ({
 
   return (
     <>
-      <MenuSeparator />
-      <div className="flex items-center py-2 px-4">
-        <div className="text-sm font-bold uppercase text-indigo-500 dark:text-indigo-400 mr-4">
+      <div className="flex items-center pt-2 pb-1 px-4">
+        <div className="text-xs font-semibold uppercase text-gray-400 dark:text-indigo-400">
           Segments
         </div>
         {showSearch && (
@@ -90,7 +88,7 @@ export const SearchableSegmentsSection = ({
         )}
       </div>
 
-      <div className="max-h-[210px] overflow-y-scroll">
+      <div>
         {showableData.map((segment) => {
           return (
             <Tooltip

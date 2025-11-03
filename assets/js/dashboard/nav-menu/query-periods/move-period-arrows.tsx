@@ -47,7 +47,7 @@ function ArrowIcon({
   return (
     <svg
       className={classNames(
-        'feather size-4',
+        'size-3.5',
         disabled
           ? 'text-gray-400 dark:text-gray-600'
           : 'text-gray-700 dark:text-gray-300'
@@ -86,21 +86,21 @@ export function MovePeriodArrows({ className }: { className?: string }) {
     getDateForShiftedPeriod({ site, query, direction: 1 }) !== null
 
   const sharedClass =
-    'flex items-center px-1 sm:px-2 dark:text-gray-100 transition-colors duration-150'
-  const enabledClass = 'hover:bg-gray-100 dark:hover:bg-gray-700'
-  const disabledClass = 'bg-gray-200 dark:bg-gray-850 cursor-not-allowed'
+    'flex items-center px-3 rounded-md dark:text-gray-100 transition-colors duration-150'
+  const enabledClass = 'bg-gray-150 dark:bg-gray-800'
+  const disabledClass = 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed'
 
   return (
     <div
       className={classNames(
-        'flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer focus:z-10 dark:bg-gray-750',
+        'flex gap-0.5 rounded-md mr-2 cursor-pointer focus:z-10',
         className
       )}
     >
       <AppNavigationLink
         className={classNames(
           sharedClass,
-          'rounded-l border-gray-300 dark:border-gray-500 focus:z-10',
+          'border-gray-300 dark:border-gray-500 focus:z-10',
           { [enabledClass]: canGoBack, [disabledClass]: !canGoBack }
         )}
         search={
@@ -117,7 +117,7 @@ export function MovePeriodArrows({ className }: { className?: string }) {
         <ArrowIcon direction="left" disabled={!canGoBack} />
       </AppNavigationLink>
       <AppNavigationLink
-        className={classNames(sharedClass, 'rounded-r', {
+        className={classNames(sharedClass, {
           [enabledClass]: canGoForward,
           [disabledClass]: !canGoForward
         })}

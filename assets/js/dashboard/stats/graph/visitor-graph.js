@@ -166,14 +166,14 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   return (
     <div
       className={
-        'relative w-full mt-2 bg-white rounded-md shadow dark:bg-gray-900'
+        'relative w-full bg-white rounded-md shadow dark:bg-gray-900'
       }
     >
       {(topStatsLoading || graphLoading) && renderLoader()}
       <FadeIn show={!(topStatsLoading || graphLoading)}>
         <div
           id="top-stats-container"
-          className="flex flex-wrap"
+          className="flex flex-wrap border-b border-gray-250 dark:border-gray-700"
           ref={topStatsBoundary}
           style={{ height: getTopStatsHeight() }}
         >
@@ -186,7 +186,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
         </div>
         <div className="relative px-2">
           {graphRefreshing && renderLoader()}
-          <div className="absolute right-4 -top-8 py-1 flex items-center gap-x-4">
+          <div className="absolute right-4 top-[-36px] py-1 flex items-center gap-x-4">
             <NoticesIcon
               notices={[
                 getImportedIntervalUnsupportedNotice(),

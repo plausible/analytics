@@ -3,7 +3,7 @@ import {
   AppNavigationLink,
   AppNavigationTarget
 } from '../navigation/use-app-navigate'
-import { XMarkIcon } from '@heroicons/react/20/solid'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 
 export type FilterPillProps = {
@@ -32,12 +32,12 @@ export function FilterPill({
   interactive,
   actions
 }: FilterPillProps) {
-  const contentClassName = 'flex w-full h-full items-center py-2 pl-3 last:pr-3'
+  const contentClassName = 'flex items-center'
 
   return (
     <div
       className={classNames(
-        'flex h-9 shadow rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm items-center',
+        'flex items-center gap-x-1 py-2 px-3 rounded-md bg-white border border-gray-200 text-gray-700 dark:text-gray-300 text-xs uppercase font-medium tracking-tight',
         className
       )}
     >
@@ -53,10 +53,10 @@ export function FilterPill({
           {!!interactive.onRemoveClick && (
             <button
               title={`Remove filter: ${plainText}`}
-              className="flex items-center h-full px-2 mr-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
+              className="flex items-center mt-px cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
               onClick={interactive.onRemoveClick}
             >
-              <XMarkIcon className="w-4 h-4" />
+              <XMarkIcon className="size-3.5 stroke-2" />
             </button>
           )}
           {actions}

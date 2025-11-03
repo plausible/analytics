@@ -9,14 +9,10 @@ import { FiltersBar } from './filters-bar'
 import { QueryPeriodsPicker } from './query-periods/query-periods-picker'
 import { SegmentMenu } from './segments/segment-menu'
 
-interface TopBarProps {
-  showCurrentVisitors: boolean
-}
-
-export function TopBar({ showCurrentVisitors }: TopBarProps) {
+export function TopBar() {
   return (
     <TopBarStickyWrapper>
-      <TopBarInner showCurrentVisitors={showCurrentVisitors} />
+      <TopBarInner />
     </TopBarStickyWrapper>
   )
 }
@@ -30,7 +26,7 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
       <div id="stats-container-top" ref={ref} />
       <div
         className={classNames(
-          'relative top-0 py-2 sm:py-3 z-10',
+          'relative top-0 py-2.5 z-10',
           !site.embedded &&
             !inView &&
             'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-950'
@@ -42,19 +38,17 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
   )
 }
 
-function TopBarInner({ showCurrentVisitors }: TopBarProps) {
+function TopBarInner() {
   const leftActionsRef = useRef<HTMLDivElement>(null)
 
   return (
     <div className="flex items-center w-full">
-      <div className="flex items-center gap-x-4 shrink-0" ref={leftActionsRef}>
+      <div className="flex items-center gap-x-2 shrink-0" ref={leftActionsRef}>
         <SiteSwitcher />
-        {showCurrentVisitors && (
-          <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />
-        )}
+        <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />
       </div>
       <div className="flex w-full">
-        <FiltersBar
+       <FiltersBar
           accessors={{
             topBar: (filtersBarElement) =>
               filtersBarElement?.parentElement?.parentElement,
@@ -67,7 +61,7 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
           }}
         />
       </div>
-      <div className="flex gap-x-4 shrink-0">
+      <div className="flex gap-x-2 shrink-0">
         <FilterMenu />
         <SegmentMenu />
         <QueryPeriodsPicker />

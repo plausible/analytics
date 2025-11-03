@@ -33,11 +33,11 @@ const panel = {
 const toggleButton = {
   classNames: {
     rounded:
-      'flex items-center rounded text-sm leading-tight h-9 transition-all duration-150',
+      'flex items-center rounded text-sm py-2.5 px-3 transition-all duration-150',
     shadow:
       'bg-white dark:bg-gray-750 shadow-sm text-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
     ghost:
-      'text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900',
+      'text-gray-700 dark:text-gray-100 hover:bg-gray-150 dark:hover:bg-gray-900',
     truncatedText: 'truncate block font-medium',
     linkLike:
       'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-150'

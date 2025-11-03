@@ -346,11 +346,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
     top_stats = [
       %{
-        name: "Current visitors",
-        graph_metric: :current_visitors,
-        value: Stats.current_visitors(site)
-      },
-      %{
         name: "Unique visitors (last 30 min)",
         graph_metric: :visitors,
         value: visitors

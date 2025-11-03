@@ -58,7 +58,7 @@ function Dashboard() {
 
   return (
     <div className="mb-16">
-      <TopBar showCurrentVisitors={!isRealTimeDashboard} />
+      <TopBar />
       <DashboardStats
         importedDataInView={
           isRealTimeDashboard ? undefined : importedDataInView

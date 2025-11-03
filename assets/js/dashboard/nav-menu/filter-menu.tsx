@@ -5,12 +5,29 @@ import {
 } from '../util/filters'
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { SearchableSegmentsSection } from './segments/searchable-segments-section'
+import { MenuSeparator } from './nav-menu-components'
+
+const FilterIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    className={className}
+    fill="none"
+  >
+    <path
+      d="M6 12h12M2 5h20M10 19h4"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
 
 export function getFilterListItems({
   propsAvailable
@@ -58,10 +75,10 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         className={classNames(
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.ghost,
-          'justify-center gap-1 px-3'
+          'justify-center gap-2'
         )}
       >
-        <MagnifyingGlassIcon className="block h-4 w-4" />
+        <FilterIcon className="block size-4 text-gray-500" />
         <span className={popover.toggleButton.classNames.truncatedText}>
           Filter
         </span>
@@ -71,7 +88,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         {...popover.transition.props}
         className={classNames(
           popover.transition.classNames.fullwidth,
-          'mt-2 md:left-auto md:w-80 md:origin-top-right'
+          'mt-2 md:left-auto md:w-72 md:origin-top-right'
         )}
       >
         <Popover.Panel
@@ -79,11 +96,12 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
           className={classNames(popover.panel.classNames.roundedSheet)}
           data-testid="filtermenu"
         >
-          <div className="flex">
-            {columns.map((filterGroups, index) => (
-              <div key={index} className="flex flex-col w-1/2">
-                {filterGroups.map(({ title, modals }) => (
-                  <div key={title}>
+          <div className="flex flex-col max-h-[420px] overflow-y-auto overscroll-contain">
+            {columns
+              .flat()
+              .map(({ title, modals }) => (
+                <React.Fragment key={title}>
+                  <div className="pb-0.5">
                     <div className={titleClassName}>{title}</div>
                     {modals
                       .filter((m) => !!m)
@@ -103,14 +121,14 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
                         </AppNavigationLink>
                       ))}
                   </div>
-                ))}
-              </div>
-            ))}
+                  <MenuSeparator />
+                </React.Fragment>
+              ))}
+            <SearchableSegmentsSection
+              closeList={closeDropdown}
+              tooltipContainerRef={panelRef}
+            />
           </div>
-          <SearchableSegmentsSection
-            closeList={closeDropdown}
-            tooltipContainerRef={panelRef}
-          />
         </Popover.Panel>
       </Transition>
     </>
@@ -124,4 +142,4 @@ export const FilterMenu = () => (
 )
 
 const titleClassName =
-  'text-sm pb-1 px-4 pt-2 font-bold uppercase text-indigo-500 dark:text-indigo-400'
+  'text-xs pb-1 px-4 pt-2 font-semibold uppercase text-gray-400 dark:text-indigo-400'

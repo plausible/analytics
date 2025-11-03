@@ -9,14 +9,14 @@ import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardQuery } from '../query'
+import { MenuSeparator } from './nav-menu-components'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
 // where `..` represents an ideally equal length.
 // The following calculations guarantee that.
 const BUFFER_RIGHT_PX = 16 - PILL_X_GAP_PX
-const BUFFER_LEFT_PX = 16
-const SEE_MORE_WIDTH_PX = 36
+const BUFFER_LEFT_PX = 8
 const SEE_MORE_RIGHT_MARGIN_PX = PILL_X_GAP_PX
 const SEE_MORE_LEFT_MARGIN_PX = 0
 
@@ -160,7 +160,6 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
             : null,
         seeMoreWidth:
           SEE_MORE_LEFT_MARGIN_PX +
-          SEE_MORE_WIDTH_PX +
           SEE_MORE_RIGHT_MARGIN_PX,
         mustShowSeeMoreMenu
       })
@@ -248,24 +247,26 @@ const SeeMoreMenu = ({
         ref={seeMoreRef}
         className={classNames(
           popover.toggleButton.classNames.rounded,
-          popover.toggleButton.classNames.shadow,
+          popover.toggleButton.classNames.ghost,
           'justify-center',
-          'relative group'
+          'relative group',
+          '!py-1.5 !px-2',
+          'rounded-md',
+          'bg-white border border-gray-200',
+          'hover:bg-white hover:border-gray-300'
         )}
         style={{
-          height: SEE_MORE_WIDTH_PX,
-          width: SEE_MORE_WIDTH_PX,
           marginLeft: SEE_MORE_LEFT_MARGIN_PX,
           marginRight: SEE_MORE_RIGHT_MARGIN_PX
         }}
       >
-        <EllipsisHorizontalIcon className="block h-5 w-5" />
+        <EllipsisHorizontalIcon className="block size-5" />
         {showMoreFilters && (
           <div
             aria-hidden="true"
-            className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 pr-[3px]"
+            className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 translate-x-1/4"
           >
-            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow-sm px-[3px] py-[1px] flex items-center rounded-xs bg-gray-100 dark:bg-gray-850">
+            <div className="text-[10px] leading-[10px] min-w-[10px] font-bold shadow-sm px-1 py-0.5 flex items-center rounded-sm bg-indigo-100 text-indigo-600 dark:bg-gray-850">
               +{filtersInMenuCount}
             </div>
           </div>
@@ -287,19 +288,15 @@ const SeeMoreMenu = ({
         >
           {showMoreFilters && (
             <>
-              <div className="py-4 px-4">
-                <AppliedFilterPillsList
-                  direction="vertical"
-                  pillClassName="!shadow-none !bg-gray-100 dark:!bg-gray-700"
-                  slice={{
-                    type: 'no-render-outside',
-                    start: visibleFiltersCount
-                  }}
-                />
-              </div>
-              {showSomeActions && (
-                <div className="mb-1 border-gray-200 dark:border-gray-700 border-b"></div>
-              )}
+              <AppliedFilterPillsList
+                direction="vertical"
+                pillClassName="!shadow-none border-none !bg-gray-100 dark:!bg-gray-700"
+                slice={{
+                  type: 'no-render-outside',
+                  start: visibleFiltersCount
+                }}
+              />
+              {showSomeActions && <MenuSeparator />}
             </>
           )}
           {showSomeActions && (
