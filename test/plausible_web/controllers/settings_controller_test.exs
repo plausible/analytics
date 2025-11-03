@@ -1703,6 +1703,227 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  describe "POST /team/force_2fa/enable" do
+    setup [:create_user, :log_in, :create_team, :setup_team]
+
+    test "enables enforcing 2FA", %{conn: conn, team: team} do
+      refute team.policy.force_2fa
+
+      conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
+               "2FA is now required for all team members"
+
+      assert Repo.reload!(team).policy.force_2fa
+    end
+
+    test "sends e-mail to all other team members", %{conn: conn, team: team, user: user} do
+      site = new_site(team: team)
+
+      member1 = add_member(team, role: :viewer)
+      member2 = add_member(team, role: :owner)
+      guest = add_guest(site, role: :viewer)
+
+      conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+
+      assert_email_delivered_with(
+        subject: "Your team now requires 2FA",
+        to: [nil: member1.email]
+      )
+
+      assert_email_delivered_with(
+        subject: "Your team now requires 2FA",
+        to: [nil: member2.email]
+      )
+
+      # guests are not notified becuause they are not affected
+      refute_email_delivered_with(
+        subject: "Your team now requires 2FA",
+        to: [nil: guest.email]
+      )
+
+      # the user enabling the enforcement is not notified
+      refute_email_delivered_with(
+        subject: "Your team now requires 2FA",
+        to: [nil: user.email]
+      )
+    end
+
+    test "is idempotent", %{conn: conn, user: user, team: team} do
+      {:ok, team} = Plausible.Teams.disable_force_2fa(team, user, "password")
+
+      conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert Repo.reload!(team).policy.force_2fa
+    end
+
+    test "can't be enabled by anyone other than owner", %{conn: conn, team: team} do
+      admin = add_member(team, role: :admin)
+      {:ok, ctx} = log_in(%{conn: conn, user: admin})
+
+      conn =
+        ctx
+        |> Keyword.fetch!(:conn)
+        |> set_current_team(team)
+
+      conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      refute Repo.reload!(team).policy.force_2fa
+    end
+  end
+
+  describe "POST /team/force_2fa/disable" do
+    setup [:create_user, :log_in, :create_team, :setup_team]
+
+    setup %{user: user} do
+      # enable 2FA
+      {:ok, user, _} = Plausible.Auth.TOTP.initiate(user)
+      code = NimbleTOTP.verification_code(user.totp_secret)
+      {:ok, _user, _} = Plausible.Auth.TOTP.enable(user, code)
+
+      {:ok, user: user}
+    end
+
+    test "disables enforcing 2FA", %{conn: conn, user: user, team: team} do
+      {:ok, team} = Plausible.Teams.enable_force_2fa(team, user)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{
+          "password" => "password"
+        })
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
+               "2FA is no longer enforced for team members"
+
+      refute Repo.reload!(team).policy.force_2fa
+    end
+
+    test "is idempotent", %{conn: conn, team: team} do
+      conn =
+        post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{
+          "password" => "password"
+        })
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      refute Repo.reload!(team).policy.force_2fa
+    end
+
+    test "returns error on invalid password", %{conn: conn} do
+      conn =
+        post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{"password" => "invalid"})
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
+    end
+
+    test "can't be disabled by anyone other than owner", %{conn: conn, team: team, user: user} do
+      {:ok, team} = Plausible.Teams.enable_force_2fa(team, user)
+
+      admin = add_member(team, role: :admin)
+
+      # enable TOTP for admin
+      {:ok, admin, _} = Plausible.Auth.TOTP.initiate(admin)
+      code = NimbleTOTP.verification_code(admin.totp_secret)
+      {:ok, _admin, _} = Plausible.Auth.TOTP.enable(admin, code)
+
+      {:ok, ctx} = log_in(%{conn: conn, user: admin})
+
+      conn =
+        ctx
+        |> Keyword.fetch!(:conn)
+        |> set_current_team(team)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{
+          "password" => "password"
+        })
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert Repo.reload!(team).policy.force_2fa
+    end
+  end
+
+  describe "GET /settings/team/general - enforce 2FA disabled" do
+    setup [:create_user, :log_in, :create_team, :setup_team]
+
+    test "is visible to owner", %{conn: conn} do
+      conn = get(conn, Routes.settings_path(conn, :team_general))
+      html = html_response(conn, 200)
+
+      assert element_exists?(html, "div#enable-force-2fa")
+      refute element_exists?(html, "div#disable-force-2fa")
+    end
+
+    test "is not visible to anyone other than owner", %{conn: conn, team: team} do
+      admin = add_member(team, role: :admin)
+      {:ok, ctx} = log_in(%{conn: conn, user: admin})
+
+      conn =
+        ctx
+        |> Keyword.fetch!(:conn)
+        |> set_current_team(team)
+
+      conn = get(conn, Routes.settings_path(conn, :team_general))
+      html = html_response(conn, 200)
+
+      refute element_exists?(html, "div#enable-force-2fa")
+      refute element_exists?(html, "div#disable-force-2fa")
+    end
+  end
+
+  describe "GET /settings/team/general - enforce 2FA enabled" do
+    setup [:create_user, :log_in, :create_team, :setup_team]
+
+    setup %{user: user, team: team} do
+      # enable 2FA
+      {:ok, user, _} = Plausible.Auth.TOTP.initiate(user)
+      code = NimbleTOTP.verification_code(user.totp_secret)
+      {:ok, _user, _} = Plausible.Auth.TOTP.enable(user, code)
+
+      {:ok, team} = Plausible.Teams.enable_force_2fa(team, user)
+
+      {:ok, user: user, team: team}
+    end
+
+    test "is visible to owner", %{conn: conn} do
+      conn = get(conn, Routes.settings_path(conn, :team_general))
+      html = html_response(conn, 200)
+
+      refute element_exists?(html, "div#enable-force-2fa")
+      assert element_exists?(html, "div#disable-force-2fa")
+    end
+
+    test "is not visible to anyone other than owner", %{conn: conn, team: team} do
+      admin = add_member(team, role: :admin)
+
+      # enable TOTP for admin
+      {:ok, admin, _} = Plausible.Auth.TOTP.initiate(admin)
+      code = NimbleTOTP.verification_code(admin.totp_secret)
+      {:ok, _admin, _} = Plausible.Auth.TOTP.enable(admin, code)
+
+      {:ok, ctx} = log_in(%{conn: conn, user: admin})
+
+      conn =
+        ctx
+        |> Keyword.fetch!(:conn)
+        |> set_current_team(team)
+
+      conn = get(conn, Routes.settings_path(conn, :team_general))
+      html = html_response(conn, 200)
+
+      refute element_exists?(html, "div#enable-force-2fa")
+      refute element_exists?(html, "div#disable-force-2fa")
+    end
+  end
+
   describe "account dropdown menu (_header.html)" do
     setup [:create_user, :log_in]
 

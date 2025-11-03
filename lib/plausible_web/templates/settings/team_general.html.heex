@@ -53,6 +53,7 @@
 
     <div
       :if={@force_2fa_enabled? and @current_team_role == :owner}
+      id="disable-force-2fa"
       x-data="{dsiableTeamForce2FAOpen: false}"
     >
       <.form
@@ -106,7 +107,7 @@
       </.form>
     </div>
 
-    <div :if={not @force_2fa_enabled? and @current_team_role == :owner}>
+    <div :if={not @force_2fa_enabled? and @current_team_role == :owner} id="enable-force-2fa">
       <.form
         action={Routes.settings_path(@conn, :enable_team_force_2fa)}
         for={@conn.params}
