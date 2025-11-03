@@ -865,7 +865,7 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :href, :string, default: nil
-  attr :class, :any, default: nil
+  attr :class, :string, default: ""
   attr :rest, :global, include: ~w(method disabled)
 
   def edit_button(assigns) do
