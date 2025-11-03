@@ -58,10 +58,10 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
       <.input
         field={f[:password]}
         label="Password (optional)"
+        help_text="Store the password securely, as it can't be viewed again."
         type="password"
         autocomplete="new-password"
       />
-
       <.button type="submit" class="w-full">
         Create shared link
       </.button>
