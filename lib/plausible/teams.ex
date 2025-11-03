@@ -334,10 +334,14 @@ defmodule Plausible.Teams do
       team
       |> Teams.Memberships.all(exclude_guests?: true)
       |> Enum.each(fn membership ->
-        team
-        |> PlausibleWeb.Email.force_2fa_enabled(membership.user, user)
-        |> Plausible.Mailer.send()
+        if membership.user.id != user.id do
+          team
+          |> PlausibleWeb.Email.force_2fa_enabled(membership.user, user)
+          |> Plausible.Mailer.send()
+        end
       end)
+
+      {:ok, team}
     end
   end
 
