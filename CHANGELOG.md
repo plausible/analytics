@@ -35,6 +35,8 @@ All notable changes to this project will be documented in this file.
   when they occurred.
 - Fixed realtime and hourly graphs of visits overcounting
 - When reporting only `visitors` and `visits` per hour, count visits in each hour they were active in.
+- Remove Subscription and Invoices menu from CE 
+- Fix email sending error "Mua.SMTPError" 503 Bad sequence of commands
 
 ## v3.0.0 - 2025-04-11
 

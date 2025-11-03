@@ -93,10 +93,10 @@ defmodule PlausibleWeb.LayoutView do
         [
           %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
           %{key: "Security", value: "security", icon: :lock_closed},
-          if(not Teams.setup?(current_team),
+          if(ee?() and not Teams.setup?(current_team),
             do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
           ),
-          if(not Teams.setup?(current_team) and subscription?,
+          if(ee?() and not Teams.setup?(current_team) and subscription?,
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(not Teams.setup?(current_team),
@@ -115,10 +115,10 @@ defmodule PlausibleWeb.LayoutView do
         "Team",
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
-          if(current_team_role in [:owner, :billing],
+          if(ee?() and current_team_role in [:owner, :billing],
             do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
           ),
-          if(current_team_role in [:owner, :billing] and subscription?,
+          if(ee?() and current_team_role in [:owner, :billing] and subscription?,
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(current_team_role in [:owner, :billing, :admin, :editor],
