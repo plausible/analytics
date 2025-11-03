@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Live.Components.Form do
           href="javascript:void(0)"
           class="absolute flex items-center text-xs font-medium text-indigo-600 dark:text-indigo-500 no-underline hover:text-indigo-700 dark:hover:text-indigo-400 top-3 right-4 transition-colors duration-150"
         >
-          <Heroicons.document_duplicate class="pr-1 size-5" />
+          <Heroicons.document_duplicate class="mr-1 size-4" />
           <span>
             COPY
           </span>
