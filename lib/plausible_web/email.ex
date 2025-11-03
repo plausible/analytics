@@ -571,6 +571,13 @@ defmodule PlausibleWeb.Email do
     end
   end
 
+  def force_2fa_enabled(team, user, enabling_user) do
+    priority_email()
+    |> to(user.email)
+    |> subject("Your team now requires 2FA")
+    |> render("force_2fa_enabled.html", team: team, enabling_user: enabling_user)
+  end
+
   @doc """
     Unlike the default 'base' emails, priority emails cannot be unsubscribed from. This is achieved
     by sending them through a dedicated 'priority' message stream in Postmark.

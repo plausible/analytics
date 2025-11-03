@@ -65,7 +65,10 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def enable_team_force_2fa(conn, _params) do
-    case Teams.enable_force_2fa(conn.assigns.current_team) do
+    team = conn.assigns.current_team
+    user = conn.assigns.current_user
+
+    case Teams.enable_force_2fa(team, user) do
       {:ok, _} ->
         conn
         |> put_flash(:success, "2FA is now required for all team members.")

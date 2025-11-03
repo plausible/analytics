@@ -327,9 +327,18 @@ defmodule Plausible.Teams do
     team.policy.force_2fa
   end
 
-  @spec enable_force_2fa(Teams.Team.t()) :: {:ok, Teams.Team.t()} | {:error, Ecto.Changeset.t()}
-  def enable_force_2fa(team) do
-    set_force_2fa(team, true)
+  @spec enable_force_2fa(Teams.Team.t(), Auth.User.t()) ::
+          {:ok, Teams.Team.t()} | {:error, Ecto.Changeset.t()}
+  def enable_force_2fa(team, user) do
+    with {:ok, team} <- set_force_2fa(team, true) do
+      team
+      |> Teams.Memberships.all(exclude_guests?: true)
+      |> Enum.each(fn membership ->
+        team
+        |> PlausibleWeb.Email.force_2fa_enabled(membership.user, user)
+        |> Plausible.Mailer.send()
+      end)
+    end
   end
 
   @spec disable_force_2fa(Teams.Team.t(), Auth.User.t(), String.t()) ::
