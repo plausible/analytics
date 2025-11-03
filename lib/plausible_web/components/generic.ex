@@ -879,7 +879,7 @@ defmodule PlausibleWeb.Components.Generic do
       case {assigns.inner_block, assigns[:icon_name]} do
         {[], nil} ->
           raise ArgumentError,
-                "Either `icon_name` attributre or icon inner block must be provided"
+                "Either `icon_name` attribute or icon inner block must be provided"
 
         {[_ | _], icon_name} when not is_nil(icon_name) ->
           raise ArgumentError, "Only one of `icon_name` and icon inner block must be provided"
