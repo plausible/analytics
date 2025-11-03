@@ -1,8 +1,11 @@
 defmodule PlausibleWeb.Live.GoalSettings.FormTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
-  import Plausible.Teams.Test
   import Plausible.Test.Support.HTML
+
+  on_ee do
+    import Plausible.Teams.Test
+  end
 
   @revenue_goal_settings ~s|div[data-test-id="revenue-goal-settings"]|
 
@@ -126,25 +129,27 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert html =~ "Custom Event"
     end
 
-    test "creates a custom event for consolidated view (revenue switch not available)", %{
-      conn: conn,
-      user: user
-    } do
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-      site = new_consolidated_view(team)
+    on_ee do
+      test "creates a custom event for consolidated view (revenue switch not available)", %{
+        conn: conn,
+        user: user
+      } do
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        site = new_consolidated_view(team)
 
-      lv = get_liveview(conn, site)
+        lv = get_liveview(conn, site)
 
-      assert render(lv) =~ "Add goal for consolidated view"
-      refute element_exists?(render(lv), @revenue_goal_settings)
+        assert render(lv) =~ "Add goal for consolidated view"
+        refute element_exists?(render(lv), @revenue_goal_settings)
 
-      lv
-      |> element("#goals-form-modalseq0 form")
-      |> render_submit(%{goal: %{event_name: "SampleCustomEvent"}})
+        lv
+        |> element("#goals-form-modalseq0 form")
+        |> render_submit(%{goal: %{event_name: "SampleCustomEvent"}})
 
-      html = render(lv)
-      assert html =~ "SampleCustomEvent"
-      assert html =~ "Custom Event"
+        html = render(lv)
+        assert html =~ "SampleCustomEvent"
+        assert html =~ "Custom Event"
+      end
     end
 
     @tag :ee_only

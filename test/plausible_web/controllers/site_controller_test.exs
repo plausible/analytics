@@ -502,14 +502,15 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "Site installation"
     end
 
-    @tag :ee_only
-    test "renders only timezone section for a consolidated site", %{conn: conn, user: user} do
-      consolidated_view = user |> team_of() |> new_consolidated_view()
-      conn = get(conn, "/#{consolidated_view.domain}/settings/general")
-      resp = html_response(conn, 200)
+    on_ee do
+      test "renders only timezone section for a consolidated site", %{conn: conn, user: user} do
+        consolidated_view = user |> team_of() |> new_consolidated_view()
+        conn = get(conn, "/#{consolidated_view.domain}/settings/general")
+        resp = html_response(conn, 200)
 
-      assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|) |> Enum.into([])
-      assert text(tile_element) =~ "Site timezone"
+        assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|) |> Enum.into([])
+        assert text(tile_element) =~ "Site timezone"
+      end
     end
 
     @tag :ee_only
@@ -577,29 +578,30 @@ defmodule PlausibleWeb.SiteControllerTest do
              ]
     end
 
-    @tag :ee_only
-    test "consolidated view settings sidebar items", %{
-      conn: conn,
-      user: user
-    } do
-      team = user |> team_of()
-      site = new_consolidated_view(team)
-      conn = get(conn, "/#{site.domain}/settings/general")
-      resp = html_response(conn, 200)
+    on_ee do
+      test "consolidated view settings sidebar items", %{
+        conn: conn,
+        user: user
+      } do
+        team = user |> team_of()
+        site = new_consolidated_view(team)
+        conn = get(conn, "/#{site.domain}/settings/general")
+        resp = html_response(conn, 200)
 
-      items =
-        resp
-        |> find("[data-testid=site_settings_sidebar] a")
-        |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
+        items =
+          resp
+          |> find("[data-testid=site_settings_sidebar] a")
+          |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
 
-      assert resp =~ "Settings for the consolidated view"
+        assert resp =~ "Settings for the consolidated view"
 
-      assert items == [
-               {"General", "/#{site.domain}/settings/general"},
-               {"Goals", "/#{site.domain}/settings/goals"},
-               {"Custom properties", "/#{site.domain}/settings/properties"},
-               {"Email reports", "/#{site.domain}/settings/email-reports"}
-             ]
+        assert items == [
+                 {"General", "/#{site.domain}/settings/general"},
+                 {"Goals", "/#{site.domain}/settings/goals"},
+                 {"Custom properties", "/#{site.domain}/settings/properties"},
+                 {"Email reports", "/#{site.domain}/settings/email-reports"}
+               ]
+      end
     end
 
     test "header and footer are shown", %{conn: conn, site: site, user: user} do

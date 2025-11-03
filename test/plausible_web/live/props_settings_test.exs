@@ -102,57 +102,59 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     end
   end
 
-  describe "GET /:domain/settings/properties - consolidated views" do
-    setup [:create_user, :create_team, :log_in]
+  on_ee do
+    describe "GET /:domain/settings/properties - consolidated views" do
+      setup [:create_user, :create_team, :log_in]
 
-    setup %{team: team} = context do
-      new_site(team: team)
-      new_site(team: team)
+      setup %{team: team} = context do
+        new_site(team: team)
+        new_site(team: team)
 
-      {:ok, Map.put(context, :consolidated_view, new_consolidated_view(team))}
-    end
+        {:ok, Map.put(context, :consolidated_view, new_consolidated_view(team))}
+      end
 
-    test "lists existing props and renders links", %{
-      conn: conn,
-      consolidated_view: consolidated_view
-    } do
-      {:ok, consolidated_view} =
-        Plausible.Props.allow(consolidated_view, ["amount", "logged_in", "is_customer"])
+      test "lists existing props and renders links", %{
+        conn: conn,
+        consolidated_view: consolidated_view
+      } do
+        {:ok, consolidated_view} =
+          Plausible.Props.allow(consolidated_view, ["amount", "logged_in", "is_customer"])
 
-      conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
+        conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
 
-      resp = html_response(conn, 200)
-      assert resp =~ "Attach custom properties"
+        resp = html_response(conn, 200)
+        assert resp =~ "Attach custom properties"
 
-      assert element_exists?(
-               resp,
-               ~s|a[href="https://plausible.io/docs/custom-props/introduction"]|
-             )
+        assert element_exists?(
+                 resp,
+                 ~s|a[href="https://plausible.io/docs/custom-props/introduction"]|
+               )
 
-      assert resp =~ "amount"
-      assert resp =~ "logged_in"
-      assert resp =~ "is_customer"
-      refute resp =~ "please upgrade your subscription"
-    end
+        assert resp =~ "amount"
+        assert resp =~ "logged_in"
+        assert resp =~ "is_customer"
+        refute resp =~ "please upgrade your subscription"
+      end
 
-    test "if no props are allowed, a proper info is displayed", %{
-      conn: conn,
-      consolidated_view: consolidated_view
-    } do
-      conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
-      resp = html_response(conn, 200)
-      assert resp =~ "No properties configured for this site"
-    end
+      test "if no props are allowed, a proper info is displayed", %{
+        conn: conn,
+        consolidated_view: consolidated_view
+      } do
+        conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
+        resp = html_response(conn, 200)
+        assert resp =~ "No properties configured for this site"
+      end
 
-    test "add property button and search input are rendered", %{
-      conn: conn,
-      consolidated_view: consolidated_view
-    } do
-      conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
-      resp = html_response(conn, 200)
-      assert element_exists?(resp, ~s/button[phx-click="add-prop"]/)
-      assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
-      assert element_exists?(resp, ~s/form[phx-change="filter"]#filter-form/)
+      test "add property button and search input are rendered", %{
+        conn: conn,
+        consolidated_view: consolidated_view
+      } do
+        conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
+        resp = html_response(conn, 200)
+        assert element_exists?(resp, ~s/button[phx-click="add-prop"]/)
+        assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
+        assert element_exists?(resp, ~s/form[phx-change="filter"]#filter-form/)
+      end
     end
   end
 
