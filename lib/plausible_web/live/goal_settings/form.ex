@@ -622,11 +622,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   on_ee do
+    defp editing_non_revenue_goal?(%{goal: nil} = _assigns), do: false
+
     defp editing_non_revenue_goal?(%{goal: goal} = _assigns) do
       not Plausible.Goal.Revenue.revenue?(goal)
     end
-
-    defp editing_non_revenue_goal?(_assigns), do: false
   else
     defp editing_non_revenue_goal?(_assigns), do: false
   end
