@@ -81,6 +81,8 @@ defmodule Plausible.DataMigration.BackfillTrackerScriptConfiguration do
     script_config =
       if installation_meta do
         Map.get(installation_meta, "script_config", %{})
+      else
+        %{}
       end
 
     %{

@@ -595,12 +595,6 @@ defmodule PlausibleWeb.Router do
            SiteController,
            :remove_traffic_change_notification_recipient
 
-    get "/sites/:domain/shared-links/new", SiteController, :new_shared_link
-    post "/sites/:domain/shared-links", SiteController, :create_shared_link
-    get "/sites/:domain/shared-links/:slug/edit", SiteController, :edit_shared_link
-    put "/sites/:domain/shared-links/:slug", SiteController, :update_shared_link
-    delete "/sites/:domain/shared-links/:slug", SiteController, :delete_shared_link
-
     get "/sites/:domain/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:domain/memberships/invite", Site.MembershipController, :invite_member
 

@@ -366,7 +366,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, required: true)
   attr(:new_tab, :boolean, default: false)
-  attr(:class, :string, default: nil)
+  attr(:class, :string, default: "")
   attr(:rest, :global)
   attr(:method, :string, default: "get")
   slot(:inner_block)
@@ -795,7 +795,7 @@ defmodule PlausibleWeb.Components.Generic do
       ]}
       {@rest}
     >
-      <div :if={@actions} class="flex gap-2">
+      <div :if={@actions} class="flex gap-1">
         {render_slot(@inner_block)}
       </div>
       <div :if={!@actions}>
@@ -864,26 +864,107 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :href, :string, default: nil
-  attr :icon, :atom, default: :pencil_square
+  attr :href, :string, required: false
+  attr :icon_name, :atom, required: false
+  attr :theme, :string, default: "default"
+  attr :class, :string, default: ""
+  attr :icon_class, :string, default: ""
+  attr :size, :string, default: "4"
   attr :rest, :global, include: ~w(method disabled)
 
-  def edit_button(assigns) do
+  slot :inner_block, required: false
+
+  def icon_button(assigns) do
+    icon_source =
+      case {assigns.inner_block, assigns[:icon_name]} do
+        {[], nil} ->
+          raise ArgumentError,
+                "Either `icon_name` attribute or icon inner block must be provided"
+
+        {[_ | _], icon_name} when not is_nil(icon_name) ->
+          raise ArgumentError, "Only one of `icon_name` and icon inner block must be provided"
+
+        {[_ | _], nil} ->
+          :inner_block
+
+        {[], icon_name} when not is_nil(icon_name) ->
+          :icon_name
+      end
+
+    text =
+      case assigns.theme do
+        "default" ->
+          %{
+            light: "text-indigo-700",
+            light_hover: "text-indigo-600",
+            dark: "text-indigo-500",
+            dark_hover: "text-indigo-400"
+          }
+
+        "danger" ->
+          %{
+            light: "text-red-700",
+            light_hover: "text-red-500",
+            dark: "text-red-500",
+            dark_hover: "text-red-400"
+          }
+
+        _ ->
+          raise ArgumentError, "Invalid `theme` provided"
+      end
+
+    button_class = [
+      "group/button",
+      "w-fit h-fit",
+      "p-2",
+      "hover:bg-gray-100",
+      "dark:hover:bg-gray-800",
+      "rounded-md",
+      "transition-colors",
+      "duration-150",
+      assigns.class
+    ]
+
+    icon_class = [
+      "size-#{assigns.size}",
+      text.light,
+      "group-hover/button:" <> text.light_hover,
+      "dark:" <> text.dark,
+      "dark:group-hover/button:" <> text.dark_hover,
+      "transition-colors",
+      "duration-150",
+      assigns.icon_class
+    ]
+
+    assigns =
+      assigns
+      |> assign(:icon_source, icon_source)
+      |> assign(:button_class, button_class)
+      |> assign(:icon_class, icon_class)
+
     if assigns[:href] do
       ~H"""
-      <.unstyled_link href={@href} {@rest}>
+      <.unstyled_link href={@href} class={@button_class} {@rest}>
+        <span :if={@icon_source == :inner_block}>
+          {render_slot(@inner_block, @icon_class)}
+        </span>
         <.dynamic_icon
-          name={@icon}
-          class="size-5 text-indigo-700 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
+          :if={@icon_source == :icon_name}
+          name={@icon_name}
+          class={@icon_class}
         />
       </.unstyled_link>
       """
     else
       ~H"""
-      <button {@rest}>
+      <button class={@button_class} {@rest}>
+        <span :if={@icon_source == :inner_block}>
+          {render_slot(@inner_block, @icon_class)}
+        </span>
         <.dynamic_icon
-          name={@icon}
-          class="size-5 text-indigo-700 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300"
+          :if={@icon_source == :icon_name}
+          name={@icon_name}
+          class={@icon_class}
         />
       </button>
       """
@@ -891,29 +972,45 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :href, :string, default: nil
+  attr :class, :string, default: ""
+  attr :rest, :global, include: ~w(method disabled)
+
+  def edit_button(assigns) do
+    ~H"""
+    <.icon_button :let={icon_class} href={@href} class={@class} {@rest}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        class={icon_class}
+      >
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="m13.25 6.25 2.836-2.836a2 2 0 0 1 2.828 0l1.672 1.672a2 2 0 0 1 0 2.828L17.75 10.75m-4.5-4.5-9.914 9.914a2 2 0 0 0-.586 1.415v3.671h3.672a2 2 0 0 0 1.414-.586l9.914-9.914m-4.5-4.5 4.5 4.5"
+        />
+      </svg>
+    </.icon_button>
+    """
+  end
+
+  attr :href, :string, default: nil
+  attr :class, :string, default: ""
   attr :icon, :atom, default: :trash
   attr :rest, :global, include: ~w(method disabled)
 
   def delete_button(assigns) do
-    if assigns[:href] do
-      ~H"""
-      <.unstyled_link href={@href} {@rest}>
-        <.dynamic_icon
-          name={@icon}
-          class="size-5 text-red-700 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
-        />
-      </.unstyled_link>
-      """
-    else
-      ~H"""
-      <button {@rest}>
-        <.dynamic_icon
-          name={@icon}
-          class="size-5 text-red-700 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
-        />
-      </button>
-      """
-    end
+    ~H"""
+    <.icon_button
+      icon_name={@icon}
+      theme="danger"
+      class={@class}
+      href={@href}
+      {@rest}
+    />
+    """
   end
 
   attr :filter_text, :string, default: ""

@@ -42,49 +42,11 @@
       You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.
     </:subtitle>
 
-    <.filter_bar filtering_enabled?={false}>
-      <.button_link href={Routes.site_path(@conn, :new_shared_link, @site.domain)} mt?={false}>
-        Add Shared Link
-      </.button_link>
-    </.filter_bar>
-
-    <p :if={Enum.empty?(@shared_links)} class="mb-8 text-center text-sm">
-      No Shared Links configured for this site.
-    </p>
-
-    <.table rows={@shared_links} id="shared-links-table">
-      <:thead>
-        <.th hide_on_mobile>Name</.th>
-        <.th>Link</.th>
-        <.th invisible>Actions</.th>
-      </:thead>
-      <:tbody :let={link}>
-        <.td truncate hide_on_mobile>
-          {link.name}
-          <Heroicons.lock_closed :if={link.password_hash} class="w-6 h-6 feather ml-2" />
-          <Heroicons.lock_open :if={!link.password_hash} class="w-6 h-6 feather ml-2" />
-        </.td>
-        <.td>
-          <.input_with_clipboard
-            name={link.slug}
-            id={link.slug}
-            value={shared_link_dest(@site, link)}
-          />
-        </.td>
-        <.td actions>
-          <.edit_button
-            class="mt-2"
-            href={Routes.site_path(@conn, :edit_shared_link, @site.domain, link.slug)}
-          />
-          <.delete_button
-            class="mt-2"
-            method="delete"
-            href={Routes.site_path(@conn, :delete_shared_link, @site.domain, link.slug)}
-            data-confirm="Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."
-          />
-        </.td>
-      </:tbody>
-    </.table>
+    <div :if={Plausible.Billing.Feature.SharedLinks.enabled?(@site)}>
+      {live_render(@conn, PlausibleWeb.Live.SharedLinkSettings,
+        session: %{"site_id" => @site.id, "domain" => @site.domain}
+      )}
+    </div>
   </.tile>
 
   <.tile

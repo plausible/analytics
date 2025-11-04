@@ -723,6 +723,47 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "GET /:domain/settings/visibility" do
     setup [:create_user, :log_in, :create_site]
 
+    setup %{user: user} do
+      subscribe_to_growth_plan(user)
+      :ok
+    end
+
+    test "shows shared links section", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/visibility")
+
+      resp = html_response(conn, 200)
+      assert resp =~ "Add shared link"
+      assert element_exists?(resp, ~s/button#add-shared-link-button/)
+    end
+
+    test "lists shared links with actions", %{conn: conn, site: site} do
+      link1 = insert(:shared_link, site: site, name: "Link 1")
+      link2 = insert(:shared_link, site: site, name: "Link 2")
+
+      conn = get(conn, "/#{site.domain}/settings/visibility")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Link 1"
+      assert resp =~ "Link 2"
+
+      assert element_exists?(
+               resp,
+               ~s/button[phx-click="edit-shared-link"][phx-value-slug="#{link1.slug}"]/
+             )
+
+      assert element_exists?(
+               resp,
+               ~s/button[phx-click="delete-shared-link"][phx-value-slug="#{link2.slug}"]/
+             )
+    end
+
+    test "shows message when no shared links are configured", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/visibility")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "No shared links configured for this site"
+    end
+
     test "does not render shared links with special names", %{conn: conn, site: site} do
       for special_name <- Plausible.Sites.shared_link_special_names() do
         insert(:shared_link, name: special_name, site: site)
@@ -1634,141 +1675,6 @@ defmodule PlausibleWeb.SiteControllerTest do
 
         assert [_] = report.recipients
       end
-    end
-  end
-
-  describe "GET /sites/:domain/shared-links/new" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "shows form for new shared link", %{conn: conn, site: site} do
-      conn = get(conn, "/sites/#{site.domain}/shared-links/new")
-
-      assert html_response(conn, 200) =~ "New shared link"
-    end
-  end
-
-  describe "POST /sites/:domain/shared-links" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "creates shared link without password", %{conn: conn, site: site} do
-      post(conn, "/sites/#{site.domain}/shared-links", %{
-        "shared_link" => %{"name" => "Link name"}
-      })
-
-      link = Repo.one(Plausible.Site.SharedLink)
-
-      refute is_nil(link.slug)
-      assert is_nil(link.password_hash)
-      assert link.name == "Link name"
-    end
-
-    test "creates shared link with password", %{conn: conn, site: site} do
-      post(conn, "/sites/#{site.domain}/shared-links", %{
-        "shared_link" => %{"password" => "password", "name" => "New name"}
-      })
-
-      link = Repo.one(Plausible.Site.SharedLink)
-
-      refute is_nil(link.slug)
-      refute is_nil(link.password_hash)
-      assert link.name == "New name"
-    end
-
-    test "fails to create when subscription plan doesn't support the shared links feature", %{
-      conn: conn,
-      user: user,
-      site: site
-    } do
-      subscribe_to_starter_plan(user)
-
-      conn =
-        post(conn, "/sites/#{site.domain}/shared-links", %{
-          "shared_link" => %{"name" => "Something"}
-        })
-
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :settings_visibility, site.domain)
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "Your current subscription plan does not include Shared Links"
-
-      refute Repo.exists?(Plausible.Site.SharedLink)
-    end
-
-    for special_name <- Plausible.Sites.shared_link_special_names() do
-      test "fails to create with the special '#{special_name}' name intended for Plugins API",
-           %{conn: conn, site: site} do
-        conn =
-          post(conn, "/sites/#{site.domain}/shared-links", %{
-            "shared_link" => %{"name" => unquote(special_name)}
-          })
-
-        assert html_response(conn, 200) =~ "This name is reserved. Please choose another one"
-        refute Repo.exists?(Plausible.Site.SharedLink)
-      end
-    end
-  end
-
-  describe "GET /sites/:domain/shared-links/edit" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "shows form to edit shared link", %{conn: conn, site: site} do
-      link = insert(:shared_link, site: site)
-      conn = get(conn, "/sites/#{site.domain}/shared-links/#{link.slug}/edit")
-
-      assert html_response(conn, 200) =~ "Edit Shared Link"
-    end
-  end
-
-  describe "PUT /sites/:domain/shared-links/:slug" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "can update link name", %{conn: conn, site: site} do
-      link = insert(:shared_link, site: site)
-
-      put(conn, "/sites/#{site.domain}/shared-links/#{link.slug}", %{
-        "shared_link" => %{"name" => "Updated link name"}
-      })
-
-      link = Repo.one(Plausible.Site.SharedLink)
-
-      assert link.name == "Updated link name"
-    end
-
-    for special_name <- Plausible.Sites.shared_link_special_names() do
-      test "fails to change link name to #{special_name}", %{conn: conn, site: site} do
-        link = insert(:shared_link, site: site)
-
-        conn =
-          put(conn, "/sites/#{site.domain}/shared-links/#{link.slug}", %{
-            "shared_link" => %{"name" => unquote(special_name)}
-          })
-
-        assert html_response(conn, 200) =~ "This name is reserved. Please choose another one"
-      end
-    end
-  end
-
-  describe "DELETE /sites/:domain/shared-links/:slug" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "deletes shared link", %{conn: conn, site: site} do
-      link = insert(:shared_link, site: site)
-
-      conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
-
-      refute Repo.one(Plausible.Site.SharedLink)
-      assert redirected_to(conn, 302) =~ "/#{URI.encode_www_form(site.domain)}/settings"
-      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Shared Link deleted"
-    end
-
-    test "fails to delete shared link from the outside", %{conn: conn, site: site} do
-      other_site = insert(:site)
-      link = insert(:shared_link, site: other_site)
-
-      conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
-
-      assert Repo.one(Plausible.Site.SharedLink)
-      assert html_response(conn, 404)
     end
   end
 
