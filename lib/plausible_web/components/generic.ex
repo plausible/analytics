@@ -391,7 +391,7 @@ defmodule PlausibleWeb.Components.Generic do
       ~H"""
       <.link
         class={[
-          "inline-flex items-center gap-x-0.5",
+          "inline-flex items-center gap-x-1",
           @class
         ]}
         href={@href}
@@ -401,7 +401,7 @@ defmodule PlausibleWeb.Components.Generic do
         {@rest}
       >
         {render_slot(@inner_block)}
-        <Heroicons.arrow_top_right_on_square class={["opacity-60", @icon_class]} />
+        <Heroicons.arrow_top_right_on_square class={["stroke-2", @icon_class]} />
       </.link>
       """
     else
@@ -466,6 +466,51 @@ defmodule PlausibleWeb.Components.Generic do
         />
       </span>
     </button>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :js_active_var, :string, required: true
+  attr :id_suffix, :string, default: ""
+  attr :disabled, :boolean, default: false
+  attr :label, :string, required: true
+  attr :help_text, :string, default: nil
+  attr :help_text_conditional, :boolean, default: false
+  attr :mt?, :boolean, default: true
+
+  attr(:rest, :global)
+
+  def toggle_field(assigns) do
+    help_text_conditional = assigns[:help_text_conditional] || false
+
+    assigns = assign(assigns, help_text_conditional: help_text_conditional)
+
+    ~H"""
+    <div class={["flex items-start justify-between gap-5 w-full", @mt? && "mt-6"]}>
+      <div class="flex-1">
+        <span
+          x-on:click={"#{@js_active_var} = !#{@js_active_var}"}
+          class="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+        >
+          {@label}
+        </span>
+        <p
+          :if={@help_text}
+          class="text-gray-500 dark:text-gray-400 text-sm text-pretty"
+          x-show={if @help_text_conditional, do: @js_active_var, else: "true"}
+          x-cloak={@help_text_conditional}
+        >
+          {@help_text}
+        </p>
+      </div>
+      <PlausibleWeb.Components.Generic.toggle_switch
+        id={@id}
+        id_suffix={@id_suffix}
+        js_active_var={@js_active_var}
+        disabled={@disabled}
+        {@rest}
+      />
+    </div>
     """
   end
 
@@ -676,9 +721,9 @@ defmodule PlausibleWeb.Components.Generic do
 
     if String.contains?(classes, "text-sm") or
          String.contains?(classes, "text-xs") do
-      ["w-3 h-3"]
+      ["size-3"]
     else
-      ["w-4 h-4"]
+      ["size-4"]
     end
   end
 
@@ -786,7 +831,7 @@ defmodule PlausibleWeb.Components.Generic do
     <td
       class={[
         @height,
-        "text-sm px-6 py-3 first:pl-0 last:pr-0 whitespace-nowrap",
+        "text-sm px-6 py-3 first:pl-0 last:pr-0 whitespace-nowrap overflow-visible",
         @truncate && "truncate",
         @max_width,
         @actions && "flex text-right justify-end",
