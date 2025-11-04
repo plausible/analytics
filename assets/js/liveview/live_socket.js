@@ -15,7 +15,7 @@ import Alpine from 'alpinejs'
 let csrfToken = document.querySelector("meta[name='csrf-token']")
 let websocketUrl = document.querySelector("meta[name='websocket-url']")
 if (csrfToken && websocketUrl) {
-  let Hooks = {Modal}
+  let Hooks = { Modal }
   Hooks.Metrics = {
     mounted() {
       this.handleEvent('send-metrics', ({ event_name }) => {
