@@ -1,6 +1,8 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("initiate-2fa-form").submit();
+    setInterval(function() {
+      document.getElementById("initiate-2fa-form").submit();
+    }, 3000)
   });
 </script>
 
