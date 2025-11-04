@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - The new tracker script automatically updates to respect the following configuration options available in "New site" flows and "Review installation" flows: whether to track outbound links, file downloads, form submissions
 - The new tracker script allows overriding almost all options by changing the snippet on the website, with the function `plausible.init({ ...your overrides... })` - this can be unique page-by-page
 - A new `@plausible-analytics/tracker` ESM module is available on NPM - it has near-identical configuration API and identical tracking logic as the script and it receives bugfixes and updates concurrently with the new tracker script
+- Ability to enforce enabling 2FA by all team members
 
 ### Removed
 

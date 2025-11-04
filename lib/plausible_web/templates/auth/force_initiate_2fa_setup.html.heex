@@ -1,0 +1,30 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    setInterval(function() {
+      document.getElementById("initiate-2fa-form").submit();
+    }, 3000)
+  });
+</script>
+
+<.focus_box>
+  <:title>
+    Setup Two-Factor Authentication
+  </:title>
+
+  <:subtitle>
+    Redirecting to 2FA setup. Click below if it doesn't happen automatically.
+  </:subtitle>
+
+  <div class="w-full">
+    <.form
+      id="initiate-2fa-form"
+      action={Routes.auth_path(@conn, :initiate_2fa_setup, force: "true")}
+      for={@conn.params}
+      method="post"
+    >
+      <.button type="submit" class="w-full" mt?={false}>
+        Proceed
+      </.button>
+    </.form>
+  </div>
+</.focus_box>

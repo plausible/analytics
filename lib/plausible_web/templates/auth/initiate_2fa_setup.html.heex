@@ -4,10 +4,13 @@
   </:title>
 
   <:subtitle>
+    <.notice :if={@forced?} class="mb-2" theme={:gray} title="Team requires 2FA setup">
+      You've been redirected here because your team enforces 2FA. Please complete the setup or switch to another team.
+    </.notice>
     Link your Plausible account to the authenticator app you have installed either on your phone or computer.
   </:subtitle>
 
-  <:footer>
+  <:footer :if={not @forced?}>
     <.focus_list>
       <:item>
         Changed your mind?

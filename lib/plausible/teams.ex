@@ -320,6 +320,54 @@ defmodule Plausible.Teams do
     )
   end
 
+  @spec force_2fa_enabled?(Teams.Team.t() | nil) :: boolean()
+  def force_2fa_enabled?(nil), do: false
+
+  def force_2fa_enabled?(team) do
+    team.policy.force_2fa
+  end
+
+  @spec enable_force_2fa(Teams.Team.t(), Auth.User.t()) ::
+          {:ok, Teams.Team.t()} | {:error, Ecto.Changeset.t()}
+  def enable_force_2fa(team, user) do
+    with {:ok, team} <- set_force_2fa(team, true) do
+      team
+      |> Teams.Memberships.all(exclude_guests?: true)
+      |> Enum.each(fn membership ->
+        if membership.user.id != user.id do
+          team
+          |> PlausibleWeb.Email.force_2fa_enabled(membership.user, user)
+          |> Plausible.Mailer.deliver_later()
+        end
+      end)
+
+      {:ok, team}
+    end
+  end
+
+  @spec disable_force_2fa(Teams.Team.t(), Auth.User.t(), String.t()) ::
+          {:ok, Teams.Team.t()} | {:error, :invalid_password | Ecto.Changeset.t()}
+  def disable_force_2fa(team, user, password) do
+    if Auth.Password.match?(password, user.password_hash) do
+      set_force_2fa(team, false)
+    else
+      {:error, :invalid_password}
+    end
+  end
+
+  defp set_force_2fa(team, enabled?) do
+    params = %{policy: %{force_2fa: enabled?}}
+
+    audit_entry_name = if(enabled?, do: "force_2fa_enabled", else: "force_2fa_disabled")
+
+    team
+    |> Ecto.Changeset.cast(params, [])
+    |> Ecto.Changeset.cast_embed(:policy,
+      with: &Teams.Policy.force_2fa_changeset(&1, &2.force_2fa)
+    )
+    |> Repo.update_with_audit(audit_entry_name, %{team_id: team.id})
+  end
+
   # Exposed for use in tests
   @doc false
   def get_owned_team(user, opts \\ []) do

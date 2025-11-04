@@ -447,6 +447,7 @@ defmodule PlausibleWeb.Router do
     post "/login", AuthController, :login
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
+    get "/2fa/setup/force-initiate", AuthController, :force_initiate_2fa_setup
     post "/2fa/setup/initiate", AuthController, :initiate_2fa_setup
     get "/2fa/setup/verify", AuthController, :verify_2fa_setup_form
     post "/2fa/setup/verify", AuthController, :verify_2fa_setup
@@ -498,6 +499,8 @@ defmodule PlausibleWeb.Router do
     get "/team/general", SettingsController, :team_general
     post "/team/general/name", SettingsController, :update_team_name
     post "/team/leave", SettingsController, :leave_team
+    post "/team/force_2fa/enable", SettingsController, :enable_team_force_2fa
+    post "/team/force_2fa/disable", SettingsController, :disable_team_force_2fa
 
     on_ee do
       get "/sso/info", SSOController, :cta

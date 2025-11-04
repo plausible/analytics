@@ -25,7 +25,7 @@ defmodule Plausible.Teams.Policy do
 
   on_ee do
     @derive {Plausible.Audit.Encoder,
-             only: [:force_sso, :sso_default_role, :sso_session_timeout_minutes]}
+             only: [:force_2fa, :force_sso, :sso_default_role, :sso_session_timeout_minutes]}
   end
 
   @primary_key false
@@ -47,6 +47,9 @@ defmodule Plausible.Teams.Policy do
     # Default session timeout for SSO-enabled accounts. We might also
     # consider accepting session timeout from assertion, if present.
     field :sso_session_timeout_minutes, :integer, default: @default_timeout_minutes
+
+    # Enforce enabling 2FA for all users
+    field :force_2fa, :boolean, default: false
   end
 
   @spec sso_member_roles() :: [sso_member_role()]
@@ -68,5 +71,12 @@ defmodule Plausible.Teams.Policy do
     policy
     |> cast(%{force_sso: mode}, [:force_sso])
     |> validate_required(:force_sso)
+  end
+
+  @spec force_2fa_changeset(t(), boolean()) :: Ecto.Changeset.t()
+  def force_2fa_changeset(policy, enabled?) when is_boolean(enabled?) do
+    policy
+    |> cast(%{force_2fa: enabled?}, [:force_2fa])
+    |> validate_required(:force_2fa)
   end
 end

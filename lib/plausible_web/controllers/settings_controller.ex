@@ -9,13 +9,20 @@ defmodule PlausibleWeb.SettingsController do
   require Logger
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
-       [:owner, :admin] when action in [:update_team_name]
+       [:owner, :admin]
+       when action in [:update_team_name]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner, :billing] when action in [:subscription, :invoices]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
-       [:owner] when action in [:team_danger_zone, :delete_team]
+       [:owner]
+       when action in [
+              :team_danger_zone,
+              :delete_team,
+              :enable_team_force_2fa,
+              :disable_team_force_2fa
+            ]
 
   plug Plausible.Plugs.RestrictUserType,
        [deny: :sso] when action in [:update_name, :update_email, :update_password]
@@ -48,17 +55,57 @@ defmodule PlausibleWeb.SettingsController do
         Keyword.get(
           opts,
           :team_name_changeset,
-          Plausible.Teams.Team.name_changeset(conn.assigns.current_team)
+          Teams.Team.name_changeset(conn.assigns.current_team)
         )
 
       render(conn, :team_general,
         team_name_changeset: name_changeset,
+        force_2fa_enabled?: Teams.force_2fa_enabled?(conn.assigns.current_team),
         layout: {PlausibleWeb.LayoutView, :settings},
         connect_live_socket: true
       )
     else
       conn
       |> redirect(to: Routes.site_path(conn, :index))
+    end
+  end
+
+  def enable_team_force_2fa(conn, _params) do
+    team = conn.assigns.current_team
+    user = conn.assigns.current_user
+
+    case Teams.enable_force_2fa(team, user) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "2FA is now required for all team members.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Failed to enforce 2FA for all team members.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+    end
+  end
+
+  def disable_team_force_2fa(conn, %{"password" => password}) do
+    team = conn.assigns.current_team
+    user = conn.assigns.current_user
+
+    case Teams.disable_force_2fa(team, user, password) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "2FA is no longer enforced for team members.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+
+      {:error, :invalid_password} ->
+        conn
+        |> put_flash(:error, "Incorrect password provided.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Failed to disable enforcing 2FA for all team members.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
     end
   end
 
