@@ -54,14 +54,16 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :invitations_map,
+        Enum.map(assigns.invitations, &{&1.invitation.invitation_id, &1}) |> Enum.into(%{})
+      )
+
     ~H"""
     <.flash_messages flash={@flash} />
-    <div
-      x-ref="invitation_data"
-      x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
-      x-on:keydown.escape.window="invitationOpen = false"
-      class="container pt-6"
-    >
+    <div class="container pt-6">
       <PlausibleWeb.Live.Components.Visitors.gradient_defs />
       <.upgrade_nag_screen :if={
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
@@ -131,7 +133,7 @@ defmodule PlausibleWeb.Live.Sites do
             <.invitation
               :if={site.entry_type == "invitation"}
               site={site}
-              invitation={hd(site.invitations)}
+              invitation={@invitations_map[hd(site.invitations).invitation_id]}
               hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
             />
           <% end %>
@@ -146,7 +148,6 @@ defmodule PlausibleWeb.Live.Sites do
         >
           Total of <span class="font-medium">{@sites.total_entries}</span> sites
         </.pagination>
-        <.invitation_modal :if={Enum.any?(@sites.entries, &(&1.entry_type == "invitation"))} />
       </div>
     </div>
     """
@@ -321,12 +322,16 @@ defmodule PlausibleWeb.Live.Sites do
   attr(:hourly_stats, :map, required: true)
 
   def invitation(assigns) do
+    assigns =
+      assigns
+      |> assign(:modal_id, "invitation-modal-#{assigns[:invitation].invitation.invitation_id}")
+
     ~H"""
     <li
       class="group relative cursor-pointer"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
-      x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
+      phx-click={Prima.Modal.open(@modal_id)}
     >
       <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
         <div class="w-full flex items-center justify-between gap-x-2.5">
@@ -342,6 +347,7 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
         <.site_stats hourly_stats={@hourly_stats} />
       </div>
+      <.invitation_modal id={@modal_id} site={@site} invitation={@invitation} />
     </li>
     """
   end
@@ -547,157 +553,121 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  attr(:id, :string, required: true)
+  attr(:site, Plausible.Site, required: true)
+  attr(:invitation, :map, required: true)
+
   def invitation_modal(assigns) do
     ~H"""
-    <div
-      x-cloak
-      x-show="invitationOpen"
-      class="fixed z-10 inset-0 overflow-y-auto"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div
-          x-show="invitationOpen"
-          x-transition:enter="transition ease-out duration-300"
-          x-transition:enter-start="opacity-0"
-          x-transition:enter-end="opacity-100"
-          x-transition:leave="transition ease-in duration-200"
-          x-transition:leave-start="opacity-100"
-          x-transition:leave-end="opacity-0"
-          class="fixed inset-0 bg-gray-500/75 dark:bg-gray-800/75 transition-opacity"
-          aria-hidden="true"
-          x-on:click="invitationOpen = false"
-        >
+    <PlausibleWeb.Live.Components.PrimaModal.modal id={@id}>
+      <div class="bg-white dark:bg-gray-850 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
+          <button
+            phx-click={Prima.Modal.close()}
+            class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+          >
+            <span class="sr-only">Close</span>
+            <Heroicons.x_mark class="size-6" />
+          </button>
         </div>
-        <!-- This element is to trick the browser into centering the modal contents. -->
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
-          &#8203;
-        </span>
-
-        <div
-          x-show="invitationOpen"
-          x-transition:enter="transition ease-out duration-300"
-          x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-          x-transition:leave="transition ease-in duration-200"
-          x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-          x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          class="relative inline-block align-bottom bg-white dark:bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-        >
-          <div class="bg-white dark:bg-gray-850 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
-              <button
-                x-on:click="invitationOpen = false"
-                class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        <div class="sm:flex sm:items-start">
+          <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+            <Heroicons.user_group class="size-6" />
+          </div>
+          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+            <PlausibleWeb.Live.Components.PrimaModal.modal_title>
+              Invitation for {@site.domain}
+            </PlausibleWeb.Live.Components.PrimaModal.modal_title>
+            <div class="mt-2">
+              <p class="text-sm text-gray-500 dark:text-gray-200">
+                You've been invited to the {@site.domain} analytics dashboard as <b class="capitalize">{@invitation.invitation.role}</b>.
+              </p>
+              <div
+                :if={
+                  !(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)) &&
+                    @invitation.invitation.role == :owner
+                }
+                class="mt-2 text-sm text-gray-500 dark:text-gray-200"
               >
-                <span class="sr-only">Close</span>
-                <Heroicons.x_mark class="h-6 w-6" />
-              </button>
-            </div>
-            <div class="sm:flex sm:items-start">
-              <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                <Heroicons.user_group class="h-6 w-6" />
-              </div>
-              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3
-                  class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100"
-                  id="modal-title"
-                >
-                  Invitation for
-                  <span x-text="selectedInvitation && selectedInvitation.invitation.site.domain">
-                  </span>
-                </h3>
-                <div class="mt-2">
-                  <p class="text-sm text-gray-500 dark:text-gray-200">
-                    You've been invited to the
-                    <span x-text="selectedInvitation && selectedInvitation.invitation.site.domain">
-                    </span>
-                    analytics dashboard as <b
-                      class="capitalize"
-                      x-text="selectedInvitation && selectedInvitation.invitation.role"
-                    >Admin</b>.
-                  </p>
-                  <div
-                    x-show="selectedInvitation && !(selectedInvitation.exceeded_limits || selectedInvitation.no_plan) && selectedInvitation.invitation.role === 'owner'"
-                    class="mt-2 text-sm text-gray-500 dark:text-gray-200"
-                  >
-                    If you accept the ownership transfer, you will be responsible for billing going forward.
-                  </div>
-                </div>
+                If you accept the ownership transfer, you will be responsible for billing going forward.
               </div>
             </div>
-            <.notice
-              x-show="selectedInvitation && selectedInvitation.missing_features"
-              title="Missing features"
-              class="mt-4 shadow-xs dark:shadow-none"
-            >
-              <p>
-                The site uses <span x-text="selectedInvitation && selectedInvitation.missing_features"></span>,
-                which your current subscription does not support. After accepting ownership of this site,
-                you will not be able to access them unless you <.styled_link
-                  class="inline-block"
-                  href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-                >
-                  upgrade to a suitable plan
-                </.styled_link>.
-              </p>
-            </.notice>
-            <.notice
-              x-show="selectedInvitation && selectedInvitation.exceeded_limits"
-              title="Unable to accept site ownership"
-              class="mt-4 shadow-xs dark:shadow-none"
-            >
-              <p>
-                Owning this site would exceed your <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>. Please check your usage in
-                <.styled_link
-                  class="inline-block"
-                  href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-                >
-                  account settings
-                </.styled_link>
-                and upgrade your subscription to accept the site ownership.
-              </p>
-            </.notice>
-            <.notice
-              x-show="selectedInvitation && selectedInvitation.no_plan"
-              title="No subscription"
-              class="mt-4 shadow-xs dark:shadow-none"
-            >
-              You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
-            </.notice>
-          </div>
-          <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <.button
-              x-show="selectedInvitation && !(selectedInvitation.exceeded_limits || selectedInvitation.no_plan)"
-              class="sm:ml-3 w-full sm:w-auto sm:text-sm"
-              data-method="post"
-              data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/accept')"
-            >
-              Accept &amp; Continue
-            </.button>
-            <.button_link
-              x-show="selectedInvitation && (selectedInvitation.exceeded_limits || selectedInvitation.no_plan)"
-              href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-              class="sm:ml-3 w-full sm:w-auto sm:text-sm"
-            >
-              Upgrade
-            </.button_link>
-            <.button_link
-              href="#"
-              theme="secondary"
-              data-method="post"
-              data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/reject')"
-            >
-              Reject
-            </.button_link>
           </div>
         </div>
+        <.notice
+          :if={Map.get(@invitation, :missing_features)}
+          title="Missing features"
+          class="mt-4 shadow-xs dark:shadow-none"
+        >
+          <p>
+            The site uses {Map.get(@invitation, :missing_features)},
+            which your current subscription does not support. After accepting ownership of this site,
+            you will not be able to access them unless you <.styled_link
+              class="inline-block"
+              href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+            >
+              upgrade to a suitable plan
+            </.styled_link>.
+          </p>
+        </.notice>
+        <.notice
+          :if={Map.get(@invitation, :exceeded_limits)}
+          title="Unable to accept site ownership"
+          class="mt-4 shadow-xs dark:shadow-none"
+        >
+          <p>
+            Owning this site would exceed your {Map.get(@invitation, :exceeded_limits)}. Please check your usage in
+            <.styled_link
+              class="inline-block"
+              href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
+            >
+              account settings
+            </.styled_link>
+            and upgrade your subscription to accept the site ownership.
+          </p>
+        </.notice>
+        <.notice
+          :if={Map.get(@invitation, :no_plan)}
+          title="No subscription"
+          class="mt-4 shadow-xs dark:shadow-none"
+        >
+          You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
+        </.notice>
       </div>
-    </div>
+      <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <.button
+          :if={!(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan))}
+          mt?={false}
+          class="sm:ml-3 w-full sm:w-auto sm:text-sm"
+          data-method="post"
+          data-csrf={Plug.CSRFProtection.get_csrf_token()}
+          data-to={"/sites/invitations/#{@invitation.invitation.invitation_id}/accept"}
+          data-autofocus
+        >
+          Accept &amp; Continue
+        </.button>
+        <.button_link
+          :if={Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)}
+          mt?={false}
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          class="sm:ml-3 w-full sm:w-auto sm:text-sm"
+          data-autofocus
+        >
+          Upgrade
+        </.button_link>
+        <.button_link
+          mt?={false}
+          class="w-full sm:w-auto mr-2 sm:text-sm mt-2 sm:mt-0"
+          href="#"
+          theme="secondary"
+          data-method="post"
+          data-csrf={Plug.CSRFProtection.get_csrf_token()}
+          data-to={"/sites/invitations/#{@invitation.invitation.invitation_id}/reject"}
+        >
+          Reject
+        </.button_link>
+      </div>
+    </PlausibleWeb.Live.Components.PrimaModal.modal>
     """
   end
 

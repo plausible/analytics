@@ -1,11 +1,12 @@
 /**
-  These 3 modules are resolved from '../deps' folder, 
-  which does not exist when running the lint command in Github CI 
+  The modules below this comment block are resolved from '../deps' folder,
+  which does not exist when running the lint command in Github CI
 */
 /* eslint-disable import/no-unresolved */
 import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
+import { Modal } from 'prima'
 import topbar from 'topbar'
 /* eslint-enable import/no-unresolved */
 
@@ -14,7 +15,7 @@ import Alpine from 'alpinejs'
 let csrfToken = document.querySelector("meta[name='csrf-token']")
 let websocketUrl = document.querySelector("meta[name='websocket-url']")
 if (csrfToken && websocketUrl) {
-  let Hooks = {}
+  let Hooks = { Modal }
   Hooks.Metrics = {
     mounted() {
       this.handleEvent('send-metrics', ({ event_name }) => {
