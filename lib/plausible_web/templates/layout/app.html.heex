@@ -12,6 +12,10 @@
       <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
       <meta name="websocket-url" content={websocket_url()} />
     <% end %>
+    <%= if assigns[:load_dashboard_js] do %>
+      <script defer type="text/javascript" src={Routes.static_path(@conn, "/js/dashboard.js")}>
+      </script>
+    <% end %>
     <meta name="robots" content={@conn.private.robots} />
 
     <PlausibleWeb.Components.Layout.favicon conn={@conn} />
@@ -55,9 +59,5 @@
     <% end %>
     <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
     </script>
-    <%= if assigns[:load_dashboard_js] do %>
-      <script type="text/javascript" src={Routes.static_path(@conn, "/js/dashboard.js")}>
-      </script>
-    <% end %>
   </body>
 </html>

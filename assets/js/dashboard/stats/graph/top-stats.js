@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
@@ -8,6 +8,7 @@ import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
 import { ChangeArrow } from '../reports/change-arrow'
+import { LiveViewIframe } from '../liveview-iframe'
 import {
   MetricFormatterShort,
   MetricFormatterLong
@@ -26,6 +27,7 @@ function topStatNumberLong(metric, value) {
 export default function TopStats({
   data,
   onMetricUpdate,
+  setTopStatsLoading,
   tooltipBoundary,
   graphableMetrics
 }) {
@@ -99,11 +101,11 @@ export default function TopStats({
     return graphableMetrics.includes(stat.graph_metric)
   }
 
-  function maybeUpdateMetric(stat) {
-    if (canMetricBeGraphed(stat)) {
-      storage.setItem(`metric__${site.domain}`, stat.graph_metric)
-      onMetricUpdate(stat.graph_metric)
-    }
+  function maybeUpdateMetric(metric) {
+    // if (canMetricBeGraphed(stat)) {
+      storage.setItem(`metric__${site.domain}`, metric)
+      onMetricUpdate(metric)
+    // }
   }
 
   function blinkingDot() {
@@ -205,6 +207,24 @@ export default function TopStats({
           ) : null}
         </div>
       </Tooltip>
+    )
+  }
+
+  const onMessage = (data) => {
+    if (data.type === "EMBEDDED_LV_TOP_STATS_SELECT") {
+      maybeUpdateMetric(data.metric)
+    } else if (data.type === "EMBEDDED_LV_TOP_STATS_LOADING_SUCCESS") {
+      setTopStatsLoading(false)
+    }
+  }
+
+  if (true) {
+    return (
+      <LiveViewIframe
+        className="w-full h-full border-0 overflow-hidden"
+        onMessage={onMessage}
+        src={`${window.location.pathname}/live/top_stats?date_range=${query.period}&filters=${JSON.stringify(query.filters)}`}
+      />
     )
   }
 
