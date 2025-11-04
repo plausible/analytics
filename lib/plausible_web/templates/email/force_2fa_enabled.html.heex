@@ -1,6 +1,8 @@
 {@enabling_user.email} has enabled a 2FA requirement for the "{@team.name}" team.<br /><br />
 Please
-<a href={Routes.auth_url(PlausibleWeb.Endpoint, :force_initiate_2fa_setup) <> "?__team=" <> @team.identifier}>
+<a href={
+  Routes.auth_url(PlausibleWeb.Endpoint, :force_initiate_2fa_setup, __team: @team.identifier)
+}>
   set up 2FA now
 </a>
 to keep access to your team on Plausible. The setup takes about a minute with any authenticator app.<br /><br />
