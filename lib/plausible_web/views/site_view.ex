@@ -6,10 +6,6 @@ defmodule PlausibleWeb.SiteView do
     PlausibleWeb.Endpoint.url()
   end
 
-  def shared_link_dest(site, link) do
-    Plausible.Sites.shared_link_url(site, link)
-  end
-
   def with_indefinite_article(word) do
     if String.starts_with?(word, ["a", "e", "i", "o", "u"]) do
       "an " <> word
