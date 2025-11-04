@@ -8,9 +8,9 @@
   </.styled_link>
   <div class="pb-5 border-b border-gray-200 dark:border-gray-750">
     <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
-      Settings for {if(Plausible.Sites.regular?(@site),
-        do: @site.domain,
-        else: "the consolidated view"
+      Settings for {if(Plausible.Sites.consolidated?(@site),
+        do: "the consolidated view",
+        else: @site.domain
       )}
     </h2>
   </div>

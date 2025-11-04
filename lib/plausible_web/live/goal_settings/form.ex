@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-target={@myself}
     >
       <.title>
-        Add goal for {if(Plausible.Sites.regular?(@site), do: @domain, else: "consolidated view")}
+        Add goal for {if(Plausible.Sites.consolidated?(@site), do: "consolidated view", else: @domain)}
       </.title>
 
       <.tabs current_user={@current_user} site={@site} selected_tab={@selected_tab} myself={@myself} />
