@@ -52,7 +52,7 @@ defmodule PlausibleWeb.RequireAccountPlug do
     user = conn.assigns[:current_user]
     team = conn.assigns[:current_team]
 
-    if must_enable_2fa?(user, team) and conn.path_info not in @force_2fa_exceptions do
+    if conn.path_info not in @force_2fa_exceptions and must_enable_2fa?(user, team) do
       conn
       |> Phoenix.Controller.redirect(to: Routes.auth_path(conn, :force_initiate_2fa_setup))
       |> halt()
