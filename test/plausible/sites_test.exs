@@ -319,7 +319,7 @@ defmodule Plausible.SitesTest do
 
       Plausible.Teams.complete_setup(site1.team)
 
-      # excluded 
+      # excluded
       new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
 
       # guest site access
@@ -373,7 +373,7 @@ defmodule Plausible.SitesTest do
       site5 = new_site(domain: "team.example.com", owner: user4)
       add_member(site5.team, user: user1, role: :editor)
 
-      # excluded 
+      # excluded
       new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
 
       assert %{
@@ -413,7 +413,7 @@ defmodule Plausible.SitesTest do
       team5 = Plausible.Teams.complete_setup(site5.team)
       add_member(site5.team, user: user1, role: :admin)
 
-      # excluded 
+      # excluded
       new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
 
       assert %{
@@ -435,7 +435,7 @@ defmodule Plausible.SitesTest do
 
       {:ok, _} = Sites.toggle_pin(pending_owner, site)
 
-      # excluded 
+      # excluded
       new_site(owner: owner, domain: "consolidated.example.com", consolidated: true)
       new_site(owner: pending_owner, domain: "consolidated2.example.com", consolidated: true)
 
@@ -1019,6 +1019,30 @@ defmodule Plausible.SitesTest do
         assert Sites.regular?(%Plausible.Site{})
         refute Sites.consolidated?(%Plausible.Site{})
       end
+    end
+  end
+
+  describe "shared_link_url/2" do
+    test "contains base URL and slug" do
+      site = new_site(domain: "example.com/deep/path")
+      link = insert(:shared_link, site: site)
+
+      # base url in tests is http://localhost:8000, in prod, it's https://plausible.io
+      assert "http://localhost:8000/share/example.com%2Fdeep%2Fpath?auth=" <> slug =
+               Sites.shared_link_url(site, link)
+
+      # we assume slug is URL safe
+      assert ^slug = link.slug
+    end
+
+    test "doesn't share the same domain formatting with public dashboard links" do
+      site = new_site(domain: "a-café.fr")
+      link = insert(:shared_link, site: site)
+
+      assert "http://localhost:8000/a-café.fr" = PlausibleWeb.StatsView.pretty_stats_url(site)
+
+      assert "http://localhost:8000/share/a-caf%C3%A9.fr?" <> _q =
+               Sites.shared_link_url(site, link)
     end
   end
 end
