@@ -615,14 +615,16 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "GET /:domain/settings/people" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns 404 for consolidated view", %{conn: conn, user: user} do
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-      new_site(team: team)
-      new_site(team: team)
-      consolidated_view = new_consolidated_view(team)
+    on_ee do
+      test "returns 404 for consolidated view", %{conn: conn, user: user} do
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        new_site(team: team)
+        new_site(team: team)
+        consolidated_view = new_consolidated_view(team)
 
-      conn = get(conn, "/#{consolidated_view.domain}/settings/people")
-      assert html_response(conn, 404)
+        conn = get(conn, "/#{consolidated_view.domain}/settings/people")
+        assert html_response(conn, 404)
+      end
     end
 
     test "lists current members", %{conn: conn, user: user} do
