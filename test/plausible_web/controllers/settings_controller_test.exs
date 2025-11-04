@@ -1766,13 +1766,15 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # The email come in order in which they are sent.
       # As the logic sending them does not force any order,
       # we have to match them in order-independent way.
-      Enum.each(1..2, fn _ ->
+      Enum.reduce(1..2, [member1.email, member2.email], fn _, emails ->
         assert assert_delivered_email_matches(%{
                  subject: "Your team now requires 2FA",
                  to: [{_, email}]
                })
 
-        assert email in [member1.email, member2.email]
+        assert email in emails
+
+        List.delete(emails, email)
       end)
 
       # member with 2FA already enabled is not notified
