@@ -189,7 +189,7 @@ defmodule Plausible.Props do
   on_ee do
     defp site_id_filter(%Plausible.Site{} = site) do
       if Plausible.Sites.consolidated?(site) do
-        site_ids = Plausible.ConsolidatedView.Cache.get(site.team.identifier)
+        site_ids = Plausible.ConsolidatedView.Cache.get(site.domain)
         dynamic([e], fragment("? in ?", e.site_id, ^site_ids))
       else
         dynamic([e], e.site_id == ^site.id)
