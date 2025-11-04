@@ -593,7 +593,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           |> find("[data-testid=site_settings_sidebar] a")
           |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
 
-        assert resp =~ "Settings for the consolidated view"
+        assert resp =~ "Settings for consolidated view"
 
         assert items == [
                  {"General", "/#{site.domain}/settings/general"},

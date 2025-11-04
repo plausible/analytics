@@ -26,6 +26,10 @@ defmodule Plausible.Sites do
     def consolidated?(%Site{}), do: always(false)
   end
 
+  def display_name(%Site{} = site) do
+    if consolidated?(site), do: "consolidated view", else: site.domain
+  end
+
   @shared_link_special_names ["WordPress - Shared Dashboard"]
   @doc """
   Special shared link names are used to distinguish between those

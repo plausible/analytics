@@ -58,10 +58,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           phx-click-away="cancel-allow-prop"
         >
           <.title>
-            Add property for {if(Plausible.Sites.consolidated?(@site),
-              do: "consolidated view",
-              else: @domain
-            )}
+            Add property for {Plausible.Sites.display_name(@site)}
           </.title>
 
           <div class="mt-6">
