@@ -43,6 +43,46 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
 
       <.input field={f[:name]} label="Name" required="required" autocomplete="off" />
 
+      <div
+        x-data="{ limitViewEnabled: false }"
+        x-effect="
+          const select = document.getElementById('segment_id');
+          if (select && !limitViewEnabled) {
+            select.value = '';
+          }
+        "
+        class="flex flex-col gap-y-2"
+      >
+        <PlausibleWeb.Components.Generic.toggle_field
+          id="limit-view"
+          id_suffix=""
+          js_active_var="limitViewEnabled"
+          label="Limit view"
+          help_text="Filter your dashboard to show only a segment."
+        />
+        <div x-show="limitViewEnabled" x-cloak>
+          <.input
+            name="segment_id"
+            id="segment_id"
+            type="select"
+            value=""
+            options={[{"Filter by segment", ""}]}
+            prompt="Filter by segment"
+            mt?={false}
+          >
+            <:link>
+              <PlausibleWeb.Components.Generic.unstyled_link
+                href="https://plausible.io/docs/filters-segments#how-to-save-a-segment"
+                new_tab
+                class="text-xs text-indigo-600 dark:text-indigo-400"
+              >
+                Learn about segments
+              </PlausibleWeb.Components.Generic.unstyled_link>
+            </:link>
+          </.input>
+        </div>
+      </div>
+
       <.button type="submit" class="w-full">
         Update shared link
       </.button>
@@ -55,13 +95,80 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
     <.form :let={f} for={@form} phx-submit="save-shared-link" phx-target={@myself}>
       <.title>New shared link</.title>
       <.input field={f[:name]} label="Name" required="required" autocomplete="off" />
-      <.input
-        field={f[:password]}
-        label="Password (optional)"
-        help_text="Store the password securely, as it can't be viewed again."
-        type="password"
-        autocomplete="new-password"
-      />
+
+      <div
+        x-data="{ passwordProtectEnabled: false }"
+        x-effect={"
+          const input = document.getElementById('#{f[:password].id}');
+          if (input) {
+            if (passwordProtectEnabled) {
+              setTimeout(() => input.focus(), 50);
+            } else {
+              input.value = '';
+            }
+          }
+        "}
+        class="flex flex-col gap-y-2"
+      >
+        <PlausibleWeb.Components.Generic.toggle_field
+          id="password-protect"
+          id_suffix=""
+          js_active_var="passwordProtectEnabled"
+          label="Password protect"
+          help_text="Keep this password safe. You won't be able to see it again."
+          help_text_conditional={true}
+        />
+        <div x-show="passwordProtectEnabled" x-cloak>
+          <.input
+            field={f[:password]}
+            type="password"
+            placeholder="Enter password"
+            autocomplete="new-password"
+            mt?={false}
+          />
+        </div>
+      </div>
+
+      <div
+        x-data="{ limitViewEnabled: false }"
+        x-effect="
+          const select = document.getElementById('segment_id');
+          if (select && !limitViewEnabled) {
+            select.value = '';
+          }
+        "
+        class="flex flex-col gap-y-2"
+      >
+        <PlausibleWeb.Components.Generic.toggle_field
+          id="limit-view"
+          id_suffix=""
+          js_active_var="limitViewEnabled"
+          label="Limit view"
+          help_text="Filter your dashboard to show only a segment."
+        />
+        <div x-show="limitViewEnabled" x-cloak>
+          <.input
+            name="segment_id"
+            id="segment_id"
+            type="select"
+            value=""
+            options={[{"Filter by segment", ""}]}
+            prompt="Filter by segment"
+            mt?={false}
+          >
+            <:link>
+              <PlausibleWeb.Components.Generic.unstyled_link
+                href="https://plausible.io/docs/filters-segments#how-to-save-a-segment"
+                new_tab
+                class="text-xs text-indigo-600 dark:text-indigo-400"
+              >
+                Learn about segments
+              </PlausibleWeb.Components.Generic.unstyled_link>
+            </:link>
+          </.input>
+        </div>
+      </div>
+
       <.button type="submit" class="w-full">
         Create shared link
       </.button>
