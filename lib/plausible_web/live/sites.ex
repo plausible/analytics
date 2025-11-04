@@ -657,6 +657,7 @@ defmodule PlausibleWeb.Live.Sites do
         </.button_link>
         <.button_link
           mt?={false}
+          class="w-full sm:w-auto mr-2 sm:text-sm mt-2 sm:mt-0"
           href="#"
           theme="secondary"
           data-method="post"
