@@ -337,7 +337,7 @@ defmodule Plausible.Teams do
         if membership.user.id != user.id do
           team
           |> PlausibleWeb.Email.force_2fa_enabled(membership.user, user)
-          |> Plausible.Mailer.send()
+          |> Plausible.Mailer.deliver_later()
         end
       end)
 
