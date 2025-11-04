@@ -54,7 +54,7 @@
     <div
       :if={@force_2fa_enabled? and @current_team_role == :owner}
       id="disable-force-2fa"
-      x-data="{dsiableTeamForce2FAOpen: false}"
+      x-data="{disableTeamForce2FAOpen: false}"
     >
       <.form
         action={Routes.settings_path(@conn, :disable_team_force_2fa)}
@@ -63,7 +63,7 @@
       >
         <.button
           theme="danger"
-          x-on:click="dsiableTeamForce2FAOpen = true; $refs.disableTeamForce2FAPassword.value = ''"
+          x-on:click="disableTeamForce2FAOpen = true; $refs.disableTeamForce2FAPassword.value = ''"
           mt?={false}
         >
           Stop Forcing 2FA
@@ -71,7 +71,7 @@
 
         <PlausibleWeb.Components.TwoFactor.modal
           id="disable-force-2fa-modal"
-          state_param="dsiableTeamForce2FAOpen"
+          state_param="disableTeamForce2FAOpen"
           form_data={@conn.params}
           form_target={Routes.settings_path(@conn, :disable_team_force_2fa)}
           title="Stop enforcing 2FA?"
