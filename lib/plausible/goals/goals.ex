@@ -355,8 +355,7 @@ defmodule Plausible.Goals do
   end
 
   defp check_no_currency_if_consolidated(site, changeset) do
-    if not is_nil(Ecto.Changeset.get_field(changeset, :currency)) and
-         Plausible.Sites.consolidated?(site) do
+    if Plausible.Sites.consolidated?(site) && Ecto.Changeset.get_field(changeset, :currency) do
       {:error, :revenue_goals_unavailable}
     else
       :ok
