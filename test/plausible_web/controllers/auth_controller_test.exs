@@ -1147,6 +1147,14 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert element_exists?(html, "svg")
       assert html =~ secret
+      refute html =~ "You've been redirected here because your team enforces 2FA."
+    end
+
+    test "shows additional notice when `force` parameter set", %{conn: conn} do
+      conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup, force: "true"))
+
+      assert html = html_response(conn, 200)
+      assert html =~ "You've been redirected here because your team enforces 2FA."
     end
 
     test "redirects back to settings if 2FA is already setup", %{conn: conn, user: user} do

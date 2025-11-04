@@ -7,13 +7,23 @@ defmodule Plausible.Teams.Memberships do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  def all(team) do
+  @spec all(Teams.Team.t(), Keyword.t()) :: [Teams.Membership.t()]
+  def all(team, opts \\ []) do
+    exclude_guests? = Keyword.get(opts, :exclude_guests?, false)
+
     query =
       from tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
         where: tm.team_id == ^team.id,
         order_by: [asc: u.id],
         preload: [user: u]
+
+    query =
+      if exclude_guests? do
+        from tm in query, where: tm.role != :guest
+      else
+        query
+      end
 
     Repo.all(query)
   end

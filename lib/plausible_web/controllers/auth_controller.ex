@@ -32,6 +32,7 @@ defmodule PlausibleWeb.AuthController do
            :activate_form,
            :activate,
            :request_activation_code,
+           :force_initiate_2fa_setup,
            :initiate_2fa_setup,
            :verify_2fa_setup_form,
            :verify_2fa_setup,
@@ -365,10 +366,19 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def initiate_2fa_setup(conn, _params) do
+  def force_initiate_2fa_setup(conn, _params) do
+    render(conn, "force_initiate_2fa_setup.html")
+  end
+
+  def initiate_2fa_setup(conn, params) do
     case Auth.TOTP.initiate(conn.assigns.current_user) do
       {:ok, user, %{totp_uri: totp_uri, secret: secret}} ->
-        render(conn, "initiate_2fa_setup.html", user: user, totp_uri: totp_uri, secret: secret)
+        render(conn, "initiate_2fa_setup.html",
+          user: user,
+          totp_uri: totp_uri,
+          secret: secret,
+          forced?: params["force"] == "true"
+        )
 
       {:error, :already_setup} ->
         conn
