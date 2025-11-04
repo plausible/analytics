@@ -1740,7 +1740,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         to: [nil: member2.email]
       )
 
-      # guests are not notified becuause they are not affected
+      # guests are not notified because they are not affected
       refute_email_delivered_with(
         subject: "Your team now requires 2FA",
         to: [nil: guest.email]
