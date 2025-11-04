@@ -1706,7 +1706,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
   describe "POST /team/force_2fa/enable" do
     setup [:create_user, :log_in, :create_team, :setup_team]
 
-    test "enables enforcing 2FA", %{conn: conn, team: team} do
+    test "enables enforcing 2FA", %{conn: conn, team: team, user: user} do
       refute team.policy.force_2fa
 
       conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
@@ -1717,6 +1717,23 @@ defmodule PlausibleWeb.SettingsControllerTest do
                "2FA is now required for all team members"
 
       assert Repo.reload!(team).policy.force_2fa
+
+      assert_matches [
+                       %{
+                         name: "force_2fa_enabled",
+                         user_id: ^user.id,
+                         team_id: ^team.id,
+                         actor_type: :user,
+                         change: %{
+                           "before" => %{"policy" => %{"force_2fa" => false}},
+                           "after" => %{"policy" => %{"after" => %{"force_2fa" => true}}}
+                         }
+                       }
+                     ] =
+                       Plausible.Audit.list_entries(
+                         entity: "Plausible.Teams.Team",
+                         entity_id: "#{team.id}"
+                       )
     end
 
     test "sends e-mail to all other team members", %{conn: conn, team: team, user: user} do
@@ -1804,6 +1821,24 @@ defmodule PlausibleWeb.SettingsControllerTest do
                "2FA is no longer enforced for team members"
 
       refute Repo.reload!(team).policy.force_2fa
+
+      assert_matches [
+                       %{
+                         name: "force_2fa_disabled",
+                         user_id: ^user.id,
+                         team_id: ^team.id,
+                         actor_type: :user,
+                         change: %{
+                           "before" => %{"policy" => %{"force_2fa" => true}},
+                           "after" => %{"policy" => %{"after" => %{"force_2fa" => false}}}
+                         }
+                       },
+                       _
+                     ] =
+                       Plausible.Audit.list_entries(
+                         entity: "Plausible.Teams.Team",
+                         entity_id: "#{team.id}"
+                       )
     end
 
     test "is idempotent", %{conn: conn, team: team} do

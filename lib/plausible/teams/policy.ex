@@ -25,7 +25,7 @@ defmodule Plausible.Teams.Policy do
 
   on_ee do
     @derive {Plausible.Audit.Encoder,
-             only: [:force_sso, :sso_default_role, :sso_session_timeout_minutes]}
+             only: [:force_2fa, :force_sso, :sso_default_role, :sso_session_timeout_minutes]}
   end
 
   @primary_key false

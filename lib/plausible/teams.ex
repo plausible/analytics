@@ -358,12 +358,14 @@ defmodule Plausible.Teams do
   defp set_force_2fa(team, enabled?) do
     params = %{policy: %{force_2fa: enabled?}}
 
+    audit_entry_name = if(enabled?, do: "force_2fa_enabled", else: "force_2fa_disabled")
+
     team
     |> Ecto.Changeset.cast(params, [])
     |> Ecto.Changeset.cast_embed(:policy,
       with: &Teams.Policy.force_2fa_changeset(&1, &2.force_2fa)
     )
-    |> Repo.update_with_audit("force_2fa_changed", %{team_id: team.id})
+    |> Repo.update_with_audit(audit_entry_name, %{team_id: team.id})
   end
 
   # Exposed for use in tests
