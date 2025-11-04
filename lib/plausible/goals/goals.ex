@@ -327,6 +327,7 @@ defmodule Plausible.Goals do
     changeset = Goal.changeset(%Goal{site_id: site.id}, params)
 
     with :ok <- maybe_check_feature_access(site, changeset),
+         :ok <- check_no_currency_if_consolidated(site, changeset),
          {:ok, goal} <- Repo.insert(changeset, insert_opts) do
       # Upsert with `on_conflict: :nothing` strategy
       # will result in goal struct missing primary key field
@@ -348,6 +349,14 @@ defmodule Plausible.Goals do
     if Ecto.Changeset.get_field(changeset, :currency) do
       site = Plausible.Repo.preload(site, :team)
       Plausible.Billing.Feature.RevenueGoals.check_availability(site.team)
+    else
+      :ok
+    end
+  end
+
+  defp check_no_currency_if_consolidated(site, changeset) do
+    if Plausible.Sites.consolidated?(site) && Ecto.Changeset.get_field(changeset, :currency) do
+      {:error, :revenue_goals_unavailable}
     else
       :ok
     end

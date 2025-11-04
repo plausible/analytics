@@ -24,7 +24,8 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
             :admin,
             :editor,
             :super_admin
-          ]
+          ],
+          include_consolidated?: true
         )
       end)
       |> assign_new(:form, fn %{site: site} ->
@@ -56,7 +57,9 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           phx-submit="allow-prop"
           phx-click-away="cancel-allow-prop"
         >
-          <.title>Add property for {@domain}</.title>
+          <.title>
+            Add property for {Plausible.Sites.display_name(@site)}
+          </.title>
 
           <div class="mt-6">
             <.label for="prop_input">

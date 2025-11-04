@@ -258,6 +258,26 @@ defmodule Plausible.PropsTest do
              site |> Plausible.Props.suggest_keys_to_allow() |> Enum.sort()
   end
 
+  on_ee do
+    test "suggest_keys_to_allow/2 for consolidated view queries events across all included sites" do
+      {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+      site1 = new_site(team: team)
+      site2 = new_site(team: team)
+      consolidated_view = new_consolidated_view(team)
+
+      populate_stats(site1, [
+        build(:pageview, "meta.key": ["a", "b"], "meta.value": ["A", "B"])
+      ])
+
+      populate_stats(site2, [
+        build(:pageview, "meta.key": ["a", "c"], "meta.value": ["A", "C"])
+      ])
+
+      assert ["a", "b", "c"] ==
+               Plausible.Props.suggest_keys_to_allow(consolidated_view) |> Enum.sort()
+    end
+  end
+
   test "suggest_keys_to_allow/2 does not return internal prop keys from special event types" do
     site = new_site()
 

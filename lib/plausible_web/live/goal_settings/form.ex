@@ -111,7 +111,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-submit="save-goal"
       phx-target={@myself}
     >
-      <.title>Add goal for {@domain}</.title>
+      <.title>
+        Add goal for {Plausible.Sites.display_name(@site)}
+      </.title>
 
       <.tabs current_user={@current_user} site={@site} selected_tab={@selected_tab} myself={@myself} />
 
@@ -376,24 +378,21 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           />
         </div>
 
-        <.revenue_goal_settings
-          :if={ee?()}
-          f={@f}
-          site={@site}
-          site_role={@site_role}
-          site_team={@site_team}
-          has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
-          goal={@goal}
-          suffix={@suffix}
-        />
+        <%= if ee?() and Plausible.Sites.regular?(@site) and not editing_non_revenue_goal?(assigns) do %>
+          <.revenue_goal_settings
+            f={@f}
+            site={@site}
+            site_role={@site_role}
+            site_team={@site_team}
+            has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+            goal={@goal}
+            suffix={@suffix}
+          />
+        <% else %>
+          <div class="h-2"></div>
+        <% end %>
       </div>
     </div>
-    """
-  end
-
-  def revenue_goal_settings(%{goal: %{currency: nil}} = assigns) do
-    ~H"""
-    <div class="h-2"></div>
     """
   end
 
@@ -407,14 +406,14 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     assigns = assign(assigns, selected_currency: currency_option(assigns.goal), js_data: js_data)
 
     ~H"""
-    <div x-data={@js_data}>
+    <div x-data={@js_data} data-test-id="revenue-goal-settings">
       <%= if is_nil(@goal) do %>
         <div class="mt-6 mb-3">
           <.revenue_toggle {assigns} />
         </div>
       <% else %>
         <label
-          data-test="goal-currency-label"
+          data-test-id="goal-currency-label"
           class="mt-4 mb-2 text-sm block font-medium dark:text-gray-100"
         >
           Currency
@@ -620,5 +619,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       </div>
     </.tooltip>
     """
+  end
+
+  on_ee do
+    defp editing_non_revenue_goal?(%{goal: nil} = _assigns), do: false
+
+    defp editing_non_revenue_goal?(%{goal: goal} = _assigns) do
+      not Plausible.Goal.Revenue.revenue?(goal)
+    end
+  else
+    defp editing_non_revenue_goal?(_assigns), do: false
   end
 end

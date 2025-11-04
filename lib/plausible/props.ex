@@ -2,7 +2,7 @@ defmodule Plausible.Props do
   @moduledoc """
   Context module for handling custom event props.
   """
-
+  use Plausible
   import Ecto.Query
 
   @type prop :: String.t()
@@ -171,7 +171,7 @@ defmodule Plausible.Props do
 
     unnested_keys =
       from e in Plausible.ClickhouseEventV2,
-        where: e.site_id == ^site.id,
+        where: ^site_id_filter(site),
         where: fragment("? > (NOW() - INTERVAL 6 MONTH)", e.timestamp),
         select: %{key: fragment("arrayJoin(?)", field(e, :"meta.key"))}
 
@@ -184,6 +184,21 @@ defmodule Plausible.Props do
         order_by: {:desc, count(uk.key)},
         limit: ^limit
     )
+  end
+
+  on_ee do
+    defp site_id_filter(%Plausible.Site{} = site) do
+      if Plausible.Sites.consolidated?(site) do
+        site_ids = Plausible.ConsolidatedView.Cache.get(site.domain)
+        dynamic([e], fragment("? in ?", e.site_id, ^site_ids))
+      else
+        dynamic([e], e.site_id == ^site.id)
+      end
+    end
+  else
+    defp site_id_filter(%Plausible.Site{} = site) do
+      dynamic([e], e.site_id == ^site.id)
+    end
   end
 
   defp valid?(key) do

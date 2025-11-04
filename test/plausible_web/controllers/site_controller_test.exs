@@ -492,6 +492,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
 
+      assert resp =~ "Settings for #{site.domain}"
       assert resp =~ "Site domain"
       assert resp =~ "Change domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
@@ -499,6 +500,17 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "Site timezone"
 
       assert resp =~ "Site installation"
+    end
+
+    on_ee do
+      test "renders only timezone section for a consolidated site", %{conn: conn, user: user} do
+        consolidated_view = user |> team_of() |> new_consolidated_view()
+        conn = get(conn, "/#{consolidated_view.domain}/settings/general")
+        resp = html_response(conn, 200)
+
+        assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|) |> Enum.into([])
+        assert text(tile_element) =~ "Site timezone"
+      end
     end
 
     @tag :ee_only
@@ -564,6 +576,32 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"Email reports", "/#{site.domain}/settings/email-reports"},
                {"Danger zone", "/#{site.domain}/settings/danger-zone"}
              ]
+    end
+
+    on_ee do
+      test "consolidated view settings sidebar items", %{
+        conn: conn,
+        user: user
+      } do
+        team = user |> team_of()
+        site = new_consolidated_view(team)
+        conn = get(conn, "/#{site.domain}/settings/general")
+        resp = html_response(conn, 200)
+
+        items =
+          resp
+          |> find("[data-testid=site_settings_sidebar] a")
+          |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
+
+        assert resp =~ "Settings for consolidated view"
+
+        assert items == [
+                 {"General", "/#{site.domain}/settings/general"},
+                 {"Goals", "/#{site.domain}/settings/goals"},
+                 {"Custom properties", "/#{site.domain}/settings/properties"},
+                 {"Email reports", "/#{site.domain}/settings/email-reports"}
+               ]
+      end
     end
 
     test "header and footer are shown", %{conn: conn, site: site, user: user} do

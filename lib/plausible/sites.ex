@@ -20,10 +20,14 @@ defmodule Plausible.Sites do
     def consolidated?(%Site{} = site), do: site.consolidated
   else
     @spec regular?(Site.t()) :: boolean()
-    def regular?(%Site{}), do: true
+    def regular?(%Site{}), do: always(true)
 
     @spec consolidated?(Site.t()) :: boolean()
-    def consolidated?(%Site{}), do: false
+    def consolidated?(%Site{}), do: always(false)
+  end
+
+  def display_name(%Site{} = site) do
+    if consolidated?(site), do: "consolidated view", else: site.domain
   end
 
   @shared_link_special_names ["WordPress - Shared Dashboard"]
