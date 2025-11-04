@@ -320,7 +320,7 @@ defmodule Plausible.Teams do
     )
   end
 
-  @spec force_2fa_enabled?(Teams.Team.t() | nil) :: :boolean
+  @spec force_2fa_enabled?(Teams.Team.t() | nil) :: boolean()
   def force_2fa_enabled?(nil), do: false
 
   def force_2fa_enabled?(team) do
