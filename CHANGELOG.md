@@ -45,6 +45,7 @@ All notable changes to this project will be documented in this file.
 - Fixed unhandled tracker-related exceptions on link clicks within svgs
 - Remove Subscription and Invoices menu from CE
 - Fix email sending error "Mua.SMTPError" 503 Bad sequence of commands
+- Make button to include / exclude imported data visible on Safari
 
 ## v3.0.0 - 2025-04-11
 
