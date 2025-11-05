@@ -334,7 +334,7 @@ defmodule Plausible.Teams do
       team
       |> Teams.Memberships.all(exclude_guests?: true)
       |> Enum.each(fn membership ->
-        if membership.user.id != user.id do
+        if membership.user.id != user.id and not Auth.TOTP.enabled?(membership.user) do
           team
           |> PlausibleWeb.Email.force_2fa_enabled(membership.user, user)
           |> Plausible.Mailer.deliver_later()
