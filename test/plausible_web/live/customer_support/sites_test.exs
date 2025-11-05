@@ -28,10 +28,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
 
         assert element_exists?(
                  html,
-                 ~s|a[href$="#{site.domain}/settings/general"]|
+                 ~s|a[href$="#{URI.encode_www_form(site.domain)}/settings/general"]|
                )
 
-        assert element_exists?(html, ~s|a[href="/#{site.domain}"]|)
+        assert element_exists?(html, ~s|a[href="/#{URI.encode_www_form(site.domain)}/"]|)
       end
 
       test "404", %{conn: conn} do

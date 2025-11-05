@@ -93,6 +93,7 @@ defmodule Plausible.Teams.Team do
       :allow_next_upgrade_override,
       :accept_traffic_until
     ])
+    |> maybe_bump_accept_traffic_until()
   end
 
   def changeset(team \\ %__MODULE__{}, attrs \\ %{}, today \\ Date.utc_today()) do
