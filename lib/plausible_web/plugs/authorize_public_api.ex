@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
              site: site,
              api_key: api_key,
              feature: Plausible.Billing.Feature.StatsAPI,
-             allow_consolidated_views: conn.assigns[:allow_consolidated_views]
+             allow_consolidated_views: conn.private[:allow_consolidated_views]
            ) do
       Plausible.OpenTelemetry.add_site_attributes(site)
       site = Plausible.Repo.preload(site, :completed_imports)
@@ -203,7 +203,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
           site: site,
           api_key: api_key,
           feature: feature,
-          allow_consolidated_views: conn.assigns[:allow_consolidated_views]
+          allow_consolidated_views: conn.private[:allow_consolidated_views]
         )
 
       _ ->

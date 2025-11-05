@@ -268,7 +268,7 @@ defmodule PlausibleWeb.Router do
         get "/:domain/funnels/:id", StatsController, :funnel
       end
 
-      scope assigns: %{allow_consolidated_views: true} do
+      scope private: %{allow_consolidated_views: true} do
         get "/:domain/current-visitors", StatsController, :current_visitors
         get "/:domain/main-graph", StatsController, :main_graph
         get "/:domain/top-stats", StatsController, :top_stats
@@ -302,7 +302,7 @@ defmodule PlausibleWeb.Router do
     end
 
     scope "/:domain/segments", PlausibleWeb.Api.Internal,
-      assigns: %{allow_consolidated_views: true} do
+      private: %{allow_consolidated_views: true} do
       post "/", SegmentsController, :create
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
@@ -320,11 +320,13 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api/v2", PlausibleWeb.Api,
+    private: %{
+      allow_consolidated_views: true
+    },
     assigns: %{
       api_scope: "stats:read:*",
       api_context: :site,
-      schema_type: :public,
-      allow_consolidated_views: true
+      schema_type: :public
     } do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
@@ -652,7 +654,7 @@ defmodule PlausibleWeb.Router do
 
     get "/debug/clickhouse", DebugController, :clickhouse
 
-    scope assigns: %{allow_consolidated_views: true} do
+    scope private: %{allow_consolidated_views: true} do
       post "/sites/:domain/weekly-report/enable", SiteController, :enable_weekly_report
       post "/sites/:domain/weekly-report/disable", SiteController, :disable_weekly_report
       post "/sites/:domain/weekly-report/recipients", SiteController, :add_weekly_report_recipient

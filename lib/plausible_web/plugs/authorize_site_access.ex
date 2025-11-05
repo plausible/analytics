@@ -190,7 +190,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   end
 
   defp ensure_consolidated_view_access(conn, site) do
-    if Plausible.Sites.consolidated?(site) && !conn.assigns[:allow_consolidated_views] do
+    if Plausible.Sites.consolidated?(site) && !conn.private[:allow_consolidated_views] do
       error_not_found(conn)
     else
       :ok
