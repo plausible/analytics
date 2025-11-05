@@ -74,35 +74,63 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       {@import_warning}
     </.notice>
 
-    <div class="flex gap-x-4">
-      <.button_link
-        theme="secondary"
-        href={Plausible.Google.API.import_authorize_url(@site.id)}
-        disabled={@import_in_progress? or @at_maximum?}
-        mt?={false}
-      >
-        Import from
-        <img
-          src="/images/icon/google_analytics_logo.svg"
-          alt="Google Analytics import"
-          class="h-6 w-12 -my-1"
-        />
-      </.button_link>
-      <.button_link
-        disabled={@import_in_progress? or @at_maximum?}
-        href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
-        mt?={false}
-      >
-        Import from CSV
-      </.button_link>
-    </div>
+    <%= if Enum.empty?(@site_imports) do %>
+      <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+        <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+          Import your first data
+        </h3>
+        <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+          Import data from external sources. Up to {Plausible.Imported.max_complete_imports()} imports are allowed at a time.
+        </p>
+        <div class="flex gap-x-4 mt-4">
+          <.button_link
+            theme="secondary"
+            href={Plausible.Google.API.import_authorize_url(@site.id)}
+            disabled={@import_in_progress? or @at_maximum?}
+            mt?={false}
+          >
+            Import from
+            <img
+              src="/images/icon/google_analytics_logo.svg"
+              alt="Google Analytics import"
+              class="h-6 w-12 -my-1"
+            />
+          </.button_link>
+          <.button_link
+            disabled={@import_in_progress? or @at_maximum?}
+            href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
+            mt?={false}
+          >
+            Import from CSV
+          </.button_link>
+        </div>
+      </div>
+    <% else %>
+      <div class="flex gap-x-4">
+        <.button_link
+          theme="secondary"
+          href={Plausible.Google.API.import_authorize_url(@site.id)}
+          disabled={@import_in_progress? or @at_maximum?}
+          mt?={false}
+        >
+          Import from
+          <img
+            src="/images/icon/google_analytics_logo.svg"
+            alt="Google Analytics import"
+            class="h-6 w-12 -my-1"
+          />
+        </.button_link>
+        <.button_link
+          disabled={@import_in_progress? or @at_maximum?}
+          href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
+          mt?={false}
+        >
+          Import from CSV
+        </.button_link>
+      </div>
 
-    <p :if={Enum.empty?(@site_imports)} class="text-center text-sm mt-8 mb-12">
-      There are no imports yet for this site.
-    </p>
-
-    <div class="mt-6">
-      <.table :if={not Enum.empty?(@site_imports)} rows={@site_imports}>
+      <div class="mt-6">
+        <.table rows={@site_imports}>
         <:thead>
           <.th>Import</.th>
           <.th hide_on_mobile>Date Range</.th>
@@ -164,7 +192,8 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
           </.td>
         </:tbody>
       </.table>
-    </div>
+      </div>
+    <% end %>
     """
   end
 

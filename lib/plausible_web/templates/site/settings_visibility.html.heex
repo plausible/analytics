@@ -38,8 +38,8 @@
     <:title>
       Shared links
     </:title>
-    <:subtitle>
-      You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.
+    <:subtitle :if={@has_shared_links?}>
+      Share your stats privately with anyone. Links are unique, secure, and can be password-protected.
     </:subtitle>
 
     <div :if={Plausible.Billing.Feature.SharedLinks.enabled?(@site)}>

@@ -16,17 +16,19 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
     ~H"""
     <div>
-      <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
-        <.button
-          id="add-goal-button"
-          phx-click="add-goal"
-          mt?={false}
-          x-data
-          x-on:click={Modal.JS.preopen("goals-form-modal")}
-        >
-          Add goal
-        </.button>
-      </.filter_bar>
+      <%= if String.trim(@filter_text) != "" || Enum.count(@goals) > 0 do %>
+        <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
+          <.button
+            id="add-goal-button"
+            phx-click="add-goal"
+            mt?={false}
+            x-data
+            x-on:click={Modal.JS.preopen("goals-form-modal")}
+          >
+            Add goal
+          </.button>
+        </.filter_bar>
+      <% end %>
 
       <%= if Enum.count(@goals) > 0 do %>
         <.table rows={@goals}>
@@ -89,17 +91,32 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </:tbody>
         </.table>
       <% else %>
-        <p class="mt-12 mb-8 text-center text-sm">
-          <span :if={String.trim(@filter_text) != ""}>
+        <%= if String.trim(@filter_text) != "" do %>
+          <p class="mt-12 mb-8 text-center text-sm">
             No goals found for this site. Please refine or
             <.styled_link phx-click="reset-filter-text" id="reset-filter-hint">
               reset your search.
             </.styled_link>
-          </span>
-          <span :if={String.trim(@filter_text) == "" && Enum.empty?(@goals)}>
-            No goals configured for this site.
-          </span>
-        </p>
+          </p>
+        <% else %>
+          <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+            <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+              Create your first goal
+            </h3>
+            <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+              Define actions that you want your users to take, like visiting a certain page, submitting a form, etc. <.styled_link href="https://plausible.io/docs/goal-conversions" target="_blank">Learn more</.styled_link>
+            </p>
+            <.button
+              id="add-goal-button"
+              phx-click="add-goal"
+              x-data
+              x-on:click={Modal.JS.preopen("goals-form-modal")}
+              class="mt-4"
+            >
+              Add goal
+            </.button>
+          </div>
+        <% end %>
       <% end %>
     </div>
     """

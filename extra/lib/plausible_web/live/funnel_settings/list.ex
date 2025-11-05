@@ -12,11 +12,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
   def render(assigns) do
     ~H"""
     <div>
-      <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
-        <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>
-          Add funnel
-        </.button>
-      </.filter_bar>
+      <%= if String.trim(@filter_text) != "" || Enum.count(@funnels) > 0 do %>
+        <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
+          <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>
+            Add funnel
+          </.button>
+        </.filter_bar>
+      <% end %>
 
       <%= if Enum.count(@funnels) > 0 do %>
         <.table rows={@funnels}>
@@ -42,17 +44,30 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
           </:tbody>
         </.table>
       <% else %>
-        <p class="mt-12 mb-8 text-sm text-center">
-          <span :if={String.trim(@filter_text) != ""}>
+        <%= if String.trim(@filter_text) != "" do %>
+          <p class="mt-12 mb-8 text-sm text-center">
             No funnels found for this site. Please refine or
             <.styled_link phx-click="reset-filter-text" id="reset-filter-hint">
               reset your search.
             </.styled_link>
-          </span>
-          <span :if={String.trim(@filter_text) == "" && Enum.empty?(@funnels)}>
-            No funnels configured for this site.
-          </span>
-        </p>
+          </p>
+        <% else %>
+          <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+            <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+              Create your first funnel
+            </h3>
+            <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+              Compose goals into funnels to track user flows and conversion rates. <.styled_link href="https://plausible.io/docs/funnel-analysis" target="_blank">Learn more</.styled_link>
+            </p>
+            <.button
+              id="add-funnel-button"
+              phx-click="add-funnel"
+              class="mt-4"
+            >
+              Add funnel
+            </.button>
+          </div>
+        <% end %>
       <% end %>
     </div>
     """

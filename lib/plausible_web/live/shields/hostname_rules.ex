@@ -34,85 +34,103 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
       <.settings_tiles>
         <.tile docs="excluding#exclude-visits-by-hostname">
           <:title>Hostnames allow list</:title>
-          <:subtitle>Accept incoming traffic only from familiar hostnames.</:subtitle>
-          <.filter_bar
-            :if={@hostname_rules_count < Shields.maximum_hostname_rules()}
-            filtering_enabled?={false}
-          >
-            <.button
-              id="add-hostname-rule"
-              x-data
-              x-on:click={Modal.JS.open("hostname-rule-form-modal")}
-              mt?={false}
+          <:subtitle :if={not Enum.empty?(@hostname_rules)}>
+            Accept incoming traffic only from familiar hostnames.
+          </:subtitle>
+
+          <%= if Enum.empty?(@hostname_rules) do %>
+            <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+              <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+                Allow a hostname
+              </h3>
+              <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+                Accept incoming traffic only from familiar hostnames. Traffic from all hostnames is recorded until you add your first rule. <.styled_link href="https://plausible.io/docs/excluding#exclude-visits-by-hostname" target="_blank">Learn more</.styled_link>
+              </p>
+              <.button
+                :if={@hostname_rules_count < Shields.maximum_hostname_rules()}
+                id="add-hostname-rule"
+                x-data
+                x-on:click={Modal.JS.open("hostname-rule-form-modal")}
+                class="mt-4"
+              >
+                Add hostname
+              </.button>
+            </div>
+          <% else %>
+            <.filter_bar
+              :if={@hostname_rules_count < Shields.maximum_hostname_rules()}
+              filtering_enabled?={false}
             >
-              Add hostname
-            </.button>
-          </.filter_bar>
+              <.button
+                id="add-hostname-rule"
+                x-data
+                x-on:click={Modal.JS.open("hostname-rule-form-modal")}
+                mt?={false}
+              >
+                Add hostname
+              </.button>
+            </.filter_bar>
 
-          <.notice
-            :if={@hostname_rules_count >= Shields.maximum_hostname_rules()}
-            class="mt-4"
-            title="Maximum number of hostnames reached"
-            theme={:gray}
-          >
-            <p>
-              You've reached the maximum number of hostnames you can block ({Shields.maximum_hostname_rules()}). Please remove one before adding another.
-            </p>
-          </.notice>
+            <.notice
+              :if={@hostname_rules_count >= Shields.maximum_hostname_rules()}
+              class="mt-4"
+              title="Maximum number of hostnames reached"
+              theme={:gray}
+            >
+              <p>
+                You've reached the maximum number of hostnames you can block ({Shields.maximum_hostname_rules()}). Please remove one before adding another.
+              </p>
+            </.notice>
 
-          <p :if={Enum.empty?(@hostname_rules)} class="mt-12 mb-8 text-center text-sm">
-            No hostname rules configured for this site.
-            <strong>
-              Traffic from all hostnames is currently accepted.
-            </strong>
-          </p>
-
-          <.table :if={not Enum.empty?(@hostname_rules)} rows={@hostname_rules}>
-            <:thead>
-              <.th>Hostname</.th>
-              <.th hide_on_mobile>Status</.th>
-              <.th invisible>Actions</.th>
-            </:thead>
-            <:tbody :let={rule}>
-              <.td>
-                <div class="flex items-center">
-                  <span
-                    id={"hostname-#{rule.id}"}
-                    class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
-                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
-                  >
-                    {rule.hostname}
-                  </span>
-                </div>
-              </.td>
-              <.td hide_on_mobile>
-                <div class="flex items-center">
-                  <span :if={rule.action == :deny}>
-                    Blocked
-                  </span>
-                  <span :if={rule.action == :allow}>
-                    Allowed
-                  </span>
-                  <span
-                    :if={@redundant_rules[rule.id]}
-                    title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
-                    class="pl-4 cursor-help"
-                  >
-                    <Heroicons.exclamation_triangle class="h-5 w-5 text-red-800" />
-                  </span>
-                </div>
-              </.td>
-              <.td actions>
-                <.delete_button
-                  id={"remove-hostname-rule-#{rule.id}"}
-                  phx-target={@myself}
-                  phx-click="remove-hostname-rule"
-                  phx-value-rule-id={rule.id}
-                  data-confirm="Are you sure you want to revoke this rule?"
-                />
-              </.td>
-            </:tbody>
-          </.table>
+            <div class="mt-6">
+              <.table rows={@hostname_rules}>
+                <:thead>
+                  <.th>Hostname</.th>
+                  <.th hide_on_mobile>Status</.th>
+                  <.th invisible>Actions</.th>
+                </:thead>
+                <:tbody :let={rule}>
+                  <.td>
+                    <div class="flex items-center">
+                      <span
+                        id={"hostname-#{rule.id}"}
+                        class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
+                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                      >
+                        {rule.hostname}
+                      </span>
+                    </div>
+                  </.td>
+                  <.td hide_on_mobile>
+                    <div class="flex items-center">
+                      <span :if={rule.action == :deny}>
+                        Blocked
+                      </span>
+                      <span :if={rule.action == :allow}>
+                        Allowed
+                      </span>
+                      <span
+                        :if={@redundant_rules[rule.id]}
+                        title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
+                        class="pl-4 cursor-help"
+                      >
+                        <Heroicons.exclamation_triangle class="h-5 w-5 text-red-800" />
+                      </span>
+                    </div>
+                  </.td>
+                  <.td actions>
+                    <.delete_button
+                      id={"remove-hostname-rule-#{rule.id}"}
+                      phx-target={@myself}
+                      phx-click="remove-hostname-rule"
+                      phx-value-rule-id={rule.id}
+                      data-confirm="Are you sure you want to revoke this rule?"
+                    />
+                  </.td>
+                </:tbody>
+              </.table>
+            </div>
+          <% end %>
 
           <.live_component :let={modal_unique_id} module={Modal} id="hostname-rule-form-modal">
             <.form

@@ -11,8 +11,8 @@
     <:title>
       Funnels
     </:title>
-    <:subtitle>
-      Compose goals into funnels
+    <:subtitle :if={@has_funnels?}>
+      Compose goals into funnels to track user flows and conversion rates.
     </:subtitle>
 
     {live_render(@conn, PlausibleWeb.Live.FunnelSettings,

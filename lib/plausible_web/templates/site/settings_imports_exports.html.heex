@@ -3,7 +3,7 @@
     <:title>
       Import data
     </:title>
-    <:subtitle>
+    <:subtitle :if={@has_imports?}>
       Import existing data from external sources.
       Pick one of the options below to start a new import. <br />
       A maximum of {Plausible.Imported.max_complete_imports()} imports at any time is allowed.

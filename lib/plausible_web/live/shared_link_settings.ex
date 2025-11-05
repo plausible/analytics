@@ -62,56 +62,72 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
         />
       </.live_component>
 
-      <.filter_bar filtering_enabled?={false}>
-        <.button
-          id="add-shared-link-button"
-          phx-click="add-shared-link"
-          mt?={false}
-          x-data
-          x-on:click={Modal.JS.preopen("shared-links-form-modal")}
-        >
-          Add shared link
-        </.button>
-      </.filter_bar>
+      <%= if Enum.empty?(@shared_links) do %>
+        <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+          <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+            Create your first shared link
+          </h3>
+          <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+            Share your stats privately with anyone. Links are unique, secure, and can be password-protected. <.styled_link href="https://plausible.io/docs/shared-links" target="_blank">Learn more</.styled_link>
+          </p>
+          <.button
+            id="add-shared-link-button"
+            phx-click="add-shared-link"
+            x-data
+            x-on:click={Modal.JS.preopen("shared-links-form-modal")}
+            class="mt-4"
+          >
+            Add shared link
+          </.button>
+        </div>
+      <% else %>
+        <.filter_bar filtering_enabled?={false}>
+          <.button
+            id="add-shared-link-button"
+            phx-click="add-shared-link"
+            mt?={false}
+            x-data
+            x-on:click={Modal.JS.preopen("shared-links-form-modal")}
+          >
+            Add shared link
+          </.button>
+        </.filter_bar>
 
-      <p :if={Enum.empty?(@shared_links)} class="mb-8 text-center text-sm">
-        No shared links configured for this site.
-      </p>
-
-      <.table rows={@shared_links} id="shared-links-table">
-        <:thead>
-          <.th hide_on_mobile>Name</.th>
-          <.th>Link</.th>
-          <.th invisible>Actions</.th>
-        </:thead>
-        <:tbody :let={link}>
-          <.td truncate hide_on_mobile>
-            {link.name}
-            <Heroicons.lock_closed :if={link.password_hash} class="feather ml-2 mb-0.5" />
-            <Heroicons.lock_open :if={!link.password_hash} class="feather ml-2 mb-0.5" />
-          </.td>
-          <.td>
-            <.input_with_clipboard
-              name={link.slug}
-              id={link.slug}
-              value={Plausible.Sites.shared_link_url(@site, link)}
-            />
-          </.td>
-          <.td actions>
-            <.edit_button
-              class="mt-1"
-              phx-click="edit-shared-link"
-              phx-value-slug={link.slug}
-            />
-            <.delete_button
-              class="mt-1"
-              phx-click="delete-shared-link"
-              phx-value-slug={link.slug}
-              data-confirm="Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."
-            />
-          </.td>
-        </:tbody>
-      </.table>
+        <.table rows={@shared_links} id="shared-links-table">
+          <:thead>
+            <.th hide_on_mobile>Name</.th>
+            <.th>Link</.th>
+            <.th invisible>Actions</.th>
+          </:thead>
+          <:tbody :let={link}>
+            <.td truncate hide_on_mobile>
+              {link.name}
+              <Heroicons.lock_closed :if={link.password_hash} class="feather ml-2 mb-0.5" />
+              <Heroicons.lock_open :if={!link.password_hash} class="feather ml-2 mb-0.5" />
+            </.td>
+            <.td>
+              <.input_with_clipboard
+                name={link.slug}
+                id={link.slug}
+                value={Plausible.Sites.shared_link_url(@site, link)}
+              />
+            </.td>
+            <.td actions>
+              <.edit_button
+                class="mt-1"
+                phx-click="edit-shared-link"
+                phx-value-slug={link.slug}
+              />
+              <.delete_button
+                class="mt-1"
+                phx-click="delete-shared-link"
+                phx-value-slug={link.slug}
+                data-confirm="Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."
+              />
+            </.td>
+          </:tbody>
+        </.table>
+      <% end %>
     </div>
     """
   end

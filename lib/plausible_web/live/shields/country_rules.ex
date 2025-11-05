@@ -29,76 +29,97 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
     ~H"""
     <div>
       <.settings_tiles>
-        <.tile docs="excluding">
+        <.tile docs="excluding#exclude-visits-by-country">
           <:title>Country block list</:title>
-          <:subtitle>Reject incoming traffic from specific countries.</:subtitle>
-          <.filter_bar
-            :if={@country_rules_count < Shields.maximum_country_rules()}
-            filtering_enabled?={false}
-          >
-            <.button
-              id="add-country-rule"
-              x-data
-              x-on:click={Modal.JS.open("country-rule-form-modal")}
-              mt?={false}
+          <:subtitle :if={not Enum.empty?(@country_rules)}>
+            Reject incoming traffic from specific countries.
+          </:subtitle>
+
+          <%= if Enum.empty?(@country_rules) do %>
+            <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+              <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+                Block a country
+              </h3>
+              <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+                Reject incoming traffic from specific countries. <.styled_link href="https://plausible.io/docs/excluding#exclude-visits-by-country" target="_blank">Learn more</.styled_link>
+              </p>
+              <.button
+                :if={@country_rules_count < Shields.maximum_country_rules()}
+                id="add-country-rule"
+                x-data
+                x-on:click={Modal.JS.open("country-rule-form-modal")}
+                class="mt-4"
+              >
+                Add country
+              </.button>
+            </div>
+          <% else %>
+            <.filter_bar
+              :if={@country_rules_count < Shields.maximum_country_rules()}
+              filtering_enabled?={false}
             >
-              Add country
-            </.button>
-          </.filter_bar>
+              <.button
+                id="add-country-rule"
+                x-data
+                x-on:click={Modal.JS.open("country-rule-form-modal")}
+                mt?={false}
+              >
+                Add country
+              </.button>
+            </.filter_bar>
 
-          <.notice
-            :if={@country_rules_count >= Shields.maximum_country_rules()}
-            class="mt-4"
-            title="Maximum number of countries reached"
-            theme={:gray}
-          >
-            <p>
-              You've reached the maximum number of countries you can block ({Shields.maximum_country_rules()}). Please remove one before adding another.
-            </p>
-          </.notice>
+            <.notice
+              :if={@country_rules_count >= Shields.maximum_country_rules()}
+              class="mt-4"
+              title="Maximum number of countries reached"
+              theme={:gray}
+            >
+              <p>
+                You've reached the maximum number of countries you can block ({Shields.maximum_country_rules()}). Please remove one before adding another.
+              </p>
+            </.notice>
 
-          <p :if={Enum.empty?(@country_rules)} class="mt-12 mb-8 text-center text-sm">
-            No country rules configured for this site.
-          </p>
-
-          <.table :if={not Enum.empty?(@country_rules)} rows={@country_rules}>
-            <:thead>
-              <.th>Country</.th>
-              <.th hide_on_mobile>Status</.th>
-              <.th invisible>Actions</.th>
-            </:thead>
-            <:tbody :let={rule}>
-              <% country = Location.Country.get_country(rule.country_code) %>
-              <.td>
-                <div class="flex items-center">
-                  <span
-                    id={"country-#{rule.id}"}
-                    class="mr-4 cursor-help"
-                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
-                  >
-                    {country.flag} {country.name}
-                  </span>
-                </div>
-              </.td>
-              <.td hide_on_mobile>
-                <span :if={rule.action == :deny}>
-                  Blocked
-                </span>
-                <span :if={rule.action == :allow}>
-                  Allowed
-                </span>
-              </.td>
-              <.td actions>
-                <.delete_button
-                  id={"remove-country-rule-#{rule.id}"}
-                  phx-target={@myself}
-                  phx-click="remove-country-rule"
-                  phx-value-rule-id={rule.id}
-                  data-confirm="Are you sure you want to revoke this rule?"
-                />
-              </.td>
-            </:tbody>
-          </.table>
+            <div class="mt-6">
+              <.table rows={@country_rules}>
+                <:thead>
+                  <.th>Country</.th>
+                  <.th hide_on_mobile>Status</.th>
+                  <.th invisible>Actions</.th>
+                </:thead>
+                <:tbody :let={rule}>
+                  <% country = Location.Country.get_country(rule.country_code) %>
+                  <.td>
+                    <div class="flex items-center">
+                      <span
+                        id={"country-#{rule.id}"}
+                        class="mr-4 cursor-help"
+                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                      >
+                        {country.flag} {country.name}
+                      </span>
+                    </div>
+                  </.td>
+                  <.td hide_on_mobile>
+                    <span :if={rule.action == :deny}>
+                      Blocked
+                    </span>
+                    <span :if={rule.action == :allow}>
+                      Allowed
+                    </span>
+                  </.td>
+                  <.td actions>
+                    <.delete_button
+                      id={"remove-country-rule-#{rule.id}"}
+                      phx-target={@myself}
+                      phx-click="remove-country-rule"
+                      phx-value-rule-id={rule.id}
+                      data-confirm="Are you sure you want to revoke this rule?"
+                    />
+                  </.td>
+                </:tbody>
+              </.table>
+            </div>
+          <% end %>
 
           <.live_component :let={modal_unique_id} module={Modal} id="country-rule-form-modal">
             <.form

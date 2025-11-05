@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
         class={@class}
       >
         <.toggle_submit set_to={@current_setting} disabled?={@disabled?}>
-          Show {String.downcase(@feature_mod.display_name())} in the dashboard
+          Show in dashboard
         </.toggle_submit>
       </.form>
 

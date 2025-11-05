@@ -11,11 +11,14 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
   def render(assigns) do
     ~H"""
     <div>
-      <.filter_bar filter_text={@filter_text} placeholder="Search Properties">
-        <.button phx-click="add-prop" mt?={false}>
-          Add property
-        </.button>
-      </.filter_bar>
+      <%= if String.trim(@filter_text) != "" || (is_list(@props) && length(@props) > 0) do %>
+        <.filter_bar filter_text={@filter_text} placeholder="Search Properties">
+          <.button phx-click="add-prop" mt?={false}>
+            Add property
+          </.button>
+        </.filter_bar>
+      <% end %>
+
       <%= if is_list(@props) && length(@props) > 0 do %>
         <.table id="allowed-props" rows={Enum.with_index(@props)}>
           <:tbody :let={{prop, index}}>
@@ -32,17 +35,30 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
           </:tbody>
         </.table>
       <% else %>
-        <p class="mt-12 mb-8 text-center text-sm">
-          <span :if={String.trim(@filter_text) != ""}>
+        <%= if String.trim(@filter_text) != "" do %>
+          <p class="mt-12 mb-8 text-center text-sm">
             No properties found for this site. Please refine or
             <.styled_link phx-click="reset-filter-text" id="reset-filter-hint">
               reset your search.
             </.styled_link>
-          </span>
-          <span :if={String.trim(@filter_text) == "" && Enum.empty?(@props)}>
-            No properties configured for this site.
-          </span>
-        </p>
+          </p>
+        <% else %>
+          <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+            <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+              Create a custom property
+            </h3>
+            <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+              Attach custom properties when sending a pageview or an event to create custom metrics. <.styled_link href="https://plausible.io/docs/custom-props/introduction" target="_blank">Learn more</.styled_link>
+            </p>
+            <.button
+              id="add-property-button"
+              phx-click="add-prop"
+              class="mt-4"
+            >
+              Add property
+            </.button>
+          </div>
+        <% end %>
       <% end %>
     </div>
     """

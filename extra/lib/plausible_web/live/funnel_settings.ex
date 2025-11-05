@@ -70,15 +70,15 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         />
       </div>
 
-      <div :if={@goal_count < Funnel.min_steps()} class="flex flex-col items-center">
-        <h1 class="mt-4 text-center">
+      <div :if={@goal_count < Funnel.min_steps()} class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+        <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
           Ready to dig into user flows?
-        </h1>
-        <p class="mt-4 mb-6 max-w-lg text-sm text-gray-500 dark:text-gray-400 leading-5 text-center">
-          Set up a few goals first (e.g. <b>"Signup"</b>, <b>"Visit /"</b>, or <b>"Scroll 50% on /blog/*"</b>) and return here to build your first funnel!
+        </h3>
+        <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+        Set up a few goals like <span class="font-medium text-indigo-600 dark:text-gray-100">Signup</span>, <span class="font-medium text-indigo-600 dark:text-gray-100">Visit /</span>, or <span class="font-medium text-indigo-600 dark:text-gray-100">Scroll 50% on /blog/*</span> first, then return here to build your first funnel.
         </p>
         <.button_link
-          class="mb-2"
+          class="mt-4"
           href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}
         >
           Set up goals →
