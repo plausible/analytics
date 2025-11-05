@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - Main graph no longer shows empty values after current time for `day`, `month` and `year` periods
 - Include `bounce_rate` metric in Entry Pages breakdown
 - Dark mode theme has been refined with darker color scheme and better visual hierarchy
+- Creating shared links now happens in a modal
 
 ### Fixed
 

@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
             <.input_with_clipboard
               name={link.slug}
               id={link.slug}
-              value={shared_link_dest(@site, link)}
+              value={Plausible.Sites.shared_link_url(@site, link)}
             />
           </.td>
           <.td actions>
@@ -176,9 +176,5 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
       |> put_live_flash(:success, "Shared link saved")
 
     {:noreply, socket}
-  end
-
-  defp shared_link_dest(site, link) do
-    Routes.stats_path(PlausibleWeb.Endpoint, :shared_link, site.domain, auth: link.slug)
   end
 end
