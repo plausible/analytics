@@ -79,16 +79,20 @@ defmodule PlausibleWeb.Live.SharedLinkSettingsTest do
       site: site,
       session: session
     } do
-      _link_with_password =
+      link_with_password =
         insert(:shared_link, site: site, name: "Protected", password: "secret")
 
-      _link_without_password = insert(:shared_link, site: site, name: "Public")
+      link_without_password = insert(:shared_link, site: site, name: "Public")
 
       lv = get_liveview(conn, session)
       html = render(lv)
 
       assert html =~ "Protected"
+      assert html =~ "value=\"#{Plausible.Sites.shared_link_url(site, link_with_password)}\""
+
       assert html =~ "Public"
+      assert html =~ "value=\"#{Plausible.Sites.shared_link_url(site, link_without_password)}\""
+
       # Check for lock icons
       assert element_exists?(html, ~s|svg|)
     end

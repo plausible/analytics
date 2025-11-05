@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - Main graph no longer shows empty values after current time for `day`, `month` and `year` periods
 - Include `bounce_rate` metric in Entry Pages breakdown
 - Dark mode theme has been refined with darker color scheme and better visual hierarchy
+- Creating shared links now happens in a modal
 
 ### Fixed
 
@@ -45,6 +46,7 @@ All notable changes to this project will be documented in this file.
 - Fixed unhandled tracker-related exceptions on link clicks within svgs
 - Remove Subscription and Invoices menu from CE
 - Fix email sending error "Mua.SMTPError" 503 Bad sequence of commands
+- Make button to include / exclude imported data visible on Safari
 
 ## v3.0.0 - 2025-04-11
 

@@ -1749,20 +1749,38 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       member1 = add_member(team, role: :viewer)
       member2 = add_member(team, role: :owner)
+
+      member_with_2fa = add_member(team, role: :editor)
+
+      # enable 2FA
+      {:ok, member_with_2fa, _} = Plausible.Auth.TOTP.initiate(member_with_2fa)
+      code = NimbleTOTP.verification_code(member_with_2fa.totp_secret)
+      {:ok, _member_with_2fa, _} = Plausible.Auth.TOTP.enable(member_with_2fa, code)
+
       guest = add_guest(site, role: :viewer)
 
       conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
 
       assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
 
-      assert_email_delivered_with(
-        subject: "Your team now requires 2FA",
-        to: [nil: member1.email]
-      )
+      # The email come in order in which they are sent.
+      # As the logic sending them does not force any order,
+      # we have to match them in order-independent way.
+      Enum.reduce(1..2, [member1.email, member2.email], fn _, emails ->
+        assert assert_delivered_email_matches(%{
+                 subject: "Your team now requires 2FA",
+                 to: [{_, email}]
+               })
 
-      assert_email_delivered_with(
+        assert email in emails
+
+        List.delete(emails, email)
+      end)
+
+      # member with 2FA already enabled is not notified
+      refute_email_delivered_with(
         subject: "Your team now requires 2FA",
-        to: [nil: member2.email]
+        to: [nil: member_with_2fa.email]
       )
 
       # guests are not notified because they are not affected
