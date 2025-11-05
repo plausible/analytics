@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import Modal from './modal'
 import { hasConversionGoalFilter } from '../../util/filters'
-import { addFilter } from '../../query'
+import { addFilter, revenueAvailable } from '../../query'
 import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
@@ -12,6 +12,9 @@ import { SortDirection } from '../../hooks/use-order-by'
 function ExitPagesModal() {
   const { query } = useQueryContext()
   const site = useSiteContext()
+
+  /*global BUILD_EXTRA*/
+  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
     title: 'Exit Pages',
@@ -51,8 +54,10 @@ function ExitPagesModal() {
           renderLabel: (_query) => 'Conversions',
           width: 'w-28'
         }),
-        metrics.createConversionRate()
-      ]
+        metrics.createConversionRate(),
+        showRevenueMetrics && metrics.createTotalRevenue(),
+        showRevenueMetrics && metrics.createAverageRevenue()
+      ].filter((metric) => !!metric)
     }
 
     if (query.period === 'realtime') {

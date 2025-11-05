@@ -4,7 +4,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { addFilter } from '../../query'
+import { addFilter, revenueAvailable } from '../../query'
 import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
@@ -15,6 +15,9 @@ import { SortDirection } from '../../hooks/use-order-by'
 function EntryPagesModal() {
   const { query } = useQueryContext()
   const site = useSiteContext()
+
+  /*global BUILD_EXTRA*/
+  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
     title: 'Entry Pages',
@@ -54,8 +57,10 @@ function EntryPagesModal() {
           renderLabel: (_query) => 'Conversions',
           width: 'w-28'
         }),
-        metrics.createConversionRate()
-      ]
+        metrics.createConversionRate(),
+        showRevenueMetrics && metrics.createTotalRevenue(),
+        showRevenueMetrics && metrics.createAverageRevenue()
+      ].filter((metric) => !!metric)
     }
 
     if (isRealTimeDashboard(query)) {
