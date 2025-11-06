@@ -96,6 +96,30 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </div>
 
+    <!-- The `relative z-50` classes are a workaround to make the dropdown appear above the site cards. -->
+    <!-- The proper solution is for Prima to render the dropdown menu within a <.portal> element to avoid -->
+    <!-- any stacking context issues. TODO  -->
+      <PlausibleWeb.Components.PrimaDropdown.dropdown
+        class="relative z-50"
+        id="add-site-dropdown"
+      >
+        <PlausibleWeb.Components.PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+          + Add <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+        </PlausibleWeb.Components.PrimaDropdown.dropdown_trigger>
+
+        <PlausibleWeb.Components.PrimaDropdown.dropdown_menu>
+          <PlausibleWeb.Components.PrimaDropdown.dropdown_item
+            as={&link/1}
+            href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
+          >
+            + Add website
+          </PlausibleWeb.Components.PrimaDropdown.dropdown_item>
+          <PlausibleWeb.Components.PrimaDropdown.dropdown_item phx-click="add-consolidated-view">
+            + Add unified dashboard
+          </PlausibleWeb.Components.PrimaDropdown.dropdown_item>
+        </PlausibleWeb.Components.PrimaDropdown.dropdown_menu>
+      </PlausibleWeb.Components.PrimaDropdown.dropdown>
+
       <p :if={@filter_text != "" and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
         No sites found. Please search for something else.
       </p>
