@@ -44,7 +44,13 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                 Allow a hostname
               </h3>
               <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-                Accept incoming traffic only from familiar hostnames. Traffic from all hostnames is recorded until you add your first rule. <.styled_link href="https://plausible.io/docs/excluding#exclude-visits-by-hostname" target="_blank">Learn more</.styled_link>
+                Accept incoming traffic only from familiar hostnames. Traffic from all hostnames is recorded until you add your first rule.
+                <.styled_link
+                  href="https://plausible.io/docs/excluding#exclude-visits-by-hostname"
+                  target="_blank"
+                >
+                  Learn more
+                </.styled_link>
               </p>
               <.button
                 :if={@hostname_rules_count < Shields.maximum_hostname_rules()}

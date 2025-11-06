@@ -487,6 +487,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :current_team, :any, default: nil
   attr :site, :any
   attr :conn, :any
+  attr :show_content?, :boolean, default: true
 
   def tile(assigns) do
     ~H"""
@@ -507,8 +508,8 @@ defmodule PlausibleWeb.Components.Generic do
           conn={@conn}
         />
       </header>
-      <div class="border-b dark:border-gray-700 mx-6"></div>
-      <div class="relative">
+      <div :if={@show_content?} class="border-b dark:border-gray-700 mx-6"></div>
+      <div :if={@show_content?} class="relative">
         <%= if @feature_mod do %>
           <PlausibleWeb.Components.Billing.feature_gate
             locked?={@feature_mod.check_availability(@current_team) != :ok}

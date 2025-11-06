@@ -68,7 +68,10 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
             Create your first shared link
           </h3>
           <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-            Share your stats privately with anyone. Links are unique, secure, and can be password-protected. <.styled_link href="https://plausible.io/docs/shared-links" target="_blank">Learn more</.styled_link>
+            Share your stats privately with anyone. Links are unique, secure, and can be password-protected.
+            <.styled_link href="https://plausible.io/docs/shared-links" target="_blank">
+              Learn more
+            </.styled_link>
           </p>
           <.button
             id="add-shared-link-button"

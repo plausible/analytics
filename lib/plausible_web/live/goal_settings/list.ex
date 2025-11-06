@@ -104,7 +104,10 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               Create your first goal
             </h3>
             <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-              Define actions that you want your users to take, like visiting a certain page, submitting a form, etc. <.styled_link href="https://plausible.io/docs/goal-conversions" target="_blank">Learn more</.styled_link>
+              Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
+              <.styled_link href="https://plausible.io/docs/goal-conversions" target="_blank">
+                Learn more
+              </.styled_link>
             </p>
             <.button
               id="add-goal-button"

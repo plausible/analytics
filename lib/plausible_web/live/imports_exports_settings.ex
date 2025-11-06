@@ -131,67 +131,67 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
 
       <div class="mt-6">
         <.table rows={@site_imports}>
-        <:thead>
-          <.th>Import</.th>
-          <.th hide_on_mobile>Date Range</.th>
-          <.th hide_on_mobile>
-            <div class="text-right">Pageviews</div>
-          </.th>
-          <.th invisible>Actions</.th>
-        </:thead>
+          <:thead>
+            <.th>Import</.th>
+            <.th hide_on_mobile>Date Range</.th>
+            <.th hide_on_mobile>
+              <div class="text-right">Pageviews</div>
+            </.th>
+            <.th invisible>Actions</.th>
+          </:thead>
 
-        <:tbody :let={entry}>
-          <.td max_width="max-w-40">
-            <div class="flex items-center gap-x-2 truncate">
-              <div class="w-5" title={notice_message(entry.tooltip)}>
-                <Heroicons.clock
-                  :if={entry.live_status == SiteImport.pending()}
-                  class="block size-5 text-indigo-600 dark:text-green-600"
-                />
-                <.spinner
-                  :if={entry.live_status == SiteImport.importing()}
-                  class="block size-5 text-indigo-600 dark:text-green-600"
-                />
-                <Heroicons.check
-                  :if={entry.live_status == SiteImport.completed()}
-                  class="block size-5 text-indigo-600 dark:text-green-600"
-                />
-                <Heroicons.exclamation_triangle
-                  :if={entry.live_status == SiteImport.failed()}
-                  class="block size-5 text-red-700 dark:text-red-500"
-                />
+          <:tbody :let={entry}>
+            <.td max_width="max-w-40">
+              <div class="flex items-center gap-x-2 truncate">
+                <div class="w-5" title={notice_message(entry.tooltip)}>
+                  <Heroicons.clock
+                    :if={entry.live_status == SiteImport.pending()}
+                    class="block size-5 text-indigo-600 dark:text-green-600"
+                  />
+                  <.spinner
+                    :if={entry.live_status == SiteImport.importing()}
+                    class="block size-5 text-indigo-600 dark:text-green-600"
+                  />
+                  <Heroicons.check
+                    :if={entry.live_status == SiteImport.completed()}
+                    class="block size-5 text-indigo-600 dark:text-green-600"
+                  />
+                  <Heroicons.exclamation_triangle
+                    :if={entry.live_status == SiteImport.failed()}
+                    class="block size-5 text-red-700 dark:text-red-500"
+                  />
+                </div>
+                <div
+                  class="max-w-sm"
+                  title={"#{Plausible.Imported.SiteImport.label(entry.site_import)} created at #{format_date(entry.site_import.inserted_at)}"}
+                >
+                  {Plausible.Imported.SiteImport.label(entry.site_import)}
+                </div>
               </div>
-              <div
-                class="max-w-sm"
-                title={"#{Plausible.Imported.SiteImport.label(entry.site_import)} created at #{format_date(entry.site_import.inserted_at)}"}
-              >
-                {Plausible.Imported.SiteImport.label(entry.site_import)}
+            </.td>
+
+            <.td hide_on_mobile>
+              {format_date(entry.site_import.start_date)} - {format_date(entry.site_import.end_date)}
+            </.td>
+
+            <.td>
+              <div class="text-right">
+                {if entry.live_status == SiteImport.completed(),
+                  do:
+                    PlausibleWeb.StatsView.large_number_format(
+                      pageview_count(entry.site_import, @pageview_counts)
+                    )}
               </div>
-            </div>
-          </.td>
-
-          <.td hide_on_mobile>
-            {format_date(entry.site_import.start_date)} - {format_date(entry.site_import.end_date)}
-          </.td>
-
-          <.td>
-            <div class="text-right">
-              {if entry.live_status == SiteImport.completed(),
-                do:
-                  PlausibleWeb.StatsView.large_number_format(
-                    pageview_count(entry.site_import, @pageview_counts)
-                  )}
-            </div>
-          </.td>
-          <.td actions>
-            <.delete_button
-              href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
-              method="delete"
-              data-confirm="Are you sure you want to delete this import?"
-            />
-          </.td>
-        </:tbody>
-      </.table>
+            </.td>
+            <.td actions>
+              <.delete_button
+                href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
+                method="delete"
+                data-confirm="Are you sure you want to delete this import?"
+              />
+            </.td>
+          </:tbody>
+        </.table>
       </div>
     <% end %>
     """

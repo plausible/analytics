@@ -42,7 +42,10 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 Block an IP address
               </h3>
               <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-                Reject incoming traffic from specific IP addresses. <.styled_link href="https://plausible.io/docs/excluding" target="_blank">Learn more</.styled_link>
+                Reject incoming traffic from specific IP addresses.
+                <.styled_link href="https://plausible.io/docs/excluding" target="_blank">
+                  Learn more
+                </.styled_link>
               </p>
               <.button
                 :if={@ip_rules_count < Shields.maximum_ip_rules()}
