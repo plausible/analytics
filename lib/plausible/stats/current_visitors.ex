@@ -11,7 +11,7 @@ defmodule Plausible.Stats.CurrentVisitors do
 
     ClickhouseRepo.one(
       from e in "events_v2",
-        where: e.site_id == ^site.id,
+        where: ^Plausible.Sites.site_id_query_filter(site),
         where: e.timestamp >= ^first_datetime,
         where: e.name != "engagement",
         select: uniq(e.user_id)

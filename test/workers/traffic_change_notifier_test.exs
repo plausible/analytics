@@ -237,6 +237,45 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       )
     end
 
+    test "notifies traffic spike on consolidated view" do
+      {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+      site1 = new_site(team: team)
+      site2 = new_site(team: team)
+
+      consolidated_view = new_consolidated_view(team)
+
+      insert(:spike_notification,
+        site: consolidated_view,
+        threshold: 2,
+        recipients: ["uku@example.com"]
+      )
+
+      populate_stats(site1, [
+        build(:pageview, referrer_source: "Google", pathname: "/b", timestamp: minutes_ago(1)),
+        build(:pageview, referrer_source: "Google", pathname: "/a", timestamp: minutes_ago(2))
+      ])
+
+      populate_stats(site2, [
+        build(:pageview, referrer_source: "Twitter", pathname: "/a", timestamp: minutes_ago(3))
+      ])
+
+      TrafficChangeNotifier.perform(nil)
+
+      assert_delivered_email_matches(%{
+        html_body: html_body,
+        subject: "Traffic Spike" <> _,
+        to: [nil: "uku@example.com"]
+      })
+
+      assert html_body =~ "The top sources for current visitors:"
+      assert html_body =~ "<b>2</b> visitors from <b>Google</b>"
+      assert html_body =~ "<b>1</b> visitor from <b>Twitter</b>"
+
+      assert html_body =~ "Your top pages being visited:"
+      assert html_body =~ "<b>2</b> visitors on <b>/a</b>"
+      assert html_body =~ "<b>1</b> visitor on <b>/b</b>"
+    end
+
     test "ignores 'Direct / None' source" do
       site = new_site()
 
