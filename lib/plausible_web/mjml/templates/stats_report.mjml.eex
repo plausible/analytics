@@ -41,7 +41,7 @@
         <mj-divider />
         <% end %>
         <mj-text mj-class="text-lg">
-          <%= @site.domain %>
+          <%= Plausible.Sites.display_name(@site, capitalize_consolidated: true) %>
         </mj-text>
         <mj-text mj-class="text-sm" padding="0 25px 0 25px">
           <%= @report_name %> Report (<%= @date_label %>)

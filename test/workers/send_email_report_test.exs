@@ -149,6 +149,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
         html_body: html_body
       })
 
+      assert html_body =~ "Consolidated view"
       assert text_of_element(html_body, ".visitors") == "2"
       assert text_of_element(html_body, ".pageviews") == "3"
       assert text_of_element(html_body, ".referrer-name") == "Google"
@@ -524,6 +525,8 @@ defmodule Plausible.Workers.SendEmailReportTest do
         to: [nil: "user@email.com"],
         html_body: html_body
       })
+
+      assert html_body =~ "Consolidated view"
 
       goal_names = find(html_body, ".goal-name") |> Enum.map(&text/1)
       goal_conversions = find(html_body, ".goal-conversions") |> Enum.map(&text/1)

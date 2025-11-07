@@ -26,8 +26,12 @@ defmodule Plausible.Sites do
     def consolidated?(%Site{}), do: always(false)
   end
 
-  def display_name(%Site{} = site) do
-    if consolidated?(site), do: "consolidated view", else: site.domain
+  def display_name(%Site{} = site, opts \\ []) do
+    if consolidated?(site) do
+      "#{if opts[:capitalize_consolidated], do: "C", else: "c"}onsolidated view"
+    else
+      site.domain
+    end
   end
 
   @shared_link_special_names ["WordPress - Shared Dashboard"]
