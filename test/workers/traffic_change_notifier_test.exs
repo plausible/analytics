@@ -4,6 +4,9 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
   use Plausible.Teams.Test
   alias Plausible.Workers.TrafficChangeNotifier
 
+  @view_dashboard_text "View dashboard"
+  @review_installation_text "review your installation"
+
   describe "drops" do
     test "does not notify anyone if we've stopped accepting traffic for the owner" do
       user = new_user(team: [accept_traffic_until: Date.utc_today()])
@@ -116,6 +119,31 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       Enum.each(site_member_emails, fn email ->
         assert email.html_body =~ "View dashboard"
       end)
+    end
+
+    test "does not link to site installation in a consolidated view traffic drop notification" do
+      %{email: user_email} = user = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      new_site(team: team)
+      new_site(team: team)
+
+      consolidated_view = new_consolidated_view(team)
+
+      insert(:drop_notification,
+        site: consolidated_view,
+        threshold: 10,
+        recipients: [user.email]
+      )
+
+      TrafficChangeNotifier.perform(nil)
+
+      assert_delivered_email_matches(%{
+        html_body: html_body,
+        to: [nil: ^user_email]
+      })
+
+      assert html_body =~ @view_dashboard_text
+      refute html_body =~ @review_installation_text
     end
 
     test "does not send notifications more than once every 12 hours" do

@@ -93,17 +93,19 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp send_drop_notification(recipient, site, current_visitors) do
-    {dashboard_link, installation_link} =
-      if Repo.exists?(email_match_query(site, recipient)) do
-        {
-          Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []) <>
-            "?__team=#{site.team.identifier}",
-          Routes.site_url(PlausibleWeb.Endpoint, :installation, site.domain,
-            flow: PlausibleWeb.Flows.review()
-          ) <> "&__team=#{site.team.identifier}"
-        }
-      else
-        {nil, nil}
+    recipient_is_site_member? = Repo.exists?(email_match_query(site, recipient))
+
+    dashboard_link =
+      if recipient_is_site_member? do
+        Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []) <>
+          "?__team=#{site.team.identifier}"
+      end
+
+    installation_link =
+      if recipient_is_site_member? and Plausible.Sites.regular?(site) do
+        Routes.site_url(PlausibleWeb.Endpoint, :installation, site.domain,
+          flow: PlausibleWeb.Flows.review()
+        ) <> "&__team=#{site.team.identifier}"
       end
 
     template =
