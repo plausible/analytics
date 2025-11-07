@@ -79,6 +79,45 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       )
     end
 
+    test "includes dashboard and installation links only when recipient is guest or team member" do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      site = new_site(team: team)
+      team_member = add_member(team, role: :admin)
+      viewer_guest = add_guest(site, role: :viewer, user: new_user())
+      random_email = "random@example.com"
+
+      insert(:drop_notification,
+        site: site,
+        threshold: 10,
+        recipients: [owner.email, team_member.email, viewer_guest.email, random_email]
+      )
+
+      TrafficChangeNotifier.perform(nil)
+
+      expected_subject = "Traffic Drop on #{site.domain}"
+
+      four_emails =
+        for _ <- 1..4 do
+          assert_delivered_email_matches(%{
+            html_body: html_body,
+            subject: ^expected_subject,
+            to: [nil: email]
+          })
+
+          %{to: email, html_body: html_body}
+        end
+
+      {[random_recipient_email], site_member_emails} =
+        Enum.split_with(four_emails, &(&1.to == random_email))
+
+      refute random_recipient_email.html_body =~ "View dashboard"
+
+      Enum.each(site_member_emails, fn email ->
+        assert email.html_body =~ "View dashboard"
+      end)
+    end
+
     test "does not send notifications more than once every 12 hours" do
       site = new_site()
 
