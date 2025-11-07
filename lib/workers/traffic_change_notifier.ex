@@ -55,8 +55,8 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp notify_spike(notification, stats, now) do
-    for recipient <- notification.recipients do
-      send_spike_notification(recipient, notification.site, stats)
+    for recipient_email <- notification.recipients do
+      send_spike_notification(recipient_email, notification.site, stats)
     end
 
     notification
@@ -65,8 +65,8 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp notify_drop(notification, current_visitors, now) do
-    for recipient <- notification.recipients do
-      send_drop_notification(recipient, notification.site, current_visitors)
+    for recipient_email <- notification.recipients do
+      send_drop_notification(recipient_email, notification.site, current_visitors)
     end
 
     notification
@@ -74,16 +74,16 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     |> Repo.update()
   end
 
-  defp send_spike_notification(recipient, site, stats) do
+  defp send_spike_notification(recipient_email, site, stats) do
     dashboard_link =
-      if Repo.exists?(email_match_query(site, recipient)) do
+      if is_recipient_email_site_member?(site, recipient_email) do
         Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []) <>
           "?__team=#{site.team.identifier}"
       end
 
     template =
       PlausibleWeb.Email.spike_notification(
-        recipient,
+        recipient_email,
         site,
         stats,
         dashboard_link
@@ -92,8 +92,8 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     Plausible.Mailer.send(template)
   end
 
-  defp send_drop_notification(recipient, site, current_visitors) do
-    recipient_is_site_member? = Repo.exists?(email_match_query(site, recipient))
+  defp send_drop_notification(recipient_email, site, current_visitors) do
+    recipient_is_site_member? = is_recipient_email_site_member?(site, recipient_email)
 
     dashboard_link =
       if recipient_is_site_member? do
@@ -110,7 +110,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
 
     template =
       PlausibleWeb.Email.drop_notification(
-        recipient,
+        recipient_email,
         site,
         current_visitors,
         dashboard_link,
@@ -165,12 +165,14 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     Map.put(stats, :pages, pages)
   end
 
-  defp email_match_query(site, recipient) do
-    from tm in Plausible.Teams.Membership,
+  defp is_recipient_email_site_member?(site, recipient_email) do
+    from(tm in Plausible.Teams.Membership,
       inner_join: u in assoc(tm, :user),
       left_join: gm in assoc(tm, :guest_memberships),
       where: tm.team_id == ^site.team_id,
       where: tm.role != :guest or gm.site_id == ^site.id,
-      where: u.email == ^recipient
+      where: u.email == ^recipient_email
+    )
+    |> Repo.exists?()
   end
 end
