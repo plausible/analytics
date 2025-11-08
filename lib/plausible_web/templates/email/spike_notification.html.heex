@@ -1,10 +1,11 @@
 There are currently <b>{@current_visitors}</b>
 visitors
 <%= if Plausible.Sites.consolidated?(@site) do %>
-  across all your sites
+  across all your sites.
 <% else %>
-  on <a href={"https://" <> @site.domain}>{@site.domain}</a>
-<% end %>. <br />
+  on <a href={"https://" <> @site.domain}>{@site.domain}</a>.
+<% end %>
+<br />
 <%= if Enum.count(@sources) > 0 do %>
   <br /> The top sources for current visitors:<br />
   <ul>
