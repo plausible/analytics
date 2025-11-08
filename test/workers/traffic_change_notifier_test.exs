@@ -36,7 +36,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
-        subject: "Traffic Drop on #{site.domain}",
+        subject: "Traffic drop on #{site.domain}",
         to: [nil: "jerod@example.com"]
       )
     end
@@ -72,12 +72,12 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
-        subject: "Traffic Drop on #{site.domain}",
+        subject: "Traffic drop on #{site.domain}",
         to: [nil: "jerod@example.com"]
       )
 
       assert_email_delivered_with(
-        subject: "Traffic Drop on #{site.domain}",
+        subject: "Traffic drop on #{site.domain}",
         to: [nil: "uku@example.com"]
       )
     end
@@ -98,7 +98,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       TrafficChangeNotifier.perform(nil)
 
-      expected_subject = "Traffic Drop on #{site.domain}"
+      expected_subject = "Traffic drop on #{site.domain}"
 
       four_emails =
         for _ <- 1..4 do
@@ -139,9 +139,11 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       assert_delivered_email_matches(%{
         html_body: html_body,
+        subject: "Traffic drop on your sites",
         to: [nil: ^user_email]
       })
 
+      assert html_body =~ "across all your sites"
       assert html_body =~ @view_dashboard_text
       refute html_body =~ @review_installation_text
     end
@@ -158,7 +160,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       TrafficChangeNotifier.perform(nil, ~N[2021-01-01 00:00:00])
 
       assert_email_delivered_with(
-        subject: "Traffic Drop on #{site.domain}",
+        subject: "Traffic drop on #{site.domain}",
         to: [nil: "uku@example.com"]
       )
 
@@ -169,7 +171,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       TrafficChangeNotifier.perform(nil, ~N[2021-01-01 12:00:01])
 
       assert_email_delivered_with(
-        subject: "Traffic Drop on #{site.domain}",
+        subject: "Traffic drop on #{site.domain}",
         to: [nil: "uku@example.com"]
       )
     end
@@ -227,12 +229,12 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
-        subject: "Traffic Spike on #{site.domain}",
+        subject: "Traffic spike on #{site.domain}",
         to: [nil: "jerod@example.com"]
       )
 
       assert_email_delivered_with(
-        subject: "Traffic Spike on #{site.domain}",
+        subject: "Traffic spike on #{site.domain}",
         to: [nil: "uku@example.com"]
       )
     end
@@ -263,9 +265,11 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       assert_delivered_email_matches(%{
         html_body: html_body,
-        subject: "Traffic Spike" <> _,
+        subject: "Traffic spike on your sites",
         to: [nil: "uku@example.com"]
       })
+
+      assert html_body =~ "across all your sites"
 
       assert html_body =~ "The top sources for current visitors:"
       assert html_body =~ "<b>2</b> visitors from <b>Google</b>"
@@ -406,7 +410,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
-        subject: "Traffic Spike on #{site.domain}",
+        subject: "Traffic spike on #{site.domain}",
         to: [nil: "uku@example.com"]
       )
 
@@ -427,7 +431,8 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       TrafficChangeNotifier.perform(nil)
 
-      assert_email_delivered_with(html_body: ~r/View dashboard:\s+<a href=\"http.+\/example.com/)
+      assert_delivered_email_matches(%{html_body: html_body})
+      assert html_body =~ @view_dashboard_text
     end
   end
 
