@@ -45,6 +45,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
           <:thead>
             <.th>Domain</.th>
             <.th>Timezone</.th>
+            <.th>Available?</.th>
             <.th invisible>Dashboard</.th>
             <.th invisible>24H</.th>
             <.th invisible>Delete</.th>
@@ -53,6 +54,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
           <:tbody :let={consolidated_view}>
             <.td>{consolidated_view.domain}</.td>
             <.td>{consolidated_view.timezone}</.td>
+            <.td>{availability(@team)}</.td>
             <.td>
               <.styled_link
                 new_tab={true}
@@ -100,5 +102,12 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
     ConsolidatedView.disable(socket.assigns.team)
     success("Deleted consolidated view")
     {:noreply, assign(socket, consolidated_views: [])}
+  end
+
+  defp availability(team) do
+    case Plausible.Billing.Feature.ConsolidatedView.check_availability(team) do
+      :ok -> "Yes"
+      {:error, :upgrade_required} -> "No - upgrade required"
+    end
   end
 end
