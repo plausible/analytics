@@ -89,6 +89,31 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
              "The account that owns this API key does not have access"
   end
 
+  on_ee do
+    test "rejects access to a site that is a consolidated view (unless instructed otherwise)", %{
+      conn: conn
+    } do
+      user = new_user()
+      api_key = insert(:api_key, user: user, scopes: ["sites:provision:*"])
+      {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+      new_site(team: team)
+      new_site(team: team)
+      consolidated_view = new_consolidated_view(team)
+
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer #{api_key.key}")
+        |> get("/", %{"site_id" => consolidated_view.domain})
+        |> assign(:api_scope, "sites:provision:*")
+        |> AuthorizePublicAPI.call(nil)
+
+      assert conn.halted
+
+      assert json_response(conn, 400)["error"] =~
+               "This operation is unavailable for a consolidated view"
+    end
+  end
+
   @tag :ee_only
   test "halts with error when upgrade is required", %{conn: conn} do
     user = new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [])

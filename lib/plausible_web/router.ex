@@ -268,38 +268,41 @@ defmodule PlausibleWeb.Router do
         get "/:domain/funnels/:id", StatsController, :funnel
       end
 
-      get "/:domain/current-visitors", StatsController, :current_visitors
-      get "/:domain/main-graph", StatsController, :main_graph
-      get "/:domain/top-stats", StatsController, :top_stats
-      get "/:domain/sources", StatsController, :sources
-      get "/:domain/channels", StatsController, :channels
-      get "/:domain/utm_mediums", StatsController, :utm_mediums
-      get "/:domain/utm_sources", StatsController, :utm_sources
-      get "/:domain/utm_campaigns", StatsController, :utm_campaigns
-      get "/:domain/utm_contents", StatsController, :utm_contents
-      get "/:domain/utm_terms", StatsController, :utm_terms
-      get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
-      get "/:domain/pages", StatsController, :pages
-      get "/:domain/entry-pages", StatsController, :entry_pages
-      get "/:domain/exit-pages", StatsController, :exit_pages
-      get "/:domain/countries", StatsController, :countries
-      get "/:domain/regions", StatsController, :regions
-      get "/:domain/cities", StatsController, :cities
-      get "/:domain/browsers", StatsController, :browsers
-      get "/:domain/browser-versions", StatsController, :browser_versions
-      get "/:domain/operating-systems", StatsController, :operating_systems
-      get "/:domain/operating-system-versions", StatsController, :operating_system_versions
-      get "/:domain/screen-sizes", StatsController, :screen_sizes
-      get "/:domain/conversions", StatsController, :conversions
-      get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
-      get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
+      scope private: %{allow_consolidated_views: true} do
+        get "/:domain/current-visitors", StatsController, :current_visitors
+        get "/:domain/main-graph", StatsController, :main_graph
+        get "/:domain/top-stats", StatsController, :top_stats
+        get "/:domain/sources", StatsController, :sources
+        get "/:domain/channels", StatsController, :channels
+        get "/:domain/utm_mediums", StatsController, :utm_mediums
+        get "/:domain/utm_sources", StatsController, :utm_sources
+        get "/:domain/utm_campaigns", StatsController, :utm_campaigns
+        get "/:domain/utm_contents", StatsController, :utm_contents
+        get "/:domain/utm_terms", StatsController, :utm_terms
+        get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
+        get "/:domain/pages", StatsController, :pages
+        get "/:domain/entry-pages", StatsController, :entry_pages
+        get "/:domain/exit-pages", StatsController, :exit_pages
+        get "/:domain/countries", StatsController, :countries
+        get "/:domain/regions", StatsController, :regions
+        get "/:domain/cities", StatsController, :cities
+        get "/:domain/browsers", StatsController, :browsers
+        get "/:domain/browser-versions", StatsController, :browser_versions
+        get "/:domain/operating-systems", StatsController, :operating_systems
+        get "/:domain/operating-system-versions", StatsController, :operating_system_versions
+        get "/:domain/screen-sizes", StatsController, :screen_sizes
+        get "/:domain/conversions", StatsController, :conversions
+        get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
+        get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
 
-      get "/:domain/suggestions/custom-prop-values/:prop_key",
-          StatsController,
-          :custom_prop_value_filter_suggestions
+        get "/:domain/suggestions/custom-prop-values/:prop_key",
+            StatsController,
+            :custom_prop_value_filter_suggestions
+      end
     end
 
-    scope "/:domain/segments", PlausibleWeb.Api.Internal do
+    scope "/:domain/segments", PlausibleWeb.Api.Internal,
+      private: %{allow_consolidated_views: true} do
       post "/", SegmentsController, :create
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
@@ -317,7 +320,14 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api/v2", PlausibleWeb.Api,
-    assigns: %{api_scope: "stats:read:*", api_context: :site, schema_type: :public} do
+    private: %{
+      allow_consolidated_views: true
+    },
+    assigns: %{
+      api_scope: "stats:read:*",
+      api_context: :site,
+      schema_type: :public
+    } do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
@@ -559,44 +569,6 @@ defmodule PlausibleWeb.Router do
     post "/sites", SiteController, :create_site
     post "/sites/:domain/make-public", SiteController, :make_public
     post "/sites/:domain/make-private", SiteController, :make_private
-    post "/sites/:domain/weekly-report/enable", SiteController, :enable_weekly_report
-    post "/sites/:domain/weekly-report/disable", SiteController, :disable_weekly_report
-    post "/sites/:domain/weekly-report/recipients", SiteController, :add_weekly_report_recipient
-
-    delete "/sites/:domain/weekly-report/recipients/:recipient",
-           SiteController,
-           :remove_weekly_report_recipient
-
-    post "/sites/:domain/monthly-report/enable", SiteController, :enable_monthly_report
-    post "/sites/:domain/monthly-report/disable", SiteController, :disable_monthly_report
-
-    post "/sites/:domain/monthly-report/recipients",
-         SiteController,
-         :add_monthly_report_recipient
-
-    delete "/sites/:domain/monthly-report/recipients/:recipient",
-           SiteController,
-           :remove_monthly_report_recipient
-
-    post "/sites/:domain/traffic-change-notification/:type/enable",
-         SiteController,
-         :enable_traffic_change_notification
-
-    post "/sites/:domain/traffic-change-notification/:type/disable",
-         SiteController,
-         :disable_traffic_change_notification
-
-    put "/sites/:domain/traffic-change-notification/:type",
-        SiteController,
-        :update_traffic_change_notification
-
-    post "/sites/:domain/traffic-change-notification/:type/recipients",
-         SiteController,
-         :add_traffic_change_notification_recipient
-
-    delete "/sites/:domain/traffic-change-notification/:type/recipients/:recipient",
-           SiteController,
-           :remove_traffic_change_notification_recipient
 
     get "/sites/:domain/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:domain/memberships/invite", Site.MembershipController, :invite_member
@@ -618,9 +590,6 @@ defmodule PlausibleWeb.Router do
         :update_role_by_user
 
     delete "/sites/:domain/memberships/u/:id", Site.MembershipController, :remove_member_by_user
-
-    get "/sites/:domain/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
-    get "/sites/:domain/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
 
     scope alias: Live, assigns: %{connect_live_socket: true} do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
@@ -648,28 +617,18 @@ defmodule PlausibleWeb.Router do
       end
     end
 
-    get "/:domain/settings", SiteController, :settings
-    get "/:domain/settings/general", SiteController, :settings_general
     get "/:domain/settings/people", SiteController, :settings_people
     get "/:domain/settings/visibility", SiteController, :settings_visibility
-    get "/:domain/settings/goals", SiteController, :settings_goals
-    get "/:domain/settings/properties", SiteController, :settings_props
 
     on_ee do
       get "/:domain/settings/funnels", SiteController, :settings_funnels
     end
 
-    get "/:domain/settings/email-reports", SiteController, :settings_email_reports
     get "/:domain/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:domain/settings/integrations", SiteController, :settings_integrations
     get "/:domain/settings/shields/:shield", SiteController, :settings_shields
     get "/:domain/settings/imports-exports", SiteController, :settings_imports_exports
 
-    put "/:domain/settings/features/visibility/:setting",
-        SiteController,
-        :update_feature_visibility
-
-    put "/:domain/settings", SiteController, :update_settings
     put "/:domain/settings/google", SiteController, :update_google_auth
     delete "/:domain/settings/google-search", SiteController, :delete_google_auth
     delete "/:domain/settings/google-import", SiteController, :delete_google_auth
@@ -695,7 +654,63 @@ defmodule PlausibleWeb.Router do
 
     get "/debug/clickhouse", DebugController, :clickhouse
 
-    get "/:domain/export", StatsController, :csv_export
-    get "/:domain/*path", StatsController, :stats
+    scope private: %{allow_consolidated_views: true} do
+      post "/sites/:domain/weekly-report/enable", SiteController, :enable_weekly_report
+      post "/sites/:domain/weekly-report/disable", SiteController, :disable_weekly_report
+      post "/sites/:domain/weekly-report/recipients", SiteController, :add_weekly_report_recipient
+
+      delete "/sites/:domain/weekly-report/recipients/:recipient",
+             SiteController,
+             :remove_weekly_report_recipient
+
+      post "/sites/:domain/monthly-report/enable", SiteController, :enable_monthly_report
+      post "/sites/:domain/monthly-report/disable", SiteController, :disable_monthly_report
+
+      post "/sites/:domain/monthly-report/recipients",
+           SiteController,
+           :add_monthly_report_recipient
+
+      delete "/sites/:domain/monthly-report/recipients/:recipient",
+             SiteController,
+             :remove_monthly_report_recipient
+
+      post "/sites/:domain/traffic-change-notification/:type/enable",
+           SiteController,
+           :enable_traffic_change_notification
+
+      post "/sites/:domain/traffic-change-notification/:type/disable",
+           SiteController,
+           :disable_traffic_change_notification
+
+      put "/sites/:domain/traffic-change-notification/:type",
+          SiteController,
+          :update_traffic_change_notification
+
+      post "/sites/:domain/traffic-change-notification/:type/recipients",
+           SiteController,
+           :add_traffic_change_notification_recipient
+
+      delete "/sites/:domain/traffic-change-notification/:type/recipients/:recipient",
+             SiteController,
+             :remove_traffic_change_notification_recipient
+
+      get "/sites/:domain/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
+      get "/sites/:domain/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
+
+      get "/:domain/settings", SiteController, :settings
+      get "/:domain/settings/general", SiteController, :settings_general
+      get "/:domain/settings/goals", SiteController, :settings_goals
+      get "/:domain/settings/properties", SiteController, :settings_props
+      get "/:domain/settings/email-reports", SiteController, :settings_email_reports
+
+      put "/:domain/settings/features/visibility/:setting",
+          SiteController,
+          :update_feature_visibility
+
+      put "/:domain/settings", SiteController, :update_settings
+
+      get "/:domain/export", StatsController, :csv_export
+      get "/:domain/*path", StatsController, :stats
+    end
   end
 end

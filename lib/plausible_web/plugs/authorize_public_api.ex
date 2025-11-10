@@ -122,7 +122,13 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   defp verify_by_scope(conn, api_key, "stats:read:" <> _ = scope) do
     with :ok <- check_scope(api_key, scope),
          {:ok, site} <- find_site(conn.params["site_id"]),
-         :ok <- verify_site_access(api_key, site, Plausible.Billing.Feature.StatsAPI) do
+         :ok <-
+           verify_site_access(
+             site: site,
+             api_key: api_key,
+             feature: Plausible.Billing.Feature.StatsAPI,
+             allow_consolidated_views: conn.private[:allow_consolidated_views]
+           ) do
       Plausible.OpenTelemetry.add_site_attributes(site)
       site = Plausible.Repo.preload(site, :completed_imports)
       {:ok, assign(conn, :site, site)}
@@ -193,7 +199,12 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   defp maybe_verify_site_access(conn, api_key, feature) do
     case find_site(conn.params["site_id"]) do
       {:ok, site} ->
-        verify_site_access(api_key, site, feature)
+        verify_site_access(
+          site: site,
+          api_key: api_key,
+          feature: feature,
+          allow_consolidated_views: conn.private[:allow_consolidated_views]
+        )
 
       _ ->
         :ok
@@ -226,13 +237,21 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     end
   end
 
-  defp verify_site_access(api_key, site, feature) do
+  defp verify_site_access(opts) do
+    site = Keyword.fetch!(opts, :site)
+    api_key = Keyword.fetch!(opts, :api_key)
+    feature = Keyword.fetch!(opts, :feature)
+    allow_consolidated_views = Keyword.fetch!(opts, :allow_consolidated_views)
+
     team = Repo.preload(site, :team).team
 
     is_member? = Plausible.Teams.Memberships.site_member?(site, api_key.user)
     is_super_admin? = Auth.is_super_admin?(api_key.user_id)
 
     cond do
+      Plausible.Sites.consolidated?(site) && !allow_consolidated_views ->
+        {:error, :unavailable_for_consolidated_view}
+
       is_super_admin? ->
         :ok
 
@@ -276,6 +295,13 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
       true ->
         {:error, :invalid_api_key}
     end
+  end
+
+  defp send_error(conn, _, {:error, :unavailable_for_consolidated_view}) do
+    H.bad_request(
+      conn,
+      "This operation is unavailable for a consolidated view"
+    )
   end
 
   defp send_error(conn, _, {:error, :missing_api_key}) do

@@ -895,6 +895,24 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         assert site.domain_changed_from == nil
       end
 
+      test "cannot update consolidated view", %{conn: conn, user: user} do
+        new_site(owner: user)
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        consolidated_view = new_consolidated_view(team)
+
+        old_domain = consolidated_view.domain
+
+        conn =
+          put(conn, "/api/v1/sites/#{consolidated_view.domain}", %{
+            "domain" => "updated.domain.com"
+          })
+
+        assert json_response(conn, 400)["error"] =~
+                 "This operation is unavailable for a consolidated view"
+
+        assert Repo.reload!(consolidated_view).domain == old_domain
+      end
+
       test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
         another_team = new_user() |> subscribe_to_business_plan() |> team_of()
         add_member(another_team, user: user, role: :admin)

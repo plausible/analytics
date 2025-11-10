@@ -148,6 +148,25 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
            }
   end
 
+  on_ee do
+    test "returns 404 for consolidated views by default", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      new_site(team: team)
+      consolidated_view = new_consolidated_view(team)
+
+      opts = AuthorizeSiteAccess.init([:super_admin, :admin, :owner])
+
+      conn =
+        conn
+        |> bypass_through(PlausibleWeb.Router)
+        |> get("/plug-tests/#{consolidated_view.domain}/with-domain")
+        |> AuthorizeSiteAccess.call(opts)
+
+      assert conn.halted
+      assert conn.status == 404
+    end
+  end
+
   test "rejects unrelated shared link slug even if user is permitted for site", %{
     conn: conn,
     site: site
