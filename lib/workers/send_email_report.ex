@@ -4,6 +4,8 @@ defmodule Plausible.Workers.SendEmailReport do
 
   alias Plausible.Stats.{Query, QueryResult}
 
+  import Ecto.Query, only: [from: 2]
+
   @weekly "weekly"
   @monthly "monthly"
 
@@ -12,9 +14,11 @@ defmodule Plausible.Workers.SendEmailReport do
     report_type = report_type(interval)
 
     site =
-      Plausible.Site
-      |> Repo.get(site_id)
-      |> Repo.preload([report_type, :team])
+      from(s in Plausible.Site,
+        where: s.id == ^site_id,
+        preload: [^report_type, :team]
+      )
+      |> Repo.one()
 
     report = site && Map.get(site, report_type)
 
