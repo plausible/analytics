@@ -114,38 +114,41 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       {[random_recipient_email], site_member_emails} =
         Enum.split_with(four_emails, &(&1.to == random_email))
 
-      refute random_recipient_email.html_body =~ "View dashboard"
+      refute random_recipient_email.html_body =~ @view_dashboard_text
 
       Enum.each(site_member_emails, fn email ->
-        assert email.html_body =~ "View dashboard"
+        assert email.html_body =~ @view_dashboard_text
+        assert email.html_body =~ @review_installation_text
       end)
     end
 
-    test "does not link to site installation in a consolidated view traffic drop notification" do
-      %{email: user_email} = user = new_user()
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-      new_site(team: team)
-      new_site(team: team)
+    on_ee do
+      test "does not link to site installation in a consolidated view traffic drop notification" do
+        %{email: user_email} = user = new_user()
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        new_site(team: team)
+        new_site(team: team)
 
-      consolidated_view = new_consolidated_view(team)
+        consolidated_view = new_consolidated_view(team)
 
-      insert(:drop_notification,
-        site: consolidated_view,
-        threshold: 10,
-        recipients: [user.email]
-      )
+        insert(:drop_notification,
+          site: consolidated_view,
+          threshold: 10,
+          recipients: [user.email]
+        )
 
-      TrafficChangeNotifier.perform(nil)
+        TrafficChangeNotifier.perform(nil)
 
-      assert_delivered_email_matches(%{
-        html_body: html_body,
-        subject: "Traffic drop on your sites",
-        to: [nil: ^user_email]
-      })
+        assert_delivered_email_matches(%{
+          html_body: html_body,
+          subject: "Traffic drop on your sites",
+          to: [nil: ^user_email]
+        })
 
-      assert html_body =~ "across all your sites"
-      assert html_body =~ @view_dashboard_text
-      refute html_body =~ @review_installation_text
+        assert html_body =~ "across all your sites"
+        assert html_body =~ @view_dashboard_text
+        refute html_body =~ @review_installation_text
+      end
     end
 
     test "does not send notifications more than once every 12 hours" do
@@ -239,45 +242,47 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       )
     end
 
-    test "notifies traffic spike on consolidated view" do
-      {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
-      site1 = new_site(team: team)
-      site2 = new_site(team: team)
+    on_ee do
+      test "notifies traffic spike on consolidated view" do
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+        site1 = new_site(team: team)
+        site2 = new_site(team: team)
 
-      consolidated_view = new_consolidated_view(team)
+        consolidated_view = new_consolidated_view(team)
 
-      insert(:spike_notification,
-        site: consolidated_view,
-        threshold: 2,
-        recipients: ["uku@example.com"]
-      )
+        insert(:spike_notification,
+          site: consolidated_view,
+          threshold: 2,
+          recipients: ["uku@example.com"]
+        )
 
-      populate_stats(site1, [
-        build(:pageview, referrer_source: "Google", pathname: "/b", timestamp: minutes_ago(1)),
-        build(:pageview, referrer_source: "Google", pathname: "/a", timestamp: minutes_ago(2))
-      ])
+        populate_stats(site1, [
+          build(:pageview, referrer_source: "Google", pathname: "/b", timestamp: minutes_ago(1)),
+          build(:pageview, referrer_source: "Google", pathname: "/a", timestamp: minutes_ago(2))
+        ])
 
-      populate_stats(site2, [
-        build(:pageview, referrer_source: "Twitter", pathname: "/a", timestamp: minutes_ago(3))
-      ])
+        populate_stats(site2, [
+          build(:pageview, referrer_source: "Twitter", pathname: "/a", timestamp: minutes_ago(3))
+        ])
 
-      TrafficChangeNotifier.perform(nil)
+        TrafficChangeNotifier.perform(nil)
 
-      assert_delivered_email_matches(%{
-        html_body: html_body,
-        subject: "Traffic spike on your sites",
-        to: [nil: "uku@example.com"]
-      })
+        assert_delivered_email_matches(%{
+          html_body: html_body,
+          subject: "Traffic spike on your sites",
+          to: [nil: "uku@example.com"]
+        })
 
-      assert html_body =~ "across all your sites"
+        assert html_body =~ "across all your sites"
 
-      assert html_body =~ "The top sources for current visitors:"
-      assert html_body =~ "<b>2</b> visitors from <b>Google</b>"
-      assert html_body =~ "<b>1</b> visitor from <b>Twitter</b>"
+        assert html_body =~ "The top sources for current visitors:"
+        assert html_body =~ "<b>2</b> visitors from <b>Google</b>"
+        assert html_body =~ "<b>1</b> visitor from <b>Twitter</b>"
 
-      assert html_body =~ "Your top pages being visited:"
-      assert html_body =~ "<b>2</b> visitors on <b>/a</b>"
-      assert html_body =~ "<b>1</b> visitor on <b>/b</b>"
+        assert html_body =~ "Your top pages being visited:"
+        assert html_body =~ "<b>2</b> visitors on <b>/a</b>"
+        assert html_body =~ "<b>1</b> visitor on <b>/b</b>"
+      end
     end
 
     test "ignores 'Direct / None' source" do
