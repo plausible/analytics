@@ -90,6 +90,7 @@ defmodule Plausible.Teams.Sites.TransferTest do
       test "disables consolidated view if sites transferred out of team" do
         user = new_user()
         site = new_site(owner: user)
+        new_site(owner: user)
         team = team_of(user)
 
         new_consolidated_view(team)

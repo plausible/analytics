@@ -2718,6 +2718,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       end
 
       test "is set to a list of site_ids when site is consolidated", %{site: site} do
+        new_site(team: site.team)
         cv = new_consolidated_view(site.team)
 
         params = %{
@@ -2726,10 +2727,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           "date_range" => "all"
         }
 
-        site_id = site.id
+        assert {:ok, %{consolidated_site_ids: site_ids}} = parse(cv, :public, params)
+        assert length(site_ids) == 2
+        assert site.id in site_ids
 
-        assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :public, params)
-        assert {:ok, %{consolidated_site_ids: [^site_id]}} = parse(cv, :internal, params)
+        assert {:ok, %{consolidated_site_ids: site_ids}} = parse(cv, :internal, params)
+        assert length(site_ids) == 2
+        assert site.id in site_ids
       end
     end
   end

@@ -757,7 +757,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         subscribe_to_enterprise_plan(user,
           features: [
             Plausible.Billing.Feature.StatsAPI,
-            Plausible.Billing.Feature.SitesAPI
+            Plausible.Billing.Feature.SitesAPI,
+            Plausible.Billing.Feature.ConsolidatedView
           ]
         )
 

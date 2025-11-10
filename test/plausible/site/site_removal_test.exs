@@ -57,6 +57,7 @@ defmodule Plausible.Site.SiteRemovalTest do
     test "site deletion disables consolidated view if need be" do
       owner = new_user()
       site = new_site(owner: owner)
+      new_site(owner: owner)
       team = team_of(owner)
 
       new_consolidated_view(team)
@@ -72,6 +73,8 @@ defmodule Plausible.Site.SiteRemovalTest do
       site = new_site(owner: owner)
 
       # another site
+      new_site(owner: owner)
+      # third site to ensure we still have 2+ after deletion
       new_site(owner: owner)
 
       team = team_of(owner)

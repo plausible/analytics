@@ -492,10 +492,12 @@ defmodule Plausible.Stats.QueryTest do
       end
 
       test "is set to a list of site_ids when site is consolidated", %{site: site} do
+        new_site(team: site.team)
         cv = new_consolidated_view(site.team)
 
-        site_id = site.id
-        assert %{consolidated_site_ids: [^site_id]} = Query.from(cv, %{"period" => "day"})
+        assert %{consolidated_site_ids: site_ids} = Query.from(cv, %{"period" => "day"})
+        assert length(site_ids) == 2
+        assert site.id in site_ids
       end
     end
   end

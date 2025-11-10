@@ -16,6 +16,25 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
+  @spec cta_dismissed?(User.t(), Team.t()) :: boolean()
+  def cta_dismissed?(%User{} = user, %Team{} = team) do
+    Teams.Users.get_preference(user, team, :consolidated_view_cta_dismissed)
+  end
+
+  @spec dismiss_cta(User.t(), Team.t()) :: :ok
+  def dismiss_cta(%User{} = user, %Team{} = team) do
+    Teams.Users.set_preference(user, team, :consolidated_view_cta_dismissed, true)
+
+    :ok
+  end
+
+  @spec restore_cta(User.t(), Team.t()) :: :ok
+  def restore_cta(%User{} = user, %Team{} = team) do
+    Teams.Users.set_preference(user, team, :consolidated_view_cta_dismissed, false)
+
+    :ok
+  end
+
   @spec ok_to_display?(Team.t() | nil, User.t() | nil) :: boolean()
   def ok_to_display?(team, user) do
     with %Team{} <- team,
@@ -56,7 +75,8 @@ defmodule Plausible.ConsolidatedView do
     from(s in q, where: s.consolidated == true)
   end
 
-  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :no_sites | :team_not_setup}
+  @spec enable(Team.t()) ::
+          {:ok, Site.t()} | {:error, :no_sites | :team_not_setup | :upgrade_required}
   def enable(%Team{} = team) do
     with :ok <- ensure_eligible(team), do: do_enable(team)
   end
@@ -159,13 +179,11 @@ defmodule Plausible.ConsolidatedView do
     team.identifier
   end
 
-  # TODO: Only active trials and business subscriptions should be eligible.
-  # This function should also call a new underlying feature module.
   defp ensure_eligible(%Team{} = team) do
     cond do
-      not Teams.setup?(team) -> {:error, :team_not_setup}
       not has_sites_to_consolidate?(team) -> {:error, :no_sites}
-      true -> :ok
+      not Teams.setup?(team) -> {:error, :team_not_setup}
+      true -> Plausible.Billing.Feature.ConsolidatedView.check_availability(team)
     end
   end
 
@@ -181,7 +199,7 @@ defmodule Plausible.ConsolidatedView do
   end
 
   defp has_sites_to_consolidate?(%Team{} = team) do
-    Teams.owned_sites_count(team) > 0
+    Teams.owned_sites_count(team) > 1
   end
 
   defp majority_sites_timezone(%Team{} = team) do

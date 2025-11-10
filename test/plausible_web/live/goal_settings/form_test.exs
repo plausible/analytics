@@ -135,6 +135,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
         user: user
       } do
         {:ok, team} = Plausible.Teams.get_or_create(user)
+        new_site(team: team)
         site = new_consolidated_view(team)
 
         lv = get_liveview(conn, site)

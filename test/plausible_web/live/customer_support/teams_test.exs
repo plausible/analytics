@@ -217,6 +217,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       end
 
       test "can create a consolidated view for team", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
         team = user |> team_of() |> Plausible.Teams.complete_setup()
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
@@ -227,6 +229,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       end
 
       test "renders existing consolidated view", %{conn: conn, user: user} do
+        new_site(owner: user)
         team = team_of(user)
         new_consolidated_view(team)
 
@@ -242,6 +245,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       end
 
       test "can delete consolidated view", %{conn: conn, user: user} do
+        new_site(owner: user)
         team = team_of(user)
         new_consolidated_view(team)
 
@@ -327,7 +331,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "site_segments" => "false",
               "shared_links" => "true",
               "sites_api" => "true",
-              "sso" => "false"
+              "sso" => "false",
+              "consolidated_view" => "true"
             }
           }
         })
@@ -342,6 +347,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
                  %Plausible.Billing.EnterprisePlan{
                    billing_interval: :yearly,
                    features: [
+                     Plausible.Billing.Feature.ConsolidatedView,
                      Plausible.Billing.Feature.SharedLinks,
                      Plausible.Billing.Feature.SitesAPI
                    ],

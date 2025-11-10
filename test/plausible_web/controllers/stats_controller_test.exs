@@ -185,6 +185,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         conn: conn,
         user: user
       } do
+        new_site(owner: user)
+        new_site(owner: user)
         cv = user |> team_of() |> new_consolidated_view()
 
         conn = get(conn, "/" <> cv.domain)
