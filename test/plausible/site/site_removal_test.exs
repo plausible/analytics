@@ -61,11 +61,11 @@ defmodule Plausible.Site.SiteRemovalTest do
       team = team_of(owner)
 
       new_consolidated_view(team)
-      assert Plausible.ConsolidatedView.enabled?(team)
+      assert Plausible.ConsolidatedView.get(team)
 
       assert {:ok, _} = Removal.run(site)
 
-      refute Plausible.ConsolidatedView.enabled?(team)
+      refute Plausible.ConsolidatedView.get(team)
     end
 
     test "site deletion keeps consolidated view if there's still regular sites" do
@@ -80,11 +80,11 @@ defmodule Plausible.Site.SiteRemovalTest do
       team = team_of(owner)
 
       new_consolidated_view(team)
-      assert Plausible.ConsolidatedView.enabled?(team)
+      assert Plausible.ConsolidatedView.get(team)
 
       assert {:ok, _} = Removal.run(site)
 
-      assert Plausible.ConsolidatedView.enabled?(team)
+      assert Plausible.ConsolidatedView.get(team)
     end
   end
 end

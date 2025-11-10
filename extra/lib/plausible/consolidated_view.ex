@@ -40,7 +40,7 @@ defmodule Plausible.ConsolidatedView do
     with %Team{} <- team,
          %User{} <- user,
          true <- flag_enabled?(team),
-         true <- enabled?(team),
+         true <- view_enabled?(team),
          true <- has_sites_to_consolidate?(team),
          :ok <- Plausible.Billing.Feature.ConsolidatedView.check_availability(team) do
       true
@@ -80,11 +80,6 @@ defmodule Plausible.ConsolidatedView do
           {:ok, Site.t()} | {:error, :no_sites | :team_not_setup | :upgrade_required}
   def enable(%Team{} = team) do
     with :ok <- ensure_eligible(team), do: do_enable(team)
-  end
-
-  @spec enabled?(Team.t()) :: boolean()
-  def enabled?(%Team{} = team) do
-    not is_nil(get(team))
   end
 
   @spec disable(Team.t()) :: :ok
@@ -230,5 +225,9 @@ defmodule Plausible.ConsolidatedView do
 
   defp flag_enabled?(team) do
     FunWithFlags.enabled?(:consolidated_view, for: team)
+  end
+
+  defp view_enabled?(%Team{} = team) do
+    not is_nil(get(team))
   end
 end

@@ -94,7 +94,7 @@ defmodule Plausible.Teams.Sites.TransferTest do
         team = team_of(user)
 
         new_consolidated_view(team)
-        assert ConsolidatedView.enabled?(team)
+        assert ConsolidatedView.get(team)
 
         another_owner = new_user()
         subscribe_to_growth_plan(another_owner)
@@ -105,7 +105,7 @@ defmodule Plausible.Teams.Sites.TransferTest do
 
         :ok = Transfer.change_team(site, user, another_team)
 
-        refute ConsolidatedView.enabled?(team)
+        refute ConsolidatedView.get(team)
       end
     end
 

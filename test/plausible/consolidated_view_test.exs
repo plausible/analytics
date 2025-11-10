@@ -72,7 +72,7 @@ defmodule Plausible.ConsolidatedViewTest do
         new_site(team: team)
         team = Teams.complete_setup(team)
         assert {:ok, %Plausible.Site{consolidated: true}} = ConsolidatedView.enable(team)
-        assert ConsolidatedView.enabled?(team)
+        assert ConsolidatedView.get(team)
       end
 
       test "is idempotent", %{team: team} do
@@ -104,7 +104,7 @@ defmodule Plausible.ConsolidatedViewTest do
       test "returns {:error, :no_sites} when the team does not have any sites", %{team: team} do
         team = Teams.complete_setup(team)
         assert {:error, :no_sites} = ConsolidatedView.enable(team)
-        refute ConsolidatedView.enabled?(team)
+        refute ConsolidatedView.get(team)
       end
 
       test "returns {:error, :team_not_setup} when the team has sites but isn't setup", %{
@@ -113,12 +113,12 @@ defmodule Plausible.ConsolidatedViewTest do
         new_site(team: team)
         new_site(team: team)
         assert {:error, :team_not_setup} = ConsolidatedView.enable(team)
-        refute ConsolidatedView.enabled?(team)
+        refute ConsolidatedView.get(team)
       end
 
       test "returns {:error, :no_sites} when the team is not set up", %{team: team} do
         assert {:error, :no_sites} = ConsolidatedView.enable(team)
-        refute ConsolidatedView.enabled?(team)
+        refute ConsolidatedView.get(team)
       end
 
       @tag :skip
@@ -285,7 +285,7 @@ defmodule Plausible.ConsolidatedViewTest do
 
       test "no-op if disabled", %{team: team} do
         :ok = ConsolidatedView.reset_if_enabled(team)
-        refute ConsolidatedView.enabled?(team)
+        refute ConsolidatedView.get(team)
         refute ConsolidatedView.get(team)
       end
 
@@ -319,7 +319,7 @@ defmodule Plausible.ConsolidatedViewTest do
         Process.sleep(1_000)
 
         :ok = ConsolidatedView.reset_if_enabled(team)
-        assert ConsolidatedView.enabled?(team)
+        assert ConsolidatedView.get(team)
 
         consolidated_view = ConsolidatedView.get(team)
         assert consolidated_view.native_stats_start_at == another_site.native_stats_start_at
