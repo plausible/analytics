@@ -39,7 +39,7 @@ defmodule Plausible.ConsolidatedView do
   def ok_to_display?(team, user) do
     with %Team{} <- team,
          %User{} <- user,
-         true <- Plausible.Auth.is_super_admin?(user),
+         true <- flag_enabled?(team),
          true <- enabled?(team),
          true <- has_sites_to_consolidate?(team) do
       true
@@ -181,9 +181,17 @@ defmodule Plausible.ConsolidatedView do
 
   defp ensure_eligible(%Team{} = team) do
     cond do
-      not has_sites_to_consolidate?(team) -> {:error, :no_sites}
-      not Teams.setup?(team) -> {:error, :team_not_setup}
-      true -> Plausible.Billing.Feature.ConsolidatedView.check_availability(team)
+      not has_sites_to_consolidate?(team) ->
+        {:error, :no_sites}
+
+      not Teams.setup?(team) ->
+        {:error, :team_not_setup}
+
+      not flag_enabled?(team) ->
+        {:error, :unavailable}
+
+      true ->
+        Plausible.Billing.Feature.ConsolidatedView.check_availability(team)
     end
   end
 
@@ -217,5 +225,9 @@ defmodule Plausible.ConsolidatedView do
       {timezone, _count} -> timezone
       nil -> "Etc/UTC"
     end
+  end
+
+  defp flag_enabled?(team) do
+    FunWithFlags.enabled?(:consolidated_view, for: team)
   end
 end

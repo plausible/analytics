@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Live.Sites do
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <.consolidated_view_card_cta
             :if={
-              !@consolidated_view and @no_consolidated_view_reason not in [:no_sites, :ce] and
+              !@consolidated_view and @no_consolidated_view_reason not in [:no_sites, :unavailable] and
                 not @consolidated_view_cta_dismissed?
             }
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
@@ -1079,7 +1079,7 @@ defmodule PlausibleWeb.Live.Sites do
     defp consolidated_view_ok_to_display?(_team, _user), do: false
 
     defp init_consolidated_view_assigns(_user, _team),
-      do: no_consolidated_view(no_consolidated_view_reason: :ce)
+      do: no_consolidated_view(no_consolidated_view_reason: :unabailable)
 
     defp load_consolidated_stats(_consolidated_view), do: nil
   end
