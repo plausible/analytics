@@ -11,6 +11,8 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Sites
   alias Plausible.Teams
 
+  alias PlausibleWeb.Components.PrimaDropdown
+
   def mount(params, _session, socket) do
     team = socket.assigns.current_team
     user = socket.assigns.current_user
@@ -92,27 +94,27 @@ defmodule PlausibleWeb.Live.Sites do
         <!-- The `z-49` class is to make the dropdown appear above the site cards and (TODO) below the top-right drop down. -->
           <!-- The proper solution is for Prima to render the dropdown menu within a <.portal> element to avoid -->
           <!-- any stacking context issues. TODO  -->
-        <PlausibleWeb.Components.PrimaDropdown.dropdown
+        <PrimaDropdown.dropdown
           :if={@consolidated_view_cta_dismissed?}
           class="z-[49]"
           id="add-site-dropdown"
         >
-          <PlausibleWeb.Components.PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+          <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
             + Add <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-          </PlausibleWeb.Components.PrimaDropdown.dropdown_trigger>
+          </PrimaDropdown.dropdown_trigger>
 
-          <PlausibleWeb.Components.PrimaDropdown.dropdown_menu>
-            <PlausibleWeb.Components.PrimaDropdown.dropdown_item
+          <PrimaDropdown.dropdown_menu>
+            <PrimaDropdown.dropdown_item
               as={&link/1}
               href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
             >
               + Add website
-            </PlausibleWeb.Components.PrimaDropdown.dropdown_item>
-            <PlausibleWeb.Components.PrimaDropdown.dropdown_item phx-click="consolidated-view-cta-restore">
+            </PrimaDropdown.dropdown_item>
+            <PrimaDropdown.dropdown_item phx-click="consolidated-view-cta-restore">
               + Add consolidated view
-            </PlausibleWeb.Components.PrimaDropdown.dropdown_item>
-          </PlausibleWeb.Components.PrimaDropdown.dropdown_menu>
-        </PlausibleWeb.Components.PrimaDropdown.dropdown>
+            </PrimaDropdown.dropdown_item>
+          </PrimaDropdown.dropdown_menu>
+        </PrimaDropdown.dropdown>
 
         <a
           :if={!@consolidated_view_cta_dismissed?}
