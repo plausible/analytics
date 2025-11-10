@@ -76,7 +76,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
 
   defp send_spike_notification(recipient_email, site, stats) do
     dashboard_link =
-      if is_recipient_email_site_member?(site, recipient_email) do
+      if recipient_email_is_site_member?(site, recipient_email) do
         Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []) <>
           "?__team=#{site.team.identifier}"
       end
@@ -93,7 +93,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp send_drop_notification(recipient_email, site, current_visitors) do
-    recipient_is_site_member? = is_recipient_email_site_member?(site, recipient_email)
+    recipient_is_site_member? = recipient_email_is_site_member?(site, recipient_email)
 
     dashboard_link =
       if recipient_is_site_member? do
@@ -165,7 +165,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     Map.put(stats, :pages, pages)
   end
 
-  defp is_recipient_email_site_member?(site, recipient_email) do
+  defp recipient_email_is_site_member?(site, recipient_email) do
     from(tm in Plausible.Teams.Membership,
       inner_join: u in assoc(tm, :user),
       left_join: gm in assoc(tm, :guest_memberships),
