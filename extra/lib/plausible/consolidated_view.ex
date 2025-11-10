@@ -41,7 +41,8 @@ defmodule Plausible.ConsolidatedView do
          %User{} <- user,
          true <- flag_enabled?(team),
          true <- enabled?(team),
-         true <- has_sites_to_consolidate?(team) do
+         true <- has_sites_to_consolidate?(team),
+         :ok <- Plausible.Billing.Feature.ConsolidatedView.check_availability(team) do
       true
     else
       _ ->

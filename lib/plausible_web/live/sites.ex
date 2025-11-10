@@ -1079,7 +1079,7 @@ defmodule PlausibleWeb.Live.Sites do
     defp consolidated_view_ok_to_display?(_team, _user), do: false
 
     defp init_consolidated_view_assigns(_user, _team),
-      do: no_consolidated_view(no_consolidated_view_reason: :unabailable)
+      do: no_consolidated_view(no_consolidated_view_reason: :unavailable)
 
     defp load_consolidated_stats(_consolidated_view), do: nil
   end

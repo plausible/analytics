@@ -68,7 +68,7 @@ if (container && container.dataset) {
                       team: {
                         identifier: container.dataset.teamIdentifier ?? null,
                         hasConsolidatedView:
-                          container.dataset.teamHasConsolidatedView === 'true'
+                          container.dataset.consolidatedViewAvailable === 'true'
                       }
                     }
                   : {
