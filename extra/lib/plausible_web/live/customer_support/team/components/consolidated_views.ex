@@ -76,7 +76,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
               <.delete_button
                 phx-click="delete-consolidated-view"
                 phx-target={@myself}
-                data-confirm="Are you sure you want to delete this consolidated view? It will be recreated whenever eligible subscription/trial accesses /sites for that team."
+                data-confirm="Are you sure you want to delete this consolidated view? All existing consolidated view configuration will be lost. The view itself will be recreated whenever eligible subscription/trial accesses /sites for that team."
               />
             </.td>
           </:tbody>
