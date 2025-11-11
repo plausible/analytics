@@ -87,7 +87,7 @@ defmodule PlausibleWeb.Live.Sites do
 
       <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
-      <div class="pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
+      <div class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
         <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
         <p :if={not @has_sites?} class="dark:text-gray-100">
           You don't have any sites yet.
@@ -97,7 +97,6 @@ defmodule PlausibleWeb.Live.Sites do
           <!-- any stacking context issues. TODO  -->
         <PrimaDropdown.dropdown
           :if={@consolidated_view_cta_dismissed?}
-          class="z-[49]"
           id="add-site-dropdown"
         >
           <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
