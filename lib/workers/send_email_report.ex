@@ -16,7 +16,9 @@ defmodule Plausible.Workers.SendEmailReport do
     site =
       from(s in Plausible.Site,
         where: s.id == ^site_id,
-        preload: [^report_type, :team]
+        inner_join: r in assoc(s, ^report_type),
+        inner_join: t in assoc(s, :team),
+        preload: [{^report_type, r}, {:team, t}]
       )
       |> Repo.one()
 
