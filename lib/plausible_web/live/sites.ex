@@ -101,8 +101,8 @@ defmodule PlausibleWeb.Live.Sites do
           id="add-site-dropdown"
         >
           <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
-            <Heroicons.plus class="size-4" />
-            Add <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+            <Heroicons.plus class="size-4" /> Add
+            <Heroicons.chevron_down mini class="size-4 mt-0.5" />
           </PrimaDropdown.dropdown_trigger>
 
           <PrimaDropdown.dropdown_menu>
@@ -110,12 +110,9 @@ defmodule PlausibleWeb.Live.Sites do
               as={&link/1}
               href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
             >
-              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
-              Add website
+              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
             </PrimaDropdown.dropdown_item>
-            <PrimaDropdown.dropdown_item
-              phx-click="consolidated-view-cta-restore"
-            >
+            <PrimaDropdown.dropdown_item phx-click="consolidated-view-cta-restore">
               <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
               Add consolidated view
             </PrimaDropdown.dropdown_item>
@@ -127,9 +124,7 @@ defmodule PlausibleWeb.Live.Sites do
           href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
           class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
         >
-
-          <Heroicons.plus class="size-4" />
-          Add website
+          <Heroicons.plus class="size-4" /> Add website
         </a>
       </div>
 
