@@ -18,16 +18,33 @@ defmodule Plausible.Sites do
 
     @spec consolidated?(Site.t()) :: boolean()
     def consolidated?(%Site{} = site), do: site.consolidated
+
+    def site_id_query_filter(%Site{} = site) do
+      if consolidated?(site) do
+        site_ids = Plausible.ConsolidatedView.Cache.get(site.domain)
+        dynamic([x], fragment("? in ?", x.site_id, ^site_ids))
+      else
+        dynamic([x], x.site_id == ^site.id)
+      end
+    end
   else
     @spec regular?(Site.t()) :: boolean()
     def regular?(%Site{}), do: always(true)
 
     @spec consolidated?(Site.t()) :: boolean()
     def consolidated?(%Site{}), do: always(false)
+
+    def site_id_query_filter(%Site{} = site) do
+      dynamic([x], x.site_id == ^site.id)
+    end
   end
 
-  def display_name(%Site{} = site) do
-    if consolidated?(site), do: "consolidated view", else: site.domain
+  def display_name(%Site{} = site, opts \\ []) do
+    if consolidated?(site) do
+      "#{if opts[:capitalize_consolidated], do: "C", else: "c"}onsolidated view"
+    else
+      site.domain
+    end
   end
 
   @shared_link_special_names ["WordPress - Shared Dashboard"]
