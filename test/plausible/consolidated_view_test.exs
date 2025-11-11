@@ -24,43 +24,39 @@ defmodule Plausible.ConsolidatedViewTest do
       end
     end
 
-    describe "ok_to_display?/2" do
+    describe "ok_to_display?/1" do
       setup [:create_user, :create_team]
 
-      test "returns false when team is nil", %{user: user} do
-        refute ConsolidatedView.ok_to_display?(nil, user)
+      test "returns false when team is nil" do
+        refute ConsolidatedView.ok_to_display?(nil)
       end
 
-      test "returns false when user is nil", %{team: team} do
-        refute ConsolidatedView.ok_to_display?(team, nil)
-      end
-
-      test "returns false when feature flag is disabled", %{team: team, user: user} do
+      test "returns false when feature flag is disabled", %{team: team} do
         FunWithFlags.disable(:consolidated_view, for_actor: team)
-        refute ConsolidatedView.ok_to_display?(team, user)
+        refute ConsolidatedView.ok_to_display?(team)
       end
 
-      test "returns false when consolidated view is not enabled", %{team: team, user: user} do
+      test "returns false when consolidated view is not enabled", %{team: team} do
         ConsolidatedView.disable(team)
-        refute ConsolidatedView.ok_to_display?(team, user)
+        refute ConsolidatedView.ok_to_display?(team)
       end
 
-      test "returns false when there are no sites to consolidate", %{team: team, user: user} do
+      test "returns false when there are no sites to consolidate", %{team: team} do
         new_site(team: team)
         site = new_site(team: team)
         team = Teams.complete_setup(team)
         {:ok, _} = ConsolidatedView.enable(team)
         Plausible.Repo.delete(site)
-        refute ConsolidatedView.ok_to_display?(team, user)
+        refute ConsolidatedView.ok_to_display?(team)
       end
 
-      test "returns true when all conditions are met", %{team: team, user: user} do
+      test "returns true when all conditions are met", %{team: team} do
         new_site(team: team)
         new_site(team: team)
         team = Teams.complete_setup(team)
         {:ok, _} = ConsolidatedView.enable(team)
 
-        assert ConsolidatedView.ok_to_display?(team, user)
+        assert ConsolidatedView.ok_to_display?(team)
       end
     end
 

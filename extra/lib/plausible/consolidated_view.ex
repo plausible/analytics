@@ -35,10 +35,9 @@ defmodule Plausible.ConsolidatedView do
     :ok
   end
 
-  @spec ok_to_display?(Team.t() | nil, User.t() | nil) :: boolean()
-  def ok_to_display?(team, user) do
+  @spec ok_to_display?(Team.t() | nil) :: boolean()
+  def ok_to_display?(team) do
     with %Team{} <- team,
-         %User{} <- user,
          true <- flag_enabled?(team),
          true <- view_enabled?(team),
          true <- has_sites_to_consolidate?(team),

@@ -155,7 +155,7 @@ defmodule PlausibleWeb.Live.Sites do
             current_team={@current_team}
           />
           <.consolidated_view_card
-            :if={@consolidated_view && consolidated_view_ok_to_display?(@current_team, @current_user)}
+            :if={@consolidated_view && consolidated_view_ok_to_display?(@current_team)}
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
             consolidated_view={@consolidated_view}
             consolidated_stats={@consolidated_stats}
@@ -1041,8 +1041,8 @@ defmodule PlausibleWeb.Live.Sites do
   on_ee do
     alias Plausible.ConsolidatedView
 
-    defp consolidated_view_ok_to_display?(team, user) do
-      ConsolidatedView.ok_to_display?(team, user)
+    defp consolidated_view_ok_to_display?(team) do
+      ConsolidatedView.ok_to_display?(team)
     end
 
     defp init_consolidated_view_assigns(_user, nil) do
@@ -1078,7 +1078,7 @@ defmodule PlausibleWeb.Live.Sites do
       end
     end
   else
-    defp consolidated_view_ok_to_display?(_team, _user), do: false
+    defp consolidated_view_ok_to_display?(_team), do: false
 
     defp init_consolidated_view_assigns(_user, _team),
       do: no_consolidated_view(no_consolidated_view_reason: :unavailable)
