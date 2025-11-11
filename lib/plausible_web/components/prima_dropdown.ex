@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
   alias Prima.Dropdown
   use Phoenix.Component
 
+  @dropdown_item_icon_base_class "text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 group-data-focus/item:text-gray-900 dark:group-hover/item:text-gray-100 dark:group-data-focus/item:text-gray-100"
+
   defdelegate dropdown(assigns), to: Prima.Dropdown
   defdelegate dropdown_trigger(assigns), to: Prima.Dropdown
 
@@ -14,7 +16,7 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
     ~H"""
     <Dropdown.dropdown_menu
       placement="bottom-end"
-      class="p-1.5 rounded-md bg-white shadow-xs ring-1 ring-gray-300 focus:outline-none"
+      class="bg-white rounded-md shadow-lg ring-1 ring-black/5 focus:outline-none p-1.5 dark:bg-gray-800"
     >
       {render_slot(@inner_block)}
     </Dropdown.dropdown_menu>
@@ -31,11 +33,15 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
     <Dropdown.dropdown_item
       as={@as}
       disabled={@disabled}
-      class="rounded-md text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 block px-4 py-2 text-sm"
+      class="group/item flex items-center gap-x-2 rounded-md px-4 py-2 text-gray-700 text-sm dark:text-gray-300 data-focus:bg-gray-100 dark:data-focus:bg-gray-700 data-focus:text-gray-900 dark:data-focus:text-gray-100"
       {@rest}
     >
       {render_slot(@inner_block)}
     </Dropdown.dropdown_item>
     """
+  end
+
+  def dropdown_item_icon_class(size \\ "size-4") do
+    "#{size} #{@dropdown_item_icon_base_class}"
   end
 end

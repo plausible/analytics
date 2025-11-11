@@ -71,22 +71,23 @@ defmodule PlausibleWeb.Live.Sites do
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center justify-between">
-        <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate shrink-0">
+      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
+        <h2 class="text-xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-2xl md:text-3xl sm:leading-9 min-w-0 truncate">
           {Teams.name(@current_team)}
-          <.unstyled_link
-            :if={Teams.setup?(@current_team)}
-            data-test-id="team-settings-link"
-            href={Routes.settings_path(@socket, :team_general)}
-          >
-            <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
-          </.unstyled_link>
         </h2>
+        <.unstyled_link
+          :if={Teams.setup?(@current_team)}
+          data-test-id="team-settings-link"
+          href={Routes.settings_path(@socket, :team_general)}
+          class="shrink-0"
+        >
+          <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
+        </.unstyled_link>
       </div>
 
       <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
-      <div class="pt-4 sm:flex sm:items-center sm:justify-between">
+      <div class="pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
         <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
         <p :if={not @has_sites?} class="dark:text-gray-100">
           You don't have any sites yet.
@@ -100,7 +101,8 @@ defmodule PlausibleWeb.Live.Sites do
           id="add-site-dropdown"
         >
           <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
-            + Add <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+            <Heroicons.plus class="size-4" />
+            Add <Heroicons.chevron_down mini class="size-4 mt-0.5" />
           </PrimaDropdown.dropdown_trigger>
 
           <PrimaDropdown.dropdown_menu>
@@ -108,10 +110,14 @@ defmodule PlausibleWeb.Live.Sites do
               as={&link/1}
               href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
             >
-              + Add website
+              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
+              Add website
             </PrimaDropdown.dropdown_item>
-            <PrimaDropdown.dropdown_item phx-click="consolidated-view-cta-restore">
-              + Add consolidated view
+            <PrimaDropdown.dropdown_item
+              phx-click="consolidated-view-cta-restore"
+            >
+              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
+              Add consolidated view
             </PrimaDropdown.dropdown_item>
           </PrimaDropdown.dropdown_menu>
         </PrimaDropdown.dropdown>
@@ -119,7 +125,7 @@ defmodule PlausibleWeb.Live.Sites do
         <a
           :if={!@consolidated_view_cta_dismissed?}
           href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
-          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
+          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
         >
           + Add website
         </a>
@@ -235,10 +241,10 @@ defmodule PlausibleWeb.Live.Sites do
       class="relative col-span-1 flex flex-col justify-between bg-white p-6 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
     >
       <div class="flex flex-col">
-        <p class="text-sm text-gray-600 dark:text-gray-400">
+        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
           Introducing
         </p>
-        <h3 class="text-[1.35rem] font-bold text-gray-900 leading-tighter dark:text-gray-100">
+        <h3 class="text-lg sm:text-[1.35rem] font-bold text-gray-900 leading-tighter dark:text-gray-100">
           Consolidated view
         </h3>
       </div>
@@ -247,7 +253,7 @@ defmodule PlausibleWeb.Live.Sites do
         :if={@no_consolidated_view_reason == :team_not_setup}
         class="flex flex-col gap-y-4"
       >
-        <p class="text-gray-900 dark:text-gray-100 leading-tighter">
+        <p class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter">
           To create a consolidated view, you'll need to set up a team.
         </p>
         <div class="flex gap-x-2">
@@ -273,14 +279,14 @@ defmodule PlausibleWeb.Live.Sites do
       >
         <p
           :if={@can_manage_consolidated_view?}
-          class="text-gray-900 dark:text-gray-100 leading-tighter"
+          class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter"
         >
           Upgrade to the Business plan<span :if={not Teams.setup?(@current_team)}> and set up a team</span> to enable consolidated views.
         </p>
 
         <p
           :if={not @can_manage_consolidated_view?}
-          class="text-gray-900 dark:text-gray-100 leading-tighter"
+          class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter"
         >
           Available on Business plans. Contact your team owner to create it.
         </p>
@@ -314,11 +320,11 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       data-test-id="consolidated-view-card"
-      class="relative row-span-2 bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
+      class="relative row-span-2"
     >
       <.unstyled_link
         href={"/#{URI.encode_www_form(@consolidated_view.domain)}"}
-        class="flex flex-col justify-between gap-6 h-full"
+        class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
           <div class="flex flex-col gap-y-2 mb-auto">
@@ -331,7 +337,7 @@ defmodule PlausibleWeb.Live.Sites do
           </div>
           <span
             :if={is_map(@consolidated_stats)}
-            class="h-[54px] text-indigo-500 my-auto"
+            class="max-w-sm sm:max-w-none text-indigo-500 my-auto"
             data-test-id="consolidated-view-chart-loaded"
           >
             <PlausibleWeb.Live.Components.Visitors.chart
@@ -467,7 +473,7 @@ defmodule PlausibleWeb.Live.Sites do
         )
       }
     >
-      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
+      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"} class="block">
         <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
@@ -504,7 +510,7 @@ defmodule PlausibleWeb.Live.Sites do
           href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
           class="group/item !flex items-center gap-x-2"
         >
-          <Heroicons.cog_6_tooth class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100 transition-colors duration-150" />
+          <Heroicons.cog_6_tooth class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100" />
           <span>Settings</span>
         </.dropdown_item>
 
@@ -526,13 +532,13 @@ defmodule PlausibleWeb.Live.Sites do
           <.icon_pin
             :if={@site.pinned_at}
             filled={true}
-            class="size-[1.15rem] text-indigo-600 dark:text-indigo-500 group-hover/item:text-indigo-700 dark:group-hover/item:text-indigo-400 transition-colors duration-150"
+            class="size-[1.15rem] text-indigo-600 dark:text-indigo-500 group-hover/item:text-indigo-700 dark:group-hover/item:text-indigo-400"
           />
           <span :if={@site.pinned_at}>Unpin site</span>
 
           <.icon_pin
             :if={!@site.pinned_at}
-            class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100 transition-colors duration-150"
+            class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100"
           />
           <span :if={!@site.pinned_at}>Pin site</span>
         </.dropdown_item>
@@ -583,7 +589,7 @@ defmodule PlausibleWeb.Live.Sites do
     </div>
     <div :if={is_map(@hourly_stats)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
-        <span class="h-[54px] text-indigo-500">
+        <span class="max-w-sm sm:max-w-none text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
             intervals={@hourly_stats.intervals}
             height={80}
@@ -611,7 +617,7 @@ defmodule PlausibleWeb.Live.Sites do
   # Related React component: <ChangeArrow />
   def percentage_change(assigns) do
     ~H"""
-    <p class="text-gray-900 dark:text-gray-100">
+    <p class="text-sm text-gray-900 dark:text-gray-100">
       <svg
         :if={@change > 0}
         xmlns="http://www.w3.org/2000/svg"
