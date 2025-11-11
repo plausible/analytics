@@ -64,7 +64,7 @@ defmodule PlausibleWeb.StatsController do
     consolidated_view? = Plausible.Sites.consolidated?(site)
 
     consolidated_view_available? =
-      on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team, current_user), else: false)
+      on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team), else: false)
 
     team_identifier = site.team.identifier
 
@@ -407,12 +407,6 @@ defmodule PlausibleWeb.StatsController do
 
         true = Plausible.Sites.regular?(shared_link.site)
 
-        consolidated_view_available? =
-          on_ee(
-            do: Plausible.ConsolidatedView.ok_to_display?(shared_link.site.team, current_user),
-            else: false
-          )
-
         team_identifier = shared_link.site.team.identifier
 
         conn
@@ -440,7 +434,7 @@ defmodule PlausibleWeb.StatsController do
           hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public),
           # no shared links for consolidated views
           consolidated_view?: false,
-          consolidated_view_available?: consolidated_view_available?,
+          consolidated_view_available?: false,
           team_identifier: team_identifier
         )
     end
