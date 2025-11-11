@@ -127,7 +127,9 @@ defmodule PlausibleWeb.Live.Sites do
           href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
           class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
         >
-          + Add website
+
+          <Heroicons.plus class="size-4" />
+          Add website
         </a>
       </div>
 
