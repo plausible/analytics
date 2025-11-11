@@ -22,9 +22,11 @@ defmodule Plausible.Workers.SendEmailReport do
       )
       |> Repo.one()
 
-    report = site && Map.get(site, report_type)
-
-    if report do
+    with %Plausible.Site{} <- site,
+         %{} = report <- Map.get(site, report_type),
+         true <-
+           not Plausible.Sites.consolidated?(site) or
+             Plausible.ConsolidatedView.ok_to_display?(site.team) do
       date_range = date_range(site, interval)
       report_name = report_name(interval, date_range.first)
       date_label = Calendar.strftime(date_range.last, "%-d %b %Y")
@@ -48,7 +50,7 @@ defmodule Plausible.Workers.SendEmailReport do
         |> Plausible.Mailer.send()
       end)
     else
-      :discard
+      _ -> :discard
     end
   end
 

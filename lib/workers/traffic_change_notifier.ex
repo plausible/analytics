@@ -29,29 +29,34 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
       )
 
     for notification <- notifications do
-      case notification.type do
-        :spike ->
-          current_visitors = Clickhouse.current_visitors(notification.site)
-
-          if current_visitors >= notification.threshold do
-            stats =
-              notification.site
-              |> get_traffic_spike_stats()
-              |> Map.put(:current_visitors, current_visitors)
-
-            notify_spike(notification, stats, now)
-          end
-
-        :drop ->
-          current_visitors = Clickhouse.current_visitors_12h(notification.site)
-
-          if current_visitors < notification.threshold do
-            notify_drop(notification, current_visitors, now)
-          end
+      if not Plausible.Sites.consolidated?(notification.site) or
+           Plausible.ConsolidatedView.ok_to_display?(notification.site.team) do
+        handle_notification(notification, now)
       end
     end
 
     :ok
+  end
+
+  defp handle_notification(%TrafficChangeNotification{type: :spike} = notification, now) do
+    current_visitors = Clickhouse.current_visitors(notification.site)
+
+    if current_visitors >= notification.threshold do
+      stats =
+        notification.site
+        |> get_traffic_spike_stats()
+        |> Map.put(:current_visitors, current_visitors)
+
+      notify_spike(notification, stats, now)
+    end
+  end
+
+  defp handle_notification(%TrafficChangeNotification{type: :drop} = notification, now) do
+    current_visitors = Clickhouse.current_visitors_12h(notification.site)
+
+    if current_visitors < notification.threshold do
+      notify_drop(notification, current_visitors, now)
+    end
   end
 
   defp notify_spike(notification, stats, now) do
