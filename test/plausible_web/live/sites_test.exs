@@ -336,10 +336,13 @@ defmodule PlausibleWeb.Live.SitesTest do
         assert stats =~ "Views per visit 1.33"
       end
 
-      test "consolidated view does not show up for non-superadmin (temp)", %{conn: conn} do
+      test "consolidated view does not show up when flag is down (temp)", %{conn: conn} do
         user = new_user()
         new_site(owner: user)
+        new_site(owner: user)
         team = team_of(user)
+
+        FunWithFlags.disable(:consolidated_views, for_actor: team)
 
         conn = set_current_team(conn, team)
 
