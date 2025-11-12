@@ -16,6 +16,11 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
+  @spec flag_enabled?(Team.t()) :: boolean()
+  def flag_enabled?(team) do
+    FunWithFlags.enabled?(:consolidated_view, for: team)
+  end
+
   @spec cta_dismissed?(User.t(), Team.t()) :: boolean()
   def cta_dismissed?(%User{} = user, %Team{} = team) do
     {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
@@ -222,10 +227,6 @@ defmodule Plausible.ConsolidatedView do
       {timezone, _count} -> timezone
       nil -> "Etc/UTC"
     end
-  end
-
-  defp flag_enabled?(team) do
-    FunWithFlags.enabled?(:consolidated_view, for: team)
   end
 
   defp view_enabled?(%Team{} = team) do
