@@ -16,13 +16,13 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id, qs)
     end
 
+    setup [:create_user, :log_in, :create_site]
+
+    setup %{user: user} do
+      patch_env(:super_admin_user_ids, [user.id])
+    end
+
     describe "overview" do
-      setup [:create_user, :log_in, :create_site]
-
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "renders", %{conn: conn, user: user} do
         team = team_of(user)
         new_site(owner: user)
@@ -165,12 +165,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     end
 
     describe "sites" do
-      setup [:create_user, :log_in, :create_site]
-
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "lists sites belonging to a team", %{conn: conn, user: user} do
         team = team_of(user)
         new_site(owner: user, domain: "primary.example.com/test")
@@ -198,13 +192,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     @consolidated_views_tab_content ~s|div[data-test-id="consolidated-views-tab-content"]|
 
     describe "consolidated views" do
-      setup [:create_user, :log_in, :create_site]
-
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
-      test "renders button to create one inonef  exist yet", %{conn: conn, user: user} do
+      test "renders button to create one if none exist yet", %{conn: conn, user: user} do
         team = team_of(user)
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
@@ -260,12 +248,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     end
 
     describe "billing" do
-      setup [:create_user, :log_in, :create_site]
-
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "renders custom plan form", %{conn: conn, user: user} do
         lv = open_custom_plan(conn, team_of(user))
         html = render(lv)
@@ -753,12 +735,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     end
 
     describe "sso" do
-      setup [:create_user, :log_in, :create_site]
-
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "sso tab normally won't render", %{conn: conn, user: user} do
         team = team_of(user)
         {:ok, _lv, html} = live(conn, open_team(team.id))
@@ -848,12 +824,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     end
 
     describe "audit" do
-      setup [:create_user, :log_in, :create_site]
-
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "audit tab is present", %{conn: conn, user: user} do
         team = team_of(user)
         {:ok, _lv, html} = live(conn, open_team(team.id))
