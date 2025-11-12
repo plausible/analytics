@@ -230,8 +230,9 @@ defmodule Plausible.Workers.SendEmailReport do
 
   on_ee do
     defp ok_to_send?(site) do
-      not Plausible.Sites.consolidated?(site) or
-        Plausible.ConsolidatedView.ok_to_display?(site.team)
+      Plausible.Sites.regular?(site) or
+        (Plausible.Sites.consolidated?(site) and
+           Plausible.ConsolidatedView.ok_to_display?(site.team))
     end
   else
     defp ok_to_send?(_site), do: always(true)
