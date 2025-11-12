@@ -134,7 +134,9 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(email)
     |> tag("spike-notification")
-    |> subject("Traffic Spike on #{site.domain}")
+    |> subject(
+      "Traffic spike on #{if Plausible.Sites.consolidated?(site), do: "your sites", else: site.domain}"
+    )
     |> render("spike_notification.html", %{
       site: site,
       current_visitors: stats.current_visitors,
@@ -148,7 +150,9 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(email)
     |> tag("drop-notification")
-    |> subject("Traffic Drop on #{site.domain}")
+    |> subject(
+      "Traffic drop on #{if Plausible.Sites.consolidated?(site), do: "your sites", else: site.domain}"
+    )
     |> render("drop_notification.html", %{
       site: site,
       current_visitors: current_visitors,
