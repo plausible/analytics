@@ -2,6 +2,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   @moduledoc """
   Oban service sending out traffic drop/spike notifications
   """
+  use Plausible
   use Plausible.Repo
   alias Plausible.Stats.{Query, Clickhouse}
   alias Plausible.Site.TrafficChangeNotification
@@ -28,11 +29,8 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
           preload: [site: {s, team: t}]
       )
 
-    for notification <- notifications do
-      if not Plausible.Sites.consolidated?(notification.site) or
-           Plausible.ConsolidatedView.ok_to_display?(notification.site.team) do
-        handle_notification(notification, now)
-      end
+    for notification <- notifications, ok_to_send?(notification.site) do
+      handle_notification(notification, now)
     end
 
     :ok
@@ -179,5 +177,14 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
       where: u.email == ^recipient_email
     )
     |> Repo.exists?()
+  end
+
+  on_ee do
+    defp ok_to_send?(site) do
+      not Plausible.Sites.consolidated?(site) or
+        Plausible.ConsolidatedView.ok_to_display?(site.team)
+    end
+  else
+    defp ok_to_send?(_site), do: always(true)
   end
 end

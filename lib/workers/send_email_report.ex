@@ -1,4 +1,5 @@
 defmodule Plausible.Workers.SendEmailReport do
+  use Plausible
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
 
@@ -24,9 +25,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
     with %Plausible.Site{} <- site,
          %{} = report <- Map.get(site, report_type),
-         true <-
-           not Plausible.Sites.consolidated?(site) or
-             Plausible.ConsolidatedView.ok_to_display?(site.team) do
+         true <- ok_to_send?(site) do
       date_range = date_range(site, interval)
       report_name = report_name(interval, date_range.first)
       date_label = Calendar.strftime(date_range.last, "%-d %b %Y")
@@ -227,5 +226,14 @@ defmodule Plausible.Workers.SendEmailReport do
       |> Date.end_of_month()
 
     Date.range(first, last)
+  end
+
+  on_ee do
+    defp ok_to_send?(site) do
+      not Plausible.Sites.consolidated?(site) or
+        Plausible.ConsolidatedView.ok_to_display?(site.team)
+    end
+  else
+    defp ok_to_send?(_site), do: always(true)
   end
 end
