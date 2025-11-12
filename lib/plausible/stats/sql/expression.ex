@@ -195,10 +195,21 @@ defmodule Plausible.Stats.SQL.Expression do
     "event:page" => :pathname,
     "event:hostname" => :hostname,
     "visit:entry_page" => :entry_page,
-    "visit:entry_page_hostname" => :entry_page_hostname,
-    "visit:exit_page" => :exit_page,
-    "visit:exit_page_hostname" => :exit_page_hostname
+    "visit:entry_page_hostname" => :entry_page_hostname
   }
+
+  def select_dimension_internal(q, "visit:exit_page") do
+    select_merge_as(q, [t], %{
+      exit_page: fragment("argMax(?, ?)", field(t, :exit_page), field(t, :events))
+    })
+  end
+
+  def select_dimension_internal(q, "visit:exit_page_hostname") do
+    select_merge_as(q, [t], %{
+      exit_page_hostname:
+        fragment("argMax(?, ?)", field(t, :exit_page_hostname), field(t, :events))
+    })
+  end
 
   def select_dimension_internal(q, dimension) do
     if column = Map.get(@dimension_columns, dimension) do
