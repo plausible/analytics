@@ -283,14 +283,10 @@ defmodule PlausibleWeb.Live.SitesTest do
 
   on_ee do
     describe "consolidated views appearance" do
-      setup %{user: user} do
-        # this is temporary, instead of feature flag we'll only show consolidated views to super admins
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "consolidated view shows up", %{conn: conn, user: user} do
         new_site(owner: user)
-        team = team_of(user)
+        new_site(owner: user)
+        team = user |> team_of()
 
         conn = set_current_team(conn, team)
 
@@ -298,7 +294,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
         refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
 
-        new_consolidated_view(team)
+        team = Plausible.Teams.complete_setup(team)
+        conn = set_current_team(conn, team)
 
         {:ok, _lv, html} = live(conn, "/sites")
 
@@ -321,11 +318,9 @@ defmodule PlausibleWeb.Live.SitesTest do
           build(:pageview, user_id: 3)
         ])
 
-        team = team_of(user)
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
 
         conn = set_current_team(conn, team)
-
-        new_consolidated_view(team)
 
         {:ok, _lv, html} = live(conn, "/sites")
 
@@ -336,24 +331,219 @@ defmodule PlausibleWeb.Live.SitesTest do
         assert stats =~ "Views per visit 1.33"
       end
 
-      test "consolidated view does not show up for non-superadmin (temp)", %{conn: conn} do
-        user = new_user()
+      test "consolidated view does not show up when flag is down (temp) during trial", %{
+        conn: conn,
+        user: user
+      } do
         new_site(owner: user)
-        team = team_of(user)
+        new_site(owner: user)
+
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+
+        FunWithFlags.disable(:consolidated_view, for_actor: team)
 
         conn = set_current_team(conn, team)
 
         {:ok, _lv, html} = live(conn, "/sites")
 
         refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+      end
 
-        new_consolidated_view(team)
+      test "consolidated view does not show up when flag is down (temp) after trial ends", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        team =
+          user
+          |> team_of()
+          |> Plausible.Teams.Team.end_trial()
+          |> Plausible.Repo.update!()
+
+        FunWithFlags.disable(:consolidated_view, for_actor: team)
+
+        conn = set_current_team(conn, team)
 
         {:ok, _lv, html} = live(conn, "/sites")
 
         refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
         refute element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
         refute element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+      end
+
+      test "consolidated view disappears when trial ends - CTA is shown instead", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+
+        conn = set_current_team(conn, team)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+
+        team |> Plausible.Teams.Team.end_trial() |> Plausible.Repo.update!()
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "Upgrade to the Business plan to enable consolidated views."
+
+        assert element_exists?(
+                 html,
+                 ~s|[data-test-id="consolidated-view-card-cta"] a[href$="/billing/choose-plan"]|
+               )
+      end
+
+      test "a team that hasn't been set up shows different CTA", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "To create a consolidated view, you'll need to set up a team."
+      end
+
+      test "single site won't show neither CTA or view - team not setup", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+      end
+
+      test "single site won't show neither CTA or view - team setup", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+
+        user |> team_of() |> Plausible.Teams.complete_setup()
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+      end
+
+      test "CTA advertises contacting team owner to viewers", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        subscribe_to_growth_plan(user)
+
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+
+        viewer = add_member(team, role: :viewer)
+
+        {:ok, conn: conn} = log_in(%{user: viewer, conn: conn})
+
+        {:ok, _lv, html} = live(conn, "/sites?__team=#{team.identifier}")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "Available on Business plans. Contact your team owner to create it."
+
+        refute element_exists?(
+                 html,
+                 ~s|[data-test-id="consolidated-view-card-cta"] a[href="/billing/choose-plan"]|
+               )
+      end
+
+      test "CTA can be permanently dismissed, in which case dropdown option to restore it shows up",
+           %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        dismiss_selector = ~s|[phx-click="consolidated-view-cta-dismiss"]|
+        cta_selector = ~s|[data-test-id="consolidated-view-card-cta"]|
+        restore_selector = ~s|[phx-click="consolidated-view-cta-restore"]|
+
+        subscribe_to_growth_plan(user)
+
+        {:ok, lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, cta_selector)
+        refute element_exists?(html, restore_selector)
+
+        lv
+        |> element(dismiss_selector)
+        |> render_click()
+
+        html = render(lv)
+
+        refute element_exists?(html, cta_selector)
+        assert element_exists?(html, restore_selector)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+        refute element_exists?(html, cta_selector)
+
+        lv
+        |> element(restore_selector)
+        |> render_click()
+
+        html = render(lv)
+        assert element_exists?(html, cta_selector)
+      end
+
+      test "consolidated view card disappears when searching", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+        conn = set_current_team(conn, team)
+
+        {:ok, lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+
+        type_into_input(lv, "filter-text", "a")
+
+        html = render(lv)
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+      end
+
+      test "CTA card disappears when searching", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        {:ok, lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        type_into_input(lv, "filter-text", "a")
+
+        html = render(lv)
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
       end
     end
   end

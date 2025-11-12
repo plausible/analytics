@@ -504,7 +504,9 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     on_ee do
       test "renders only timezone section for a consolidated site", %{conn: conn, user: user} do
-        consolidated_view = user |> team_of() |> new_consolidated_view()
+        team = team_of(user)
+        new_site(team: team)
+        consolidated_view = new_consolidated_view(team)
         conn = get(conn, "/#{consolidated_view.domain}/settings/general")
         resp = html_response(conn, 200)
 
@@ -584,6 +586,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         user: user
       } do
         team = user |> team_of()
+        new_site(team: team)
         site = new_consolidated_view(team)
         conn = get(conn, "/#{site.domain}/settings/general")
         resp = html_response(conn, 200)

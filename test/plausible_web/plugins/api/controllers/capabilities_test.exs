@@ -33,7 +33,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "SitesAPI" => false,
                    "SiteSegments" => false,
                    "SharedLinks" => false,
-                   "SSO" => false
+                   "SSO" => false,
+                   "ConsolidatedView" => false
                  }
                }
 
@@ -61,7 +62,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "SitesAPI" => false,
                    "SiteSegments" => false,
                    "SharedLinks" => false,
-                   "SSO" => false
+                   "SSO" => false,
+                   "ConsolidatedView" => false
                  }
                }
 
@@ -91,7 +93,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "SitesAPI" => false,
                    "SiteSegments" => true,
                    "SharedLinks" => true,
-                   "SSO" => false
+                   "SSO" => false,
+                   "ConsolidatedView" => true
                  }
                }
 
@@ -123,7 +126,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "SitesAPI" => false,
                    "SiteSegments" => false,
                    "SharedLinks" => true,
-                   "SSO" => false
+                   "SSO" => false,
+                   "ConsolidatedView" => false
                  }
                }
 
@@ -158,7 +162,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "SitesAPI" => true,
                    "SiteSegments" => false,
                    "SharedLinks" => false,
-                   "SSO" => false
+                   "SSO" => false,
+                   "ConsolidatedView" => false
                  }
                }
 

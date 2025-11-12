@@ -30,7 +30,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
       assert text_of_attr(resp, @react_container, "data-embedded") == ""
       assert text_of_attr(resp, @react_container, "data-is-consolidated-view") == "false"
-      assert text_of_attr(resp, @react_container, "data-team-has-consolidated-view") == "false"
+      assert text_of_attr(resp, @react_container, "data-consolidated-view-available") == "false"
       assert text_of_attr(resp, @react_container, "data-team-identifier") == site.team.identifier
 
       assert "noindex, nofollow" ==
@@ -185,6 +185,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         conn: conn,
         user: user
       } do
+        new_site(owner: user)
+        new_site(owner: user)
         cv = user |> team_of() |> new_consolidated_view()
 
         conn = get(conn, "/" <> cv.domain)
@@ -194,6 +196,23 @@ defmodule PlausibleWeb.StatsControllerTest do
         assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
         assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
         assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
+      end
+
+      test "redirects to /sites if for some reason ineligible anymore", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+        cv = user |> team_of() |> new_consolidated_view()
+
+        user
+        |> team_of()
+        |> Plausible.Teams.Team.end_trial()
+        |> Plausible.Repo.update!()
+
+        conn = get(conn, "/" <> cv.domain)
+        assert redirected_to(conn, 302) == "/sites"
       end
     end
 

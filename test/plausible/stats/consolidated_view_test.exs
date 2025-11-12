@@ -72,6 +72,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       fixed_now = ~N[2025-10-20 12:49:15]
       owner = new_user()
       site = new_site(owner: owner)
+      new_site(owner: owner)
 
       populate_stats(site, [
         build(:pageview, user_id: 111, timestamp: ~N[2025-10-20 12:00:00]),
@@ -95,6 +96,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       fixed_now = ~N[2025-10-20 12:49:15]
       owner = new_user()
       site = new_site(owner: owner)
+      new_site(owner: owner)
 
       populate_stats(site, [
         build(:pageview, user_id: 111, timestamp: ~N[2025-10-19 11:00:00]),
@@ -122,6 +124,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       fixed_now = ~N[2025-10-20 12:49:15]
       owner = new_user()
       site = new_site(owner: owner)
+      new_site(owner: owner)
 
       populate_stats(site, [
         build(:pageview, user_id: 111, timestamp: ~N[2025-10-20 12:00:00]),

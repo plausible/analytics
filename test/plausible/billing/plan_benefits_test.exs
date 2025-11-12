@@ -80,7 +80,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Stats API (600 requests per hour)",
                "Looker Studio Connector",
                "Ecommerce revenue attribution",
-               "Funnels"
+               "Funnels",
+               "Consolidated View"
              ]
     end
 
@@ -99,7 +100,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Funnels",
                "Stats API (600 requests per hour)",
                "Looker Studio Connector",
-               "Shared Segments"
+               "Shared Segments",
+               "Consolidated View"
              ]
     end
 
@@ -120,7 +122,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Everything in Growth",
                  "Ecommerce revenue attribution",
                  "Funnels",
-                 "Shared Segments"
+                 "Shared Segments",
+                 "Consolidated View"
                ]
       end
     end

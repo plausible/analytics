@@ -1020,7 +1020,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def filter_bar(assigns) do
     ~H"""
-    <div class="mb-6 flex items-center justify-between" x-data>
+    <div class="flex items-center justify-between" x-data>
       <div :if={@filtering_enabled?} class="relative rounded-md flex">
         <form id="filter-form" phx-change="filter" phx-submit="filter" class="flex items-center">
           <div class="text-gray-800 inline-flex items-center">
@@ -1031,7 +1031,7 @@ defmodule PlausibleWeb.Components.Generic do
               type="text"
               name="filter-text"
               id="filter-text"
-              class="w-36 sm:w-full pl-8 text-sm dark:bg-gray-750 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-750 rounded-md dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+              class="w-full max-w-64 pl-8 text-sm dark:bg-gray-750 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-750 rounded-md dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
               placeholder="Press / to search"
               x-ref="filter_text"
               phx-debounce={200}

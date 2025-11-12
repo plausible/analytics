@@ -6,7 +6,7 @@
 import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
-import { Modal } from 'prima'
+import { Modal, Dropdown } from 'prima'
 import topbar from 'topbar'
 /* eslint-enable import/no-unresolved */
 
@@ -15,7 +15,7 @@ import Alpine from 'alpinejs'
 let csrfToken = document.querySelector("meta[name='csrf-token']")
 let websocketUrl = document.querySelector("meta[name='websocket-url']")
 if (csrfToken && websocketUrl) {
-  let Hooks = { Modal }
+  let Hooks = { Modal, Dropdown }
   Hooks.Metrics = {
     mounted() {
       this.handleEvent('send-metrics', ({ event_name }) => {

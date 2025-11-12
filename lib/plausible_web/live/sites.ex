@@ -11,6 +11,8 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Sites
   alias Plausible.Teams
 
+  alias PlausibleWeb.Components.PrimaDropdown
+
   def mount(params, _session, socket) do
     team = socket.assigns.current_team
     user = socket.assigns.current_user
@@ -69,31 +71,57 @@ defmodule PlausibleWeb.Live.Sites do
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center justify-between">
-        <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate shrink-0">
+      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
+        <h2 class="text-xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-2xl md:text-3xl sm:leading-9 min-w-0 truncate">
           {Teams.name(@current_team)}
-          <.unstyled_link
-            :if={Teams.setup?(@current_team)}
-            data-test-id="team-settings-link"
-            href={Routes.settings_path(@socket, :team_general)}
-          >
-            <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
-          </.unstyled_link>
         </h2>
+        <.unstyled_link
+          :if={Teams.setup?(@current_team)}
+          data-test-id="team-settings-link"
+          href={Routes.settings_path(@socket, :team_general)}
+          class="shrink-0"
+        >
+          <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
+        </.unstyled_link>
       </div>
 
       <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
-      <div class="pt-4 sm:flex sm:items-center sm:justify-between">
+      <div class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
         <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
         <p :if={not @has_sites?} class="dark:text-gray-100">
           You don't have any sites yet.
         </p>
-        <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <a href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"} class="button">
-            + Add website
-          </a>
-        </div>
+        <PrimaDropdown.dropdown
+          :if={@consolidated_view_cta_dismissed?}
+          id="add-site-dropdown"
+        >
+          <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+            <Heroicons.plus class="size-4" /> Add
+            <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+          </PrimaDropdown.dropdown_trigger>
+
+          <PrimaDropdown.dropdown_menu>
+            <PrimaDropdown.dropdown_item
+              as={&link/1}
+              href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
+            >
+              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
+            </PrimaDropdown.dropdown_item>
+            <PrimaDropdown.dropdown_item phx-click="consolidated-view-cta-restore">
+              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
+              Add consolidated view
+            </PrimaDropdown.dropdown_item>
+          </PrimaDropdown.dropdown_menu>
+        </PrimaDropdown.dropdown>
+
+        <a
+          :if={!@consolidated_view_cta_dismissed?}
+          href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
+          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
+        >
+          <Heroicons.plus class="size-4" /> Add website
+        </a>
       </div>
 
       <p :if={@filter_text != "" and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
@@ -115,9 +143,22 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <!-- Insert upgrade_card here -->
+          <.consolidated_view_card_cta
+            :if={
+              @filter_text == "" and
+                !@consolidated_view and @no_consolidated_view_reason not in [:no_sites, :unavailable] and
+                not @consolidated_view_cta_dismissed?
+            }
+            can_manage_consolidated_view?={@can_manage_consolidated_view?}
+            no_consolidated_view_reason={@no_consolidated_view_reason}
+            current_user={@current_user}
+            current_team={@current_team}
+          />
           <.consolidated_view_card
-            :if={@consolidated_view && consolidated_view_ok_to_display?(@current_team, @current_user)}
+            :if={
+              @filter_text == "" and not is_nil(@consolidated_view) and
+                consolidated_view_ok_to_display?(@current_team)
+            }
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
             consolidated_view={@consolidated_view}
             consolidated_stats={@consolidated_stats}
@@ -190,29 +231,84 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  def upgrade_card(assigns) do
+  def consolidated_view_card_cta(assigns) do
     ~H"""
-    <li class="relative col-span-1 flex flex-col justify-between bg-white p-6 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl">
+    <li
+      data-test-id="consolidated-view-card-cta"
+      class="relative col-span-1 flex flex-col justify-between bg-white p-6 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
+    >
       <div class="flex flex-col">
-        <p class="text-sm text-gray-600 dark:text-gray-400">
+        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
           Introducing
         </p>
-        <h3 class="text-[1.35rem] font-bold text-gray-900 leading-tighter dark:text-gray-100">
-          consolidated view
+        <h3 class="text-lg sm:text-[1.35rem] font-bold text-gray-900 leading-tighter dark:text-gray-100">
+          Consolidated view
         </h3>
       </div>
-      <p class="text-gray-900 dark:text-gray-100 leading-tighter mb-2.5">
-        See stats for all your sites in one single dashboard.
-      </p>
-      <div class="flex gap-x-2">
-        <a href="#" class="button">
-          Upgrade
-        </a>
-        <a href="#" class="button button-outline">
-          Learn more
-        </a>
+
+      <div
+        :if={@no_consolidated_view_reason == :team_not_setup}
+        class="flex flex-col gap-y-4"
+      >
+        <p class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter">
+          To create a consolidated view, you'll need to set up a team.
+        </p>
+        <div class="flex gap-x-2">
+          <.button_link
+            href={Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)}
+            mt?={false}
+          >
+            Create team
+          </.button_link>
+          <.button_link
+            theme="secondary"
+            href="https://plausible.io/docs/consolidated-views"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
       </div>
-      <Heroicons.x_mark class="absolute top-6 right-6 size-5 text-gray-400 transition-colors duration-150 cursor-pointer dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" />
+
+      <div
+        :if={@no_consolidated_view_reason == :upgrade_required}
+        class="flex flex-col gap-y-4"
+      >
+        <p
+          :if={@can_manage_consolidated_view?}
+          class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter"
+        >
+          Upgrade to the Business plan<span :if={not Teams.setup?(@current_team)}> and set up a team</span> to enable consolidated views.
+        </p>
+
+        <p
+          :if={not @can_manage_consolidated_view?}
+          class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter"
+        >
+          Available on Business plans. Contact your team owner to create it.
+        </p>
+
+        <div class="flex gap-x-2">
+          <.button_link
+            :if={@can_manage_consolidated_view?}
+            href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)}
+            mt?={false}
+          >
+            Upgrade
+          </.button_link>
+
+          <.button_link
+            theme="secondary"
+            href="https://plausible.io/docs/consolidated-views"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+      <a phx-click="consolidated-view-cta-dismiss">
+        <Heroicons.x_mark class="absolute top-6 right-6 size-5 text-gray-400 transition-colors duration-150 cursor-pointer dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" />
+      </a>
     </li>
     """
   end
@@ -221,11 +317,11 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       data-test-id="consolidated-view-card"
-      class="relative row-span-2 bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
+      class="relative row-span-2"
     >
       <.unstyled_link
         href={"/#{URI.encode_www_form(@consolidated_view.domain)}"}
-        class="flex flex-col justify-between gap-6 h-full"
+        class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
           <div class="flex flex-col gap-y-2 mb-auto">
@@ -238,7 +334,7 @@ defmodule PlausibleWeb.Live.Sites do
           </div>
           <span
             :if={is_map(@consolidated_stats)}
-            class="h-[54px] text-indigo-500 my-auto"
+            class="max-w-sm sm:max-w-none text-indigo-500 my-auto"
             data-test-id="consolidated-view-chart-loaded"
           >
             <PlausibleWeb.Live.Components.Visitors.chart
@@ -374,7 +470,7 @@ defmodule PlausibleWeb.Live.Sites do
         )
       }
     >
-      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
+      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"} class="block">
         <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
@@ -411,7 +507,7 @@ defmodule PlausibleWeb.Live.Sites do
           href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
           class="group/item !flex items-center gap-x-2"
         >
-          <Heroicons.cog_6_tooth class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100 transition-colors duration-150" />
+          <Heroicons.cog_6_tooth class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100" />
           <span>Settings</span>
         </.dropdown_item>
 
@@ -433,13 +529,13 @@ defmodule PlausibleWeb.Live.Sites do
           <.icon_pin
             :if={@site.pinned_at}
             filled={true}
-            class="size-[1.15rem] text-indigo-600 dark:text-indigo-500 group-hover/item:text-indigo-700 dark:group-hover/item:text-indigo-400 transition-colors duration-150"
+            class="size-[1.15rem] text-indigo-600 dark:text-indigo-500 group-hover/item:text-indigo-700 dark:group-hover/item:text-indigo-400"
           />
           <span :if={@site.pinned_at}>Unpin site</span>
 
           <.icon_pin
             :if={!@site.pinned_at}
-            class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100 transition-colors duration-150"
+            class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100"
           />
           <span :if={!@site.pinned_at}>Pin site</span>
         </.dropdown_item>
@@ -490,7 +586,7 @@ defmodule PlausibleWeb.Live.Sites do
     </div>
     <div :if={is_map(@hourly_stats)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
-        <span class="h-[54px] text-indigo-500">
+        <span class="max-w-sm sm:max-w-none text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
             intervals={@hourly_stats.intervals}
             height={80}
@@ -518,7 +614,7 @@ defmodule PlausibleWeb.Live.Sites do
   # Related React component: <ChangeArrow />
   def percentage_change(assigns) do
     ~H"""
-    <p class="text-gray-900 dark:text-gray-100">
+    <p class="text-sm text-gray-900 dark:text-gray-100">
       <svg
         :if={@change > 0}
         xmlns="http://www.w3.org/2000/svg"
@@ -781,6 +877,28 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
+  on_ee do
+    def handle_event("consolidated-view-cta-dismiss", _, socket) do
+      :ok =
+        Plausible.ConsolidatedView.dismiss_cta(
+          socket.assigns.current_user,
+          socket.assigns.current_team
+        )
+
+      {:noreply, assign(socket, :consolidated_view_cta_dismissed?, true)}
+    end
+
+    def handle_event("consolidated-view-cta-restore", _, socket) do
+      :ok =
+        Plausible.ConsolidatedView.restore_cta(
+          socket.assigns.current_user,
+          socket.assigns.current_team
+        )
+
+      {:noreply, assign(socket, :consolidated_view_cta_dismissed?, false)}
+    end
+  end
+
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
       Sites.list_with_invitations(assigns.current_user, assigns.params,
@@ -912,32 +1030,54 @@ defmodule PlausibleWeb.Live.Sites do
     :sha |> :crypto.hash(domain) |> Base.encode16()
   end
 
-  @no_consolidated_view %{
-    consolidated_view: nil,
-    can_manage_consolidated_view?: false,
-    consolidated_stats: nil
-  }
+  def no_consolidated_view(overrides \\ []) do
+    [
+      consolidated_view: nil,
+      can_manage_consolidated_view?: false,
+      consolidated_stats: nil,
+      no_consolidated_view_reason: nil,
+      consolidated_view_cta_dismissed?: false
+    ]
+    |> Keyword.merge(overrides)
+  end
 
   on_ee do
     alias Plausible.ConsolidatedView
 
-    defp consolidated_view_ok_to_display?(team, user) do
-      ConsolidatedView.ok_to_display?(team, user)
+    defp consolidated_view_ok_to_display?(team) do
+      ConsolidatedView.ok_to_display?(team)
     end
 
-    defp init_consolidated_view_assigns(_user, nil), do: @no_consolidated_view
+    defp init_consolidated_view_assigns(_user, nil) do
+      # technically this is team not setup, but is also equivalent of having no sites at this moment (can have invitations though), so CTA should not be shown
+      no_consolidated_view(no_consolidated_view_reason: :no_sites)
+    end
 
     defp init_consolidated_view_assigns(user, team) do
-      if Teams.setup?(team) do
-        view = ConsolidatedView.get(team)
+      if ConsolidatedView.flag_enabled?(team) do
+        case ConsolidatedView.enable(team) do
+          {:ok, view} ->
+            %{
+              consolidated_view: view,
+              can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+              consolidated_stats: :loading,
+              no_consolidated_view_reason: nil,
+              consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+            }
 
-        %{
-          consolidated_view: view,
-          can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
-          consolidated_stats: :loading
-        }
+          {:error, reason} ->
+            no_consolidated_view(
+              no_consolidated_view_reason: reason,
+              can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+              consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+            )
+        end
       else
-        @no_consolidated_view
+        no_consolidated_view(
+          no_consolidated_view_reason: :unavailable,
+          can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+          consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+        )
       end
     end
 
@@ -949,8 +1089,11 @@ defmodule PlausibleWeb.Live.Sites do
       end
     end
   else
-    defp consolidated_view_ok_to_display?(_team, _user), do: false
-    defp init_consolidated_view_assigns(_user, _team), do: @no_consolidated_view
+    defp consolidated_view_ok_to_display?(_team), do: false
+
+    defp init_consolidated_view_assigns(_user, _team),
+      do: no_consolidated_view(no_consolidated_view_reason: :unavailable)
+
     defp load_consolidated_stats(_consolidated_view), do: nil
   end
 end

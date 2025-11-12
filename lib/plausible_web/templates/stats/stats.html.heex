@@ -50,7 +50,7 @@
       Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()
     }
     data-is-consolidated-view={Jason.encode!(@consolidated_view?)}
-    data-team-has-consolidated-view={Jason.encode!(@team_has_consolidated_view?)}
+    data-consolidated-view-available={Jason.encode!(@consolidated_view_available?)}
     data-team-identifier={@team_identifier}
   >
   </div>

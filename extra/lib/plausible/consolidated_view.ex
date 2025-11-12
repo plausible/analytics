@@ -16,18 +16,45 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
-  @spec ok_to_display?(Team.t() | nil, User.t() | nil) :: boolean()
-  def ok_to_display?(team, user) do
-    with %Team{} <- team,
-         %User{} <- user,
-         true <- Plausible.Auth.is_super_admin?(user),
-         true <- enabled?(team),
-         true <- has_sites_to_consolidate?(team) do
-      true
-    else
-      _ ->
-        false
-    end
+  @spec flag_enabled?(Team.t()) :: boolean()
+  def flag_enabled?(team) do
+    FunWithFlags.enabled?(:consolidated_view, for: team)
+  end
+
+  @spec cta_dismissed?(User.t(), Team.t()) :: boolean()
+  def cta_dismissed?(%User{} = user, %Team{} = team) do
+    {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
+    Teams.Memberships.get_preference(team_membership, :consolidated_view_cta_dismissed)
+  end
+
+  @spec dismiss_cta(User.t(), Team.t()) :: :ok
+  def dismiss_cta(%User{} = user, %Team{} = team) do
+    {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
+    Teams.Memberships.set_preference(team_membership, :consolidated_view_cta_dismissed, true)
+
+    :ok
+  end
+
+  @spec restore_cta(User.t(), Team.t()) :: :ok
+  def restore_cta(%User{} = user, %Team{} = team) do
+    {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
+
+    Teams.Memberships.set_preference(
+      team_membership,
+      :consolidated_view_cta_dismissed,
+      false
+    )
+
+    :ok
+  end
+
+  @spec ok_to_display?(Team.t() | nil) :: boolean()
+  def ok_to_display?(team) do
+    is_struct(team, Team) and
+      flag_enabled?(team) and
+      view_enabled?(team) and
+      has_sites_to_consolidate?(team) and
+      Plausible.Billing.Feature.ConsolidatedView.check_availability(team) == :ok
   end
 
   @spec reset_if_enabled(Team.t()) :: :ok
@@ -56,14 +83,25 @@ defmodule Plausible.ConsolidatedView do
     from(s in q, where: s.consolidated == true)
   end
 
-  @spec enable(Team.t()) :: {:ok, Site.t()} | {:error, :no_sites | :team_not_setup}
+  @spec enable(Team.t()) ::
+          {:ok, Site.t()} | {:error, :no_sites | :team_not_setup | :upgrade_required}
   def enable(%Team{} = team) do
-    with :ok <- ensure_eligible(team), do: do_enable(team)
-  end
+    cond do
+      not has_sites_to_consolidate?(team) ->
+        {:error, :no_sites}
 
-  @spec enabled?(Team.t()) :: boolean()
-  def enabled?(%Team{} = team) do
-    not is_nil(get(team))
+      not Teams.setup?(team) ->
+        {:error, :team_not_setup}
+
+      not flag_enabled?(team) ->
+        {:error, :unavailable}
+
+      true ->
+        case Plausible.Billing.Feature.ConsolidatedView.check_availability(team) do
+          :ok -> do_enable(team)
+          error -> error
+        end
+    end
   end
 
   @spec disable(Team.t()) :: :ok
@@ -159,16 +197,6 @@ defmodule Plausible.ConsolidatedView do
     team.identifier
   end
 
-  # TODO: Only active trials and business subscriptions should be eligible.
-  # This function should also call a new underlying feature module.
-  defp ensure_eligible(%Team{} = team) do
-    cond do
-      not Teams.setup?(team) -> {:error, :team_not_setup}
-      not has_sites_to_consolidate?(team) -> {:error, :no_sites}
-      true -> :ok
-    end
-  end
-
   defp native_stats_start_at(%Team{} = team) do
     q =
       from(sr in Site.regular(),
@@ -181,7 +209,7 @@ defmodule Plausible.ConsolidatedView do
   end
 
   defp has_sites_to_consolidate?(%Team{} = team) do
-    Teams.owned_sites_count(team) > 0
+    Teams.owned_sites_count(team) > 1
   end
 
   defp majority_sites_timezone(%Team{} = team) do
@@ -199,5 +227,9 @@ defmodule Plausible.ConsolidatedView do
       {timezone, _count} -> timezone
       nil -> "Etc/UTC"
     end
+  end
+
+  defp view_enabled?(%Team{} = team) do
+    not is_nil(get(team))
   end
 end

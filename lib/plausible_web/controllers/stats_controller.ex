@@ -63,8 +63,8 @@ defmodule PlausibleWeb.StatsController do
 
     consolidated_view? = Plausible.Sites.consolidated?(site)
 
-    team_has_consolidated_view? =
-      on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team, current_user), else: false)
+    consolidated_view_available? =
+      on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team), else: false)
 
     team_identifier = site.team.identifier
 
@@ -74,6 +74,9 @@ defmodule PlausibleWeb.StatsController do
     {:ok, segments} = Plausible.Segments.get_all_for_site(site, site_role)
 
     cond do
+      consolidated_view? and not consolidated_view_available? and site_role != :super_admin ->
+        redirect(conn, to: Routes.site_path(conn, :index))
+
       (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
         flags = get_flags(current_user, site)
 
@@ -96,7 +99,7 @@ defmodule PlausibleWeb.StatsController do
           load_dashboard_js: true,
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
           consolidated_view?: consolidated_view?,
-          team_has_consolidated_view?: team_has_consolidated_view?,
+          consolidated_view_available?: consolidated_view_available?,
           team_identifier: team_identifier
         )
 
@@ -402,13 +405,7 @@ defmodule PlausibleWeb.StatsController do
 
         embedded? = conn.params["embed"] == "true"
 
-        consolidated_view? = Plausible.Sites.consolidated?(shared_link.site)
-
-        team_has_consolidated_view? =
-          on_ee(
-            do: Plausible.ConsolidatedView.ok_to_display?(shared_link.site.team, current_user),
-            else: false
-          )
+        true = Plausible.Sites.regular?(shared_link.site)
 
         team_identifier = shared_link.site.team.identifier
 
@@ -435,8 +432,9 @@ defmodule PlausibleWeb.StatsController do
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public),
-          consolidated_view?: consolidated_view?,
-          team_has_consolidated_view?: team_has_consolidated_view?,
+          # no shared links for consolidated views
+          consolidated_view?: false,
+          consolidated_view_available?: false,
           team_identifier: team_identifier
         )
     end

@@ -126,7 +126,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -145,7 +146,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -164,7 +166,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -183,7 +186,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -202,7 +206,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -221,7 +226,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -240,7 +246,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -259,7 +266,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   }

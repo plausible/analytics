@@ -179,6 +179,7 @@ defmodule Plausible.SitesTest do
       test "resets consolidated view stats dates every time" do
         owner = new_user()
         new_site(owner: owner)
+        new_site(owner: owner)
         team = team_of(owner)
 
         consolidated_view = new_consolidated_view(team)

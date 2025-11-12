@@ -134,7 +134,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ]
   },
   {
@@ -152,7 +153,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ]
   },
   {
@@ -170,7 +172,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ]
   },
   {
@@ -188,7 +191,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ]
   },
   {
@@ -206,7 +210,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ]
   },
   {
@@ -224,7 +229,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ]
   },
   {
@@ -242,7 +248,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ]
   },
   {
@@ -260,7 +267,8 @@
       "funnels",
       "stats_api",
       "site_segments",
-      "shared_links"
+      "shared_links",
+      "consolidated_view"
     ]
   }
 ]
