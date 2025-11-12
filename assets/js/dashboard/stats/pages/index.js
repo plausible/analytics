@@ -20,7 +20,7 @@ function EntryPages({ afterFetchData }) {
   }
 
   function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site.domain, page.name)
+    return url.externalLinkForPage(site, page.name)
   }
 
   function getFilterInfo(listItem) {
@@ -66,7 +66,7 @@ function ExitPages({ afterFetchData }) {
   }
 
   function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site.domain, page.name)
+    return url.externalLinkForPage(site, page.name)
   }
 
   function getFilterInfo(listItem) {
@@ -112,7 +112,7 @@ function TopPages({ afterFetchData }) {
   }
 
   function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site.domain, page.name)
+    return url.externalLinkForPage(site, page.name)
   }
 
   function getFilterInfo(listItem) {
