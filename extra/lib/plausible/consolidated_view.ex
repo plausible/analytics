@@ -45,16 +45,11 @@ defmodule Plausible.ConsolidatedView do
 
   @spec ok_to_display?(Team.t() | nil) :: boolean()
   def ok_to_display?(team) do
-    with %Team{} <- team,
-         true <- flag_enabled?(team),
-         true <- view_enabled?(team),
-         true <- has_sites_to_consolidate?(team),
-         :ok <- Plausible.Billing.Feature.ConsolidatedView.check_availability(team) do
-      true
-    else
-      _ ->
-        false
-    end
+    is_struct(team, Team) and
+      flag_enabled?(team) and
+      view_enabled?(team) and
+      has_sites_to_consolidate?(team) and
+      Plausible.Billing.Feature.ConsolidatedView.check_availability(team) == :ok
   end
 
   @spec reset_if_enabled(Team.t()) :: :ok
