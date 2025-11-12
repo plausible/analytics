@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-940E605A.js"></script>
+    <script src="dist/sidebar_items-9447BB7D.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -175,7 +175,23 @@ pointers to team's regular sites.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#cta_dismissed?/2" data-no-tooltip translate="no">cta_dismissed?(user, team)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#disable/1" data-no-tooltip translate="no">disable(team)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dismiss_cta/2" data-no-tooltip translate="no">dismiss_cta(user, team)</a>
 
       </div>
 
@@ -191,7 +207,7 @@ pointers to team's regular sites.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#enabled?/1" data-no-tooltip translate="no">enabled?(team)</a>
+        <a href="#flag_enabled?/1" data-no-tooltip translate="no">flag_enabled?(team)</a>
 
       </div>
 
@@ -207,7 +223,7 @@ pointers to team's regular sites.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ok_to_display?/2" data-no-tooltip translate="no">ok_to_display?(team, user)</a>
+        <a href="#ok_to_display?/1" data-no-tooltip translate="no">ok_to_display?(team)</a>
 
       </div>
 
@@ -216,6 +232,14 @@ pointers to team's regular sites.</p>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#reset_if_enabled/1" data-no-tooltip translate="no">reset_if_enabled(team)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#restore_cta/2" data-no-tooltip translate="no">restore_cta(user, team)</a>
 
       </div>
 
@@ -258,7 +282,7 @@ pointers to team's regular sites.</p>
     </a>
     <h1 class="signature" translate="no">can_manage?(user, team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L118" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L156" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -284,7 +308,7 @@ pointers to team's regular sites.</p>
     </a>
     <h1 class="signature" translate="no">change_stats_dates(site_or_changeset, team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L103" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L141" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -306,6 +330,32 @@ pointers to team's regular sites.</p>
 
   </section>
 </section>
+<section class="detail" id="cta_dismissed?/2">
+
+  <div class="detail-header">
+    <a href="#cta_dismissed?/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">cta_dismissed?(user, team)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L25" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cta_dismissed?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="disable/1">
 
   <div class="detail-header">
@@ -314,7 +364,7 @@ pointers to team's regular sites.</p>
     </a>
     <h1 class="signature" translate="no">disable(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L70" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L108" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -332,6 +382,32 @@ pointers to team's regular sites.</p>
 
   </section>
 </section>
+<section class="detail" id="dismiss_cta/2">
+
+  <div class="detail-header">
+    <a href="#dismiss_cta/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">dismiss_cta(user, team)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L31" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dismiss_cta(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="enable/1">
 
   <div class="detail-header">
@@ -340,7 +416,7 @@ pointers to team's regular sites.</p>
     </a>
     <h1 class="signature" translate="no">enable(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L60" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L88" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -352,22 +428,23 @@ pointers to team's regular sites.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> enable(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) ::
-  {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()} | {:error, :no_sites | :team_not_setup}</pre>
+  {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()}
+  | {:error, :no_sites | :team_not_setup | :upgrade_required}</pre>
 
       </div>
 
 
   </section>
 </section>
-<section class="detail" id="enabled?/1">
+<section class="detail" id="flag_enabled?/1">
 
   <div class="detail-header">
-    <a href="#enabled?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#flag_enabled?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">enabled?(team)</h1>
+    <h1 class="signature" translate="no">flag_enabled?(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L65" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L20" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -378,7 +455,7 @@ pointers to team's regular sites.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> enabled?(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> flag_enabled?(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
@@ -393,7 +470,7 @@ pointers to team's regular sites.</p>
     </a>
     <h1 class="signature" translate="no">get(team_or_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L89" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L127" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -411,15 +488,15 @@ pointers to team's regular sites.</p>
 
   </section>
 </section>
-<section class="detail" id="ok_to_display?/2">
+<section class="detail" id="ok_to_display?/1">
 
   <div class="detail-header">
-    <a href="#ok_to_display?/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#ok_to_display?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">ok_to_display?(team, user)</h1>
+    <h1 class="signature" translate="no">ok_to_display?(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L20" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L52" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -430,8 +507,7 @@ pointers to team's regular sites.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> ok_to_display?(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil, <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | nil) ::
-  <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> ok_to_display?(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
@@ -446,7 +522,7 @@ pointers to team's regular sites.</p>
     </a>
     <h1 class="signature" translate="no">reset_if_enabled(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L34" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L61" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -464,6 +540,32 @@ pointers to team's regular sites.</p>
 
   </section>
 </section>
+<section class="detail" id="restore_cta/2">
+
+  <div class="detail-header">
+    <a href="#restore_cta/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">restore_cta(user, team)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L39" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> restore_cta(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="site_ids/1">
 
   <div class="detail-header">
@@ -472,7 +574,7 @@ pointers to team's regular sites.</p>
     </a>
     <h1 class="signature" translate="no">site_ids(consolidated_view_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L77" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L115" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -501,7 +603,7 @@ pointers to team's regular sites.</p>
     </a>
     <h1 class="signature" translate="no">sites(q \\ Site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L55" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/consolidated_view.ex#L82" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
