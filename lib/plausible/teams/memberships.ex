@@ -251,7 +251,7 @@ defmodule Plausible.Teams.Memberships do
         select: field(tup, ^option)
       )
 
-    Repo.one(query) || Map.get(defaults, option)
+    Repo.one(query) || Map.fetch!(defaults, option)
   end
 
   defp get_guest_membership(site_id, user_id) do
