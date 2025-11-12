@@ -283,11 +283,6 @@ defmodule PlausibleWeb.Live.SitesTest do
 
   on_ee do
     describe "consolidated views appearance" do
-      setup %{user: user} do
-        # this is temporary, instead of feature flag we'll only show consolidated views to super admins
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "consolidated view shows up", %{conn: conn, user: user} do
         new_site(owner: user)
         new_site(owner: user)
@@ -491,6 +486,39 @@ defmodule PlausibleWeb.Live.SitesTest do
 
         html = render(lv)
         assert element_exists?(html, cta_selector)
+      end
+
+      test "consolidated view card disappears when searching", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+        conn = set_current_team(conn, team)
+
+        {:ok, lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+
+        type_into_input(lv, "filter-text", "a")
+
+        html = render(lv)
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+      end
+
+      test "CTA card disappears when searching", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        {:ok, lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        type_into_input(lv, "filter-text", "a")
+
+        html = render(lv)
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
       end
     end
   end
