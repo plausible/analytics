@@ -24,7 +24,7 @@ defmodule Plausible.Workers.SendEmailReport do
       |> Repo.one()
 
     with %Plausible.Site{} <- site,
-         %{} = report <- Map.get(site, report_type),
+         %{} = report <- Map.fetch!(site, report_type),
          true <- ok_to_send?(site) do
       date_range = date_range(site, interval)
       report_name = report_name(interval, date_range.first)
