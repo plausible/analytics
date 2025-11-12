@@ -7,37 +7,6 @@ defmodule Plausible.Teams.Users do
 
   alias Plausible.Repo
   alias Plausible.Teams
-  require Teams.UserPreference
-
-  @spec set_preference(Plausible.Auth.User.t(), Teams.Team.t(), atom(), any()) ::
-          Teams.UserPreference.t()
-  def set_preference(user, team, option, value) when option in Teams.UserPreference.options() do
-    user
-    |> Teams.UserPreference.changeset(team, %{option => value})
-    |> Repo.insert!(
-      conflict_target: [:user_id, :team_id],
-      # This way of conflict handling enables doing upserts of options leaving
-      # existing, unrelated values intact.
-      on_conflict: from(p in Teams.UserPreference, update: [set: [{^option, ^value}]]),
-      returning: true
-    )
-  end
-
-  @spec get_preference(Plausible.Auth.User.t(), Teams.Team.t(), atom()) :: any()
-  def get_preference(user, team, option)
-      when option in Teams.UserPreference.options() do
-    defaults = %Teams.UserPreference{}
-
-    query =
-      from(
-        tup in Teams.UserPreference,
-        where: tup.user_id == ^user.id,
-        where: tup.team_id == ^team.id,
-        select: field(tup, ^option)
-      )
-
-    Repo.one(query) || Map.get(defaults, option)
-  end
 
   def owned_teams(user) do
     Repo.all(teams_query(user, roles: :owner))

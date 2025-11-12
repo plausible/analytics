@@ -18,19 +18,27 @@ defmodule Plausible.ConsolidatedView do
 
   @spec cta_dismissed?(User.t(), Team.t()) :: boolean()
   def cta_dismissed?(%User{} = user, %Team{} = team) do
-    Teams.Users.get_preference(user, team, :consolidated_view_cta_dismissed)
+    {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
+    Teams.Memberships.get_preference(team_membership, :consolidated_view_cta_dismissed)
   end
 
   @spec dismiss_cta(User.t(), Team.t()) :: :ok
   def dismiss_cta(%User{} = user, %Team{} = team) do
-    Teams.Users.set_preference(user, team, :consolidated_view_cta_dismissed, true)
+    {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
+    Teams.Memberships.set_preference(team_membership, :consolidated_view_cta_dismissed, true)
 
     :ok
   end
 
   @spec restore_cta(User.t(), Team.t()) :: :ok
   def restore_cta(%User{} = user, %Team{} = team) do
-    Teams.Users.set_preference(user, team, :consolidated_view_cta_dismissed, false)
+    {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
+
+    Teams.Memberships.set_preference(
+      team_membership,
+      :consolidated_view_cta_dismissed,
+      false
+    )
 
     :ok
   end

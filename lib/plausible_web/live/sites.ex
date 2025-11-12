@@ -145,8 +145,8 @@ defmodule PlausibleWeb.Live.Sites do
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <.consolidated_view_card_cta
             :if={
-            @filter_text == "" and
-              !@consolidated_view and @no_consolidated_view_reason not in [:no_sites, :unavailable] and
+              @filter_text == "" and
+                !@consolidated_view and @no_consolidated_view_reason not in [:no_sites, :unavailable] and
                 not @consolidated_view_cta_dismissed?
             }
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
@@ -155,7 +155,10 @@ defmodule PlausibleWeb.Live.Sites do
             current_team={@current_team}
           />
           <.consolidated_view_card
-            :if={@filter_text == "" and not is_nil(@consolidated_view) and consolidated_view_ok_to_display?(@current_team)}
+            :if={
+              @filter_text == "" and not is_nil(@consolidated_view) and
+                consolidated_view_ok_to_display?(@current_team)
+            }
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
             consolidated_view={@consolidated_view}
             consolidated_stats={@consolidated_stats}
