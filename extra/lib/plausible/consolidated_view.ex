@@ -192,9 +192,6 @@ defmodule Plausible.ConsolidatedView do
     team.identifier
   end
 
-  defp ensure_eligible(%Team{} = team) do
-  end
-
   defp native_stats_start_at(%Team{} = team) do
     q =
       from(sr in Site.regular(),
