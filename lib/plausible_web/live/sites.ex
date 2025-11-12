@@ -92,9 +92,6 @@ defmodule PlausibleWeb.Live.Sites do
         <p :if={not @has_sites?} class="dark:text-gray-100">
           You don't have any sites yet.
         </p>
-        <!-- The `z-49` class is to make the dropdown appear above the site cards and (TODO) below the top-right drop down. -->
-          <!-- The proper solution is for Prima to render the dropdown menu within a <.portal> element to avoid -->
-          <!-- any stacking context issues. TODO  -->
         <PrimaDropdown.dropdown
           :if={@consolidated_view_cta_dismissed?}
           id="add-site-dropdown"
