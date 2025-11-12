@@ -190,13 +190,17 @@ defmodule Plausible.Stats.SQL.Expression do
   def select_dimension(q, key, "visit:city_name", _table, _query),
     do: select_merge_as(q, [t], %{key => t.city_name})
 
-  @dimension_columns %{
-    "event:name" => :name,
-    "event:page" => :pathname,
-    "event:hostname" => :hostname,
-    "visit:entry_page" => :entry_page,
-    "visit:entry_page_hostname" => :entry_page_hostname
-  }
+  def select_dimension_internal(q, "visit:entry_page") do
+    select_merge_as(q, [t], %{
+      entry_page: fragment("any(?)", field(t, :entry_page))
+    })
+  end
+
+  def select_dimension_internal(q, "visit:entry_page_hostname") do
+    select_merge_as(q, [t], %{
+      entry_page_hostname: fragment("any(?)", field(t, :entry_page_hostname))
+    })
+  end
 
   def select_dimension_internal(q, "visit:exit_page") do
     select_merge_as(q, [t], %{
@@ -211,28 +215,21 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  def select_dimension_internal(q, dimension) do
-    if column = Map.get(@dimension_columns, dimension) do
-      select_merge_as(q, [t], %{column => fragment("any(?)", field(t, ^column))})
-    else
-      q
-    end
-  end
-
-  def select_dimension_from_join(q, key, "event:name"),
-    do: select_merge_as(q, [..., t], %{key => t.name})
-
-  def select_dimension_from_join(q, key, "event:page"),
-    do: select_merge_as(q, [..., t], %{key => t.pathname})
-
-  def select_dimension_from_join(q, key, "event:hostname"),
-    do: select_merge_as(q, [..., t], %{key => t.hostname})
+  def select_dimension_internal(q, _dimension), do: q
 
   def select_dimension_from_join(q, key, "visit:entry_page"),
     do: select_merge_as(q, [..., t], %{key => t.entry_page})
 
+  def select_dimension_from_join(q, key, "visit:entry_page_hostname"),
+    do: select_merge_as(q, [..., t], %{key => t.entry_page_hostaname})
+
   def select_dimension_from_join(q, key, "visit:exit_page"),
     do: select_merge_as(q, [..., t], %{key => t.exit_page})
+
+  def select_dimension_from_join(q, key, "visit:exit_page_hostname"),
+    do: select_merge_as(q, [..., t], %{key => t.exit_page_hostname})
+
+  def select_dimension_from_join(q, _key, _dimension), do: q
 
   def event_metric(:pageviews, _query) do
     wrap_alias([e], %{
