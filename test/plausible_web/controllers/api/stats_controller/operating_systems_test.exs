@@ -213,6 +213,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for operating systems breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, operating_system: "Mac"),

@@ -272,6 +272,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              }
     end
 
+    @tag :ee_only
     test "return revenue metrics for browsers breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, browser: "Firefox"),

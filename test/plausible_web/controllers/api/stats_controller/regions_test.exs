@@ -95,6 +95,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       assert resp =~ "Failed to parse 'to' argument."
     end
 
+    @tag :ee_only
     test "return revenue metrics for regions breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

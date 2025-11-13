@@ -67,6 +67,7 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for cities breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

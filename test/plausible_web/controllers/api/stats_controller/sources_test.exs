@@ -679,6 +679,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              }
     end
 
+    @tag :ee_only
     test "return revenue metrics for sources breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -907,6 +908,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for channels breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1186,6 +1188,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for UTM mediums breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1450,6 +1453,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for UTM campaigns breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1602,6 +1606,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for UTM sources breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1866,6 +1871,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for UTM terms breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -2130,6 +2136,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for UTM contents breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

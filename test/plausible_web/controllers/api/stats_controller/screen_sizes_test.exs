@@ -317,6 +317,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for screen sizes breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, screen_size: "Mobile"),

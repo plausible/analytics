@@ -3010,6 +3010,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for entry pages breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, pathname: "/first"),
@@ -3121,6 +3122,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for exit pages breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, pathname: "/first"),
@@ -3235,6 +3237,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for pages breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, pathname: "/first"),

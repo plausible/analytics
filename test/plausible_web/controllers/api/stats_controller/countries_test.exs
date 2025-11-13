@@ -413,6 +413,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
              ]
     end
 
+    @tag :ee_only
     test "return revenue metrics for countries breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
