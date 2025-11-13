@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Removed
+
+### Changed
+
+### Fixed
+
+## v3.1.0 - 2025-11-13
+
+### Added
+
 - Custom events can now be marked as non-interactive in events API and tracker script: events marked as non-interactive are not counted towards bounce rate
 - Ability to leave team via Team Settings > Leave Team
 - Stats APIv2 now supports `include.trim_relative_date_range` - this option allows trimming empty values after current time for `day`, `month` and `year` date_range values
