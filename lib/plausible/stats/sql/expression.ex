@@ -203,6 +203,8 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def select_dimension_internal(q, "visit:exit_page") do
+    # As exit page changes with every pageview event over the lifetime
+    # of a session, only the most recent value must be considered. 
     select_merge_as(q, [t], %{
       exit_page: fragment("argMax(?, ?)", field(t, :exit_page), field(t, :events))
     })
