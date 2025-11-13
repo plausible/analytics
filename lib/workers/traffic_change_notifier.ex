@@ -2,6 +2,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   @moduledoc """
   Oban service sending out traffic drop/spike notifications
   """
+  use Plausible
   use Plausible.Repo
   alias Plausible.Stats.{Query, Clickhouse}
   alias Plausible.Site.TrafficChangeNotification
@@ -28,30 +29,32 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
           preload: [site: {s, team: t}]
       )
 
-    for notification <- notifications do
-      case notification.type do
-        :spike ->
-          current_visitors = Clickhouse.current_visitors(notification.site)
-
-          if current_visitors >= notification.threshold do
-            stats =
-              notification.site
-              |> get_traffic_spike_stats()
-              |> Map.put(:current_visitors, current_visitors)
-
-            notify_spike(notification, stats, now)
-          end
-
-        :drop ->
-          current_visitors = Clickhouse.current_visitors_12h(notification.site)
-
-          if current_visitors < notification.threshold do
-            notify_drop(notification, current_visitors, now)
-          end
-      end
+    for notification <- notifications, ok_to_send?(notification.site) do
+      handle_notification(notification, now)
     end
 
     :ok
+  end
+
+  defp handle_notification(%TrafficChangeNotification{type: :spike} = notification, now) do
+    current_visitors = Clickhouse.current_visitors(notification.site)
+
+    if current_visitors >= notification.threshold do
+      stats =
+        notification.site
+        |> get_traffic_spike_stats()
+        |> Map.put(:current_visitors, current_visitors)
+
+      notify_spike(notification, stats, now)
+    end
+  end
+
+  defp handle_notification(%TrafficChangeNotification{type: :drop} = notification, now) do
+    current_visitors = Clickhouse.current_visitors_12h(notification.site)
+
+    if current_visitors < notification.threshold do
+      notify_drop(notification, current_visitors, now)
+    end
   end
 
   defp notify_spike(notification, stats, now) do
@@ -174,5 +177,15 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
       where: u.email == ^recipient_email
     )
     |> Repo.exists?()
+  end
+
+  on_ee do
+    defp ok_to_send?(site) do
+      Plausible.Sites.regular?(site) or
+        (Plausible.Sites.consolidated?(site) and
+           Plausible.ConsolidatedView.ok_to_display?(site.team))
+    end
+  else
+    defp ok_to_send?(_site), do: always(true)
   end
 end
