@@ -88,7 +88,14 @@ defmodule PlausibleWeb.Live.Sites do
       <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
       <div class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
-        <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
+        <.search_form
+          :if={
+            @has_sites? and
+              (Teams.setup?(@current_team) or @sites.entries != [] or @filter_text != "")
+          }
+          filter_text={@filter_text}
+          uri={@uri}
+        />
         <p :if={not @has_sites?} class="dark:text-gray-100">
           You don't have any sites yet.
         </p>
@@ -116,7 +123,11 @@ defmodule PlausibleWeb.Live.Sites do
         </PrimaDropdown.dropdown>
 
         <a
-          :if={!@consolidated_view_cta_dismissed?}
+          :if={
+            !@consolidated_view_cta_dismissed? and
+              (not @has_sites? or Teams.setup?(@current_team) or @sites.entries != [] or
+                 @filter_text != "")
+          }
           href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
           class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
         >
@@ -128,18 +139,36 @@ defmodule PlausibleWeb.Live.Sites do
         No sites found. Please search for something else.
       </p>
 
-      <p
+      <div
         :if={
           @has_sites? and not Teams.setup?(@current_team) and @sites.entries == [] and
             @filter_text == ""
         }
-        class="mt-4 dark:text-gray-100 text-center"
+        class="flex flex-col items-center justify-center py-8 sm:py-12 max-w-md mx-auto"
       >
-        You currently have no personal sites. Are you looking for your team’s sites?
-        <.styled_link href={Routes.auth_path(@socket, :select_team)}>
-          Go to your team &rarr;
-        </.styled_link>
-      </p>
+        <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+          Add your first personal site
+        </h3>
+        <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+          Start tracking stats for your own site or switch to your team's sites.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 mt-6">
+          <.button_link
+            href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
+            theme="primary"
+            mt?={false}
+          >
+            <Heroicons.plus class="size-4" /> Add website
+          </.button_link>
+          <.button_link
+            href={Routes.auth_path(@socket, :select_team)}
+            theme="secondary"
+            mt?={false}
+          >
+            Go to team sites
+          </.button_link>
+        </div>
+      </div>
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

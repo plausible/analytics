@@ -16,8 +16,8 @@ defmodule PlausibleWeb.Live.SitesTest do
       text = text(html)
       assert text =~ "My Personal Sites"
       assert text =~ "You don't have any sites yet"
-      refute text =~ "You currently have no personal sites"
-      refute text =~ "Go to your team"
+      refute text =~ "Add your first personal site"
+      refute text =~ "Go to team sites"
     end
 
     test "renders team switcher link, if on personal sites with other teams available", %{
@@ -33,8 +33,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert text =~ "My Personal Sites"
       refute text =~ "You don't have any sites yet"
-      assert text =~ "You currently have no personal sites"
-      assert text =~ "Go to your team"
+      assert text =~ "Add your first personal site"
+      assert text =~ "Go to team sites"
     end
 
     test "renders settings link when current team is set", %{user: user, conn: conn} do
