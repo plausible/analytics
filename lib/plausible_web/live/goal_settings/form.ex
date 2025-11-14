@@ -19,11 +19,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       |> Plausible.Goal.changeset()
       |> to_form()
 
-    selected_tab =
-      case assigns.goal do
-        %{page_path: p, scroll_threshold: s} when not is_nil(p) and s > -1 -> "scroll"
-        %{page_path: p} when not is_nil(p) -> "pageviews"
-        _goal_or_nil -> "custom_events"
+    form_type =
+      if assigns.goal do
+        case assigns.goal do
+          %{page_path: p, scroll_threshold: s} when not is_nil(p) and s > -1 -> "scroll"
+          %{page_path: p} when not is_nil(p) -> "pageviews"
+          _ -> "custom_events"
+        end
+      else
+        assigns[:goal_type] || "custom_events"
       end
 
     socket =
@@ -37,14 +41,14 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         current_user: assigns.current_user,
         site_team: assigns.site_team,
         domain: assigns.domain,
-        selected_tab: selected_tab,
-        tab_sequence_id: 0,
+        form_type: form_type,
         site: site,
         has_access_to_revenue_goals?: has_access_to_revenue_goals?,
         existing_goals: assigns.existing_goals,
         on_save_goal: assigns.on_save_goal,
         on_autoconfigure: assigns.on_autoconfigure,
-        goal: assigns.goal
+        goal: assigns.goal,
+        goal_type: assigns[:goal_type]
       )
 
     {:ok, socket}
@@ -68,7 +72,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       <.title>Edit goal for {@domain}</.title>
 
       <.custom_event_fields
-        :if={@selected_tab == "custom_events"}
+        :if={@form_type == "custom_events"}
         f={f}
         suffix={@context_unique_id}
         current_user={@current_user}
@@ -80,14 +84,14 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
       />
       <.pageview_fields
-        :if={@selected_tab == "pageviews"}
+        :if={@form_type == "pageviews"}
         f={f}
         goal={@goal}
         suffix={@context_unique_id}
         site={@site}
       />
       <.scroll_fields
-        :if={@selected_tab == "scroll"}
+        :if={@form_type == "scroll"}
         f={f}
         goal={@goal}
         suffix={@context_unique_id}
@@ -103,58 +107,41 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def create_form(assigns) do
     ~H"""
-    <.form
-      :let={f}
-      x-data="{ tabSelectionInProgress: false }"
-      for={@form}
-      phx-submit="save-goal"
-      phx-target={@myself}
-    >
+    <.form :let={f} for={@form} phx-submit="save-goal" phx-target={@myself}>
       <.title>
         Add goal for {Plausible.Sites.display_name(@site)}
       </.title>
 
-      <.tabs current_user={@current_user} site={@site} selected_tab={@selected_tab} myself={@myself} />
-
       <.custom_event_fields
-        :if={@selected_tab == "custom_events"}
-        x-show="!tabSelectionInProgress"
+        :if={@form_type == "custom_events"}
         f={f}
-        suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        suffix={@context_unique_id}
         current_user={@current_user}
         site_team={@site_team}
         site={@site}
         existing_goals={@existing_goals}
         goal_options={@event_name_options}
         has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
-        x-init="tabSelectionInProgress = false"
       />
       <.pageview_fields
-        :if={@selected_tab == "pageviews"}
-        x-show="!tabSelectionInProgress"
+        :if={@form_type == "pageviews"}
         f={f}
-        suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        suffix={@context_unique_id}
         site={@site}
-        x-init="tabSelectionInProgress = false"
       />
       <.scroll_fields
-        :if={@selected_tab == "scroll"}
-        x-show="!tabSelectionInProgress"
+        :if={@form_type == "scroll"}
         f={f}
-        suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        suffix={@context_unique_id}
         site={@site}
-        x-init="tabSelectionInProgress = false"
       />
 
-      <div x-show="!tabSelectionInProgress">
-        <.button type="submit" class="w-full">
-          Add goal
-        </.button>
-      </div>
+      <.button type="submit" class="w-full">
+        Add goal
+      </.button>
 
       <button
-        :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
-        x-show="!tabSelectionInProgress"
+        :if={@form_type == "custom_events" && @event_name_options_count > 0}
         class="mt-4 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
         phx-click="autoconfigure"
         phx-target={@myself}
@@ -441,73 +428,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     """
   end
 
-  def tabs(assigns) do
-    ~H"""
-    <div class="text-sm mt-6 font-medium dark:text-gray-100">Goal trigger</div>
-    <div class="my-2 p-1 text-sm w-full flex gap-1 overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
-      <.tab
-        id="event-tab"
-        tab_value="custom_events"
-        selected?={@selected_tab == "custom_events"}
-        myself={@myself}
-      >
-        Custom event
-      </.tab>
-      <.tab
-        id="pageview-tab"
-        tab_value="pageviews"
-        selected?={@selected_tab == "pageviews"}
-        myself={@myself}
-      >
-        Pageview
-      </.tab>
-      <.tab
-        id="scroll-tab"
-        tab_value="scroll"
-        selected?={@selected_tab == "scroll"}
-        myself={@myself}
-      >
-        Scroll depth
-      </.tab>
-    </div>
-    """
-  end
-
-  attr(:id, :string, required: true)
-  attr(:tab_value, :string, required: true)
-  attr(:selected?, :boolean, required: true)
-  attr(:myself, :any, required: true)
-  slot(:inner_block, required: true)
-
-  defp tab(assigns) do
-    ~H"""
-    <a
-      class={[
-        "flex-1 text-center py-2 px-3 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150",
-        "cursor-pointer",
-        @selected? && "bg-gray-150 dark:bg-gray-700 text-gray-800 dark:text-white",
-        !@selected? && "dark:text-gray-200 text-gray-600 hover:text-gray-800 dark:hover:text-white"
-      ]}
-      id={@id}
-      x-on:click={!@selected? && "tabSelectionInProgress = true"}
-      phx-click="switch-tab"
-      phx-value-tab={@tab_value}
-      phx-target={@myself}
-    >
-      {render_slot(@inner_block)}
-    </a>
-    """
-  end
-
-  def handle_event("switch-tab", %{"tab" => tab}, socket) do
-    socket =
-      socket
-      |> assign(:selected_tab, tab)
-      |> update(:tab_sequence_id, &(&1 + 1))
-
-    {:noreply, socket}
-  end
-
   def handle_event("save-goal", %{"goal" => goal_params}, %{assigns: %{goal: nil}} = socket) do
     case Plausible.Goals.create(socket.assigns.site, goal_params) do
       {:ok, goal} ->
@@ -570,10 +490,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     site
     |> Plausible.Stats.GoalSuggestions.suggest_event_names(input, exclude: existing_names)
     |> Enum.map(fn name -> {name, name} end)
-  end
-
-  defp suffix(context_unique_id, tab_sequence_id) do
-    "#{context_unique_id}-tabseq#{tab_sequence_id}"
   end
 
   on_ee do

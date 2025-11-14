@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   """
   use PlausibleWeb, :live_component
   alias PlausibleWeb.Live.Components.Modal
+  alias PlausibleWeb.Components.PrimaDropdown
 
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)
@@ -19,25 +20,52 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       |> assign(:searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
-    <div>
+    <div class="flex flex-col gap-4">
       <%= if @searching? or Enum.count(@goals) > 0 do %>
         <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
-          <.button
-            id="add-goal-button"
-            phx-click="add-goal"
-            mt?={false}
-            x-data
-            x-on:click={Modal.JS.preopen("goals-form-modal")}
-          >
-            Add goal
-          </.button>
+          <PrimaDropdown.dropdown id="add-goal-dropdown">
+            <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+              Add goal <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+            </PrimaDropdown.dropdown_trigger>
+
+            <PrimaDropdown.dropdown_menu>
+              <PrimaDropdown.dropdown_item
+                phx-click="add-goal"
+                phx-value-goal-type="pageviews"
+                x-data
+                x-on:click={Modal.JS.preopen("goals-form-modal")}
+              >
+                <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Pageview
+              </PrimaDropdown.dropdown_item>
+              <PrimaDropdown.dropdown_item
+                phx-click="add-goal"
+                phx-value-goal-type="custom_events"
+                x-data
+                x-on:click={Modal.JS.preopen("goals-form-modal")}
+              >
+                <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Custom event
+              </PrimaDropdown.dropdown_item>
+              <PrimaDropdown.dropdown_item
+                phx-click="add-goal"
+                phx-value-goal-type="scroll"
+                x-data
+                x-on:click={Modal.JS.preopen("goals-form-modal")}
+              >
+                <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Scroll depth
+              </PrimaDropdown.dropdown_item>
+            </PrimaDropdown.dropdown_menu>
+          </PrimaDropdown.dropdown>
         </.filter_bar>
       <% end %>
 
       <%= if Enum.count(@goals) > 0 do %>
         <.table rows={@goals}>
+          <:thead>
+            <.th>Name</.th>
+            <.th hide_on_mobile>Type</.th>
+          </:thead>
           <:tbody :let={goal}>
-            <.td max_width="max-w-40" height="h-16">
+            <.td max_width="max-w-64" height="h-16">
               <%= if not @revenue_goals_enabled? && goal.currency do %>
                 <div class="truncate">{goal}</div>
                 <.tooltip>
@@ -52,20 +80,27 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                   </span>
                 </.tooltip>
               <% else %>
+                <div class="font-medium text-sm flex items-center gap-1.5">
+                  <span class="truncate">{goal}</span>
+                  <.tooltip :if={not Enum.empty?(goal.funnels)} centered?={true}>
+                    <:tooltip_content>
+                      Belongs to funnel
+                    </:tooltip_content>
+                    <Heroicons.funnel class="size-3.5 stroke-2 flex-shrink-0" />
+                  </.tooltip>
+                </div>
                 <div class="truncate">
                   <.goal_description goal={goal} />
                 </div>
-                <div class="truncate">{goal}</div>
               <% end %>
             </.td>
             <.td hide_on_mobile height="h-16">
-              <span :if={goal.page_path && goal.scroll_threshold > -1}>Scroll</span>
-              <span :if={goal.page_path && goal.scroll_threshold == -1}>Pageview</span>
-              <span :if={goal.event_name && !goal.currency}>Custom Event</span>
-              <span :if={goal.currency}>Revenue Goal ({goal.currency})</span>
-              <span :if={not Enum.empty?(goal.funnels)} class="text-gray-400 dark:text-gray-500">
-                <br />Belongs to funnel(s)
-              </span>
+              <.pill :if={goal.page_path && goal.scroll_threshold > -1} color={:green}>Scroll</.pill>
+              <.pill :if={goal.page_path && goal.scroll_threshold == -1} color={:gray}>
+                Pageview
+              </.pill>
+              <.pill :if={goal.event_name && !goal.currency} color={:yellow}>Custom Event</.pill>
+              <.pill :if={goal.currency} color={:indigo}>Revenue Goal ({goal.currency})</.pill>
             </.td>
             <.td actions height="h-16">
               <.edit_button
