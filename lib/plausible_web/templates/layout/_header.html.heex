@@ -81,13 +81,13 @@
                     />
                     <.dropdown_divider />
                     <.dropdown_item href={Routes.settings_path(@conn, :index)}>
-                      Account Settings
+                      Account settings
                     </.dropdown_item>
 
                     <div :if={@my_team && @my_team.id == @current_team.id}>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span data-test="create-a-team-cta" class="flex-1">
-                          Create a Team
+                          Create a team
                         </span>
                       </.dropdown_item>
                       <.dropdown_divider />
@@ -99,7 +99,7 @@
                         href={Routes.settings_path(@conn, :team_general)}
                       >
                         <span class="flex-1">
-                          Team Settings
+                          Team settings
                         </span>
                       </.dropdown_item>
                       <.dropdown_divider />
@@ -109,7 +109,7 @@
                       new_tab
                       href="https://plausible.io/docs"
                     >
-                      Help Center
+                      Help center
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ee?()}
@@ -117,7 +117,7 @@
                       new_tab
                       href="https://plausible.io/contact"
                     >
-                      Contact Support
+                      Contact support
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ee?()}
@@ -125,7 +125,7 @@
                       new_tab
                       href={feedback_link(@conn.assigns[:current_user])}
                     >
-                      Feature Requests
+                      Feature requests
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ce?()}
@@ -133,9 +133,9 @@
                       new_tab
                       href="https://github.com/plausible/analytics"
                     >
-                      Github Repo
+                      Github repo
                     </.dropdown_item>
-                    <.dropdown_item href="/logout">Log Out</.dropdown_item>
+                    <.dropdown_item href="/logout">Log out</.dropdown_item>
                   </:menu>
                 </.dropdown>
               </li>
