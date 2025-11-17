@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
         resp = conn |> html_response(200)
 
-        assert text(resp) =~ "please upgrade your subscription"
+        assert text(resp) =~ "upgrade your subscription"
       end
 
       test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert resp =~ "From blog to signup"
         assert resp =~ "From signup to blog"
         refute resp =~ "Your account does not have access"
-        refute resp =~ "please upgrade your subscription"
+        refute resp =~ "upgrade your subscription"
         assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnel-analysis\"]")
       end
 

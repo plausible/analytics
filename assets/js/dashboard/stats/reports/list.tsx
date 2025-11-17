@@ -247,7 +247,7 @@ export default function ListReport<
     return (
       <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
         <div
-          className="flex w-full items-center"
+          className="group flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm transition-colors duration-150"
           style={{ marginTop: ROW_GAP_HEIGHT }}
         >
           {renderBarFor(listItem)}
@@ -258,7 +258,7 @@ export default function ListReport<
   }
 
   function renderBarFor(listItem: TListItem) {
-    const lightBackground = color || 'bg-green-50'
+    const lightBackground = color || 'bg-green-50 group-hover:bg-green-100'
     const metricToPlot = metrics.find((metric) => metric.meta.plot)?.key
 
     return (
@@ -267,7 +267,7 @@ export default function ListReport<
           maxWidthDeduction={undefined}
           count={listItem[metricToPlot]}
           all={state.list}
-          bg={`${lightBackground} dark:bg-gray-500/15`}
+          bg={`${lightBackground} dark:bg-gray-500/15 dark:group-hover:bg-gray-500/30`}
           plot={metricToPlot}
         >
           <div className="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">

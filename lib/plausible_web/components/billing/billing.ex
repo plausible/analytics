@@ -20,15 +20,24 @@ defmodule PlausibleWeb.Components.Billing do
     <div
       :if={@locked?}
       id="feature-gate-overlay"
-      class="absolute backdrop-blur-[6px] bg-white/50 dark:bg-gray-800/50 inset-0 flex justify-center items-center rounded-md"
+      class="absolute backdrop-blur-[8px] bg-white/70 dark:bg-gray-800/50 inset-0 flex justify-center items-center"
     >
-      <div class="px-6 flex flex-col items-center text-gray-500 dark:text-gray-400">
-        <Heroicons.lock_closed solid class="size-8 mb-2" />
-
-        <span id="lock-notice" class="text-center max-w-sm sm:max-w-md">
-          To gain access to this feature,
-          <.upgrade_call_to_action current_role={@current_role} current_team={@current_team} />.
-        </span>
+      <div class="px-6 flex flex-col items-center gap-y-3">
+        <div class="flex-shrink-0 bg-white dark:bg-gray-700 max-w-max rounded-md p-2 border border-gray-200 dark:border-gray-600 text-indigo-500">
+          <Heroicons.lock_closed solid class="size-6 -mt-px pb-px" />
+        </div>
+        <div class="flex flex-col gap-y-1.5 items-center">
+          <h3 class="font-medium text-gray-900 dark:text-gray-100">
+            Upgrade to unlock
+          </h3>
+          <span
+            id="lock-notice"
+            class="max-w-sm sm:max-w-md mb-2 text-sm text-gray-600 dark:text-gray-100/60 leading-normal text-center"
+          >
+            To access this feature,
+            <.upgrade_call_to_action current_role={@current_role} current_team={@current_team} />
+          </span>
+        </div>
       </div>
     </div>
     """
@@ -359,23 +368,25 @@ defmodule PlausibleWeb.Components.Billing do
 
     cond do
       not is_nil(assigns.current_role) and assigns.current_role not in [:owner, :billing] ->
-        ~H"please reach out to the team owner to upgrade their subscription"
+        ~H"ask your team owner to upgrade their subscription."
 
       upgrade_assistance_required? ->
         ~H"""
-        please contact <a href="mailto:hello@plausible.io" class="underline">hello@plausible.io</a>
-        to upgrade your subscription
+        contact
+        <.styled_link href="mailto:hello@plausible.io" class="font-medium">
+          hello@plausible.io
+        </.styled_link>
+        to upgrade your subscription.
         """
 
       true ->
         ~H"""
-        please
-        <.link
-          class="underline inline-block"
+        <.styled_link
+          class="inline-block font-medium"
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
         >
-          upgrade your subscription
-        </.link>
+          upgrade your subscription.
+        </.styled_link>
         """
     end
   end

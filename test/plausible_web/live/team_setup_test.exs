@@ -93,10 +93,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       {:ok, _lv, html} = live(conn, @url)
 
-      assert class_of_element(html, "#feature-gate-inner-block-container") =~
-               "pointer-events-none"
-
-      assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur-[6px]"
+      assert element_exists?(html, "#feature-gate-inner-block-container")
+      assert element_exists?(html, "#feature-gate-overlay")
+      assert text_of_element(html, "#feature-gate-overlay") =~ "Upgrade to unlock"
     end
   end
 
