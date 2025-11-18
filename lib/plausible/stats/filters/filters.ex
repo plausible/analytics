@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Filters do
   """
 
   alias Plausible.Stats.Query
-  alias Plausible.Stats.Filters.QueryParser
+  alias Plausible.Stats.QueryParser
   alias Plausible.Stats.Filters.LegacyStatsAPIFilterParser
 
   @visit_props [

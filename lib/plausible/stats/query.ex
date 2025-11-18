@@ -18,7 +18,7 @@ defmodule Plausible.Stats.Query do
             timezone: nil,
             legacy_breakdown: false,
             preloaded_goals: [],
-            include: Plausible.Stats.Filters.QueryParser.default_include(),
+            include: Plausible.Stats.QueryParser.default_include(),
             debug_metadata: %{},
             pagination: nil,
             # Revenue metric specific metadata
@@ -34,7 +34,7 @@ defmodule Plausible.Stats.Query do
             smear_session_metrics: false
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}
+  alias Plausible.Stats.{DateTimeRange, Imported, Legacy, Comparisons, QueryParser}
 
   @type t :: %__MODULE__{}
 
@@ -44,7 +44,7 @@ defmodule Plausible.Stats.Query do
         %{"site_id" => domain} = params,
         debug_metadata \\ %{}
       ) do
-    with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params) do
+    with {:ok, query_data} <- QueryParser.parse(site, schema_type, params) do
       query =
         %__MODULE__{
           debug_metadata: debug_metadata,

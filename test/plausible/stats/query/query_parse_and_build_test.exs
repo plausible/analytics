@@ -2,7 +2,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   use Plausible
   use Plausible.DataCase
   use Plausible.Teams.Test
-  import Plausible.Stats.Filters.QueryParser
+  import Plausible.Stats.QueryParser
   doctest Plausible.Stats.Filters.QueryParser
 
   alias Plausible.Stats.DateTimeRange

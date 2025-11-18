@@ -154,7 +154,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
   end
 
   describe "trim_relative_date_range" do
-    alias Plausible.Stats.Filters.QueryParser
+    alias Plausible.Stats.QueryParser
 
     test "trims current month period when flag is set" do
       now = DateTime.new!(~D[2024-01-15], ~T[12:00:00], "UTC")

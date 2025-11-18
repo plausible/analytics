@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.Filters.QueryParser do
+defmodule Plausible.Stats.QueryParser do
   @moduledoc false
 
   use Plausible
