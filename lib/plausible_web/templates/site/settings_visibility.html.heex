@@ -27,27 +27,11 @@
     </.form>
   </.tile>
 
-  <.tile
-    docs="shared-links"
-    feature_mod={Plausible.Billing.Feature.SharedLinks}
-    site={@site}
-    current_role={@site_role}
-    current_team={@site_team}
-    conn={@conn}
-  >
-    <:title>
-      Shared links
-    </:title>
-    <:subtitle :if={@has_shared_links?}>
-      Share your stats privately with anyone. Links are unique, secure, and can be password-protected.
-    </:subtitle>
-
-    <div :if={Plausible.Billing.Feature.SharedLinks.enabled?(@site)}>
-      {live_render(@conn, PlausibleWeb.Live.SharedLinkSettings,
-        session: %{"site_id" => @site.id, "domain" => @site.domain}
-      )}
-    </div>
-  </.tile>
+  <div :if={Plausible.Billing.Feature.SharedLinks.enabled?(@site)}>
+    {live_render(@conn, PlausibleWeb.Live.SharedLinkSettings,
+      session: %{"site_id" => @site.id, "domain" => @site.domain}
+    )}
+  </div>
 
   <.tile
     docs="embed-dashboard"

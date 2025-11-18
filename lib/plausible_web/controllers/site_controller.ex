@@ -163,19 +163,9 @@ defmodule PlausibleWeb.SiteController do
   def settings_visibility(conn, _params) do
     site = conn.assigns[:site]
 
-    has_shared_links? =
-      Repo.exists?(
-        from(l in Plausible.Site.SharedLink,
-          where:
-            l.site_id == ^site.id and
-              l.name not in ^Plausible.Sites.shared_link_special_names()
-        )
-      )
-
     conn
     |> render("settings_visibility.html",
       site: site,
-      has_shared_links?: has_shared_links?,
       dogfood_page_path: "/:dashboard/settings/visibility",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}

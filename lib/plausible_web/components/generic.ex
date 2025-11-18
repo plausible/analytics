@@ -485,8 +485,9 @@ defmodule PlausibleWeb.Components.Generic do
   attr :feature_toggle?, :boolean, default: false
   attr :current_role, :atom, default: nil
   attr :current_team, :any, default: nil
+  attr :current_user, :any, default: nil
   attr :site, :any
-  attr :conn, :any
+  attr :conn, :any, default: nil
   attr :show_content?, :boolean, default: true
 
   def tile(assigns) do
@@ -506,6 +507,7 @@ defmodule PlausibleWeb.Components.Generic do
           feature_mod={@feature_mod}
           site={@site}
           conn={@conn}
+          current_user={@current_user}
         />
       </header>
       <div :if={@show_content?} class="border-b dark:border-gray-700 mx-6"></div>
