@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
     test "if no goals are present, a proper info is displayed", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
-      assert resp =~ "No goals configured for this site"
+      assert resp =~ "Create your first goal"
     end
 
     test "if goals are present, no info about missing goals is displayed", %{
@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       {:ok, _goals} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
-      refute resp =~ "No goals configured for this site"
+      refute resp =~ "Create your first goal"
     end
 
     test "add goal button is rendered", %{conn: conn, site: site} do
@@ -96,6 +96,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
     end
 
     test "search goals input is rendered", %{conn: conn, site: site} do
+      {:ok, _goals} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
       assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
@@ -119,7 +120,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
         assert resp = html_response(conn, 200)
         assert resp =~ "Define actions that you want your users to take"
-        assert resp =~ "No goals configured for this site"
+        assert resp =~ "Create your first goal"
         assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
       end
 

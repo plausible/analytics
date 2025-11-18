@@ -78,6 +78,8 @@ defmodule PlausibleWeb.Components.Site.Feature.ToggleLive do
             "#{feature_mod.display_name()} are now hidden from your dashboard"
           end
 
+        send(self(), {:site_updated, updated_site})
+
         {:noreply,
          socket
          |> assign(:site, updated_site)

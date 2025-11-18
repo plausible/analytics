@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     test "if no props are allowed, a proper info is displayed", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/properties")
       resp = html_response(conn, 200)
-      assert resp =~ "No properties configured for this site"
+      assert resp =~ "Create a custom property"
     end
 
     test "if props are enabled, no info about missing props is displayed", %{
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
       conn = get(conn, "/#{site.domain}/settings/properties")
       resp = html_response(conn, 200)
-      refute resp =~ "No properties configured for this site"
+      refute resp =~ "Create a custom property"
     end
 
     test "add property button is rendered", %{conn: conn, site: site} do
@@ -95,6 +95,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     end
 
     test "search props input is rendered", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
       conn = get(conn, "/#{site.domain}/settings/properties")
       resp = html_response(conn, 200)
       assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
@@ -142,13 +143,16 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       } do
         conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
         resp = html_response(conn, 200)
-        assert resp =~ "No properties configured for this site"
+        assert resp =~ "Create a custom property"
       end
 
       test "add property button and search input are rendered", %{
         conn: conn,
         consolidated_view: consolidated_view
       } do
+        {:ok, consolidated_view} =
+          Plausible.Props.allow(consolidated_view, ["amount", "logged_in", "is_customer"])
+
         conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
         resp = html_response(conn, 200)
         assert element_exists?(resp, ~s/button[phx-click="add-prop"]/)
@@ -222,6 +226,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     end
 
     test "allows resetting filter text via no match link", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
       lv = get_liveview(conn, site)
       html = type_into_search(lv, "Definitely this is not going to render any matches")
 

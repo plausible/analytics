@@ -776,7 +776,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/visibility")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No shared links configured for this site"
+      assert resp =~ "Create your first shared link"
     end
 
     test "does not render shared links with special names", %{conn: conn, site: site} do
@@ -990,7 +990,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert element_exists?(resp, ~s|a[href^="https://accounts.google.com/o/oauth2/"]|)
 
       assert(resp =~ "Import data")
-      assert resp =~ "There are no imports yet"
+      assert resp =~ "Import your first data"
       assert resp =~ "Export data"
     end
 

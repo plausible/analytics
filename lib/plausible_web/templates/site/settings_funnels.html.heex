@@ -1,25 +1,7 @@
 <.settings_tiles>
-  <.tile
-    docs="funnel-analysis"
-    feature_mod={Plausible.Billing.Feature.Funnels}
-    feature_toggle?={true}
-    show_content?={!Plausible.Billing.Feature.Funnels.opted_out?(@site)}
-    current_role={@site_role}
-    current_team={@site_team}
-    site={@site}
-    conn={@conn}
-  >
-    <:title>
-      Funnels
-    </:title>
-    <:subtitle :if={@has_funnels?}>
-      Compose goals into funnels to track user flows and conversion rates.
-    </:subtitle>
-
-    <div :if={Plausible.Billing.Feature.Funnels.enabled?(@site)}>
-      {live_render(@conn, PlausibleWeb.Live.FunnelSettings,
-        session: %{"site_id" => @site.id, "domain" => @site.domain}
-      )}
-    </div>
-  </.tile>
+  <div>
+    {live_render(@conn, PlausibleWeb.Live.FunnelSettings,
+      session: %{"site_id" => @site.id, "domain" => @site.domain}
+    )}
+  </div>
 </.settings_tiles>

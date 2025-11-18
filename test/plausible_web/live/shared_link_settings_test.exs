@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettingsTest do
       lv = get_liveview(conn, session)
       html = render(lv)
 
-      assert html =~ "No shared links configured for this site"
+      assert html =~ "Create your first shared link"
     end
   end
 

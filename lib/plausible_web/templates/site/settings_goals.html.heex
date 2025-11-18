@@ -1,31 +1,7 @@
 <.settings_tiles>
-  <.tile
-    docs="goal-conversions"
-    feature_mod={Plausible.Billing.Feature.Goals}
-    feature_toggle?={true}
-    show_content?={!Plausible.Billing.Feature.Goals.opted_out?(@site)}
-    site={@site}
-    conn={@conn}
-  >
-    <:title>
-      Goals
-    </:title>
-    <:subtitle :if={@has_goals?}>
-      <p>
-        Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
-      </p>
-      <p :if={ee?() and Plausible.Sites.regular?(@site)} data-test-id="setup-funnels-cta">
-        You can also
-        <.styled_link href={Routes.site_path(@conn, :settings_funnels, @site.domain)}>
-          compose goals into funnels.
-        </.styled_link>
-      </p>
-    </:subtitle>
-
-    <div :if={Plausible.Billing.Feature.Goals.enabled?(@site)}>
-      {live_render(@conn, PlausibleWeb.Live.GoalSettings,
-        session: %{"site_id" => @site.id, "domain" => @site.domain}
-      )}
-    </div>
-  </.tile>
+  <div>
+    {live_render(@conn, PlausibleWeb.Live.GoalSettings,
+      session: %{"site_id" => @site.id, "domain" => @site.domain}
+    )}
+  </div>
 </.settings_tiles>

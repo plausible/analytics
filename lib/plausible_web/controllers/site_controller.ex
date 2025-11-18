@@ -173,19 +173,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_goals(conn, _params) do
-    site = conn.assigns[:site]
-
-    has_goals? =
-      Repo.exists?(
-        from(g in Plausible.Goal,
-          where: g.site_id == ^site.id
-        )
-      )
-
     conn
     |> render("settings_goals.html",
-      site: site,
-      has_goals?: has_goals?,
       dogfood_page_path: "/:dashboard/settings/goals",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -193,19 +182,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    site = conn.assigns[:site]
-
-    has_funnels? =
-      Repo.exists?(
-        from(f in Plausible.Funnel,
-          where: f.site_id == ^site.id
-        )
-      )
-
     conn
     |> render("settings_funnels.html",
-      site: site,
-      has_funnels?: has_funnels?,
       dogfood_page_path: "/:dashboard/settings/funnels",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -213,15 +191,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_props(conn, _params) do
-    site = conn.assigns[:site]
-
-    has_props? =
-      site.allowed_event_props && length(site.allowed_event_props) > 0
-
     conn
     |> render("settings_props.html",
-      site: site,
-      has_props?: has_props?,
       dogfood_page_path: "/:dashboard/settings/properties",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"},
       connect_live_socket: true
@@ -296,17 +267,9 @@ defmodule PlausibleWeb.SiteController do
   def settings_imports_exports(conn, _params) do
     site = conn.assigns.site
 
-    has_imports? =
-      Repo.exists?(
-        from(i in Plausible.Imported.SiteImport,
-          where: i.site_id == ^site.id
-        )
-      )
-
     conn
     |> render("settings_imports_exports.html",
       site: site,
-      has_imports?: has_imports?,
       dogfood_page_path: "/:dashboard/settings/imports-exports",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}

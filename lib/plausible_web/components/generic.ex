@@ -1126,6 +1126,16 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  slot :inner_block, required: true
+
+  def highlighted(assigns) do
+    ~H"""
+    <span class="font-medium text-indigo-600 dark:text-gray-100">
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
+
   def settings_badge(%{type: :new} = assigns) do
     ~H"""
     <span class="inline-block ml-2 bg-indigo-100 text-indigo-600 text-xs font-semibold py-1 px-2 rounded-md">

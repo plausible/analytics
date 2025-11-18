@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
     """
   end
 
-  defp target(site, setting, conn, set_to) when is_boolean(set_to) do
+  def target(site, setting, conn, set_to) when is_boolean(set_to) do
     r = conn.request_path
     Routes.site_path(conn, :update_feature_visibility, site.domain, setting, r: r, set: set_to)
   end

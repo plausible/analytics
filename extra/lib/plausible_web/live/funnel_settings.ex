@@ -25,6 +25,10 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           ]
         )
       end)
+      |> assign_new(:site_role, fn %{site: site, current_user: current_user} ->
+        {:ok, {_, site_role}} = Plausible.Teams.Memberships.site_role(site, current_user)
+        site_role
+      end)
       |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
         Funnels.list(site)
       end)
@@ -50,45 +54,62 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     <div id="funnel-settings-main">
       <.flash_messages flash={@flash} />
 
-      <%= if @setup_funnel? do %>
-        {live_render(
-          @socket,
-          PlausibleWeb.Live.FunnelSettings.Form,
-          id: "funnels-form",
-          session: %{
-            "domain" => @domain,
-            "funnel_id" => @funnel_id
-          }
-        )}
-      <% end %>
-      <div :if={@goal_count >= Funnel.min_steps()}>
-        <.live_component
-          module={PlausibleWeb.Live.FunnelSettings.List}
-          id="funnels-list"
-          funnels={@displayed_funnels}
-          filter_text={@filter_text}
-        />
-      </div>
-
-      <div
-        :if={@goal_count < Funnel.min_steps()}
-        class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto"
+      <.tile
+        docs="funnel-analysis"
+        feature_mod={Plausible.Billing.Feature.Funnels}
+        feature_toggle?={true}
+        show_content?={!Plausible.Billing.Feature.Funnels.opted_out?(@site)}
+        site={@site}
+        current_user={@current_user}
+        current_role={@site_role}
+        current_team={@current_team}
       >
-        <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
-          Ready to dig into user flows?
-        </h3>
-        <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-          Set up a few goals like <span class="font-medium text-indigo-600 dark:text-gray-100">Signup</span>, <span class="font-medium text-indigo-600 dark:text-gray-100">Visit /</span>, or
-          <span class="font-medium text-indigo-600 dark:text-gray-100">Scroll 50% on /blog/*</span>
-          first, then return here to build your first funnel.
-        </p>
-        <.button_link
-          class="mt-4"
-          href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}
+        <:title>
+          Funnels
+        </:title>
+        <:subtitle :if={Enum.count(@all_funnels) > 0}>
+          Compose goals into funnels to track user flows and conversion rates.
+        </:subtitle>
+        <%= if @setup_funnel? do %>
+          {live_render(
+            @socket,
+            PlausibleWeb.Live.FunnelSettings.Form,
+            id: "funnels-form",
+            session: %{
+              "domain" => @domain,
+              "funnel_id" => @funnel_id
+            }
+          )}
+        <% end %>
+        <div :if={@goal_count >= Funnel.min_steps()}>
+          <.live_component
+            module={PlausibleWeb.Live.FunnelSettings.List}
+            id="funnels-list"
+            funnels={@displayed_funnels}
+            filter_text={@filter_text}
+          />
+        </div>
+
+        <div
+          :if={@goal_count < Funnel.min_steps()}
+          class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto"
         >
-          Set up goals →
-        </.button_link>
-      </div>
+          <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+            Ready to dig into user flows?
+          </h3>
+          <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+            Set up a few goals like <.highlighted>Signup</.highlighted>, <.highlighted>Visit /</.highlighted>, or
+            <.highlighted>Scroll 50% on /blog/*</.highlighted>
+            first, then return here to build your first funnel.
+          </p>
+          <.button_link
+            class="mt-4"
+            href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}
+          >
+            Set up goals →
+          </.button_link>
+        </div>
+      </.tile>
     </div>
     """
   end
@@ -151,5 +172,9 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def handle_info(:cancel_setup_funnel, socket) do
     {:noreply, assign(socket, setup_funnel?: false, funnel_id: nil)}
+  end
+
+  def handle_info({:site_updated, updated_site}, socket) do
+    {:noreply, assign(socket, site: updated_site)}
   end
 end
