@@ -7,6 +7,13 @@ export function apiPath(
   return `/api/stats/${encodeURIComponent(site.domain)}${path}/`
 }
 
+export function livePath(
+  site: Pick<PlausibleSite, 'domain'>,
+  path = ''
+): string {
+  return `/${encodeURIComponent(site.domain)}/live${path}/`
+}
+
 export function externalLinkForPage(
   site: PlausibleSite,
   page: string

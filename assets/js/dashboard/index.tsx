@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
 import Pages from './stats/pages'
+import { PagesLive } from './stats/live'
 import Locations from './stats/locations'
 import Devices from './stats/devices'
 import { TopBar } from './nav-menu/top-bar'
@@ -27,7 +28,7 @@ function DashboardStats({
           <Sources />
         </div>
         <div className={statsBoxClass}>
-          <Pages />
+          <PagesLive />
         </div>
       </div>
 

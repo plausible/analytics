@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="websocket-url" content={websocket_url()} />
+    <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
+    <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
+    <script defer skip-topbar phx-track-static src={Routes.static_path(@conn, "/js/app.js")}>
+    </script>
+    <style>
+      html,body { margin:0; padding:0; background:transparent }
+    </style>
+    <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />
+  </head>
+  <body>
+    {@inner_content}
+    <script>
+      const send = () => {
+        requestAnimationFrame(() => {
+          top.postMessage(
+            { type: "EMBEDDED_LV_SIZE", height: document.body.scrollHeight },
+            "*"
+          );
+        })
+      }
+      new ResizeObserver(send).observe(document.body);
+      window.addEventListener("load", send);
+    </script>
+  </body>
+</html>
