@@ -1358,7 +1358,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
   ]
 
   on_ee do
-    describe "Account Settings - SSO user" do
+    describe "Account settings - SSO user" do
       setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
 
       test "shows only expected menu items", %{conn: conn} do
@@ -1409,7 +1409,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
-  describe "Team Settings" do
+  describe "Team settings" do
     setup [:create_user, :log_in]
 
     test "when no team is assigned & the user doesn't have a subscription, limited account menu is present",
@@ -2003,14 +2003,14 @@ defmodule PlausibleWeb.SettingsControllerTest do
   describe "account dropdown menu (_header.html)" do
     setup [:create_user, :log_in]
 
-    test "renders the 'Create a Team' option", %{conn: conn, user: user} do
+    test "renders the 'Create a team' option", %{conn: conn, user: user} do
       subscribe_to_growth_plan(user)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a Team"
+      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a team"
     end
 
-    test "does not render the 'Create a Team' option if a team is already set up", %{
+    test "does not render the 'Create a team' option if a team is already set up", %{
       conn: conn,
       user: user
     } do

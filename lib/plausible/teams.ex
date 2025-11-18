@@ -14,7 +14,7 @@ defmodule Plausible.Teams do
   @accept_traffic_until_free ~D[2135-01-01]
 
   @spec default_name() :: String.t()
-  def default_name(), do: "My Personal Sites"
+  def default_name(), do: "My personal sites"
 
   @spec name(nil | Teams.Team.t()) :: String.t()
   def name(nil), do: default_name()
