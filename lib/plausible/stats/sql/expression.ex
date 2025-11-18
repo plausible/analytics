@@ -190,6 +190,49 @@ defmodule Plausible.Stats.SQL.Expression do
   def select_dimension(q, key, "visit:city_name", _table, _query),
     do: select_merge_as(q, [t], %{key => t.city_name})
 
+  def select_dimension_internal(q, "visit:entry_page") do
+    select_merge_as(q, [t], %{
+      entry_page: fragment("any(?)", field(t, :entry_page))
+    })
+  end
+
+  def select_dimension_internal(q, "visit:entry_page_hostname") do
+    select_merge_as(q, [t], %{
+      entry_page_hostname: fragment("any(?)", field(t, :entry_page_hostname))
+    })
+  end
+
+  def select_dimension_internal(q, "visit:exit_page") do
+    # As exit page changes with every pageview event over the lifetime
+    # of a session, only the most recent value must be considered. 
+    select_merge_as(q, [t], %{
+      exit_page: fragment("argMax(?, ?)", field(t, :exit_page), field(t, :events))
+    })
+  end
+
+  def select_dimension_internal(q, "visit:exit_page_hostname") do
+    select_merge_as(q, [t], %{
+      exit_page_hostname:
+        fragment("argMax(?, ?)", field(t, :exit_page_hostname), field(t, :events))
+    })
+  end
+
+  def select_dimension_internal(q, _dimension), do: q
+
+  def select_dimension_from_join(q, key, "visit:entry_page"),
+    do: select_merge_as(q, [..., t], %{key => t.entry_page})
+
+  def select_dimension_from_join(q, key, "visit:entry_page_hostname"),
+    do: select_merge_as(q, [..., t], %{key => t.entry_page_hostaname})
+
+  def select_dimension_from_join(q, key, "visit:exit_page"),
+    do: select_merge_as(q, [..., t], %{key => t.exit_page})
+
+  def select_dimension_from_join(q, key, "visit:exit_page_hostname"),
+    do: select_merge_as(q, [..., t], %{key => t.exit_page_hostname})
+
+  def select_dimension_from_join(q, _key, _dimension), do: q
+
   def event_metric(:pageviews, _query) do
     wrap_alias([e], %{
       pageviews: scale_sample(fragment("countIf(? = 'pageview')", e.name))

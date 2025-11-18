@@ -72,6 +72,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   defp join_sessions_if_needed(q, query) do
     if TableDecider.events_join_sessions?(query) do
+      %{session: dimensions} = TableDecider.partition_dimensions(query)
+
       sessions_q =
         from(
           s in "sessions_v2",
@@ -80,6 +82,14 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
           select: %{session_id: s.session_id},
           group_by: s.session_id
         )
+
+      # The session-only dimension columns are explicitly selected in joined 
+      # sessions table. This enables combining session-only dimensions (entry 
+      # and exit pages) with event-only metrics, like revenue.
+      sessions_q =
+        Enum.reduce(dimensions, sessions_q, fn dimension, acc ->
+          Plausible.Stats.SQL.Expression.select_dimension_internal(acc, dimension)
+        end)
 
       on_ee do
         sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
@@ -131,8 +141,31 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> Enum.reduce(%{}, &Map.merge/2)
   end
 
-  def build_group_by(q, table, query) do
-    Enum.reduce(query.dimensions, q, &dimension_group_by(&2, table, query, &1))
+  def build_group_by(q, :events, query) do
+    # Session-only dimensions are extracted from joined sessions table
+    %{session: session_only_dimensions} = TableDecider.partition_dimensions(query)
+    event_dimensions = query.dimensions -- session_only_dimensions
+
+    q =
+      Enum.reduce(event_dimensions, q, &dimension_group_by(&2, :events, query, &1))
+
+    Enum.reduce(
+      session_only_dimensions,
+      q,
+      &dimension_group_by_join(&2, query, &1)
+    )
+  end
+
+  def build_group_by(q, :sessions, query) do
+    Enum.reduce(query.dimensions, q, &dimension_group_by(&2, :sessions, query, &1))
+  end
+
+  defp dimension_group_by_join(q, query, dimension) do
+    key = shortname(query, dimension)
+
+    q
+    |> Expression.select_dimension_from_join(key, dimension)
+    |> group_by([], selected_as(^key))
   end
 
   defp dimension_group_by(q, :events, query, "event:goal" = dimension) do

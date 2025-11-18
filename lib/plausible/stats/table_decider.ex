@@ -54,6 +54,10 @@ defmodule Plausible.Stats.TableDecider do
     end
   end
 
+  def partition_dimensions(query) do
+    partition(query.dimensions, query, &dimension_partitioner/2)
+  end
+
   @type table_type() :: :events | :sessions
   @type metric() :: String.t()
 
