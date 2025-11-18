@@ -7,11 +7,12 @@ defmodule PlausibleWeb.Components.Site.Feature do
 
   attr(:site, Plausible.Site, required: true)
   attr(:feature_mod, :atom, required: true, values: Plausible.Billing.Feature.list())
-  attr(:conn, Plug.Conn, required: true)
+  attr(:conn, :any, default: nil)
+  attr(:current_user, :any, default: nil)
   attr(:class, :any, default: nil)
   slot(:inner_block)
 
-  def toggle(assigns) do
+  def toggle(%{conn: %Plug.Conn{}} = assigns) do
     assigns =
       assigns
       |> assign(:current_setting, assigns.feature_mod.enabled?(assigns.site))
@@ -37,7 +38,22 @@ defmodule PlausibleWeb.Components.Site.Feature do
     """
   end
 
-  def target(site, setting, conn, set_to) when is_boolean(set_to) do
+  def toggle(assigns) do
+    ~H"""
+    <.live_component
+      module={PlausibleWeb.Components.Site.Feature.ToggleLive}
+      id={"feature-toggle-#{@site.id}-#{@feature_mod}"}
+      site={@site}
+      feature_mod={@feature_mod}
+      current_user={@current_user}
+      class={@class}
+    >
+      {render_slot(@inner_block)}
+    </.live_component>
+    """
+  end
+
+  defp target(site, setting, conn, set_to) when is_boolean(set_to) do
     r = conn.request_path
     Routes.site_path(conn, :update_feature_visibility, site.domain, setting, r: r, set: set_to)
   end
