@@ -546,7 +546,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def suggest_page_paths(input, site) do
     query =
-      Plausible.Stats.Query.build!(
+      Plausible.Stats.Query.parse_and_build!(
         site,
         :internal,
         %{

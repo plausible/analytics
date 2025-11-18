@@ -38,7 +38,7 @@ defmodule Plausible.Stats.Query do
 
   @type t :: %__MODULE__{}
 
-  def build(
+  def parse_and_build(
         %Plausible.Site{domain: domain} = site,
         schema_type,
         %{"site_id" => domain} = params,
@@ -64,15 +64,15 @@ defmodule Plausible.Stats.Query do
     end
   end
 
-  def build!(site, schema_type, params, debug_metadata \\ %{}) do
-    case build(site, schema_type, params, debug_metadata) do
+  def parse_and_build!(site, schema_type, params, debug_metadata \\ %{}) do
+    case parse_and_build(site, schema_type, params, debug_metadata) do
       {:ok, query} -> query
       {:error, reason} -> raise "Failed to build query: #{inspect(reason)}"
     end
   end
 
   @doc """
-  Builds query from old-style stats APIv1 params. New code should use `Query.build`.
+  Builds query from old-style stats APIv1 params. New code should use `Query.parse_and_build`.
   """
   def from(site, params, debug_metadata \\ %{}, now \\ nil) do
     Legacy.QueryBuilder.from(site, params, debug_metadata, now)
