@@ -69,51 +69,6 @@ defmodule Plausible.Stats.QueryParseAndBuildTest do
     :ok
   end
 
-  def check_success(params, site, expected_result, schema_type \\ :public) do
-    assert {:ok, result} = parse(site, schema_type, params, @now)
-
-    return_value = Map.take(result, [:preloaded_goals, :revenue_warning, :revenue_currencies])
-
-    result =
-      Map.drop(result, [
-        :now,
-        :input_date_range,
-        :preloaded_goals,
-        :revenue_warning,
-        :revenue_currencies,
-        :consolidated_site_ids
-      ])
-
-    assert result == expected_result
-
-    return_value
-  end
-
-  def check_error(params, site, expected_error_message, schema_type \\ :public) do
-    {:error, message} = parse(site, schema_type, params, @now)
-    assert message == expected_error_message
-  end
-
-  def check_date_range(date_params, site, expected_date_range, schema_type \\ :public) do
-    params =
-      %{"site_id" => site.domain, "metrics" => ["visitors", "events"]}
-      |> Map.merge(date_params)
-
-    expected_parsed =
-      %{
-        metrics: [:visitors, :events],
-        utc_time_range: expected_date_range,
-        filters: [],
-        dimensions: [],
-        order_by: nil,
-        timezone: site.timezone,
-        include: @default_include,
-        pagination: %{limit: 10_000, offset: 0}
-      }
-
-    check_success(params, site, expected_parsed, schema_type)
-  end
-
   def check_goals(query, opts) do
     assert %Query{
              preloaded_goals: preloaded_goals,
