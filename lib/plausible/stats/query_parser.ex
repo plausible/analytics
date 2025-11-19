@@ -308,9 +308,8 @@ defmodule Plausible.Stats.QueryParser do
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
   def parse_include(include, site) when is_map(include) do
-    with {:ok, include} <- atomize_include_keys(include),
-         {:ok, include} <- update_comparisons_date_range(include, site) do
-      {:ok, include}
+    with {:ok, include} <- atomize_include_keys(include) do
+      update_comparisons_date_range(include, site)
     end
   end
 
