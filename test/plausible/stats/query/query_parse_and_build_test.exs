@@ -1,7 +1,6 @@
 defmodule Plausible.Stats.QueryParseAndBuildTest do
   use Plausible.DataCase
   use Plausible.Teams.Test
-  import Plausible.Stats.QueryParser
   import Plausible.AssertMatches
 
   alias Plausible.Stats.{Query, DateTimeRange, Filters}
