@@ -26,7 +26,10 @@ defmodule Plausible.Stats.QueryBuilder do
         |> Query.put_imported_opts(site)
 
       on_ee do
-        query = Plausible.Stats.Sampling.put_threshold(query, site, params)
+        # NOTE: The Query API schema does not allow the sample_threshold param
+        # and it looks like it's not used as a parameter anymore. We might want
+        # to clean this up.
+        query = Plausible.Stats.Sampling.put_threshold(query, site, %{})
       end
 
       {:ok, query}
