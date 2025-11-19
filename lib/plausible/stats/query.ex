@@ -18,7 +18,7 @@ defmodule Plausible.Stats.Query do
             timezone: nil,
             legacy_breakdown: false,
             preloaded_goals: [],
-            include: Plausible.Stats.QueryParser.default_include(),
+            include: Plausible.Stats.ParsedQueryParams.default_include(),
             debug_metadata: %{},
             pagination: nil,
             # Revenue metric specific metadata
@@ -34,7 +34,16 @@ defmodule Plausible.Stats.Query do
             smear_session_metrics: false
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{DateTimeRange, Imported, Legacy, Comparisons, QueryParser}
+
+  alias Plausible.Stats.{
+    DateTimeRange,
+    Imported,
+    Legacy,
+    Comparisons,
+    QueryParser,
+    ParsedQueryParams,
+    QueryBuilder
+  }
 
   @type t :: %__MODULE__{}
 
@@ -44,23 +53,9 @@ defmodule Plausible.Stats.Query do
         %{"site_id" => domain} = params,
         debug_metadata \\ %{}
       ) do
-    with {:ok, query_data} <- QueryParser.parse(site, schema_type, params) do
-      query =
-        %__MODULE__{
-          debug_metadata: debug_metadata,
-          site_id: site.id,
-          site_native_stats_start_at: site.native_stats_start_at
-        }
-        |> struct!(Map.to_list(query_data))
-        |> set_time_on_page_data(site)
-        |> put_comparison_utc_time_range()
-        |> put_imported_opts(site)
-
-      on_ee do
-        query = Plausible.Stats.Sampling.put_threshold(query, site, params)
-      end
-
-      {:ok, query}
+    with {:ok, %ParsedQueryParams{} = parsed_query_params} <-
+           QueryParser.parse(site, schema_type, params) do
+      QueryBuilder.build(site, parsed_query_params, params, debug_metadata)
     end
   end
 
@@ -143,13 +138,6 @@ defmodule Plausible.Stats.Query do
     put_imported_opts(query, nil)
   end
 
-  def put_comparison_utc_time_range(%__MODULE__{include: %{comparisons: nil}} = query), do: query
-
-  def put_comparison_utc_time_range(%__MODULE__{include: %{comparisons: comparison_opts}} = query) do
-    datetime_range = Comparisons.get_comparison_utc_time_range(query, comparison_opts)
-    struct!(query, comparison_utc_time_range: datetime_range)
-  end
-
   def put_imported_opts(query, site) do
     requested? = query.include.imports
 
@@ -188,15 +176,6 @@ defmodule Plausible.Stats.Query do
       end
 
     in_comparison_range ++ in_range
-  end
-
-  def set_time_on_page_data(query, site) do
-    struct!(query,
-      time_on_page_data: %{
-        new_metric_visible: Plausible.Stats.TimeOnPage.new_time_on_page_visible?(site),
-        cutoff_date: site.legacy_time_on_page_cutoff
-      }
-    )
   end
 
   @spec get_skip_imported_reason(t()) ::

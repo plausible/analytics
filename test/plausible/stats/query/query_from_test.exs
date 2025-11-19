@@ -3,7 +3,6 @@ defmodule Plausible.Stats.QueryTest do
   use Plausible.Teams.Test
   alias Plausible.Stats.Query
   alias Plausible.Stats.Legacy.QueryBuilder
-  alias Plausible.Stats.QueryParser
   alias Plausible.Stats.DateTimeRange
 
   doctest Plausible.Stats.Legacy.QueryBuilder
