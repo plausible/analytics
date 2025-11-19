@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
 
     ~H"""
     <div>
-      <%= if @searching? or (is_list(@props) && length(@props) > 0) do %>
+      <%= if @searching? or Enum.count(@props) > 0 do %>
         <.filter_bar filter_text={@filter_text} placeholder="Search Properties">
           <.button phx-click="add-prop" mt?={false}>
             Add property
@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
         </.filter_bar>
       <% end %>
 
-      <%= if is_list(@props) && length(@props) > 0 do %>
+      <%= if Enum.count(@props) > 0 do %>
         <.table id="allowed-props" rows={Enum.with_index(@props)}>
           <:tbody :let={{prop, index}}>
             <.td id={"prop-#{index}"}><span class="font-medium">{prop}</span></.td>

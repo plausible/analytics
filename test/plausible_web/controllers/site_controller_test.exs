@@ -57,9 +57,77 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "GET /sites" do
     setup [:create_user, :log_in]
 
-    test "shows empty screen if no sites", %{conn: conn} do
+    test "shows personal sites empty state when there are no sites at all", %{conn: conn} do
       conn = get(conn, "/sites")
-      assert html_response(conn, 200) =~ "You don't have any sites yet"
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Add your first personal site"
+      assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
+      refute resp =~ "Go to team sites"
+    end
+
+    test "shows team sites empty state when team is setup and there are no sites at all", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Teams.get_or_create(user)
+      team = Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Add your first team site"
+      assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
+      refute resp =~ "Go to team sites"
+    end
+
+    test "shows team sites empty state when team is setup but has no team sites, and user has personal sites",
+         %{conn: conn, user: user} do
+      _personal_site = new_site(owner: user)
+
+      other_user = new_user()
+      {:ok, other_team} = Teams.get_or_create(other_user)
+      other_team = Teams.complete_setup(other_team)
+      add_member(other_team, user: user, role: :admin)
+      conn = set_current_team(conn, other_team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Add your first team site"
+      assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
+      refute resp =~ "Go to team sites"
+    end
+
+    test "shows personal sites empty state when there are team sites but no personal sites", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Teams.get_or_create(user)
+      team = Teams.complete_setup(team)
+      _team_site = new_site(team: team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Add your first personal site"
+      assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
+      assert resp =~ "Go to team sites"
+    end
+
+    test "shows empty search state when filter returns no results but there are sites", %{
+      conn: conn,
+      user: user
+    } do
+      _site = new_site(domain: "example.com", owner: user)
+
+      conn = get(conn, "/sites", filter_text: "nonexistent")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "No sites found. Try a different search term."
+      refute resp =~ "Add your first"
+      refute resp =~ "Go to team sites"
     end
 
     test "lists all of your sites with last 24h visitors (defaulting to 0 on first mount)", %{
@@ -195,7 +263,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
 
       refute resp =~ "second.example.com"
-      assert html_response(conn, 200) =~ "No sites found. Please search for something else."
+      assert html_response(conn, 200) =~ "No sites found. Try a different search term."
       refute html_response(conn, 200) =~ "You don't have any sites yet."
     end
 

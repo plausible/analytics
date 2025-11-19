@@ -51,6 +51,34 @@ defmodule PlausibleWeb.Live.Sites do
           Teams.Users.owns_sites?(current_user, include_pending?: true, only_team: current_team) &&
           Teams.Billing.check_needs_to_upgrade(current_team)
       end)
+      |> then(fn socket ->
+        %{
+          sites: sites,
+          current_team: current_team,
+          has_sites?: has_sites?,
+          filter_text: filter_text
+        } = socket.assigns
+
+        is_empty_state? =
+          not (sites.entries != [] and (Teams.setup?(current_team) or has_sites?)) and
+            filter_text == ""
+
+        empty_state_title =
+          if Teams.setup?(current_team) do
+            "Add your first team site"
+          else
+            "Add your first personal site"
+          end
+
+        empty_state_description =
+          "Collect simple, privacy-friendly stats to better understand your audience."
+
+        assign(socket,
+          is_empty_state?: is_empty_state?,
+          empty_state_title: empty_state_title,
+          empty_state_description: empty_state_description
+        )
+      end)
 
     {:noreply, socket}
   end
@@ -62,6 +90,7 @@ defmodule PlausibleWeb.Live.Sites do
         :invitations_map,
         Enum.map(assigns.invitations, &{&1.invitation.invitation_id, &1}) |> Enum.into(%{})
       )
+      |> assign(:searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
     <.flash_messages flash={@flash} />
@@ -87,18 +116,11 @@ defmodule PlausibleWeb.Live.Sites do
 
       <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
-      <div class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
-        <.search_form
-          :if={
-            @has_sites? and
-              (Teams.setup?(@current_team) or @sites.entries != [] or @filter_text != "")
-          }
-          filter_text={@filter_text}
-          uri={@uri}
-        />
-        <p :if={not @has_sites?} class="dark:text-gray-100">
-          You don't have any sites yet.
-        </p>
+      <div
+        :if={not @is_empty_state?}
+        class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2"
+      >
+        <.search_form filter_text={@filter_text} uri={@uri} />
         <PrimaDropdown.dropdown
           :if={@consolidated_view_cta_dismissed?}
           id="add-site-dropdown"
@@ -123,11 +145,7 @@ defmodule PlausibleWeb.Live.Sites do
         </PrimaDropdown.dropdown>
 
         <a
-          :if={
-            !@consolidated_view_cta_dismissed? and
-              (not @has_sites? or Teams.setup?(@current_team) or @sites.entries != [] or
-                 @filter_text != "")
-          }
+          :if={!@consolidated_view_cta_dismissed?}
           href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
           class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
         >
@@ -135,22 +153,15 @@ defmodule PlausibleWeb.Live.Sites do
         </a>
       </div>
 
-      <p :if={@filter_text != "" and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
-        No sites found. Please search for something else.
+      <p :if={@searching? and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
+        No sites found. Try a different search term.
       </p>
-
-      <div
-        :if={
-          @has_sites? and not Teams.setup?(@current_team) and @sites.entries == [] and
-            @filter_text == ""
-        }
-        class="flex flex-col items-center justify-center py-8 sm:py-12 max-w-md mx-auto"
-      >
+      <div :if={@is_empty_state?} class="flex flex-col items-center justify-center py-8 sm:py-12 max-w-md mx-auto">
         <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
-          Add your first personal site
+          {@empty_state_title}
         </h3>
         <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-          Start tracking stats for your own site or switch to your team's sites.
+          {@empty_state_description}
         </p>
         <div class="flex flex-col sm:flex-row gap-3 mt-6">
           <.button_link
@@ -161,6 +172,7 @@ defmodule PlausibleWeb.Live.Sites do
             <Heroicons.plus class="size-4" /> Add website
           </.button_link>
           <.button_link
+            :if={not Teams.setup?(@current_team) and @has_sites?}
             href={Routes.auth_path(@socket, :select_team)}
             theme="secondary"
             mt?={false}
@@ -174,7 +186,7 @@ defmodule PlausibleWeb.Live.Sites do
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <.consolidated_view_card_cta
             :if={
-              @filter_text == "" and
+              not @searching? and
                 !@consolidated_view and @no_consolidated_view_reason not in [:no_sites, :unavailable] and
                 not @consolidated_view_cta_dismissed?
             }
@@ -185,7 +197,7 @@ defmodule PlausibleWeb.Live.Sites do
           />
           <.consolidated_view_card
             :if={
-              @filter_text == "" and not is_nil(@consolidated_view) and
+              not @searching? and not is_nil(@consolidated_view) and
                 consolidated_view_ok_to_display?(@current_team)
             }
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
