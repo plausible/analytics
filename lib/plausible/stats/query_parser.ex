@@ -59,9 +59,6 @@ defmodule Plausible.Stats.QueryParser do
 
   def parse_filters(nil), do: {:ok, nil}
 
-  # TODO: clean  this up? When is it not a list?
-  def parse_filters(_invalid_metrics), do: {:error, "Invalid filters passed."}
-
   defp parse_filter(filter) do
     with {:ok, operator} <- parse_operator(filter),
          {:ok, second} <- parse_filter_second(operator, filter),
