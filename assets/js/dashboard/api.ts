@@ -111,8 +111,8 @@ export async function get(
   query?: DashboardQuery,
   ...extraQueryParams: unknown[]
 ) {
-  const fullURL = getUrl(url, query, extraQueryParams)
-  const response = await fetch(fullURL, {
+  const fullUrl = getUrl(url, query, ...extraQueryParams)
+  const response = await fetch(fullUrl, {
     signal: abortController.signal,
     headers: { ...getHeaders(), Accept: 'application/json' }
   })

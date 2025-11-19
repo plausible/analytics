@@ -133,12 +133,19 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           </div>
 
           <div class="grow" style={"min-height: #{@data_container_height}px;"}>
-            <div :for={item <- @results} style={"min-height: #{@row_height}px;"}>
+            <div :for={{item, idx} <- Enum.with_index(@results)} style={"min-height: #{@row_height}px;"}>
               <div class="flex w-full items-center" style={"margin-top: #{@row_gap_height}"}>
                 <div class="grow w-full overflow-hidden">
                   <div class="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
                     <span class="w-full md:truncate">
-                      {trim_name(item.name, @col_min_width)}
+                      <a
+                        id={"filter-link-#{idx}"}
+                        phx-hook="LiveDashboard"
+                        data-widget="patch-filters-button"
+                        data-filter={Jason.encode!(%{prefix: "page", filter: ["is", "page", [item.name]]})}
+                        href="#">
+                        {trim_name(item.name, @col_min_width)}
+                      </a>
                     </span>
                   </div>
                 </div>
@@ -153,6 +160,32 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="w-full text-center">
+            <a
+              id="modal-link"
+              phx-hook="LiveDashboard"
+              data-widget="modal-button"
+              data-modal="pages"
+              href="#"
+              class="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 tracking-wide"
+            >
+              <svg
+                class="feather mr-1"
+                style="margin-top: -2px;"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+              DETAILS
+            </a>
           </div>
         </div>
       </div>
