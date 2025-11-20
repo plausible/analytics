@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       text = text(html)
 
-      assert text =~ "My Personal Sites"
+      assert text =~ "My personal sites"
       assert text =~ "Add your first personal site"
       refute text =~ "Go to team sites"
     end
