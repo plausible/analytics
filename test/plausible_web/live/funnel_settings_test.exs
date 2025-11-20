@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       end
 
       test "search funnels input is rendered", %{conn: conn, site: site} do
-        setup_goals(site)
+        {:ok, _} = setup_funnels(site)
         conn = get(conn, "/#{site.domain}/settings/funnels")
         resp = html_response(conn, 200)
         assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
 
         doc = conn |> html_response(200)
-        assert text(doc) =~ "Set up a few goals first"
+        assert text(doc) =~ "Set up a few goals"
 
         add_goals_path = Routes.site_path(conn, :settings_goals, site.domain)
         assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)
@@ -89,6 +89,16 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
     describe "FunnelSettings live view" do
       setup [:create_user, :log_in, :create_site]
+
+      test "allows dashboard toggle", %{conn: conn, site: site} do
+        lv = get_liveview(conn, site)
+        lv |> element("#feature-funnels-toggle button") |> render_click()
+        assert render(lv) =~ "Funnels are now hidden from your dashboard"
+        assert Plausible.Billing.Feature.Funnels.opted_out?(Plausible.Repo.reload!(site))
+        lv |> element("#feature-funnels-toggle button") |> render_click()
+        assert render(lv) =~ "Funnels are now visible again on your dashboard"
+        refute Plausible.Billing.Feature.Funnels.opted_out?(Plausible.Repo.reload!(site))
+      end
 
       test "allows list filtering / search", %{conn: conn, site: site} do
         {:ok, _} = setup_funnels(site, ["Funnel One", "Search Me"])

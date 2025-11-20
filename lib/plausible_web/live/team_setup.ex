@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
       <div class="relative -mt-8 pt-4 pb-8 px-8">
         <PlausibleWeb.Components.Billing.feature_gate
-          current_role={@current_team_role}
+          current_user={@current_user}
           current_team={@current_team}
           locked?={@locked?}
         >

@@ -485,10 +485,11 @@ defmodule PlausibleWeb.Components.Generic do
   slot :subtitle, required: false
   attr :feature_mod, :atom, default: nil
   attr :feature_toggle?, :boolean, default: false
-  attr :current_role, :atom, default: nil
   attr :current_team, :any, default: nil
-  attr :site, :any
-  attr :conn, :any
+  attr :current_user, :any, default: nil
+  attr :site, :any, default: nil
+  attr :conn, :any, default: nil
+  attr :show_content?, :boolean, default: true
 
   def tile(assigns) do
     ~H"""
@@ -502,20 +503,24 @@ defmodule PlausibleWeb.Components.Generic do
         <div :if={@subtitle != []} class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           {render_slot(@subtitle)}
         </div>
-        <PlausibleWeb.Components.Site.Feature.toggle
+
+        <.live_component
           :if={@feature_toggle?}
-          feature_mod={@feature_mod}
+          module={PlausibleWeb.Components.Site.Feature.ToggleLive}
+          id={"feature-toggle-#{@site.id}-#{@feature_mod}"}
           site={@site}
-          conn={@conn}
+          feature_mod={@feature_mod}
+          current_user={@current_user}
         />
       </header>
-      <div class="border-b dark:border-gray-700 mx-6"></div>
-      <div class="relative">
+      <div class={["border-b dark:border-gray-700 mx-6", if(not @show_content?, do: "hidden")]}></div>
+      <div class={["relative", if(not @show_content?, do: "hidden")]}>
         <%= if @feature_mod do %>
           <PlausibleWeb.Components.Billing.feature_gate
             locked?={@feature_mod.check_availability(@current_team) != :ok}
-            current_role={@current_role}
+            current_user={@current_user}
             current_team={@current_team}
+            site={@site}
           >
             <div class="p-6 pb-14">
               {render_slot(@inner_block)}
@@ -1122,6 +1127,16 @@ defmodule PlausibleWeb.Components.Generic do
     <div id="disclosure-panel" style="display: none;">
       {render_slot(@inner_block)}
     </div>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  def highlighted(assigns) do
+    ~H"""
+    <span class="font-medium text-indigo-600 dark:text-gray-100">
+      {render_slot(@inner_block)}
+    </span>
     """
   end
 

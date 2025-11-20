@@ -91,42 +91,6 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def update_feature_visibility(conn, %{
-        "setting" => setting,
-        "r" => "/" <> _ = redirect_path,
-        "set" => value
-      })
-      when setting in ~w[conversions_enabled funnels_enabled props_enabled] and
-             value in ["true", "false"] do
-    site = conn.assigns[:site]
-    toggle_field = String.to_existing_atom(setting)
-
-    feature_mod =
-      Enum.find(Plausible.Billing.Feature.list(), &(&1.toggle_field() == toggle_field))
-
-    case feature_mod.toggle(site, conn.assigns.current_user, override: value == "true") do
-      {:ok, updated_site} ->
-        message =
-          if Map.fetch!(updated_site, toggle_field) do
-            "#{feature_mod.display_name()} are now visible again on your dashboard"
-          else
-            "#{feature_mod.display_name()} are now hidden from your dashboard"
-          end
-
-        conn
-        |> put_flash(:success, message)
-        |> redirect(to: redirect_path)
-
-      {:error, _} ->
-        conn
-        |> put_flash(
-          :error,
-          "Something went wrong. Failed to toggle #{feature_mod.display_name()} on your dashboard."
-        )
-        |> redirect(to: redirect_path)
-    end
-  end
-
   def settings(conn, %{"domain" => domain}) do
     redirect(conn, to: Routes.site_path(conn, :settings_general, domain))
   end

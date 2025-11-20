@@ -35,7 +35,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         event_name_options_count: length(assigns.event_name_options),
         event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
         current_user: assigns.current_user,
-        site_role: assigns.site_role,
         site_team: assigns.site_team,
         domain: assigns.domain,
         selected_tab: selected_tab,
@@ -72,7 +71,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         :if={@selected_tab == "custom_events"}
         f={f}
         suffix={@context_unique_id}
-        site_role={@site_role}
+        current_user={@current_user}
         site_team={@site_team}
         site={@site}
         goal={@goal}
@@ -122,7 +121,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-show="!tabSelectionInProgress"
         f={f}
         suffix={suffix(@context_unique_id, @tab_sequence_id)}
-        site_role={@site_role}
+        current_user={@current_user}
         site_team={@site_team}
         site={@site}
         existing_goals={@existing_goals}
@@ -319,7 +318,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
-  attr(:site_role, :atom)
+  attr(:current_user, Plausible.Auth.User)
   attr(:site_team, Plausible.Teams.Team)
   attr(:suffix, :string)
   attr(:existing_goals, :list)
@@ -382,7 +381,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <.revenue_goal_settings
             f={@f}
             site={@site}
-            site_role={@site_role}
+            current_user={@current_user}
             site_team={@site_team}
             has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
             goal={@goal}
@@ -595,7 +594,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         <div class="text-xs">
           To get access to this feature
           <PlausibleWeb.Components.Billing.upgrade_call_to_action
-            current_role={@site_role}
+            current_user={@current_user}
             current_team={@site_team}
           />.
         </div>

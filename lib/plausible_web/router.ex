@@ -703,10 +703,6 @@ defmodule PlausibleWeb.Router do
       get "/:domain/settings/properties", SiteController, :settings_props
       get "/:domain/settings/email-reports", SiteController, :settings_email_reports
 
-      put "/:domain/settings/features/visibility/:setting",
-          SiteController,
-          :update_feature_visibility
-
       put "/:domain/settings", SiteController, :update_settings
 
       get "/:domain/export", StatsController, :csv_export

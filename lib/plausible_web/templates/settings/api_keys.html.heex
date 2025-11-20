@@ -1,63 +1,74 @@
 <.settings_tiles>
   <.tile
     docs="stats-api"
-    current_role={@current_team_role}
+    current_user={@current_user}
     current_team={@current_team}
     feature_mod={Plausible.Billing.Feature.StatsAPI}
   >
     <:title>
       <a id="api-keys">API keys</a>
     </:title>
-    <:subtitle>
+    <:subtitle :if={not Enum.empty?(@api_keys)}>
       Create and manage access.
     </:subtitle>
 
-    <.filter_bar filtering_enabled?={false}>
-      <.button_link mt?={false} href={Routes.settings_path(@conn, :new_api_key)}>
-        New API Key
-      </.button_link>
-    </.filter_bar>
+    <%= if Enum.empty?(@api_keys) do %>
+      <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+        <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+          Create your first API key
+        </h3>
+        <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+          Access your stats through the Plausible API.
+          <.styled_link href="https://plausible.io/docs/stats-api">Learn more</.styled_link>
+        </p>
+        <.button_link href={Routes.settings_path(@conn, :new_api_key)}>
+          New API Key
+        </.button_link>
+      </div>
+    <% else %>
+      <.filter_bar filtering_enabled?={false}>
+        <.button_link mt?={false} href={Routes.settings_path(@conn, :new_api_key)}>
+          New API Key
+        </.button_link>
+      </.filter_bar>
 
-    <p :if={Enum.empty?(@api_keys)} class="mb-8 text-center text-sm">
-      No API keys configured yet.
-    </p>
+      <.table rows={@api_keys}>
+        <:thead>
+          <.th>
+            Name
+          </.th>
+          <.th hide_on_mobile>
+            Key
+          </.th>
+          <.th :if={ee?()} hide_on_mobile>
+            Type
+          </.th>
+          <.th invisible>
+            Actions
+          </.th>
+        </:thead>
 
-    <.table rows={@api_keys}>
-      <:thead>
-        <.th>
-          Name
-        </.th>
-        <.th hide_on_mobile>
-          Key
-        </.th>
-        <.th :if={ee?()} hide_on_mobile>
-          Type
-        </.th>
-        <.th invisible>
-          Actions
-        </.th>
-      </:thead>
-
-      <:tbody :let={api_key}>
-        <.td truncate max_width="max-w-40">
-          {api_key.name}
-        </.td>
-        <.td hide_on_mobile>
-          {api_key.key_prefix}
-          {String.duplicate("*", 32 - 6)}
-        </.td>
-        <.td :if={ee?()}>
-          <span :if={api_key.type == "stats_api"}>Stats API</span>
-          <span :if={api_key.type == "sites_api"}>Sites API</span>
-        </.td>
-        <.td actions>
-          <.delete_button
-            method="delete"
-            href={Routes.settings_path(@conn, :delete_api_key, api_key.id)}
-            data-confirm="Are you sure you want to revoke this key? This action cannot be reversed."
-          />
-        </.td>
-      </:tbody>
-    </.table>
+        <:tbody :let={api_key}>
+          <.td truncate max_width="max-w-40">
+            {api_key.name}
+          </.td>
+          <.td hide_on_mobile>
+            {api_key.key_prefix}
+            {String.duplicate("*", 32 - 6)}
+          </.td>
+          <.td :if={ee?()}>
+            <span :if={api_key.type == "stats_api"}>Stats API</span>
+            <span :if={api_key.type == "sites_api"}>Sites API</span>
+          </.td>
+          <.td actions>
+            <.delete_button
+              method="delete"
+              href={Routes.settings_path(@conn, :delete_api_key, api_key.id)}
+              data-confirm="Are you sure you want to revoke this key? This action cannot be reversed."
+            />
+          </.td>
+        </:tbody>
+      </.table>
+    <% end %>
   </.tile>
 </.settings_tiles>

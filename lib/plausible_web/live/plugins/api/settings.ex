@@ -50,14 +50,29 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
         )}
       <% end %>
 
-      <div>
+      <%= if Enum.empty?(@displayed_tokens) do %>
+        <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+          <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+            Create your first plugin token
+          </h3>
+          <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+            Control plugin access by creating tokens for third-party integrations.
+          </p>
+          <.button
+            phx-click="create-token"
+            class="mt-4"
+          >
+            New plugin token
+          </.button>
+        </div>
+      <% else %>
         <.filter_bar filtering_enabled?={false}>
           <.button phx-click="create-token" mt?={false}>
             Create plugin token
           </.button>
         </.filter_bar>
 
-        <.table :if={not Enum.empty?(@displayed_tokens)} rows={@displayed_tokens}>
+        <.table rows={@displayed_tokens}>
           <:thead>
             <.th>Description</.th>
             <.th hide_on_mobile>Hint</.th>
@@ -86,7 +101,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
             </.td>
           </:tbody>
         </.table>
-      </div>
+      <% end %>
     </div>
     """
   end
