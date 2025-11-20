@@ -140,7 +140,9 @@ defmodule PlausibleWeb.Components.Layout do
         class="size-5 mr-2"
       />
       {@text}
-      <PlausibleWeb.Components.Generic.settings_badge type={@badge} />
+      <PlausibleWeb.Components.Generic.pill :if={@badge == :new} color={:indigo} class="ml-2">
+        NEW 🔥
+      </PlausibleWeb.Components.Generic.pill>
       <Heroicons.chevron_down
         :if={is_nil(@value)}
         class="h-3 w-3 ml-2 text-gray-400 dark:text-gray-500"

@@ -51,7 +51,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
        domain: domain,
        displayed_goals: socket.assigns.all_goals,
        filter_text: "",
-       form_goal: nil
+       form_goal: nil,
+       goal_type: nil
      )}
   end
 
@@ -75,6 +76,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
           site_team={@site_team}
           existing_goals={@all_goals}
           goal={@form_goal}
+          goal_type={@goal_type}
           on_save_goal={
             fn goal, socket ->
               send(self(), {:goal_added, goal})
@@ -123,8 +125,12 @@ defmodule PlausibleWeb.Live.GoalSettings do
     {:noreply, socket}
   end
 
-  def handle_event("add-goal", _, socket) do
-    socket = socket |> assign(form_goal: nil) |> Modal.open("goals-form-modal")
+  def handle_event("add-goal", %{"goal-type" => goal_type}, socket) do
+    socket =
+      socket
+      |> assign(form_goal: nil, goal_type: goal_type)
+      |> Modal.open("goals-form-modal")
+
     {:noreply, socket}
   end
 
@@ -167,7 +173,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
         event_name_options:
           Enum.reject(socket.assigns.event_name_options, &(&1 == goal.event_name)),
         displayed_goals: all_goals,
-        form_goal: nil
+        form_goal: nil,
+        goal_type: nil
       )
       |> put_live_flash(:success, "Goal saved successfully")
 
