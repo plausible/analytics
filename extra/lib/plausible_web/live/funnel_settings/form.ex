@@ -84,7 +84,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 Funnel steps
               </.label>
 
-              <div :for={step_idx <- @step_ids} class="flex mb-3 mt-3">
+              <div :for={step_idx <- @step_ids} class="flex my-3">
                 <div class="w-2/5 flex-1">
                   <.live_component
                     selected={find_preselected(@funnel, @funnel_modified?, step_idx)}
@@ -117,13 +117,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 </div>
               </div>
 
-              <.add_step_button :if={
-                length(@step_ids) < Funnel.max_steps() and
-                  map_size(@selections_made) < length(@goals)
-              } />
-
-              <div class="mt-6">
-                <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 text-sm mt-2 mb-2">
+              <div class="flex flex-col gap-y-4 mt-6">
+                <.add_step_button :if={
+                  length(@step_ids) < Funnel.max_steps() and
+                    map_size(@selections_made) < length(@goals)
+                } />
+                <p id="funnel-eval" class="text-gray-800 dark:text-gray-200 text-sm">
                   <%= if @evaluation_result do %>
                     Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
                   <% end %>
@@ -179,7 +178,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def add_step_button(assigns) do
     ~H"""
-    <a class="underline text-indigo-500 text-sm cursor-pointer mt-6" phx-click="add-step">
+    <a class="text-indigo-500 text-sm font-medium cursor-pointer" phx-click="add-step">
       + Add another step
     </a>
     """
