@@ -56,7 +56,7 @@ defmodule Plausible.Stats.ConsolidatedView do
       |> DateTime.to_iso8601()
 
     stats_query =
-      Stats.Query.build!(view, :internal, %{
+      Stats.Query.parse_and_build!(view, :internal, %{
         "site_id" => view.domain,
         "metrics" => ["visitors", "visits", "pageviews", "views_per_visit"],
         "include" => %{"comparisons" => %{"mode" => "custom", "date_range" => [c_from, c_to]}},
@@ -91,7 +91,7 @@ defmodule Plausible.Stats.ConsolidatedView do
 
   defp query_24h_intervals(view, now) do
     graph_query =
-      Stats.Query.build!(
+      Stats.Query.parse_and_build!(
         view,
         :internal,
         %{

@@ -137,7 +137,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
 
   defp put_sources(stats, site) do
     query =
-      Query.build!(
+      Query.parse_and_build!(
         site,
         :internal,
         Map.merge(@base_query_params, %{
@@ -154,7 +154,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
 
   defp put_pages(stats, site) do
     query =
-      Query.build!(
+      Query.parse_and_build!(
         site,
         :internal,
         Map.merge(@base_query_params, %{

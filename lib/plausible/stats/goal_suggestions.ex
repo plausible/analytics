@@ -41,7 +41,7 @@ defmodule Plausible.Stats.GoalSuggestions do
     from_date = Date.shift(to_date, month: -6)
 
     query =
-      Plausible.Stats.Query.build!(
+      Plausible.Stats.Query.parse_and_build!(
         site,
         :internal,
         %{

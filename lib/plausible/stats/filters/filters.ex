@@ -4,8 +4,8 @@ defmodule Plausible.Stats.Filters do
   """
 
   alias Plausible.Stats.Query
-  alias Plausible.Stats.Filters.QueryParser
-  alias Plausible.Stats.Filters.StatsAPIFilterParser
+  alias Plausible.Stats.QueryParser
+  alias Plausible.Stats.Filters.LegacyStatsAPIFilterParser
 
   @visit_props [
     :source,
@@ -70,7 +70,7 @@ defmodule Plausible.Stats.Filters do
     case Jason.decode(filters) do
       {:ok, filters} when is_list(filters) -> parse(filters)
       {:ok, _} -> []
-      {:error, err} -> StatsAPIFilterParser.parse_filter_expression(err.data)
+      {:error, err} -> LegacyStatsAPIFilterParser.parse_filter_expression(err.data)
     end
   end
 
