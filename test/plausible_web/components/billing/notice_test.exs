@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       )
 
     assert rendered =~ "This team is limited to 10 users"
-    assert rendered =~ "please reach out to the team owner to upgrade their subscription"
+    assert rendered =~ "ask your team owner to upgrade their subscription"
   end
 
   @tag :ee_only

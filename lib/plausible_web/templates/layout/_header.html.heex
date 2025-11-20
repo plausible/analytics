@@ -47,12 +47,19 @@
                 :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team])}
                 class="hidden sm:block"
               >
-                <.styled_link
-                  class="flex items-center h-[40px] px-3 py-2 text-sm text-yellow-700 hover:text-yellow-800 dark:text-yellow-500 dark:hover:text-yellow-500 font-medium rounded-md bg-yellow-100 dark:bg-yellow-800/40 dark:hover:bg-yellow-800/50 transition-colors duration-150"
-                  href={Routes.settings_path(@conn, :subscription)}
-                >
-                  {trial_notification(@conn.assigns[:current_team])}
-                </.styled_link>
+                <div class="flex items-center p-1 rounded-lg bg-yellow-100 dark:bg-yellow-600/35 overflow-hidden">
+                  <span class="px-3 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {trial_notification(@conn.assigns[:current_team])}
+                  </span>
+                  <.button_link
+                    href={Routes.settings_path(@conn, :subscription)}
+                    theme="yellow"
+                    mt?={false}
+                    class="!px-3 !py-2"
+                  >
+                    Upgrade
+                  </.button_link>
+                </div>
               </li>
               <li class="w-full sm:w-auto">
                 <.dropdown>
@@ -81,13 +88,13 @@
                     />
                     <.dropdown_divider />
                     <.dropdown_item href={Routes.settings_path(@conn, :index)}>
-                      Account Settings
+                      Account settings
                     </.dropdown_item>
 
                     <div :if={@my_team && @my_team.id == @current_team.id}>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span data-test="create-a-team-cta" class="flex-1">
-                          Create a Team
+                          Create a team
                         </span>
                       </.dropdown_item>
                       <.dropdown_divider />
@@ -99,7 +106,7 @@
                         href={Routes.settings_path(@conn, :team_general)}
                       >
                         <span class="flex-1">
-                          Team Settings
+                          Team settings
                         </span>
                       </.dropdown_item>
                       <.dropdown_divider />
@@ -109,7 +116,7 @@
                       new_tab
                       href="https://plausible.io/docs"
                     >
-                      Help Center
+                      Help center
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ee?()}
@@ -117,7 +124,7 @@
                       new_tab
                       href="https://plausible.io/contact"
                     >
-                      Contact Support
+                      Contact support
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ee?()}
@@ -125,7 +132,7 @@
                       new_tab
                       href={feedback_link(@conn.assigns[:current_user])}
                     >
-                      Feature Requests
+                      Feature requests
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ce?()}
@@ -133,9 +140,9 @@
                       new_tab
                       href="https://github.com/plausible/analytics"
                     >
-                      Github Repo
+                      Github repo
                     </.dropdown_item>
-                    <.dropdown_item href="/logout">Log Out</.dropdown_item>
+                    <.dropdown_item href="/logout">Log out</.dropdown_item>
                   </:menu>
                 </.dropdown>
               </li>

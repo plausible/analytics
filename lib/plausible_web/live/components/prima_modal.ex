@@ -12,11 +12,11 @@ defmodule PlausibleWeb.Live.Components.PrimaModal do
       <Modal.modal_overlay
         transition_enter={{"ease-out duration-300", "opacity-0", "opacity-100"}}
         transition_leave={{"ease-in duration-200", "opacity-100", "opacity-0"}}
-        class="fixed inset-0 bg-gray-500/75 dark:bg-gray-800/75"
+        class="fixed inset-0 z-[9999] bg-gray-500/75 dark:bg-gray-800/75"
       />
 
-      <div class="fixed inset-0 w-screen overflow-y-auto">
-        <div class="flex min-h-full items-end justify-center p-4 sm:items-center sm:p-0">
+      <div class="fixed inset-0 z-[9999] w-screen overflow-y-auto sm:pt-[10vmin]">
+        <div class="flex min-h-full items-end justify-center p-4 sm:items-start sm:p-0">
           <Modal.modal_panel
             id={@id <> "-panel"}
             class="relative overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-xl sm:w-full sm:max-w-lg"
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Live.Components.PrimaModal do
 
   def modal_title(assigns) do
     ~H"""
-    <Modal.modal_title as={&h2/1}>
+    <Modal.modal_title as={&h2/1} class="text-lg font-semibold text-gray-900 dark:text-gray-100">
       {render_slot(@inner_block)}
     </Modal.modal_title>
     """

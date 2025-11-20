@@ -31,24 +31,24 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     setup [:create_user, :log_in, :create_team]
 
     test "renames the team on first render", %{conn: conn, team: team} do
-      assert team.name == "My Personal Sites"
+      assert team.name == "My personal sites"
       {:ok, _lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "Jane Smith's Team"
+               "Jane Smith's team"
 
-      assert Repo.reload!(team).name == "Jane Smith's Team"
+      assert Repo.reload!(team).name == "Jane Smith's team"
     end
 
     test "renames even if team already has non-default name", %{conn: conn, team: team} do
-      assert team.name == "My Personal Sites"
+      assert team.name == "My personal sites"
       Repo.update!(Teams.Team.name_changeset(team, %{name: "Foo"}))
       {:ok, _lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "Jane Smith's Team"
+               "Jane Smith's team"
 
-      assert Repo.reload!(team).name == "Jane Smith's Team"
+      assert Repo.reload!(team).name == "Jane Smith's team"
     end
 
     test "renders form", %{conn: conn} do
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       _ = render(lv)
     end
 
-    test "setting team name to 'My Personal Sites' is reserved", %{
+    test "setting team name to 'My personal sites' is reserved", %{
       conn: conn,
       team: team,
       user: user
@@ -75,11 +75,11 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "#{user.name}'s Team"
+               "#{user.name}'s team"
 
       type_into_input(lv, "team[name]", "Team Name 1")
       _ = render(lv)
-      type_into_input(lv, "team[name]", "My Personal Sites")
+      type_into_input(lv, "team[name]", "My personal sites")
       _ = render(lv)
       assert Repo.reload!(team).name == "Team Name 1"
     end
@@ -93,10 +93,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       {:ok, _lv, html} = live(conn, @url)
 
-      assert class_of_element(html, "#feature-gate-inner-block-container") =~
-               "pointer-events-none"
-
-      assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur-[6px]"
+      assert element_exists?(html, "#feature-gate-inner-block-container")
+      assert element_exists?(html, "#feature-gate-overlay")
+      assert text_of_element(html, "#feature-gate-overlay") =~ "Upgrade to unlock"
     end
   end
 

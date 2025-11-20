@@ -149,6 +149,29 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
         assert html_body =~ @view_dashboard_text
         refute html_body =~ @review_installation_text
       end
+
+      test "does not notify traffic drop on consolidated view when ok_to_display? is false" do
+        user = new_user()
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        site = new_site(team: team)
+        new_site(team: team)
+
+        consolidated_view = new_consolidated_view(team)
+
+        Plausible.Repo.delete(site)
+
+        refute Plausible.ConsolidatedView.ok_to_display?(team)
+
+        insert(:drop_notification,
+          site: consolidated_view,
+          threshold: 10,
+          recipients: [user.email]
+        )
+
+        TrafficChangeNotifier.perform(nil)
+
+        assert_no_emails_delivered()
+      end
     end
 
     test "does not send notifications more than once every 12 hours" do
@@ -282,6 +305,41 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
         assert html_body =~ "Your top pages being visited:"
         assert html_body =~ "<b>2</b> visitors on <b>/a</b>"
         assert html_body =~ "<b>1</b> visitor on <b>/b</b>"
+      end
+
+      test "does not notify traffic spike on consolidated view when ok_to_display? is false" do
+        user = new_user()
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        site1 = new_site(team: team)
+        site2 = new_site(team: team)
+
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:spike_notification,
+          site: consolidated_view,
+          threshold: 2,
+          recipients: ["uku@example.com"]
+        )
+
+        populate_stats(site1, [
+          build(:pageview, timestamp: minutes_ago(1)),
+          build(:pageview, timestamp: minutes_ago(2)),
+          build(:pageview, timestamp: minutes_ago(3))
+        ])
+
+        Plausible.Repo.delete(site2)
+
+        refute Plausible.ConsolidatedView.ok_to_display?(team)
+
+        insert(:drop_notification,
+          site: consolidated_view,
+          threshold: 10,
+          recipients: [user.email]
+        )
+
+        TrafficChangeNotifier.perform(nil)
+
+        assert_no_emails_delivered()
       end
     end
 

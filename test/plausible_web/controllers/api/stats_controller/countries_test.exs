@@ -412,5 +412,116 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                }
              ]
     end
+
+    @tag :ee_only
+    test "return revenue metrics for countries breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          country_code: "EE"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          country_code: "EE"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          country_code: "EE"
+        ),
+        build(:pageview,
+          user_id: 4,
+          country_code: "GB"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          country_code: "GB"
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/countries#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "name" => "Estonia",
+                 "alpha_3" => "EST",
+                 "code" => "EE",
+                 "flag" => "🇪🇪",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "name" => "United Kingdom",
+                 "alpha_3" => "GBR",
+                 "code" => "GB",
+                 "flag" => "🇬🇧",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 1
+               }
+             ]
+    end
   end
 end

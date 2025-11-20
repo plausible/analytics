@@ -53,7 +53,7 @@ function EntryPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50"
+      color="bg-orange-50 group-hover:bg-orange-100"
     />
   )
 }
@@ -99,7 +99,7 @@ function ExitPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50"
+      color="bg-orange-50 group-hover:bg-orange-100"
     />
   )
 }
@@ -141,7 +141,7 @@ function TopPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50"
+      color="bg-orange-50 group-hover:bg-orange-100"
     />
   )
 }

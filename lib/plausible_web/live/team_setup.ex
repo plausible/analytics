@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         %Teams.Team{} ->
           team_name_form =
             current_team
-            |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s Team"})
+            |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s team"})
             |> Repo.update!()
             |> Teams.Team.name_changeset(%{})
             |> to_form()
@@ -90,7 +90,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
           >
             <.input
               type="text"
-              placeholder={"#{@current_user.name}'s Team"}
+              placeholder={"#{@current_user.name}'s team"}
               autofocus={not @locked?}
               field={f[:name]}
               label="Name"

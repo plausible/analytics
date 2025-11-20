@@ -158,6 +158,25 @@ defmodule Plausible.Workers.SendEmailReportTest do
         assert text_of_element(html_body, ".page-name") == "/"
         assert text_of_element(html_body, ".page-count") == "2"
       end
+
+      test "does not send weekly report for consolidated view with ok_to_display? false" do
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+
+        site = new_site(team: team)
+        new_site(team: team)
+
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:weekly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+        Plausible.Repo.delete!(site)
+
+        refute Plausible.ConsolidatedView.ok_to_display?(team)
+
+        perform_job(SendEmailReport, %{"site_id" => consolidated_view.id, "interval" => "weekly"})
+
+        assert_no_emails_delivered()
+      end
     end
 
     test "renders correct signs (+/-) and trend colors for positive percentage changes" do
@@ -539,6 +558,25 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
         assert goal_names == ["Signup", "Purchase", "Visit /thank-you"]
         assert goal_conversions == ["2", "1", "1"]
+      end
+
+      test "does not send monthly report for consolidated view with ok_to_display? false" do
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+
+        site = new_site(team: team)
+        new_site(team: team)
+
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:monthly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+        Plausible.Repo.delete!(site)
+
+        refute Plausible.ConsolidatedView.ok_to_display?(site.team)
+
+        perform_job(SendEmailReport, %{"site_id" => consolidated_view.id, "interval" => "monthly"})
+
+        assert_no_emails_delivered()
       end
     end
   end

@@ -84,7 +84,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                    },
                    %{
                      "id" => personal_team.identifier,
-                     "name" => "My Personal Sites",
+                     "name" => "My personal sites",
                      "api_available" => false
                    }
                  ],
@@ -113,7 +113,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "teams" => [
                    %{
                      "id" => personal_team.identifier,
-                     "name" => "My Personal Sites",
+                     "name" => "My personal sites",
                      "api_available" => true
                    }
                  ],

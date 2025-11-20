@@ -17,10 +17,9 @@ defmodule PlausibleWeb.Components.BillingTest do
         }
         |> render_feature_gate()
 
-      assert class_of_element(html, "#feature-gate-inner-block-container") =~
-               "pointer-events-none"
-
-      assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur"
+      assert element_exists?(html, "#feature-gate-inner-block-container")
+      assert element_exists?(html, "#feature-gate-overlay")
+      assert text_of_element(html, "#feature-gate-overlay") =~ "Upgrade to unlock"
     end
 
     test "renders a blur overlay for a teamless account", %{user: user} do
@@ -32,10 +31,9 @@ defmodule PlausibleWeb.Components.BillingTest do
         }
         |> render_feature_gate()
 
-      assert class_of_element(html, "#feature-gate-inner-block-container") =~
-               "pointer-events-none"
-
-      assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur"
+      assert element_exists?(html, "#feature-gate-inner-block-container")
+      assert element_exists?(html, "#feature-gate-overlay")
+      assert text_of_element(html, "#feature-gate-overlay") =~ "Upgrade to unlock"
     end
 
     test "does not render a blur overlay if feature access is granted", %{user: user} do
@@ -47,9 +45,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         }
         |> render_feature_gate()
 
-      refute class_of_element(html, "#feature-gate-inner-block-container") =~
-               "pointer-events-none"
-
+      assert element_exists?(html, "#feature-gate-inner-block-container")
       refute element_exists?(html, "#feature-gate-overlay")
     end
 
@@ -95,7 +91,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         }
         |> render_feature_gate()
 
-      assert text_of_element(html, "#lock-notice") =~ "reach out to the team owner"
+      assert text_of_element(html, "#lock-notice") =~ "ask your team owner"
     end
   end
 

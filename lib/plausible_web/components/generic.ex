@@ -30,6 +30,8 @@ defmodule PlausibleWeb.Components.Generic do
       "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35",
     "secondary" =>
       "border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:text-gray-900 hover:shadow-sm dark:hover:bg-gray-600 dark:hover:text-white disabled:text-gray-700/40 disabled:hover:shadow-none dark:disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:border-gray-800",
+    "yellow" =>
+      "bg-yellow-600/90 text-white hover:bg-yellow-600 focus-visible:outline-yellow-600 disabled:bg-yellow-400/60 disabled:dark:bg-yellow-600/30 disabled:dark:text-white/35",
     "danger" =>
       "border border-gray-300 dark:border-gray-800 text-red-600 bg-white dark:bg-gray-800 hover:text-red-700 hover:shadow-sm dark:hover:text-red-400 dark:text-red-500 active:text-red-800 disabled:text-red-700/40 disabled:hover:shadow-none dark:disabled:text-red-500/35 dark:disabled:bg-gray-800"
   }
@@ -95,7 +97,7 @@ defmodule PlausibleWeb.Components.Generic do
 
     theme_class =
       if assigns.disabled do
-        "bg-gray-400 text-white transition-colors duration-150 dark:text-white dark:text-gray-400 dark:bg-gray-700 cursor-not-allowed"
+        "bg-gray-400 text-white transition-all duration-150 dark:text-white dark:text-gray-400 dark:bg-gray-700 cursor-not-allowed"
       else
         @button_themes[assigns.theme]
       end
@@ -520,7 +522,7 @@ defmodule PlausibleWeb.Components.Generic do
             current_team={@current_team}
             site={@site}
           >
-            <div class="p-6">
+            <div class="p-6 pb-14">
               {render_slot(@inner_block)}
             </div>
           </PlausibleWeb.Components.Billing.feature_gate>

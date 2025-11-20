@@ -477,7 +477,11 @@ defmodule PlausibleWeb.Api.StatsController do
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
-    metrics = breakdown_metrics(query, extra_metrics)
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics,
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -511,7 +515,11 @@ defmodule PlausibleWeb.Api.StatsController do
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
-    metrics = breakdown_metrics(query, extra_metrics)
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics,
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -595,7 +603,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:utm_medium")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:bounce_rate, :visit_duration],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -625,7 +638,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:utm_campaign")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:bounce_rate, :visit_duration],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -655,7 +673,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:utm_content")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:bounce_rate, :visit_duration],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -685,7 +708,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:utm_term")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:bounce_rate, :visit_duration],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -715,7 +743,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:utm_source")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:bounce_rate, :visit_duration],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -745,7 +778,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:referrer")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:bounce_rate, :visit_duration],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -837,7 +875,11 @@ defmodule PlausibleWeb.Api.StatsController do
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
-    metrics = breakdown_metrics(query, extra_metrics)
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics,
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -865,7 +907,12 @@ defmodule PlausibleWeb.Api.StatsController do
         []
       end
 
-    metrics = breakdown_metrics(query, extra_metrics)
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics,
+        include_revenue?: !!params["detailed"]
+      )
+
     pagination = parse_pagination(params)
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
@@ -897,7 +944,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:entry_page")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:visits, :visit_duration, :bounce_rate])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:visits, :visit_duration, :bounce_rate],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -943,7 +995,11 @@ defmodule PlausibleWeb.Api.StatsController do
         [:visits, :exit_rate]
       end
 
-    metrics = breakdown_metrics(query, extra_metrics)
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics,
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, {limit, page})
 
@@ -980,7 +1036,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:country")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1038,7 +1099,7 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:region")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query)
+    metrics = breakdown_metrics(query, include_revenue?: !!params["detailed"])
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1079,7 +1140,7 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:city")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query)
+    metrics = breakdown_metrics(query, include_revenue?: !!params["detailed"])
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1129,7 +1190,11 @@ defmodule PlausibleWeb.Api.StatsController do
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
-    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics ++ [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1163,7 +1228,11 @@ defmodule PlausibleWeb.Api.StatsController do
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
-    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics ++ [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1206,7 +1275,11 @@ defmodule PlausibleWeb.Api.StatsController do
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
-    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics ++ [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1240,7 +1313,11 @@ defmodule PlausibleWeb.Api.StatsController do
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
-    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics ++ [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1283,7 +1360,11 @@ defmodule PlausibleWeb.Api.StatsController do
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
-    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: extra_metrics ++ [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1614,9 +1695,18 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp breakdown_metrics(query, extra_metrics \\ []) do
+  defp breakdown_metrics(query, opts) do
+    extra_metrics = Keyword.get(opts, :extra_metrics, [])
+    include_revenue? = Keyword.get(opts, :include_revenue?, false)
+
     if toplevel_goal_filter?(query) do
-      [:visitors, :conversion_rate, :total_visitors]
+      metrics = [:visitors, :conversion_rate, :total_visitors]
+
+      if ee?() and include_revenue? do
+        metrics ++ [:average_revenue, :total_revenue]
+      else
+        metrics
+      end
     else
       [:visitors] ++ extra_metrics
     end

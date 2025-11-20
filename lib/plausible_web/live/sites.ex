@@ -700,38 +700,31 @@ defmodule PlausibleWeb.Live.Sites do
   def invitation_modal(assigns) do
     ~H"""
     <PlausibleWeb.Live.Components.PrimaModal.modal id={@id}>
-      <div class="bg-white dark:bg-gray-850 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+      <div class="p-5 pb-3 sm:p-6 sm:pb-3">
         <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
           <button
             phx-click={Prima.Modal.close()}
-            class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+            class="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400"
           >
             <span class="sr-only">Close</span>
             <Heroicons.x_mark class="size-6" />
           </button>
         </div>
-        <div class="sm:flex sm:items-start">
-          <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-            <Heroicons.user_group class="size-6" />
-          </div>
-          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-            <PlausibleWeb.Live.Components.PrimaModal.modal_title>
-              Invitation for {@site.domain}
-            </PlausibleWeb.Live.Components.PrimaModal.modal_title>
-            <div class="mt-2">
-              <p class="text-sm text-gray-500 dark:text-gray-200">
-                You've been invited to the {@site.domain} analytics dashboard as <b class="capitalize">{@invitation.invitation.role}</b>.
-              </p>
-              <div
-                :if={
-                  !(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)) &&
-                    @invitation.invitation.role == :owner
-                }
-                class="mt-2 text-sm text-gray-500 dark:text-gray-200"
-              >
+        <div class="flex flex-col gap-y-4 text-center sm:text-left">
+          <PlausibleWeb.Live.Components.PrimaModal.modal_title>
+            You're invited to {@site.domain}
+          </PlausibleWeb.Live.Components.PrimaModal.modal_title>
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 text-pretty">
+              You've been added as <b class="capitalize">{@invitation.invitation.role}</b>
+              to the {@site.domain} analytics dashboard.
+              <%= if !(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)) &&
+                        @invitation.invitation.role == :owner do %>
                 If you accept the ownership transfer, you will be responsible for billing going forward.
-              </div>
-            </div>
+              <% else %>
+                Welcome aboard!
+              <% end %>
+            </p>
           </div>
         </div>
         <.notice
@@ -774,30 +767,30 @@ defmodule PlausibleWeb.Live.Sites do
           You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
         </.notice>
       </div>
-      <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+      <div class="flex flex-col sm:flex-row-reverse gap-3 p-5 sm:p-6">
         <.button
           :if={!(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan))}
           mt?={false}
-          class="sm:ml-3 w-full sm:w-auto sm:text-sm"
+          class="w-full sm:w-auto sm:text-sm"
           data-method="post"
           data-csrf={Plug.CSRFProtection.get_csrf_token()}
           data-to={"/sites/invitations/#{@invitation.invitation.invitation_id}/accept"}
           data-autofocus
         >
-          Accept &amp; Continue
+          Accept and continue
         </.button>
         <.button_link
           :if={Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)}
           mt?={false}
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-          class="sm:ml-3 w-full sm:w-auto sm:text-sm"
+          class="w-full sm:w-auto sm:text-sm"
           data-autofocus
         >
           Upgrade
         </.button_link>
         <.button_link
           mt?={false}
-          class="w-full sm:w-auto mr-2 sm:text-sm mt-2 sm:mt-0"
+          class="w-full sm:w-auto sm:text-sm"
           href="#"
           theme="secondary"
           data-method="post"

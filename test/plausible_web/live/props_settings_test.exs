@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
         |> html_response(200)
         |> text_of_element("#lock-notice")
 
-      assert lock_notice =~ "please upgrade your subscription"
+      assert lock_notice =~ "upgrade your subscription"
     end
 
     @tag :ee_only
@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
         |> html_response(200)
         |> text_of_element("#lock-notice")
 
-      refute lock_notice =~ "please upgrade your subscription"
+      refute lock_notice =~ "upgrade your subscription"
     end
 
     test "lists props for the site and renders links", %{conn: conn, site: site} do
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       assert resp =~ "amount"
       assert resp =~ "logged_in"
       assert resp =~ "is_customer"
-      refute resp =~ "please upgrade your subscription"
+      refute resp =~ "upgrade your subscription"
     end
 
     test "lists props with disallow actions", %{conn: conn, site: site} do
@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
         assert resp =~ "amount"
         assert resp =~ "logged_in"
         assert resp =~ "is_customer"
-        refute resp =~ "please upgrade your subscription"
+        refute resp =~ "upgrade your subscription"
       end
 
       test "if no props are allowed, a proper info is displayed", %{
