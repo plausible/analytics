@@ -90,6 +90,16 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
     describe "FunnelSettings live view" do
       setup [:create_user, :log_in, :create_site]
 
+      test "allows dashboard toggle", %{conn: conn, site: site} do
+        lv = get_liveview(conn, site)
+        lv |> element("#feature-funnels-toggle button") |> render_click()
+        assert render(lv) =~ "Funnels are now hidden from your dashboard"
+        assert Plausible.Billing.Feature.Funnels.opted_out?(Plausible.Repo.reload!(site))
+        lv |> element("#feature-funnels-toggle button") |> render_click()
+        assert render(lv) =~ "Funnels are now visible again on your dashboard"
+        refute Plausible.Billing.Feature.Funnels.opted_out?(Plausible.Repo.reload!(site))
+      end
+
       test "allows list filtering / search", %{conn: conn, site: site} do
         {:ok, _} = setup_funnels(site, ["Funnel One", "Search Me"])
         {lv, html} = get_liveview(conn, site, with_html?: true)

@@ -18,10 +18,6 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
         current_user
         |> Plausible.Sites.get_for_user!(domain, roles: [:owner, :admin, :editor, :super_admin])
       end)
-      |> assign_new(:site_role, fn %{site: site, current_user: current_user} ->
-        {:ok, {_, site_role}} = Plausible.Teams.Memberships.site_role(site, current_user)
-        site_role
-      end)
       |> assign_new(:shared_links, fn %{site: site} ->
         Plausible.Repo.all(
           from(l in Plausible.Site.SharedLink,
@@ -49,7 +45,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
         docs="shared-links"
         feature_mod={Plausible.Billing.Feature.SharedLinks}
         site={@site}
-        current_role={@site_role}
+        current_user={@current_user}
         current_team={@current_team}
       >
         <:title>

@@ -156,7 +156,10 @@ defmodule PlausibleWeb.Live.Sites do
       <p :if={@searching? and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
         No sites found. Try a different search term.
       </p>
-      <div :if={@is_empty_state?} class="flex flex-col items-center justify-center py-8 sm:py-12 max-w-md mx-auto">
+      <div
+        :if={@is_empty_state?}
+        class="flex flex-col items-center justify-center py-8 sm:py-12 max-w-md mx-auto"
+      >
         <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
           {@empty_state_title}
         </h3>

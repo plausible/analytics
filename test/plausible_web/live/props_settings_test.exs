@@ -162,18 +162,18 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     end
   end
 
-  # validating input
-  # clicking suggestions fills out input
-  # adding props
-  # error when reached props limit
-  # clearserror when fixed input
-  # removal
-  # removal shows confirmation
-  # allow existing props: shows/hides
-  # after adding all suggestions no allow existing props
-
   describe "PropsSettings live view" do
     setup [:create_user, :log_in, :create_site]
+
+    test "allows dashboard toggle", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      lv |> element("#feature-props-toggle button") |> render_click()
+      assert render(lv) =~ "Custom Properties are now hidden from your dashboard"
+      assert Plausible.Billing.Feature.Props.opted_out?(Plausible.Repo.reload!(site))
+      lv |> element("#feature-props-toggle button") |> render_click()
+      assert render(lv) =~ "Custom Properties are now visible again on your dashboard"
+      refute Plausible.Billing.Feature.Props.opted_out?(Plausible.Repo.reload!(site))
+    end
 
     test "allows prop removal", %{conn: conn, site: site} do
       {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in"])

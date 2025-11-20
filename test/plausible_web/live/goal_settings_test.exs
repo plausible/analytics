@@ -152,6 +152,16 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
   describe "GoalSettings live view" do
     setup [:create_user, :log_in, :create_site]
 
+    test "allows dashboard toggle", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      lv |> element("#feature-goals-toggle button") |> render_click()
+      assert render(lv) =~ "Goals are now hidden from your dashboard"
+      assert Plausible.Billing.Feature.Goals.opted_out?(Plausible.Repo.reload!(site))
+      lv |> element("#feature-goals-toggle button") |> render_click()
+      assert render(lv) =~ "Goals are now visible again on your dashboard"
+      refute Plausible.Billing.Feature.Goals.opted_out?(Plausible.Repo.reload!(site))
+    end
+
     test "allows goal deletion", %{conn: conn, site: site} do
       {:ok, [g1, g2 | _]} = setup_goals(site)
       {lv, html} = get_liveview(conn, site, with_html?: true)

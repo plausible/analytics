@@ -18,45 +18,43 @@ defmodule PlausibleWeb.Components.Site.Feature.ToggleLive do
      |> assign(:disabled?, disabled?)}
   end
 
+  attr :site, Plausible.Site, required: true
+  attr :feature_mod, :atom, required: true
+  attr :current_user, Plausible.Auth.User, required: true
+
   def render(assigns) do
     ~H"""
-    <div class="mt-4">
-      <div class={@class}>
-        <div class="my-2 flex items-center">
-          <button
-            type="button"
-            phx-click="toggle"
-            phx-target={@myself}
+    <div class="mt-4" id={"feature-#{@feature_mod.name()}-toggle"}>
+      <div class="my-2 flex items-center">
+        <button
+          type="button"
+          phx-click="toggle"
+          phx-target={@myself}
+          class={[
+            "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200",
+            if(@current_setting, do: "bg-indigo-600", else: "bg-gray-200 dark:bg-gray-600"),
+            if(@disabled?, do: "cursor-not-allowed")
+          ]}
+          disabled={@disabled?}
+        >
+          <span
+            aria-hidden="true"
             class={[
-              "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200",
-              if(@current_setting, do: "bg-indigo-600", else: "bg-gray-200 dark:bg-gray-600"),
-              if(@disabled?, do: "cursor-not-allowed")
+              "inline-block size-5 rounded-full bg-white shadow transform transition ease-in-out duration-200",
+              if(@current_setting, do: "translate-x-5", else: "translate-x-0")
             ]}
-            disabled={@disabled?}
-          >
-            <span
-              aria-hidden="true"
-              class={[
-                "inline-block size-5 rounded-full bg-white shadow transform transition ease-in-out duration-200",
-                if(@current_setting, do: "translate-x-5", else: "translate-x-0")
-              ]}
-            />
-          </button>
+          />
+        </button>
 
-          <span class={[
-            "ml-2 font-medium leading-5 text-sm",
-            if(@disabled?,
-              do: "text-gray-500 dark:text-gray-400",
-              else: "text-gray-900 dark:text-gray-100"
-            )
-          ]}>
-            Show in dashboard
-          </span>
-        </div>
-      </div>
-
-      <div :if={@current_setting}>
-        {render_slot(@inner_block)}
+        <span class={[
+          "ml-2 font-medium leading-5 text-sm",
+          if(@disabled?,
+            do: "text-gray-500 dark:text-gray-400",
+            else: "text-gray-900 dark:text-gray-100"
+          )
+        ]}>
+          Show in dashboard
+        </span>
       </div>
     </div>
     """
@@ -78,21 +76,15 @@ defmodule PlausibleWeb.Components.Site.Feature.ToggleLive do
             "#{feature_mod.display_name()} are now hidden from your dashboard"
           end
 
-        send(self(), {:site_updated, updated_site})
+        send(self(), {:feature_toggled, message, updated_site})
 
-        {:noreply,
-         socket
-         |> assign(:site, updated_site)
-         |> assign(:current_setting, feature_mod.enabled?(updated_site))
-         |> put_flash(:success, message)}
+        socket =
+          assign(socket, site: updated_site, current_setting: feature_mod.enabled?(updated_site))
+
+        {:noreply, socket}
 
       {:error, _} ->
-        {:noreply,
-         socket
-         |> put_flash(
-           :error,
-           "Something went wrong. Failed to toggle #{feature_mod.display_name()} on your dashboard."
-         )}
+        {:noreply, socket}
     end
   end
 end

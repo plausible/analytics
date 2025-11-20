@@ -14,9 +14,9 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, _lv, html} = live(conn, "/sites")
 
       text = text(html)
+
       assert text =~ "My Personal Sites"
-      assert text =~ "You don't have any sites yet"
-      refute text =~ "Add your first personal site"
+      assert text =~ "Add your first personal site"
       refute text =~ "Go to team sites"
     end
 

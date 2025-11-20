@@ -25,10 +25,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           ]
         )
       end)
-      |> assign_new(:site_role, fn %{site: site, current_user: current_user} ->
-        {:ok, {_, site_role}} = Plausible.Teams.Memberships.site_role(site, current_user)
-        site_role
-      end)
       |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
         Funnels.list(site)
       end)
@@ -61,7 +57,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         show_content?={!Plausible.Billing.Feature.Funnels.opted_out?(@site)}
         site={@site}
         current_user={@current_user}
-        current_role={@site_role}
         current_team={@current_team}
       >
         <:title>
@@ -174,7 +169,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     {:noreply, assign(socket, setup_funnel?: false, funnel_id: nil)}
   end
 
-  def handle_info({:site_updated, updated_site}, socket) do
-    {:noreply, assign(socket, site: updated_site)}
+  def handle_info({:feature_toggled, flash_msg, updated_site}, socket) do
+    {:noreply, assign(put_flash(socket, :success, flash_msg), site: updated_site)}
   end
 end

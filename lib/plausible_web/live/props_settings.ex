@@ -21,10 +21,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
           include_consolidated?: true
         )
       end)
-      |> assign_new(:site_role, fn %{site: site, current_user: current_user} ->
-        {:ok, {_, site_role}} = Plausible.Teams.Memberships.site_role(site, current_user)
-        site_role
-      end)
       |> assign_new(:all_props, fn %{site: site} ->
         site.allowed_event_props || []
       end)
@@ -53,7 +49,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
         show_content?={!Plausible.Billing.Feature.Props.opted_out?(@site)}
         site={@site}
         current_user={@current_user}
-        current_role={@site_role}
         current_team={@current_team}
       >
         <:title>
@@ -153,8 +148,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, assign(socket, add_prop?: false)}
   end
 
-  def handle_info({:site_updated, updated_site}, socket) do
-    {:noreply, assign(socket, site: updated_site)}
+  def handle_info({:feature_toggled, flash_msg, updated_site}, socket) do
+    {:noreply, assign(put_flash(socket, :success, flash_msg), site: updated_site)}
   end
 
   def handle_info({:props_allowed, props}, socket) when is_list(props) do

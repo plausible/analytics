@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     test "renders a blur overlay if the feature is locked", %{user: user} do
       html =
         %{
-          current_role: :owner,
+          current_user: user,
           current_team: user |> subscribe_to_growth_plan() |> team_of(),
           locked?: true
         }
@@ -23,10 +23,10 @@ defmodule PlausibleWeb.Components.BillingTest do
       assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur"
     end
 
-    test "renders a blur overlay for a teamless account" do
+    test "renders a blur overlay for a teamless account", %{user: user} do
       html =
         %{
-          current_role: nil,
+          current_user: user,
           current_team: nil,
           locked?: true
         }
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     test "does not render a blur overlay if feature access is granted", %{user: user} do
       html =
         %{
-          current_role: :owner,
+          current_user: user,
           current_team: user |> subscribe_to_business_plan() |> team_of(),
           locked?: false
         }
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     test "renders upgrade cta linking to the upgrade page if user role is :owner", %{user: user} do
       html =
         %{
-          current_role: :owner,
+          current_user: user,
           current_team: user |> subscribe_to_growth_plan() |> team_of(),
           locked?: true
         }
@@ -66,10 +66,13 @@ defmodule PlausibleWeb.Components.BillingTest do
     end
 
     test "renders upgrade cta linking to the upgrade page if user role is :billing", %{user: user} do
+      team = user |> subscribe_to_growth_plan() |> team_of()
+      billing = add_member(team, role: :billing)
+
       html =
         %{
-          current_role: :billing,
-          current_team: user |> subscribe_to_growth_plan() |> team_of(),
+          current_user: billing,
+          current_team: team,
           locked?: true
         }
         |> render_feature_gate()
@@ -81,10 +84,13 @@ defmodule PlausibleWeb.Components.BillingTest do
          %{
            user: user
          } do
+      team = user |> subscribe_to_growth_plan() |> team_of()
+      editor = add_member(team, role: :editor)
+
       html =
         %{
-          current_role: :editor,
-          current_team: user |> subscribe_to_growth_plan() |> team_of(),
+          current_user: editor,
+          current_team: team,
           locked?: true
         }
         |> render_feature_gate()
