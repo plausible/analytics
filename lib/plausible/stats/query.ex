@@ -40,7 +40,7 @@ defmodule Plausible.Stats.Query do
     Imported,
     Legacy,
     Comparisons,
-    QueryParser,
+    ApiQueryParser,
     ParsedQueryParams,
     QueryBuilder
   }
@@ -54,7 +54,7 @@ defmodule Plausible.Stats.Query do
         debug_metadata \\ %{}
       ) do
     with {:ok, %ParsedQueryParams{} = parsed_query_params} <-
-           QueryParser.parse(site, schema_type, params) do
+           ApiQueryParser.parse(site, schema_type, params) do
       QueryBuilder.build(site, parsed_query_params, params, debug_metadata)
     end
   end

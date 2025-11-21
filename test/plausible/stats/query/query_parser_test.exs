@@ -1,6 +1,6 @@
-defmodule Plausible.Stats.Query.QueryParserTest do
+defmodule Plausible.Stats.ApiQueryParserTest do
   use Plausible.DataCase
-  import Plausible.Stats.QueryParser
+  import Plausible.Stats.ApiQueryParser
 
   setup [:create_user, :create_site]
 

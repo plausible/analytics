@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Interval, Query, QueryParser, QueryBuilder, DateTimeRange}
+  alias Plausible.Stats.{Filters, Interval, Query, ApiQueryParser, QueryBuilder, DateTimeRange}
 
   def from(site, params, debug_metadata, now \\ nil) do
     now = now || Plausible.Stats.Query.Test.get_fixed_now()
@@ -271,7 +271,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   def parse_order_by(order_by) do
     with true <- is_binary(order_by),
          {:ok, order_by} <- JSON.decode(order_by),
-         {:ok, order_by} <- QueryParser.parse_order_by(order_by) do
+         {:ok, order_by} <- ApiQueryParser.parse_order_by(order_by) do
       order_by
     else
       _ -> []
@@ -290,7 +290,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     include =
       with true <- is_binary(include),
            {:ok, include} <- JSON.decode(include),
-           {:ok, include} <- QueryParser.parse_include(include, site) do
+           {:ok, include} <- ApiQueryParser.parse_include(include, site) do
         include
       else
         _ -> %{}
@@ -343,7 +343,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   def parse_comparison_params(site, %{"comparison" => "custom"} = params) do
     {:ok, date_range} =
-      QueryParser.parse_date_range_pair(site, [
+      ApiQueryParser.parse_date_range_pair(site, [
         params["compare_from"],
         params["compare_to"]
       ])
