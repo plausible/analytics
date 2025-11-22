@@ -292,7 +292,7 @@ export function init() {
         function submitForm() {
           if (!formSubmitted) {
             formSubmitted = true
-            form.submit()
+            form.requestSubmit(event.submitter) // ← FIX: preserves the button info
           }
         }
 
