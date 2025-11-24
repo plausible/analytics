@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryParserTest do
+defmodule Plausible.Stats.Query.QueryParserTest do
   use Plausible.DataCase
   import Plausible.Stats.QueryParser
 

@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryParseAndBuildTest do
+defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
   use Plausible.DataCase
   use Plausible.Teams.Test
   import Plausible.AssertMatches
