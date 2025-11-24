@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
   on_ee do
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     alias Plausible.Auth.SSO
 

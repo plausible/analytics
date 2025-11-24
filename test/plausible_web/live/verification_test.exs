@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.VerificationTest do
   use Plausible.Test.Support.DNS
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   @moduletag :capture_log
 

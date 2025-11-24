@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.InstallationTest do
   use Plausible.Test.Support.DNS
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Site.TrackerScriptConfiguration
 

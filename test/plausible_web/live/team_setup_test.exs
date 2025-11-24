@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   use Bamboo.Test, shared: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Teams
   alias Plausible.Repo

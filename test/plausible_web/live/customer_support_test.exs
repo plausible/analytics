@@ -7,7 +7,6 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
     @cs_index Routes.customer_support_path(PlausibleWeb.Endpoint, :index)
 
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     alias Plausible.Auth.SSO
 

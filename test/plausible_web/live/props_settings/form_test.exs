@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   on_ee do
   end

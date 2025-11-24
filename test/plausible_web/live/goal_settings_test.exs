@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Live.GoalSettingsTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   @funnels_cta ~s|p[data-test-id="setup-funnels-cta"]|
 

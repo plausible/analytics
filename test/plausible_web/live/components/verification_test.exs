@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
   on_ee do
     import Phoenix.LiveViewTest, only: [render_component: 2]
-    import Plausible.Test.Support.HTML
 
     alias Plausible.InstallationSupport.{State, Verification}
 

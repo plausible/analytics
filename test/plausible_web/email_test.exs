@@ -2,7 +2,6 @@ defmodule PlausibleWeb.EmailTest do
   use Plausible.DataCase, async: true
 
   import Plausible.Factory
-  import Plausible.Test.Support.HTML
 
   alias PlausibleWeb.Email
 

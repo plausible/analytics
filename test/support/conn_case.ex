@@ -20,8 +20,11 @@ defmodule PlausibleWeb.ConnCase do
       use Plausible.TestUtils
       use Plausible
       use Plausible.Teams.Test
+
+      import Plausible.Test.Support.HTML
       import Plug.Conn
       import Phoenix.ConnTest
+
       alias PlausibleWeb.Router.Helpers, as: Routes
       import Plausible.Factory
       import Plausible.AssertMatches

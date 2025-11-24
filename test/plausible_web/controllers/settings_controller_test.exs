@@ -4,7 +4,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
   use Plausible.Repo
 
   import Mox
-  import Plausible.Test.Support.HTML
+
   import Ecto.Query
 
   require Plausible.Billing.Subscription.Status

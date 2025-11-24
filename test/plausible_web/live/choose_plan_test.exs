@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     @moduletag :ee_only
 
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
+
     require Plausible.Billing.Subscription.Status
     alias Plausible.{Repo, Billing, Billing.Subscription}
 

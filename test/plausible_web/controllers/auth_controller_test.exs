@@ -3,7 +3,6 @@ defmodule PlausibleWeb.AuthControllerTest do
   use Bamboo.Test
   use Plausible.Repo
 
-  import Plausible.Test.Support.HTML
   import Mox
 
   require Logger

@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
   on_ee do
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     describe "GET /:domain/settings/funnels" do
       setup [:create_user, :log_in, :create_site]

@@ -5,7 +5,6 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
   use Bamboo.Test
 
   import Phoenix.View
-  import Plausible.Test.Support.HTML
 
   alias PlausibleWeb.Endpoint
   alias PlausibleWeb.ErrorView

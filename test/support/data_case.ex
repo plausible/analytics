@@ -21,6 +21,8 @@ defmodule Plausible.DataCase do
       use Plausible
       use Plausible.Teams.Test
 
+      import Plausible.Test.Support.HTML
+
       import Ecto.Changeset
       import Plausible.DataCase
       import Plausible.Factory

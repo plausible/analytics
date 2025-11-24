@@ -4,8 +4,6 @@ defmodule PlausibleWeb.SSOControllerTest do
   @moduletag :ee_only
 
   on_ee do
-    import Plausible.Test.Support.HTML
-
     alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Repo

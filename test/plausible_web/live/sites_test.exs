@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Live.SitesTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Repo
 

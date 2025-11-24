@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
   use PlausibleWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   on_ee do
     import Mox

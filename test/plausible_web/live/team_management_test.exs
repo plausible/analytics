@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
   use Bamboo.Test, shared: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   def team_general_path(), do: Routes.settings_path(PlausibleWeb.Endpoint, :team_general)
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "

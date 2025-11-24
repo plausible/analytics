@@ -2,7 +2,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
   use Plausible.DataCase
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  import Plausible.Test.Support.HTML
+
   alias Plausible.Workers.SendEmailReport
 
   @green "#15803d"

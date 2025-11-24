@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
 
   on_ee do
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     defp open_user(id, qs \\ []) do
       Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, id, qs)

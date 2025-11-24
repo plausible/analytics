@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Live.SharedLinkSettingsTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   describe "SharedLinkSettings LiveView" do
     setup [:create_user, :log_in, :create_site]
