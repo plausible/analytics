@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.Api.StatsController.RegionsTest do
-  use Plausible.Teams.Test
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/regions" do

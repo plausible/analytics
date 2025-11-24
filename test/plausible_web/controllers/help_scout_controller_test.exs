@@ -1,12 +1,9 @@
 defmodule PlausibleWeb.HelpScoutControllerTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
 
   @moduletag :ee_only
 
   on_ee do
-    import Plausible.Teams.Test
-
     alias Plausible.HelpScout
 
     describe "callback/2" do

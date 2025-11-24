@@ -1,5 +1,6 @@
 defmodule Plausible.Audit.TestSchema do
   @moduledoc false
+
   use Plausible
 
   on_ee do

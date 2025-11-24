@@ -1,12 +1,9 @@
 defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
-  use Plausible
   @moduletag :ee_only
 
   on_ee do
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     defp open_user(id, qs \\ []) do
       Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, id, qs)

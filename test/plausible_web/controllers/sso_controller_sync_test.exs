@@ -4,8 +4,6 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
   @moduletag :ee_only
 
   on_ee do
-    use Plausible.Teams.Test
-
     alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Repo

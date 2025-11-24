@@ -8,11 +8,12 @@ defmodule PlausibleWeb.PluginsAPICase do
 
   using do
     quote do
-      # The default endpoint for testing
       @endpoint PlausibleWeb.Endpoint
 
-      # Import conveniences for testing with connections
       use Plausible.TestUtils
+      use Plausible.Teams.Test
+      use Plausible
+
       import Plug.Conn
       import Phoenix.ConnTest
       import PlausibleWeb.Plugins.API.Spec, only: [spec: 0]

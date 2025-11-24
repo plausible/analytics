@@ -20,10 +20,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
   Site CRUD endpoints tests are in ExternalSitesControllerSitesCrudApiTest
   """
-  use Plausible
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
-  use Plausible.Teams.Test
   use Bamboo.Test
 
   on_ee do

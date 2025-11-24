@@ -1,12 +1,10 @@
 defmodule PlausibleWeb.SettingsControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
-  use Plausible
   use Plausible.Repo
-  use Plausible.Teams.Test
 
   import Mox
-  import Plausible.Test.Support.HTML
+
   import Ecto.Query
 
   require Plausible.Billing.Subscription.Status

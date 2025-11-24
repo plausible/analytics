@@ -1,10 +1,7 @@
 defmodule Plausible.Plugs.SSOTeamAccessTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
 
   on_ee do
-    use Plausible.Teams.Test
-
     alias Plausible.Auth
     alias Plausible.Plugs.SSOTeamAccess
     alias PlausibleWeb.AuthPlug

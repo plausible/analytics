@@ -1,6 +1,4 @@
 defmodule Plausible.Teams.Invitations.RejectTest do
-  use Plausible
-  use Plausible.Teams.Test
   use Plausible.DataCase, async: true
   use Bamboo.Test
 

@@ -1,7 +1,6 @@
 defmodule Plausible.Stats.ComparisonsTest do
   use Plausible.DataCase
   alias Plausible.Stats.{Query, Comparisons}
-  import Plausible.TestUtils
 
   setup [:create_user, :create_site]
 

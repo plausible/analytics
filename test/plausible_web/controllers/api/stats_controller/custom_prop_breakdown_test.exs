@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]

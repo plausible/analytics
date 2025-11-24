@@ -1,11 +1,8 @@
 defmodule PlausibleWeb.Live.InstallationTest do
   use PlausibleWeb.ConnCase
-  use Plausible
   use Plausible.Test.Support.DNS
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
-  import Plausible.Teams.Test
 
   alias Plausible.Site.TrackerScriptConfiguration
 

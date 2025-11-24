@@ -1,8 +1,6 @@
 defmodule Plausible.Teams.Memberships.LeaveTest do
   use Plausible.DataCase, async: true
-  use Plausible
   use Plausible.Repo
-  use Plausible.Teams.Test
   use Bamboo.Test
 
   alias Plausible.Teams.Memberships.Leave

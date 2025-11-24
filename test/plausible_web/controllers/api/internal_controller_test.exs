@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.InternalControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
-  use Plausible.Teams.Test
 
   describe "GET /api/sites" do
     setup [:create_user, :log_in]

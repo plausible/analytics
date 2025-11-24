@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.TrackerTest do
   use Plausible.DataCase
   use Oban.Testing, repo: Plausible.Repo
-  use Plausible
-  use Plausible.Teams.Test
 
   alias Plausible.Site.TrackerScriptConfiguration
   alias PlausibleWeb.Tracker

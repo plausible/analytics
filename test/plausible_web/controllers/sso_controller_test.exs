@@ -1,13 +1,9 @@
 defmodule PlausibleWeb.SSOControllerTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
 
   @moduletag :ee_only
 
   on_ee do
-    import Plausible.Teams.Test
-    import Plausible.Test.Support.HTML
-
     alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Repo

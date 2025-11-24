@@ -2,8 +2,6 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
   use Plausible.DataCase, async: true
 
   on_ee do
-    import Plausible.Teams.Test
-
     test "returns stats for a consolidated view merged with placeholder" do
       fixed_now = ~N[2023-10-26 10:00:15]
       owner = new_user()

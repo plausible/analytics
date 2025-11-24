@@ -1,7 +1,5 @@
 defmodule Plausible.HelpScoutTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
-  use Plausible
 
   @moduletag :ee_only
 

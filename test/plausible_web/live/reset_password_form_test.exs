@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
 
   import Phoenix.ChannelTest
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Auth.User
   alias Plausible.Auth.Token

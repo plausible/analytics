@@ -1,10 +1,9 @@
 defmodule Plausible.ConsolidatedViewTest do
-  use Plausible
+  use Plausible.DataCase, async: true
 
   on_ee do
-    use Plausible.DataCase, async: true
     import Ecto.Query
-    import Plausible.Teams.Test
+
     alias Plausible.ConsolidatedView
     alias Plausible.Teams
 

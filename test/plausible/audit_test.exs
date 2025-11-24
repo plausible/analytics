@@ -1,11 +1,7 @@
 defmodule Plausible.AuditTest do
-  use Plausible
+  use Plausible.DataCase
 
   on_ee do
-    use Plausible.DataCase
-
-    use Plausible.Teams.Test
-
     alias Plausible.Audit
     alias Plausible.Audit.Encoder
     alias Plausible.Audit.Entry

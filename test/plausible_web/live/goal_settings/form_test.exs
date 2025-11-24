@@ -1,10 +1,8 @@
 defmodule PlausibleWeb.Live.GoalSettings.FormTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   on_ee do
-    import Plausible.Teams.Test
   end
 
   @revenue_goal_settings ~s|div[data-test-id="revenue-goal-settings"]|

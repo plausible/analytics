@@ -1,6 +1,5 @@
 defmodule Plausible.Ingestion.EventTest do
   use Plausible.DataCase, async: false
-  use Plausible.Teams.Test
 
   import Phoenix.ConnTest
 

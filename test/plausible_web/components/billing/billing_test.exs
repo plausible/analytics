@@ -1,9 +1,7 @@
 defmodule PlausibleWeb.Components.BillingTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
   import Phoenix.Component
   import Phoenix.LiveViewTest, only: [rendered_to_string: 1]
-  import Plausible.Test.Support.HTML
 
   describe "feature_gate/1" do
     setup [:create_user]

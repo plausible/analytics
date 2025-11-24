@@ -1,6 +1,5 @@
 defmodule Plausible.DataMigration.PrefixTrackerScriptConfigurationIdTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   import ExUnit.CaptureIO
   import Ecto.Query

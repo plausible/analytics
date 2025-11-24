@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
   alias Plausible.Billing.Feature
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key]

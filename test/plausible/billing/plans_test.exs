@@ -1,6 +1,5 @@
 defmodule Plausible.Billing.PlansTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
   alias Plausible.Billing.Plans
 
   @legacy_plan_id "558746"
