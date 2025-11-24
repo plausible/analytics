@@ -899,6 +899,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
+    IO.inspect query.filters, label: :FILTERS
 
     extra_metrics =
       if params["detailed"] do

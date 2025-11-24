@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   LV version of pages breakdown.
   """
 
-  use PlausibleWeb, :live_view
+  use PlausibleWeb, :live_component
 
   alias Plausible.Stats
   alias Plausible.Stats.Filters
@@ -32,28 +32,24 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     }
   }
 
-  def mount(_params, _session, socket) do
-    {:ok,
-     assign(socket,
-       max_items: @max_items,
-       min_height: @min_height,
-       row_height: @row_height,
-       row_gap_height: @row_gap_height,
-       data_container_height: @data_container_height,
-       col_min_width: @col_min_width
-     )}
-  end
+  def update(assigns, socket) do
+    socket =
+      assign(socket,
+        max_items: @max_items,
+        min_height: @min_height,
+        row_height: @row_height,
+        row_gap_height: @row_gap_height,
+        data_container_height: @data_container_height,
+        col_min_width: @col_min_width,
+        site: assigns.site
+      )
 
-  def handle_params(%{"domain" => domain} = params, _uri, socket) do
-    site = Plausible.Sites.get_for_user(socket.assigns.current_user, domain)
-
-    params = Map.put(params, "property", "event:page")
-    query = Query.from(site, params, %{})
+    query = struct!(assigns.query, dimensions: ["event:page"])
 
     metrics = breakdown_metrics(query)
-    pagination = parse_pagination(params)
+    pagination = parse_pagination(%{})
 
-    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
+    %{results: results, meta: meta} = Stats.breakdown(assigns.site, query, metrics, pagination)
 
     pages =
       results
@@ -68,7 +64,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         skip_imported_reason: meta[:imports_skip_reason]
       )
 
-    {:noreply, socket}
+    {:ok, socket}
   end
 
   def render(assigns) do
@@ -81,7 +77,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     assigns = assign(assigns, :tabs, tabs)
 
     ~H"""
-    <div>
+    <div phx-hook="LiveDashboard" data-widget="breakdown-tile" id="breakdown-tile-pages">
       <div class="w-full flex justify-between h-full">
         <div class="flex gap-x-1">
           <h3 class="font-bold dark:text-gray-100">
@@ -138,14 +134,11 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
                 <div class="grow w-full overflow-hidden">
                   <div class="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
                     <span class="w-full md:truncate">
-                      <a
+                      <.dashboard_link
                         id={"filter-link-#{idx}"}
-                        phx-hook="LiveDashboard"
-                        data-widget="patch-filters-button"
-                        data-filter={Jason.encode!(%{prefix: "page", filter: ["is", "page", [item.name]]})}
-                        href="#">
+                        href="/dummy.site?f=is,page,/about">
                         {trim_name(item.name, @col_min_width)}
-                      </a>
+                      </.dashboard_link>
                     </span>
                   </div>
                 </div>
@@ -165,9 +158,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           <div class="w-full text-center">
             <a
               id="modal-link"
-              phx-hook="LiveDashboard"
-              data-widget="modal-button"
-              data-modal="pages"
               href="#"
               class="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 tracking-wide"
             >

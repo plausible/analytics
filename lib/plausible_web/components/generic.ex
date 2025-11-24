@@ -413,6 +413,22 @@ defmodule PlausibleWeb.Components.Generic do
     end
   end
 
+  attr(:href, :string, required: true)
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
+
+  def dashboard_link(assigns) do
+    ~H"""
+    <.link
+      data-type="dashboard-link"
+      href={@href}
+      {@rest}>
+      {render_slot(@inner_block)}
+    </.link>
+    """
+  end
+
   attr(:class, :any, default: "")
   attr(:rest, :global)
 

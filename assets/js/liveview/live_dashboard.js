@@ -1,27 +1,58 @@
 const WIDGETS = {
-  'patch-filters-button': {
+  // 'navigation-tracker': {
+  //   initialize: function () {
+  //     console.log('Setting up navigation tracker...')
+  //
+  //     this.listener = window.addEventListener('phx:navigate', () => {
+  //       console.log('STATE PUSHED!', document.location)
+  //     })
+  //   },
+  //   cleanup: function () {
+  //     if (this.listener) {
+  //       console.log('Removing navigation tracker...')
+  //       window.removeEventListener('phx:navigate', this.listener)
+  //       this.listener = null
+  //     }
+  //   }
+  // },
+  'modal-button': {
+    initialize: function () {},
+    cleanup: function () {}
+  },
+  'breakdown-tile': {
     initialize: function () {
-      const that = this
+      this.listener = this.el.addEventListener('click', (e) => {
+        const type = e.target.dataset.type || null
 
-      this.listener = this.el.addEventListener('click', () => {
-        const filter = that.el.getAttribute('data-filter')
+        if (type && type == 'dashboard-link') {
+          const url = new URL(e.target.href)
+          this.el.dispatchEvent(
+            new CustomEvent('live-navigate', {
+              bubbles: true,
+              detail: { search: url.search }
+            })
+          )
 
-        top.postMessage(
-          { type: 'EMBEDDED_LV_PATCH_FILTER', filter: JSON.parse(filter) },
-          '*'
-        )
+          this.pushEvent('handle_dashboard_params', { url: url.toString() })
+
+          e.preventDefault()
+        }
+      })
+
+
+      this.backListener = window.addEventListener('live-navigate-back', (e) => {
+        if (typeof e.detail.search === 'string') {
+          console.log('live-navigate-back', e.detail.search)
+          this.pushEvent('handle_dashboard_params', { url: window.location.href })
+        }
       })
     },
     cleanup: function () {
       if (this.listener) {
-        that.el.removeEventListener('click', this.listener)
+        window.removeEventListener('live-navigate', this.listener)
         this.listener = null
       }
     }
-  },
-  'modal-button': {
-    initialize: function () {},
-    cleanup: function () {}
   }
 }
 
