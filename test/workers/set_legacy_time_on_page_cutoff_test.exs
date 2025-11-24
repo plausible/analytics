@@ -1,6 +1,5 @@
 defmodule Plausible.Workers.SetLegacyTimeOnPageCutoffTest do
   use Plausible.DataCase
-  use Plausible.TestUtils
 
   alias Plausible.Workers.SetLegacyTimeOnPageCutoff
 
