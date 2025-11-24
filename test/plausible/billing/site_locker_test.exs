@@ -1,7 +1,6 @@
 defmodule Plausible.Billing.SiteLockerTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
-  use Plausible.Teams.Test
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{SiteLocker, Subscription}
 

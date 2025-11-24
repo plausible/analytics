@@ -1,10 +1,8 @@
 defmodule PlausibleWeb.Site.MembershipControllerTest do
-  use Plausible
   use PlausibleWeb.ConnCase
   use Plausible.Repo
   use Bamboo.Test
 
-  use Plausible.Teams.Test
   import Plausible.Teams.Test
   import Plausible.Test.Support.HTML
 

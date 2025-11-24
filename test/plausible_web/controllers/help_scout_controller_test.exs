@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.HelpScoutControllerTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
 
   @moduletag :ee_only
 

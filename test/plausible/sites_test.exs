@@ -1,7 +1,5 @@
 defmodule Plausible.SitesTest do
   use Plausible.DataCase
-  use Plausible
-  use Plausible.Teams.Test
 
   alias Plausible.Sites
 

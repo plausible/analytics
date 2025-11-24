@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Components.Billing.NoticeTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
   import Phoenix.LiveViewTest, only: [render_component: 2]
   alias PlausibleWeb.Components.Billing.Notice
 

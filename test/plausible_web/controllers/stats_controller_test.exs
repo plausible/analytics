@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.StatsControllerTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
-  use Plausible.Teams.Test
   import Plausible.Test.Support.HTML
 
   @react_container "div#stats-react-container"

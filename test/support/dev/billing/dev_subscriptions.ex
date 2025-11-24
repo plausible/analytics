@@ -2,6 +2,7 @@ defmodule Plausible.Billing.DevSubscriptions do
   @moduledoc """
   Module for conveniently handling subscriptions in the :dev environment.
   """
+
   use Plausible
 
   on_ee do

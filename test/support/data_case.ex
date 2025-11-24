@@ -19,6 +19,7 @@ defmodule Plausible.DataCase do
       use Plausible.Repo
       use Plausible.TestUtils
       use Plausible
+      use Plausible.Teams.Test
 
       import Ecto.Changeset
       import Plausible.DataCase

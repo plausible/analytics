@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.SSOControllerTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
 
   @moduletag :ee_only
 

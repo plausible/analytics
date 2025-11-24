@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Live.GoalSettingsSyncTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
 
   import Phoenix.LiveViewTest
 

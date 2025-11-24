@@ -1,8 +1,6 @@
 defmodule Plausible.Teams.Management.LayoutTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
   use Bamboo.Test
-  use Plausible
 
   alias Plausible.Teams.Management.Layout
   alias Plausible.Teams.Management.Layout.Entry

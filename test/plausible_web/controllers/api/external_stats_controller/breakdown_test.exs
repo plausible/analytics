@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   alias Plausible.Billing.Feature
 

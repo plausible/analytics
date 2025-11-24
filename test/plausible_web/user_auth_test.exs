@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
-  use Plausible.Teams.Test
 
   alias Plausible.Repo
   alias PlausibleWeb.UserAuth

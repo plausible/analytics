@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.EmailTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   import Plausible.Factory
   import Plausible.Test.Support.HTML

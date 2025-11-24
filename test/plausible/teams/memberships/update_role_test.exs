@@ -1,9 +1,7 @@
 defmodule Plausible.Teams.Memberships.UpdateRoleTest do
   use Plausible.DataCase, async: true
   use Plausible.Repo
-  use Plausible.Teams.Test
   use Bamboo.Test
-  use Plausible
 
   alias Plausible.Teams.Memberships.UpdateRole
 

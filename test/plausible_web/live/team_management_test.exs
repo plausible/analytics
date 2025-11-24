@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Live.TeamMangementTest do
   use PlausibleWeb.ConnCase, async: false
   use Bamboo.Test, shared: true
-  use Plausible.Teams.Test
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML

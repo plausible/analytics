@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Live.ChangeDomainTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible
 
   import Phoenix.LiveViewTest
   import Plausible.TestUtils

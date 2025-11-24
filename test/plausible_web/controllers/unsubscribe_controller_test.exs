@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.UnsubscribeControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
-  use Plausible.Teams.Test
 
   setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
 

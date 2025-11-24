@@ -1,6 +1,5 @@
 defmodule Plausible.PropsTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
 
   test "allow/2 returns error when user plan does not include props" do
     user = new_user() |> subscribe_to_growth_plan()

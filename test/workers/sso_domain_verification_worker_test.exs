@@ -1,12 +1,10 @@
 defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
   use Plausible.DataCase
-  use Plausible
 
   on_ee do
     use Bamboo.Test, shared: true
     use Oban.Testing, repo: Plausible.Repo
     use Plausible.Auth.SSO.Domain.Status
-    use Plausible.Teams.Test
 
     alias Plausible.Auth.SSO
     alias Plausible.Auth.SSO.Domain.Verification.Worker

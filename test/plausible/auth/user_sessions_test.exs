@@ -1,7 +1,5 @@
 defmodule Plausible.Auth.UserSessionsTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
-  use Plausible
 
   import Phoenix.ChannelTest
 

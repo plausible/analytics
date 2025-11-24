@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
   use PlausibleWeb.PluginsAPICase, async: true
-  use Plausible.Teams.Test
   alias PlausibleWeb.Plugins.API.Schemas
 
   describe "examples" do

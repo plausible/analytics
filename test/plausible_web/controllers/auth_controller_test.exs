@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
-  use Plausible.Teams.Test
   use Plausible.Repo
 
   import Plausible.Test.Support.HTML

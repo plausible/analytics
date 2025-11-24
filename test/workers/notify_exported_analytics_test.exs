@@ -1,7 +1,5 @@
 defmodule Plausible.Workers.NotifyExportedAnalyticsTest do
-  use Plausible
   use Plausible.DataCase
-  use Plausible.Teams.Test
   use Bamboo.Test
 
   describe "perform/1" do

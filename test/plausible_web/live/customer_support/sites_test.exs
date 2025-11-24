@@ -3,8 +3,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
   @moduletag :ee_only
 
   on_ee do
-    use Plausible.Teams.Test
-    use Plausible
     use Bamboo.Test, shared: true
 
     import Phoenix.LiveViewTest

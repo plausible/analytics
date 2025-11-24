@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Live.InstallationTest do
   use PlausibleWeb.ConnCase
-  use Plausible
   use Plausible.Test.Support.DNS
 
   import Phoenix.LiveViewTest

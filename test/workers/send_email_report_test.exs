@@ -1,7 +1,6 @@
 defmodule Plausible.Workers.SendEmailReportTest do
   use Plausible.DataCase
   use Bamboo.Test
-  use Plausible.Teams.Test
   use Oban.Testing, repo: Plausible.Repo
   import Plausible.Test.Support.HTML
   alias Plausible.Workers.SendEmailReport

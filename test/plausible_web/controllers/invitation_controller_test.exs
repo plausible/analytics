@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Site.InvitationControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
-  use Plausible.Teams.Test
   use Bamboo.Test
 
   alias Plausible.Teams

@@ -1,9 +1,7 @@
 defmodule Plausible.Teams.Invitations.AcceptTest do
-  use Plausible
   require Plausible.Billing.Subscription.Status
   use Plausible.DataCase, async: true
   use Bamboo.Test
-  use Plausible.Teams.Test
 
   alias Plausible.Teams.Invitations.Accept
 

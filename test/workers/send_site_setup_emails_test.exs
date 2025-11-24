@@ -2,7 +2,6 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  use Plausible.Teams.Test
 
   alias Plausible.Workers.SendSiteSetupEmails
 
