@@ -428,7 +428,7 @@ defmodule Plausible.Stats.ComparisonsTest do
 
   defp build_comparison_query(site, params) do
     query =
-      Query.parse_and_build!(
+      Query.build!(
         site,
         :internal,
         Map.merge(

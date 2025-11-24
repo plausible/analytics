@@ -349,7 +349,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       )
 
     query =
-      Plausible.Stats.Query.parse_and_build!(
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{

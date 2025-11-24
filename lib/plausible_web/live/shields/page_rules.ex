@@ -248,7 +248,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
 
   def suggest_page_paths(input, _options, site, page_rules) do
     query =
-      Plausible.Stats.Query.parse_and_build!(
+      Plausible.Stats.Query.build!(
         site,
         :internal,
         %{

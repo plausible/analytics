@@ -88,7 +88,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp stats_aggregates(site, date_range) do
     query =
-      Query.parse_and_build!(
+      Query.build!(
         site,
         :internal,
         %{
@@ -120,7 +120,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp pages(site, date_range) do
     query =
-      Query.parse_and_build!(
+      Query.build!(
         site,
         :internal,
         %{
@@ -145,7 +145,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp sources(site, date_range) do
     query =
-      Query.parse_and_build!(
+      Query.build!(
         site,
         :internal,
         %{
@@ -171,7 +171,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp goals(site, date_range) do
     query =
-      Query.parse_and_build!(
+      Query.build!(
         site,
         :internal,
         %{

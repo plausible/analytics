@@ -131,7 +131,7 @@ defmodule Plausible.Segments.Segment do
   """
   def build_naive_query_from_segment_data(%Plausible.Site{} = site, filters),
     do:
-      Plausible.Stats.Query.parse_and_build(
+      Plausible.Stats.Query.build(
         site,
         :internal,
         %{
