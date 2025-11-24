@@ -7,7 +7,8 @@ defmodule PlausibleWeb.Components.Billing do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Subscriptions, Plan, Plans, EnterprisePlan}
 
-  attr :current_role, :atom, required: true
+  attr :site, Plausible.Site, required: false, default: nil
+  attr :current_user, Plausible.Auth.User, required: true
   attr :current_team, :any, required: true
   attr :locked?, :boolean, required: true
   slot :inner_block, required: true
@@ -35,7 +36,7 @@ defmodule PlausibleWeb.Components.Billing do
             class="max-w-sm sm:max-w-md mb-2 text-sm text-gray-600 dark:text-gray-100/60 leading-normal text-center"
           >
             To access this feature,
-            <.upgrade_call_to_action current_role={@current_role} current_team={@current_team} />
+            <.upgrade_call_to_action current_user={@current_user} current_team={@current_team} />
           </span>
         </div>
       </div>
@@ -357,7 +358,22 @@ defmodule PlausibleWeb.Components.Billing do
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
   def upgrade_call_to_action(assigns) do
+    user = assigns.current_user
+    site = assigns[:site]
     team = Plausible.Teams.with_subscription(assigns.current_team)
+
+    current_role =
+      if site do
+        case Plausible.Teams.Memberships.site_role(site, user) do
+          {:ok, {_, site_role}} -> site_role
+          _ -> nil
+        end
+      else
+        if team do
+          {:ok, team_role} = Plausible.Teams.Memberships.team_role(team, user)
+          team_role
+        end
+      end
 
     upgrade_assistance_required? =
       case Plans.get_subscription_plan(team && team.subscription) do
@@ -367,7 +383,7 @@ defmodule PlausibleWeb.Components.Billing do
       end
 
     cond do
-      not is_nil(assigns.current_role) and assigns.current_role not in [:owner, :billing] ->
+      not is_nil(current_role) and current_role not in [:owner, :billing] ->
         ~H"ask your team owner to upgrade their subscription."
 
       upgrade_assistance_required? ->
