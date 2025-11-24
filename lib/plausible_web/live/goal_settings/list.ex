@@ -160,15 +160,38 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           Learn more
         </.styled_link>
       </p>
-      <.button
-        id="add-goal-button"
-        phx-click="add-goal"
-        x-data
-        x-on:click={Modal.JS.preopen("goals-form-modal")}
-        class="mt-4"
-      >
-        Add goal
-      </.button>
+      <PrimaDropdown.dropdown id="add-goal-dropdown-empty" class="mt-4">
+        <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+          Add goal <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+        </PrimaDropdown.dropdown_trigger>
+
+        <PrimaDropdown.dropdown_menu>
+          <PrimaDropdown.dropdown_item
+            phx-click="add-goal"
+            phx-value-goal-type="pageviews"
+            x-data
+            x-on:click={Modal.JS.preopen("goals-form-modal")}
+          >
+            <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Pageview
+          </PrimaDropdown.dropdown_item>
+          <PrimaDropdown.dropdown_item
+            phx-click="add-goal"
+            phx-value-goal-type="custom_events"
+            x-data
+            x-on:click={Modal.JS.preopen("goals-form-modal")}
+          >
+            <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Custom event
+          </PrimaDropdown.dropdown_item>
+          <PrimaDropdown.dropdown_item
+            phx-click="add-goal"
+            phx-value-goal-type="scroll"
+            x-data
+            x-on:click={Modal.JS.preopen("goals-form-modal")}
+          >
+            <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Scroll depth
+          </PrimaDropdown.dropdown_item>
+        </PrimaDropdown.dropdown_menu>
+      </PrimaDropdown.dropdown>
     </div>
     """
   end
