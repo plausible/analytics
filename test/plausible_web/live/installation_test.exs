@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
-  import Plausible.Teams.Test
 
   alias Plausible.Site.TrackerScriptConfiguration
 

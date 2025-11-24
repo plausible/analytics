@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   use Plausible.Repo
   use Bamboo.Test
 
-  import Plausible.Teams.Test
   import Plausible.Test.Support.HTML
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "

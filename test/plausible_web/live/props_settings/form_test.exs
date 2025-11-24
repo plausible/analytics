@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   import Plausible.Test.Support.HTML
 
   on_ee do
-    import Plausible.Teams.Test
   end
 
   describe "Props submission" do

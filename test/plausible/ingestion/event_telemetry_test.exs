@@ -1,6 +1,5 @@
 defmodule Plausible.Ingestion.EventTelemetryTest do
   import Phoenix.ConnTest
-  import Plausible.Teams.Test
 
   alias Plausible.Ingestion.Request
   alias Plausible.Ingestion.Event

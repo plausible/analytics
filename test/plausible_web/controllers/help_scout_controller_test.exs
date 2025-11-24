@@ -4,8 +4,6 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
   @moduletag :ee_only
 
   on_ee do
-    import Plausible.Teams.Test
-
     alias Plausible.HelpScout
 
     describe "callback/2" do

@@ -3,7 +3,7 @@ defmodule Plausible.ConsolidatedViewTest do
 
   on_ee do
     import Ecto.Query
-    import Plausible.Teams.Test
+
     alias Plausible.ConsolidatedView
     alias Plausible.Teams
 

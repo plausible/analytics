@@ -1,6 +1,5 @@
 defmodule Plausible.Stats.ClickhouseTest do
   use Plausible.DataCase, async: true
-  import Plausible.Teams.Test
 
   import Plausible.TestUtils
   alias Plausible.Stats.Clickhouse
