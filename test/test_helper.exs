@@ -11,8 +11,6 @@ Mox.defmock(Plausible.DnsLookup.Mock,
 
 Application.ensure_all_started(:double)
 
-FunWithFlags.enable(:consolidated_view)
-
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
 # warn about minio if it's included in tests but not running

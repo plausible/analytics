@@ -16,11 +16,6 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
-  @spec flag_enabled?(Team.t()) :: boolean()
-  def flag_enabled?(team) do
-    FunWithFlags.enabled?(:consolidated_view, for: team)
-  end
-
   @spec cta_dismissed?(User.t(), Team.t()) :: boolean()
   def cta_dismissed?(%User{} = user, %Team{} = team) do
     {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
@@ -51,7 +46,6 @@ defmodule Plausible.ConsolidatedView do
   @spec ok_to_display?(Team.t() | nil) :: boolean()
   def ok_to_display?(team) do
     is_struct(team, Team) and
-      flag_enabled?(team) and
       view_enabled?(team) and
       has_sites_to_consolidate?(team) and
       Plausible.Billing.Feature.ConsolidatedView.check_availability(team) == :ok
@@ -97,9 +91,6 @@ defmodule Plausible.ConsolidatedView do
 
       not Teams.setup?(team) ->
         {:error, :team_not_setup}
-
-      not flag_enabled?(team) ->
-        {:error, :unavailable}
 
       true ->
         do_enable(team)

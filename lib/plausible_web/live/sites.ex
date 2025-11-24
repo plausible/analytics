@@ -1091,30 +1091,22 @@ defmodule PlausibleWeb.Live.Sites do
     end
 
     defp init_consolidated_view_assigns(user, team) do
-      if ConsolidatedView.flag_enabled?(team) do
-        case ConsolidatedView.enable(team) do
-          {:ok, view} ->
-            %{
-              consolidated_view: view,
-              can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
-              consolidated_stats: :loading,
-              no_consolidated_view_reason: nil,
-              consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
-            }
+      case ConsolidatedView.enable(team) do
+        {:ok, view} ->
+          %{
+            consolidated_view: view,
+            can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+            consolidated_stats: :loading,
+            no_consolidated_view_reason: nil,
+            consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+          }
 
-          {:error, reason} ->
-            no_consolidated_view(
-              no_consolidated_view_reason: reason,
-              can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
-              consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
-            )
-        end
-      else
-        no_consolidated_view(
-          no_consolidated_view_reason: :unavailable,
-          can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
-          consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
-        )
+        {:error, reason} ->
+          no_consolidated_view(
+            no_consolidated_view_reason: reason,
+            can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+            consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+          )
       end
     end
 
