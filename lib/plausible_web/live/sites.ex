@@ -508,9 +508,9 @@ defmodule PlausibleWeb.Live.Sites do
               {@site.domain}
             </h3>
           </div>
-          <span class="inline-flex items-center -my-1 px-2 py-1 rounded-sm bg-green-100 text-green-800 text-xs font-medium leading-normal dark:bg-green-900/40 dark:text-green-400">
+          <.pill color={:green}>
             Pending invitation
-          </span>
+          </.pill>
         </div>
         <.site_stats hourly_stats={@hourly_stats} />
       </div>

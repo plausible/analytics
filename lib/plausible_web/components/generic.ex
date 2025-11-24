@@ -522,7 +522,7 @@ defmodule PlausibleWeb.Components.Generic do
             current_team={@current_team}
             site={@site}
           >
-            <div class="p-6 pb-14">
+            <div class="p-6">
               {render_slot(@inner_block)}
             </div>
           </PlausibleWeb.Components.Billing.feature_gate>
@@ -793,7 +793,7 @@ defmodule PlausibleWeb.Components.Generic do
     <td
       class={[
         @height,
-        "text-sm px-6 py-3 first:pl-0 last:pr-0 whitespace-nowrap",
+        "text-sm px-6 py-4 first:pl-0 last:pr-0 whitespace-nowrap",
         @truncate && "truncate",
         @max_width,
         @actions && "flex text-right justify-end",
@@ -1027,10 +1027,15 @@ defmodule PlausibleWeb.Components.Generic do
 
   def filter_bar(assigns) do
     ~H"""
-    <div class="flex items-center justify-between" x-data>
-      <div :if={@filtering_enabled?} class="relative rounded-md flex">
-        <form id="filter-form" phx-change="filter" phx-submit="filter" class="flex items-center">
-          <div class="text-gray-800 inline-flex items-center">
+    <div class="flex items-center justify-between gap-2" x-data>
+      <div :if={@filtering_enabled?} class="relative rounded-md flex flex-grow-1 w-full">
+        <form
+          id="filter-form"
+          phx-change="filter"
+          phx-submit="filter"
+          class="flex items-center w-full"
+        >
+          <div class="text-gray-800 inline-flex items-center w-full">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
             </div>
@@ -1038,7 +1043,7 @@ defmodule PlausibleWeb.Components.Generic do
               type="text"
               name="filter-text"
               id="filter-text"
-              class="w-full max-w-64 pl-8 text-sm dark:bg-gray-750 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-750 rounded-md dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+              class="w-full max-w-80 pl-8 text-sm dark:bg-gray-750 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-750 rounded-md dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
               placeholder="Press / to search"
               x-ref="filter_text"
               phx-debounce={200}
@@ -1140,13 +1145,41 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  def settings_badge(%{type: :new} = assigns) do
+  attr(:class, :string, default: "")
+  attr(:color, :atom, default: :gray, values: [:gray, :indigo, :yellow, :green])
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
+
+  def pill(assigns) do
+    assigns = assign(assigns, :color_classes, get_pill_color_classes(assigns.color))
+
     ~H"""
-    <span class="inline-block ml-2 bg-indigo-100 text-indigo-600 text-xs font-semibold py-1 px-2 rounded-md">
-      NEW 🔥
+    <span
+      class={[
+        "inline-flex items-center text-xs font-medium py-1 px-2 rounded-md",
+        @color_classes,
+        @class
+      ]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
     </span>
     """
   end
 
-  def settings_badge(assigns), do: ~H""
+  defp get_pill_color_classes(:gray) do
+    "bg-gray-100 text-gray-800 dark:bg-gray-750 dark:text-gray-200"
+  end
+
+  defp get_pill_color_classes(:indigo) do
+    "bg-indigo-100/60 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300"
+  end
+
+  defp get_pill_color_classes(:yellow) do
+    "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300"
+  end
+
+  defp get_pill_color_classes(:green) do
+    "bg-green-100/70 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+  end
 end
