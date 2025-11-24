@@ -1810,7 +1810,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     })
     |> recycle()
     |> Map.put(:secret_key_base, secret_key_base())
-    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+    |> Plug.Conn.put_req_header("x-forwarded-for", random_ip())
   end
 
   defp set_remember_2fa_cookie(conn, user) do
@@ -1818,7 +1818,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     |> PlausibleWeb.TwoFactor.Session.maybe_set_remember_2fa(user, "true")
     |> recycle()
     |> Map.put(:secret_key_base, secret_key_base())
-    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+    |> Plug.Conn.put_req_header("x-forwarded-for", random_ip())
   end
 
   defp mock_captcha_success() do

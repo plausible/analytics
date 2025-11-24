@@ -1,7 +1,6 @@
 defmodule Plausible.Stats.ClickhouseTest do
   use Plausible.DataCase, async: true
 
-  import Plausible.TestUtils
   alias Plausible.Stats.Clickhouse
 
   describe "last_24_visitors_hourly_intervals/1" do
