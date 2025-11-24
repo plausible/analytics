@@ -1,6 +1,5 @@
 defmodule Plausible.Site.CacheTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   alias Plausible.{Site, Goal}
   alias Plausible.Site.Cache

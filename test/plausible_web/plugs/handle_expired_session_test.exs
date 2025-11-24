@@ -1,10 +1,7 @@
 defmodule Plausible.Plugs.HandleExpiredSessionTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
 
   on_ee do
-    use Plausible.Teams.Test
-
     alias Plausible.Auth.UserSessions
     alias Plausible.Plugs.HandleExpiredSession
     alias Plausible.Repo

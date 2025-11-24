@@ -3,9 +3,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
   import Mox
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
-
-  use Plausible.Teams.Test
 
   alias Plausible.Auth.User
   alias Plausible.Repo

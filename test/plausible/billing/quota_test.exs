@@ -1,11 +1,8 @@
 defmodule Plausible.Billing.QuotaTest do
   alias Plausible.Billing.EnterprisePlan
   use Plausible.DataCase, async: true
-  use Plausible
   alias Plausible.Billing.{Quota, Plans}
   alias Plausible.Billing.Feature.{Goals, Props, StatsAPI, SharedLinks}
-
-  use Plausible.Teams.Test
 
   on_ee do
     alias Plausible.Billing.Feature.{Funnels, RevenueGoals, SitesAPI}

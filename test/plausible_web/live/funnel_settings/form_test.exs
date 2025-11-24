@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
   @moduletag :ee_only
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   describe "integration - live rendering" do
     setup [:create_user, :log_in, :create_site]

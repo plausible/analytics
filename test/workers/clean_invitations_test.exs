@@ -1,6 +1,5 @@
 defmodule Plausible.Workers.CleanInvitationsTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
   alias Plausible.Workers.CleanInvitations
 
   test "cleans invitations and transfers that are more than 48h old" do

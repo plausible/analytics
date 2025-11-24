@@ -1,11 +1,9 @@
 defmodule Plausible.Auth.SSO.DomainsTest do
   use Plausible.DataCase, async: true
-  use Plausible
 
   @moduletag :ee_only
 
   on_ee do
-    use Plausible.Teams.Test
     use Plausible.Auth.SSO.Domain.Status
     use Oban.Testing, repo: Plausible.Repo
 

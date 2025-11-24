@@ -1,7 +1,6 @@
 defmodule Plausible.Workers.CheckUsageTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
-  use Plausible.Teams.Test
   import Double
 
   alias Plausible.Workers.CheckUsage

@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   alias Plausible.Repo
 

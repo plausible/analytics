@@ -16,11 +16,6 @@ defmodule Plausible.ConsolidatedView do
 
   import Ecto.Query
 
-  @spec flag_enabled?(Team.t()) :: boolean()
-  def flag_enabled?(team) do
-    FunWithFlags.enabled?(:consolidated_view, for: team)
-  end
-
   @spec cta_dismissed?(User.t(), Team.t()) :: boolean()
   def cta_dismissed?(%User{} = user, %Team{} = team) do
     {:ok, team_membership} = Teams.Memberships.get_team_membership(team, user)
@@ -51,7 +46,6 @@ defmodule Plausible.ConsolidatedView do
   @spec ok_to_display?(Team.t() | nil) :: boolean()
   def ok_to_display?(team) do
     is_struct(team, Team) and
-      flag_enabled?(team) and
       view_enabled?(team) and
       has_sites_to_consolidate?(team) and
       Plausible.Billing.Feature.ConsolidatedView.check_availability(team) == :ok
@@ -84,23 +78,26 @@ defmodule Plausible.ConsolidatedView do
   end
 
   @spec enable(Team.t()) ::
-          {:ok, Site.t()} | {:error, :no_sites | :team_not_setup | :upgrade_required}
+          {:ok, Site.t()}
+          | {:error, :no_sites | :team_not_setup | :upgrade_required | :contact_us}
   def enable(%Team{} = team) do
+    availability_check = Plausible.Billing.Feature.ConsolidatedView.check_availability(team)
+
     cond do
       not has_sites_to_consolidate?(team) ->
         {:error, :no_sites}
 
+      Teams.Billing.enterprise_configured?(team) and availability_check != :ok ->
+        {:error, :contact_us}
+
+      availability_check != :ok ->
+        availability_check
+
       not Teams.setup?(team) ->
         {:error, :team_not_setup}
 
-      not flag_enabled?(team) ->
-        {:error, :unavailable}
-
       true ->
-        case Plausible.Billing.Feature.ConsolidatedView.check_availability(team) do
-          :ok -> do_enable(team)
-          error -> error
-        end
+        do_enable(team)
     end
   end
 

@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.AuthPlugTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
 
   alias PlausibleWeb.AuthPlug
 

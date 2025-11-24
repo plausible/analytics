@@ -1,7 +1,6 @@
 defmodule Plausible.Site.SiteRemovalTest do
   use Plausible.DataCase, async: true
   use Oban.Testing, repo: Plausible.Repo
-  use Plausible.Teams.Test
 
   alias Plausible.Site.Removal
   alias Plausible.Sites

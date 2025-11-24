@@ -1,9 +1,7 @@
 defmodule Plausible.Teams.Sites.TransferTest do
-  use Plausible
   require Plausible.Billing.Subscription.Status
   use Plausible.DataCase, async: true
   use Bamboo.Test
-  use Plausible.Teams.Test
 
   alias Plausible.Teams.Sites.Transfer
 

@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
       refute_receive :paddle_queried
 
       new_ip =
-        Plug.Conn.put_req_header(initial_conn, "x-forwarded-for", Plausible.TestUtils.random_ip())
+        Plug.Conn.put_req_header(initial_conn, "x-forwarded-for", random_ip())
 
       conn = get(new_ip, Routes.paddle_path(initial_conn, :currency))
       assert json_response(conn, 200) == %{"currency" => "£"}

@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.Live.GoalSettingsTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   @funnels_cta ~s|p[data-test-id="setup-funnels-cta"]|
 
@@ -76,7 +74,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
     test "if no goals are present, a proper info is displayed", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
-      assert resp =~ "No goals configured for this site"
+      assert resp =~ "Create your first goal"
     end
 
     test "if goals are present, no info about missing goals is displayed", %{
@@ -86,16 +84,40 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       {:ok, _goals} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
-      refute resp =~ "No goals configured for this site"
+      refute resp =~ "Create your first goal"
     end
 
-    test "add goal button is rendered", %{conn: conn, site: site} do
+    test "add goal dropdown is rendered in empty state", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
-      assert element_exists?(resp, ~s/button#add-goal-button[phx-click="add-goal"]/)
+      assert element_exists?(resp, ~s/[id="add-goal-dropdown-empty"]/)
+
+      assert element_exists?(
+               resp,
+               ~s/[phx-click="add-goal"][phx-value-goal-type="custom_events"]/
+             )
+
+      assert element_exists?(resp, ~s/[phx-click="add-goal"][phx-value-goal-type="pageviews"]/)
+      assert element_exists?(resp, ~s/[phx-click="add-goal"][phx-value-goal-type="scroll"]/)
+    end
+
+    test "add goal dropdown is rendered in non-empty state", %{conn: conn, site: site} do
+      {:ok, _goals} = setup_goals(site)
+      conn = get(conn, "/#{site.domain}/settings/goals")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, ~s/[id="add-goal-dropdown"]/)
+
+      assert element_exists?(
+               resp,
+               ~s/[phx-click="add-goal"][phx-value-goal-type="custom_events"]/
+             )
+
+      assert element_exists?(resp, ~s/[phx-click="add-goal"][phx-value-goal-type="pageviews"]/)
+      assert element_exists?(resp, ~s/[phx-click="add-goal"][phx-value-goal-type="scroll"]/)
     end
 
     test "search goals input is rendered", %{conn: conn, site: site} do
+      {:ok, _goals} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
       assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
@@ -119,7 +141,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
         assert resp = html_response(conn, 200)
         assert resp =~ "Define actions that you want your users to take"
-        assert resp =~ "No goals configured for this site"
+        assert resp =~ "Create your first goal"
         assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
       end
 
@@ -150,6 +172,16 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
   describe "GoalSettings live view" do
     setup [:create_user, :log_in, :create_site]
+
+    test "allows dashboard toggle", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      lv |> element("#feature-goals-toggle button") |> render_click()
+      assert render(lv) =~ "Goals are now hidden from your dashboard"
+      assert Plausible.Billing.Feature.Goals.opted_out?(Plausible.Repo.reload!(site))
+      lv |> element("#feature-goals-toggle button") |> render_click()
+      assert render(lv) =~ "Goals are now visible again on your dashboard"
+      refute Plausible.Billing.Feature.Goals.opted_out?(Plausible.Repo.reload!(site))
+    end
 
     test "allows goal deletion", %{conn: conn, site: site} do
       {:ok, [g1, g2 | _]} = setup_goals(site)

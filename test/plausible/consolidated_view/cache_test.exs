@@ -1,6 +1,5 @@
 defmodule Plausible.CondolidatedView.CacheTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   on_ee do
     alias Plausible.ConsolidatedView

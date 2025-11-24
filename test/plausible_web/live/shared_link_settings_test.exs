@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.Live.SharedLinkSettingsTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   describe "SharedLinkSettings LiveView" do
     setup [:create_user, :log_in, :create_site]
@@ -101,7 +99,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettingsTest do
       lv = get_liveview(conn, session)
       html = render(lv)
 
-      assert html =~ "No shared links configured for this site"
+      assert html =~ "Create your first shared link"
     end
   end
 

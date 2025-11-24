@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
-  use Plausible.Teams.Test
   use PlausibleWeb.ConnCase
 
   describe "API authorization - as anonymous user" do

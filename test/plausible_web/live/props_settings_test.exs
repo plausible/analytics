@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.Live.PropsSettingsTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   describe "GET /:domain/settings/properties" do
     setup [:create_user, :log_in, :create_site]
@@ -75,7 +73,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     test "if no props are allowed, a proper info is displayed", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/properties")
       resp = html_response(conn, 200)
-      assert resp =~ "No properties configured for this site"
+      assert resp =~ "Create a custom property"
     end
 
     test "if props are enabled, no info about missing props is displayed", %{
@@ -85,7 +83,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
       conn = get(conn, "/#{site.domain}/settings/properties")
       resp = html_response(conn, 200)
-      refute resp =~ "No properties configured for this site"
+      refute resp =~ "Create a custom property"
     end
 
     test "add property button is rendered", %{conn: conn, site: site} do
@@ -95,6 +93,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     end
 
     test "search props input is rendered", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
       conn = get(conn, "/#{site.domain}/settings/properties")
       resp = html_response(conn, 200)
       assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
@@ -142,13 +141,16 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       } do
         conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
         resp = html_response(conn, 200)
-        assert resp =~ "No properties configured for this site"
+        assert resp =~ "Create a custom property"
       end
 
       test "add property button and search input are rendered", %{
         conn: conn,
         consolidated_view: consolidated_view
       } do
+        {:ok, consolidated_view} =
+          Plausible.Props.allow(consolidated_view, ["amount", "logged_in", "is_customer"])
+
         conn = get(conn, "/#{consolidated_view.domain}/settings/properties")
         resp = html_response(conn, 200)
         assert element_exists?(resp, ~s/button[phx-click="add-prop"]/)
@@ -158,18 +160,18 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     end
   end
 
-  # validating input
-  # clicking suggestions fills out input
-  # adding props
-  # error when reached props limit
-  # clearserror when fixed input
-  # removal
-  # removal shows confirmation
-  # allow existing props: shows/hides
-  # after adding all suggestions no allow existing props
-
   describe "PropsSettings live view" do
     setup [:create_user, :log_in, :create_site]
+
+    test "allows dashboard toggle", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      lv |> element("#feature-props-toggle button") |> render_click()
+      assert render(lv) =~ "Custom Properties are now hidden from your dashboard"
+      assert Plausible.Billing.Feature.Props.opted_out?(Plausible.Repo.reload!(site))
+      lv |> element("#feature-props-toggle button") |> render_click()
+      assert render(lv) =~ "Custom Properties are now visible again on your dashboard"
+      refute Plausible.Billing.Feature.Props.opted_out?(Plausible.Repo.reload!(site))
+    end
 
     test "allows prop removal", %{conn: conn, site: site} do
       {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in"])
@@ -222,6 +224,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     end
 
     test "allows resetting filter text via no match link", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
       lv = get_liveview(conn, site)
       html = type_into_search(lv, "Definitely this is not going to render any matches")
 

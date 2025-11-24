@@ -1,9 +1,7 @@
 defmodule PlausibleWeb.Live.SitesTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Repo
 
@@ -14,10 +12,10 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, _lv, html} = live(conn, "/sites")
 
       text = text(html)
+
       assert text =~ "My personal sites"
-      assert text =~ "You don't have any sites yet"
-      refute text =~ "You currently have no personal sites"
-      refute text =~ "Go to your team"
+      assert text =~ "Add your first personal site"
+      refute text =~ "Go to team sites"
     end
 
     test "renders team switcher link, if on personal sites with other teams available", %{
@@ -33,8 +31,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert text =~ "My personal sites"
       refute text =~ "You don't have any sites yet"
-      assert text =~ "You currently have no personal sites"
-      assert text =~ "Go to your team"
+      assert text =~ "Add your first personal site"
+      assert text =~ "Go to team sites"
     end
 
     test "renders settings link when current team is set", %{user: user, conn: conn} do
@@ -331,52 +329,6 @@ defmodule PlausibleWeb.Live.SitesTest do
         assert stats =~ "Views per visit 1.33"
       end
 
-      test "consolidated view does not show up when flag is down (temp) during trial", %{
-        conn: conn,
-        user: user
-      } do
-        new_site(owner: user)
-        new_site(owner: user)
-
-        team = user |> team_of() |> Plausible.Teams.complete_setup()
-
-        FunWithFlags.disable(:consolidated_view, for_actor: team)
-
-        conn = set_current_team(conn, team)
-
-        {:ok, _lv, html} = live(conn, "/sites")
-
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
-      end
-
-      test "consolidated view does not show up when flag is down (temp) after trial ends", %{
-        conn: conn,
-        user: user
-      } do
-        new_site(owner: user)
-        new_site(owner: user)
-
-        team =
-          user
-          |> team_of()
-          |> Plausible.Teams.Team.end_trial()
-          |> Plausible.Repo.update!()
-
-        FunWithFlags.disable(:consolidated_view, for_actor: team)
-
-        conn = set_current_team(conn, team)
-
-        {:ok, _lv, html} = live(conn, "/sites")
-
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
-      end
-
       test "consolidated view disappears when trial ends - CTA is shown instead", %{
         conn: conn,
         user: user
@@ -400,12 +352,28 @@ defmodule PlausibleWeb.Live.SitesTest do
         assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
 
         assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
-                 "Upgrade to the Business plan to enable consolidated views."
+                 "Upgrade to the Business plan to enable consolidated view."
 
         assert element_exists?(
                  html,
                  ~s|[data-test-id="consolidated-view-card-cta"] a[href$="/billing/choose-plan"]|
                )
+      end
+
+      test "CTA for insufficient custom plans", %{conn: conn, user: user} do
+        user
+        |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.Goals])
+        |> team_of()
+
+        new_site(owner: user)
+        new_site(owner: user)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "Your plan does not include consolidated view. Contact us to discuss an upgrade."
       end
 
       test "a team that hasn't been set up shows different CTA", %{

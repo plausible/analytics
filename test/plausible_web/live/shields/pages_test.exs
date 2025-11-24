@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Shields
 
@@ -13,7 +12,7 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/pages")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No page rules configured for this site"
+      assert resp =~ "Block a page"
       assert resp =~ "Pages block list"
     end
 

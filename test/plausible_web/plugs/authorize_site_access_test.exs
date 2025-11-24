@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
   alias PlausibleWeb.Plugs.AuthorizeSiteAccess
 
   setup [:create_user, :log_in, :create_site]

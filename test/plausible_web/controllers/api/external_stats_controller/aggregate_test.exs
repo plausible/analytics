@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
-  import Plausible.TestUtils
   alias Plausible.Billing.Feature
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key]

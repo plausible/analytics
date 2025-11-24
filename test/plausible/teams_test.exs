@@ -1,7 +1,5 @@
 defmodule Plausible.TeamsTest do
   use Plausible.DataCase, async: true
-  use Plausible
-  use Plausible.Teams.Test
 
   alias Plausible.Billing.Subscription
   alias Plausible.Teams

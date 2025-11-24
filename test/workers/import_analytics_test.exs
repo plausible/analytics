@@ -1,7 +1,6 @@
 defmodule Plausible.Workers.ImportAnalyticsTest do
   use Plausible.DataCase
   use Bamboo.Test
-  use Plausible.Teams.Test
 
   alias Plausible.Imported.SiteImport
   alias Plausible.Workers.ImportAnalytics

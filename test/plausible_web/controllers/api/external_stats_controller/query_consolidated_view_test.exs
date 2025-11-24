@@ -2,8 +2,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryConsolidatedViewTest do
   use PlausibleWeb.ConnCase
 
   on_ee do
-    use Plausible.Teams.Test
-
     setup [:create_user, :create_team, :create_site, :create_api_key, :use_api_key]
 
     test "simple aggregate query across all consolidated site_ids", %{

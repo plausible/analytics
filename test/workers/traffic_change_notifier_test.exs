@@ -1,7 +1,6 @@
 defmodule Plausible.Workers.TrafficChangeNotifierTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
-  use Plausible.Teams.Test
   alias Plausible.Workers.TrafficChangeNotifier
 
   @view_dashboard_text "View dashboard"

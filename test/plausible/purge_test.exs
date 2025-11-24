@@ -1,6 +1,5 @@
 defmodule Plausible.PurgeTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
 
   setup do
     user = new_user()

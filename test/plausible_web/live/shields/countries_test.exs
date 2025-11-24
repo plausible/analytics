@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Shields
 
@@ -13,7 +12,7 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/countries")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No country rules configured for this site"
+      assert resp =~ "Block a country"
       assert resp =~ "Country block list"
     end
 

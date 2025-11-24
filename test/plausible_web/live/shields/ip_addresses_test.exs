@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Shields
 
@@ -13,7 +12,7 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/ip_addresses")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No IP rules configured for this site"
+      assert resp =~ "Block an IP address"
       assert resp =~ "IP block list"
     end
 

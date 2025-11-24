@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Plugs.AuthorizeTeamAccessTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
 
   alias Plausible.Plugs.AuthorizeTeamAccess
   import Plug.Conn

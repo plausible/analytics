@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         ]}>
           {String.capitalize(to_string(@kind))}
         </h3>
-        <.pill :if={@highlight} text={@highlight} />
+        <.highlight_pill :if={@highlight} text={@highlight} />
       </div>
       <div>
         <div class={@price_container_class}>
@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     """
   end
 
-  defp pill(assigns) do
+  defp highlight_pill(assigns) do
     ~H"""
     <div class="flex items-center justify-between gap-x-4">
       <p

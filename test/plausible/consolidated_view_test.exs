@@ -1,10 +1,9 @@
 defmodule Plausible.ConsolidatedViewTest do
-  use Plausible
+  use Plausible.DataCase, async: true
 
   on_ee do
-    use Plausible.DataCase, async: true
     import Ecto.Query
-    import Plausible.Teams.Test
+
     alias Plausible.ConsolidatedView
     alias Plausible.Teams
 
@@ -29,11 +28,6 @@ defmodule Plausible.ConsolidatedViewTest do
 
       test "returns false when team is nil" do
         refute ConsolidatedView.ok_to_display?(nil)
-      end
-
-      test "returns false when feature flag is disabled", %{team: team} do
-        FunWithFlags.disable(:consolidated_view, for_actor: team)
-        refute ConsolidatedView.ok_to_display?(team)
       end
 
       test "returns false when consolidated view is not enabled", %{team: team} do
@@ -83,6 +77,31 @@ defmodule Plausible.ConsolidatedViewTest do
                  |> Plausible.Repo.aggregate(:count)
 
         assert s1.domain == s2.domain
+      end
+
+      test "returns {:error, :upgrade_required} before :team_not_setup", %{team: team} do
+        # we want to ask the user to upgrade first, before making them create a team they might not need
+        new_site(team: team)
+        new_site(team: team)
+
+        team =
+          team
+          |> Plausible.Teams.Team.end_trial()
+          |> Plausible.Repo.update!()
+
+        assert {:error, :upgrade_required} = ConsolidatedView.enable(team)
+      end
+
+      test "returns {:error, :contact_us} when on insufficient custom plan", %{user: user} do
+        team =
+          user
+          |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.Goals])
+          |> team_of()
+
+        new_site(team: team)
+        new_site(team: team)
+
+        assert ConsolidatedView.enable(team) == {:error, :contact_us}
       end
 
       test "returns {:error, :upgrade_required} for ineligible subscription", %{

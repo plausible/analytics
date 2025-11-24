@@ -1,6 +1,5 @@
 defmodule Plausible.BillingTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
   use Bamboo.Test, shared: true
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing

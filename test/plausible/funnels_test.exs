@@ -2,9 +2,6 @@ defmodule Plausible.FunnelsTest do
   use Plausible.DataCase
   @moduletag :ee_only
 
-  use Plausible
-  use Plausible.Teams.Test
-
   on_ee do
     alias Plausible.Goals
     alias Plausible.Funnels

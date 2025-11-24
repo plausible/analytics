@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
   use PlausibleWeb.PluginsAPICase, async: true
-  use Plausible.Teams.Test
   import Plausible.AssertMatches
   alias PlausibleWeb.Plugins.API.Schemas
 

@@ -1,6 +1,5 @@
 defmodule Plausible.Teams.Invitations.RemoveFromSiteTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   alias Plausible.Teams.Invitations.RemoveFromSite
 

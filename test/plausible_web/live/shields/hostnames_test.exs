@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Shields
 
@@ -13,9 +12,9 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/hostnames")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No hostname rules configured for this site"
+      assert resp =~ "Allow a hostname"
       assert resp =~ "Hostnames allow list"
-      assert resp =~ "Traffic from all hostnames is currently accepted."
+      assert resp =~ "Traffic from all hostnames is recorded until you add your first rule"
     end
 
     test "lists hostname rules with remove actions", %{conn: conn, site: site} do

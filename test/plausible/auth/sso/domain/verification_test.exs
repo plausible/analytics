@@ -1,12 +1,9 @@
 defmodule Plausible.Auth.SSO.Domain.VerificationTest do
   use Plausible.DataCase, async: true
-  use Plausible
 
   @moduletag :ee_only
 
   on_ee do
-    use Plausible.Teams.Test
-
     alias Plasusible.Test.Support.DNSServer
     alias Plausible.Auth.SSO.Domain.Verification
     alias Plug.Conn

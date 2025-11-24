@@ -1,8 +1,6 @@
 defmodule Plausible.Stats.SamplingTest do
   use Plausible.DataCase, async: true
 
-  use Plausible
-
   on_ee do
     import Plausible.Stats.Sampling, only: [fractional_sample_rate: 2]
     alias Plausible.Stats.{Query, DateTimeRange}

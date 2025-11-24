@@ -17,16 +17,18 @@ defmodule PlausibleWeb.ConnCase do
 
   using do
     quote do
-      # Import conveniences for testing with connections
       use Plausible.TestUtils
       use Plausible
+      use Plausible.Teams.Test
+
+      import Plausible.Test.Support.HTML
       import Plug.Conn
       import Phoenix.ConnTest
+
       alias PlausibleWeb.Router.Helpers, as: Routes
       import Plausible.Factory
       import Plausible.AssertMatches
 
-      # The default endpoint for testing
       @endpoint PlausibleWeb.Endpoint
     end
   end

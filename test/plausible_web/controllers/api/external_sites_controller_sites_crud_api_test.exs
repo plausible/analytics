@@ -2,10 +2,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
   @moduledoc """
   Tests for Sites create/read/update/delete API.
   """
-  use Plausible
   use PlausibleWeb.ConnCase
   use Plausible.Repo
-  use Plausible.Teams.Test
   use Bamboo.Test
 
   on_ee do

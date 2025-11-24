@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
     <Dropdown.dropdown_item
       as={@as}
       disabled={@disabled}
-      class="group/item z-50 flex items-center gap-x-2 min-w-max rounded-md px-4 py-2 text-gray-700 text-sm dark:text-gray-300 data-focus:bg-gray-100 dark:data-focus:bg-gray-700 data-focus:text-gray-900 dark:data-focus:text-gray-100"
+      class="group/item z-50 flex items-center gap-x-2 min-w-max w-full rounded-md pl-3 pr-5 py-2 text-gray-700 text-sm dark:text-gray-300 data-focus:bg-gray-100 dark:data-focus:bg-gray-700 data-focus:text-gray-900 dark:data-focus:text-gray-100"
       {@rest}
     >
       {render_slot(@inner_block)}

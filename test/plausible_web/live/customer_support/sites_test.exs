@@ -3,12 +3,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
   @moduletag :ee_only
 
   on_ee do
-    use Plausible.Teams.Test
-    use Plausible
     use Bamboo.Test, shared: true
 
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     defp open_site(id, opts \\ []) do
       Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, id, opts)

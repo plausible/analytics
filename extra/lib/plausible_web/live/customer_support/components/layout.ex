@@ -67,7 +67,7 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
           </p>
           <strong>team:</strong>input<br />
           <p class="font-sans pl-2 mb-1">
-            Search for teams exclusively. Input will be checked against user's name and e-mail.
+            Search for teams exclusively. Input will be checked against user/team name, e-mail or team identifier. Identifier must be provided complete, as is.
           </p>
 
           <strong>team:</strong>input <strong>+sub</strong>

@@ -1,7 +1,6 @@
 defmodule Plausible.Stats.ComparisonsTest do
   use Plausible.DataCase
   alias Plausible.Stats.{Query, Comparisons}
-  import Plausible.TestUtils
 
   setup [:create_user, :create_site]
 
@@ -428,7 +427,7 @@ defmodule Plausible.Stats.ComparisonsTest do
 
   defp build_comparison_query(site, params) do
     query =
-      Query.build!(
+      Query.parse_and_build!(
         site,
         :internal,
         Map.merge(

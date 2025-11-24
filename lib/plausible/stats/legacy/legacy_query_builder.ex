@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange}
+  alias Plausible.Stats.{Filters, Interval, Query, QueryParser, QueryBuilder, DateTimeRange}
 
   def from(site, params, debug_metadata, now \\ nil) do
     now = now || Plausible.Stats.Query.Test.get_fixed_now()
@@ -31,9 +31,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_consolidated_site_ids(site)
       |> put_order_by(params)
       |> put_include(site, params)
-      |> Query.put_comparison_utc_time_range()
+      |> QueryBuilder.put_comparison_utc_time_range()
       |> Query.put_imported_opts(site)
-      |> Query.set_time_on_page_data(site)
+      |> QueryBuilder.set_time_on_page_data(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, site, params)
@@ -68,7 +68,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp preload_goals_and_revenue(query, site) do
     {preloaded_goals, revenue_warning, revenue_currencies} =
-      Plausible.Stats.Filters.QueryParser.preload_goals_and_revenue(
+      Plausible.Stats.QueryBuilder.preload_goals_and_revenue(
         site,
         query.metrics,
         query.filters,
@@ -269,35 +269,36 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     [{:visitors, :asc}, {"visit:source", :desc}]
   """
   def parse_order_by(order_by) do
-    json_decode(order_by)
-    |> unwrap([])
-    |> Filters.QueryParser.parse_order_by()
-    |> unwrap([])
+    with true <- is_binary(order_by),
+         {:ok, order_by} <- JSON.decode(order_by),
+         {:ok, order_by} <- QueryParser.parse_order_by(order_by) do
+      order_by
+    else
+      _ -> []
+    end
   end
 
   @doc """
   ### Examples:
     iex> QueryBuilder.parse_include(%{}, nil)
-    QueryParser.default_include()
+    Plausible.Stats.ParsedQueryParams.default_include()
 
     iex> QueryBuilder.parse_include(%{}, ~s({"total_rows": true}))
-    Map.merge(QueryParser.default_include(), %{total_rows: true})
+    Map.merge(Plausible.Stats.ParsedQueryParams.default_include(), %{total_rows: true})
   """
   def parse_include(site, include) do
-    json_decode(include)
-    |> unwrap(%{})
-    |> Filters.QueryParser.parse_include(site)
-    |> unwrap(Filters.QueryParser.default_include())
+    include =
+      with true <- is_binary(include),
+           {:ok, include} <- JSON.decode(include),
+           {:ok, include} <- QueryParser.parse_include(include, site) do
+        include
+      else
+        _ -> %{}
+      end
+
+    Plausible.Stats.ParsedQueryParams.default_include()
+    |> Map.merge(include)
   end
-
-  defp json_decode(string) when is_binary(string) do
-    Jason.decode(string)
-  end
-
-  defp json_decode(_other), do: :error
-
-  defp unwrap({:ok, result}, _default), do: result
-  defp unwrap(_, default), do: default
 
   defp put_order_by(query, %{} = params) do
     struct!(query, order_by: parse_order_by(params["order_by"]))
@@ -342,7 +343,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   def parse_comparison_params(site, %{"comparison" => "custom"} = params) do
     {:ok, date_range} =
-      Filters.QueryParser.parse_date_range_pair(site, [
+      QueryParser.parse_date_range_pair(site, [
         params["compare_from"],
         params["compare_to"]
       ])

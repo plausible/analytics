@@ -1,5 +1,7 @@
-defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
-  @moduledoc false
+defmodule Plausible.Stats.Filters.LegacyStatsAPIFilterParser do
+  @moduledoc """
+  Parser for legacy filter format used in Stats API v1.
+  """
 
   @non_escaped_pipe_regex ~r/(?<!\\)\|/
 

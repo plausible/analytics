@@ -51,6 +51,34 @@ defmodule PlausibleWeb.Live.Sites do
           Teams.Users.owns_sites?(current_user, include_pending?: true, only_team: current_team) &&
           Teams.Billing.check_needs_to_upgrade(current_team)
       end)
+      |> then(fn socket ->
+        %{
+          sites: sites,
+          current_team: current_team,
+          has_sites?: has_sites?,
+          filter_text: filter_text
+        } = socket.assigns
+
+        is_empty_state? =
+          not (sites.entries != [] and (Teams.setup?(current_team) or has_sites?)) and
+            filter_text == ""
+
+        empty_state_title =
+          if Teams.setup?(current_team) do
+            "Add your first team site"
+          else
+            "Add your first personal site"
+          end
+
+        empty_state_description =
+          "Collect simple, privacy-friendly stats to better understand your audience."
+
+        assign(socket,
+          is_empty_state?: is_empty_state?,
+          empty_state_title: empty_state_title,
+          empty_state_description: empty_state_description
+        )
+      end)
 
     {:noreply, socket}
   end
@@ -62,6 +90,7 @@ defmodule PlausibleWeb.Live.Sites do
         :invitations_map,
         Enum.map(assigns.invitations, &{&1.invitation.invitation_id, &1}) |> Enum.into(%{})
       )
+      |> assign(:searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
     <.flash_messages flash={@flash} />
@@ -87,11 +116,11 @@ defmodule PlausibleWeb.Live.Sites do
 
       <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
-      <div class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
-        <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
-        <p :if={not @has_sites?} class="dark:text-gray-100">
-          You don't have any sites yet.
-        </p>
+      <div
+        :if={not @is_empty_state?}
+        class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2"
+      >
+        <.search_form filter_text={@filter_text} uri={@uri} />
         <PrimaDropdown.dropdown
           :if={@consolidated_view_cta_dismissed?}
           id="add-site-dropdown"
@@ -124,28 +153,43 @@ defmodule PlausibleWeb.Live.Sites do
         </a>
       </div>
 
-      <p :if={@filter_text != "" and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
-        No sites found. Please search for something else.
+      <p :if={@searching? and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
+        No sites found. Try a different search term.
       </p>
-
-      <p
-        :if={
-          @has_sites? and not Teams.setup?(@current_team) and @sites.entries == [] and
-            @filter_text == ""
-        }
-        class="mt-4 dark:text-gray-100 text-center"
+      <div
+        :if={@is_empty_state?}
+        class="flex flex-col items-center justify-center py-8 sm:py-12 max-w-md mx-auto"
       >
-        You currently have no personal sites. Are you looking for your team’s sites?
-        <.styled_link href={Routes.auth_path(@socket, :select_team)}>
-          Go to your team &rarr;
-        </.styled_link>
-      </p>
+        <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+          {@empty_state_title}
+        </h3>
+        <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+          {@empty_state_description}
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 mt-6">
+          <.button_link
+            href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
+            theme="primary"
+            mt?={false}
+          >
+            <Heroicons.plus class="size-4" /> Add website
+          </.button_link>
+          <.button_link
+            :if={not Teams.setup?(@current_team) and @has_sites?}
+            href={Routes.auth_path(@socket, :select_team)}
+            theme="secondary"
+            mt?={false}
+          >
+            Go to team sites
+          </.button_link>
+        </div>
+      </div>
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <.consolidated_view_card_cta
             :if={
-              @filter_text == "" and
+              not @searching? and
                 !@consolidated_view and @no_consolidated_view_reason not in [:no_sites, :unavailable] and
                 not @consolidated_view_cta_dismissed?
             }
@@ -156,7 +200,7 @@ defmodule PlausibleWeb.Live.Sites do
           />
           <.consolidated_view_card
             :if={
-              @filter_text == "" and not is_nil(@consolidated_view) and
+              not @searching? and not is_nil(@consolidated_view) and
                 consolidated_view_ok_to_display?(@current_team)
             }
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
@@ -278,7 +322,7 @@ defmodule PlausibleWeb.Live.Sites do
           :if={@can_manage_consolidated_view?}
           class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter"
         >
-          Upgrade to the Business plan<span :if={not Teams.setup?(@current_team)}> and set up a team</span> to enable consolidated views.
+          Upgrade to the Business plan<span :if={not Teams.setup?(@current_team)}> and set up a team</span> to enable consolidated view.
         </p>
 
         <p
@@ -306,6 +350,33 @@ defmodule PlausibleWeb.Live.Sites do
           </.button_link>
         </div>
       </div>
+
+      <div
+        :if={@no_consolidated_view_reason == :contact_us}
+        class="flex flex-col gap-y-4"
+      >
+        <p class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter">
+          Your plan does not include consolidated view. Contact us to discuss an upgrade.
+        </p>
+
+        <div class="flex gap-x-2">
+          <.button_link
+            href="mailto:hello@plausible.io"
+            mt?={false}
+          >
+            Contact us
+          </.button_link>
+
+          <.button_link
+            theme="secondary"
+            href="https://plausible.io/docs/consolidated-views"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+
       <a phx-click="consolidated-view-cta-dismiss">
         <Heroicons.x_mark class="absolute top-6 right-6 size-5 text-gray-400 transition-colors duration-150 cursor-pointer dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" />
       </a>
@@ -437,9 +508,9 @@ defmodule PlausibleWeb.Live.Sites do
               {@site.domain}
             </h3>
           </div>
-          <span class="inline-flex items-center -my-1 px-2 py-1 rounded-sm bg-green-100 text-green-800 text-xs font-medium leading-normal dark:bg-green-900/40 dark:text-green-400">
+          <.pill color={:green}>
             Pending invitation
-          </span>
+          </.pill>
         </div>
         <.site_stats hourly_stats={@hourly_stats} />
       </div>
@@ -1047,30 +1118,22 @@ defmodule PlausibleWeb.Live.Sites do
     end
 
     defp init_consolidated_view_assigns(user, team) do
-      if ConsolidatedView.flag_enabled?(team) do
-        case ConsolidatedView.enable(team) do
-          {:ok, view} ->
-            %{
-              consolidated_view: view,
-              can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
-              consolidated_stats: :loading,
-              no_consolidated_view_reason: nil,
-              consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
-            }
+      case ConsolidatedView.enable(team) do
+        {:ok, view} ->
+          %{
+            consolidated_view: view,
+            can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+            consolidated_stats: :loading,
+            no_consolidated_view_reason: nil,
+            consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+          }
 
-          {:error, reason} ->
-            no_consolidated_view(
-              no_consolidated_view_reason: reason,
-              can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
-              consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
-            )
-        end
-      else
-        no_consolidated_view(
-          no_consolidated_view_reason: :unavailable,
-          can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
-          consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
-        )
+        {:error, reason} ->
+          no_consolidated_view(
+            no_consolidated_view_reason: reason,
+            can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+            consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+          )
       end
     end
 
