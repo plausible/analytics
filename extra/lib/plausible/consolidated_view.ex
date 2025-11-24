@@ -86,9 +86,14 @@ defmodule Plausible.ConsolidatedView do
   @spec enable(Team.t()) ::
           {:ok, Site.t()} | {:error, :no_sites | :team_not_setup | :upgrade_required}
   def enable(%Team{} = team) do
+    availability_check = Plausible.Billing.Feature.ConsolidatedView.check_availability(team)
+
     cond do
       not has_sites_to_consolidate?(team) ->
         {:error, :no_sites}
+
+      availability_check != :ok ->
+        availability_check
 
       not Teams.setup?(team) ->
         {:error, :team_not_setup}
@@ -97,10 +102,7 @@ defmodule Plausible.ConsolidatedView do
         {:error, :unavailable}
 
       true ->
-        case Plausible.Billing.Feature.ConsolidatedView.check_availability(team) do
-          :ok -> do_enable(team)
-          error -> error
-        end
+        do_enable(team)
     end
   end
 
