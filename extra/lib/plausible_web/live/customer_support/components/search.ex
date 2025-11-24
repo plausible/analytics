@@ -103,6 +103,15 @@ defmodule PlausibleWeb.CustomerSupport.Components.Search do
         opts
       end
 
+    opts =
+      case Ecto.UUID.cast(input) do
+        {:ok, _uuid} ->
+          Keyword.merge(opts, uuid_provided?: true)
+
+        _ ->
+          opts
+      end
+
     {[Resource.Team], input, opts}
   end
 
