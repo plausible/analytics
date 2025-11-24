@@ -85,7 +85,7 @@ defmodule Plausible.ConsolidatedViewTest do
         assert s1.domain == s2.domain
       end
 
-      test "returns {:error, :upgrade_required} before :team_not_setup", %{team: team, user: user} do
+      test "returns {:error, :upgrade_required} before :team_not_setup", %{team: team} do
         # we want to ask the user to upgrade first, before making them create a team they might not need
         new_site(team: team)
         new_site(team: team)
