@@ -98,6 +98,18 @@ defmodule Plausible.ConsolidatedViewTest do
         assert {:error, :upgrade_required} = ConsolidatedView.enable(team)
       end
 
+      test "returns {:error, :contact_us} when on insufficient custom plan", %{user: user} do
+        team =
+          user
+          |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.Goals])
+          |> team_of()
+
+        new_site(team: team)
+        new_site(team: team)
+
+        assert ConsolidatedView.enable(team) == {:error, :contact_us}
+      end
+
       test "returns {:error, :upgrade_required} for ineligible subscription", %{
         team: team,
         user: user

@@ -322,7 +322,7 @@ defmodule PlausibleWeb.Live.Sites do
           :if={@can_manage_consolidated_view?}
           class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter"
         >
-          Upgrade to the Business plan<span :if={not Teams.setup?(@current_team)}> and set up a team</span> to enable consolidated views.
+          Upgrade to the Business plan<span :if={not Teams.setup?(@current_team)}> and set up a team</span> to enable consolidated view.
         </p>
 
         <p
@@ -350,6 +350,33 @@ defmodule PlausibleWeb.Live.Sites do
           </.button_link>
         </div>
       </div>
+
+      <div
+        :if={@no_consolidated_view_reason == :contact_us}
+        class="flex flex-col gap-y-4"
+      >
+        <p class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter">
+          Your plan does not include consolidated view. Contact us to discuss an upgrade.
+        </p>
+
+        <div class="flex gap-x-2">
+          <.button_link
+            href="mailto:hello@plausible.io"
+            mt?={false}
+          >
+            Contact us
+          </.button_link>
+
+          <.button_link
+            theme="secondary"
+            href="https://plausible.io/docs/consolidated-views"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+
       <a phx-click="consolidated-view-cta-dismiss">
         <Heroicons.x_mark class="absolute top-6 right-6 size-5 text-gray-400 transition-colors duration-150 cursor-pointer dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" />
       </a>
