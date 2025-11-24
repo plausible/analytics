@@ -89,7 +89,22 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       refute resp =~ "Create your first goal"
     end
 
-    test "add goal dropdown is rendered", %{conn: conn, site: site} do
+    test "add goal dropdown is rendered in empty state", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/goals")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, ~s/[id="add-goal-dropdown-empty"]/)
+
+      assert element_exists?(
+               resp,
+               ~s/[phx-click="add-goal"][phx-value-goal-type="custom_events"]/
+             )
+
+      assert element_exists?(resp, ~s/[phx-click="add-goal"][phx-value-goal-type="pageviews"]/)
+      assert element_exists?(resp, ~s/[phx-click="add-goal"][phx-value-goal-type="scroll"]/)
+    end
+
+    test "add goal dropdown is rendered in non-empty state", %{conn: conn, site: site} do
+      {:ok, _goals} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
       assert element_exists?(resp, ~s/[id="add-goal-dropdown"]/)
