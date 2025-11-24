@@ -66,14 +66,9 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         assert_search_result(html, "site", site2.id)
       end
 
-      test "search teams", %{conn: conn} do
+      test "search teams by name", %{conn: conn} do
         team1 = new_user(team: [name: "Team One"]) |> team_of()
-
-        team2 =
-          new_user(team: [name: "Team Two"])
-          |> subscribe_to_growth_plan()
-          |> team_of()
-
+        team2 = new_user(team: [name: "Team Two"]) |> team_of()
         team3 = new_user(team: [name: "Team Three"]) |> team_of()
 
         {:ok, lv, _html} = live(conn, @cs_index)
@@ -84,6 +79,14 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         assert_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         assert_search_result(html, "team", team3.id)
+      end
+
+      test "search teams by partial name", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:Team T")
         html = render(lv)
@@ -91,6 +94,14 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         refute_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         assert_search_result(html, "team", team3.id)
+      end
+
+      test "search teams with subscription filter", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> subscribe_to_growth_plan() |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:Team T +sub")
         html = render(lv)
@@ -98,24 +109,49 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         refute_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         refute_search_result(html, "team", team3.id)
+      end
+
+      test "search teams with sso filter before integration", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> subscribe_to_growth_plan() |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:Team T +sso")
         html = render(lv)
         refute_search_result(html, "team", team1.id)
         refute_search_result(html, "team", team2.id)
         refute_search_result(html, "team", team3.id)
+      end
+
+      test "search teams with sso filter after integration", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> subscribe_to_growth_plan() |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
 
         integration = SSO.initiate_saml_integration(team2)
-
         SSO.Domains.add(integration, "some-sso.example.com")
-
         SSO.initiate_saml_integration(team3)
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:Team T +sso")
         html = render(lv)
         refute_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         assert_search_result(html, "team", team3.id)
+      end
+
+      test "search teams by sso domain", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> subscribe_to_growth_plan() |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        integration = SSO.initiate_saml_integration(team2)
+        SSO.Domains.add(integration, "some-sso.example.com")
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:some-sso +sso")
         html = render(lv)
@@ -123,6 +159,19 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         refute_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         refute_search_result(html, "team", team3.id)
+      end
+
+      test "search teams by identifier", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
+
+        type_into_input(lv, "filter-text", "team:#{team2.identifier}")
+        html = render(lv)
+
+        refute_search_result(html, "team", team1.id)
+        assert_search_result(html, "team", team2.id)
       end
     end
 
