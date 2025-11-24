@@ -31,11 +31,6 @@ defmodule Plausible.ConsolidatedViewTest do
         refute ConsolidatedView.ok_to_display?(nil)
       end
 
-      test "returns false when feature flag is disabled", %{team: team} do
-        FunWithFlags.disable(:consolidated_view, for_actor: team)
-        refute ConsolidatedView.ok_to_display?(team)
-      end
-
       test "returns false when consolidated view is not enabled", %{team: team} do
         ConsolidatedView.disable(team)
         refute ConsolidatedView.ok_to_display?(team)

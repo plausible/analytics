@@ -331,52 +331,6 @@ defmodule PlausibleWeb.Live.SitesTest do
         assert stats =~ "Views per visit 1.33"
       end
 
-      test "consolidated view does not show up when flag is down (temp) during trial", %{
-        conn: conn,
-        user: user
-      } do
-        new_site(owner: user)
-        new_site(owner: user)
-
-        team = user |> team_of() |> Plausible.Teams.complete_setup()
-
-        FunWithFlags.disable(:consolidated_view, for_actor: team)
-
-        conn = set_current_team(conn, team)
-
-        {:ok, _lv, html} = live(conn, "/sites")
-
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
-      end
-
-      test "consolidated view does not show up when flag is down (temp) after trial ends", %{
-        conn: conn,
-        user: user
-      } do
-        new_site(owner: user)
-        new_site(owner: user)
-
-        team =
-          user
-          |> team_of()
-          |> Plausible.Teams.Team.end_trial()
-          |> Plausible.Repo.update!()
-
-        FunWithFlags.disable(:consolidated_view, for_actor: team)
-
-        conn = set_current_team(conn, team)
-
-        {:ok, _lv, html} = live(conn, "/sites")
-
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
-        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
-      end
-
       test "consolidated view disappears when trial ends - CTA is shown instead", %{
         conn: conn,
         user: user
