@@ -400,12 +400,28 @@ defmodule PlausibleWeb.Live.SitesTest do
         assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
 
         assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
-                 "Upgrade to the Business plan to enable consolidated views."
+                 "Upgrade to the Business plan to enable consolidated view."
 
         assert element_exists?(
                  html,
                  ~s|[data-test-id="consolidated-view-card-cta"] a[href$="/billing/choose-plan"]|
                )
+      end
+
+      test "CTA for insufficient custom plans", %{conn: conn, user: user} do
+        user
+        |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.Goals])
+        |> team_of()
+
+        new_site(owner: user)
+        new_site(owner: user)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "Your plan does not include consolidated view. Contact us to discuss an upgrade."
       end
 
       test "a team that hasn't been set up shows different CTA", %{
