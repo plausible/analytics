@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryResultTest do
+defmodule Plausible.Stats.Query.QueryResultTest do
   use Plausible.DataCase, async: true
   use Plausible.Teams.Test
   alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer}
@@ -18,7 +18,7 @@ defmodule Plausible.Stats.QueryResultTest do
 
   test "query!/3 raises on error on site_id mismatch", %{site: site} do
     assert_raise FunctionClauseError, fn ->
-      Query.build!(
+      Query.parse_and_build!(
         site,
         :public,
         %{
@@ -32,7 +32,7 @@ defmodule Plausible.Stats.QueryResultTest do
     assert_raise RuntimeError,
                  ~s/Failed to build query: "#: Required properties metrics, date_range were not present."/,
                  fn ->
-                   Query.build!(
+                   Query.parse_and_build!(
                      site,
                      :public,
                      %{
@@ -44,7 +44,7 @@ defmodule Plausible.Stats.QueryResultTest do
 
   test "serializing query to JSON keeps keys ordered", %{site: site} do
     query =
-      Query.build!(
+      Query.parse_and_build!(
         site,
         :public,
         %{

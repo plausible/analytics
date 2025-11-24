@@ -252,7 +252,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
   def suggest_hostnames(input, _options, site) do
     query =
-      Plausible.Stats.Query.build!(
+      Plausible.Stats.Query.parse_and_build!(
         site,
         :internal,
         %{
