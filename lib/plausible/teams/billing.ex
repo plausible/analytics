@@ -16,46 +16,15 @@ defmodule Plausible.Teams.Billing do
 
   require Plausible.Billing.Subscription.Status
 
+  # Features that are always available, regardless of team plan
+  @free_features [Goals]
+
   @limit_sites_since ~D[2021-05-05]
 
   @typep last_30_days_usage() :: %{:last_30_days => Quota.usage_cycle()}
   @typep monthly_pageview_usage() :: Quota.cycles_usage() | last_30_days_usage()
 
-  @starter_tier_launch ~D[2025-06-11]
-  def starter_tier_launch(), do: @starter_tier_launch
-
-  def show_new_upgrade_page?(nil = _team) do
-    FunWithFlags.enabled?(:starter_tier)
-  end
-
-  def show_new_upgrade_page?(%Teams.Team{} = team) do
-    team = Teams.with_subscription(team)
-    feature_flag_enabled? = FunWithFlags.enabled?(:starter_tier, for: team)
-
-    subscription_plan = Plans.get_subscription_plan(team.subscription)
-
-    case {subscription_plan, team.trial_expiry_date} do
-      {%Plan{generation: 5}, _} ->
-        true
-
-      {nil, nil} ->
-        feature_flag_enabled?
-
-      {nil, trial_expiry_date} ->
-        diff = Date.diff(@starter_tier_launch, trial_expiry_date)
-        # Active or recently (less than 10 days ago) ended trials
-        # should be able to subscribe to the plans they saw when
-        # they signed up.
-        if diff <= 10 and diff >= -30 do
-          false
-        else
-          feature_flag_enabled?
-        end
-
-      {_, _} ->
-        feature_flag_enabled?
-    end
-  end
+  def free_features(), do: @free_features
 
   def grandfathered_team?(nil), do: false
 
@@ -255,7 +224,7 @@ defmodule Plausible.Teams.Billing do
   end
 
   on_ee do
-    @team_member_limit_for_trials 3
+    @team_member_limit_for_trials 10
 
     def team_member_limit(nil) do
       @team_member_limit_for_trials
@@ -466,7 +435,7 @@ defmodule Plausible.Teams.Billing do
     last_bill_date = team.subscription.last_bill_date
 
     normalized_last_bill_date =
-      Date.shift(last_bill_date, month: Timex.diff(today, last_bill_date, :months))
+      Date.shift(last_bill_date, month: Plausible.Times.diff(today, last_bill_date, :month))
 
     date_range =
       case cycle do
@@ -612,7 +581,7 @@ defmodule Plausible.Teams.Billing do
 
   defp query_team_member_emails(team, pending_ownership_site_ids, exclude_emails) do
     pending_owner_memberships_q =
-      from s in Plausible.Site,
+      from s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         inner_join: tm in assoc(t, :team_memberships),
         inner_join: u in assoc(tm, :user),
@@ -657,29 +626,34 @@ defmodule Plausible.Teams.Billing do
   end
 
   def allowed_features_for(nil) do
-    [Goals]
+    @free_features
   end
 
   def allowed_features_for(team) do
     team = Teams.with_subscription(team)
 
-    case Plans.get_subscription_plan(team.subscription) do
-      %EnterprisePlan{features: features} ->
-        features
+    features =
+      case Plans.get_subscription_plan(team.subscription) do
+        %EnterprisePlan{features: features} ->
+          features
 
-      %Plan{features: features} ->
-        features
+        %Plan{features: features} ->
+          features
 
-      :free_10k ->
-        [Goals, Props, StatsAPI, SharedLinks]
+        :free_10k ->
+          [Props, StatsAPI, SharedLinks]
 
-      nil ->
-        if Teams.on_trial?(team) do
-          Feature.list() -- [SitesAPI, SSO]
-        else
-          [Goals]
-        end
-    end
+        nil ->
+          if Teams.on_trial?(team) do
+            Feature.list() -- [SitesAPI, SSO]
+          else
+            []
+          end
+      end
+
+    features
+    |> Enum.concat(@free_features)
+    |> Enum.uniq()
   end
 
   defp active_subscription_query(team) do

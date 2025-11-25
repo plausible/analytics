@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   def render(assigns) do
     class = [
-      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-lg px-8 pt-6 pb-8 top-24",
+      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-900 shadow-xl rounded-lg px-8 pt-6 pb-8 top-24",
       assigns.class
     ]
 
@@ -223,12 +223,12 @@ defmodule PlausibleWeb.Live.Components.Modal do
       <div
         x-show="modalOpen || modalPreopen"
         x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="bg-opacity-0"
-        x-transition:enter-end="bg-opacity-75"
+        x-transition:enter-start="bg-gray-500/0"
+        x-transition:enter-end="bg-gray-500/75"
         x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="bg-opacity-75"
-        x-transition:leave-end="bg-opacity-0"
-        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-[2050]"
+        x-transition:leave-start="bg-gray-500/75"
+        x-transition:leave-end="bg-gray-500/0"
+        class="fixed inset-0 bg-gray-500/75 z-[2050]"
       >
       </div>
       <div

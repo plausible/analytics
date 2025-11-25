@@ -21,14 +21,15 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     isDbip: dataset.isDbip === 'true',
     flags: JSON.parse(dataset.flags!),
     validIntervalsByPeriod: JSON.parse(dataset.validIntervalsByPeriod!),
-    shared: !!dataset.sharedLinkAuth
+    shared: !!dataset.sharedLinkAuth,
+    isConsolidatedView: dataset.isConsolidatedView === 'true'
   }
 }
 
 // Update this object when new feature flags are added to the frontend.
 type FeatureFlags = Record<never, boolean>
 
-const siteContextDefaultValue = {
+export const siteContextDefaultValue = {
   domain: '',
   /** offset in seconds from UTC at site load time, @example 7200 */
   offset: 0,
@@ -51,7 +52,8 @@ const siteContextDefaultValue = {
   isDbip: false,
   flags: {} as FeatureFlags,
   validIntervalsByPeriod: {} as Record<string, Array<string>>,
-  shared: false
+  shared: false,
+  isConsolidatedView: false
 }
 
 export type PlausibleSite = typeof siteContextDefaultValue

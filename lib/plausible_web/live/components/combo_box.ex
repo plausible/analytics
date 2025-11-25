@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Live.Components.ComboBox do
   @moduledoc """
   Phoenix LiveComponent for a combobox UI element with search and selection
-  functionality. 
+  functionality.
 
   The component allows users to select an option from a list of options,
   which can be searched by typing in the input field.
@@ -90,7 +90,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       <div class="relative w-full">
         <div
           @click.away="close"
-          class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+          class="pl-2 pr-8 py-1 w-full dark:bg-gray-750 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-750 focus-within:outline-none focus-within:ring-3 focus-within:ring-indigo-500/20 dark:focus-within:ring-indigo-500/25 focus-within:border-indigo-500"
         >
           <input
             type="text"
@@ -105,7 +105,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             phx-target={@myself}
             phx-debounce={200}
             value={@display_value}
-            class="text-sm [&.phx-change-loading+svg.spinner]:block border-none py-1.5 px-1.5 w-full inline-block rounded-md focus:outline-none focus:ring-0"
+            class="text-sm [&.phx-change-loading+svg.spinner]:block border-none py-1.5 px-1.5 w-full inline-block rounded-md focus:outline-hidden focus:ring-0"
             style="background-color: inherit;"
             required={@required}
           />
@@ -180,7 +180,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       id={"dropdown-#{@ref}"}
       x-show="isOpen"
       x-ref="suggestions"
-      class="text-sm w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-900"
+      class="text-sm w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1/5 ring-black focus:outline-hidden dark:bg-gray-800"
       style="display: none;"
     >
       <.option
@@ -242,7 +242,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         @creatable && "creatable"
       ]}
       @mouseenter={"setFocus(#{@idx})"}
-      x-bind:class={ "{'text-white bg-indigo-500': focus === #{@idx}}" }
+      x-bind:class={ "{'bg-gray-100 dark:bg-gray-700': focus === #{@idx}}" }
       id={"dropdown-#{@ref}-option-#{@idx}"}
     >
       <a

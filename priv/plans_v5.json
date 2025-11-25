@@ -238,7 +238,8 @@
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels"
+      "funnels",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -257,7 +258,8 @@
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels"
+      "funnels",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -276,7 +278,8 @@
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels"
+      "funnels",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -295,7 +298,8 @@
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels"
+      "funnels",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -314,7 +318,8 @@
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels"
+      "funnels",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -333,7 +338,8 @@
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels"
+      "funnels",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -352,7 +358,8 @@
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels"
+      "funnels",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   },
@@ -371,7 +378,8 @@
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels"
+      "funnels",
+      "consolidated_view"
     ],
     "data_retention_in_years": 5
   }

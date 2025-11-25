@@ -1,6 +1,12 @@
 defmodule Plausible.CustomerSupport.Resource.Site do
   @moduledoc false
-  use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Site
+  use Plausible.CustomerSupport.Resource, type: "site"
+  alias Plausible.Repo
+
+  @impl true
+  def path(id) do
+    Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, id)
+  end
 
   @impl true
   def search(input, opts \\ [])
@@ -9,7 +15,7 @@ defmodule Plausible.CustomerSupport.Resource.Site do
     limit = Keyword.fetch!(opts, :limit)
 
     q =
-      from s in Plausible.Site,
+      from s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         inner_join: o in assoc(t, :owners),
         order_by: [
@@ -18,14 +24,14 @@ defmodule Plausible.CustomerSupport.Resource.Site do
         limit: ^limit,
         preload: [team: {t, owners: o}]
 
-    Plausible.Repo.all(q)
+    Repo.all(q)
   end
 
   def search(input, opts) do
     limit = Keyword.fetch!(opts, :limit)
 
     q =
-      from s in Plausible.Site,
+      from s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         inner_join: o in assoc(t, :owners),
         where:
@@ -41,13 +47,13 @@ defmodule Plausible.CustomerSupport.Resource.Site do
         limit: ^limit,
         preload: [team: {t, owners: o}]
 
-    Plausible.Repo.all(q)
+    Repo.all(q)
   end
 
   @impl true
   def get(id) do
     Plausible.Site
-    |> Plausible.Repo.get!(id)
-    |> Plausible.Repo.preload(:team)
+    |> Repo.get!(id)
+    |> Repo.preload(:team)
   end
 end

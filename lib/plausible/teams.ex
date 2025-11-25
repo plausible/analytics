@@ -89,7 +89,11 @@ defmodule Plausible.Teams do
   def owned_sites(nil, _), do: []
 
   def owned_sites(team, limit) do
-    query = from(s in Plausible.Site, where: s.team_id == ^team.id, order_by: [asc: s.domain])
+    query =
+      from(s in Plausible.Site.regular(),
+        where: s.team_id == ^team.id,
+        order_by: [asc: s.domain]
+      )
 
     if limit do
       query
@@ -107,7 +111,7 @@ defmodule Plausible.Teams do
 
   def owned_sites_ids(team) do
     Repo.all(
-      from(s in Plausible.Site,
+      from(s in Plausible.Site.regular(),
         where: s.team_id == ^team.id,
         select: s.id,
         order_by: [desc: s.id]
@@ -120,7 +124,7 @@ defmodule Plausible.Teams do
 
   def owned_sites_count(team) do
     Repo.aggregate(
-      from(s in Plausible.Site,
+      from(s in Plausible.Site.regular(),
         where: s.team_id == ^team.id
       ),
       :count
@@ -314,6 +318,54 @@ defmodule Plausible.Teams do
       order_by: [desc: subscription.inserted_at, desc: subscription.id],
       limit: 1
     )
+  end
+
+  @spec force_2fa_enabled?(Teams.Team.t() | nil) :: boolean()
+  def force_2fa_enabled?(nil), do: false
+
+  def force_2fa_enabled?(team) do
+    team.policy.force_2fa
+  end
+
+  @spec enable_force_2fa(Teams.Team.t(), Auth.User.t()) ::
+          {:ok, Teams.Team.t()} | {:error, Ecto.Changeset.t()}
+  def enable_force_2fa(team, user) do
+    with {:ok, team} <- set_force_2fa(team, true) do
+      team
+      |> Teams.Memberships.all(exclude_guests?: true)
+      |> Enum.each(fn membership ->
+        if membership.user.id != user.id and not Auth.TOTP.enabled?(membership.user) do
+          team
+          |> PlausibleWeb.Email.force_2fa_enabled(membership.user, user)
+          |> Plausible.Mailer.deliver_later()
+        end
+      end)
+
+      {:ok, team}
+    end
+  end
+
+  @spec disable_force_2fa(Teams.Team.t(), Auth.User.t(), String.t()) ::
+          {:ok, Teams.Team.t()} | {:error, :invalid_password | Ecto.Changeset.t()}
+  def disable_force_2fa(team, user, password) do
+    if Auth.Password.match?(password, user.password_hash) do
+      set_force_2fa(team, false)
+    else
+      {:error, :invalid_password}
+    end
+  end
+
+  defp set_force_2fa(team, enabled?) do
+    params = %{policy: %{force_2fa: enabled?}}
+
+    audit_entry_name = if(enabled?, do: "force_2fa_enabled", else: "force_2fa_disabled")
+
+    team
+    |> Ecto.Changeset.cast(params, [])
+    |> Ecto.Changeset.cast_embed(:policy,
+      with: &Teams.Policy.force_2fa_changeset(&1, &2.force_2fa)
+    )
+    |> Repo.update_with_audit(audit_entry_name, %{team_id: team.id})
   end
 
   # Exposed for use in tests

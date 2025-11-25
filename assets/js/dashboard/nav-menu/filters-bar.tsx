@@ -265,7 +265,7 @@ const SeeMoreMenu = ({
             aria-hidden="true"
             className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 pr-[3px]"
           >
-            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow px-[3px] py-[1px] flex items-center rounded-sm bg-gray-100 dark:bg-gray-850">
+            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow-sm px-[3px] py-[1px] flex items-center rounded-xs bg-gray-100 dark:bg-gray-850">
               +{filtersInMenuCount}
             </div>
           </div>
@@ -290,7 +290,7 @@ const SeeMoreMenu = ({
               <div className="py-4 px-4">
                 <AppliedFilterPillsList
                   direction="vertical"
-                  pillClassName="dark:!shadow-gray-950/60"
+                  pillClassName="!shadow-none !bg-gray-100 dark:!bg-gray-700"
                   slice={{
                     type: 'no-render-outside',
                     start: visibleFiltersCount
@@ -298,7 +298,7 @@ const SeeMoreMenu = ({
                 />
               </div>
               {showSomeActions && (
-                <div className="mb-1 border-gray-200 dark:border-gray-500 border-b"></div>
+                <div className="mb-1 border-gray-200 dark:border-gray-700 border-b"></div>
               )}
             </>
           )}
@@ -309,10 +309,6 @@ const SeeMoreMenu = ({
                   popover.items.classNames.navigationLink,
                   popover.items.classNames.selectedOption,
                   popover.items.classNames.hoverLink,
-                  {
-                    [popover.items.classNames.roundedStart]: !showMoreFilters // rounded start is needed when there's no filters panel above
-                  },
-                  popover.items.classNames.roundedEnd,
                   'whitespace-nowrap'
                 )
 

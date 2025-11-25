@@ -47,7 +47,7 @@ export async function mockManyRequests({
   awaitedRequestCount,
   responseDelay,
   shouldIgnoreRequest,
-  mockRequestTimeout = 3000
+  mockRequestTimeout = 1000
 }: MockManyRequestsOptions) {
   const requestList: unknown[] = []
   const scope = scopeMockToPage ? page : page.context()

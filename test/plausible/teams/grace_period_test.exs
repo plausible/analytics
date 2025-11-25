@@ -1,6 +1,5 @@
 defmodule Plausible.Teams.GracePeriodTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   test "active?/1 returns false when grace period cannot be telled" do
     without_grace_period =

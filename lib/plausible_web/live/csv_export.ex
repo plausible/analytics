@@ -188,7 +188,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     <p :if={@export.expires_at} class="text-sm">
       Note: this file will expire
       <.hint message={@export.expires_at}>
-        {Timex.Format.DateTime.Formatters.Relative.format!(@export.expires_at, "{relative}")}.
+        {Plausible.Times.humanize(@export.expires_at)}.
       </.hint>
     </p>
 

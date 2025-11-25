@@ -15,12 +15,14 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [
-          :owner,
-          :admin,
-          :editor,
-          :super_admin
-        ])
+        Plausible.Sites.get_for_user!(current_user, domain,
+          roles: [
+            :owner,
+            :admin,
+            :editor,
+            :super_admin
+          ]
+        )
       end)
       |> assign_new(:site_imports, fn %{site: site} ->
         site
@@ -72,95 +74,134 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       {@import_warning}
     </.notice>
 
-    <div class="mt-4 flex justify-end gap-x-4">
-      <.button_link
-        theme="bright"
-        href={Plausible.Google.API.import_authorize_url(@site.id)}
-        disabled={@import_in_progress? or @at_maximum?}
-      >
-        Import from
-        <img
-          src="/images/icon/google_analytics_logo.svg"
-          alt="Google Analytics import"
-          class="h-6 w-12"
-        />
-      </.button_link>
-      <.button_link
-        disabled={@import_in_progress? or @at_maximum?}
-        href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
-      >
-        Import from CSV
-      </.button_link>
-    </div>
-
-    <p :if={Enum.empty?(@site_imports)} class="text-center text-sm mt-8 mb-12">
-      There are no imports yet for this site.
-    </p>
-
-    <div class="mt-8">
-      <.table :if={not Enum.empty?(@site_imports)} rows={@site_imports}>
-        <:thead>
-          <.th>Import</.th>
-          <.th hide_on_mobile>Date Range</.th>
-          <.th hide_on_mobile>
-            <div class="text-right">Pageviews</div>
-          </.th>
-          <.th invisible>Actions</.th>
-        </:thead>
-
-        <:tbody :let={entry}>
-          <.td max_width="max-w-40">
-            <div class="flex items-center gap-x-2 truncate">
-              <div class="w-6" title={notice_message(entry.tooltip)}>
-                <Heroicons.clock
-                  :if={entry.live_status == SiteImport.pending()}
-                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
-                />
-                <.spinner
-                  :if={entry.live_status == SiteImport.importing()}
-                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
-                />
-                <Heroicons.check
-                  :if={entry.live_status == SiteImport.completed()}
-                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
-                />
-                <Heroicons.exclamation_triangle
-                  :if={entry.live_status == SiteImport.failed()}
-                  class="block h-6 w-6 text-red-700 dark:text-red-500"
-                />
-              </div>
-              <div
-                class="max-w-sm"
-                title={"#{Plausible.Imported.SiteImport.label(entry.site_import)} created at #{format_date(entry.site_import.inserted_at)}"}
-              >
-                {Plausible.Imported.SiteImport.label(entry.site_import)}
-              </div>
-            </div>
-          </.td>
-
-          <.td hide_on_mobile>
-            {format_date(entry.site_import.start_date)} - {format_date(entry.site_import.end_date)}
-          </.td>
-
-          <.td>
-            <div class="text-right">
-              {if entry.live_status == SiteImport.completed(),
-                do:
-                  PlausibleWeb.StatsView.large_number_format(
-                    pageview_count(entry.site_import, @pageview_counts)
-                  )}
-            </div>
-          </.td>
-          <.td actions>
-            <.delete_button
-              href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
-              method="delete"
-              data-confirm="Are you sure you want to delete this import?"
+    <.tile docs="google-analytics-import">
+      <:title>
+        Import data
+      </:title>
+      <:subtitle :if={not Enum.empty?(@site_imports)}>
+        Import data from external sources. Up to {Plausible.Imported.max_complete_imports()} imports are allowed at a time.
+      </:subtitle>
+      <%= if Enum.empty?(@site_imports) do %>
+        <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+          <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+            Import your first data
+          </h3>
+          <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+            Import data from external sources. Up to {Plausible.Imported.max_complete_imports()} imports are allowed at a time.
+          </p>
+          <div class="flex gap-x-4 mt-4">
+            <.button_link
+              theme="secondary"
+              href={Plausible.Google.API.import_authorize_url(@site.id)}
+              disabled={@import_in_progress? or @at_maximum?}
+              mt?={false}
+            >
+              Import from
+              <img
+                src="/images/icon/google_analytics_logo.svg"
+                alt="Google Analytics import"
+                class="h-6 w-12 -my-1"
+              />
+            </.button_link>
+            <.button_link
+              disabled={@import_in_progress? or @at_maximum?}
+              href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
+              mt?={false}
+            >
+              Import from CSV
+            </.button_link>
+          </div>
+        </div>
+      <% else %>
+        <div class="flex gap-x-4">
+          <.button_link
+            theme="secondary"
+            href={Plausible.Google.API.import_authorize_url(@site.id)}
+            disabled={@import_in_progress? or @at_maximum?}
+            mt?={false}
+          >
+            Import from
+            <img
+              src="/images/icon/google_analytics_logo.svg"
+              alt="Google Analytics import"
+              class="h-6 w-12 -my-1"
             />
-          </.td>
-        </:tbody>
-      </.table>
-    </div>
+          </.button_link>
+          <.button_link
+            disabled={@import_in_progress? or @at_maximum?}
+            href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
+            mt?={false}
+          >
+            Import from CSV
+          </.button_link>
+        </div>
+
+        <div class="mt-6">
+          <.table rows={@site_imports}>
+            <:thead>
+              <.th>Import</.th>
+              <.th hide_on_mobile>Date Range</.th>
+              <.th hide_on_mobile>
+                <div class="text-right">Pageviews</div>
+              </.th>
+              <.th invisible>Actions</.th>
+            </:thead>
+
+            <:tbody :let={entry}>
+              <.td max_width="max-w-40">
+                <div class="flex items-center gap-x-2 truncate">
+                  <div class="w-5" title={notice_message(entry.tooltip)}>
+                    <Heroicons.clock
+                      :if={entry.live_status == SiteImport.pending()}
+                      class="block size-5 text-indigo-600 dark:text-green-600"
+                    />
+                    <.spinner
+                      :if={entry.live_status == SiteImport.importing()}
+                      class="block size-5 text-indigo-600 dark:text-green-600"
+                    />
+                    <Heroicons.check
+                      :if={entry.live_status == SiteImport.completed()}
+                      class="block size-5 text-indigo-600 dark:text-green-600"
+                    />
+                    <Heroicons.exclamation_triangle
+                      :if={entry.live_status == SiteImport.failed()}
+                      class="block size-5 text-red-700 dark:text-red-500"
+                    />
+                  </div>
+                  <div
+                    class="max-w-sm"
+                    title={"#{Plausible.Imported.SiteImport.label(entry.site_import)} created at #{format_date(entry.site_import.inserted_at)}"}
+                  >
+                    {Plausible.Imported.SiteImport.label(entry.site_import)}
+                  </div>
+                </div>
+              </.td>
+
+              <.td hide_on_mobile>
+                {format_date(entry.site_import.start_date)} - {format_date(entry.site_import.end_date)}
+              </.td>
+
+              <.td>
+                <div class="text-right">
+                  {if entry.live_status == SiteImport.completed(),
+                    do:
+                      PlausibleWeb.StatsView.large_number_format(
+                        pageview_count(entry.site_import, @pageview_counts)
+                      )}
+                </div>
+              </.td>
+              <.td actions>
+                <.delete_button
+                  href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
+                  method="delete"
+                  data-confirm="Are you sure you want to delete this import?"
+                />
+              </.td>
+            </:tbody>
+          </.table>
+        </div>
+      <% end %>
+    </.tile>
     """
   end
 

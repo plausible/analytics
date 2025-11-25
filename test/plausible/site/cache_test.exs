@@ -1,6 +1,5 @@
 defmodule Plausible.Site.CacheTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   alias Plausible.{Site, Goal}
   alias Plausible.Site.Cache
@@ -23,6 +22,9 @@ defmodule Plausible.Site.CacheTest do
       add_guest(site, user: viewer, role: :viewer)
       add_guest(site, user: admin, role: :editor)
 
+      # excluded from cache
+      new_site(owner: owner, domain: "consolidated.example.com", consolidated: true)
+
       :ok = Cache.refresh_all(cache_name: test)
 
       {:ok, _} = Plausible.Repo.delete(site1)
@@ -39,6 +41,7 @@ defmodule Plausible.Site.CacheTest do
                Cache.get("site2.example.com", cache_name: test)
 
       refute Cache.get("site3.example.com", cache_name: test, force?: true)
+      refute Cache.get("consolidated.example.com", cache_name: test, force?: true)
     end
 
     @tag :ee_only

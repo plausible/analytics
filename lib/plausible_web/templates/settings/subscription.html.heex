@@ -4,24 +4,21 @@
       <a id="subscription">Subscription</a>
     </:title>
     <:subtitle>
-      Manage your plan
+      Manage your plan.
     </:subtitle>
-    <div class="w-full inline-flex gap-x-4 justify-end items-center mt-4 mb-4">
+    <div :if={@subscription} class="w-full inline-flex gap-x-4 justify-end items-center mt-4 mb-4">
       <span
-        :if={@subscription && Plausible.Billing.Plans.business_tier?(@subscription)}
+        :if={Plausible.Billing.Plans.business_tier?(@subscription)}
         class={[
           "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 text-indigo-600 bg-blue-100 dark:text-yellow-200 dark:border dark:bg-inherit dark:border-yellow-200"
         ]}
       >
         Business
       </span>
-      <span
-        :if={@subscription}
-        class={[
-          "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
-          subscription_colors(@subscription.status)
-        ]}
-      >
+      <span class={[
+        "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
+        subscription_colors(@subscription.status)
+      ]}>
         {present_subscription_status(@subscription.status)}
       </span>
     </div>
@@ -36,7 +33,7 @@
         team={@current_team}
         subscription={@subscription}
       />
-      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded dark:bg-gray-900">
+      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-800">
         <h4 class="font-black dark:text-gray-100">Next bill amount</h4>
         <%= if Plausible.Billing.Subscription.Status.in?(@subscription, [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()]) do %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">
@@ -49,7 +46,7 @@
           <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>
         <% end %>
       </div>
-      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded dark:bg-gray-900">
+      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-800">
         <h4 class="font-black dark:text-gray-100">Next bill date</h4>
 
         <%= if @subscription && @subscription.next_bill_date && Plausible.Billing.Subscription.Status.in?(@subscription, [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()]) do %>
@@ -97,7 +94,7 @@
           <%= if Application.get_env(:plausible, :environment) == "dev" do %>
             <a
               href={@subscription.update_url}
-              class="ml-2 font-medium rounded-md px-3.5 py-2.5 text-sm shadow-sm border border-gray-300 dark:border-gray-500 text-yellow-600 dark:text-yellow-400 bg-white dark:bg-gray-900"
+              class="ml-2 font-medium rounded-md px-3.5 py-2.5 text-sm shadow-xs border border-gray-300 dark:border-gray-500 text-yellow-600 dark:text-yellow-400 bg-white dark:bg-gray-900"
             >
               [DEV ONLY] Change subscription status
             </a>

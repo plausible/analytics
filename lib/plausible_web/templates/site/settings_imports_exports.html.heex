@@ -1,25 +1,14 @@
-<.settings_tiles docs="google-analytics-import">
-  <.tile>
+<.settings_tiles>
+  {live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
+    session: %{"domain" => @site.domain}
+  )}
+
+  <.tile docs="export-stats">
     <:title>
-      Import Data
+      Export data
     </:title>
     <:subtitle>
-      Import existing data from external sources.
-      Pick one of the options below to start a new import. <br />
-      A maximum of {Plausible.Imported.max_complete_imports()} imports at any time is allowed.
-    </:subtitle>
-
-    {live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
-      session: %{"domain" => @site.domain}
-    )}
-  </.tile>
-
-  <.tile>
-    <:title>
-      Export Data
-    </:title>
-    <:subtitle>
-      Export all your data into CSV format
+      Export all your data into CSV format.
     </:subtitle>
 
     {live_render(@conn, PlausibleWeb.Live.CSVExport,

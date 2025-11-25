@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
           x-transition:leave="transition ease-in duration-200"
           x-transition:leave-start="opacity-100"
           x-transition:leave-end="opacity-0"
-          class="fixed inset-0 bg-gray-500 dark:bg-gray-800 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
+          class="fixed inset-0 bg-gray-500/75 dark:bg-gray-800/75 transition-opacity"
           aria-hidden="true"
           x-on:click={"#{@state_param} = false"}
         >
@@ -130,22 +130,22 @@ defmodule PlausibleWeb.Components.TwoFactor do
           x-transition:leave="transition ease-in duration-200"
           x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
           x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          class="inline-block align-bottom bg-white dark:bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+          class="relative inline-block align-bottom bg-white dark:bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
         >
           <.form :let={f} for={@form_data} action={@form_target} onsubmit={@onsubmit}>
-            <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="bg-white dark:bg-gray-850 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
                 <a
                   href="#"
                   x-on:click.prevent={"#{@state_param} = false"}
-                  class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none"
+                  class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-hidden"
                 >
                   <span class="sr-only">Close</span>
                   <Heroicons.x_mark class="h-6 w-6" />
                 </a>
               </div>
               <div class="sm:flex sm:items-start">
-                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
                   {render_slot(@icon)}
                 </div>
                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left text-gray-900 dark:text-gray-100">
@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
                 type="button"
                 x-on:click={"#{@state_param} = false"}
                 class="w-full sm:w-auto mr-2"
-                theme="bright"
+                theme="secondary"
               >
                 Cancel
               </.button>

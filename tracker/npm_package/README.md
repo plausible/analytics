@@ -1,13 +1,12 @@
 # Plausible Analytics tracker
 
-[![NPM](https://flat.badgen.net/npm/v/macobo-test-tracker)](https://www.npmjs.com/package/macobo-test-tracker)
+[![NPM](https://flat.badgen.net/npm/v/@plausible-analytics/tracker)](https://www.npmjs.com/package/@plausible-analytics/tracker)
 [![MIT License](https://img.shields.io/badge/License-MIT-red.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-
-**Notice:** This library is currently under development and will be released as an official library later this year.
 
 Add [Plausible Analytics](https://plausible.io/) to your website.
 
 ## Features
+
 - Small package size
 - Same features and codebase as the official script, but as an NPM module
 - Automatically track page views in your SPA apps
@@ -22,7 +21,7 @@ Add [Plausible Analytics](https://plausible.io/) to your website.
 With npm:
 
 ```bash
-npm install macobo-test-tracker
+npm install @plausible-analytics/tracker
 ```
 
 ## Usage
@@ -30,7 +29,7 @@ npm install macobo-test-tracker
 To begin tracking events, you must initialize the tracker:
 
 ```javascript
-import { init } from 'macobo-test-tracker'
+import { init } from '@plausible-analytics/tracker'
 
 init({
   domain: 'my-app.com'
@@ -41,19 +40,20 @@ init({
 
 See also [plausible.d.ts](https://github.com/plausible/analytics/blob/master/tracker/npm_package/plausible.d.ts) for typescript types.
 
-| Option | Description | Default |
-| --- | --- | --- |
-| `domain` | **Required** Your site's domain, as declared by you in Plausible's settings. | |
-| `endpoint` | The URL of the Plausible API endpoint. See proxying guide at https://plausible.io/docs/proxy/introduction | `"https://plausible.io/api/event"` |
-| `autoCapturePageviews` | Whether to automatically capture pageviews. | `true` |
-| `hashBasedRouting` | Whether the page uses hash based routing. Read more at https://plausible.io/docs/hash-based-routing | `false` |
-| `outboundLinks` | Whether to track outbound link clicks. | `false` |
-| `fileDownloads` |  Whether to track file downloads. | `false` |
-| `formSubmissions` | Whether to track form submissions. | `false` |
-| `captureOnLocalhost` | Whether to capture events on localhost. | `false` |
-| `logging` | Whether to log on ignored events. | `true` |
-| `customProperties` | Object or function that returns custom properties for a given event. | `{}` |
-| `transformRequest` | Function that allows transforming or ignoring requests | |
+| Option                 | Description                                                                                                                                                                                                                                                                          | Default                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| `domain`               | **Required** Your site's domain, as declared by you in Plausible's settings.                                                                                                                                                                                                         |                                    |
+| `endpoint`             | The URL of the Plausible API endpoint. See proxying guide at https://plausible.io/docs/proxy/introduction                                                                                                                                                                            | `"https://plausible.io/api/event"` |
+| `autoCapturePageviews` | Whether to automatically capture pageviews.                                                                                                                                                                                                                                          | `true`                             |
+| `hashBasedRouting`     | Whether the page uses hash based routing. Read more at https://plausible.io/docs/hash-based-routing                                                                                                                                                                                  | `false`                            |
+| `outboundLinks`        | Whether to track outbound link clicks.                                                                                                                                                                                                                                               | `false`                            |
+| `fileDownloads`        | Whether to track file downloads.                                                                                                                                                                                                                                                     | `false`                            |
+| `formSubmissions`      | Whether to track form submissions.                                                                                                                                                                                                                                                   | `false`                            |
+| `captureOnLocalhost`   | Whether to capture events on localhost.                                                                                                                                                                                                                                              | `false`                            |
+| `logging`              | Whether to log on ignored events.                                                                                                                                                                                                                                                    | `true`                             |
+| `customProperties`     | Object or function that returns custom properties for a given event.                                                                                                                                                                                                                 | `{}`                               |
+| `transformRequest`     | Function that allows transforming or ignoring requests                                                                                                                                                                                                                               |                                    |
+| `bindToWindow`         | Binds `track` to `window.plausible` which is used by Plausible installation verification tool to detect whether Plausible has been installed correctly. If `bindToWindow` is set to false, the installation verification tool won't be able to automatically detect it on your site. | `true`                             |
 
 #### Using `customProperties`
 
@@ -62,7 +62,7 @@ To track a custom property with every page view, you can use the `customProperti
 ```javascript
 init({
   domain: 'my-app.com',
-  customProperties: { "content_category": "news" }
+  customProperties: { content_category: 'news' }
 })
 ```
 
@@ -71,7 +71,7 @@ init({
 ```javascript
 init({
   domain: 'my-app.com',
-  customProperties: (eventName) => ({ "title": document.title })
+  customProperties: (eventName) => ({ title: document.title })
 })
 ```
 
@@ -80,9 +80,9 @@ init({
 To track a custom event, call `track` and give it the name of the event. Custom properties can be passed as a second argument:
 
 ```javascript
-import { track } from 'macobo-test-tracker'
+import { track } from '@plausible-analytics/tracker'
 
-track('signup', { props: { tier: "startup" } })
+track('signup', { props: { tier: 'startup' } })
 ```
 
 To mark an event as non-interactive so it would not be counted towards bounce rate calculations, set `interactive` option:
@@ -96,7 +96,7 @@ track('autoplay', { interactive: false })
 To track an event with revenue information, do:
 
 ```javascript
-import { track } from 'macobo-test-tracker'
+import { track } from '@plausible-analytics/tracker'
 
 track('Purchase', { revenue: { amount: 15.99, currency: 'USD' } })
 ```
@@ -108,16 +108,16 @@ More information can be found in [ecommerce revenue tracking docs](https://plaus
 When calling `track`, you can pass in a custom callback.
 
 ```javascript
-import { track } from 'macobo-test-tracker'
+import { track } from '@plausible-analytics/tracker'
 
 track('some-event', {
   callback: (result) => {
     if (result?.status) {
-      console.debug("Request to plausible done. Status:", result.status)
+      console.debug('Request to plausible done. Status:', result.status)
     } else if (result?.error) {
-      console.log("Error handling request:", result.error)
+      console.log('Error handling request:', result.error)
     } else {
-      console.log("Request was ignored")
+      console.log('Request was ignored')
     }
   }
 })

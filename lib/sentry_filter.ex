@@ -23,6 +23,15 @@ defmodule Plausible.SentryFilter do
     %{event | fingerprint: ["db_connection", reason]}
   end
 
+  def before_send(
+        %{
+          exception: [%{type: "Mint.TransportError"}],
+          original_exception: %{reason: reason}
+        } = event
+      ) do
+    %{event | fingerprint: ["mint_transport", reason]}
+  end
+
   def before_send(%{extra: %{request: %Plausible.Ingestion.Request{}}} = event) do
     %{event | fingerprint: ["ingestion_request"]}
   end

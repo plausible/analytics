@@ -1,6 +1,5 @@
 defmodule Plausible.Site.GateKeeperTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   alias Plausible.Site.Cache
   alias Plausible.Site.GateKeeper
@@ -13,6 +12,18 @@ defmodule Plausible.Site.GateKeeperTest do
 
   test "sites not found in cache are denied", %{opts: opts} do
     assert {:deny, :not_found} = GateKeeper.check("example.com", opts)
+  end
+
+  @tag :ee_only
+  test "consolidated sites should be treated as not found", %{opts: opts, test: test} do
+    consolidated_site =
+      add_site_and_refresh_cache(test, domain: "consolidated.example.com", consolidated: true)
+
+    assert {:deny, :not_found} = GateKeeper.check("consolidated.example.com", opts)
+
+    Plausible.Cache.Adapter.put(test, "consolidated.example.com", consolidated_site)
+
+    assert {:deny, :not_found} = GateKeeper.check("consolidated.example.com", opts)
   end
 
   test "sites with accepted_traffic_until < now are denied", %{test: test, opts: opts} do

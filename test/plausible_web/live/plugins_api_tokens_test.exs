@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Plugins.API.Tokens
 
@@ -22,7 +21,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       conn = get(conn, "/#{site.domain}/settings/integrations?new_token=test")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Plugin Tokens"
+      assert resp =~ "Plugin tokens"
     end
 
     test "does display the Plugins API section when there are tokens already created", %{
@@ -33,7 +32,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Plugin Tokens"
+      assert resp =~ "Plugin tokens"
     end
 
     test "lists tokens with revoke actions", %{conn: conn, site: site} do
@@ -56,12 +55,12 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
 
       assert element_exists?(
                resp,
-               ~s/button[phx-click="revoke-token"][phx-value-token-id=#{t1.id}]#revoke-token-#{t1.id}/
+               ~s/button[phx-click="revoke-token"][phx-value-token-id="#{t1.id}"]#revoke-token-#{t1.id}/
              )
 
       assert element_exists?(
                resp,
-               ~s/button[phx-click="revoke-token"][phx-value-token-id=#{t2.id}]#revoke-token-#{t2.id}/
+               ~s/button[phx-click="revoke-token"][phx-value-token-id="#{t2.id}"]#revoke-token-#{t2.id}/
              )
     end
 

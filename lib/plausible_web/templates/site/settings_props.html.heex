@@ -1,24 +1,8 @@
 <.settings_tiles>
-  <.tile
-    docs="custom-props/introduction"
-    feature_mod={Plausible.Billing.Feature.Props}
-    feature_toggle?={true}
-    site={@site}
-    current_role={@site_role}
-    current_team={@site_team}
-    conn={@conn}
-  >
-    <:title>
-      Custom Properties
-    </:title>
-    <:subtitle>
-      Attach Custom Properties when sending a Pageview or an Event to
-      create custom metrics.
-    </:subtitle>
-
+  <div>
     {live_render(@conn, PlausibleWeb.Live.PropsSettings,
       id: "props-form",
       session: %{"site_id" => @site.id, "domain" => @site.domain}
     )}
-  </.tile>
+  </div>
 </.settings_tiles>

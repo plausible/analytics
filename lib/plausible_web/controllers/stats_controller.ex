@@ -60,11 +60,23 @@ defmodule PlausibleWeb.StatsController do
     can_see_stats? = not Teams.locked?(site.team) or site_role == :super_admin
     demo = site.domain == "plausible.io"
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
-    skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
+
+    consolidated_view? = Plausible.Sites.consolidated?(site)
+
+    consolidated_view_available? =
+      on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team), else: false)
+
+    team_identifier = site.team.identifier
+
+    skip_to_dashboard? =
+      conn.params["skip_to_dashboard"] == "true" or consolidated_view?
 
     {:ok, segments} = Plausible.Segments.get_all_for_site(site, site_role)
 
     cond do
+      consolidated_view? and not consolidated_view_available? and site_role != :super_admin ->
+        redirect(conn, to: Routes.site_path(conn, :index))
+
       (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
         flags = get_flags(current_user, site)
 
@@ -85,7 +97,10 @@ defmodule PlausibleWeb.StatsController do
           is_dbip: is_dbip(),
           segments: segments,
           load_dashboard_js: true,
-          hide_footer?: if(ce?() || demo, do: false, else: site_role != :public)
+          hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
+          consolidated_view?: consolidated_view?,
+          consolidated_view_available?: consolidated_view_available?,
+          team_identifier: team_identifier
         )
 
       !stats_start_date && can_see_stats? ->
@@ -287,6 +302,7 @@ defmodule PlausibleWeb.StatsController do
         conn
         |> render("shared_link_password.html",
           link: shared_link,
+          query_string: conn.query_string,
           dogfood_page_path: "/share/:dashboard"
         )
     end
@@ -326,12 +342,17 @@ defmodule PlausibleWeb.StatsController do
 
         conn
         |> put_resp_cookie(shared_link_cookie_name(slug), token)
-        |> redirect(to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
+        |> redirect(
+          to:
+            Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug) <>
+              qs_appendix(conn)
+        )
       else
         conn
         |> render("shared_link_password.html",
           link: shared_link,
           error: "Incorrect password. Please try again.",
+          query_string: conn.query_string,
           dogfood_page_path: "/share/:dashboard"
         )
       end
@@ -339,6 +360,13 @@ defmodule PlausibleWeb.StatsController do
       render_error(conn, 404)
     end
   end
+
+  def qs_appendix(conn)
+      when is_nil(conn.query_string) or
+             (is_binary(conn.query_string) and byte_size(conn.query_string)) == 0,
+      do: ""
+
+  def qs_appendix(conn), do: "&#{conn.query_string}"
 
   defp render_shared_link(conn, shared_link) do
     shared_links_feature_access? =
@@ -377,6 +405,10 @@ defmodule PlausibleWeb.StatsController do
 
         embedded? = conn.params["embed"] == "true"
 
+        true = Plausible.Sites.regular?(shared_link.site)
+
+        team_identifier = shared_link.site.team.identifier
+
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
@@ -399,7 +431,11 @@ defmodule PlausibleWeb.StatsController do
           is_dbip: is_dbip(),
           segments: segments,
           load_dashboard_js: true,
-          hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public)
+          hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public),
+          # no shared links for consolidated views
+          consolidated_view?: false,
+          consolidated_view_available?: false,
+          team_identifier: team_identifier
         )
     end
   end

@@ -64,8 +64,23 @@ defmodule Plausible.Cache do
       alias Plausible.Cache.Adapter
       require Logger
 
+      @spec broadcast_put(any(), any(), Keyword.t()) :: :ok
+      def broadcast_put(key, value, opts \\ []) do
+        cache_name = Keyword.get(opts, :cache_name, name())
+        multicall_timeout = Keyword.get(opts, :multicall_timeout, :timer.seconds(5))
+
+        {:ok, _} =
+          Task.start(fn ->
+            :rpc.multicall(Adapter, :put, [cache_name, key, value, opts], multicall_timeout)
+          end)
+
+        :ok
+      end
+
       @spec get(any(), Keyword.t()) :: any() | nil
-      def get(key, opts \\ []) when is_list(opts) do
+      def get(key, opts \\ [])
+
+      def get(key, opts) when is_list(opts) do
         cache_name = Keyword.get(opts, :cache_name, name())
         force? = Keyword.get(opts, :force?, false)
 
@@ -75,6 +90,8 @@ defmodule Plausible.Cache do
           get_from_source(key)
         end
       end
+
+      defoverridable get: 2
 
       @spec get_or_store(any(), (-> any()), Keyword.t()) :: any() | nil
       def get_or_store(key, fallback_fn, opts \\ [])
@@ -105,11 +122,16 @@ defmodule Plausible.Cache do
       end
 
       @spec refresh_updated_recently(Keyword.t()) :: :ok
-      def refresh_updated_recently(opts \\ []) do
+      def refresh_updated_recently(opts \\ [])
+
+      def refresh_updated_recently(opts) do
         recently_updated_query =
-          from [s, ...] in base_db_query(),
+          from([s, ...] in base_db_query(),
             order_by: [asc: s.updated_at],
-            where: s.updated_at > ago(^15, "minute")
+            where:
+              s.updated_at >
+                ago(^15, "minute")
+          )
 
         refresh(
           :updated_recently,
@@ -117,6 +139,8 @@ defmodule Plausible.Cache do
           Keyword.put(opts, :delete_stale_items?, false)
         )
       end
+
+      defoverridable refresh_updated_recently: 1
 
       @spec merge_items(new_items :: [any()], opts :: Keyword.t()) :: :ok
       def merge_items(new_items, opts \\ [])

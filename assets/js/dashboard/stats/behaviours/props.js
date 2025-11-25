@@ -138,7 +138,7 @@ export default function Properties({ afterFetchData }) {
           search: (search) => search
         }}
         maybeHideDetails={true}
-        color="bg-red-50"
+        color="bg-red-50 group-hover:bg-red-100"
         colMinWidth={90}
       />
     )
@@ -155,7 +155,7 @@ export default function Properties({ afterFetchData }) {
     : ''
   const comboboxValues = propKey ? [{ value: propKey, label: propKey }] : []
   const boxClass = classNames(
-    'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500',
+    'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:bg-gray-750 dark:border-gray-750',
     {
       'pointer-events-none': comboboxDisabled
     }

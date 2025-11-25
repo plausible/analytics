@@ -12,7 +12,7 @@
       for={@name_changeset}
       method="post"
     >
-      <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
+      <.input type="text" field={f[:name]} label="Name" width="w-1/2" mt?={false} />
 
       <.button type="submit">
         Name Ändern
@@ -28,7 +28,7 @@
       Der Name der mit deinem Konto verknüpft ist
     </:subtitle>
     <.form :let={f} for={@name_changeset}>
-      <.input type="text" field={f[:name]} disabled={true} label="Name" width="w-1/2" />
+      <.input type="text" field={f[:name]} disabled={true} label="Name" width="w-1/2" mt?={false} />
     </.form>
   </.tile>
 
@@ -51,10 +51,11 @@
         options={Plausible.Themes.options()}
         label="Theme"
         width="w-1/2"
+        mt?={false}
       />
 
       <.button type="submit">
-        Change Theme
+        Change theme
       </.button>
     </.form>
   </.tile>

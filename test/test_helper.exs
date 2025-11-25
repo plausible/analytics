@@ -4,11 +4,12 @@ end
 
 {:ok, _} = Application.ensure_all_started(:ex_machina)
 Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
-Application.ensure_all_started(:double)
 
-FunWithFlags.enable(:channels)
-FunWithFlags.enable(:scroll_depth)
-FunWithFlags.enable(:starter_tier)
+Mox.defmock(Plausible.DnsLookup.Mock,
+  for: Plausible.DnsLookupInterface
+)
+
+Application.ensure_all_started(:double)
 
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
@@ -19,8 +20,12 @@ end
 
 default_exclude = [:slow, :minio, :migrations]
 
-# avoid slowdowns contacting the code server https://github.com/sasa1977/con_cache/pull/79
-:code.ensure_loaded(ConCache.Lock.Resource)
+# avoid slowdowns contacting the code server
+for {app, _, _} <- Application.loaded_applications() do
+  if modules = Application.spec(app, :modules) do
+    Code.ensure_all_loaded(modules)
+  end
+end
 
 if Mix.env() == :ce_test do
   IO.puts("Test mode: Community Edition")

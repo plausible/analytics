@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <div
       id={"#{@kind}-plan-box"}
       class={[
-        "shadow-lg border border-gray-200 dark:border-none bg-white rounded-xl px-6 sm:px-4 py-4 sm:py-3 dark:bg-gray-800",
+        "shadow-lg border border-gray-200 dark:border-none bg-white rounded-xl px-6 sm:px-4 py-4 sm:py-3 dark:bg-gray-850",
         !@highlight && "dark:ring-gray-600",
         @highlight && "ring-2 ring-indigo-600 dark:ring-indigo-300"
       ]}
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         ]}>
           {String.capitalize(to_string(@kind))}
         </h3>
-        <.pill :if={@highlight} text={@highlight} />
+        <.highlight_pill :if={@highlight} text={@highlight} />
       </div>
       <div>
         <div class={@price_container_class}>
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <div
       id="enterprise-plan-box"
       class={[
-        "rounded-xl px-6 sm:px-4 py-4 sm:py-3 bg-gray-900 shadow-xl dark:bg-gray-800",
+        "rounded-xl px-6 sm:px-4 py-4 sm:py-3 bg-gray-900 shadow-xl dark:bg-gray-850",
         !@recommended && "dark:ring-gray-600",
         @recommended && "ring-4 ring-indigo-500 dark:ring-2 dark:ring-indigo-300"
       ]}
@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     """
   end
 
-  defp pill(assigns) do
+  defp highlight_pill(assigns) do
     ~H"""
     <div class="flex items-center justify-between gap-x-4">
       <p
@@ -197,7 +197,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
       <span
         id={"#{@kind}-price-tag-interval"}
-        class="text-sm font-semibold leading-6 text-gray-600 pl-1 self-end"
+        class="text-sm font-semibold leading-6 text-gray-600 dark:text-gray-500 pl-1 self-end"
       >
         /year
       </span>
@@ -205,7 +205,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       <div class="font-bold tracking-tight text-sm self-center">
         <span
           id={"#{@kind}-discount-price-tag-strikethrough-amount"}
-          class="line-through tracking-tight text-gray-500 dark:text-gray-600"
+          class="line-through tracking-tight text-gray-500"
         >
           {@monthly_cost}
         </span>
@@ -214,7 +214,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         </span>
       </div>
 
-      <span class="text-sm font-semibold text-gray-600 pl-1 self-center">
+      <span class="text-sm font-semibold text-gray-600 dark:text-gray-500 pl-1 self-center">
         /month
       </span>
     </div>
@@ -288,7 +288,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
     <div :if={@exceeded_plan_limits != [] && @disabled_message} class="flex flex-col items-center">
-      <.tooltip>
+      <.tooltip testid="plan-tooltip">
         <div class="h-0 text-sm">
           <div class="flex items-center text-red-700 dark:text-red-500 justify-center">
             {@disabled_message}

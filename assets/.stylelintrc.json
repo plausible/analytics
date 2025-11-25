@@ -3,7 +3,7 @@
   "ignoreFiles": ["./node_modules/**/*.*"],
   "rules": {
     "import-notation": "string",
-    "at-rule-no-unknown": [true, { "ignoreAtRules": ["apply", "screen"] }],
+    "at-rule-no-unknown": [true, { "ignoreAtRules": ["apply", "screen", "plugin", "source", "theme", "utility", "custom-variant"] }],
     "at-rule-empty-line-before": [
       "always",
       { "except": ["blockless-after-same-name-blockless"], "ignoreAtRules": ["apply"] }

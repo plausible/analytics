@@ -16,15 +16,10 @@ defmodule PlausibleWeb.Live.GoalSettings do
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
         current_user
-        |> Plausible.Sites.get_for_user!(domain, [:owner, :admin, :editor, :super_admin])
-      end)
-      |> assign_new(:site_role, fn %{site: site, current_user: current_user} ->
-        if Plausible.Auth.is_super_admin?(current_user) do
-          :super_admin
-        else
-          {:ok, {_, role}} = Plausible.Teams.Memberships.site_role(site, current_user)
-          role
-        end
+        |> Plausible.Sites.get_for_user!(domain,
+          roles: [:owner, :admin, :editor, :super_admin],
+          include_consolidated?: true
+        )
       end)
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)
@@ -48,7 +43,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
        domain: domain,
        displayed_goals: socket.assigns.all_goals,
        filter_text: "",
-       form_goal: nil
+       form_goal: nil,
+       goal_type: nil
      )}
   end
 
@@ -59,41 +55,64 @@ defmodule PlausibleWeb.Live.GoalSettings do
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
 
-      <.live_component :let={modal_unique_id} module={Modal} preload?={false} id="goals-form-modal">
-        <.live_component
-          module={PlausibleWeb.Live.GoalSettings.Form}
-          id={"goals-form-#{modal_unique_id}"}
-          context_unique_id={modal_unique_id}
-          event_name_options={@event_name_options}
-          domain={@domain}
-          site={@site}
-          current_user={@current_user}
-          site_role={@site_role}
-          site_team={@site_team}
-          existing_goals={@all_goals}
-          goal={@form_goal}
-          on_save_goal={
-            fn goal, socket ->
-              send(self(), {:goal_added, goal})
-              Modal.close(socket, "goals-form-modal")
-            end
-          }
-          on_autoconfigure={
-            fn socket ->
-              send(self(), :autoconfigure)
-              Modal.close(socket, "goals-form-modal")
-            end
-          }
-        />
-      </.live_component>
-      <.live_component
-        module={PlausibleWeb.Live.GoalSettings.List}
-        id="goals-list"
-        goals={@displayed_goals}
-        domain={@domain}
-        filter_text={@filter_text}
+      <.tile
+        docs="goal-conversions"
+        feature_mod={Plausible.Billing.Feature.Goals}
+        feature_toggle?={true}
+        show_content?={!Plausible.Billing.Feature.Goals.opted_out?(@site)}
         site={@site}
-      />
+        current_user={@current_user}
+      >
+        <:title>
+          Goals
+        </:title>
+        <:subtitle :if={Enum.count(@all_goals) > 0}>
+          <p>
+            Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
+          </p>
+          <p :if={ee?() and Plausible.Sites.regular?(@site)} data-test-id="setup-funnels-cta">
+            You can also
+            <.styled_link href={Routes.site_path(@socket, :settings_funnels, @domain)}>
+              compose goals into funnels.
+            </.styled_link>
+          </p>
+        </:subtitle>
+        <.live_component :let={modal_unique_id} module={Modal} preload?={false} id="goals-form-modal">
+          <.live_component
+            module={PlausibleWeb.Live.GoalSettings.Form}
+            id={"goals-form-#{modal_unique_id}"}
+            context_unique_id={modal_unique_id}
+            event_name_options={@event_name_options}
+            domain={@domain}
+            site={@site}
+            current_user={@current_user}
+            site_team={@site_team}
+            existing_goals={@all_goals}
+            goal={@form_goal}
+            goal_type={@goal_type}
+            on_save_goal={
+              fn goal, socket ->
+                send(self(), {:goal_added, goal})
+                Modal.close(socket, "goals-form-modal")
+              end
+            }
+            on_autoconfigure={
+              fn socket ->
+                send(self(), :autoconfigure)
+                Modal.close(socket, "goals-form-modal")
+              end
+            }
+          />
+        </.live_component>
+        <.live_component
+          module={PlausibleWeb.Live.GoalSettings.List}
+          id="goals-list"
+          goals={@displayed_goals}
+          domain={@domain}
+          filter_text={@filter_text}
+          site={@site}
+        />
+      </.tile>
     </div>
     """
   end
@@ -120,8 +139,12 @@ defmodule PlausibleWeb.Live.GoalSettings do
     {:noreply, socket}
   end
 
-  def handle_event("add-goal", _, socket) do
-    socket = socket |> assign(form_goal: nil) |> Modal.open("goals-form-modal")
+  def handle_event("add-goal", %{"goal-type" => goal_type}, socket) do
+    socket =
+      socket
+      |> assign(form_goal: nil, goal_type: goal_type)
+      |> Modal.open("goals-form-modal")
+
     {:noreply, socket}
   end
 
@@ -164,7 +187,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
         event_name_options:
           Enum.reject(socket.assigns.event_name_options, &(&1 == goal.event_name)),
         displayed_goals: all_goals,
-        form_goal: nil
+        form_goal: nil,
+        goal_type: nil
       )
       |> put_live_flash(:success, "Goal saved successfully")
 
@@ -190,5 +214,9 @@ defmodule PlausibleWeb.Live.GoalSettings do
       |> put_live_flash(:success, "All goals added successfully")
 
     {:noreply, socket}
+  end
+
+  def handle_info({:feature_toggled, flash_msg, updated_site}, socket) do
+    {:noreply, assign(put_flash(socket, :success, flash_msg), site: updated_site)}
   end
 end

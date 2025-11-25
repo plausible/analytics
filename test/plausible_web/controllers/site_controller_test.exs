@@ -3,11 +3,9 @@ defmodule PlausibleWeb.SiteControllerTest do
   use Plausible.Repo
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  use Plausible.Teams.Test
 
   import ExUnit.CaptureLog
   import Mox
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Imported.SiteImport
   alias Plausible.Teams
@@ -57,9 +55,77 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "GET /sites" do
     setup [:create_user, :log_in]
 
-    test "shows empty screen if no sites", %{conn: conn} do
+    test "shows personal sites empty state when there are no sites at all", %{conn: conn} do
       conn = get(conn, "/sites")
-      assert html_response(conn, 200) =~ "You don't have any sites yet"
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Add your first personal site"
+      assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
+      refute resp =~ "Go to team sites"
+    end
+
+    test "shows team sites empty state when team is setup and there are no sites at all", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Teams.get_or_create(user)
+      team = Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Add your first team site"
+      assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
+      refute resp =~ "Go to team sites"
+    end
+
+    test "shows team sites empty state when team is setup but has no team sites, and user has personal sites",
+         %{conn: conn, user: user} do
+      _personal_site = new_site(owner: user)
+
+      other_user = new_user()
+      {:ok, other_team} = Teams.get_or_create(other_user)
+      other_team = Teams.complete_setup(other_team)
+      add_member(other_team, user: user, role: :admin)
+      conn = set_current_team(conn, other_team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Add your first team site"
+      assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
+      refute resp =~ "Go to team sites"
+    end
+
+    test "shows personal sites empty state when there are team sites but no personal sites", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Teams.get_or_create(user)
+      team = Teams.complete_setup(team)
+      _team_site = new_site(team: team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Add your first personal site"
+      assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
+      assert resp =~ "Go to team sites"
+    end
+
+    test "shows empty search state when filter returns no results but there are sites", %{
+      conn: conn,
+      user: user
+    } do
+      _site = new_site(domain: "example.com", owner: user)
+
+      conn = get(conn, "/sites", filter_text: "nonexistent")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "No sites found. Try a different search term."
+      refute resp =~ "Add your first"
+      refute resp =~ "Go to team sites"
     end
 
     test "lists all of your sites with last 24h visitors (defaulting to 0 on first mount)", %{
@@ -195,7 +261,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
 
       refute resp =~ "second.example.com"
-      assert html_response(conn, 200) =~ "No sites found. Please search for something else."
+      assert html_response(conn, 200) =~ "No sites found. Try a different search term."
       refute html_response(conn, 200) =~ "You don't have any sites yet."
     end
 
@@ -254,7 +320,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ "can&#39;t be blank"
+      assert html_response(conn, 200) =~ htmlize_quotes("can't be blank")
     end
 
     test "fails to create site when not allowed to in selected team", %{conn: conn, user: user} do
@@ -404,7 +470,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ "can&#39;t be blank"
+      assert html_response(conn, 200) =~ htmlize_quotes("can't be blank")
     end
 
     test "only alphanumeric characters and slash allowed in domain", %{conn: conn} do
@@ -483,31 +549,36 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:domain/installation" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "static render - spinner determining installation type", %{
-      conn: conn,
-      site: site
-    } do
-      conn = get(conn, "/#{site.domain}/installation")
-
-      assert html_response(conn, 200) =~ "Determining installation type"
-    end
-  end
-
   describe "GET /:domain/settings/general" do
     setup [:create_user, :log_in, :create_site]
 
     setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
 
     test "shows settings form", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/settings/general")
+      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
 
-      assert resp =~ "Site Timezone"
-      assert resp =~ "Site Domain"
-      assert resp =~ "Site Installation"
+      assert resp =~ "Settings for #{site.domain}"
+      assert resp =~ "Site domain"
+      assert resp =~ "Change domain"
+      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
+
+      assert resp =~ "Site timezone"
+
+      assert resp =~ "Site installation"
+    end
+
+    on_ee do
+      test "renders only timezone section for a consolidated site", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(team: team)
+        consolidated_view = new_consolidated_view(team)
+        conn = get(conn, "/#{consolidated_view.domain}/settings/general")
+        resp = html_response(conn, 200)
+
+        assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|) |> Enum.into([])
+        assert text(tile_element) =~ "Site timezone"
+      end
     end
 
     @tag :ee_only
@@ -530,16 +601,16 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"Visibility", "/#{site.domain}/settings/visibility"},
                {"Goals", "/#{site.domain}/settings/goals"},
                {"Funnels", "/#{site.domain}/settings/funnels"},
-               {"Custom Properties", "/#{site.domain}/settings/properties"},
+               {"Custom properties", "/#{site.domain}/settings/properties"},
                {"Integrations", "/#{site.domain}/settings/integrations"},
-               {"Imports & Exports", "/#{site.domain}/settings/imports-exports"},
-               {"Shields", ""},
-               {"IP Addresses", "/#{site.domain}/settings/shields/ip_addresses"},
+               {"Imports & exports", "/#{site.domain}/settings/imports-exports"},
+               {"Shields", nil},
+               {"IP addresses", "/#{site.domain}/settings/shields/ip_addresses"},
                {"Countries", "/#{site.domain}/settings/shields/countries"},
                {"Pages", "/#{site.domain}/settings/shields/pages"},
                {"Hostnames", "/#{site.domain}/settings/shields/hostnames"},
-               {"Email Reports", "/#{site.domain}/settings/email-reports"},
-               {"Danger Zone", "/#{site.domain}/settings/danger-zone"}
+               {"Email reports", "/#{site.domain}/settings/email-reports"},
+               {"Danger zone", "/#{site.domain}/settings/danger-zone"}
              ]
     end
 
@@ -562,17 +633,44 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"People", "/#{site.domain}/settings/people"},
                {"Visibility", "/#{site.domain}/settings/visibility"},
                {"Goals", "/#{site.domain}/settings/goals"},
-               {"Custom Properties", "/#{site.domain}/settings/properties"},
+               {"Custom properties", "/#{site.domain}/settings/properties"},
                {"Integrations", "/#{site.domain}/settings/integrations"},
-               {"Imports & Exports", "/#{site.domain}/settings/imports-exports"},
-               {"Shields", ""},
-               {"IP Addresses", "/#{site.domain}/settings/shields/ip_addresses"},
+               {"Imports & exports", "/#{site.domain}/settings/imports-exports"},
+               {"Shields", nil},
+               {"IP addresses", "/#{site.domain}/settings/shields/ip_addresses"},
                {"Countries", "/#{site.domain}/settings/shields/countries"},
                {"Pages", "/#{site.domain}/settings/shields/pages"},
                {"Hostnames", "/#{site.domain}/settings/shields/hostnames"},
-               {"Email Reports", "/#{site.domain}/settings/email-reports"},
-               {"Danger Zone", "/#{site.domain}/settings/danger-zone"}
+               {"Email reports", "/#{site.domain}/settings/email-reports"},
+               {"Danger zone", "/#{site.domain}/settings/danger-zone"}
              ]
+    end
+
+    on_ee do
+      test "consolidated view settings sidebar items", %{
+        conn: conn,
+        user: user
+      } do
+        team = user |> team_of()
+        new_site(team: team)
+        site = new_consolidated_view(team)
+        conn = get(conn, "/#{site.domain}/settings/general")
+        resp = html_response(conn, 200)
+
+        items =
+          resp
+          |> find("[data-testid=site_settings_sidebar] a")
+          |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
+
+        assert resp =~ "Settings for consolidated view"
+
+        assert items == [
+                 {"General", "/#{site.domain}/settings/general"},
+                 {"Goals", "/#{site.domain}/settings/goals"},
+                 {"Custom properties", "/#{site.domain}/settings/properties"},
+                 {"Email reports", "/#{site.domain}/settings/email-reports"}
+               ]
+      end
     end
 
     test "header and footer are shown", %{conn: conn, site: site, user: user} do
@@ -585,6 +683,18 @@ defmodule PlausibleWeb.SiteControllerTest do
 
   describe "GET /:domain/settings/people" do
     setup [:create_user, :log_in, :create_site]
+
+    on_ee do
+      test "returns 404 for consolidated view", %{conn: conn, user: user} do
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        new_site(team: team)
+        new_site(team: team)
+        consolidated_view = new_consolidated_view(team)
+
+        conn = get(conn, "/#{consolidated_view.domain}/settings/people")
+        assert html_response(conn, 404)
+      end
+    end
 
     test "lists current members", %{conn: conn, user: user} do
       site = new_site(owner: user)
@@ -694,6 +804,47 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "GET /:domain/settings/visibility" do
     setup [:create_user, :log_in, :create_site]
 
+    setup %{user: user} do
+      subscribe_to_growth_plan(user)
+      :ok
+    end
+
+    test "shows shared links section", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/visibility")
+
+      resp = html_response(conn, 200)
+      assert resp =~ "Add shared link"
+      assert element_exists?(resp, ~s/button#add-shared-link-button/)
+    end
+
+    test "lists shared links with actions", %{conn: conn, site: site} do
+      link1 = insert(:shared_link, site: site, name: "Link 1")
+      link2 = insert(:shared_link, site: site, name: "Link 2")
+
+      conn = get(conn, "/#{site.domain}/settings/visibility")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Link 1"
+      assert resp =~ "Link 2"
+
+      assert element_exists?(
+               resp,
+               ~s/button[phx-click="edit-shared-link"][phx-value-slug="#{link1.slug}"]/
+             )
+
+      assert element_exists?(
+               resp,
+               ~s/button[phx-click="delete-shared-link"][phx-value-slug="#{link2.slug}"]/
+             )
+    end
+
+    test "shows message when no shared links are configured", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/visibility")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Create your first shared link"
+    end
+
     test "does not render shared links with special names", %{conn: conn, site: site} do
       for special_name <- Plausible.Sites.shared_link_special_names() do
         insert(:shared_link, name: special_name, site: site)
@@ -719,9 +870,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html_response(conn, 200) =~ "Custom event"
       assert html_response(conn, 200) =~ "Visit /register"
-    end
 
-    test "goal names are HTML safe", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "<some_event>")
 
       conn = get(conn, "/#{site.domain}/settings/goals")
@@ -867,6 +1016,21 @@ defmodule PlausibleWeb.SiteControllerTest do
                "/#{URI.encode_www_form(site.domain)}/settings/integrations"
     end
 
+    test "won't crash if associated google auth has been already deleted", %{
+      conn: conn1,
+      user: user,
+      site: site
+    } do
+      insert(:google_auth, user: user, site: site)
+      delete(conn1, "/#{site.domain}/settings/google-search")
+      conn = delete(conn1, "/#{site.domain}/settings/google-search")
+
+      refute Repo.exists?(Plausible.Site.GoogleAuth)
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/integrations"
+    end
+
     test "fails to delete associated google auth from the outside", %{
       conn: conn,
       user: user
@@ -887,12 +1051,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      assert text_of_attr(resp, ~s|a[href]|, "href") =~
-               "https://accounts.google.com/o/oauth2/"
+      assert element_exists?(resp, ~s|a[href^="https://accounts.google.com/o/oauth2/"]|)
 
-      assert resp =~ "Import Data"
-      assert resp =~ "There are no imports yet"
-      assert resp =~ "Export Data"
+      assert(resp =~ "Import data")
+      assert resp =~ "Import your first data"
+      assert resp =~ "Export data"
     end
 
     test "renders imports in import list", %{conn: conn, site: site} do
@@ -912,8 +1075,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      buttons = find(resp, ~s|a[data-method="delete"]|)
-      assert length(buttons) == 4
+      assert elem_count(resp, ~s|a[data-method="delete"]|) == 4
 
       assert resp =~ "Google Analytics (123456)"
       assert resp =~ "9.9k"
@@ -1157,123 +1319,6 @@ defmodule PlausibleWeb.SiteControllerTest do
         end)
 
       assert log =~ "Google Analytics: failed to list sites: :nxdomain"
-    end
-  end
-
-  describe "PUT /:domain/settings/features/visibility/:setting" do
-    def query_conn_with_some_url(context) do
-      {:ok, Map.put(context, :conn_with_url, get(context.conn, "/some_parent_path"))}
-    end
-
-    setup [:create_user, :log_in, :query_conn_with_some_url]
-
-    for {title, setting} <- %{
-          "Goals" => :conversions_enabled,
-          "Funnels" => :funnels_enabled,
-          "Custom Properties" => :props_enabled
-        } do
-      test "can toggle #{title} with admin access", %{
-        user: user,
-        conn: conn0,
-        conn_with_url: conn_with_url
-      } do
-        site = new_site()
-        add_guest(site, user: user, role: :editor)
-
-        conn =
-          put(
-            conn0,
-            PlausibleWeb.Components.Site.Feature.target(
-              site,
-              unquote(setting),
-              conn_with_url,
-              false
-            )
-          )
-
-        assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
-                 "#{unquote(title)} are now hidden from your dashboard"
-
-        assert redirected_to(conn, 302) =~ "/some_parent_path"
-
-        assert %{unquote(setting) => false} = Plausible.Sites.get_by_domain(site.domain)
-
-        conn =
-          put(
-            conn0,
-            PlausibleWeb.Components.Site.Feature.target(
-              site,
-              unquote(setting),
-              conn_with_url,
-              true
-            )
-          )
-
-        assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
-                 "#{unquote(title)} are now visible again on your dashboard"
-
-        assert redirected_to(conn, 302) =~ "/some_parent_path"
-
-        assert %{unquote(setting) => true} = Plausible.Sites.get_by_domain(site.domain)
-      end
-    end
-
-    for {title, setting} <- %{
-          "Goals" => :conversions_enabled,
-          "Funnels" => :funnels_enabled,
-          "Properties" => :props_enabled
-        } do
-      test "cannot toggle #{title} with viewer access", %{
-        user: user,
-        conn: conn0,
-        conn_with_url: conn_with_url
-      } do
-        site = new_site()
-        add_guest(site, user: user, role: :viewer)
-
-        conn =
-          put(
-            conn0,
-            PlausibleWeb.Components.Site.Feature.target(
-              site,
-              unquote(setting),
-              conn_with_url,
-              false
-            )
-          )
-
-        assert conn.status == 404
-        assert conn.halted
-      end
-    end
-
-    test "setting feature visibility is idempotent", %{
-      user: user,
-      conn: conn0,
-      conn_with_url: conn_with_url
-    } do
-      site = new_site()
-      add_guest(site, user: user, role: :editor)
-
-      setting = :funnels_enabled
-
-      conn =
-        put(
-          conn0,
-          PlausibleWeb.Components.Site.Feature.target(site, setting, conn_with_url, false)
-        )
-
-      assert %{^setting => false} = Plausible.Sites.get_by_domain(site.domain)
-      assert redirected_to(conn, 302) =~ "/some_parent_path"
-
-      conn =
-        put(
-          conn0,
-          PlausibleWeb.Components.Site.Feature.target(site, setting, conn_with_url, false)
-        )
-
-      assert %{^setting => false} = Plausible.Sites.get_by_domain(site.domain)
-      assert redirected_to(conn, 302) =~ "/some_parent_path"
     end
   end
 
@@ -1595,141 +1640,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /sites/:domain/shared-links/new" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "shows form for new shared link", %{conn: conn, site: site} do
-      conn = get(conn, "/sites/#{site.domain}/shared-links/new")
-
-      assert html_response(conn, 200) =~ "New Shared Link"
-    end
-  end
-
-  describe "POST /sites/:domain/shared-links" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "creates shared link without password", %{conn: conn, site: site} do
-      post(conn, "/sites/#{site.domain}/shared-links", %{
-        "shared_link" => %{"name" => "Link name"}
-      })
-
-      link = Repo.one(Plausible.Site.SharedLink)
-
-      refute is_nil(link.slug)
-      assert is_nil(link.password_hash)
-      assert link.name == "Link name"
-    end
-
-    test "creates shared link with password", %{conn: conn, site: site} do
-      post(conn, "/sites/#{site.domain}/shared-links", %{
-        "shared_link" => %{"password" => "password", "name" => "New name"}
-      })
-
-      link = Repo.one(Plausible.Site.SharedLink)
-
-      refute is_nil(link.slug)
-      refute is_nil(link.password_hash)
-      assert link.name == "New name"
-    end
-
-    test "fails to create when subscription plan doesn't support the shared links feature", %{
-      conn: conn,
-      user: user,
-      site: site
-    } do
-      subscribe_to_starter_plan(user)
-
-      conn =
-        post(conn, "/sites/#{site.domain}/shared-links", %{
-          "shared_link" => %{"name" => "Something"}
-        })
-
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :settings_visibility, site.domain)
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "Your current subscription plan does not include Shared Links"
-
-      refute Repo.exists?(Plausible.Site.SharedLink)
-    end
-
-    for special_name <- Plausible.Sites.shared_link_special_names() do
-      test "fails to create with the special '#{special_name}' name intended for Plugins API",
-           %{conn: conn, site: site} do
-        conn =
-          post(conn, "/sites/#{site.domain}/shared-links", %{
-            "shared_link" => %{"name" => unquote(special_name)}
-          })
-
-        assert html_response(conn, 200) =~ "This name is reserved. Please choose another one"
-        refute Repo.exists?(Plausible.Site.SharedLink)
-      end
-    end
-  end
-
-  describe "GET /sites/:domain/shared-links/edit" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "shows form to edit shared link", %{conn: conn, site: site} do
-      link = insert(:shared_link, site: site)
-      conn = get(conn, "/sites/#{site.domain}/shared-links/#{link.slug}/edit")
-
-      assert html_response(conn, 200) =~ "Edit Shared Link"
-    end
-  end
-
-  describe "PUT /sites/:domain/shared-links/:slug" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "can update link name", %{conn: conn, site: site} do
-      link = insert(:shared_link, site: site)
-
-      put(conn, "/sites/#{site.domain}/shared-links/#{link.slug}", %{
-        "shared_link" => %{"name" => "Updated link name"}
-      })
-
-      link = Repo.one(Plausible.Site.SharedLink)
-
-      assert link.name == "Updated link name"
-    end
-
-    for special_name <- Plausible.Sites.shared_link_special_names() do
-      test "fails to change link name to #{special_name}", %{conn: conn, site: site} do
-        link = insert(:shared_link, site: site)
-
-        conn =
-          put(conn, "/sites/#{site.domain}/shared-links/#{link.slug}", %{
-            "shared_link" => %{"name" => unquote(special_name)}
-          })
-
-        assert html_response(conn, 200) =~ "This name is reserved. Please choose another one"
-      end
-    end
-  end
-
-  describe "DELETE /sites/:domain/shared-links/:slug" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "deletes shared link", %{conn: conn, site: site} do
-      link = insert(:shared_link, site: site)
-
-      conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
-
-      refute Repo.one(Plausible.Site.SharedLink)
-      assert redirected_to(conn, 302) =~ "/#{URI.encode_www_form(site.domain)}/settings"
-      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Shared Link deleted"
-    end
-
-    test "fails to delete shared link from the outside", %{conn: conn, site: site} do
-      other_site = insert(:site)
-      link = insert(:shared_link, site: other_site)
-
-      conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
-
-      assert Repo.one(Plausible.Site.SharedLink)
-      assert html_response(conn, 404)
-    end
-  end
-
   describe "DELETE /:domain/settings/:forget_import/:import_id" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
@@ -1743,7 +1653,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           site,
           user,
           start_date: ~D[2022-01-01],
-          end_date: Timex.today()
+          end_date: Date.utc_today()
         )
 
       %{args: %{import_id: import_id}} = job
@@ -1814,7 +1724,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         site,
         user,
         start_date: ~D[2022-01-01],
-        end_date: Timex.today()
+        end_date: Date.utc_today()
       )
 
       populate_stats(site, [
@@ -1835,7 +1745,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           site,
           user,
           start_date: ~D[2022-01-01],
-          end_date: Timex.today()
+          end_date: Date.utc_today()
         )
 
       populate_stats(site, [
@@ -1845,95 +1755,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/#{site.domain}/settings/forget-imported")
 
       assert Repo.reload(job).state == "cancelled"
-    end
-  end
-
-  describe "domain change" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "shows domain change in the settings form", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
-      resp = html_response(conn, 200)
-
-      assert resp =~ "Site Domain"
-      assert resp =~ "Change Domain"
-      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
-    end
-
-    test "domain change form renders", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
-      resp = html_response(conn, 200)
-      assert resp =~ Routes.site_path(conn, :change_domain_submit, site.domain)
-
-      assert text(resp) =~
-               "Once you change your domain, you must update Plausible Installation on your site within 72 hours"
-    end
-
-    test "domain change form submission when no change is made", %{conn: conn, site: site} do
-      conn =
-        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => site.domain}
-        })
-
-      resp = html_response(conn, 200)
-      assert resp =~ "New domain must be different than the current one"
-    end
-
-    test "domain change form submission to an existing domain", %{conn: conn, site: site} do
-      another_site = insert(:site)
-
-      conn =
-        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => another_site.domain}
-        })
-
-      resp = html_response(conn, 200)
-      assert resp =~ "This domain cannot be registered"
-
-      site = Repo.reload!(site)
-      assert site.domain != another_site.domain
-      assert is_nil(site.domain_changed_from)
-    end
-
-    test "domain change form submission to a domain in transition period", %{
-      conn: conn,
-      site: site
-    } do
-      another_site = insert(:site, domain_changed_from: "foo.example.com")
-
-      conn =
-        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => "foo.example.com"}
-        })
-
-      resp = html_response(conn, 200)
-      assert resp =~ "This domain cannot be registered"
-
-      site = Repo.reload!(site)
-      assert site.domain != another_site.domain
-      assert is_nil(site.domain_changed_from)
-    end
-
-    test "domain change successful form submission redirects to installation", %{
-      conn: conn,
-      site: site
-    } do
-      original_domain = site.domain
-      new_domain = "â-example.com"
-
-      conn =
-        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => new_domain}
-        })
-
-      assert redirected_to(conn) ==
-               Routes.site_path(conn, :installation, new_domain,
-                 flow: PlausibleWeb.Flows.domain_change()
-               )
-
-      site = Repo.reload!(site)
-      assert site.domain == new_domain
-      assert site.domain_changed_from == original_domain
     end
   end
 
@@ -1956,7 +1777,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "no change team section appears when <1 team", %{conn: conn, site: site} do
       conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
       html = html_response(conn, 200)
-      assert html =~ "Danger Zone"
+      assert html =~ "Danger zone"
       assert html =~ "Delete #{site.domain}"
       refute html =~ "Change #{site.domain} team"
     end
@@ -1966,7 +1787,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
       html = html_response(conn, 200)
-      assert html =~ "Danger Zone"
+      assert html =~ "Danger zone"
       assert html =~ "Delete #{site.domain}"
       assert html =~ "Change #{site.domain} team"
     end
@@ -2026,6 +1847,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         )
 
       html = html_response(conn, 200)
+
       assert text(html) =~ "This site's usage is over the limits of the team's subscription"
     end
 

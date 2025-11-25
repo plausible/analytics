@@ -5,12 +5,18 @@ defmodule PlausibleWeb.Live.Sites do
 
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Pagination
+  import PlausibleWeb.StatsView, only: [large_number_format: 1]
   require Logger
 
   alias Plausible.Sites
   alias Plausible.Teams
 
+  alias PlausibleWeb.Components.PrimaDropdown
+
   def mount(params, _session, socket) do
+    team = socket.assigns.current_team
+    user = socket.assigns.current_user
+
     uri =
       ("/sites?" <> URI.encode_query(Map.take(params, ["filter_text"])))
       |> URI.new!()
@@ -20,9 +26,11 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:uri, uri)
       |> assign(
         :team_invitations,
-        Teams.Invitations.all(socket.assigns.current_user)
+        Teams.Invitations.all(user)
       )
+      |> assign(:hourly_stats, %{})
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
+      |> assign(init_consolidated_view_assigns(user, team))
 
     {:ok, socket}
   end
@@ -43,81 +51,175 @@ defmodule PlausibleWeb.Live.Sites do
           Teams.Users.owns_sites?(current_user, include_pending?: true, only_team: current_team) &&
           Teams.Billing.check_needs_to_upgrade(current_team)
       end)
+      |> then(fn socket ->
+        %{
+          sites: sites,
+          current_team: current_team,
+          has_sites?: has_sites?,
+          filter_text: filter_text
+        } = socket.assigns
+
+        is_empty_state? =
+          not (sites.entries != [] and (Teams.setup?(current_team) or has_sites?)) and
+            filter_text == ""
+
+        empty_state_title =
+          if Teams.setup?(current_team) do
+            "Add your first team site"
+          else
+            "Add your first personal site"
+          end
+
+        empty_state_description =
+          "Collect simple, privacy-friendly stats to better understand your audience."
+
+        assign(socket,
+          is_empty_state?: is_empty_state?,
+          empty_state_title: empty_state_title,
+          empty_state_description: empty_state_description
+        )
+      end)
 
     {:noreply, socket}
   end
 
   def render(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :invitations_map,
+        Enum.map(assigns.invitations, &{&1.invitation.invitation_id, &1}) |> Enum.into(%{})
+      )
+      |> assign(:searching?, String.trim(assigns.filter_text) != "")
+
     ~H"""
     <.flash_messages flash={@flash} />
-    <div
-      x-ref="invitation_data"
-      x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
-      x-on:keydown.escape.window="invitationOpen = false"
-      class="container pt-6"
-    >
+    <div class="container pt-6">
       <PlausibleWeb.Live.Components.Visitors.gradient_defs />
       <.upgrade_nag_screen :if={
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
-        <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
+      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
+        <h2 class="text-xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-2xl md:text-3xl sm:leading-9 min-w-0 truncate">
           {Teams.name(@current_team)}
-          <.unstyled_link
-            :if={Teams.setup?(@current_team)}
-            data-test-id="team-settings-link"
-            href={Routes.settings_path(@socket, :team_general)}
-          >
-            <Heroicons.cog_6_tooth class="hidden group-hover:inline size-4 dark:text-gray-100 text-gray-900" />
-          </.unstyled_link>
         </h2>
+        <.unstyled_link
+          :if={Teams.setup?(@current_team)}
+          data-test-id="team-settings-link"
+          href={Routes.settings_path(@socket, :team_general)}
+          class="shrink-0"
+        >
+          <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
+        </.unstyled_link>
       </div>
 
       <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
-      <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
-        <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
-        <p :if={not @has_sites?} class="dark:text-gray-100">
-          You don't have any sites yet.
+      <div
+        :if={not @is_empty_state?}
+        class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2"
+      >
+        <.search_form filter_text={@filter_text} uri={@uri} />
+        <PrimaDropdown.dropdown
+          :if={@consolidated_view_cta_dismissed?}
+          id="add-site-dropdown"
+        >
+          <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+            <Heroicons.plus class="size-4" /> Add
+            <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+          </PrimaDropdown.dropdown_trigger>
+
+          <PrimaDropdown.dropdown_menu>
+            <PrimaDropdown.dropdown_item
+              as={&link/1}
+              href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
+            >
+              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
+            </PrimaDropdown.dropdown_item>
+            <PrimaDropdown.dropdown_item phx-click="consolidated-view-cta-restore">
+              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
+              Add consolidated view
+            </PrimaDropdown.dropdown_item>
+          </PrimaDropdown.dropdown_menu>
+        </PrimaDropdown.dropdown>
+
+        <a
+          :if={!@consolidated_view_cta_dismissed?}
+          href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
+          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
+        >
+          <Heroicons.plus class="size-4" /> Add website
+        </a>
+      </div>
+
+      <p :if={@searching? and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
+        No sites found. Try a different search term.
+      </p>
+      <div
+        :if={@is_empty_state?}
+        class="flex flex-col items-center justify-center py-8 sm:py-12 max-w-md mx-auto"
+      >
+        <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+          {@empty_state_title}
+        </h3>
+        <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+          {@empty_state_description}
         </p>
-        <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <a href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"} class="button">
-            + Add Website
-          </a>
+        <div class="flex flex-col sm:flex-row gap-3 mt-6">
+          <.button_link
+            href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
+            theme="primary"
+            mt?={false}
+          >
+            <Heroicons.plus class="size-4" /> Add website
+          </.button_link>
+          <.button_link
+            :if={not Teams.setup?(@current_team) and @has_sites?}
+            href={Routes.auth_path(@socket, :select_team)}
+            theme="secondary"
+            mt?={false}
+          >
+            Go to team sites
+          </.button_link>
         </div>
       </div>
 
-      <p :if={@filter_text != "" and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
-        No sites found. Please search for something else.
-      </p>
-
-      <p
-        :if={
-          @has_sites? and not Teams.setup?(@current_team) and @sites.entries == [] and
-            @filter_text == ""
-        }
-        class="mt-4 dark:text-gray-100 text-center"
-      >
-        You currently have no personal sites. Are you looking for your team’s sites?
-        <.styled_link href={Routes.auth_path(@socket, :select_team)}>
-          Go to your team &rarr;
-        </.styled_link>
-      </p>
-
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <.consolidated_view_card_cta
+            :if={
+              not @searching? and
+                !@consolidated_view and @no_consolidated_view_reason not in [:no_sites, :unavailable] and
+                not @consolidated_view_cta_dismissed?
+            }
+            can_manage_consolidated_view?={@can_manage_consolidated_view?}
+            no_consolidated_view_reason={@no_consolidated_view_reason}
+            current_user={@current_user}
+            current_team={@current_team}
+          />
+          <.consolidated_view_card
+            :if={
+              not @searching? and not is_nil(@consolidated_view) and
+                consolidated_view_ok_to_display?(@current_team)
+            }
+            can_manage_consolidated_view?={@can_manage_consolidated_view?}
+            consolidated_view={@consolidated_view}
+            consolidated_stats={@consolidated_stats}
+            current_user={@current_user}
+            current_team={@current_team}
+          />
           <%= for site <- @sites.entries do %>
             <.site
               :if={site.entry_type in ["pinned_site", "site"]}
               site={site}
-              hourly_stats={@hourly_stats[site.domain]}
+              hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
             />
             <.invitation
               :if={site.entry_type == "invitation"}
               site={site}
-              invitation={hd(site.invitations)}
-              hourly_stats={@hourly_stats[site.domain]}
+              invitation={@invitations_map[hd(site.invitations).invitation_id]}
+              hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
             />
           <% end %>
         </ul>
@@ -131,7 +233,6 @@ defmodule PlausibleWeb.Live.Sites do
         >
           Total of <span class="font-medium">{@sites.total_entries}</span> sites
         </.pagination>
-        <.invitation_modal :if={Enum.any?(@sites.entries, &(&1.entry_type == "invitation"))} />
       </div>
     </div>
     """
@@ -139,11 +240,11 @@ defmodule PlausibleWeb.Live.Sites do
 
   def upgrade_nag_screen(assigns) do
     ~H"""
-    <div class="rounded-md bg-yellow-100 p-4">
+    <div class="rounded-md bg-yellow-100 dark:bg-yellow-900/40 p-5">
       <div class="flex">
-        <div class="flex-shrink-0">
+        <div class="shrink-0">
           <svg
-            class="h-5 w-5 text-yellow-400"
+            class="size-5 mt-0.5 text-yellow-500"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
@@ -156,11 +257,11 @@ defmodule PlausibleWeb.Live.Sites do
             />
           </svg>
         </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-yellow-800">
+        <div class="ml-2">
+          <h3 class="font-medium text-gray-900 dark:text-gray-100">
             Payment required
           </h3>
-          <div class="mt-2 text-sm text-yellow-700">
+          <div class="mt-1 text-sm text-gray-900/80 dark:text-gray-100/60">
             <p>
               To access the sites you own, you need to subscribe to a monthly or yearly payment plan.
               <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}>
@@ -174,37 +275,246 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  def consolidated_view_card_cta(assigns) do
+    ~H"""
+    <li
+      data-test-id="consolidated-view-card-cta"
+      class="relative col-span-1 flex flex-col justify-between bg-white p-6 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
+    >
+      <div class="flex flex-col">
+        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          Introducing
+        </p>
+        <h3 class="text-lg sm:text-[1.35rem] font-bold text-gray-900 leading-tighter dark:text-gray-100">
+          Consolidated view
+        </h3>
+      </div>
+
+      <div
+        :if={@no_consolidated_view_reason == :team_not_setup}
+        class="flex flex-col gap-y-4"
+      >
+        <p class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter">
+          To create a consolidated view, you'll need to set up a team.
+        </p>
+        <div class="flex gap-x-2">
+          <.button_link
+            href={Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)}
+            mt?={false}
+          >
+            Create team
+          </.button_link>
+          <.button_link
+            theme="secondary"
+            href="https://plausible.io/docs/consolidated-views"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+
+      <div
+        :if={@no_consolidated_view_reason == :upgrade_required}
+        class="flex flex-col gap-y-4"
+      >
+        <p
+          :if={@can_manage_consolidated_view?}
+          class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter"
+        >
+          Upgrade to the Business plan<span :if={not Teams.setup?(@current_team)}> and set up a team</span> to enable consolidated view.
+        </p>
+
+        <p
+          :if={not @can_manage_consolidated_view?}
+          class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter"
+        >
+          Available on Business plans. Contact your team owner to create it.
+        </p>
+
+        <div class="flex gap-x-2">
+          <.button_link
+            :if={@can_manage_consolidated_view?}
+            href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)}
+            mt?={false}
+          >
+            Upgrade
+          </.button_link>
+
+          <.button_link
+            theme="secondary"
+            href="https://plausible.io/docs/consolidated-views"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+
+      <div
+        :if={@no_consolidated_view_reason == :contact_us}
+        class="flex flex-col gap-y-4"
+      >
+        <p class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-tighter">
+          Your plan does not include consolidated view. Contact us to discuss an upgrade.
+        </p>
+
+        <div class="flex gap-x-2">
+          <.button_link
+            href="mailto:hello@plausible.io"
+            mt?={false}
+          >
+            Contact us
+          </.button_link>
+
+          <.button_link
+            theme="secondary"
+            href="https://plausible.io/docs/consolidated-views"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+
+      <a phx-click="consolidated-view-cta-dismiss">
+        <Heroicons.x_mark class="absolute top-6 right-6 size-5 text-gray-400 transition-colors duration-150 cursor-pointer dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" />
+      </a>
+    </li>
+    """
+  end
+
+  def consolidated_view_card(assigns) do
+    ~H"""
+    <li
+      data-test-id="consolidated-view-card"
+      class="relative row-span-2"
+    >
+      <.unstyled_link
+        href={"/#{URI.encode_www_form(@consolidated_view.domain)}"}
+        class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
+      >
+        <div class="flex flex-col flex-1 justify-between gap-y-5">
+          <div class="flex flex-col gap-y-2 mb-auto">
+            <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+              <.globe_icon />
+            </span>
+            <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight dark:text-gray-100">
+              All sites
+            </h3>
+          </div>
+          <span
+            :if={is_map(@consolidated_stats)}
+            class="max-w-sm sm:max-w-none text-indigo-500 my-auto"
+            data-test-id="consolidated-view-chart-loaded"
+          >
+            <PlausibleWeb.Live.Components.Visitors.chart
+              intervals={@consolidated_stats.intervals}
+              height={80}
+            />
+          </span>
+        </div>
+        <div
+          :if={is_map(@consolidated_stats)}
+          data-test-id="consolidated-view-stats-loaded"
+          class="flex flex-col flex-1 justify-between gap-y-2.5 sm:gap-y-5"
+        >
+          <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
+            <.consolidated_view_stat
+              value={large_number_format(@consolidated_stats.visitors)}
+              label="Unique visitors"
+              change={@consolidated_stats.visitors_change}
+            />
+            <.consolidated_view_stat
+              value={large_number_format(@consolidated_stats.visits)}
+              label="Total visits"
+              change={@consolidated_stats.visits_change}
+            />
+          </div>
+          <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
+            <.consolidated_view_stat
+              value={large_number_format(@consolidated_stats.pageviews)}
+              label="Total pageviews"
+              change={@consolidated_stats.pageviews_change}
+            />
+            <.consolidated_view_stat
+              value={@consolidated_stats.views_per_visit}
+              label="Views per visit"
+              change={@consolidated_stats.views_per_visit_change}
+            />
+          </div>
+        </div>
+        <div
+          :if={@consolidated_stats == :loading}
+          class="flex flex-col gap-y-2 min-h-[254px] h-full text-center animate-pulse"
+          data-test-id="consolidated-viw-stats-loading"
+        >
+          <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
+          <div class="flex-1 flex flex-col gap-y-2">
+            <div class="w-full h-full dark:bg-gray-750 bg-gray-100 rounded-md"></div>
+            <div class="w-full h-full dark:bg-gray-750 bg-gray-100 rounded-md"></div>
+          </div>
+        </div>
+      </.unstyled_link>
+      <div :if={@can_manage_consolidated_view?} class="absolute right-1 top-3.5">
+        <.ellipsis_menu site={@consolidated_view} can_manage?={true} />
+      </div>
+    </li>
+    """
+  end
+
+  attr(:value, :string, required: true)
+  attr(:label, :string, required: true)
+  attr(:change, :integer, required: true)
+
+  def consolidated_view_stat(assigns) do
+    ~H"""
+    <div class="flex flex-col flex-1 sm:gap-y-1.5">
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        {@label}
+      </p>
+      <div class="flex w-full justify-between items-baseline sm:flex-col sm:justify-start sm:items-start">
+        <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
+          {@value}
+        </p>
+
+        <.percentage_change change={@change} />
+      </div>
+    </div>
+    """
+  end
+
   attr(:site, Plausible.Site, required: true)
   attr(:invitation, :map, required: true)
   attr(:hourly_stats, :map, required: true)
 
   def invitation(assigns) do
+    assigns =
+      assigns
+      |> assign(:modal_id, "invitation-modal-#{assigns[:invitation].invitation.invitation_id}")
+
     ~H"""
     <li
-      class="group cursor-pointer"
+      class="group relative cursor-pointer"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
-      x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
+      phx-click={Prima.Modal.open(@modal_id)}
     >
-      <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
-        <div class="w-full flex items-center justify-between space-x-4">
-          <img
-            src={"/favicon/sources/#{@site.domain}"}
-            onerror="this.onerror=null; this.src='/favicon/sources/placeholder';"
-            class="w-4 h-4 flex-shrink-0 mt-px"
-          />
-          <div class="flex-1 truncate -mt-px">
-            <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100">
+      <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+        <div class="w-full flex items-center justify-between gap-x-2.5">
+          <.favicon domain={@site.domain} />
+          <div class="flex-1 w-full truncate">
+            <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-[22px] truncate dark:text-gray-100">
               {@site.domain}
             </h3>
           </div>
-
-          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+          <.pill color={:green}>
             Pending invitation
-          </span>
+          </.pill>
         </div>
         <.site_stats hourly_stats={@hourly_stats} />
       </div>
+      <.invitation_modal id={@modal_id} site={@site} invitation={@invitation} />
     </li>
     """
   end
@@ -231,13 +541,13 @@ defmodule PlausibleWeb.Live.Sites do
         )
       }
     >
-      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
-        <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
-          <div class="w-full flex items-center justify-between space-x-4">
+      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"} class="block">
+        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+          <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
-            <div class="flex-1 -mt-px w-full">
+            <div class="flex-1 w-full">
               <h3
-                class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
+                class="text-gray-900 font-medium text-md sm:text-lg leading-[22px] truncate dark:text-gray-100"
                 style="width: calc(100% - 4rem)"
               >
                 {@site.domain}
@@ -248,8 +558,8 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </.unstyled_link>
 
-      <div class="absolute right-0 top-2">
-        <.ellipsis_menu site={@site} />
+      <div class="absolute right-1 top-3.5">
+        <.ellipsis_menu site={@site} can_manage?={List.first(@site.memberships).role != :viewer} />
       </div>
     </li>
     """
@@ -258,21 +568,22 @@ defmodule PlausibleWeb.Live.Sites do
   def ellipsis_menu(assigns) do
     ~H"""
     <.dropdown>
-      <:button class="size-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400">
-        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 size-4" />
+      <:button class="size-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
+        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 size-5 transition-colors duration-150" />
       </:button>
       <:menu class="!mt-0 mr-4 min-w-40">
         <!-- adjust position because click area is much bigger than icon. Default positioning from click area looks weird -->
         <.dropdown_item
-          :if={List.first(@site.memberships).role != :viewer}
+          :if={@can_manage?}
           href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
-          class="!flex items-center gap-x-2"
+          class="group/item !flex items-center gap-x-2"
         >
-          <Heroicons.cog_6_tooth class="size-4" />
+          <Heroicons.cog_6_tooth class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100" />
           <span>Settings</span>
         </.dropdown_item>
 
         <.dropdown_item
+          :if={Sites.regular?(@site)}
           href="#"
           x-on:click.prevent
           phx-click={
@@ -284,16 +595,29 @@ defmodule PlausibleWeb.Live.Sites do
             |> JS.push("pin-toggle")
           }
           phx-value-domain={@site.domain}
-          class="!flex items-center gap-x-2"
+          class="group/item !flex items-center gap-x-2"
         >
           <.icon_pin
             :if={@site.pinned_at}
-            class="size-4 text-red-400 stroke-red-500 dark:text-yellow-600 dark:stroke-yellow-700"
+            filled={true}
+            class="size-[1.15rem] text-indigo-600 dark:text-indigo-500 group-hover/item:text-indigo-700 dark:group-hover/item:text-indigo-400"
           />
-          <span :if={@site.pinned_at}>Unpin Site</span>
+          <span :if={@site.pinned_at}>Unpin site</span>
 
-          <.icon_pin :if={!@site.pinned_at} class="size-4" />
-          <span :if={!@site.pinned_at}>Pin Site</span>
+          <.icon_pin
+            :if={!@site.pinned_at}
+            class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100"
+          />
+          <span :if={!@site.pinned_at}>Pin site</span>
+        </.dropdown_item>
+        <.dropdown_item
+          :if={Application.get_env(:plausible, :environment) == "dev" and Sites.regular?(@site)}
+          href={Routes.site_path(PlausibleWeb.Endpoint, :delete_site, @site.domain)}
+          method="delete"
+          class="group/item !flex items-center gap-x-2"
+        >
+          <Heroicons.trash class="size-5 text-red-500" />
+          <span class="text-red-500">[DEV ONLY] Quick delete</span>
         </.dropdown_item>
       </:menu>
     </.dropdown>
@@ -301,18 +625,21 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:rest, :global)
+  attr(:filled, :boolean, default: false)
 
   def icon_pin(assigns) do
     ~H"""
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      fill="currentColor"
-      viewBox="0 0 16 16"
+      viewBox="0 0 24 24"
+      fill={if @filled, do: "currentColor", else: "none"}
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="1.5"
       {@rest}
     >
-      <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a5.927 5.927 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707-.195-.195.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a5.922 5.922 0 0 1 1.013.16l3.134-3.133a2.772 2.772 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146z" />
+      <path d="m4 20 4.5-4.5-.196.196M14.314 21.005l-5.657-5.657L3 9.69l1.228-1.228a3 3 0 0 1 3.579-.501l.58.322 7.34-5.664 5.658 5.657-5.665 7.34.323.581a3 3 0 0 1-.501 3.578l-1.228 1.229Z" />
     </svg>
     """
   end
@@ -321,30 +648,34 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div class="md:h-[68px] sm:h-[58px] h-20 pl-8 pr-8 pt-2">
-      <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
-        <div class="md:h-[34px] sm:h-[30px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-        <div class="md:h-[26px] sm:h-[18px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-      </div>
-      <div
-        :if={is_map(@hourly_stats)}
-        class="hidden h-50px"
-        phx-mounted={JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})}
-      >
-        <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-          <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
-          <div class="flex justify-between items-center">
-            <p>
-              <span class="text-gray-800 dark:text-gray-200">
-                <b>{PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors)}</b>
-                visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
-              </span>
-            </p>
-
-            <.percentage_change change={@hourly_stats.change} />
-          </div>
+    <div class={[
+      "flex flex-col gap-y-2 h-[122px] text-center animate-pulse",
+      is_map(@hourly_stats) && " hidden"
+    ]}>
+      <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
+      <div class="flex-1 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
+    </div>
+    <div :if={is_map(@hourly_stats)}>
+      <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
+        <span class="max-w-sm sm:max-w-none text-indigo-500">
+          <PlausibleWeb.Live.Components.Visitors.chart
+            intervals={@hourly_stats.intervals}
+            height={80}
+          />
         </span>
-      </div>
+        <div class="flex justify-between items-end">
+          <div class="flex flex-col">
+            <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
+              {large_number_format(@hourly_stats.visitors)}
+            </p>
+            <p class="text-gray-600 dark:text-gray-400">
+              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
+            </p>
+          </div>
+
+          <.percentage_change change={@hourly_stats.change} />
+        </div>
+      </span>
     </div>
     """
   end
@@ -354,8 +685,7 @@ defmodule PlausibleWeb.Live.Sites do
   # Related React component: <ChangeArrow />
   def percentage_change(assigns) do
     ~H"""
-    <p class="dark:text-gray-100">
-      <span :if={@change == 0} class="font-semibold">〰</span>
+    <p class="text-sm text-gray-900 dark:text-gray-100">
       <svg
         :if={@change > 0}
         xmlns="http://www.w3.org/2000/svg"
@@ -385,163 +715,119 @@ defmodule PlausibleWeb.Live.Sites do
         </path>
       </svg>
 
-      {abs(@change)}%
+      {PlausibleWeb.TextHelpers.number_format(abs(@change))}%
     </p>
     """
   end
 
+  attr(:id, :string, required: true)
+  attr(:site, Plausible.Site, required: true)
+  attr(:invitation, :map, required: true)
+
   def invitation_modal(assigns) do
     ~H"""
-    <div
-      x-cloak
-      x-show="invitationOpen"
-      class="fixed z-10 inset-0 overflow-y-auto"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div
-          x-show="invitationOpen"
-          x-transition:enter="transition ease-out duration-300"
-          x-transition:enter-start="opacity-0"
-          x-transition:enter-end="opacity-100"
-          x-transition:leave="transition ease-in duration-200"
-          x-transition:leave-start="opacity-100"
-          x-transition:leave-end="opacity-0"
-          class="fixed inset-0 bg-gray-500 dark:bg-gray-800 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
-          aria-hidden="true"
-          x-on:click="invitationOpen = false"
-        >
+    <PlausibleWeb.Live.Components.PrimaModal.modal id={@id}>
+      <div class="p-5 pb-3 sm:p-6 sm:pb-3">
+        <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
+          <button
+            phx-click={Prima.Modal.close()}
+            class="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400"
+          >
+            <span class="sr-only">Close</span>
+            <Heroicons.x_mark class="size-6" />
+          </button>
         </div>
-        <!-- This element is to trick the browser into centering the modal contents. -->
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
-          &#8203;
-        </span>
-
-        <div
-          x-show="invitationOpen"
-          x-transition:enter="transition ease-out duration-300"
-          x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-          x-transition:leave="transition ease-in duration-200"
-          x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-          x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          class="inline-block align-bottom bg-white dark:bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-        >
-          <div class="bg-white dark:bg-gray-850 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
-              <button
-                x-on:click="invitationOpen = false"
-                class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <span class="sr-only">Close</span>
-                <Heroicons.x_mark class="h-6 w-6" />
-              </button>
-            </div>
-            <div class="sm:flex sm:items-start">
-              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                <Heroicons.user_group class="h-6 w-6" />
-              </div>
-              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3
-                  class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100"
-                  id="modal-title"
-                >
-                  Invitation for
-                  <span x-text="selectedInvitation && selectedInvitation.invitation.site.domain">
-                  </span>
-                </h3>
-                <div class="mt-2">
-                  <p class="text-sm text-gray-500 dark:text-gray-200">
-                    You've been invited to the
-                    <span x-text="selectedInvitation && selectedInvitation.invitation.site.domain">
-                    </span>
-                    analytics dashboard as <b
-                      class="capitalize"
-                      x-text="selectedInvitation && selectedInvitation.invitation.role"
-                    >Admin</b>.
-                  </p>
-                  <div
-                    x-show="selectedInvitation && !(selectedInvitation.exceeded_limits || selectedInvitation.no_plan) && selectedInvitation.invitation.role === 'owner'"
-                    class="mt-2 text-sm text-gray-500 dark:text-gray-200"
-                  >
-                    If you accept the ownership transfer, you will be responsible for billing going forward.
-                  </div>
-                </div>
-              </div>
-            </div>
-            <.notice
-              x-show="selectedInvitation && selectedInvitation.missing_features"
-              title="Missing features"
-              class="mt-4 shadow-sm dark:shadow-none"
-            >
-              <p>
-                The site uses <span x-text="selectedInvitation && selectedInvitation.missing_features"></span>,
-                which your current subscription does not support. After accepting ownership of this site,
-                you will not be able to access them unless you
-                <.styled_link
-                  class="inline-block"
-                  href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-                >
-                  upgrade to a suitable plan
-                </.styled_link>.
-              </p>
-            </.notice>
-            <.notice
-              x-show="selectedInvitation && selectedInvitation.exceeded_limits"
-              title="Unable to accept site ownership"
-              class="mt-4 shadow-sm dark:shadow-none"
-            >
-              <p>
-                Owning this site would exceed your <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>. Please check your usage in
-                <.styled_link
-                  class="inline-block"
-                  href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-                >
-                  account settings
-                </.styled_link>
-                and upgrade your subscription to accept the site ownership.
-              </p>
-            </.notice>
-            <.notice
-              x-show="selectedInvitation && selectedInvitation.no_plan"
-              title="No subscription"
-              class="mt-4 shadow-sm dark:shadow-none"
-            >
-              You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
-            </.notice>
+        <div class="flex flex-col gap-y-4 text-center sm:text-left">
+          <PlausibleWeb.Live.Components.PrimaModal.modal_title>
+            You're invited to {@site.domain}
+          </PlausibleWeb.Live.Components.PrimaModal.modal_title>
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 text-pretty">
+              You've been added as <b class="capitalize">{@invitation.invitation.role}</b>
+              to the {@site.domain} analytics dashboard.
+              <%= if !(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)) &&
+                        @invitation.invitation.role == :owner do %>
+                If you accept the ownership transfer, you will be responsible for billing going forward.
+              <% else %>
+                Welcome aboard!
+              <% end %>
+            </p>
           </div>
-          <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <.button
-              x-show="selectedInvitation && !(selectedInvitation.exceeded_limits || selectedInvitation.no_plan)"
-              class="sm:ml-3 w-full sm:w-auto sm:text-sm"
-              data-method="post"
-              data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/accept')"
-            >
-              Accept &amp; Continue
-            </.button>
-            <.button_link
-              x-show="selectedInvitation && (selectedInvitation.exceeded_limits || selectedInvitation.no_plan)"
+        </div>
+        <.notice
+          :if={Map.get(@invitation, :missing_features)}
+          title="Missing features"
+          class="mt-4 shadow-xs dark:shadow-none"
+        >
+          <p>
+            The site uses {Map.get(@invitation, :missing_features)},
+            which your current subscription does not support. After accepting ownership of this site,
+            you will not be able to access them unless you <.styled_link
+              class="inline-block"
               href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-              class="sm:ml-3 w-full sm:w-auto sm:text-sm"
             >
-              Upgrade
-            </.button_link>
-            <.button_link
-              href="#"
-              theme="bright"
-              data-method="post"
-              data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/reject')"
+              upgrade to a suitable plan
+            </.styled_link>.
+          </p>
+        </.notice>
+        <.notice
+          :if={Map.get(@invitation, :exceeded_limits)}
+          title="Unable to accept site ownership"
+          class="mt-4 shadow-xs dark:shadow-none"
+        >
+          <p>
+            Owning this site would exceed your {Map.get(@invitation, :exceeded_limits)}. Please check your usage in
+            <.styled_link
+              class="inline-block"
+              href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
             >
-              Reject
-            </.button_link>
-          </div>
-        </div>
+              account settings
+            </.styled_link>
+            and upgrade your subscription to accept the site ownership.
+          </p>
+        </.notice>
+        <.notice
+          :if={Map.get(@invitation, :no_plan)}
+          title="No subscription"
+          class="mt-4 shadow-xs dark:shadow-none"
+        >
+          You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
+        </.notice>
       </div>
-    </div>
+      <div class="flex flex-col sm:flex-row-reverse gap-3 p-5 sm:p-6">
+        <.button
+          :if={!(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan))}
+          mt?={false}
+          class="w-full sm:w-auto sm:text-sm"
+          data-method="post"
+          data-csrf={Plug.CSRFProtection.get_csrf_token()}
+          data-to={"/sites/invitations/#{@invitation.invitation.invitation_id}/accept"}
+          data-autofocus
+        >
+          Accept and continue
+        </.button>
+        <.button_link
+          :if={Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)}
+          mt?={false}
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          class="w-full sm:w-auto sm:text-sm"
+          data-autofocus
+        >
+          Upgrade
+        </.button_link>
+        <.button_link
+          mt?={false}
+          class="w-full sm:w-auto sm:text-sm"
+          href="#"
+          theme="secondary"
+          data-method="post"
+          data-csrf={Plug.CSRFProtection.get_csrf_token()}
+          data-to={"/sites/invitations/#{@invitation.invitation.invitation_id}/reject"}
+        >
+          Reject
+        </.button_link>
+      </div>
+    </PlausibleWeb.Live.Components.PrimaModal.modal>
     """
   end
 
@@ -559,7 +845,28 @@ defmodule PlausibleWeb.Live.Sites do
     assigns = assign(assigns, :src, src)
 
     ~H"""
-    <img src={@src} class="w-4 h-4 flex-shrink-0 mt-px" />
+    <img src={@src} class="size-[18px] shrink-0" />
+    """
+  end
+
+  def globe_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M22 12H2M12 22c5.714-5.442 5.714-14.558 0-20M12 22C6.286 16.558 6.286 7.442 12 2"
+      />
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
+      />
+    </svg>
     """
   end
 
@@ -634,11 +941,26 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
-  defp loading(sites) do
-    sites.entries
-    |> Enum.into(%{}, fn site ->
-      {site.domain, :loading}
-    end)
+  on_ee do
+    def handle_event("consolidated-view-cta-dismiss", _, socket) do
+      :ok =
+        Plausible.ConsolidatedView.dismiss_cta(
+          socket.assigns.current_user,
+          socket.assigns.current_team
+        )
+
+      {:noreply, assign(socket, :consolidated_view_cta_dismissed?, true)}
+    end
+
+    def handle_event("consolidated-view-cta-restore", _, socket) do
+      :ok =
+        Plausible.ConsolidatedView.restore_cta(
+          socket.assigns.current_user,
+          socket.assigns.current_team
+        )
+
+      {:noreply, assign(socket, :consolidated_view_cta_dismissed?, false)}
+    end
   end
 
   defp load_sites(%{assigns: assigns} = socket) do
@@ -658,11 +980,16 @@ defmodule PlausibleWeb.Live.Sites do
               "Could not render 24h visitors hourly intervals: #{inspect(kind)} #{inspect(value)}"
             )
 
-            loading(sites)
+            %{}
         end
       else
-        loading(sites)
+        %{}
       end
+
+    consolidated_stats =
+      if connected?(socket),
+        do: load_consolidated_stats(assigns.consolidated_view),
+        else: :loading
 
     invitations = extract_invitations(sites.entries, assigns.current_team)
 
@@ -670,7 +997,8 @@ defmodule PlausibleWeb.Live.Sites do
       socket,
       sites: sites,
       invitations: invitations,
-      hourly_stats: hourly_stats
+      hourly_stats: hourly_stats,
+      consolidated_stats: consolidated_stats || Map.get(assigns, :consolidated_stats)
     )
   end
 
@@ -764,5 +1092,64 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp hash_domain(domain) do
     :sha |> :crypto.hash(domain) |> Base.encode16()
+  end
+
+  def no_consolidated_view(overrides \\ []) do
+    [
+      consolidated_view: nil,
+      can_manage_consolidated_view?: false,
+      consolidated_stats: nil,
+      no_consolidated_view_reason: nil,
+      consolidated_view_cta_dismissed?: false
+    ]
+    |> Keyword.merge(overrides)
+  end
+
+  on_ee do
+    alias Plausible.ConsolidatedView
+
+    defp consolidated_view_ok_to_display?(team) do
+      ConsolidatedView.ok_to_display?(team)
+    end
+
+    defp init_consolidated_view_assigns(_user, nil) do
+      # technically this is team not setup, but is also equivalent of having no sites at this moment (can have invitations though), so CTA should not be shown
+      no_consolidated_view(no_consolidated_view_reason: :no_sites)
+    end
+
+    defp init_consolidated_view_assigns(user, team) do
+      case ConsolidatedView.enable(team) do
+        {:ok, view} ->
+          %{
+            consolidated_view: view,
+            can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+            consolidated_stats: :loading,
+            no_consolidated_view_reason: nil,
+            consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+          }
+
+        {:error, reason} ->
+          no_consolidated_view(
+            no_consolidated_view_reason: reason,
+            can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
+            consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
+          )
+      end
+    end
+
+    defp load_consolidated_stats(consolidated_view) do
+      case Plausible.Stats.ConsolidatedView.safe_overview_24h(consolidated_view) do
+        {:ok, stats} -> stats
+        {:error, :not_found} -> nil
+        {:error, :inaccessible} -> :loading
+      end
+    end
+  else
+    defp consolidated_view_ok_to_display?(_team), do: false
+
+    defp init_consolidated_view_assigns(_user, _team),
+      do: no_consolidated_view(no_consolidated_view_reason: :unavailable)
+
+    defp load_consolidated_stats(_consolidated_view), do: nil
   end
 end

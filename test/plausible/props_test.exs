@@ -1,6 +1,5 @@
 defmodule Plausible.PropsTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
 
   test "allow/2 returns error when user plan does not include props" do
     user = new_user() |> subscribe_to_growth_plan()
@@ -54,17 +53,23 @@ defmodule Plausible.PropsTest do
 
     long_prop = String.duplicate("a", 301)
     assert {:error, changeset} = Plausible.Props.allow(site, long_prop)
-    assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
+
+    assert {"must be between 1 and 300 characters", [validation: :length, type: :string]} ==
+             changeset.errors[:allowed_event_props]
   end
 
   test "allow/2 fails when prop key is empty" do
     site = new_site()
 
     assert {:error, changeset} = Plausible.Props.allow(site, "")
-    assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
+
+    assert {"must be between 1 and 300 characters", [validation: :length, type: :string]} ==
+             changeset.errors[:allowed_event_props]
 
     assert {:error, changeset} = Plausible.Props.allow(site, " ")
-    assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
+
+    assert {"must be between 1 and 300 characters", [validation: :length, type: :string]} ==
+             changeset.errors[:allowed_event_props]
   end
 
   test "allow/2 does not fail when prop key is already in the list" do
@@ -250,6 +255,26 @@ defmodule Plausible.PropsTest do
 
     assert ["amount", "first_time_customer", "is_customer", "logged_in", "os", "with_error"] ==
              site |> Plausible.Props.suggest_keys_to_allow() |> Enum.sort()
+  end
+
+  on_ee do
+    test "suggest_keys_to_allow/2 for consolidated view queries events across all included sites" do
+      {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+      site1 = new_site(team: team)
+      site2 = new_site(team: team)
+      consolidated_view = new_consolidated_view(team)
+
+      populate_stats(site1, [
+        build(:pageview, "meta.key": ["a", "b"], "meta.value": ["A", "B"])
+      ])
+
+      populate_stats(site2, [
+        build(:pageview, "meta.key": ["a", "c"], "meta.value": ["A", "C"])
+      ])
+
+      assert ["a", "b", "c"] ==
+               Plausible.Props.suggest_keys_to_allow(consolidated_view) |> Enum.sort()
+    end
   end
 
   test "suggest_keys_to_allow/2 does not return internal prop keys from special event types" do

@@ -1,7 +1,7 @@
 <.settings_tiles>
   <.tile :if={Plausible.Users.type(@current_user) == :standard} docs="change-email">
     <:title>
-      <a id="update-email">Email Address</a>
+      <a id="update-email">Email address</a>
     </:title>
     <:subtitle>
       Ändere die mit deinem Konto verknüpfte Adresse
@@ -16,35 +16,37 @@
         type="text"
         name="user[current_email]"
         value={f.data.email}
-        label="Aktuelle Email"
+        label="Current Email"
         width="w-1/2"
+        mt?={false}
         disabled
       />
 
-      <.input type="email" field={f[:email]} label="Neue E-mail" width="w-1/2" />
+      <.input type="email" field={f[:email]} label="New E-mail" width="w-1/2" />
 
-      <.input type="password" field={f[:password]} label="Account Passwort" width="w-1/2" />
+      <.input type="password" field={f[:password]} label="Account Password" width="w-1/2" />
 
       <.button type="submit">
-        Email Ändern
+        Change Email
       </.button>
     </.form>
   </.tile>
 
   <.tile :if={Plausible.Users.type(@current_user) == :sso}>
     <:title>
-      <a id="view-email">Email-Adresse</a>
+      <a id="view-email">Email Address</a>
     </:title>
     <:subtitle>
-      Email, die mit deinem Account verknüpft ist
+      Address associated with your account
     </:subtitle>
     <.form :let={f} for={@email_changeset}>
       <.input
         type="text"
         name="user[current_email]"
         value={f.data.email}
-        label="Aktuelle Email"
+        label="Current Email"
         width="w-1/2"
+        mt?={false}
         disabled
       />
     </.form>
@@ -55,7 +57,7 @@
       <a id="update-password">Passwort</a>
     </:title>
     <:subtitle>
-      Ändere dein Passwort
+      Change your password
     </:subtitle>
     <.form
       :let={f}
@@ -67,15 +69,16 @@
         type="password"
         max_one_error
         field={f[:old_password]}
-        label="Altes Passwort"
+        label="Old Password"
         width="w-1/2"
+        mt?={false}
       />
 
       <.input
         type="password"
         max_one_error
         field={f[:password]}
-        label="Neues Passwort"
+        label="New Password"
         width="w-1/2"
       />
 
@@ -84,7 +87,7 @@
         max_one_error
         autocomplete="new-password"
         field={f[:password_confirmation]}
-        label="Neues Passwort bestätigen"
+        label="Confirm New Password"
         width="w-1/2"
       />
 
@@ -100,7 +103,7 @@
       </div>
 
       <.button type="submit">
-        Passwort ändern
+        Change Password
       </.button>
     </.form>
   </.tile>
@@ -110,7 +113,7 @@
       <a id="update-2fa">Two-Factor Authentication (2FA)</a>
     </:title>
     <:subtitle>
-      Die Zwei-Faktor-Authentifizierung schützt dein Konto durch einen zusätzlichen Sicherheitsschritt bei der Anmeldung
+      Two-Factor Authentication protects your account by adding an extra security step when you log in
     </:subtitle>
 
     <div x-data="{disable2FAOpen: false, regenerate2FAOpen: false}">
@@ -237,10 +240,10 @@
 
   <.tile docs="login-management">
     <:title>
-      <a id="user-sessions">Login Management</a>
+      <a id="user-sessions">Login management</a>
     </:title>
     <:subtitle>
-      Melde dich von deinem Konto auf anderen Geräten ab. Beachte, dass angemeldete Sitzungen automatisch nach 14 Tagen Inaktivität ablaufen
+      Log out of your account on other devices. Note that logged-in sessions automatically expire after 14 days of inactivity
     </:subtitle>
 
     <.table rows={@user_sessions}>

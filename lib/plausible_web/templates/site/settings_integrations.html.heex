@@ -3,7 +3,7 @@
 <.settings_tiles>
   <.tile docs="google-search-console-integration">
     <:title>
-      Google Search Console Integration
+      Google Search Console integration
     </:title>
     <:subtitle>
       <p>
@@ -18,6 +18,7 @@
           value={@site.google_auth.email}
           disabled="disabled"
           width="w-1/2"
+          mt?={false}
         />
 
         <.button_link
@@ -25,7 +26,7 @@
           href={Routes.site_path(@conn, :delete_google_auth, @site.domain)}
           method="delete"
         >
-          Unlink Google Account
+          Unlink Google account
         </.button_link>
 
         <%= case @search_console_domains do %>
@@ -53,20 +54,22 @@
               class="max-w-xs"
               action={"/#{URI.encode_www_form(@site.domain)}/settings/google"}
             >
-              <div class="inline-block relative w-full">
-                <.input
-                  options={domains}
-                  type="select"
-                  field={f[:property]}
-                  prompt="(Choose property)"
-                  class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:rounded-md"
-                />
+              <div class="mt-2 w-full">
+                {live_render(@conn, PlausibleWeb.Live.PlainCombo,
+                  session: %{
+                    "options" => Enum.zip(domains, domains),
+                    "prompt" => "(Choose property)",
+                    "name" => f[:property].name,
+                    "id" => f[:property].id,
+                    "selected" => f[:property].value
+                  }
+                )}
               </div>
 
               <.button type="submit">Save</.button>
             </.form>
           <% {:error, error} -> %>
-            <.notice title="Integration Error" theme={:red} class="mt-8">
+            <.notice title="Integration error" theme={:red} class="mt-8">
               <%= case error do %>
                 <% "invalid_grant" -> %>
                   Invalid Grant error returned from Google.
@@ -140,7 +143,7 @@
       </p>
     </:subtitle>
 
-    <div class="mt-4 text-sm">
+    <div class="text-sm">
       Plausible Looker Studio Connector adds powerful reporting features that help turn Plausible
       into an even better replacement for Google Analytics.
       <.styled_link href="https://plausible.io/docs/looker-studio" new_tab={true}>
@@ -151,10 +154,10 @@
 
   <.tile :if={@has_plugins_tokens? || @conn.query_params["new_token"]}>
     <:title>
-      Plugin Tokens
+      Plugin tokens
     </:title>
-    <:subtitle>
-      Control Plugin Access
+    <:subtitle :if={@has_plugins_tokens?}>
+      Control plugin access.
     </:subtitle>
 
     {live_render(@conn, PlausibleWeb.Live.Plugins.API.Settings,

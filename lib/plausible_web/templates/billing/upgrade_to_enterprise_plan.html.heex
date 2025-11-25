@@ -6,7 +6,7 @@
   </h1>
 </div>
 <div class="w-full max-w-lg px-4 mx-auto mt-4 text-gray-900 dark:text-gray-100">
-  <div class="flex-1 p-8 mt-8 rounded bg-white shadow-md dark:bg-gray-800 dark:shadow-none">
+  <div class="flex-1 p-8 mt-8 rounded-sm bg-white shadow-md dark:bg-gray-800 dark:shadow-none">
     <div class="w-full pb-4">
       <span>
         {if @subscription_resumable,
@@ -38,7 +38,7 @@
     </ul>
     <div class="w-max">
       <%= if @subscription_resumable do %>
-        <span class="inline-flex w-full rounded-md shadow-sm">
+        <span class="inline-flex w-full rounded-md shadow-xs">
           <.link
             id="preview-changes"
             href={
@@ -48,7 +48,7 @@
                 @latest_enterprise_plan.paddle_plan_id
               )
             }
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent leading-5 rounded-md hover:bg-indigo-500 focus:outline-hidden focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
           >
             <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2">
               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>

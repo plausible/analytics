@@ -19,6 +19,21 @@ defmodule Plausible.Auth.User do
 
   @required [:email, :name, :password]
 
+  on_ee do
+    @derive {Plausible.Audit.Encoder,
+             only: [
+               :id,
+               :email,
+               :name,
+               :email_verified,
+               :previous_email,
+               :totp_enabled,
+               :last_team_identifier,
+               :sso_integration,
+               :sso_domain
+             ]}
+  end
+
   schema "users" do
     field :email, :string
     field :password_hash

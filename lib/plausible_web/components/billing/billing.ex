@@ -7,7 +7,8 @@ defmodule PlausibleWeb.Components.Billing do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Subscriptions, Plan, Plans, EnterprisePlan}
 
-  attr :current_role, :atom, required: true
+  attr :site, Plausible.Site, required: false, default: nil
+  attr :current_user, Plausible.Auth.User, required: true
   attr :current_team, :any, required: true
   attr :locked?, :boolean, required: true
   slot :inner_block, required: true
@@ -20,15 +21,24 @@ defmodule PlausibleWeb.Components.Billing do
     <div
       :if={@locked?}
       id="feature-gate-overlay"
-      class="absolute backdrop-blur-[6px] bg-white/50 dark:bg-gray-800/50 inset-0 flex justify-center items-center rounded-md"
+      class="absolute backdrop-blur-[8px] bg-white/70 dark:bg-gray-800/50 inset-0 flex justify-center items-center"
     >
-      <div class="px-6 flex flex-col items-center text-gray-500 dark:text-gray-400">
-        <Heroicons.lock_closed solid class="size-8 mb-2" />
-
-        <span id="lock-notice" class="text-center max-w-sm sm:max-w-md">
-          To gain access to this feature,
-          <.upgrade_call_to_action current_role={@current_role} current_team={@current_team} />.
-        </span>
+      <div class="px-6 flex flex-col items-center gap-y-3">
+        <div class="flex-shrink-0 bg-white dark:bg-gray-700 max-w-max rounded-md p-2 border border-gray-200 dark:border-gray-600 text-indigo-500">
+          <Heroicons.lock_closed solid class="size-6 -mt-px pb-px" />
+        </div>
+        <div class="flex flex-col gap-y-1.5 items-center">
+          <h3 class="font-medium text-gray-900 dark:text-gray-100">
+            Upgrade to unlock
+          </h3>
+          <span
+            id="lock-notice"
+            class="max-w-sm sm:max-w-md mb-2 text-sm text-gray-600 dark:text-gray-100/60 leading-normal text-center"
+          >
+            To access this feature,
+            <.upgrade_call_to_action current_user={@current_user} current_team={@current_team} />
+          </span>
+        </div>
       </div>
     </div>
     """
@@ -178,7 +188,7 @@ defmodule PlausibleWeb.Components.Billing do
   def usage_and_limits_table(assigns) do
     ~H"""
     <table class="min-w-full text-gray-900 dark:text-gray-100" {@rest}>
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
         {render_slot(@inner_block)}
       </tbody>
     </table>
@@ -198,8 +208,8 @@ defmodule PlausibleWeb.Components.Billing do
         {@title}
       </td>
       <td class="text-sm py-4 sm:whitespace-nowrap text-right">
-        {Cldr.Number.to_string!(@usage)}
-        {if is_number(@limit), do: "/ #{Cldr.Number.to_string!(@limit)}"}
+        {PlausibleWeb.TextHelpers.number_format(@usage)}
+        {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
       </td>
     </tr>
     """
@@ -209,7 +219,7 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <div
       id="monthly-quota-box"
-      class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded dark:bg-gray-900 w-max-md"
+      class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-800 w-max-md"
     >
       <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
       <div class="py-2 text-xl font-medium dark:text-gray-100">
@@ -276,7 +286,7 @@ defmodule PlausibleWeb.Components.Billing do
       id={@id}
       onclick={"if (#{@confirmed}) {#{@js_action_expr}}"}
       class={[
-        "text-sm w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white",
+        "text-sm w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white transition-colors duration-150",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
         @checkout_disabled && "pointer-events-none bg-gray-400 dark:bg-gray-600"
       ]}
@@ -330,7 +340,11 @@ defmodule PlausibleWeb.Components.Billing do
 
   def upgrade_link(assigns) do
     ~H"""
-    <.button_link id="upgrade-link-2" href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}>
+    <.button_link
+      id="upgrade-link-2"
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+      mt?={false}
+    >
       Upgrade
     </.button_link>
     """
@@ -344,7 +358,22 @@ defmodule PlausibleWeb.Components.Billing do
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
   def upgrade_call_to_action(assigns) do
+    user = assigns.current_user
+    site = assigns[:site]
     team = Plausible.Teams.with_subscription(assigns.current_team)
+
+    current_role =
+      if site do
+        case Plausible.Teams.Memberships.site_role(site, user) do
+          {:ok, {_, site_role}} -> site_role
+          _ -> nil
+        end
+      else
+        if team do
+          {:ok, team_role} = Plausible.Teams.Memberships.team_role(team, user)
+          team_role
+        end
+      end
 
     upgrade_assistance_required? =
       case Plans.get_subscription_plan(team && team.subscription) do
@@ -354,24 +383,26 @@ defmodule PlausibleWeb.Components.Billing do
       end
 
     cond do
-      not is_nil(assigns.current_role) and assigns.current_role not in [:owner, :billing] ->
-        ~H"please reach out to the team owner to upgrade their subscription"
+      not is_nil(current_role) and current_role not in [:owner, :billing] ->
+        ~H"ask your team owner to upgrade their subscription."
 
       upgrade_assistance_required? ->
         ~H"""
-        please contact <a href="mailto:hello@plausible.io" class="underline">hello@plausible.io</a>
-        to upgrade your subscription
+        contact
+        <.styled_link href="mailto:hello@plausible.io" class="font-medium">
+          hello@plausible.io
+        </.styled_link>
+        to upgrade your subscription.
         """
 
       true ->
         ~H"""
-        please
-        <.link
-          class="underline inline-block"
+        <.styled_link
+          class="inline-block font-medium"
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
         >
-          upgrade your subscription
-        </.link>
+          upgrade your subscription.
+        </.styled_link>
         """
     end
   end

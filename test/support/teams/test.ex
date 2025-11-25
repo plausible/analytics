@@ -23,6 +23,14 @@ defmodule Plausible.Teams.Test do
     Plug.Conn.put_session(conn, :current_team_id, team.identifier)
   end
 
+  on_ee do
+    def new_consolidated_view(team) do
+      team = Teams.complete_setup(team)
+      {:ok, site} = Plausible.ConsolidatedView.enable(team)
+      site
+    end
+  end
+
   def new_site(args \\ []) do
     args =
       cond do
@@ -407,5 +415,31 @@ defmodule Plausible.Teams.Test do
     team
     |> Plausible.Teams.with_subscription()
     |> Map.fetch!(:subscription)
+  end
+
+  on_ee do
+    def audited_entry(name, attrs \\ []) do
+      attrs = Keyword.put(attrs, :name, name)
+
+      case Plausible.Audit.list_entries(attrs) do
+        [entry] ->
+          entry
+
+        _ ->
+          raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
+      end
+    end
+
+    def audited_entries(length, name, attrs \\ []) do
+      attrs = Keyword.put(attrs, :name, name)
+
+      case Plausible.Audit.list_entries(attrs) do
+        entries when is_list(entries) and length(entries) == length ->
+          entries
+
+        _ ->
+          raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
+      end
+    end
   end
 end

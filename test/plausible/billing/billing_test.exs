@@ -1,6 +1,5 @@
 defmodule Plausible.BillingTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
   use Bamboo.Test, shared: true
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing
@@ -437,7 +436,10 @@ defmodule Plausible.BillingTest do
     end
 
     test "if teams's grace period has ended, upgrading will unlock sites and remove grace period" do
-      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.shift(Date.utc_today(), day: -1)
+      }
+
       user = new_user(team: [grace_period: grace_period])
 
       subscribe_to_growth_plan(user)
@@ -571,7 +573,7 @@ defmodule Plausible.BillingTest do
         Billing.subscription_payment_succeeded(%{
           "alert_name" => "subscription_payment_succeeded",
           "subscription_id" => "nonexistent_subscription_id",
-          "next_bill_date" => Timex.shift(Timex.today(), days: 30),
+          "next_bill_date" => Date.shift(Date.utc_today(), day: 30),
           "unit_price" => "12.00"
         })
 
@@ -621,78 +623,5 @@ defmodule Plausible.BillingTest do
     assert Plausible.Teams.Billing.has_active_subscription?(active_team)
     refute Plausible.Teams.Billing.has_active_subscription?(paused_team)
     refute Plausible.Teams.Billing.has_active_subscription?(nil)
-  end
-
-  @v4_plan_id "857088"
-  @v5_plan_id "910429"
-
-  describe "show_new_upgrade_page?/1" do
-    @describetag :ee_only
-
-    test "returns true for non-existing team" do
-      assert Plausible.Teams.Billing.show_new_upgrade_page?(nil) == true
-    end
-
-    test "returns true for team with no trial_expiry_date" do
-      {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
-      team = %{team | trial_expiry_date: nil}
-      assert Plausible.Teams.Billing.show_new_upgrade_page?(team) == true
-    end
-
-    test "returns true for a user already on a v5 plan regardless of starter_tier feature flag" do
-      team =
-        new_user()
-        |> subscribe_to_plan(@v5_plan_id)
-        |> team_of()
-
-      FunWithFlags.disable(:starter_tier, for_actor: team)
-
-      assert Plausible.Teams.Billing.show_new_upgrade_page?(team) == true
-    end
-
-    test "returns false for a trial that expired 10 days before starter tier release" do
-      trial_expiry_date =
-        Plausible.Teams.Billing.starter_tier_launch()
-        |> Date.shift(day: -10)
-
-      team = new_user(trial_expiry_date: trial_expiry_date) |> team_of()
-      assert Plausible.Teams.Billing.show_new_upgrade_page?(team) == false
-    end
-
-    test "returns true for a trial that expired 11 days before starter tier release" do
-      trial_expiry_date =
-        Plausible.Teams.Billing.starter_tier_launch()
-        |> Date.shift(day: -11)
-
-      team = new_user(trial_expiry_date: trial_expiry_date) |> team_of()
-      assert Plausible.Teams.Billing.show_new_upgrade_page?(team) == true
-    end
-
-    test "returns false for a trial that started on the day of starter tier release" do
-      trial_expiry_date =
-        Plausible.Teams.Billing.starter_tier_launch()
-        |> Date.shift(day: 30)
-
-      team = new_user(trial_expiry_date: trial_expiry_date) |> team_of()
-      assert Plausible.Teams.Billing.show_new_upgrade_page?(team) == false
-    end
-
-    test "returns true for a trial that started after starter tier release" do
-      trial_expiry_date =
-        Plausible.Teams.Billing.starter_tier_launch()
-        |> Date.shift(day: 31)
-
-      team = new_user(trial_expiry_date: trial_expiry_date) |> team_of()
-      assert Plausible.Teams.Billing.show_new_upgrade_page?(team) == true
-    end
-
-    test "returns true for a v4 subscription" do
-      team =
-        new_user(trial_expiry_date: ~D[2025-01-01])
-        |> subscribe_to_plan(@v4_plan_id)
-        |> team_of()
-
-      assert Plausible.Teams.Billing.show_new_upgrade_page?(team) == true
-    end
   end
 end

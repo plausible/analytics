@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.FaviconTest do
   use Plausible.DataCase, async: true
-  use Plug.Test
+  import Plug.Test
   alias PlausibleWeb.Favicon
 
   import Mox
@@ -145,7 +145,7 @@ defmodule PlausibleWeb.FaviconTest do
   end
 
   describe "Fallback to placeholder icon" do
-    @placeholder_icon File.read!("priv/placeholder_favicon.svg")
+    @placeholder_icon File.read!("priv/link_favicon.svg")
 
     test "falls back to placeholder when DDG returns a non-2xx response", %{plug_opts: plug_opts} do
       expect(

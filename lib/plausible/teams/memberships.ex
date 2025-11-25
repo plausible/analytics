@@ -7,13 +7,25 @@ defmodule Plausible.Teams.Memberships do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  def all(team) do
+  require Teams.Memberships.UserPreference
+
+  @spec all(Teams.Team.t(), Keyword.t()) :: [Teams.Membership.t()]
+  def all(team, opts \\ []) do
+    exclude_guests? = Keyword.get(opts, :exclude_guests?, false)
+
     query =
       from tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
         where: tm.team_id == ^team.id,
         order_by: [asc: u.id],
         preload: [user: u]
+
+    query =
+      if exclude_guests? do
+        from tm in query, where: tm.role != :guest
+      else
+        query
+      end
 
     Repo.all(query)
   end
@@ -31,6 +43,8 @@ defmodule Plausible.Teams.Memberships do
     )
   end
 
+  @spec team_role(Teams.Team.t(), Auth.User.t()) ::
+          {:ok, Teams.Membership.role()} | {:error, :not_a_member}
   def team_role(team, user) do
     result =
       from(u in Auth.User,
@@ -86,8 +100,17 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
+  @spec site_member?(Plausible.Site.t(), Auth.User.t() | nil) :: boolean()
   def site_member?(site, user) do
     case site_role(site, user) do
+      {:ok, _} -> true
+      _ -> false
+    end
+  end
+
+  @spec team_member?(Teams.Team.t(), Auth.User.t()) :: boolean()
+  def team_member?(team, user) do
+    case team_role(team, user) do
       {:ok, _} -> true
       _ -> false
     end
@@ -200,6 +223,35 @@ defmodule Plausible.Teams.Memberships do
       nil -> {:error, :membership_not_found}
       membership -> {:ok, membership}
     end
+  end
+
+  @spec set_preference(Teams.Membership.t(), atom(), any()) ::
+          Teams.Memberships.UserPreference.t()
+  def set_preference(team_membership, option, value)
+      when option in Teams.Memberships.UserPreference.options() do
+    team_membership
+    |> Teams.Memberships.UserPreference.changeset(%{option => value})
+    |> Repo.insert!(
+      conflict_target: [:team_membership_id],
+      on_conflict:
+        from(p in Teams.Memberships.UserPreference, update: [set: [{^option, ^value}]]),
+      returning: true
+    )
+  end
+
+  @spec get_preference(Teams.Membership.t(), atom()) :: any()
+  def get_preference(team_membership, option)
+      when option in Teams.Memberships.UserPreference.options() do
+    defaults = %Teams.Memberships.UserPreference{}
+
+    query =
+      from(
+        tup in Teams.Memberships.UserPreference,
+        where: tup.team_membership_id == ^team_membership.id,
+        select: field(tup, ^option)
+      )
+
+    Repo.one(query) || Map.fetch!(defaults, option)
   end
 
   defp get_guest_membership(site_id, user_id) do

@@ -1,7 +1,5 @@
 defmodule Plausible.Auth.UserSessionsTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
-  use Plausible
 
   import Phoenix.ChannelTest
 
@@ -33,16 +31,33 @@ defmodule Plausible.Auth.UserSessionsTest do
     end
   end
 
+  describe "count_for_users/2" do
+    test "counts user sessions" do
+      now = NaiveDateTime.utc_now(:second)
+      thirty_minutes_ago = NaiveDateTime.shift(now, minute: -30)
+
+      u1 = insert(:user)
+      u2 = insert(:user)
+      u3 = insert(:user)
+
+      insert_session(u1, "Recent Device", thirty_minutes_ago)
+      insert_session(u1, "Recent Device 2", thirty_minutes_ago)
+      insert_session(u2, "Recent Device", thirty_minutes_ago)
+
+      assert UserSessions.count_for_users([u1, u2, u3], now) == [{u1.id, 2}, {u2.id, 1}]
+    end
+  end
+
   on_ee do
     describe "list_for_sso_team/1,2" do
       test "lists only SSO member sessions for a given team" do
-        %{team: sso_team, site: site} =
+        %{team: sso_team, site: site, sso_integration: sso_integration} =
           setup_do(&create_user/1)
           |> setup_do(&create_team/1)
           |> setup_do(&create_site/1)
           |> setup_do(&setup_sso/1)
 
-        %{team: _other_sso_team} =
+        %{team: _other_sso_team, sso_integration: other_sso_integration} =
           %{domain: "example2.com"}
           |> setup_do(&create_user/1)
           |> setup_do(&create_team/1)
@@ -56,7 +71,10 @@ defmodule Plausible.Auth.UserSessionsTest do
         _other_member_session = Auth.UserSessions.create!(other_member, "Unknown")
 
         %{user: sso_member} =
-          %{user: %{name: "Jerry Wane", email: "wane@example.com"}}
+          %{
+            user: %{name: "Jerry Wane", email: "wane@example.com"},
+            sso_integration: sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         now = NaiveDateTime.utc_now(:second)
@@ -65,7 +83,10 @@ defmodule Plausible.Auth.UserSessionsTest do
           insert_session(sso_member, "Unknown", NaiveDateTime.add(now, -1, :hour))
 
         %{user: sso_member2} =
-          %{user: %{name: "Joan McGuire", email: "joan@example.com"}}
+          %{
+            user: %{name: "Joan McGuire", email: "joan@example.com"},
+            sso_integration: sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         sso_member2_session1 =
@@ -83,13 +104,19 @@ defmodule Plausible.Auth.UserSessionsTest do
         _standard_member_session = insert_session(standard_member, "Unknown", now)
 
         %{user: other_sso_member} =
-          %{user: %{name: "Veronica Dogwright", email: "veronica@example2.com"}}
+          %{
+            user: %{name: "Veronica Dogwright", email: "veronica@example2.com"},
+            sso_integration: other_sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         _other_sso_member_session = insert_session(other_sso_member, "Unknown", now)
 
         %{user: guest_sso_member} =
-          %{user: %{name: "Jimmy Felon", email: "jimmy@example2.com"}}
+          %{
+            user: %{name: "Jimmy Felon", email: "jimmy@example2.com"},
+            sso_integration: other_sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         add_guest(site, user: Repo.reload!(guest_sso_member), role: :viewer)
@@ -106,13 +133,16 @@ defmodule Plausible.Auth.UserSessionsTest do
 
     describe "revoke_sso_by_id/2" do
       test "deletes and disconnects user session" do
-        %{team: sso_team} =
+        %{team: sso_team, sso_integration: sso_integration} =
           setup_do(&create_user/1)
           |> setup_do(&create_team/1)
           |> setup_do(&setup_sso/1)
 
         %{user: user} =
-          %{user: %{name: "Jerry Wane", email: "wane@example.com"}}
+          %{
+            user: %{name: "Jerry Wane", email: "wane@example.com"},
+            sso_integration: sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         now = NaiveDateTime.utc_now(:second)
@@ -132,19 +162,22 @@ defmodule Plausible.Auth.UserSessionsTest do
       end
 
       test "does not delete session of user on another team" do
-        %{team: sso_team} =
+        %{team: sso_team, sso_integration: sso_integration} =
           setup_do(&create_user/1)
           |> setup_do(&create_team/1)
           |> setup_do(&setup_sso/1)
 
-        %{team: _other_sso_team} =
+        %{team: _other_sso_team, sso_integration: other_sso_integration} =
           %{domain: "example2.com"}
           |> setup_do(&create_user/1)
           |> setup_do(&create_team/1)
           |> setup_do(&setup_sso/1)
 
         %{user: user} =
-          %{user: %{name: "Jerry Wane", email: "wane@example.com"}}
+          %{
+            user: %{name: "Jerry Wane", email: "wane@example.com"},
+            sso_integration: sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         now = NaiveDateTime.utc_now(:second)
@@ -152,7 +185,10 @@ defmodule Plausible.Auth.UserSessionsTest do
         active_session = insert_session(user, "Unknown", now)
 
         %{user: other_user} =
-          %{user: %{name: "Judy Wasteland", email: "judy@example2.com"}}
+          %{
+            user: %{name: "Judy Wasteland", email: "judy@example2.com"},
+            sso_integration: other_sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         other_session = insert_session(other_user, "Unknown", now)
@@ -186,14 +222,17 @@ defmodule Plausible.Auth.UserSessionsTest do
           |> setup_do(&create_team/1)
           |> setup_do(&setup_sso/1)
 
-        %{team: _other_sso_team} =
+        %{team: _other_sso_team, sso_integration: other_sso_integration} =
           %{domain: "example2.com"}
           |> setup_do(&create_user/1)
           |> setup_do(&create_team/1)
           |> setup_do(&setup_sso/1)
 
         %{user: user} =
-          %{user: %{name: "Judy Wasteland", email: "judy@example2.com"}}
+          %{
+            user: %{name: "Judy Wasteland", email: "judy@example2.com"},
+            sso_integration: other_sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         user = add_guest(site, user: Repo.reload!(user), role: :editor)
@@ -207,13 +246,16 @@ defmodule Plausible.Auth.UserSessionsTest do
       end
 
       test "executes gracefully when session does not exist" do
-        %{team: sso_team} =
+        %{team: sso_team, sso_integration: sso_integration} =
           setup_do(&create_user/1)
           |> setup_do(&create_team/1)
           |> setup_do(&setup_sso/1)
 
         %{user: user} =
-          %{user: %{name: "Jerry Wane", email: "wane@example.com"}}
+          %{
+            user: %{name: "Jerry Wane", email: "wane@example.com"},
+            sso_integration: sso_integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         now = NaiveDateTime.utc_now(:second)

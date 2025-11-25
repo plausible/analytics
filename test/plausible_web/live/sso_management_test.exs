@@ -6,10 +6,8 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
   on_ee do
     use Bamboo.Test, shared: true
-    use Plausible.Teams.Test
 
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     alias Plausible.Auth
     alias Plausible.Auth.SSO
@@ -78,8 +76,8 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         text = text(render(lv))
 
-        assert text =~ "Sign-in URL can't be blank"
-        assert text =~ "Entity ID can't be blank"
+        assert text =~ "SSO URL / Sign-on URL / Login URL can't be blank"
+        assert text =~ "Entity ID / Issuer / Identifier can't be blank"
         assert text =~ "Certificate in PEM format can't be blank"
 
         lv
@@ -210,7 +208,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         assert text_of_attr(
                  html,
-                 ~s|#sso-policy_sso_default_role option[selected="selected"]|,
+                 ~s|#sso-policy_sso_default_role option[selected]|,
                  "value"
                ) == "viewer"
 
@@ -220,7 +218,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         |> element("form#sso-policy")
         |> render_submit(%{
           policy: %{
-            sso_default_role: "owner",
+            sso_default_role: "admin",
             sso_session_timeout_minutes: "710"
           }
         })
@@ -229,9 +227,9 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         assert text_of_attr(
                  html,
-                 ~s|#sso-policy_sso_default_role option[selected="selected"]|,
+                 ~s|#sso-policy_sso_default_role option[selected]|,
                  "value"
-               ) == "owner"
+               ) == "admin"
 
         assert text_of_attr(html, ~s|#sso-policy_sso_session_timeout_minutes|, "value") == "710"
       end
@@ -241,7 +239,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         team: team,
         user: user
       } do
-        setup_integration(team, "org.example.com")
+        integration = setup_integration(team, "org.example.com")
         {_lv, html} = get_lv(conn)
 
         assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
@@ -249,7 +247,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         {:ok, user, _} = Auth.TOTP.initiate(user)
         {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-        identity = new_identity("Lance Wurst", "lance@org.example.com")
+        identity = new_identity("Lance Wurst", "lance@org.example.com", integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         {_lv, html} = get_lv(conn)
@@ -263,7 +261,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         team: team,
         user: user
       } do
-        setup_integration(team, "example.com")
+        integration = setup_integration(team, "example.com")
         {_lv, html} = get_lv(conn)
 
         assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
@@ -271,7 +269,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         {:ok, user, _} = Auth.TOTP.initiate(user)
         {:ok, _user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
         {:ok, _, _, user} = SSO.provision_user(identity)
 
         {:ok, conn: conn} = log_in(%{conn: conn, user: user})
@@ -293,12 +291,14 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        {:ok, _integration} =
+        {:ok, integration} =
           SSO.update_integration(integration, %{
             idp_signin_url: "https://#{domain}",
             idp_entity_id: "some-entity",
             idp_cert_pem: @cert_pem
           })
+
+        integration
       end
 
       defp get_lv(conn) do

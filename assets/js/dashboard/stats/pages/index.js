@@ -20,7 +20,7 @@ function EntryPages({ afterFetchData }) {
   }
 
   function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site.domain, page.name)
+    return url.externalLinkForPage(site, page.name)
   }
 
   function getFilterInfo(listItem) {
@@ -53,7 +53,7 @@ function EntryPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50"
+      color="bg-orange-50 group-hover:bg-orange-100"
     />
   )
 }
@@ -66,7 +66,7 @@ function ExitPages({ afterFetchData }) {
   }
 
   function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site.domain, page.name)
+    return url.externalLinkForPage(site, page.name)
   }
 
   function getFilterInfo(listItem) {
@@ -99,7 +99,7 @@ function ExitPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50"
+      color="bg-orange-50 group-hover:bg-orange-100"
     />
   )
 }
@@ -112,7 +112,7 @@ function TopPages({ afterFetchData }) {
   }
 
   function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site.domain, page.name)
+    return url.externalLinkForPage(site, page.name)
   }
 
   function getFilterInfo(listItem) {
@@ -141,7 +141,7 @@ function TopPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50"
+      color="bg-orange-50 group-hover:bg-orange-100"
     />
   )
 }

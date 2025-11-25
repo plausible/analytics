@@ -14,8 +14,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
   do regenerate the files before running tests, so they're up to date.
   """
   use PlausibleWeb.ConnCase, async: true
-  use Plug.Test
-  use Plausible.Teams.Test
+  import Plug.Test
 
   alias PlausibleWeb.Tracker
 
@@ -36,13 +35,13 @@ defmodule PlausibleWeb.TrackerPlugTest do
       site = new_site()
 
       tracker_script_configuration =
-        Tracker.update_script_configuration(
+        Tracker.update_script_configuration!(
           site,
           Map.put(@example_config, :site_id, site.id),
           :installation
         )
 
-      response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
+      response = get(conn, "/js/#{tracker_script_configuration.id}.js") |> response(200)
 
       assert String.contains?(response, "!function(){var")
       assert String.contains?(response, "domain:\"#{site.domain}\"")
@@ -56,20 +55,20 @@ defmodule PlausibleWeb.TrackerPlugTest do
       site = new_site()
 
       tracker_script_configuration =
-        Tracker.update_script_configuration(
+        Tracker.update_script_configuration!(
           site,
           Map.put(@example_config, :site_id, site.id),
           :installation
         )
 
-      response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
+      response = get(conn, "/js/#{tracker_script_configuration.id}.js") |> response(200)
 
       assert String.contains?(response, "window.plausible")
     end
 
     test "returns 404 for unknown site", %{conn: conn} do
       conn
-      |> get("/js/s-a14125a2-000-000-0000-000000000000.js")
+      |> get("/js/pa-a14125a2-000-000-0000-000000000000.js")
       |> response(404)
     end
   end

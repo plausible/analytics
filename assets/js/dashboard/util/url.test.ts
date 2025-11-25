@@ -1,4 +1,5 @@
 import { apiPath, externalLinkForPage, isValidHttpUrl, trimURL } from './url'
+import { siteContextDefaultValue } from '../site-context'
 
 describe('apiPath', () => {
   it.each([
@@ -32,10 +33,19 @@ describe('externalLinkForPage', () => {
   ])(
     'when domain is %s and page is %s, it should return %s',
     (domain, page, expected) => {
-      const result = externalLinkForPage(domain, page)
+      const site = { ...siteContextDefaultValue, domain: domain }
+      const result = externalLinkForPage(site, page)
       expect(result).toBe(expected)
     }
   )
+
+  it('returns null for consolidated view', () => {
+    const consolidatedView = {
+      ...siteContextDefaultValue,
+      isConsolidatedView: true
+    }
+    expect(externalLinkForPage(consolidatedView, '/some-page')).toBe(null)
+  })
 })
 
 describe('isValidHttpUrl', () => {

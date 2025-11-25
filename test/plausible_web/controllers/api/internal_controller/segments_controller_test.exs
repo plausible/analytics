@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
-  use Plausible.Teams.Test
 
   describe "POST /api/:domain/segments" do
     setup [:create_user, :log_in, :create_site]

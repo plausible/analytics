@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.PagesTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
@@ -2143,6 +2142,58 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                }
              ]
     end
+
+    on_ee do
+      test "returns pages across all sites on a consolidated view", %{conn: conn, site: site} do
+        another_site = new_site(team: site.team)
+        cv = new_consolidated_view(site.team)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/a1", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:pageview, pathname: "/a2", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:pageview, pathname: "/a2", timestamp: ~N[2021-01-01 00:00:00])
+        ])
+
+        populate_stats(another_site, [
+          build(:pageview, pathname: "/b1", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:pageview, pathname: "/b1", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:pageview, pathname: "/b1", timestamp: ~N[2021-01-01 00:00:00])
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{cv.domain}/pages?period=day&date=2021-01-01&detailed=true"
+          )
+
+        assert json_response(conn, 200)["results"] == [
+                 %{
+                   "bounce_rate" => 100,
+                   "name" => "/b1",
+                   "pageviews" => 3,
+                   "time_on_page" => nil,
+                   "visitors" => 3,
+                   "scroll_depth" => nil
+                 },
+                 %{
+                   "bounce_rate" => 100,
+                   "name" => "/a2",
+                   "pageviews" => 2,
+                   "time_on_page" => nil,
+                   "visitors" => 2,
+                   "scroll_depth" => nil
+                 },
+                 %{
+                   "bounce_rate" => 100,
+                   "name" => "/a1",
+                   "pageviews" => 1,
+                   "time_on_page" => nil,
+                   "visitors" => 1,
+                   "scroll_depth" => nil
+                 }
+               ]
+      end
+    end
   end
 
   describe "GET /api/stats/:domain/entry-pages" do
@@ -2185,13 +2236,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "visits" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                },
                %{
                  "visitors" => 1,
                  "visits" => 2,
                  "name" => "/page2",
-                 "visit_duration" => 450
+                 "visit_duration" => 450,
+                 "bounce_rate" => 50
                }
              ]
     end
@@ -2241,13 +2294,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 1,
                  "visits" => 1,
                  "name" => "/blog",
-                 "visit_duration" => 60
+                 "visit_duration" => 60,
+                 "bounce_rate" => 0
                },
                %{
                  "visitors" => 1,
                  "visits" => 1,
                  "name" => "/blog/john-2",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                }
              ]
     end
@@ -2296,13 +2351,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "visits" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                },
                %{
                  "visitors" => 1,
                  "visits" => 2,
                  "name" => "/page2",
-                 "visit_duration" => 450
+                 "visit_duration" => 450,
+                 "bounce_rate" => 50
                }
              ]
 
@@ -2317,13 +2374,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 3,
                  "visits" => 5,
                  "name" => "/page2",
-                 "visit_duration" => 240.0
+                 "visit_duration" => 240.0,
+                 "bounce_rate" => 20
                },
                %{
                  "visitors" => 2,
                  "visits" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                }
              ]
     end
@@ -2376,8 +2435,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       # We're going to only join sessions where the exit hostname matches the filter
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "/page1", "visit_duration" => 0, "visitors" => 1, "visits" => 1},
-               %{"name" => "/page2", "visit_duration" => 0, "visitors" => 1, "visits" => 1}
+               %{
+                 "name" => "/page1",
+                 "visit_duration" => 0,
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "bounce_rate" => 100
+               },
+               %{
+                 "name" => "/page2",
+                 "visit_duration" => 0,
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "bounce_rate" => 100
+               }
              ]
     end
 
@@ -2534,19 +2605,22 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visit_duration" => 100.0,
                  "name" => "/a",
                  "visits" => 10,
-                 "visitors" => 6
+                 "visitors" => 6,
+                 "bounce_rate" => 10
                },
                %{
                  "visit_duration" => 50.0,
                  "name" => "/bbb",
                  "visits" => 2,
-                 "visitors" => 2
+                 "visitors" => 2,
+                 "bounce_rate" => 0
                },
                %{
                  "visit_duration" => 0,
                  "name" => "/aaa",
                  "visits" => 1,
-                 "visitors" => 1
+                 "visitors" => 1,
+                 "bounce_rate" => 100
                }
              ]
     end
@@ -2930,6 +3004,372 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "exit_rate" => 100.0,
                  "name" => "/aaa",
                  "visits" => 1,
+                 "visitors" => 1
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "return revenue metrics for entry pages breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/first"),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 2, pathname: "/second"),
+        build(:event,
+          user_id: 2,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("3000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("4000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 3, pathname: "/first"),
+        build(:event,
+          name: "Payment",
+          user_id: 3,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 4, pathname: "/third"),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("2500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event, name: "Payment", revenue_reporting_amount: nil),
+        build(:event, name: "Payment", revenue_reporting_amount: nil)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/entry-pages#{q}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/first",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,500.00",
+                   "short" => "$3.5K",
+                   "value" => 3500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/second",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$7,000.00",
+                   "short" => "$7.0K",
+                   "value" => 7000.0
+                 },
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$2,500.00",
+                   "short" => "$2.5K",
+                   "value" => 2500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/third",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$2,500.00",
+                   "short" => "$2.5K",
+                   "value" => 2500.0
+                 },
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "return revenue metrics for exit pages breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/first"),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 1, pathname: "/exit_first"),
+        build(:pageview, user_id: 2, pathname: "/second"),
+        build(:event,
+          user_id: 2,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("3000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("4000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 2, pathname: "/exit_second"),
+        build(:pageview, user_id: 3, pathname: "/first"),
+        build(:event,
+          name: "Payment",
+          user_id: 3,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 3, pathname: "/exit_first"),
+        build(:pageview, user_id: 4, pathname: "/third"),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("2500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event, name: "Payment", revenue_reporting_amount: nil),
+        build(:event, name: "Payment", revenue_reporting_amount: nil)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages#{q}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/exit_first",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,500.00",
+                   "short" => "$3.5K",
+                   "value" => 3500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/exit_second",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$7,000.00",
+                   "short" => "$7.0K",
+                   "value" => 7000.0
+                 },
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$2,500.00",
+                   "short" => "$2.5K",
+                   "value" => 2500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/third",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$2,500.00",
+                   "short" => "$2.5K",
+                   "value" => 2500.0
+                 },
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "return revenue metrics for pages breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/first"),
+        build(:event,
+          name: "Payment",
+          pathname: "/purchase/first",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 1, pathname: "/exit_first"),
+        build(:pageview, user_id: 2, pathname: "/second"),
+        build(:event,
+          user_id: 2,
+          name: "Payment",
+          pathname: "/purchase/second",
+          revenue_reporting_amount: Decimal.new("3000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          pathname: "/purchase/second",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("4000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 2, pathname: "/exit_second"),
+        build(:pageview, user_id: 3, pathname: "/first"),
+        build(:event,
+          name: "Payment",
+          pathname: "/purchase/first",
+          user_id: 3,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 3, pathname: "/exit_first"),
+        build(:pageview, user_id: 4, pathname: "/third"),
+        build(:event,
+          name: "Payment",
+          pathname: "/purchase/third",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("2500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event, name: "Payment", pathname: "/nopay", revenue_reporting_amount: nil),
+        build(:event, name: "Payment", pathname: "/nopay", revenue_reporting_amount: nil),
+        build(:event, name: "Payment", pathname: "/nopay", revenue_reporting_amount: nil)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages#{q}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$0.00",
+                   "short" => "$0.0",
+                   "value" => 0.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/nopay",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$0.00",
+                   "short" => "$0.0",
+                   "value" => 0.0
+                 },
+                 "total_visitors" => 3,
+                 "visitors" => 3
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/purchase/first",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,500.00",
+                   "short" => "$3.5K",
+                   "value" => 3500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/purchase/second",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$7,000.00",
+                   "short" => "$7.0K",
+                   "value" => 7000.0
+                 },
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$2,500.00",
+                   "short" => "$2.5K",
+                   "value" => 2500.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "/purchase/third",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$2,500.00",
+                   "short" => "$2.5K",
+                   "value" => 2500.0
+                 },
+                 "total_visitors" => 1,
                  "visitors" => 1
                }
              ]

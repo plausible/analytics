@@ -1,15 +1,17 @@
 defmodule Plausible.Stats.Legacy.QueryBuilder do
   @moduledoc """
-  Module used to parse URL search params to a valid Query, used to power the API for the dashboard.
+  Module used to parse URL search params to a valid Query, used to power the API for the dashboard
+  and v1 of our Stats API.
+
   @deprecated
   """
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange}
+  alias Plausible.Stats.{Filters, Interval, Query, QueryParser, QueryBuilder, DateTimeRange}
 
   def from(site, params, debug_metadata, now \\ nil) do
-    now = now || DateTime.utc_now(:second)
+    now = now || Plausible.Stats.Query.Test.get_fixed_now()
 
     query =
       Query
@@ -19,24 +21,38 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
         site_id: site.id,
         site_native_stats_start_at: site.native_stats_start_at
       )
-      |> put_period(site, params)
+      |> put_input_date_range(site, params)
       |> put_timezone(site)
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
       |> resolve_segments(site)
       |> preload_goals_and_revenue(site)
+      |> put_consolidated_site_ids(site)
       |> put_order_by(params)
       |> put_include(site, params)
-      |> Query.put_comparison_utc_time_range()
+      |> QueryBuilder.put_comparison_utc_time_range()
       |> Query.put_imported_opts(site)
-      |> Query.set_time_on_page_data(site)
+      |> QueryBuilder.set_time_on_page_data(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, site, params)
     end
 
     query
+  end
+
+  on_ee do
+    defp put_consolidated_site_ids(query, %Plausible.Site{} = site) do
+      if Plausible.Sites.consolidated?(site) do
+        site_ids = Plausible.ConsolidatedView.Cache.get(site.domain)
+        struct!(query, consolidated_site_ids: site_ids)
+      else
+        query
+      end
+    end
+  else
+    defp put_consolidated_site_ids(query, _site), do: query
   end
 
   defp resolve_segments(query, site) do
@@ -52,7 +68,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp preload_goals_and_revenue(query, site) do
     {preloaded_goals, revenue_warning, revenue_currencies} =
-      Plausible.Stats.Filters.QueryParser.preload_goals_and_revenue(
+      Plausible.Stats.QueryBuilder.preload_goals_and_revenue(
         site,
         query.metrics,
         query.filters,
@@ -66,7 +82,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     )
   end
 
-  defp put_period(%Query{now: now} = query, _site, %{"period" => period})
+  defp put_input_date_range(%Query{now: now} = query, _site, %{"period" => period})
        when period in ["realtime", "30m"] do
     duration_minutes =
       case period do
@@ -80,19 +96,19 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     datetime_range =
       DateTimeRange.new!(first_datetime, last_datetime) |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: period, utc_time_range: datetime_range)
+    struct!(query, input_date_range: period, utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "day"} = params) do
+  defp put_input_date_range(query, site, %{"period" => "day"} = params) do
     date = parse_single_date(query, params)
 
     datetime_range =
       DateTimeRange.new!(date, date, site.timezone) |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "day", utc_time_range: datetime_range)
+    struct!(query, input_date_range: "day", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => period} = params)
+  defp put_input_date_range(query, site, %{"period" => period} = params)
        when period in ["7d", "28d", "30d", "91d"] do
     {days, "d"} = Integer.parse(period)
 
@@ -103,87 +119,93 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: period, utc_time_range: datetime_range)
+    struct!(query, input_date_range: period, utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "month"} = params) do
+  defp put_input_date_range(query, site, %{"period" => "month"} = params) do
     date = parse_single_date(query, params)
-    start_date = Timex.beginning_of_month(date)
-    end_date = Timex.end_of_month(date)
+    start_date = Date.beginning_of_month(date)
+    end_date = Date.end_of_month(date)
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "month", utc_time_range: datetime_range)
+    struct!(query, input_date_range: "month", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "6mo"} = params) do
+  defp put_input_date_range(query, site, %{"period" => "6mo"} = params) do
     end_date =
       parse_single_date(query, params)
-      |> Timex.end_of_month()
+      |> Date.shift(month: -1)
+      |> Date.end_of_month()
 
     start_date =
       Date.shift(end_date, month: -5)
-      |> Timex.beginning_of_month()
+      |> Date.beginning_of_month()
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "6mo", utc_time_range: datetime_range)
+    struct!(query, input_date_range: "6mo", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "12mo"} = params) do
+  defp put_input_date_range(query, site, %{"period" => "12mo"} = params) do
     end_date =
       parse_single_date(query, params)
-      |> Timex.end_of_month()
+      |> Date.shift(month: -1)
+      |> Date.end_of_month()
 
     start_date =
       Date.shift(end_date, month: -11)
-      |> Timex.beginning_of_month()
+      |> Date.beginning_of_month()
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "12mo", utc_time_range: datetime_range)
+    struct!(query, input_date_range: "12mo", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "year"} = params) do
+  defp put_input_date_range(query, site, %{"period" => "year"} = params) do
     end_date =
       parse_single_date(query, params)
-      |> Timex.end_of_year()
+      |> Plausible.Times.end_of_year()
 
-    start_date = Timex.beginning_of_year(end_date)
+    start_date = Plausible.Times.beginning_of_year(end_date)
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "year", utc_time_range: datetime_range)
+    struct!(query, input_date_range: "year", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "all"}) do
+  defp put_input_date_range(query, site, %{"period" => "all"}) do
     today = today(query)
     start_date = Plausible.Sites.stats_start_date(site) || today
 
     datetime_range =
       DateTimeRange.new!(start_date, today, site.timezone) |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "all", utc_time_range: datetime_range)
+    struct!(query, input_date_range: "all", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "custom", "from" => from, "to" => to} = params) do
+  defp put_input_date_range(
+         query,
+         site,
+         %{"period" => "custom", "from" => from, "to" => to} = params
+       ) do
     new_params =
       params
       |> Map.drop(["from", "to"])
       |> Map.put("date", Enum.join([from, to], ","))
 
-    put_period(query, site, new_params)
+    put_input_date_range(query, site, new_params)
   end
 
-  defp put_period(query, site, %{"period" => "custom", "date" => date}) do
+  defp put_input_date_range(query, site, %{"period" => "custom", "date" => date}) do
     [from, to] = String.split(date, ",")
     from_date = Date.from_iso8601!(String.trim(from))
     to_date = Date.from_iso8601!(String.trim(to))
@@ -192,11 +214,11 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(from_date, to_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "custom", utc_time_range: datetime_range)
+    struct!(query, input_date_range: "custom", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, params) do
-    put_period(query, site, Map.merge(params, %{"period" => "30d"}))
+  defp put_input_date_range(query, site, params) do
+    put_input_date_range(query, site, Map.merge(params, %{"period" => "30d"}))
   end
 
   defp put_timezone(query, site) do
@@ -247,47 +269,48 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     [{:visitors, :asc}, {"visit:source", :desc}]
   """
   def parse_order_by(order_by) do
-    json_decode(order_by)
-    |> unwrap([])
-    |> Filters.QueryParser.parse_order_by()
-    |> unwrap([])
+    with true <- is_binary(order_by),
+         {:ok, order_by} <- JSON.decode(order_by),
+         {:ok, order_by} <- QueryParser.parse_order_by(order_by) do
+      order_by
+    else
+      _ -> []
+    end
   end
 
   @doc """
   ### Examples:
     iex> QueryBuilder.parse_include(%{}, nil)
-    QueryParser.default_include()
+    Plausible.Stats.ParsedQueryParams.default_include()
 
     iex> QueryBuilder.parse_include(%{}, ~s({"total_rows": true}))
-    Map.merge(QueryParser.default_include(), %{total_rows: true})
+    Map.merge(Plausible.Stats.ParsedQueryParams.default_include(), %{total_rows: true})
   """
   def parse_include(site, include) do
-    json_decode(include)
-    |> unwrap(%{})
-    |> Filters.QueryParser.parse_include(site)
-    |> unwrap(Filters.QueryParser.default_include())
+    include =
+      with true <- is_binary(include),
+           {:ok, include} <- JSON.decode(include),
+           {:ok, include} <- QueryParser.parse_include(include, site) do
+        include
+      else
+        _ -> %{}
+      end
+
+    Plausible.Stats.ParsedQueryParams.default_include()
+    |> Map.merge(include)
   end
-
-  defp json_decode(string) when is_binary(string) do
-    Jason.decode(string)
-  end
-
-  defp json_decode(_other), do: :error
-
-  defp unwrap({:ok, result}, _default), do: result
-  defp unwrap(_, default), do: default
 
   defp put_order_by(query, %{} = params) do
     struct!(query, order_by: parse_order_by(params["order_by"]))
   end
 
-  defp put_interval(%{:period => "all"} = query, params) do
+  defp put_interval(%{:input_date_range => "all"} = query, params) do
     interval = Map.get(params, "interval", Interval.default_for_date_range(query.utc_time_range))
     struct!(query, interval: interval)
   end
 
   defp put_interval(query, params) do
-    interval = Map.get(params, "interval", Interval.default_for_period(query.period))
+    interval = Map.get(params, "interval", Interval.default_for_period(query.input_date_range))
     struct!(query, interval: interval)
   end
 
@@ -296,12 +319,12 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp today(query) do
-    query.now |> Timex.to_date()
+    query.now |> DateTime.to_date()
   end
 
   defp parse_single_date(query, params) do
     case params["date"] do
-      "today" -> query.now |> Timex.to_date()
+      "today" -> query.now |> DateTime.to_date()
       date when is_binary(date) -> Date.from_iso8601!(date)
       _ -> today(query)
     end
@@ -320,7 +343,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   def parse_comparison_params(site, %{"comparison" => "custom"} = params) do
     {:ok, date_range} =
-      Filters.QueryParser.parse_date_range_pair(site, [
+      QueryParser.parse_date_range_pair(site, [
         params["compare_from"],
         params["compare_to"]
       ])

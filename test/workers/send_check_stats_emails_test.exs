@@ -2,7 +2,6 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
   use Plausible.DataCase, async: true
   use Oban.Testing, repo: Plausible.Repo
   use Bamboo.Test
-  use Plausible.Teams.Test
 
   alias Plausible.Workers.SendCheckStatsEmails
 
@@ -49,9 +48,27 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
     )
   end
 
+  test "team members idling will get the email" do
+    user = new_user(last_seen: NaiveDateTime.utc_now(:second), inserted_at: days_ago(8))
+    site = new_site(owner: user)
+    populate_stats(site, [build(:pageview)])
+
+    user2 =
+      add_member(team_of(user),
+        user: new_user(inserted_at: days_ago(8), last_seen: days_ago(8)),
+        role: :editor
+      )
+
+    perform_job(SendCheckStatsEmails, %{})
+
+    assert_email_delivered_with(
+      to: [{user2.name, user2.email}],
+      subject: "Check your Plausible website stats"
+    )
+  end
+
   defp days_ago(days) do
-    NaiveDateTime.utc_now()
-    |> NaiveDateTime.truncate(:second)
-    |> Timex.shift(days: -days)
+    NaiveDateTime.utc_now(:second)
+    |> NaiveDateTime.shift(day: -days)
   end
 end

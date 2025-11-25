@@ -10,7 +10,7 @@
                 logo_path("logo_dark.svg")
               )
             }
-            class="w-44 -mt-2 hidden dark:inline"
+            class="w-32 hidden dark:inline"
             alt="Plausible logo"
             loading="lazy"
           />
@@ -21,7 +21,7 @@
                 logo_path("logo_light.svg")
               )
             }
-            class="w-44 -mt-2 inline dark:hidden"
+            class="w-32 inline dark:hidden"
             alt="Plausible logo"
             loading="lazy"
           />
@@ -30,7 +30,7 @@
       <div class="absolute inset-y-0 right-0 flex items-center justify-end">
         <%= cond do %>
           <% @conn.assigns[:current_user] -> %>
-            <ul class="flex items-center w-full sm:w-auto">
+            <ul class="flex items-center gap-2 w-full sm:w-auto">
               <li :if={
                 ee?() && @conn.assigns[:site] &&
                   Plausible.Auth.is_super_admin?(@conn.assigns[:current_user])
@@ -45,24 +45,31 @@
               </li>
               <li
                 :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team])}
-                class="hidden mr-6 sm:block"
+                class="hidden sm:block"
               >
-                <.styled_link
-                  class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
-                  href={Routes.settings_path(@conn, :subscription)}
-                >
-                  {trial_notification(@conn.assigns[:current_team])}
-                </.styled_link>
+                <div class="flex items-center p-1 rounded-lg bg-yellow-100 dark:bg-yellow-600/35 overflow-hidden">
+                  <span class="px-3 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {trial_notification(@conn.assigns[:current_team])}
+                  </span>
+                  <.button_link
+                    href={Routes.settings_path(@conn, :subscription)}
+                    theme="yellow"
+                    mt?={false}
+                    class="!px-3 !py-2"
+                  >
+                    Upgrade
+                  </.button_link>
+                </div>
               </li>
               <li class="w-full sm:w-auto">
                 <.dropdown>
-                  <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                    <span class="font-medium truncate dark:text-gray-100 hidden md:block">
+                  <:button class="flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-md transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <span class="hidden md:block text-sm font-medium truncate dark:text-gray-100">
                       {@conn.assigns[:current_user].name}
                     </span>
                     <img
                       src={Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user])}
-                      class="w-7 rounded-full"
+                      class="-my-0.5 w-7 rounded-full"
                     />
                   </:button>
                   <:menu>
@@ -87,7 +94,7 @@
                     <div :if={@my_team && @my_team.id == @current_team.id}>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span data-test="create-a-team-cta" class="flex-1">
-                          Create a Team
+                          Create a team
                         </span>
                       </.dropdown_item>
                       <.dropdown_divider />
@@ -99,7 +106,7 @@
                         href={Routes.settings_path(@conn, :team_general)}
                       >
                         <span class="flex-1">
-                          Team Einstellungen
+                          Team Settings
                         </span>
                       </.dropdown_item>
                       <.dropdown_divider />
@@ -111,7 +118,7 @@
                       new_tab
                       href="https://plausible.io/docs"
                     >
-                      Help Center
+                      Help center
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ee?()}
@@ -119,7 +126,7 @@
                       new_tab
                       href="https://plausible.io/contact"
                     >
-                      Contact Support
+                      Contact support
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ee?()}
@@ -127,7 +134,7 @@
                       new_tab
                       href={feedback_link(@conn.assigns[:current_user])}
                     >
-                      Feature Requests
+                      Feature requests
                     </.dropdown_item>
                     <.dropdown_item
                       :if={ce?()}
@@ -135,11 +142,9 @@
                       new_tab
                       href="https://github.com/plausible/analytics"
                     >
-                      Github Repo
+                      Github repo
                     </.dropdown_item>
-                    Ende deaktivierte Menüpunkte --%>
-
-                    <.dropdown_item href="/logout">Abmelden</.dropdown_item>
+                    <.dropdown_item href="/logout">Log Out</.dropdown_item>
                   </:menu>
                 </.dropdown>
               </li>
@@ -153,7 +158,7 @@
                 <div class="inline-flex">
                   <a
                     href="/login"
-                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out"
+                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-hidden focus:text-gray-900 transition duration-150 ease-in-out"
                   >
                     Login
                   </a>
@@ -166,15 +171,15 @@
                 <div class="inline-flex">
                   <a
                     href="/login"
-                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out"
+                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-hidden focus:text-gray-900 transition duration-150 ease-in-out"
                   >
                     Login
                   </a>
                 </div>
-                <div class="inline-flex ml-6 rounded shadow">
+                <div class="inline-flex ml-6 rounded-sm shadow-sm">
                   <a
                     href="/register"
-                    class="inline-flex items-center justify-center px-5 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out"
+                    class="inline-flex items-center justify-center px-5 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-hidden focus:ring transition duration-150 ease-in-out"
                   >
                     Sign up
                   </a>

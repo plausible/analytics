@@ -5,7 +5,6 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
   use Bamboo.Test
 
   import Phoenix.View
-  import Plausible.Test.Support.HTML
 
   alias PlausibleWeb.Endpoint
   alias PlausibleWeb.ErrorView
@@ -109,12 +108,11 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
       text =
         email
         |> Map.fetch!(:html_body)
-        |> Floki.parse_document!()
-        |> Floki.text()
+        |> text()
 
       assert text =~ "Reported by: Alice Bob"
       assert text =~ "Sentry trace: some-trace"
-      assert text =~ "User feedback:\nhello world"
+      assert text =~ "User feedback: hello world"
     end
   end
 
@@ -138,7 +136,7 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
           |> get("/")
 
         assert html = render_to_string(ErrorView, unquote(error) <> ".html", %{conn: conn})
-        text = html |> Floki.parse_document!() |> Floki.text()
+        text = text(html)
         assert text =~ "There has been a server error"
         assert text =~ "But don't worry, we're on it!"
 

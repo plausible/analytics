@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.Api.StatsController.RegionsTest do
-  use Plausible.Teams.Test
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/regions" do
@@ -95,24 +94,123 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       assert resp =~ "Failed to parse 'to' argument."
     end
 
-    test "bugfix: don't crash on ambiguous date time", %{conn: conn, user: user} do
-      # The site has timezone set to Azores.
-      # Given it's 28th Nov and there's 30 day range, the starting day falls on 29th Oct
-      # which coincides with daylight savings time change there:
-      # https://www.timeanddate.com/time/change/portugal/ponta-delgada-azores.
-      site = new_site(owner: user, timezone: "Atlantic/Azores")
-
+    @tag :ee_only
+    test "return revenue metrics for regions breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minutes: -5))
+        build(:pageview,
+          user_id: 1,
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:pageview,
+          user_id: 4,
+          country_code: "EE",
+          subdivision1_code: "EE-39",
+          city_geoname_id: 591_632
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          country_code: "EE",
+          subdivision1_code: "EE-39",
+          city_geoname_id: 591_632
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        )
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/regions?period=30d&date=2023-11-28&with_imported=true"
-        )
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      assert json_response(conn, 200)
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/regions#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 33.33,
+                 "name" => "Harjumaa",
+                 "code" => "EE-37",
+                 "country_flag" => "🇪🇪",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 6,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 25.0,
+                 "name" => "Hiiumaa",
+                 "code" => "EE-39",
+                 "country_flag" => "🇪🇪",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 4,
+                 "visitors" => 1
+               }
+             ]
     end
   end
 end

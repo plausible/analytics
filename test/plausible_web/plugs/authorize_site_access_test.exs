@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
   alias PlausibleWeb.Plugs.AuthorizeSiteAccess
 
   setup [:create_user, :log_in, :create_site]
@@ -146,6 +145,25 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     assert json_response(conn, 404) == %{
              "error" => "Site does not exist or user does not have sufficient access."
            }
+  end
+
+  on_ee do
+    test "returns 404 for consolidated views by default", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      new_site(team: team)
+      consolidated_view = new_consolidated_view(team)
+
+      opts = AuthorizeSiteAccess.init([:super_admin, :admin, :owner])
+
+      conn =
+        conn
+        |> bypass_through(PlausibleWeb.Router)
+        |> get("/plug-tests/#{consolidated_view.domain}/with-domain")
+        |> AuthorizeSiteAccess.call(opts)
+
+      assert conn.halted
+      assert conn.status == 404
+    end
   end
 
   test "rejects unrelated shared link slug even if user is permitted for site", %{

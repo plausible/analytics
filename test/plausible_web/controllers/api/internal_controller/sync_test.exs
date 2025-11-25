@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.InternalController.SyncTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
-  use Plausible.Teams.Test
 
   describe "PUT /api/:domain/disable-feature" do
     setup [:create_user, :log_in]

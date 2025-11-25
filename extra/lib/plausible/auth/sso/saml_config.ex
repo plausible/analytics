@@ -21,6 +21,9 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   @fields [:idp_signin_url, :idp_entity_id, :idp_cert_pem, :idp_metadata]
   @required_fields @fields -- [:idp_metadata]
 
+  @derive {Plausible.Audit.Encoder,
+           only: [:id, :idp_signin_url, :idp_entity_id, :idp_cert_pem, :idp_metadata]}
+
   embedded_schema do
     field :idp_signin_url, :string
     field :idp_entity_id, :string
@@ -69,7 +72,7 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
     if pem = get_change(changeset, field) do
       pem = clean_pem(pem)
 
-      case X509.Certificate.from_pem(pem) do
+      case parse_pem(pem) do
         {:ok, _cert} -> put_change(changeset, field, pem)
         {:error, _} -> add_error(changeset, field, "invalid certificate", validation: :cert_pem)
       end
@@ -78,12 +81,26 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
     end
   end
 
+  defp parse_pem(pem) do
+    X509.Certificate.from_pem(pem)
+  catch
+    _, _ -> {:error, :failed_to_parse}
+  end
+
   defp clean_pem(pem) do
-    pem
-    |> String.split("\n")
-    |> Enum.map(&String.trim/1)
-    |> Enum.reject(&(&1 == ""))
-    |> Enum.join("\n")
-    |> String.trim()
+    cleaned =
+      pem
+      |> String.split("\n")
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.join("\n")
+      |> String.trim()
+
+    # Trying to account for PEM certificates without markers
+    if String.starts_with?(cleaned, "-----BEGIN CERTIFICATE-----") do
+      cleaned
+    else
+      "-----BEGIN CERTIFICATE-----\n" <> cleaned <> "\n-----END CERTIFICATE-----"
+    end
   end
 end

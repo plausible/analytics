@@ -33,81 +33,108 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
     <div>
       <.settings_tiles>
         <.tile docs="top-pages#block-traffic-from-specific-pages-or-sections">
-          <:title>Pages Block List</:title>
-          <:subtitle>Reject incoming traffic for specific pages</:subtitle>
-          <.filter_bar
-            :if={@page_rules_count < Shields.maximum_page_rules()}
-            filtering_enabled?={false}
-          >
-            <.button
-              id="add-page-rule"
-              x-data
-              x-on:click={Modal.JS.open("page-rule-form-modal")}
-              mt?={false}
-            >
-              Add Page
-            </.button>
-          </.filter_bar>
+          <:title>Pages block list</:title>
+          <:subtitle :if={not Enum.empty?(@page_rules)}>
+            Reject incoming traffic for specific pages.
+          </:subtitle>
 
-          <.notice
-            :if={@page_rules_count >= Shields.maximum_page_rules()}
-            class="mt-4"
-            title="Maximum number of pages reached"
-            theme={:gray}
-          >
-            <p>
-              You've reached the maximum number of pages you can block ({Shields.maximum_page_rules()}). Please remove one before adding another.
-            </p>
-          </.notice>
-
-          <p :if={Enum.empty?(@page_rules)} class="mt-12 mb-8 text-center text-sm">
-            No Page Rules configured for this site.
-          </p>
-
-          <.table :if={not Enum.empty?(@page_rules)} rows={@page_rules}>
-            <:thead>
-              <.th>Page</.th>
-              <.th hide_on_mobile>Status</.th>
-              <.th invisible>Actions</.th>
-            </:thead>
-            <:tbody :let={rule}>
-              <.td max_width="max-w-40" truncate>
-                <span
-                  id={"page-#{rule.id}"}
-                  class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
-                  title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+          <%= if Enum.empty?(@page_rules) do %>
+            <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+              <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+                Block a page
+              </h3>
+              <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+                Reject incoming traffic for specific pages.
+                <.styled_link
+                  href="https://plausible.io/docs/top-pages#block-traffic-from-specific-pages-or-sections"
+                  target="_blank"
                 >
-                  {rule.page_path}
-                </span>
-              </.td>
-              <.td hide_on_mobile>
-                <div class="flex items-center">
-                  <span :if={rule.action == :deny}>
-                    Blocked
-                  </span>
-                  <span :if={rule.action == :allow}>
-                    Allowed
-                  </span>
-                  <span
-                    :if={@redundant_rules[rule.id]}
-                    title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
-                    class="pl-4 cursor-help"
-                  >
-                    <Heroicons.exclamation_triangle class="h-5 w-5 text-red-800" />
-                  </span>
-                </div>
-              </.td>
-              <.td actions>
-                <.delete_button
-                  id={"remove-page-rule-#{rule.id}"}
-                  phx-target={@myself}
-                  phx-click="remove-page-rule"
-                  phx-value-rule-id={rule.id}
-                  data-confirm="Are you sure you want to revoke this rule?"
-                />
-              </.td>
-            </:tbody>
-          </.table>
+                  Learn more
+                </.styled_link>
+              </p>
+              <.button
+                :if={@page_rules_count < Shields.maximum_page_rules()}
+                id="add-page-rule"
+                x-data
+                x-on:click={Modal.JS.open("page-rule-form-modal")}
+                class="mt-4"
+              >
+                Add page
+              </.button>
+            </div>
+          <% else %>
+            <.filter_bar
+              :if={@page_rules_count < Shields.maximum_page_rules()}
+              filtering_enabled?={false}
+            >
+              <.button
+                id="add-page-rule"
+                x-data
+                x-on:click={Modal.JS.open("page-rule-form-modal")}
+                mt?={false}
+              >
+                Add page
+              </.button>
+            </.filter_bar>
+
+            <.notice
+              :if={@page_rules_count >= Shields.maximum_page_rules()}
+              class="mt-4"
+              title="Maximum number of pages reached"
+              theme={:gray}
+            >
+              <p>
+                You've reached the maximum number of pages you can block ({Shields.maximum_page_rules()}). Please remove one before adding another.
+              </p>
+            </.notice>
+
+            <div class="mt-6">
+              <.table rows={@page_rules}>
+                <:thead>
+                  <.th>Page</.th>
+                  <.th hide_on_mobile>Status</.th>
+                  <.th invisible>Actions</.th>
+                </:thead>
+                <:tbody :let={rule}>
+                  <.td max_width="max-w-40" truncate>
+                    <span
+                      id={"page-#{rule.id}"}
+                      class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
+                      title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                    >
+                      {rule.page_path}
+                    </span>
+                  </.td>
+                  <.td hide_on_mobile>
+                    <div class="flex items-center">
+                      <span :if={rule.action == :deny}>
+                        Blocked
+                      </span>
+                      <span :if={rule.action == :allow}>
+                        Allowed
+                      </span>
+                      <span
+                        :if={@redundant_rules[rule.id]}
+                        title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
+                        class="pl-4 cursor-help"
+                      >
+                        <Heroicons.exclamation_triangle class="h-5 w-5 text-red-800" />
+                      </span>
+                    </div>
+                  </.td>
+                  <.td actions>
+                    <.delete_button
+                      id={"remove-page-rule-#{rule.id}"}
+                      phx-target={@myself}
+                      phx-click="remove-page-rule"
+                      phx-value-rule-id={rule.id}
+                      data-confirm="Are you sure you want to revoke this rule?"
+                    />
+                  </.td>
+                </:tbody>
+              </.table>
+            </div>
+          <% end %>
 
           <.live_component :let={modal_unique_id} module={Modal} id="page-rule-form-modal">
             <.form
@@ -115,9 +142,9 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
               for={@form}
               phx-submit="save-page-rule"
               phx-target={@myself}
-              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+              class="max-w-md w-full mx-auto"
             >
-              <.title>Add Page to Block List</.title>
+              <.title>Add page to block list</.title>
 
               <.live_component
                 class="mt-4"
@@ -125,7 +152,9 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 submit_value={f[:page_path].value}
                 display_value={f[:page_path].value || ""}
                 module={PlausibleWeb.Live.Components.ComboBox}
-                suggest_fun={fn input, options -> suggest_page_paths(input, options, @site) end}
+                suggest_fun={
+                  fn input, options -> suggest_page_paths(input, options, @site, @page_rules) end
+                }
                 id={"#{f[:page_path].id}-#{modal_unique_id}"}
                 creatable
               />
@@ -139,7 +168,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 Once added, we will start rejecting traffic from this page within a few minutes.
               </p>
               <.button type="submit" class="w-full">
-                Add Page
+                Add page
               </.button>
             </.form>
           </.live_component>
@@ -217,8 +246,18 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
     |> Calendar.strftime("%Y-%m-%d %H:%M:%S")
   end
 
-  def suggest_page_paths(input, _options, site) do
-    query = Plausible.Stats.Query.from(site, %{})
+  def suggest_page_paths(input, _options, site, page_rules) do
+    query =
+      Plausible.Stats.Query.parse_and_build!(
+        site,
+        :internal,
+        %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews"],
+          "filters" => [["is_not", "event:page", Enum.map(page_rules, & &1.page_path)]]
+        }
+      )
 
     site
     |> Plausible.Stats.filter_suggestions(query, "page", input)

@@ -1,12 +1,10 @@
 defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
   use Plausible.DataCase
-  use Plausible
 
   on_ee do
     use Bamboo.Test, shared: true
     use Oban.Testing, repo: Plausible.Repo
     use Plausible.Auth.SSO.Domain.Status
-    use Plausible.Teams.Test
 
     alias Plausible.Auth.SSO
     alias Plausible.Auth.SSO.Domain.Verification.Worker
@@ -86,9 +84,19 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
           to: [nil: owner2.email],
           subject: "Your SSO domain #{domain} is ready!"
         )
+
+        {:ok, domain} = SSO.Domains.get(domain)
+
+        assert audited_entry("sso_domain_verification_success",
+                 team_id: team.id,
+                 entity_id: "#{domain.id}"
+               )
       end
 
-      test "domain is marked as unverified when max snoozes exhausted", %{domain: domain} do
+      test "domain is marked as unverified when max snoozes exhausted", %{
+        domain: domain,
+        team: team
+      } do
         assert {:snooze, _} =
                  perform_job(Worker, %{"domain" => domain},
                    attempt: 14,
@@ -102,6 +110,13 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
                  )
 
         assert_email_delivered_with(subject: "SSO domain #{domain} verification failure")
+
+        {:ok, domain} = SSO.Domains.get(domain)
+
+        assert audited_entry("sso_domain_verification_failure",
+                 team_id: team.id,
+                 entity_id: "#{domain.id}"
+               )
       end
     end
   end

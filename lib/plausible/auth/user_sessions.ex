@@ -21,6 +21,19 @@ defmodule Plausible.Auth.UserSessions do
     )
   end
 
+  @spec count_for_users([Auth.User.t()], NaiveDateTime.t()) :: list()
+  def count_for_users(users, now \\ NaiveDateTime.utc_now(:second)) when is_list(users) do
+    Repo.all(
+      from(us in Auth.UserSession,
+        where: us.user_id in ^Enum.map(users, & &1.id),
+        where: us.timeout_at >= ^now,
+        group_by: us.user_id,
+        select: {us.user_id, count(us.id)},
+        order_by: [asc: us.user_id]
+      )
+    )
+  end
+
   on_ee do
     alias Plausible.Teams
 

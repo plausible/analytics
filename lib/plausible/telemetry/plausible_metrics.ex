@@ -2,9 +2,15 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   @moduledoc """
   Custom PromEx plugin for instrumenting code within Plausible app.
   """
+  use Plausible
   use PromEx.Plugin
   alias Plausible.Site
   alias Plausible.Ingestion
+  alias Plausible.Ingestion.Persistor
+
+  on_ee do
+    alias Plausible.InstallationSupport
+  end
 
   @impl true
   def polling_metrics(opts) do
@@ -48,10 +54,55 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           measurement: :duration
         ),
         distribution(
+          metric_prefix ++ [:cache_warmer, :tracker_script, :refresh, :all],
+          event_name: PlausibleWeb.TrackerScriptCache.telemetry_event_refresh(:all),
+          reporter_options: [
+            buckets: [500, 1000, 2000, 5000, 10_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration
+        ),
+        distribution(
+          metric_prefix ++ [:cache_warmer, :tracker_script, :refresh, :updated_recently],
+          event_name: PlausibleWeb.TrackerScriptCache.telemetry_event_refresh(:updated_recently),
+          reporter_options: [
+            buckets: [500, 1000, 2000, 5000, 10_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration
+        ),
+        distribution(
           metric_prefix ++ [:ingest, :events, :pipeline, :steps],
           event_name: Ingestion.Event.telemetry_pipeline_step_duration(),
           reporter_options: [
             buckets: [10, 50, 100, 250, 350, 500, 1000, 5000, 10_000, 100_000, 500_000]
+          ],
+          unit: {:native, :microsecond},
+          measurement: :duration,
+          tags: [:step]
+        ),
+        distribution(
+          metric_prefix ++ [:remote_ingest, :events, :pipeline, :steps],
+          event_name: Ingestion.Persistor.EmbeddedWithRelay.telemetry_pipeline_step_duration(),
+          reporter_options: [
+            buckets: [
+              10,
+              50,
+              100,
+              250,
+              350,
+              500,
+              1000,
+              5000,
+              7_000,
+              10_000,
+              15_000,
+              20_000,
+              35_000,
+              50_000,
+              100_000,
+              500_000
+            ]
           ],
           unit: {:native, :microsecond},
           measurement: :duration,
@@ -73,6 +124,15 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         counter(
           metric_prefix ++ [:ingest, :events, :dropped, :total],
           event_name: Ingestion.Event.telemetry_event_dropped(),
+          tags: [:reason]
+        ),
+        counter(
+          metric_prefix ++ [:remote_ingest, :events, :buffered, :total],
+          event_name: Ingestion.Persistor.EmbeddedWithRelay.telemetry_event_buffered()
+        ),
+        counter(
+          metric_prefix ++ [:remote_ingest, :events, :dropped, :total],
+          event_name: Ingestion.Persistor.EmbeddedWithRelay.telemetry_event_dropped(),
           tags: [:reason]
         ),
         counter(
@@ -121,8 +181,38 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           event_name: PlausibleWeb.TrackerPlug.telemetry_event(:legacy),
           tags: [:status],
           tag_values: &%{status: &1.status}
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:detection, :success],
+              event_name: InstallationSupport.Detection.Checks.telemetry_event_success()
+            )
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:detection, :failure],
+              event_name: InstallationSupport.Detection.Checks.telemetry_event_failure()
+            )
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:verification, :handled],
+              event_name: InstallationSupport.Verification.Checks.telemetry_event_handled()
+            )
+        ),
+        on_ee(
+          do:
+            counter(
+              metric_prefix ++ [:verification, :unhandled],
+              event_name: InstallationSupport.Verification.Checks.telemetry_event_unhandled()
+            )
         )
       ]
+      |> Enum.concat(persistor_metrics(metric_prefix))
+      |> Enum.reject(&is_nil/1)
     )
   end
 
@@ -174,6 +264,60 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
     {duration, result} = time_it(fun)
     :telemetry.execute(event, %{duration: duration}, meta)
     result
+  end
+
+  defp persistor_metrics(metric_prefix) do
+    [
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :request, :total_duration, :millisecond],
+        event_name: Persistor.Remote.telemetry_request_duration(),
+        reporter_options: [
+          buckets: [1, 3, 5, 7, 10, 13, 15, 20, 25, 50, 75, 100, 500, 1_000, 10_000, 30_000]
+        ],
+        unit: {:native, :millisecond},
+        measurement: :duration
+      ),
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :request, :duration, :millisecond],
+        event_name: Persistor.TelemetryHandler.request_event(),
+        reporter_options: [
+          buckets: [1, 3, 5, 7, 10, 13, 15, 20, 25, 50, 75, 100, 500, 1_000, 10_000, 30_000]
+        ],
+        unit: {:native, :millisecond},
+        measurement: :duration,
+        tags: [:result, :path]
+      ),
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :connect, :duration, :millisecond],
+        event_name: Persistor.TelemetryHandler.connect_event(),
+        reporter_options: [
+          buckets: [1, 10, 50, 100, 500, 1_000, 10_000]
+        ],
+        unit: {:native, :millisecond},
+        measurement: :duration,
+        tags: [:status]
+      ),
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :send, :duration, :millisecond],
+        event_name: Persistor.TelemetryHandler.send_event(),
+        reporter_options: [
+          buckets: [1, 10, 50, 100, 500, 1_000, 10_000]
+        ],
+        unit: {:native, :millisecond},
+        measurement: :duration,
+        tags: [:status]
+      ),
+      distribution(
+        metric_prefix ++ [:persistor, :remote, :receive, :duration, :millisecond],
+        event_name: Persistor.TelemetryHandler.receive_event(),
+        reporter_options: [
+          buckets: [1, 10, 25, 50, 75, 100, 250, 350, 500, 750, 1_000, 5_000, 10_000, 30_000]
+        ],
+        unit: {:native, :millisecond},
+        measurement: :duration,
+        tags: [:status]
+      )
+    ]
   end
 
   defp time_it(fun) do

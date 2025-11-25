@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Shields
 
@@ -13,8 +12,8 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/pages")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No Page Rules configured for this site"
-      assert resp =~ "Pages Block List"
+      assert resp =~ "Block a page"
+      assert resp =~ "Pages block list"
     end
 
     test "lists page rules with remove actions", %{conn: conn, site: site} do
@@ -33,10 +32,10 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
       assert remove_button_1 = find(resp, "#remove-page-rule-#{r1.id}")
       assert remove_button_2 = find(resp, "#remove-page-rule-#{r2.id}")
 
-      assert text_of_attr(remove_button_1, "phx-click" == "remove-page-rule")
-      assert text_of_attr(remove_button_1, "phx-value-rule-id" == r1.id)
-      assert text_of_attr(remove_button_2, "phx-click" == "remove-page-rule")
-      assert text_of_attr(remove_button_2, "phx-value-rule-id" == r2.id)
+      assert text_of_attr(remove_button_1, "phx-click") == "remove-page-rule"
+      assert text_of_attr(remove_button_1, "phx-value-rule-id") == r1.id
+      assert text_of_attr(remove_button_2, "phx-click") == "remove-page-rule"
+      assert text_of_attr(remove_button_2, "phx-value-rule-id") == r2.id
     end
 
     test "add rule button is rendered", %{conn: conn, site: site} do
@@ -164,6 +163,57 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
 
       refute html =~
                "This rule might be redundant because the following rules may match first:\n\n/test/*"
+    end
+
+    test "debug - check combo box behavior", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post1", timestamp: Date.add(Date.utc_today(), -3)),
+        build(:pageview, pathname: "/blog/post2", timestamp: Date.add(Date.utc_today(), -3))
+      ])
+
+      opt1_selector = "li#dropdown-page_rule_page_path-modalseq0-option-1"
+      opt2_selector = "li#dropdown-page_rule_page_path-modalseq0-option-2"
+
+      lv = get_liveview(conn, site)
+
+      type_into_combo(lv, "page_rule_page_path-modalseq0", "blog")
+      html = lv |> render()
+
+      assert text_of_element(html, opt1_selector) == "/blog/post1"
+      assert text_of_element(html, opt2_selector) == "/blog/post2"
+
+      lv
+      |> element("form")
+      |> render_submit(%{
+        "page_rule[page_path]" => "/blog/post2"
+      })
+
+      type_into_combo(lv, "page_rule_page_path-modalseq0", "blog")
+      html = lv |> render()
+
+      assert text_of_element(html, opt1_selector) == "/blog/post1"
+      refute element_exists?(html, opt2_selector)
+
+      lv
+      |> element("form")
+      |> render_submit(%{
+        "page_rule[page_path]" => "/blog/post1"
+      })
+
+      type_into_combo(lv, "page_rule_page_path-modalseq0", "blog")
+      html = lv |> render()
+
+      refute element_exists?(html, opt1_selector)
+      refute element_exists?(html, opt2_selector)
+    end
+
+    defp type_into_combo(lv, id, text) do
+      lv
+      |> element("input##{id}")
+      |> render_change(%{
+        "_target" => ["display-#{id}"],
+        "display-#{id}" => "#{text}"
+      })
     end
 
     defp get_liveview(conn, site) do

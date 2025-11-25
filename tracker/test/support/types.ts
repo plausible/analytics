@@ -1,13 +1,87 @@
 export type Options = {
   hashBasedRouting: boolean
   outboundLinks: boolean
-  fileDownloads: boolean | string[]
+  fileDownloads: boolean | { fileExtensions: string[] }
   formSubmissions: boolean
   captureOnLocalhost: boolean
   autoCapturePageviews: boolean
+  customProperties:
+    | Record<string, unknown>
+    | ((eventName: string) => Record<string, unknown>)
+  transformRequest: (payload: unknown) => unknown
+  logging: boolean
 }
 
 export type ScriptConfig = {
   domain: string
   endpoint: string
 } & Partial<Options>
+
+export type VerifierArgs = {
+  debug: boolean
+  responseHeaders: Record<string, string>
+  timeoutMs: number
+  cspHostToCheck: string
+  trackerScriptSelector: string
+}
+
+type ConsentResult =
+  // consented to cookies of cmp
+  | { handled: true; cmp: string }
+  // did not detect cmps, exhausted detection retries
+  | {
+      handled: true
+    }
+  // failed init or consent process
+  | {
+      handled: false
+      error: unknown
+    }
+  // none of the above, most likely didn't get to finish
+  | {
+      handled: null
+      engineLifecycle: string
+    }
+
+export type VerifierResult = {
+  data:
+    | {
+        completed: true
+        attempts: number
+        plausibleIsOnWindow: boolean
+        plausibleIsInitialized: boolean
+        plausibleVersion: number
+        plausibleVariant?: string
+        disallowedByCsp: boolean
+        cookiesConsentResult: ConsentResult
+        testEvent: {
+          /**
+           * window.plausible (track) callback
+           */
+          callbackResult?: unknown
+          /**
+           * intercepted fetch response status
+           */
+          responseStatus?: number
+          /**
+           * error caught during intercepted fetch
+           */
+          error?: {
+            message: string
+          }
+          /**
+           * intercepted fetch request url
+           */
+          requestUrl?: string
+          /**
+           * intercepted fetch request body normalized
+           */
+          normalizedBody?: {
+            domain: string
+            name: string
+            version?: number
+          }
+        }
+      }
+    | { completed: false; error: { message: string } }
+}

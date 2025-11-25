@@ -44,4 +44,10 @@ defmodule PlausibleWeb.TextHelpers do
   def format_date(date) do
     Calendar.strftime(date, "%b %-d, %Y")
   end
+
+  def number_format(number) when is_integer(number) do
+    Cldr.Number.to_string!(number)
+  end
+
+  def number_format(other), do: other
 end

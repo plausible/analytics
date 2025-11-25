@@ -37,7 +37,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Capabilities do
         SiteSegments: false,
         Teams: false,
         SharedLinks: false,
-        SSO: false
+        SSO: false,
+        ConsolidatedView: false
       }
     }
   })

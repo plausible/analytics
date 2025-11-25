@@ -106,11 +106,9 @@ defmodule Plausible.HelpScout do
           end)
 
         user_link =
-          Routes.customer_support_resource_url(
+          Routes.customer_support_user_url(
             PlausibleWeb.Endpoint,
-            :details,
-            :users,
-            :user,
+            :show,
             user.id
           )
 
@@ -136,19 +134,15 @@ defmodule Plausible.HelpScout do
 
         status_link =
           if team do
-            Routes.customer_support_resource_url(
+            Routes.customer_support_team_url(
               PlausibleWeb.Endpoint,
-              :details,
-              :teams,
-              :team,
+              :show,
               team.id
             )
           else
-            Routes.customer_support_resource_url(
+            Routes.customer_support_user_url(
               PlausibleWeb.Endpoint,
-              :details,
-              :users,
-              :user,
+              :show,
               user.id
             )
           end
@@ -177,7 +171,7 @@ defmodule Plausible.HelpScout do
     search_term = "%#{term}%"
 
     domain_query =
-      from(s in Plausible.Site,
+      from(s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         inner_join: tm in assoc(t, :team_memberships),
         where: tm.user_id == parent_as(:user).id and tm.role == :owner,
@@ -302,6 +296,7 @@ defmodule Plausible.HelpScout do
       left_join: t in assoc(tm, :team),
       left_join: s in assoc(t, :sites),
       as: :sites,
+      where: is_nil(s) or not s.consolidated,
       group_by: u.id,
       order_by: [desc: count(s.id)]
     )

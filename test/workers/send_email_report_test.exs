@@ -1,11 +1,9 @@
 defmodule Plausible.Workers.SendEmailReportTest do
   use Plausible.DataCase
   use Bamboo.Test
-  use Plausible.Teams.Test
   use Oban.Testing, repo: Plausible.Repo
-  import Plausible.Test.Support.HTML
+
   alias Plausible.Workers.SendEmailReport
-  alias Timex.Timezone
 
   @green "#15803d"
   @red "#b91c1c"
@@ -46,25 +44,25 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-      now = Timex.now(site.timezone)
-      last_monday = Timex.shift(now, weeks: -1) |> Timex.beginning_of_week()
-      last_sunday = Timex.shift(now, weeks: -1) |> Timex.end_of_week()
-      sunday_before_last = Timex.shift(last_monday, minutes: -1)
-      this_monday = Timex.beginning_of_week(now)
+      now = DateTime.now!(site.timezone)
+      last_monday = DateTime.shift(now, week: -1) |> Plausible.Times.beginning_of_week()
+      last_sunday = DateTime.shift(now, week: -1) |> Plausible.Times.end_of_week()
+      sunday_before_last = DateTime.shift(last_monday, minute: -1)
+      this_monday = Plausible.Times.beginning_of_week(now)
 
       populate_stats(site, [
         # Sunday before last, not counted
-        build(:pageview, timestamp: Timezone.convert(sunday_before_last, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(sunday_before_last, "UTC")),
         # Sunday before last, not counted
-        build(:pageview, timestamp: Timezone.convert(sunday_before_last, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(sunday_before_last, "UTC")),
         # Last monday, counted
-        build(:pageview, timestamp: Timezone.convert(last_monday, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(last_monday, "UTC")),
         # Last sunday, counted
-        build(:pageview, timestamp: Timezone.convert(last_sunday, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(last_sunday, "UTC")),
         # This monday, not counted
-        build(:pageview, timestamp: Timezone.convert(this_monday, "UTC")),
+        build(:pageview, timestamp: DateTime.shift_zone!(this_monday, "UTC")),
         # This monday, not counted
-        build(:pageview, timestamp: Timezone.convert(this_monday, "UTC"))
+        build(:pageview, timestamp: DateTime.shift_zone!(this_monday, "UTC"))
       ])
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
@@ -79,18 +77,18 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "includes the correct stats" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      site = new_site(domain: "test-site.com", inserted_at: Timex.shift(now, days: -8))
+      now = NaiveDateTime.utc_now(:second)
+      site = new_site(domain: "test-site.com", inserted_at: NaiveDateTime.shift(now, day: -8))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          timestamp: Timex.shift(now, days: -7),
+          timestamp: NaiveDateTime.shift(now, day: -7),
           referrer_source: "Google"
         ),
-        build(:pageview, user_id: 123, timestamp: Timex.shift(now, days: -7)),
-        build(:pageview, timestamp: Timex.shift(now, days: -7))
+        build(:pageview, user_id: 123, timestamp: NaiveDateTime.shift(now, day: -7)),
+        build(:pageview, timestamp: NaiveDateTime.shift(now, day: -7))
       ])
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
@@ -108,12 +106,84 @@ defmodule Plausible.Workers.SendEmailReportTest do
       assert text_of_element(html_body, ".page-count") == "2"
     end
 
-    test "renders correct signs (+/-) and trend colors for positive percentage changes" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      week_ago = now |> Timex.shift(days: -7)
-      two_weeks_ago = now |> Timex.shift(days: -14)
+    on_ee do
+      test "includes the correct stats for consolidated view" do
+        now = NaiveDateTime.utc_now(:second)
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+        site1 =
+          new_site(
+            domain: "testsite1.com",
+            team: team,
+            inserted_at: NaiveDateTime.shift(now, day: -8)
+          )
+
+        site2 =
+          new_site(
+            domain: "testsite2.com",
+            team: team,
+            inserted_at: NaiveDateTime.shift(now, day: -8)
+          )
+
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:weekly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+        populate_stats(site1, [
+          build(:pageview,
+            user_id: 123,
+            timestamp: NaiveDateTime.shift(now, day: -7),
+            referrer_source: "Google"
+          ),
+          build(:pageview, user_id: 123, timestamp: NaiveDateTime.shift(now, day: -7))
+        ])
+
+        populate_stats(site2, [
+          build(:pageview, timestamp: NaiveDateTime.shift(now, day: -7))
+        ])
+
+        perform_job(SendEmailReport, %{"site_id" => consolidated_view.id, "interval" => "weekly"})
+
+        assert_delivered_email_matches(%{
+          to: [nil: "user@email.com"],
+          html_body: html_body
+        })
+
+        assert html_body =~ "Consolidated view"
+        assert text_of_element(html_body, ".visitors") == "2"
+        assert text_of_element(html_body, ".pageviews") == "3"
+        assert text_of_element(html_body, ".referrer-name") == "Google"
+        assert text_of_element(html_body, ".referrer-count") == "1"
+        assert text_of_element(html_body, ".page-name") == "/"
+        assert text_of_element(html_body, ".page-count") == "2"
+      end
+
+      test "does not send weekly report for consolidated view with ok_to_display? false" do
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+
+        site = new_site(team: team)
+        new_site(team: team)
+
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:weekly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+        Plausible.Repo.delete!(site)
+
+        refute Plausible.ConsolidatedView.ok_to_display?(team)
+
+        perform_job(SendEmailReport, %{"site_id" => consolidated_view.id, "interval" => "weekly"})
+
+        assert_no_emails_delivered()
+      end
+    end
+
+    test "renders correct signs (+/-) and trend colors for positive percentage changes" do
+      now = NaiveDateTime.utc_now(:second)
+      week_ago = now |> NaiveDateTime.shift(day: -7)
+      two_weeks_ago = now |> NaiveDateTime.shift(day: -14)
+
+      site = new_site(inserted_at: NaiveDateTime.shift(now, day: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -144,11 +214,11 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "renders correct signs (+/-) and trend colors for negative percentage changes" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      week_ago = now |> Timex.shift(days: -7)
-      two_weeks_ago = now |> Timex.shift(days: -14)
+      now = NaiveDateTime.utc_now(:second)
+      week_ago = now |> NaiveDateTime.shift(day: -7)
+      two_weeks_ago = now |> NaiveDateTime.shift(day: -14)
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+      site = new_site(inserted_at: NaiveDateTime.shift(now, day: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -179,11 +249,11 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "renders 0% changes with a green color and without a sign" do
-      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      week_ago = now |> Timex.shift(days: -7)
-      two_weeks_ago = now |> Timex.shift(days: -14)
+      now = NaiveDateTime.utc_now(:second)
+      week_ago = now |> NaiveDateTime.shift(day: -7)
+      two_weeks_ago = now |> NaiveDateTime.shift(day: -14)
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+      site = new_site(inserted_at: NaiveDateTime.shift(now, day: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -210,6 +280,66 @@ defmodule Plausible.Workers.SendEmailReportTest do
       assert text(bounce_rate_change_container) == "0%"
       assert text_of_attr(bounce_rate_change_container, "style") =~ @green
     end
+
+    test "includes goal conversions when goals exist" do
+      last_monday =
+        NaiveDateTime.utc_now(:second)
+        |> NaiveDateTime.shift(day: -7)
+        |> Plausible.Times.beginning_of_week()
+
+      site =
+        new_site(domain: "test-site.com", inserted_at: NaiveDateTime.shift(last_monday, day: -1))
+
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
+
+      _goal1 = insert(:goal, site: site, event_name: "Signup")
+      _goal2 = insert(:goal, site: site, event_name: "Purchase")
+      _goal3 = insert(:goal, site: site, page_path: "/thank-you")
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          timestamp: last_monday
+        ),
+        build(:pageview,
+          user_id: 124,
+          timestamp: NaiveDateTime.shift(last_monday, day: 1)
+        ),
+        build(:event,
+          user_id: 123,
+          name: "Signup",
+          timestamp: last_monday
+        ),
+        build(:event,
+          user_id: 124,
+          name: "Signup",
+          timestamp: NaiveDateTime.shift(last_monday, day: 1)
+        ),
+        build(:event,
+          user_id: 125,
+          name: "Purchase",
+          timestamp: NaiveDateTime.shift(last_monday, day: 2)
+        ),
+        build(:pageview,
+          user_id: 126,
+          pathname: "/thank-you",
+          timestamp: NaiveDateTime.shift(last_monday, day: 3)
+        )
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      goal_names = find(html_body, ".goal-name") |> Enum.map(&text/1)
+      goal_conversions = find(html_body, ".goal-conversions") |> Enum.map(&text/1)
+
+      assert goal_names == ["Signup", "Purchase", "Visit /thank-you"]
+      assert goal_conversions == ["2", "1", "1"]
+    end
   end
 
   describe "monthly_reports" do
@@ -218,10 +348,10 @@ defmodule Plausible.Workers.SendEmailReportTest do
       insert(:monthly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
 
       last_month =
-        Timex.now(site.timezone)
-        |> Timex.shift(months: -1)
-        |> Timex.beginning_of_month()
-        |> Timex.format!("{Mfull}")
+        DateTime.now!(site.timezone)
+        |> DateTime.shift(month: -1)
+        |> Plausible.Times.beginning_of_month()
+        |> Calendar.strftime("%B")
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
 
@@ -241,6 +371,212 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       assert :discard =
                perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
+    end
+
+    test "calculates timezone correctly" do
+      site =
+        new_site(timezone: "US/Eastern")
+
+      insert(:monthly_report, site: site, recipients: ["user@email.com"])
+
+      now = DateTime.now!(site.timezone)
+      last_month_first = DateTime.shift(now, month: -1) |> Plausible.Times.beginning_of_month()
+      last_month_last = DateTime.shift(now, month: -1) |> Plausible.Times.end_of_month()
+      month_before_last = DateTime.shift(last_month_first, minute: -1)
+      this_month_first = Plausible.Times.beginning_of_month(now)
+
+      populate_stats(site, [
+        # Month before last, not counted
+        build(:pageview,
+          timestamp: DateTime.shift_zone!(month_before_last, "UTC")
+        ),
+        # Month before last, not counted
+        build(:pageview,
+          timestamp: DateTime.shift_zone!(month_before_last, "UTC")
+        ),
+        # Last month first day, counted
+        build(:pageview,
+          user_id: 123,
+          timestamp: DateTime.shift_zone!(last_month_first, "UTC")
+        ),
+        # Last month last day, counted
+        build(:pageview,
+          user_id: 124,
+          timestamp: DateTime.shift_zone!(last_month_last, "UTC")
+        ),
+        # This month first day, not counted
+        build(:pageview,
+          timestamp: DateTime.shift_zone!(this_month_first, "UTC")
+        ),
+        # This month first day, not counted
+        build(:pageview,
+          timestamp: DateTime.shift_zone!(this_month_first, "UTC")
+        )
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      # Should find 2 visitors
+      assert text_of_element(html_body, ".page-count") == "2"
+    end
+
+    test "limits all stats sections to 5 entries" do
+      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      site = new_site(domain: "test-site.com", inserted_at: Timex.shift(now, months: -2))
+      insert(:monthly_report, site: site, recipients: ["user@email.com"])
+
+      for i <- 1..6, do: insert(:goal, site: site, event_name: "Goal#{i}")
+
+      last_month_stats =
+        for i <- 1..6 do
+          [
+            build(:pageview,
+              user_id: 100 + i,
+              pathname: "/page#{i}",
+              referrer_source: if(i == 6, do: "Direct / None", else: "Source#{i}"),
+              timestamp: Date.shift(now, month: -1)
+            ),
+            build(:event,
+              user_id: 100 + i,
+              name: "Goal#{i}",
+              timestamp: Date.shift(now, month: -1)
+            )
+          ]
+        end
+        |> List.flatten()
+
+      populate_stats(site, last_month_stats)
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      assert elem_count(html_body, ".page-name") == 5
+      assert elem_count(html_body, ".referrer-name") == 5
+      assert elem_count(html_body, ".goal-name") == 5
+    end
+
+    test "email subject includes month name" do
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
+      insert(:monthly_report, site: site, recipients: ["user@email.com"])
+
+      last_month =
+        site.timezone
+        |> DateTime.now!()
+        |> Date.shift(month: -1)
+        |> Date.beginning_of_month()
+        |> Calendar.strftime("%B")
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
+
+      assert_email_delivered_with(
+        subject: "#{last_month} report for #{site.domain}",
+        to: [nil: "user@email.com"]
+      )
+    end
+
+    on_ee do
+      test "includes goal conversions when goals exist on a consolidate view" do
+        beginning_of_last_month =
+          Date.utc_today()
+          |> Date.shift(month: -1)
+          |> Date.beginning_of_month()
+          |> NaiveDateTime.new!(~T[00:00:00])
+
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+
+        [site1, site2] =
+          for _ <- 1..2 do
+            new_site(
+              team: team,
+              inserted_at: NaiveDateTime.shift(beginning_of_last_month, day: -1)
+            )
+          end
+
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:monthly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+        _goal1 = insert(:goal, site: consolidated_view, event_name: "Signup")
+        _goal2 = insert(:goal, site: consolidated_view, event_name: "Purchase")
+        _goal3 = insert(:goal, site: consolidated_view, page_path: "/thank-you")
+
+        populate_stats(site1, [
+          build(:pageview,
+            user_id: 123,
+            timestamp: beginning_of_last_month
+          ),
+          build(:event,
+            user_id: 123,
+            name: "Signup",
+            timestamp: beginning_of_last_month
+          ),
+          build(:event,
+            user_id: 125,
+            name: "Purchase",
+            timestamp: NaiveDateTime.shift(beginning_of_last_month, day: 2)
+          )
+        ])
+
+        populate_stats(site2, [
+          build(:pageview,
+            user_id: 124,
+            timestamp: NaiveDateTime.shift(beginning_of_last_month, day: 1)
+          ),
+          build(:event,
+            user_id: 124,
+            name: "Signup",
+            timestamp: NaiveDateTime.shift(beginning_of_last_month, day: 1)
+          ),
+          build(:pageview,
+            user_id: 126,
+            pathname: "/thank-you",
+            timestamp: NaiveDateTime.shift(beginning_of_last_month, day: 3)
+          )
+        ])
+
+        perform_job(SendEmailReport, %{"site_id" => consolidated_view.id, "interval" => "monthly"})
+
+        assert_delivered_email_matches(%{
+          to: [nil: "user@email.com"],
+          html_body: html_body
+        })
+
+        assert html_body =~ "Consolidated view"
+
+        goal_names = find(html_body, ".goal-name") |> Enum.map(&text/1)
+        goal_conversions = find(html_body, ".goal-conversions") |> Enum.map(&text/1)
+
+        assert goal_names == ["Signup", "Purchase", "Visit /thank-you"]
+        assert goal_conversions == ["2", "1", "1"]
+      end
+
+      test "does not send monthly report for consolidated view with ok_to_display? false" do
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+
+        site = new_site(team: team)
+        new_site(team: team)
+
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:monthly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+        Plausible.Repo.delete!(site)
+
+        refute Plausible.ConsolidatedView.ok_to_display?(site.team)
+
+        perform_job(SendEmailReport, %{"site_id" => consolidated_view.id, "interval" => "monthly"})
+
+        assert_no_emails_delivered()
+      end
     end
   end
 end

@@ -81,6 +81,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     with {:ok, domain} <- get_domain(conn, site_param),
          {:ok, %{site: site, role: membership_role, member_type: member_type}} <-
            get_site_with_role(conn, current_user, domain),
+         :ok <- ensure_consolidated_view_access(conn, site),
          {:ok, shared_link} <- maybe_get_shared_link(conn, site) do
       role =
         cond do
@@ -185,6 +186,14 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
       {:ok, %{site: site, role: site_role, member_type: member_type}}
     else
       error_not_found(conn)
+    end
+  end
+
+  defp ensure_consolidated_view_access(conn, site) do
+    if Plausible.Sites.consolidated?(site) && !conn.private[:allow_consolidated_views] do
+      error_not_found(conn)
+    else
+      :ok
     end
   end
 

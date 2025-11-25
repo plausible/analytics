@@ -4,12 +4,12 @@ defmodule Plausible.Site.Domain do
   @moduledoc """
   Basic interface for domain changes.
 
-  Once `Plausible.DataMigration.NumericIDs` schema migration is ready, 
+  Once `Plausible.DataMigration.NumericIDs` schema migration is ready,
   domain change operation will be enabled, accessible to the users.
 
   We will set a transition period of #{@expire_threshold_hours} hours
   during which, both old and new domains, will be accepted as traffic
-  identifiers to the same site. 
+  identifiers to the same site.
 
   A periodic worker will call the `expire/0` function to end it where applicable.
   See: `Plausible.Workers.ExpireDomainChangeTransitions`.
@@ -29,7 +29,7 @@ defmodule Plausible.Site.Domain do
   def expire_change_transitions(expire_threshold_hours \\ @expire_threshold_hours) do
     {updated, _} =
       Repo.update_all(
-        from(s in Site,
+        from(s in Site.regular(),
           where: s.domain_changed_at < ago(^expire_threshold_hours, "hour")
         ),
         set: [

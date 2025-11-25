@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
   use PlausibleWeb.PluginsAPICase, async: true
-  use Plausible
-  use Plausible.Teams.Test
 
   @moduletag :ee_only
 

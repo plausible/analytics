@@ -6,9 +6,8 @@ defmodule Plausible.Workers.ScheduleEmailReports do
 
   @impl Oban.Worker
   @doc """
-    Email reports should be sent on Monday at 9am according to the timezone
-  of a site. This job runs every day at midnight to ensure that all sites
-  have a scheduled job for email reports.
+  Email reports should be sent on Monday at 9am according to the timezone
+  of a site.
   """
   def perform(_job) do
     schedule_weekly_emails()
@@ -52,7 +51,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
   def monday_9am(timezone) do
     DateTime.now!(timezone)
     |> DateTime.shift(week: 1)
-    |> Timex.beginning_of_week()
+    |> Plausible.Times.beginning_of_week()
     |> DateTime.shift(hour: 9)
   end
 
@@ -93,7 +92,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
   def first_of_month_9am(timezone) do
     DateTime.now!(timezone)
     |> DateTime.shift(month: 1)
-    |> Timex.beginning_of_month()
+    |> Plausible.Times.beginning_of_month()
     |> DateTime.shift(hour: 9)
   end
 end

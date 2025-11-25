@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { RefObject } from 'react'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import {
@@ -25,16 +25,17 @@ import { useSearchableItems } from '../../hooks/use-searchable-items'
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
-  popover.items.classNames.hoverLink,
-  popover.items.classNames.groupRoundedEnd
+  popover.items.classNames.hoverLink
 )
 
 const INITIAL_SEGMENTS_SHOWN = 5
 
 export const SearchableSegmentsSection = ({
-  closeList
+  closeList,
+  tooltipContainerRef
 }: {
   closeList: () => void
+  tooltipContainerRef: RefObject<HTMLElement>
 }) => {
   const site = useSiteContext()
   const segmentsContext = useSegmentsContext()
@@ -93,6 +94,7 @@ export const SearchableSegmentsSection = ({
         {showableData.map((segment) => {
           return (
             <Tooltip
+              containerRef={tooltipContainerRef}
               className="group"
               key={segment.id}
               info={
@@ -122,7 +124,11 @@ export const SearchableSegmentsSection = ({
           )
         })}
         {countOfMoreToShow > 0 && (
-          <Tooltip className="group" info={null}>
+          <Tooltip
+            className="group"
+            info={null}
+            containerRef={tooltipContainerRef}
+          >
             <button
               className={classNames(
                 linkClassName,
@@ -137,7 +143,11 @@ export const SearchableSegmentsSection = ({
         )}
       </div>
       {searching && !filteredData.length && (
-        <Tooltip className="group" info={null}>
+        <Tooltip
+          className="group"
+          info={null}
+          containerRef={tooltipContainerRef}
+        >
           <button
             className={classNames(
               linkClassName,

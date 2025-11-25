@@ -42,7 +42,8 @@ export const DEFAULT_SITE: PlausibleSite = {
   isDbip: false,
   flags: {},
   validIntervalsByPeriod: {},
-  shared: false
+  shared: false,
+  isConsolidatedView: false
 }
 
 export const TestContextProviders = ({
@@ -68,7 +69,14 @@ export const TestContextProviders = ({
     // <ThemeContextProvider> not interactive component, default value is suitable
     <SiteContextProvider site={site}>
       <UserContextProvider
-        user={user ?? { role: Role.editor, loggedIn: true, id: 1 }}
+        user={
+          user ?? {
+            role: Role.editor,
+            loggedIn: true,
+            id: 1,
+            team: { identifier: null, hasConsolidatedView: false }
+          }
+        }
       >
         <SegmentsContextProvider preloadedSegments={preloaded?.segments ?? []}>
           <MemoryRouter

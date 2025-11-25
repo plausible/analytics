@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   alias Plausible.Billing.Feature
 
@@ -361,7 +360,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       insert(:site_import,
         site: site,
         start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
+        end_date: Date.utc_today(),
         source: :universal_analytics
       )
 
@@ -554,7 +553,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       insert(:site_import,
         site: site,
         start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
+        end_date: Date.utc_today(),
         source: :universal_analytics
       )
 
@@ -879,7 +878,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       insert(:site_import,
         site: site,
         start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
+        end_date: Date.utc_today(),
         source: :universal_analytics
       )
 
@@ -2521,7 +2520,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         insert(:site_import,
           site: site,
           start_date: ~D[2005-01-01],
-          end_date: Timex.today(),
+          end_date: Date.utc_today(),
           source: :universal_analytics
         )
 
@@ -3372,7 +3371,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert %{"source" => "Google", "events" => 1} = breakdown_and_first.("visit:source")
     end
 
-    for goal_name <- Plausible.Imported.goals_with_url() do
+    for goal_name <- Plausible.Goals.SystemGoals.goals_with_url() do
       test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)
         site_import = insert(:site_import, site: site)
@@ -3432,7 +3431,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       end
     end
 
-    for goal_name <- Plausible.Imported.goals_with_path() do
+    for goal_name <- Plausible.Goals.SystemGoals.goals_with_path() do
       test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)
         site_import = insert(:site_import, site: site)

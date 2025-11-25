@@ -6,6 +6,7 @@ defmodule PlausibleWeb.AuthPlug do
   Must be kept in sync with `PlausibleWeb.Live.AuthContext`.
   """
 
+  use Plausible
   import Plug.Conn
 
   alias PlausibleWeb.UserAuth
@@ -63,7 +64,15 @@ defmodule PlausibleWeb.AuthPlug do
           |> Enum.take(3)
 
         Plausible.OpenTelemetry.add_user_attributes(user)
+
         Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
+
+        on_ee do
+          Plausible.Audit.set_context(%{
+            current_user: user,
+            current_team: current_team
+          })
+        end
 
         conn
         |> assign(:current_user, user)

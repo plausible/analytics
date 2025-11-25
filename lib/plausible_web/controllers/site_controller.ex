@@ -91,42 +91,6 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def update_feature_visibility(conn, %{
-        "setting" => setting,
-        "r" => "/" <> _ = redirect_path,
-        "set" => value
-      })
-      when setting in ~w[conversions_enabled funnels_enabled props_enabled] and
-             value in ["true", "false"] do
-    site = conn.assigns[:site]
-    toggle_field = String.to_existing_atom(setting)
-
-    feature_mod =
-      Enum.find(Plausible.Billing.Feature.list(), &(&1.toggle_field() == toggle_field))
-
-    case feature_mod.toggle(site, conn.assigns.current_user, override: value == "true") do
-      {:ok, updated_site} ->
-        message =
-          if Map.fetch!(updated_site, toggle_field) do
-            "#{feature_mod.display_name()} are now visible again on your dashboard"
-          else
-            "#{feature_mod.display_name()} are now hidden from your dashboard"
-          end
-
-        conn
-        |> put_flash(:success, message)
-        |> redirect(to: redirect_path)
-
-      {:error, _} ->
-        conn
-        |> put_flash(
-          :error,
-          "Something went wrong. Failed to toggle #{feature_mod.display_name()} on your dashboard."
-        )
-        |> redirect(to: redirect_path)
-    end
-  end
-
   def settings(conn, %{"domain" => domain}) do
     redirect(conn, to: Routes.site_path(conn, :settings_general, domain))
   end
@@ -163,19 +127,11 @@ defmodule PlausibleWeb.SiteController do
   def settings_visibility(conn, _params) do
     site = conn.assigns[:site]
 
-    shared_links =
-      Repo.all(
-        from(l in Plausible.Site.SharedLink,
-          where:
-            l.site_id == ^site.id and l.name not in ^Plausible.Sites.shared_link_special_names()
-        )
-      )
-
     conn
     |> render("settings_visibility.html",
       site: site,
-      shared_links: shared_links,
       dogfood_page_path: "/:dashboard/settings/visibility",
+      connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -300,10 +256,11 @@ defmodule PlausibleWeb.SiteController do
       conn.assigns[:site]
       |> Repo.preload(:google_auth)
 
-    Repo.delete!(site.google_auth)
+    if site.google_auth do
+      Repo.delete!(site.google_auth)
+    end
 
-    conn = put_flash(conn, :success, "Google account unlinked from Plausible")
-
+    put_flash(conn, :success, "Google account unlinked from Plausible")
     redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
@@ -568,94 +525,6 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: Routes.site_path(conn, :settings_email_reports, site.domain))
   end
 
-  def new_shared_link(conn, _params) do
-    site = conn.assigns[:site]
-    changeset = Plausible.Site.SharedLink.changeset(%Plausible.Site.SharedLink{}, %{})
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("new_shared_link.html",
-      site: site,
-      changeset: changeset
-    )
-  end
-
-  def create_shared_link(conn, %{"shared_link" => link}) do
-    site = conn.assigns[:site]
-
-    case Sites.create_shared_link(site, link["name"], password: link["password"]) do
-      {:ok, _created} ->
-        redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
-
-      {:error, :upgrade_required} ->
-        conn
-        |> put_flash(:error, "Your current subscription plan does not include Shared Links")
-        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
-
-      {:error, changeset} ->
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("new_shared_link.html",
-          site: site,
-          changeset: changeset
-        )
-    end
-  end
-
-  def edit_shared_link(conn, %{"slug" => slug}) do
-    site = conn.assigns[:site]
-    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-    changeset = Plausible.Site.SharedLink.changeset(shared_link, %{})
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("edit_shared_link.html",
-      site: site,
-      changeset: changeset
-    )
-  end
-
-  def update_shared_link(conn, %{"slug" => slug, "shared_link" => params}) do
-    site = conn.assigns[:site]
-    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-    changeset = Plausible.Site.SharedLink.changeset(shared_link, params)
-
-    case Repo.update(changeset) do
-      {:ok, _updated} ->
-        redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
-
-      {:error, changeset} ->
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("edit_shared_link.html",
-          site: site,
-          changeset: changeset
-        )
-    end
-  end
-
-  def delete_shared_link(conn, %{"slug" => slug}) do
-    site = conn.assigns[:site]
-    site_id = site.id
-
-    case Repo.delete_all(
-           from(l in Plausible.Site.SharedLink,
-             where: l.slug == ^slug,
-             where: l.site_id == ^site_id
-           )
-         ) do
-      {1, _} ->
-        conn
-        |> put_flash(:success, "Shared Link deleted")
-        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
-
-      {0, _} ->
-        conn
-        |> put_flash(:error, "Could not find Shared Link")
-        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
-    end
-  end
-
   def forget_import(conn, %{"import_id" => import_id}) do
     site = conn.assigns.site
 
@@ -744,35 +613,6 @@ defmodule PlausibleWeb.SiteController do
     |> render("csv_import.html",
       connect_live_socket: true
     )
-  end
-
-  def change_domain(conn, _params) do
-    changeset = Plausible.Site.update_changeset(conn.assigns.site)
-
-    render(conn, "change_domain.html",
-      skip_plausible_tracking: true,
-      changeset: changeset
-    )
-  end
-
-  def change_domain_submit(conn, %{"site" => %{"domain" => new_domain}}) do
-    case Plausible.Site.Domain.change(conn.assigns.site, new_domain) do
-      {:ok, updated_site} ->
-        conn
-        |> put_flash(:success, "Website domain changed successfully")
-        |> redirect(
-          to:
-            Routes.site_path(conn, :installation, updated_site.domain,
-              flow: PlausibleWeb.Flows.domain_change()
-            )
-        )
-
-      {:error, changeset} ->
-        render(conn, "change_domain.html",
-          skip_plausible_tracking: true,
-          changeset: changeset
-        )
-    end
   end
 
   defp tolerate_unique_contraint_violation(result, name) do

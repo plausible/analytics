@@ -16,12 +16,14 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [
-          :owner,
-          :admin,
-          :editor,
-          :super_admin
-        ])
+        Plausible.Sites.get_for_user!(current_user, domain,
+          roles: [
+            :owner,
+            :admin,
+            :editor,
+            :super_admin
+          ]
+        )
       end)
       |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
         Funnels.list(site)
@@ -48,40 +50,61 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     <div id="funnel-settings-main">
       <.flash_messages flash={@flash} />
 
-      <%= if @setup_funnel? do %>
-        {live_render(
-          @socket,
-          PlausibleWeb.Live.FunnelSettings.Form,
-          id: "funnels-form",
-          session: %{
-            "domain" => @domain,
-            "funnel_id" => @funnel_id
-          }
-        )}
-      <% end %>
-      <div :if={@goal_count >= Funnel.min_steps()}>
-        <.live_component
-          module={PlausibleWeb.Live.FunnelSettings.List}
-          id="funnels-list"
-          funnels={@displayed_funnels}
-          filter_text={@filter_text}
-        />
-      </div>
+      <.tile
+        docs="funnel-analysis"
+        feature_mod={Plausible.Billing.Feature.Funnels}
+        feature_toggle?={true}
+        show_content?={!Plausible.Billing.Feature.Funnels.opted_out?(@site)}
+        site={@site}
+        current_user={@current_user}
+        current_team={@current_team}
+      >
+        <:title>
+          Funnels
+        </:title>
+        <:subtitle :if={Enum.count(@all_funnels) > 0}>
+          Compose goals into funnels to track user flows and conversion rates.
+        </:subtitle>
+        <%= if @setup_funnel? do %>
+          {live_render(
+            @socket,
+            PlausibleWeb.Live.FunnelSettings.Form,
+            id: "funnels-form",
+            session: %{
+              "domain" => @domain,
+              "funnel_id" => @funnel_id
+            }
+          )}
+        <% end %>
+        <div :if={@goal_count >= Funnel.min_steps()}>
+          <.live_component
+            module={PlausibleWeb.Live.FunnelSettings.List}
+            id="funnels-list"
+            funnels={@displayed_funnels}
+            filter_text={@filter_text}
+          />
+        </div>
 
-      <div :if={@goal_count < Funnel.min_steps()} class="flex flex-col items-center">
-        <h1 class="mt-4 text-center">
-          Ready to dig into user flows?
-        </h1>
-        <p class="mt-4 mb-6 max-w-lg text-sm text-gray-500 dark:text-gray-400 leading-5 text-center">
-          Set up a few goals first (e.g. <b>"Signup"</b>, <b>"Visit /"</b>, or <b>"Scroll 50% on /blog/*"</b>) and return here to build your first funnel!
-        </p>
-        <.button_link
-          class="mb-2"
-          href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}
+        <div
+          :if={@goal_count < Funnel.min_steps()}
+          class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto"
         >
-          Set up goals →
-        </.button_link>
-      </div>
+          <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+            Ready to dig into user flows?
+          </h3>
+          <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+            Set up a few goals like <.highlighted>Signup</.highlighted>, <.highlighted>Visit /</.highlighted>, or
+            <.highlighted>Scroll 50% on /blog/*</.highlighted>
+            first, then return here to build your first funnel.
+          </p>
+          <.button_link
+            class="mt-4"
+            href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}
+          >
+            Set up goals →
+          </.button_link>
+        </div>
+      </.tile>
     </div>
     """
   end
@@ -114,7 +137,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       Plausible.Sites.get_for_user!(
         socket.assigns.current_user,
         socket.assigns.domain,
-        [:owner, :admin, :editor]
+        roles: [:owner, :admin, :editor]
       )
 
     id = String.to_integer(id)
@@ -144,5 +167,9 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def handle_info(:cancel_setup_funnel, socket) do
     {:noreply, assign(socket, setup_funnel?: false, funnel_id: nil)}
+  end
+
+  def handle_info({:feature_toggled, flash_msg, updated_site}, socket) do
+    {:noreply, assign(put_flash(socket, :success, flash_msg), site: updated_site)}
   end
 end

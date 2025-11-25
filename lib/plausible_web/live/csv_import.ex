@@ -98,10 +98,10 @@ defmodule PlausibleWeb.Live.CSVImport do
     ~H"""
     <label
       phx-drop-target={@upload.ref}
-      class="block border-2 dark:border-gray-600 rounded-md p-4 hover:bg-gray-50 dark:hover:bg-gray-900 hover:border-indigo-500 dark:hover:border-indigo-600 transition cursor-pointer"
+      class="block border border-gray-300 dark:border-gray-750 dark:bg-gray-750 rounded-md p-4 transition cursor-pointer"
     >
-      <div class="hidden md:flex items-center text-gray-500 dark:text-gray-500">
-        <Heroicons.document_plus class="w-5 h-5 transition" />
+      <div class="hidden md:flex items-center text-gray-500 dark:text-gray-400">
+        <Heroicons.document_plus class="size-5 transition" />
         <span class="ml-1.5 text-sm">
           (or drag-and-drop your unzipped CSVs here)
         </span>
@@ -311,7 +311,7 @@ defmodule PlausibleWeb.Live.CSVImport do
           native_stats_start_date: native_stats_start_date
         } = socket.assigns
 
-        cutoff_date = native_stats_start_date || Timex.today(site.timezone)
+        cutoff_date = native_stats_start_date || Plausible.Times.today(site.timezone)
 
         case Imported.clamp_dates(occupied_ranges, cutoff_date, start_date, end_date) do
           {:ok, start_date, end_date} -> Date.range(start_date, end_date)

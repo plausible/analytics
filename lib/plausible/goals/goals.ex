@@ -258,6 +258,12 @@ defmodule Plausible.Goals do
     :ok
   end
 
+  @spec create_form_submissions(Plausible.Site.t()) :: :ok
+  def create_form_submissions(%Plausible.Site{} = site) do
+    create(site, %{"event_name" => "Form: Submission"}, upsert?: true)
+    :ok
+  end
+
   @spec create_404(Plausible.Site.t()) :: :ok
   def create_404(%Plausible.Site{} = site) do
     create(site, %{"event_name" => "404"}, upsert?: true)
@@ -297,6 +303,17 @@ defmodule Plausible.Goals do
     :ok
   end
 
+  @spec delete_form_submissions(Plausible.Site.t()) :: :ok
+  def delete_form_submissions(%Plausible.Site{} = site) do
+    q =
+      from g in Goal,
+        where: g.site_id == ^site.id,
+        where: g.event_name == "Form: Submission"
+
+    Repo.delete_all(q)
+    :ok
+  end
+
   defp insert_goal(site, params, upsert?) do
     params = Map.delete(params, "site_id")
 
@@ -310,6 +327,7 @@ defmodule Plausible.Goals do
     changeset = Goal.changeset(%Goal{site_id: site.id}, params)
 
     with :ok <- maybe_check_feature_access(site, changeset),
+         :ok <- check_no_currency_if_consolidated(site, changeset),
          {:ok, goal} <- Repo.insert(changeset, insert_opts) do
       # Upsert with `on_conflict: :nothing` strategy
       # will result in goal struct missing primary key field
@@ -331,6 +349,14 @@ defmodule Plausible.Goals do
     if Ecto.Changeset.get_field(changeset, :currency) do
       site = Plausible.Repo.preload(site, :team)
       Plausible.Billing.Feature.RevenueGoals.check_availability(site.team)
+    else
+      :ok
+    end
+  end
+
+  defp check_no_currency_if_consolidated(site, changeset) do
+    if Plausible.Sites.consolidated?(site) && Ecto.Changeset.get_field(changeset, :currency) do
+      {:error, :revenue_goals_unavailable}
     else
       :ok
     end

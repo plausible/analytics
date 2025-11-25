@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Shields
 
@@ -13,8 +12,8 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/countries")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No Country Rules configured for this site"
-      assert resp =~ "Country Block List"
+      assert resp =~ "Block a country"
+      assert resp =~ "Country block list"
     end
 
     test "lists country rules with remove actions", %{conn: conn, site: site} do
@@ -33,10 +32,10 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
       assert remove_button_1 = find(resp, "#remove-country-rule-#{r1.id}")
       assert remove_button_2 = find(resp, "#remove-country-rule-#{r2.id}")
 
-      assert text_of_attr(remove_button_1, "phx-click" == "remove-country-rule")
-      assert text_of_attr(remove_button_1, "phx-value-rule-id" == r1.id)
-      assert text_of_attr(remove_button_2, "phx-click" == "remove-country-rule")
-      assert text_of_attr(remove_button_2, "phx-value-rule-id" == r2.id)
+      assert text_of_attr(remove_button_1, "phx-click") == "remove-country-rule"
+      assert text_of_attr(remove_button_1, "phx-value-rule-id") == r1.id
+      assert text_of_attr(remove_button_2, "phx-click") == "remove-country-rule"
+      assert text_of_attr(remove_button_2, "phx-value-rule-id") == r2.id
     end
 
     test "add rule button is rendered", %{conn: conn, site: site} do

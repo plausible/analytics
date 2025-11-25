@@ -26,7 +26,7 @@ export default function Bar({
   return (
     <div className="w-full h-full relative" style={style}>
       <div
-        className={`absolute top-0 left-0 h-full ${bg || ''}`}
+        className={`absolute top-0 left-0 h-full rounded-sm transition-colors duration-150 ${bg || ''}`}
         style={{ width: `${width}%` }}
       ></div>
       {children}

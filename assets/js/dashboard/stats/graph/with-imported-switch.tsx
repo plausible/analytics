@@ -15,7 +15,7 @@ export default function WithImportedSwitch({
   const { query } = useQueryContext()
   const importsSwitchedOn = query.with_imported
 
-  const iconClass = classNames({
+  const iconClass = classNames('size-4', {
     'dark:text-gray-300 text-gray-700': importsSwitchedOn,
     'dark:text-gray-500 text-gray-400': !importsSwitchedOn
   })
@@ -23,7 +23,7 @@ export default function WithImportedSwitch({
   return (
     <Tooltip
       info={<div className="font-normal truncate">{tooltipMessage}</div>}
-      className="w-4 h-4"
+      className="size-4"
     >
       <AppNavigationLink
         search={
@@ -31,6 +31,7 @@ export default function WithImportedSwitch({
             ? (search) => search
             : (search) => ({ ...search, with_imported: !importsSwitchedOn })
         }
+        className="flex items-center justify-center"
       >
         <BarsArrowUpIcon className={iconClass} />
       </AppNavigationLink>

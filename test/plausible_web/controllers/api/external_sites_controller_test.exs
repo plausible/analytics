@@ -1,8 +1,27 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
-  use Plausible
+  @moduledoc """
+  Tests for the following endpoints
+
+  GET /api/v1/sites/teams
+
+  GET /api/v1/sites/guests
+  PUT /api/v1/sites/guests
+  DELETE /api/v1/sites/guests
+
+  PUT /api/v1/sites/shared-links
+
+  GET /api/v1/custom-props
+  PUT /api/v1/sites/custom-props
+  DELETE /api/v1/sites/custom-props/:property
+
+  GET /api/v1/goals
+  PUT /api/v1/sites/goals
+  DELETE /api/v1/sites/goals/:goal_id
+
+  Site CRUD endpoints tests are in ExternalSitesControllerSitesCrudApiTest
+  """
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
-  use Plausible.Teams.Test
   use Bamboo.Test
 
   on_ee do
@@ -92,7 +111,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "teams" => [
                    %{
                      "id" => personal_team.identifier,
-                     "name" => "Meine Websites",
+                     "name" => "My Personal Sites",
                      "api_available" => true
                    }
                  ],
@@ -105,231 +124,20 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
     end
 
-    describe "POST /api/v1/sites" do
-      test "can create a site", %{conn: conn} do
-        conn =
-          post(conn, "/api/v1/sites", %{
-            "domain" => "some-site.domain",
-            "timezone" => "Europe/Tallinn"
-          })
-
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
-               }
-      end
-
-      test "can't create site in a team where not permitted to", %{conn: conn, user: user} do
-        owner = new_user() |> subscribe_to_growth_plan()
-        team = owner |> team_of() |> Plausible.Teams.complete_setup()
-        add_member(team, user: user, role: :viewer)
-
-        conn =
-          post(conn, "/api/v1/sites", %{
-            "team_id" => team.identifier,
-            "domain" => "some-site.domain",
-            "timezone" => "Europe/Tallinn"
-          })
-
-        assert json_response(conn, 403) == %{
-                 "error" => "You can't add sites to the selected team."
-               }
-      end
-
-      test "can create a site under a specific team if permitted", %{conn: conn, user: user} do
-        _site = new_site(owner: user)
-
-        owner = new_user() |> subscribe_to_growth_plan()
-        team = owner |> team_of() |> Plausible.Teams.complete_setup()
-        add_member(team, user: user, role: :owner)
-
-        conn =
-          post(conn, "/api/v1/sites", %{
-            "team_id" => team.identifier,
-            "domain" => "some-site.domain",
-            "timezone" => "Europe/Tallinn"
-          })
-
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
-               }
-
-        assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == team.id
-      end
-
-      test "creates under a particular team when team-scoped key used", %{conn: conn, user: user} do
-        personal_team = user |> subscribe_to_business_plan() |> team_of()
-
-        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
-        add_member(another_team, user: user, role: :admin)
-
-        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
-        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
-
-        conn =
-          post(conn, "/api/v1/sites", %{
-            # is ignored
-            "team_id" => personal_team.identifier,
-            "domain" => "some-site.domain",
-            "timezone" => "Europe/Tallinn"
-          })
-
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Europe/Tallinn"
-               }
-
-        assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == another_team.id
-      end
-
-      test "timezone is validated", %{conn: conn} do
-        conn =
-          post(conn, "/api/v1/sites", %{
-            "domain" => "some-site.domain",
-            "timezone" => "d"
-          })
-
-        assert json_response(conn, 400) == %{
-                 "error" => "timezone: is invalid"
-               }
-      end
-
-      test "timezone defaults to Etc/UTC", %{conn: conn} do
-        conn =
-          post(conn, "/api/v1/sites", %{
-            "domain" => "some-site.domain"
-          })
-
-        assert json_response(conn, 200) == %{
-                 "domain" => "some-site.domain",
-                 "timezone" => "Etc/UTC"
-               }
-      end
-
-      test "domain is required", %{conn: conn} do
-        conn = post(conn, "/api/v1/sites", %{})
-
-        assert json_response(conn, 400) == %{
-                 "error" => "domain: can't be blank"
-               }
-      end
-
-      test "accepts international domain names", %{conn: conn} do
-        ["müllers-café.test", "音乐.cn", "до.101домен.рф/pages"]
-        |> Enum.each(fn idn_domain ->
-          conn = post(conn, "/api/v1/sites", %{"domain" => idn_domain})
-          assert %{"domain" => ^idn_domain} = json_response(conn, 200)
-        end)
-      end
-
-      test "validates uri breaking domains", %{conn: conn} do
-        ["quero:café.test", "h&llo.test", "iamnotsur&about?this.com"]
-        |> Enum.each(fn bad_domain ->
-          conn = post(conn, "/api/v1/sites", %{"domain" => bad_domain})
-
-          assert %{"error" => error} = json_response(conn, 400)
-          assert error =~ "domain: must not contain URI reserved characters"
-        end)
-      end
-
-      test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
-        for _ <- 1..10, do: new_site(owner: user)
-
-        conn =
-          post(conn, "/api/v1/sites", %{
-            "domain" => "some-site.domain",
-            "timezone" => "Europe/Tallinn"
-          })
-
-        assert json_response(conn, 402) == %{
-                 "error" =>
-                   "Your account has reached the limit of 10 sites. To unlock more sites, please upgrade your subscription."
-               }
-      end
-
-      test "cannot access with a bad API key scope", %{conn: conn, user: user} do
-        api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
-
-        conn =
-          conn
-          |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
-          |> post("/api/v1/sites", %{"site" => %{"domain" => "domain.com"}})
-
-        assert json_response(conn, 401) == %{
-                 "error" =>
-                   "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
-               }
-      end
-    end
-
-    describe "DELETE /api/v1/sites/:site_id" do
-      setup :create_site
-
-      test "delete a site by its domain", %{conn: conn, site: site} do
-        conn = delete(conn, "/api/v1/sites/" <> site.domain)
-
-        assert json_response(conn, 200) == %{"deleted" => true}
-      end
-
-      test "delete a site by its old domain after domain change", %{conn: conn, site: site} do
-        old_domain = site.domain
-        new_domain = "new.example.com"
-
-        Plausible.Site.Domain.change(site, new_domain)
-
-        conn = delete(conn, "/api/v1/sites/" <> old_domain)
-
-        assert json_response(conn, 200) == %{"deleted" => true}
-      end
-
-      test "is 404 when site cannot be found", %{conn: conn} do
-        conn = delete(conn, "/api/v1/sites/foobar.baz")
-
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
-      end
-
-      @tag :capture_log
-      test "cannot delete a site that the user does not own", %{conn: conn, user: user} do
-        site = new_site()
-        add_guest(site, user: user, role: :editor)
-        conn = delete(conn, "/api/v1/sites/" <> site.domain)
-
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
-      end
-
-      test "cannot delete if team not matching team-scoped API key", %{
-        conn: conn,
-        user: user,
-        site: site
-      } do
-        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
-        add_member(another_team, user: user, role: :admin)
-        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
-        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
-
-        conn = delete(conn, "/api/v1/sites/" <> site.domain)
-
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
-      end
-
-      test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
-        api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
-
-        conn =
-          conn
-          |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
-          |> delete("/api/v1/sites/" <> site.domain)
-
-        assert json_response(conn, 401) == %{
-                 "error" =>
-                   "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
-               }
-      end
-    end
-
     describe "PUT /api/v1/sites/shared-links" do
       setup :create_site
+
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [
+            Plausible.Billing.Feature.SharedLinks,
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.SitesAPI
+          ]
+        )
+
+        :ok
+      end
 
       test "can add a shared link to a site", %{conn: conn, site: site} do
         conn =
@@ -393,8 +201,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             name: "WordPress"
           })
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
 
       test "returns 400 when site id missing", %{conn: conn} do
@@ -433,8 +241,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             name: "WordPress"
           })
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 402)
+        assert res["error"] =~ "API key does not have access to Sites API"
       end
 
       test "fails to create without access to SharedLinks feature", %{
@@ -471,8 +279,181 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
     end
 
+    describe "PUT /api/v1/sites/custom-props" do
+      setup :create_site
+
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [
+            Plausible.Billing.Feature.Props,
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.SitesAPI
+          ]
+        )
+
+        :ok
+      end
+
+      test "can add a custom property to a site", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop1"
+          })
+
+        res = json_response(conn, 200)
+
+        assert res["created"] == true
+
+        assert Repo.reload!(site).allowed_event_props == ["prop1"]
+      end
+
+      test "can add a custom prop using old site_id after domain change", %{
+        conn: conn,
+        site: site
+      } do
+        old_domain = site.domain
+        new_domain = "new.example.com"
+
+        Plausible.Site.Domain.change(site, new_domain)
+
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: old_domain,
+            property: "prop1"
+          })
+
+        res = json_response(conn, 200)
+
+        assert res["created"] == true
+
+        assert Repo.reload!(site).allowed_event_props == ["prop1"]
+      end
+
+      test "is idempotent", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop1"
+          })
+
+        assert %{"created" => true} = json_response(conn, 200)
+
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop1"
+          })
+
+        assert %{"created" => true} = json_response(conn, 200)
+
+        assert Repo.reload!(site).allowed_event_props == ["prop1"]
+      end
+
+      test "fails to add a custom prop with too long name", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: String.duplicate("a", Plausible.Props.max_prop_key_length() + 1)
+          })
+
+        assert %{"error" => "Parameter `property` is too long"} = json_response(conn, 400)
+      end
+
+      test "fails to add a custom prop when props list is too long", %{conn: conn, site: site} do
+        max_props = Plausible.Props.max_props()
+
+        Enum.reduce(1..max_props, site, fn idx, site ->
+          {:ok, site} = Plausible.Props.allow(site, "prop#{idx}")
+          site
+        end)
+
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop#{max_props + 1}"
+          })
+
+        assert %{"error" => "Can't add any more custom properties"} = json_response(conn, 400)
+      end
+
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop1"
+          })
+
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
+      end
+
+      test "returns 400 when site id missing", %{conn: conn} do
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            property: "prop1"
+          })
+
+        res = json_response(conn, 400)
+        assert res["error"] == "Parameter `site_id` is required to create a custom property"
+      end
+
+      test "returns 404 when site id is non existent", %{conn: conn} do
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            property: "prop1",
+            site_id: "bad"
+          })
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
+      end
+
+      @tag :capture_log
+      test "returns 404 when api key owner does not have permissions to create a goal", %{
+        conn: conn,
+        user: user
+      } do
+        site = new_site()
+
+        add_guest(site, user: user, role: :viewer)
+
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop1"
+          })
+
+        res = json_response(conn, 402)
+        assert res["error"] =~ "API key does not have access to Sites API"
+      end
+
+      test "returns 400 when property missing", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain
+          })
+
+        res = json_response(conn, 400)
+        assert res["error"] == "Parameter `property` is required to create a custom property"
+      end
+    end
+
     describe "PUT /api/v1/sites/goals" do
       setup :create_site
+
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+        )
+
+        :ok
+      end
 
       test "can add a goal as event to a site", %{conn: conn, site: site} do
         conn =
@@ -590,8 +571,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             event_name: "Signup"
           })
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
 
       test "returns 400 when site id missing", %{conn: conn} do
@@ -633,8 +614,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             event_name: "Signup"
           })
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 402)
+        assert res["error"] =~ "API key does not have access to Sites API"
       end
 
       test "returns 400 when goal type missing", %{conn: conn, site: site} do
@@ -671,8 +652,167 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
     end
 
+    describe "DELETE /api/v1/sites/custom-props/:property" do
+      setup :create_site
+
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [
+            Plausible.Billing.Feature.Props,
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.SitesAPI
+          ]
+        )
+
+        :ok
+      end
+
+      test "deletes a custom property", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop1"
+          })
+
+        assert %{"created" => true} = json_response(conn, 200)
+
+        conn =
+          delete(conn, "/api/v1/sites/custom-props/prop1", %{
+            site_id: site.domain
+          })
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+
+        assert Repo.reload!(site).allowed_event_props == []
+      end
+
+      test "deletes a custom property with slash in name", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop1/key/with/slashes"
+          })
+
+        assert %{"created" => true} = json_response(conn, 200)
+
+        conn =
+          delete(conn, "/api/v1/sites/custom-props/prop1/key/with/slashes", %{
+            site_id: site.domain
+          })
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+
+        assert Repo.reload!(site).allowed_event_props == []
+      end
+
+      test "deletes a custom prop using old site_id after domain change", %{
+        conn: conn,
+        site: site
+      } do
+        old_domain = site.domain
+        new_domain = "new.example.com"
+
+        Plausible.Site.Domain.change(site, new_domain)
+
+        conn =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: new_domain,
+            property: "prop1"
+          })
+
+        assert %{"created" => true} = json_response(conn, 200)
+
+        conn =
+          delete(conn, "/api/v1/sites/custom-props/prop1", %{
+            site_id: old_domain
+          })
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+        assert Repo.reload!(site).allowed_event_props == []
+      end
+
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
+        conn1 =
+          put(conn, "/api/v1/sites/custom-props", %{
+            site_id: site.domain,
+            property: "prop1"
+          })
+
+        assert %{"created" => true} = json_response(conn1, 200)
+
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn =
+          delete(conn, "/api/v1/sites/custom-props/prop1", %{
+            site_id: site.domain
+          })
+
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
+      end
+
+      test "handles non-existent custom prop gracefully", %{conn: conn, site: site} do
+        conn =
+          delete(conn, "/api/v1/sites/custom-props/none", %{
+            site_id: site.domain
+          })
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+      end
+
+      @tag :capture_log
+      test "cannot delete a custom prop belongs to a site that the user does not own", %{
+        conn: conn,
+        user: user
+      } do
+        site = new_site()
+        add_guest(site, user: user, role: :viewer)
+
+        conn =
+          delete(conn, "/api/v1/sites/custom-props/prop1", %{
+            site_id: site.domain
+          })
+
+        assert %{"error" => error} = json_response(conn, 402)
+        assert error =~ "API key does not have access to Sites API"
+      end
+
+      test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
+        {:ok, site} = Plausible.Props.allow(site, "prop1")
+        api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
+
+        conn =
+          conn
+          |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+
+        conn =
+          delete(conn, "/api/v1/sites/custom-props/prop1", %{
+            site_id: site.domain
+          })
+
+        assert json_response(conn, 401) == %{
+                 "error" =>
+                   "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
+               }
+      end
+    end
+
     describe "DELETE /api/v1/sites/goals/:goal_id" do
       setup :create_site
+
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.SitesAPI
+          ]
+        )
+
+        :ok
+      end
 
       test "delete a goal by its id", %{conn: conn, site: site} do
         conn =
@@ -735,8 +875,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             site_id: site.domain
           })
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
 
       test "is 404 when goal cannot be found", %{conn: conn, site: site} do
@@ -761,7 +901,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             site_id: site.domain
           })
 
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+        assert %{"error" => error} = json_response(conn, 402)
+        assert error =~ "API key does not have access to Sites API"
       end
 
       test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
@@ -780,148 +921,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "error" =>
                    "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
                }
-      end
-    end
-
-    describe "GET /api/v1/sites" do
-      test "returns empty when there are no sites for user", %{conn: conn} do
-        conn = get(conn, "/api/v1/sites")
-
-        assert json_response(conn, 200) == %{
-                 "sites" => [],
-                 "meta" => %{
-                   "before" => nil,
-                   "after" => nil,
-                   "limit" => 100
-                 }
-               }
-      end
-
-      test "returns sites when present", %{conn: conn, user: user} do
-        site1 = new_site(owner: user)
-        site2 = new_site(owner: user)
-
-        _unrelated_site = new_site()
-
-        conn = get(conn, "/api/v1/sites")
-
-        assert json_response(conn, 200) == %{
-                 "sites" => [
-                   %{"domain" => site2.domain, "timezone" => site2.timezone},
-                   %{"domain" => site1.domain, "timezone" => site1.timezone}
-                 ],
-                 "meta" => %{
-                   "before" => nil,
-                   "after" => nil,
-                   "limit" => 100
-                 }
-               }
-      end
-
-      test "returns sites where user is only a viewer", %{conn: conn, user: user} do
-        %{domain: owned_site_domain} = new_site(owner: user)
-        other_site = %{domain: other_site_domain} = new_site()
-        add_guest(other_site, user: user, role: :viewer)
-
-        conn = get(conn, "/api/v1/sites")
-
-        assert %{
-                 "sites" => [
-                   %{"domain" => ^other_site_domain},
-                   %{"domain" => ^owned_site_domain}
-                 ]
-               } = json_response(conn, 200)
-      end
-
-      test "returns sites scoped to a given team for full memberships", %{conn: conn, user: user} do
-        _owned_site = new_site(owner: user)
-        other_site = new_site()
-        add_guest(other_site, user: user, role: :viewer)
-        other_team_site = new_site()
-        add_member(other_team_site.team, user: user, role: :viewer)
-
-        conn = get(conn, "/api/v1/sites?team_id=" <> other_team_site.team.identifier)
-
-        assert_matches %{
-                         "sites" => [
-                           %{"domain" => ^other_team_site.domain}
-                         ]
-                       } = json_response(conn, 200)
-      end
-
-      test "implicitly scopes to a team for a team-scoped key", %{
-        conn: conn,
-        user: user
-      } do
-        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
-        add_member(another_team, user: user, role: :admin)
-        site = new_site(team: another_team)
-        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
-        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
-
-        _owned_site = new_site(owner: user)
-        other_site = new_site()
-        add_guest(other_site, user: user, role: :viewer)
-        other_team_site = new_site()
-        add_member(other_team_site.team, user: user, role: :viewer)
-
-        # `team_id` paramaeter is ignored
-        conn = get(conn, "/api/v1/sites?team_id=" <> other_team_site.team.identifier)
-
-        assert_matches %{
-                         "sites" => [
-                           %{"domain" => ^site.domain}
-                         ]
-                       } = json_response(conn, 200)
-      end
-
-      test "handles pagination correctly", %{conn: conn, user: user} do
-        [
-          %{domain: site1_domain},
-          %{domain: site2_domain},
-          %{domain: site3_domain}
-        ] = for _ <- 1..3, do: new_site(owner: user)
-
-        conn1 = get(conn, "/api/v1/sites?limit=2")
-
-        assert %{
-                 "sites" => [
-                   %{"domain" => ^site3_domain},
-                   %{"domain" => ^site2_domain}
-                 ],
-                 "meta" => %{
-                   "before" => nil,
-                   "after" => after_cursor,
-                   "limit" => 2
-                 }
-               } = json_response(conn1, 200)
-
-        conn2 = get(conn, "/api/v1/sites?limit=2&after=" <> after_cursor)
-
-        assert %{
-                 "sites" => [
-                   %{"domain" => ^site1_domain}
-                 ],
-                 "meta" => %{
-                   "before" => before_cursor,
-                   "after" => nil,
-                   "limit" => 2
-                 }
-               } = json_response(conn2, 200)
-
-        assert is_binary(before_cursor)
-      end
-
-      test "lists sites for user with read-only scope", %{conn: conn, user: user} do
-        %{domain: site_domain} = new_site(owner: user)
-        api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
-
-        conn =
-          conn
-          |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/api/v1/sites")
-
-        assert %{"sites" => [%{"domain" => ^site_domain}]} = json_response(conn, 200)
       end
     end
 
@@ -1025,12 +1024,23 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         conn = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}")
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
     end
 
     describe "PUT /api/v1/sites/guests" do
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.SitesAPI
+          ]
+        )
+
+        :ok
+      end
+
       test "creates new invitation", %{conn: conn, user: user} do
         site = new_site(owner: user)
 
@@ -1115,8 +1125,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "email" => "test@example.com"
           })
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
 
       test "fails for unknown role", %{conn: conn, user: user} do
@@ -1138,6 +1148,14 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     describe "DELETE /api/v1/sites/guests" do
+      setup %{user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+        )
+
+        :ok
+      end
+
       test "no-op when nothing to delete", %{conn: conn, user: user} do
         site = new_site(owner: user)
 
@@ -1199,8 +1217,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         conn = delete(conn, "/api/v1/sites/guests/test@example.com?site_id=#{site.domain}")
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
 
       test "won't delete non-guest membership", %{conn: conn, user: user} do
@@ -1216,52 +1234,60 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
     end
 
-    describe "GET /api/v1/sites/:site_id" do
+    describe "GET /api/v1/custom-props" do
       setup :create_site
 
-      test "get a site by its domain", %{conn: conn, site: site} do
-        site =
-          site
-          |> Ecto.Changeset.change(allowed_event_props: ["logged_in", "author"])
-          |> Repo.update!()
+      test "returns empty when there are no custom props for site", %{conn: conn, site: site} do
+        conn = get(conn, "/api/v1/sites/custom-props?site_id=" <> site.domain)
 
-        conn = get(conn, "/api/v1/sites/" <> site.domain)
+        assert json_response(conn, 200) == %{"custom_properties" => []}
+      end
+
+      test "returns custom props when present", %{conn: conn, site: site} do
+        {:ok, site} = Plausible.Props.allow(site, "prop1")
+        {:ok, site} = Plausible.Props.allow(site, "prop2")
+        Plausible.Props.allow(site, "prop3")
+
+        conn = get(conn, "/api/v1/sites/custom-props?site_id=" <> site.domain)
 
         assert json_response(conn, 200) == %{
-                 "domain" => site.domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => ["logged_in", "author"]
+                 "custom_properties" => [
+                   %{"property" => "prop1"},
+                   %{"property" => "prop2"},
+                   %{"property" => "prop3"}
+                 ]
                }
       end
 
-      test "get a site by old site_id after domain change", %{conn: conn, site: site} do
-        old_domain = site.domain
-        new_domain = "new.example.com"
+      @tag :capture_log
+      test "returns custom props for site where user is viewer", %{site: site} do
+        viewer = new_user()
+        add_guest(site, user: viewer, role: :viewer)
 
-        Plausible.Site.Domain.change(site, new_domain)
+        {:ok, site} = Plausible.Props.allow(site, "prop1")
 
-        conn = get(conn, "/api/v1/sites/" <> old_domain)
+        api_key = insert(:api_key, user: viewer, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(build_conn(), "authorization", "Bearer #{api_key.key}")
 
-        assert json_response(conn, 200) == %{
-                 "domain" => new_domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => []
-               }
+        conn = get(conn, "/api/v1/sites/custom-props?site_id=" <> site.domain)
+
+        assert %{"custom_properties" => [%{"property" => "prop1"}]} = json_response(conn, 200)
       end
 
-      test "get a site for user with read-only scope", %{conn: conn, user: user, site: site} do
+      test "lists custom props for user with read-only scope", %{
+        conn: conn,
+        user: user,
+        site: site
+      } do
+        {:ok, site} = Plausible.Props.allow(site, "prop1")
         api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 
         conn =
           conn
           |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/api/v1/sites/" <> site.domain)
+          |> get("/api/v1/sites/custom-props?site_id=" <> site.domain)
 
-        assert json_response(conn, 200) == %{
-                 "domain" => site.domain,
-                 "timezone" => site.timezone,
-                 "custom_properties" => []
-               }
+        assert %{"custom_properties" => [%{"property" => "prop1"}]} = json_response(conn, 200)
       end
 
       test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
@@ -1270,24 +1296,38 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
         conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
 
-        conn = get(conn, "/api/v1/sites/" <> site.domain)
+        _goal = insert(:goal, %{site: site, page_path: "/login"})
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        conn = get(conn, "/api/v1/sites/custom-props?site_id=" <> site.domain)
+
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
 
-      test "is 404 when site cannot be found", %{conn: conn} do
-        conn = get(conn, "/api/v1/sites/foobar.baz")
+      test "returns error when `site_id` parameter is missing", %{conn: conn} do
+        conn = get(conn, "/api/v1/sites/custom-props")
 
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+        assert json_response(conn, 400) == %{
+                 "error" => "Parameter `site_id` is required to list custom properties"
+               }
       end
 
-      test "is 404 when user is not a member of the site", %{conn: conn} do
-        site = insert(:site)
+      test "returns error when `site_id` parameter is invalid", %{conn: conn} do
+        conn = get(conn, "/api/v1/sites/custom-props?site_id=does.not.exist")
 
-        conn = get(conn, "/api/v1/sites/" <> site.domain)
+        assert json_response(conn, 404) == %{
+                 "error" => "Site could not be found"
+               }
+      end
 
-        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+      @tag :capture_log
+      test "returns error when user is not a member of the site", %{conn: conn} do
+        site = new_site()
+
+        conn = get(conn, "/api/v1/sites/custom-props?site_id=" <> site.domain)
+
+        assert %{"error" => error} = json_response(conn, 401)
+        assert(error =~ "Invalid API key")
       end
     end
 
@@ -1419,8 +1459,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         conn = get(conn, "/api/v1/sites/goals?site_id=" <> site.domain)
 
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
+        res = json_response(conn, 401)
+        assert res["error"] =~ "Invalid API key"
       end
 
       test "returns error when `site_id` parameter is missing", %{conn: conn} do
@@ -1439,75 +1479,14 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                }
       end
 
+      @tag :capture_log
       test "returns error when user is not a member of the site", %{conn: conn} do
-        site = insert(:site)
+        site = new_site()
 
         conn = get(conn, "/api/v1/sites/goals?site_id=" <> site.domain)
 
-        assert json_response(conn, 404) == %{
-                 "error" => "Site could not be found"
-               }
-      end
-    end
-
-    describe "PUT /api/v1/sites/:site_id" do
-      setup :create_site
-
-      test "can change domain name", %{conn: conn, site: site} do
-        old_domain = site.domain
-        assert old_domain != "new.example.com"
-
-        conn =
-          put(conn, "/api/v1/sites/#{old_domain}", %{
-            "domain" => "new.example.com"
-          })
-
-        assert json_response(conn, 200) == %{
-                 "domain" => "new.example.com",
-                 "timezone" => "UTC"
-               }
-
-        site = Repo.reload!(site)
-
-        assert site.domain == "new.example.com"
-        assert site.domain_changed_from == old_domain
-      end
-
-      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
-        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
-        add_member(another_team, user: user, role: :admin)
-        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
-        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
-
-        old_domain = site.domain
-        assert old_domain != "new.example.com"
-
-        conn =
-          put(conn, "/api/v1/sites/#{old_domain}", %{
-            "domain" => "new.example.com"
-          })
-
-        res = json_response(conn, 404)
-        assert res["error"] == "Site could not be found"
-      end
-
-      test "can't make a no-op change", %{conn: conn, site: site} do
-        conn =
-          put(conn, "/api/v1/sites/#{site.domain}", %{
-            "domain" => site.domain
-          })
-
-        assert json_response(conn, 400) == %{
-                 "error" => "domain: New domain must be different than the current one"
-               }
-      end
-
-      test "domain parameter is required", %{conn: conn, site: site} do
-        conn = put(conn, "/api/v1/sites/#{site.domain}", %{})
-
-        assert json_response(conn, 400) == %{
-                 "error" => "domain: can't be blank"
-               }
+        assert %{"error" => error} = json_response(conn, 401)
+        assert error =~ "Invalid API key"
       end
     end
   end

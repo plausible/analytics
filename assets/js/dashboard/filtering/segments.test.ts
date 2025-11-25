@@ -90,7 +90,12 @@ describe(`${isListableSegment.name}`, () => {
   const site: Pick<PlausibleSite, 'siteSegmentsAvailable'> = {
     siteSegmentsAvailable: true
   }
-  const user: UserContextValue = { loggedIn: true, id: 1, role: Role.editor }
+  const user: UserContextValue = {
+    loggedIn: true,
+    id: 1,
+    role: Role.editor,
+    team: { identifier: null, hasConsolidatedView: false }
+  }
 
   it('should return true for site segment when siteSegmentsAvailable is true', () => {
     const segment = { id: 1, type: SegmentType.site, owner_id: 1 }
@@ -103,7 +108,12 @@ describe(`${isListableSegment.name}`, () => {
       isListableSegment({
         segment,
         site,
-        user: { loggedIn: false, role: Role.public, id: null }
+        user: {
+          loggedIn: false,
+          role: Role.public,
+          id: null,
+          team: { identifier: null, hasConsolidatedView: false }
+        }
       })
     ).toBe(false)
   })
@@ -175,7 +185,12 @@ describe(`${resolveFilters.name}`, () => {
 
 describe(`${canSeeSegmentDetails.name}`, () => {
   it('should return true if the user is logged in and not a public role', () => {
-    const user: UserContextValue = { loggedIn: true, role: Role.admin, id: 1 }
+    const user: UserContextValue = {
+      loggedIn: true,
+      role: Role.admin,
+      id: 1,
+      team: { identifier: null, hasConsolidatedView: false }
+    }
     expect(canSeeSegmentDetails({ user })).toBe(true)
   })
 
@@ -183,13 +198,19 @@ describe(`${canSeeSegmentDetails.name}`, () => {
     const user: UserContextValue = {
       loggedIn: false,
       role: Role.editor,
-      id: null
+      id: null,
+      team: { identifier: null, hasConsolidatedView: false }
     }
     expect(canSeeSegmentDetails({ user })).toBe(false)
   })
 
   it('should return false if the user has a public role', () => {
-    const user: UserContextValue = { loggedIn: true, role: Role.public, id: 1 }
+    const user: UserContextValue = {
+      loggedIn: true,
+      role: Role.public,
+      id: 1,
+      team: { identifier: null, hasConsolidatedView: false }
+    }
     expect(canSeeSegmentDetails({ user })).toBe(false)
   })
 })

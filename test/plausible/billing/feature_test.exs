@@ -1,7 +1,6 @@
 defmodule Plausible.Billing.FeatureTest do
   alias Plausible.Billing.Feature.SiteSegments
   use Plausible.DataCase
-  use Plausible.Teams.Test
 
   alias Plausible.Billing.Feature.{
     Goals,
@@ -10,14 +9,15 @@ defmodule Plausible.Billing.FeatureTest do
     Funnels,
     RevenueGoals,
     StatsAPI,
-    Props
+    Props,
+    ConsolidatedView
   }
 
   @v1_growth_plan_id "558018"
   @v5_growth_plan_id "910429"
 
   describe "business features (for everyone)" do
-    for mod <- [Funnels, RevenueGoals] do
+    for mod <- [Funnels, RevenueGoals, ConsolidatedView] do
       test "#{mod}.check_availability/1 returns :ok when site owner is on a enterprise plan that supports #{mod}" do
         team =
           new_user()

@@ -2,7 +2,7 @@ defmodule Plausible.Props do
   @moduledoc """
   Context module for handling custom event props.
   """
-
+  use Plausible
   import Ecto.Query
 
   @type prop :: String.t()
@@ -120,7 +120,11 @@ defmodule Plausible.Props do
     |> Ecto.Changeset.validate_change(:allowed_event_props, fn field, allowed_props ->
       if Enum.all?(allowed_props, &valid?/1),
         do: [],
-        else: [{field, "must be between 1 and #{@max_prop_key_length} characters"}]
+        else: [
+          {field,
+           {"must be between 1 and #{@max_prop_key_length} characters",
+            validation: :length, type: :string}}
+        ]
     end)
   end
 
@@ -167,7 +171,7 @@ defmodule Plausible.Props do
 
     unnested_keys =
       from e in Plausible.ClickhouseEventV2,
-        where: e.site_id == ^site.id,
+        where: ^Plausible.Sites.site_id_query_filter(site),
         where: fragment("? > (NOW() - INTERVAL 6 MONTH)", e.timestamp),
         select: %{key: fragment("arrayJoin(?)", field(e, :"meta.key"))}
 

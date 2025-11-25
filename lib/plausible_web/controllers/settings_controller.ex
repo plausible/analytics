@@ -9,13 +9,20 @@ defmodule PlausibleWeb.SettingsController do
   require Logger
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
-       [:owner, :admin] when action in [:update_team_name]
+       [:owner, :admin]
+       when action in [:update_team_name]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner, :billing] when action in [:subscription, :invoices]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
-       [:owner] when action in [:team_danger_zone, :delete_team]
+       [:owner]
+       when action in [
+              :team_danger_zone,
+              :delete_team,
+              :enable_team_force_2fa,
+              :disable_team_force_2fa
+            ]
 
   plug Plausible.Plugs.RestrictUserType,
        [deny: :sso] when action in [:update_name, :update_email, :update_password]
@@ -29,7 +36,7 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def update_team_name(conn, %{"team" => params}) do
-    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.current_team, params)
+    changeset = Teams.Team.name_changeset(conn.assigns.current_team, params)
 
     case Repo.update(changeset) do
       {:ok, _user} ->
@@ -43,22 +50,79 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   defp render_team_general(conn, opts \\ []) do
-    if Plausible.Teams.setup?(conn.assigns.current_team) do
+    if Teams.setup?(conn.assigns.current_team) do
       name_changeset =
         Keyword.get(
           opts,
           :team_name_changeset,
-          Plausible.Teams.Team.name_changeset(conn.assigns.current_team)
+          Teams.Team.name_changeset(conn.assigns.current_team)
         )
 
       render(conn, :team_general,
         team_name_changeset: name_changeset,
+        force_2fa_enabled?: Teams.force_2fa_enabled?(conn.assigns.current_team),
         layout: {PlausibleWeb.LayoutView, :settings},
         connect_live_socket: true
       )
     else
       conn
       |> redirect(to: Routes.site_path(conn, :index))
+    end
+  end
+
+  def enable_team_force_2fa(conn, _params) do
+    team = conn.assigns.current_team
+    user = conn.assigns.current_user
+
+    case Teams.enable_force_2fa(team, user) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "2FA is now required for all team members.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Failed to enforce 2FA for all team members.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+    end
+  end
+
+  def disable_team_force_2fa(conn, %{"password" => password}) do
+    team = conn.assigns.current_team
+    user = conn.assigns.current_user
+
+    case Teams.disable_force_2fa(team, user, password) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "2FA is no longer enforced for team members.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+
+      {:error, :invalid_password} ->
+        conn
+        |> put_flash(:error, "Incorrect password provided.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Failed to disable enforcing 2FA for all team members.")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+    end
+  end
+
+  def leave_team(conn, _params) do
+    case Teams.Memberships.Leave.leave(conn.assigns.current_team, conn.assigns.current_user) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "You have left \"#{Teams.name(conn.assigns.current_team)}\"")
+        |> redirect(to: Routes.site_path(conn, :index, __team: "none"))
+
+      {:error, :only_one_owner} ->
+        conn
+        |> put_flash(:error, "You can't leave as you are the only Owner on the team")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+
+      {:error, :membership_not_found} ->
+        redirect(conn, to: Routes.site_path(conn, :index, __team: "none"))
     end
   end
 

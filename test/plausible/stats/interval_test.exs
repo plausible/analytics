@@ -42,7 +42,7 @@ defmodule Plausible.Stats.IntervalTest do
     end
 
     test "for a site with stats starting over 12m ago" do
-      site = build(:site, stats_start_date: Timex.shift(Date.utc_today(), months: -13))
+      site = build(:site, stats_start_date: Date.shift(Date.utc_today(), month: -13))
 
       assert valid_by_period(site: site) == %{
                "realtime" => ["minute"],
@@ -61,7 +61,7 @@ defmodule Plausible.Stats.IntervalTest do
     end
 
     test "for a query range exceeding 12m" do
-      ago_13m = Timex.shift(Date.utc_today(), months: -13)
+      ago_13m = Date.shift(Date.utc_today(), month: -13)
       site = build(:site, stats_start_date: ago_13m)
 
       assert valid_by_period(site: site, from: ago_13m, to: Date.utc_today()) == %{
@@ -124,7 +124,7 @@ defmodule Plausible.Stats.IntervalTest do
     end
 
     test "for a site with stats starting over 12m ago" do
-      site = build(:site, stats_start_date: Timex.shift(Date.utc_today(), months: -13))
+      site = build(:site, stats_start_date: Date.shift(Date.utc_today(), month: -13))
       refute valid_for_period?("all", "day", site: site)
 
       assert valid_for_period?("custom", "day",

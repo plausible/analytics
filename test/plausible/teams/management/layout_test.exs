@@ -1,8 +1,6 @@
 defmodule Plausible.Teams.Management.LayoutTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
   use Bamboo.Test
-  use Plausible
 
   alias Plausible.Teams.Management.Layout
   alias Plausible.Teams.Management.Layout.Entry
@@ -308,6 +306,8 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
     test "limits are checked", %{user: user, team: team} do
       on_ee do
+        subscribe_to_growth_plan(user)
+
         assert {:error, {:over_limit, 3}} =
                  team
                  |> Layout.init()

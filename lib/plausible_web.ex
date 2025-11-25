@@ -13,6 +13,10 @@ defmodule PlausibleWeb do
         use PlausibleWeb.Live.SentryContext
       end
 
+      on_ee do
+        use Plausible.Audit.LiveContext
+      end
+
       alias PlausibleWeb.Router.Helpers, as: Routes
       alias Phoenix.LiveView.JS
 
@@ -43,7 +47,7 @@ defmodule PlausibleWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: PlausibleWeb
+      use Phoenix.Controller, formats: [html: "View", json: "View"]
 
       import Plug.Conn
       import PlausibleWeb.ControllerHelpers
@@ -54,8 +58,7 @@ defmodule PlausibleWeb do
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/plausible_web/templates",
-        namespace: PlausibleWeb
+        root: "lib/plausible_web/templates"
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [view_module: 1]
@@ -72,8 +75,7 @@ defmodule PlausibleWeb do
     def extra_view do
       quote do
         use Phoenix.View,
-          root: "extra/lib/plausible_web/templates",
-          namespace: PlausibleWeb
+          root: "extra/lib/plausible_web/templates"
 
         # Import convenience functions from controllers
         import Phoenix.Controller, only: [view_module: 1]
@@ -103,7 +105,7 @@ defmodule PlausibleWeb do
 
   def plugins_api_controller do
     quote do
-      use Phoenix.Controller, namespace: PlausibleWeb.Plugins.API
+      use Phoenix.Controller, formats: [:json]
       import Plug.Conn
       import PlausibleWeb.Router.Helpers
 
@@ -120,9 +122,7 @@ defmodule PlausibleWeb do
 
   def plugins_api_view do
     quote do
-      use Phoenix.View,
-        namespace: PlausibleWeb.Plugins.API,
-        root: ""
+      use Phoenix.View, root: ""
 
       alias PlausibleWeb.Router.Helpers
       import PlausibleWeb.Plugins.API.Views.Pagination, only: [render_metadata_links: 4]

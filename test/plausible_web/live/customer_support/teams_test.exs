@@ -1,39 +1,81 @@
 defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
-  use Plausible
   @moduletag :ee_only
 
   on_ee do
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     alias Plausible.Auth.SSO
 
     require Plausible.Billing.Subscription.Status
 
     defp open_team(id, qs \\ []) do
-      Routes.customer_support_resource_path(
-        PlausibleWeb.Endpoint,
-        :details,
-        :teams,
-        :team,
-        id,
-        qs
-      )
+      Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id, qs)
+    end
+
+    setup [:create_user, :log_in, :create_site]
+
+    setup %{user: user} do
+      patch_env(:super_admin_user_ids, [user.id])
     end
 
     describe "overview" do
-      setup [:create_user, :log_in, :create_site]
-
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "renders", %{conn: conn, user: user} do
         team = team_of(user)
+        new_site(owner: user)
+        new_site(owner: user, consolidated: true)
+        add_member(team, role: :editor)
+
         {:ok, _lv, html} = live(conn, open_team(team.id))
-        assert text(html) =~ team.name
+        text = text(html)
+
+        assert text =~ team.name
+        assert text =~ "Sites (2/10)"
+        assert text =~ "Members (1/10)"
+      end
+
+      test "renders unlimited limits", %{conn: conn, user: user} do
+        owner = new_user(team: [inserted_at: ~N[2021-01-01 00:00:00]])
+        subscribe_to_enterprise_plan(owner, team_member_limit: :unlimited)
+        team = team_of(owner)
+        add_member(team, user: user, role: :editor)
+        new_site(owner: owner)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+        text = text(html)
+
+        assert text =~ team.name
+        assert text =~ "Sites (1/unlimited)"
+        assert text =~ "Members (1/unlimited)"
+      end
+
+      test "delete team", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-team"]|)
+        |> render_click()
+
+        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+
+        refute Plausible.Repo.get(Plausible.Teams.Team, team.id)
+      end
+
+      test "delete team with active subscription", %{conn: conn, user: user} do
+        user = subscribe_to_growth_plan(user)
+        team = team_of(user)
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        lv
+        |> element(~s|button[phx-click="delete-team"]|)
+        |> render_click()
+
+        text = lv |> render() |> text()
+
+        assert text =~ "The team has an active subscription which must be canceled first"
+
+        assert Plausible.Repo.get(Plausible.Teams.Team, team.id)
       end
 
       test "grace period handling", %{conn: conn, user: user} do
@@ -96,6 +138,22 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert team.locked
       end
 
+      test "trial expiry date update, updates accept traffic until too", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        lv
+        |> element("form")
+        |> render_submit(%{
+          "team" => %{"trial_expiry_date" => "2029-01-01"}
+        })
+
+        html = render(lv)
+
+        assert text_of_attr(html, "#team_trial_expiry_date", "value") == "2029-01-01"
+        assert text_of_attr(html, "#team_accept_traffic_until", "value") == "2029-01-15"
+      end
+
       test "404", %{conn: conn} do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_team(9999))
@@ -103,13 +161,90 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       end
     end
 
-    describe "billing" do
-      setup [:create_user, :log_in, :create_site]
+    describe "sites" do
+      test "lists sites belonging to a team", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(owner: user, domain: "primary.example.com/test")
+        new_site(owner: user, domain: "consolidated.example.com", consolidated: true)
+        new_site(owner: user, domain: "secondary.example.com")
+        # other
+        new_site(domain: "other.example.com")
 
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+        html = render(lv)
+        text = text(html)
+
+        assert element_exists?(html, ~s|a[href="/primary.example.com%2Ftest/"]|)
+        assert element_exists?(html, ~s|a[href="/primary.example.com%2Ftest/settings/general"]|)
+
+        assert text =~ "primary.example.com/test"
+        assert text =~ "secondary.example.com"
+        refute text =~ "condolidated.example.com"
+        refute text =~ "other.example.com"
+      end
+    end
+
+    @create_consolidated_view_button ~s|button[phx-click="create-consolidated-view"]|
+    @delete_consolidated_view_button ~s|button[phx-click="delete-consolidated-view"]|
+    @consolidated_views_tab_content ~s|div[data-test-id="consolidated-views-tab-content"]|
+
+    describe "consolidated views" do
+      test "renders button to create one if none exist yet", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
+        html = render(lv)
+
+        assert text_of_element(html, @consolidated_views_tab_content) =~
+                 "This team does not have a consolidated view yet"
+
+        assert text_of_element(html, @create_consolidated_view_button) == "Create one"
       end
 
+      test "can create a consolidated view for team", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
+
+        lv |> element(@create_consolidated_view_button) |> render_click()
+
+        assert Plausible.ConsolidatedView.get(team)
+      end
+
+      test "renders existing consolidated view", %{conn: conn, user: user} do
+        new_site(owner: user)
+        team = team_of(user)
+        new_consolidated_view(team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
+        html = render(lv)
+
+        table_text = text_of_element(html, @consolidated_views_tab_content)
+
+        assert table_text =~ team.identifier
+        assert table_text =~ "Dashboard"
+
+        assert element_exists?(html, @delete_consolidated_view_button)
+      end
+
+      test "can delete consolidated view", %{conn: conn, user: user} do
+        new_site(owner: user)
+        team = team_of(user)
+        new_consolidated_view(team)
+
+        assert Plausible.ConsolidatedView.get(team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "consolidated_views"))
+
+        lv |> element(@delete_consolidated_view_button) |> render_click()
+
+        refute Plausible.ConsolidatedView.get(team)
+      end
+    end
+
+    describe "billing" do
       test "renders custom plan form", %{conn: conn, user: user} do
         lv = open_custom_plan(conn, team_of(user))
         html = render(lv)
@@ -149,7 +284,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         })
 
         html = render(lv)
-        assert text_of_attr(html, ~s|#cost-estimate|, "value") == "10380.00"
+        assert text_of_attr(html, ~s|#cost-estimate|, "value") == "12380.00"
       end
 
       test "saves custom plan", %{conn: conn, user: user} do
@@ -177,7 +312,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "site_segments" => "false",
               "shared_links" => "true",
               "sites_api" => "true",
-              "sso" => "false"
+              "sso" => "false",
+              "consolidated_view" => "true"
             }
           }
         })
@@ -192,6 +328,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
                  %Plausible.Billing.EnterprisePlan{
                    billing_interval: :yearly,
                    features: [
+                     Plausible.Billing.Feature.ConsolidatedView,
                      Plausible.Billing.Feature.SharedLinks,
                      Plausible.Billing.Feature.SitesAPI
                    ],
@@ -290,7 +427,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert text_of_element(
                  html,
-                 ~s|select[name="enterprise_plan[billing_interval]"] option[selected="selected"]|
+                 ~s|select[name="enterprise_plan[billing_interval]"] option[selected]|
                ) ==
                  "monthly"
 
@@ -313,17 +450,17 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert element_exists?(
                  html,
-                 ~s|input[name="enterprise_plan[features[]][stats_api]"][checked="checked"]|
+                 ~s|input[name="enterprise_plan[features[]][stats_api]"][checked]|
                )
 
         assert element_exists?(
                  html,
-                 ~s|input[name="enterprise_plan[features[]][funnels]"][checked="checked"]|
+                 ~s|input[name="enterprise_plan[features[]][funnels]"][checked]|
                )
 
         refute element_exists?(
                  html,
-                 ~s|input[name="enterprise_plan[features[]][revenue_goals]"][checked="checked"]|
+                 ~s|input[name="enterprise_plan[features[]][revenue_goals]"][checked]|
                )
 
         assert text(html) =~ "Update Plan"
@@ -516,6 +653,76 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
                ) == "5000000"
       end
 
+      test "current plan is annotated and delete button is available", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        user
+        |> subscribe_to_enterprise_plan(
+          team_member_limit: :unlimited,
+          paddle_plan_id: "plan-current"
+        )
+
+        insert(:enterprise_plan,
+          team: team,
+          paddle_plan_id: "plan-another",
+          monthly_pageview_limit: 1_000_000
+        )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        html = render(lv)
+
+        current_selector = ~s|[data-test-id="plan-entry-plan-current"]|
+        other_selector = ~s|[data-test-id="plan-entry-plan-another"]|
+
+        assert element_exists?(html, current_selector)
+        assert element_exists?(html, other_selector)
+
+        current = text_of_element(html, current_selector)
+        other = text_of_element(html, other_selector)
+
+        assert current =~ "CURRENT"
+        refute other =~ "CURRENT"
+
+        refute element_exists?(
+                 html,
+                 ~s|button[phx-click="delete-plan"][data-test-id="delete-plan-plan-current"]|
+               )
+
+        assert element_exists?(
+                 html,
+                 ~s|button[phx-click="delete-plan"][data-test-id="delete-plan-plan-another"]|
+               )
+      end
+
+      test "plan can be deleted", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        user |> subscribe_to_enterprise_plan(team_member_limit: :unlimited)
+
+        inactive_plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "plan-another",
+            monthly_pageview_limit: 1_000_000
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        html = render(lv)
+
+        assert element_exists?(html, ~s|[data-test-id="plan-entry-plan-another"]|)
+
+        lv
+        |> element(~s|button[phx-click="delete-plan"][data-test-id="delete-plan-plan-another"]|)
+        |> render_click()
+
+        html = render(lv)
+
+        refute Plausible.Repo.get(Plausible.Billing.EnterprisePlan, inactive_plan.id)
+        refute element_exists?(html, ~s|[data-test-id="plan-entry-plan-another"]|)
+      end
+
       defp open_custom_plan(conn, team) do
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
         render(lv)
@@ -525,12 +732,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     end
 
     describe "sso" do
-      setup [:create_user, :log_in, :create_site]
-
-      setup %{user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
-      end
-
       test "sso tab normally won't render", %{conn: conn, user: user} do
         team = team_of(user)
         {:ok, _lv, html} = live(conn, open_team(team.id))
@@ -548,7 +749,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert element_exists?(html, ~s|a[href="?tab=sso"]|)
       end
 
-      test "sso tab displays domains", %{conn: conn, user: user} do
+      test "sso tab displays domains and policy/idp config", %{conn: conn, user: user} do
         team = team_of(user)
 
         integration = SSO.initiate_saml_integration(team)
@@ -558,10 +759,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
-        html = render(lv)
+        text = lv |> render() |> text()
 
-        assert html =~ "sso1.example.com"
-        assert html =~ "sso2.example.com"
+        assert text =~ "sso1.example.com"
+        assert text =~ "sso2.example.com"
+        assert text =~ "configured? false"
+        assert text =~ "sso_session_timeout_minutes 360"
       end
 
       test "delete domain", %{conn: conn, user: user} do
@@ -570,7 +773,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         {:ok, domain} = SSO.Domains.add(integration, "sso1.example.com")
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
-        lv |> element("button#remove-domain-#{domain.identifier}") |> render_click()
+        lv |> element("button#remove-sso-domain-#{domain.identifier}") |> render_click()
         refute render(lv) =~ "sso1.example.com"
       end
 
@@ -584,6 +787,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         {:ok, :standard, team, user} =
           SSO.provision_user(%SSO.Identity{
             id: Ecto.UUID.generate(),
+            integration_id: integration.identifier,
             name: user.name,
             email: user.email,
             expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
@@ -597,9 +801,115 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         html = render(lv)
 
         assert text(html) =~ "SSO membership"
-        lv |> element("#deprovision-user-#{user.id}") |> render_click()
+        lv |> element("#deprovision-sso-user-#{user.id}") |> render_click()
 
         assert Plausible.Repo.reload!(user).type == :standard
+      end
+
+      test "removing integration", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        SSO.initiate_saml_integration(team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
+
+        assert {:error, {:live_redirect, %{to: to}}} =
+                 lv |> element("button#remove-sso-integration") |> render_click()
+
+        assert to == Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)
+      end
+    end
+
+    describe "audit" do
+      test "audit tab is present", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+        assert element_exists?(html, ~s|a[href="?tab=audit"]|)
+      end
+
+      test "shows audit entries", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        entry =
+          %Plausible.Audit.Entry{
+            name: "Reveal Test",
+            entity: "Plausible.Teams.Team",
+            entity_id: to_string(team.id),
+            change: %{"foo" => "bar"},
+            team_id: team.id,
+            datetime: NaiveDateTime.utc_now()
+          }
+          |> Plausible.Repo.insert!()
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :audit))
+
+        html = render(lv)
+
+        assert html =~ "Reveal Test"
+
+        html =
+          lv
+          |> element(~s|button[phx-click="reveal-audit-entry"][phx-value-id="#{entry.id}"]|)
+          |> render_click()
+
+        assert text_of_element(html, ~s|textarea|) == ~s|{ "foo": "bar" }|
+      end
+
+      test "shows audit entries when user id does not exists", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        %Plausible.Audit.Entry{
+          name: "Reveal Test",
+          entity: "Plausible.Auth.User",
+          entity_id: "666111",
+          team_id: team.id,
+          datetime: NaiveDateTime.utc_now(),
+          user_id: 666_111,
+          actor_type: :user
+        }
+        |> Plausible.Repo.insert!()
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :audit))
+
+        text = lv |> render() |> text()
+
+        assert text =~ "(N/A) (N/A)"
+      end
+
+      test "paginates audit entries", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        now = NaiveDateTime.utc_now()
+
+        for i <- 1..8 do
+          %Plausible.Audit.Entry{
+            name: "Entry (#{i})",
+            entity: "Plausible.Teams.Team",
+            entity_id: to_string(team.id),
+            team_id: team.id,
+            datetime: NaiveDateTime.shift(now, second: 8 - i)
+          }
+          |> Plausible.Repo.insert!()
+        end
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :audit, limit: 3))
+        text = lv |> render() |> text()
+
+        for i <- 4..8, do: refute(text =~ "Entry (#{i})")
+        for i <- 1..3, do: assert(text =~ "Entry (#{i})")
+
+        lv |> element("button#next-page") |> render_click()
+        text = lv |> render() |> text()
+
+        for i <- 4..6, do: assert(text =~ "Entry (#{i})")
+        for i <- 1..3, do: refute(text =~ "Entry (#{i})")
+        for i <- 7..8, do: refute(text =~ "Entry (#{i})")
+
+        lv |> element("button#prev-page") |> render_click()
+        text = lv |> render() |> text()
+
+        for i <- 4..8, do: refute(text =~ "Entry (#{i})")
+        for i <- 1..3, do: assert(text =~ "Entry (#{i})")
       end
     end
   end

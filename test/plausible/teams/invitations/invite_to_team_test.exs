@@ -1,8 +1,6 @@
 defmodule Plausible.Teams.Invitations.InviteToTeamTest do
   use Plausible.DataCase
-  use Plausible
   use Bamboo.Test
-  use Plausible.Teams.Test
 
   alias Plausible.Repo
   alias Plausible.Teams
@@ -168,6 +166,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
     @tag :ee_only
     test "returns error when owner is over their team member limit" do
       [owner, inviter, invitee] = for _ <- 1..3, do: new_user()
+      subscribe_to_growth_plan(owner)
       _site = new_site(owner: owner)
       team = team_of(owner)
       inviter = add_member(team, user: inviter, role: :admin)

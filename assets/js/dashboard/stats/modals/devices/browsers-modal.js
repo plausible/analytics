@@ -52,7 +52,7 @@ function BrowsersModal() {
     <Modal>
       <BreakdownModal
         reportInfo={reportInfo}
-        metrics={chooseMetrics(query)}
+        metrics={chooseMetrics(query, site)}
         getFilterInfo={getFilterInfo}
         addSearchFilter={addSearchFilter}
         renderIcon={renderIcon}

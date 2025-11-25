@@ -233,6 +233,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     )
     |> limit(25)
     |> ClickhouseRepo.all()
+    |> add_direct_suggestion(filter_name, filter_search)
     |> Enum.filter(fn suggestion -> suggestion != "" end)
     |> wrap_suggestions()
   end
@@ -283,6 +284,19 @@ defmodule Plausible.Stats.FilterSuggestions do
   defp apply_additional_filters(q, _, _), do: q
 
   defp wrap_suggestions(list) do
-    Enum.map(list, fn val -> %{value: val, label: val} end)
+    list |> Enum.uniq() |> Enum.map(fn val -> %{value: val, label: val} end)
+  end
+
+  @no_ref "Direct / None"
+  defp add_direct_suggestion(suggestions, :referrer_source, filter_search) do
+    if String.contains?(String.downcase(@no_ref), String.downcase(filter_search)) do
+      [@no_ref | suggestions]
+    else
+      suggestions
+    end
+  end
+
+  defp add_direct_suggestion(suggestions, _filter_name, _filter_search) do
+    suggestions
   end
 end

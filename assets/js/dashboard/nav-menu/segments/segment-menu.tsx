@@ -20,9 +20,7 @@ import { DashboardQuery } from '../../query'
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
-  popover.items.classNames.hoverLink,
-  popover.items.classNames.roundedStart,
-  popover.items.classNames.roundedEnd
+  popover.items.classNames.hoverLink
 )
 const buttonClassName = classNames(
   'text-white font-medium bg-indigo-600 hover:bg-indigo-700'
@@ -59,7 +57,7 @@ export const SegmentMenu = () => {
   }
 
   return (
-    <div className="flex shadow">
+    <div className="flex shadow-sm">
       <AppNavigationLink
         className={classNames(
           popover.toggleButton.classNames.rounded,

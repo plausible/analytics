@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   alias Plausible.Sites
   alias Plausible.Goal
   alias Plausible.Goals
+  alias Plausible.Props
   alias Plausible.Teams
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -23,7 +24,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       |> paginate(params, @pagination_opts)
 
     json(conn, %{
-      sites: page.entries,
+      sites: page.entries |> Enum.map(&get_site_response_for_index/1),
       meta: pagination_meta(page.metadata)
     })
   end
@@ -33,7 +34,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     team = conn.assigns.current_team
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- get_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
       opts = [cursor_fields: [inserted_at: :desc, id: :desc], limit: 100, maximum_limit: 1000]
       page = site |> Sites.list_guests_query() |> paginate(params, opts)
 
@@ -83,7 +84,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     team = conn.assigns.current_team
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- get_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
       page =
         site
         |> Plausible.Goals.for_site_query()
@@ -115,11 +116,28 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     user = conn.assigns.current_user
     team = conn.assigns.current_team || Teams.get(params["team_id"])
 
-    case Sites.create(user, params, team) do
-      {:ok, %{site: site}} ->
-        json(conn, site)
+    case Repo.transact(fn ->
+           with {:ok, %{site: site}} <- Sites.create(user, params, team),
+                {:ok, tracker_script_configuration} <-
+                  get_or_create_config(site, params["tracker_script_configuration"] || %{}) do
+             {:ok,
+              struct(site,
+                tracker_script_configuration: tracker_script_configuration
+              )}
+           else
+             # Translates Multi error format to Repo.transact error format
+             {:error, step_id, output, context} ->
+               {:error, {step_id, output, context}}
 
-      {:error, _, {:over_limit, limit}, _} ->
+             # already in Repo.transact error format
+             {:error, reason} ->
+               {:error, reason}
+           end
+         end) do
+      {:ok, site} ->
+        json(conn, get_site_response(site))
+
+      {:error, {_, {:over_limit, limit}, _}} ->
         conn
         |> put_status(402)
         |> json(%{
@@ -127,21 +145,26 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
             "Your account has reached the limit of #{limit} sites. To unlock more sites, please upgrade your subscription."
         })
 
-      {:error, _, :permission_denied, _} ->
+      {:error, {_, :permission_denied, _}} ->
         conn
         |> put_status(403)
         |> json(%{
           error: "You can't add sites to the selected team."
         })
 
-      {:error, _, :multiple_teams, _} ->
+      {:error, {_, :multiple_teams, _}} ->
         conn
         |> put_status(400)
         |> json(%{
           error: "You must select a team with 'team_id' parameter."
         })
 
-      {:error, _, changeset, _} ->
+      {:error, {:tracker_script_configuration_invalid, %Ecto.Changeset{} = changeset}} ->
+        conn
+        |> put_status(400)
+        |> json(serialize_errors(changeset, "tracker_script_configuration."))
+
+      {:error, {_, %Ecto.Changeset{} = changeset, _}} ->
         conn
         |> put_status(400)
         |> json(serialize_errors(changeset))
@@ -152,14 +175,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
 
-    case get_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
-      {:ok, site} ->
-        json(conn, %{
-          domain: site.domain,
-          timezone: site.timezone,
-          custom_properties: site.allowed_event_props || []
-        })
+    with {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]),
+         {:ok, tracker_script_configuration} <- get_or_create_config(site, %{}) do
+      site = struct(site, tracker_script_configuration: tracker_script_configuration)
 
+      json(conn, get_site_response(site))
+    else
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
     end
@@ -169,7 +190,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
 
-    case get_site(user, team, site_id, [:owner]) do
+    case find_site(user, team, site_id, [:owner]) do
       {:ok, site} ->
         {:ok, _} = Plausible.Site.Removal.run(site)
         json(conn, %{"deleted" => true})
@@ -183,18 +204,66 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
 
-    # for now this only allows to change the domain
-    with {:ok, site} <- get_site(user, team, site_id, [:owner, :admin, :editor]),
-         {:ok, site} <- Plausible.Site.Domain.change(site, params["domain"]) do
-      json(conn, site)
+    with {:ok, params} <- validate_update_payload(params),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, site} <- do_update_site(site, params) do
+      json(conn, get_site_response(site))
     else
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
 
-      {:error, %Ecto.Changeset{} = changeset} ->
+      {:error, :no_changes} ->
+        H.bad_request(
+          conn,
+          "Payload must contain at least one of the parameters 'domain', 'tracker_script_configuration'"
+        )
+
+      {:error, {:domain_change_invalid, %Ecto.Changeset{} = changeset}} ->
         conn
         |> put_status(400)
         |> json(serialize_errors(changeset))
+
+      {:error, {:tracker_script_configuration_invalid, %Ecto.Changeset{} = changeset}} ->
+        conn
+        |> put_status(400)
+        |> json(serialize_errors(changeset, "tracker_script_configuration."))
+    end
+  end
+
+  defp validate_update_payload(params) do
+    params = params |> Map.take(["domain", "tracker_script_configuration"]) |> Map.drop([nil])
+
+    if map_size(params) == 0 do
+      {:error, :no_changes}
+    else
+      {:ok, params}
+    end
+  end
+
+  defp do_update_site(site, params) do
+    Repo.transact(fn ->
+      with {:ok, site} <-
+             if(params["domain"],
+               do: change_domain(site, params["domain"]),
+               else: {:ok, site}
+             ),
+           {:ok, tracker_script_configuration} <-
+             if(params["tracker_script_configuration"],
+               do: update_config(site, params["tracker_script_configuration"]),
+               else: get_or_create_config(site, %{})
+             ) do
+        {:ok, struct(site, tracker_script_configuration: tracker_script_configuration)}
+      end
+    end)
+  end
+
+  defp change_domain(site, domain) do
+    case Plausible.Site.Domain.change(site, domain) do
+      {:ok, site} ->
+        {:ok, site}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, {:domain_change_invalid, changeset}}
     end
   end
 
@@ -205,7 +274,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, email} <- expect_param_key(params, "email"),
          {:ok, role} <- expect_param_key(params, "role", ["viewer", "editor"]),
-         {:ok, site} <- get_site(user, team, site_id, [:owner, :admin]) do
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin]) do
       existing = Repo.one(Sites.list_guests_query(site, email: email))
 
       if existing do
@@ -250,7 +319,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, email} <- expect_param_key(params, "email"),
-         {:ok, site} <- get_site(user, team, site_id, [:owner, :admin]) do
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin]) do
       existing = Repo.one(Sites.list_guests_query(site, email: email))
 
       case existing do
@@ -285,7 +354,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, link_name} <- expect_param_key(params, "name"),
-         {:ok, site} <- get_site(user, team, site_id, [:owner, :admin, :editor]) do
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]) do
       shared_link = Repo.get_by(Plausible.Site.SharedLink, site_id: site.id, name: link_name)
 
       shared_link =
@@ -329,7 +398,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, _} <- expect_param_key(params, "goal_type"),
-         {:ok, site} <- get_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
          {:ok, goal} <- Goals.find_or_create(site, params) do
       json(conn, goal)
     else
@@ -350,7 +419,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, goal_id} <- expect_param_key(params, "goal_id"),
-         {:ok, site} <- get_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
          :ok <- Goals.delete(goal_id, site) do
       json(conn, %{"deleted" => true})
     else
@@ -371,6 +440,92 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def custom_props_index(conn, params) do
+    user = conn.assigns.current_user
+    team = conn.assigns.current_team
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
+      properties =
+        (site.allowed_event_props || [])
+        |> Enum.sort()
+        |> Enum.map(fn prop -> %{property: prop} end)
+
+      json(conn, %{custom_properties: properties})
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to list custom properties")
+    end
+  end
+
+  def add_custom_prop(conn, params) do
+    user = conn.assigns.current_user
+    team = conn.assigns.current_team
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, property} <- expect_param_key(params, "property"),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, _} <- Props.allow(site, property) do
+      json(conn, %{"created" => true})
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, param} ->
+        H.bad_request(conn, "Parameter `#{param}` is required to create a custom property")
+
+      {:error, :upgrade_required} ->
+        H.payment_required(
+          conn,
+          "Your current subscription plan does not include Custom Properties"
+        )
+
+      {:error, changeset} ->
+        %{allowed_event_props: [error | _]} =
+          Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
+            cond do
+              opts[:type] == :list and opts[:validation] == :length ->
+                "Can't add any more custom properties"
+
+              opts[:type] == :string and opts[:validation] == :length ->
+                "Parameter `property` is too long"
+
+              true ->
+                "Parameter `property` is invalid"
+            end
+          end)
+
+        H.bad_request(conn, error)
+    end
+  end
+
+  def delete_custom_prop(conn, params) do
+    user = conn.assigns.current_user
+    team = conn.assigns.current_team
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, property} <- expect_param_key(params, "property"),
+         # Property name is extracted from route URL via wildcard,
+         # which returns a list.
+         property = Path.join(property),
+         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, _} <- Props.disallow(site, property) do
+      json(conn, %{"deleted" => true})
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, param} ->
+        H.bad_request(conn, "Parameter `#{param}` is required to delete a custom property")
+
+      e ->
+        H.bad_request(conn, "Something went wrong: #{inspect(e)}")
+    end
+  end
+
   defp pagination_meta(meta) do
     %{
       after: meta.after,
@@ -379,8 +534,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     }
   end
 
-  defp get_site(user, team, site_id, roles) do
-    case Plausible.Sites.get_for_user(user, site_id, roles) do
+  defp find_site(user, team, site_id, roles) do
+    case Plausible.Sites.get_for_user(user, site_id, roles: roles) do
       nil ->
         {:error, :site_not_found}
 
@@ -395,9 +550,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  defp serialize_errors(changeset) do
+  defp serialize_errors(changeset, field_prefix \\ "") do
     {field, {msg, _opts}} = List.first(changeset.errors)
-    error_msg = Atom.to_string(field) <> ": " <> msg
+    error_msg = field_prefix <> Atom.to_string(field) <> ": " <> msg
     %{"error" => error_msg}
   end
 
@@ -418,5 +573,36 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       _ ->
         {:missing, key}
     end
+  end
+
+  defp get_or_create_config(site, params) do
+    case PlausibleWeb.Tracker.get_or_create_tracker_script_configuration(site, params) do
+      {:ok, tracker_script_configuration} ->
+        {:ok, tracker_script_configuration}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, {:tracker_script_configuration_invalid, changeset}}
+    end
+  end
+
+  defp update_config(site, params) do
+    case PlausibleWeb.Tracker.update_script_configuration(site, params, :installation) do
+      {:ok, tracker_script_configuration} ->
+        {:ok, tracker_script_configuration}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, {:tracker_script_configuration_invalid, changeset}}
+    end
+  end
+
+  defp get_site_response_for_index(site) do
+    site |> Map.take([:domain, :timezone])
+  end
+
+  defp get_site_response(site) do
+    site
+    |> Map.take([:domain, :timezone, :tracker_script_configuration])
+    # remap to `custom_properties`
+    |> Map.put(:custom_properties, site.allowed_event_props || [])
   end
 end

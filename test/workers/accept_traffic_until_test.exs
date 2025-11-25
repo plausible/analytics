@@ -1,6 +1,5 @@
 defmodule Plausible.Workers.AcceptTrafficUntilTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
   use Bamboo.Test
 
   alias Plausible.Workers.AcceptTrafficUntil

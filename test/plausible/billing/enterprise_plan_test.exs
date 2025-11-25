@@ -1,6 +1,5 @@
 defmodule Plausible.Billing.EnterprisePlanTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
   alias Plausible.Billing.EnterprisePlan
 
   test "changeset/2 loads and dumps the list of features" do

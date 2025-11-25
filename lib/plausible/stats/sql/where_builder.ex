@@ -41,17 +41,26 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     end
   end
 
-  defp filter_site_time_range(:events, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query)
-
-    dynamic(
-      [e],
-      e.site_id == ^query.site_id and e.timestamp >= ^first_datetime and
-        e.timestamp <= ^last_datetime
-    )
+  defp filter_site_time_range(table, query) do
+    dynamic([], ^filter_site_id(query) and ^filter_time_range(table, query))
   end
 
-  defp filter_site_time_range(:sessions, query) do
+  defp filter_site_id(query) do
+    case query.consolidated_site_ids do
+      nil ->
+        dynamic([x], x.site_id == ^query.site_id)
+
+      [_ | _] = ids ->
+        dynamic([x], fragment("? in ?", x.site_id, ^ids))
+    end
+  end
+
+  defp filter_time_range(:events, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query)
+    dynamic([e], e.timestamp >= ^first_datetime and e.timestamp <= ^last_datetime)
+  end
+
+  defp filter_time_range(:sessions, query) do
     {first_datetime, last_datetime} = utc_boundaries(query)
 
     # Counts each _active_ session in time range even if they started before
@@ -67,8 +76,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       # Without it, the sample factor would be greatly overestimated for large sites,
       # as query would be estimated to return _all_ rows matching other conditions
       # before `start == last_datetime`.
-      s.site_id == ^query.site_id and
-        s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
+      s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
         s.timestamp >= ^first_datetime and
         s.start <= ^last_datetime
     )
@@ -161,7 +169,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp add_filter(table, _query, filter) do
-    Logger.info("Unable to process garbage filter. No results are returned",
+    Logger.notice("Unable to process garbage filter. No results are returned",
       table: table,
       filter: filter
     )
@@ -265,7 +273,11 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp filter_field(db_field, [:contains | _rest] = filter) do
-    contains_clause(col_value_string(db_field), filter)
+    if no_ref_field?(db_field) do
+      contains_clause_no_ref(col_value_string(db_field), filter)
+    else
+      contains_clause(col_value_string(db_field), filter)
+    end
   end
 
   defp filter_field(db_field, [:contains_not | rest]) do
@@ -297,6 +309,15 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp db_field_name("channel"), do: :acquisition_channel
   defp db_field_name(name), do: String.to_existing_atom(name)
+
+  defp no_ref_field?(:source), do: true
+  defp no_ref_field?(:referrer), do: true
+  defp no_ref_field?(:utm_medium), do: true
+  defp no_ref_field?(:utm_source), do: true
+  defp no_ref_field?(:utm_campaign), do: true
+  defp no_ref_field?(:utm_content), do: true
+  defp no_ref_field?(:utm_term), do: true
+  defp no_ref_field?(_), do: false
 
   defp db_field_val(:source, @no_ref), do: ""
   defp db_field_val(:referrer, @no_ref), do: ""
@@ -346,6 +367,39 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     end
   end
 
+  defp contains_clause_no_ref(value_expression, [_, _, clauses | _] = filter) do
+    case_sensitive? = case_sensitive?(filter)
+
+    expression =
+      if case_sensitive? do
+        dynamic(
+          [x],
+          fragment("multiSearchAny(?, ?)", ^value_expression, ^clauses)
+        )
+      else
+        dynamic(
+          [x],
+          fragment("multiSearchAnyCaseInsensitive(?, ?)", ^value_expression, ^clauses)
+        )
+      end
+
+    if Enum.any?(clauses, &matches_no_ref?(&1, case_sensitive?)) do
+      dynamic([x], ^expression or fragment("? = ?", ^value_expression, ""))
+    else
+      expression
+    end
+  end
+
   defp case_sensitive?([_, _, _, %{case_sensitive: false}]), do: false
   defp case_sensitive?(_), do: true
+
+  @no_ref_downcase String.downcase(@no_ref)
+
+  defp matches_no_ref?(input, false) do
+    String.contains?(@no_ref_downcase, String.downcase(input))
+  end
+
+  defp matches_no_ref?(input, true) do
+    String.contains?(@no_ref, input)
+  end
 end

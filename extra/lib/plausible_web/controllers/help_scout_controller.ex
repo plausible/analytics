@@ -110,6 +110,6 @@ defmodule PlausibleWeb.HelpScoutController do
   defp make_iframe_friendly(conn, _opts) do
     conn
     |> delete_resp_header("x-frame-options")
-    |> put_layout(false)
+    |> put_root_layout(html: {PlausibleWeb.HelpScoutView, :layout})
   end
 end

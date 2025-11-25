@@ -44,7 +44,12 @@ defmodule Plausible.DataMigration.BackfillTrackerScriptConfiguration do
   def process_batch(offset, now) do
     sites =
       Repo.all(
-        from(s in Plausible.Site, order_by: [asc: :id], limit: @batch_size, offset: ^offset)
+        from(s in "sites",
+          order_by: [asc: :id],
+          limit: @batch_size,
+          offset: ^offset,
+          select: %{id: s.id, installation_meta: s.installation_meta}
+        )
       )
 
     if length(sites) > 0 do
@@ -67,8 +72,18 @@ defmodule Plausible.DataMigration.BackfillTrackerScriptConfiguration do
 
   defp tracker_script_configuration(site, now) do
     installation_meta = site.installation_meta
-    installation_type = if(installation_meta, do: installation_meta.installation_type, else: nil)
-    script_config = if(installation_meta, do: installation_meta.script_config, else: %{})
+
+    installation_type =
+      if installation_meta do
+        Map.get(installation_meta, "installation_type")
+      end
+
+    script_config =
+      if installation_meta do
+        Map.get(installation_meta, "script_config", %{})
+      else
+        %{}
+      end
 
     %{
       id: Nanoid.generate(),

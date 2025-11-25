@@ -1,9 +1,7 @@
 defmodule PlausibleWeb.EmailTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   import Plausible.Factory
-  import Plausible.Test.Support.HTML
 
   alias PlausibleWeb.Email
 
@@ -164,7 +162,7 @@ defmodule PlausibleWeb.EmailTest do
       assert subject == "[Action required] You have outgrown your Plausible subscription tier"
 
       assert html_body =~ PlausibleWeb.TextHelpers.format_date_range(last_cycle)
-      assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
+      assert html_body =~ "We recommend you upgrade to the 100k pageviews/month plan"
       assert html_body =~ "your account recorded 32,100 billable pageviews"
 
       assert html_body =~
@@ -225,7 +223,7 @@ defmodule PlausibleWeb.EmailTest do
       assert subject == "[Action required] Your Plausible dashboard is now locked"
 
       assert html_body =~ PlausibleWeb.TextHelpers.format_date_range(last_cycle)
-      assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
+      assert html_body =~ "We recommend you upgrade to the 100k pageviews/month plan"
       assert html_body =~ "your account recorded 32,100 billable pageviews"
 
       assert html_body =~
@@ -406,7 +404,7 @@ defmodule PlausibleWeb.EmailTest do
              * Enable email reports (https://plausible.io/docs/email-reports) and notifications for traffic spikes (https://plausible.io/docs/traffic-spikes)
              * Integrate with Search Console (https://plausible.io/docs/google-search-console-integration) to get keyword phrases people find your site with
              * Invite team members and other collaborators (https://plausible.io/docs/users-roles)
-             * Set up easy goals including 404 error pages (https://plausible.io/docs/error-pages-tracking-404), file downloads (https://plausible.io/docs/file-downloads-tracking) and outbound link clicks (https://plausible.io/docs/outbound-link-click-tracking)
+             * Set up easy goals including form submissions (https://plausible.io/docs/form-submissions-tracking), 404 error pages (https://plausible.io/docs/error-pages-tracking-404), file downloads (https://plausible.io/docs/file-downloads-tracking) and outbound link clicks (https://plausible.io/docs/outbound-link-click-tracking)
              * Opt out from counting your own visits (https://plausible.io/docs/excluding)
              * If you're concerned about adblockers, set up a proxy to bypass them (https://plausible.io/docs/proxy/introduction)
 
@@ -444,7 +442,7 @@ defmodule PlausibleWeb.EmailTest do
              * Enable email reports (https://plausible.io/docs/email-reports) and notifications for traffic spikes (https://plausible.io/docs/traffic-spikes)
              * Integrate with Search Console (https://plausible.io/docs/google-search-console-integration) to get keyword phrases people find your site with
              * Invite team members and other collaborators (https://plausible.io/docs/users-roles)
-             * Set up easy goals including 404 error pages (https://plausible.io/docs/error-pages-tracking-404), file downloads (https://plausible.io/docs/file-downloads-tracking) and outbound link clicks (https://plausible.io/docs/outbound-link-click-tracking)
+             * Set up easy goals including form submissions (https://plausible.io/docs/form-submissions-tracking), 404 error pages (https://plausible.io/docs/error-pages-tracking-404), file downloads (https://plausible.io/docs/file-downloads-tracking) and outbound link clicks (https://plausible.io/docs/outbound-link-click-tracking)
              * Opt out from counting your own visits (https://plausible.io/docs/excluding)
              * If you're concerned about adblockers, set up a proxy to bypass them (https://plausible.io/docs/proxy/introduction)
 

@@ -64,7 +64,7 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  def select_dimension(q, key, "time:hour", :sessions, query) do
+  def select_dimension(q, key, "time:hour", :sessions, query) when query.smear_session_metrics do
     # :TRICKY: ClickHouse timeSlots works off of unix epoch and is not
     #   timezone-aware. This means that for e.g. Asia/Katmandu (GMT+5:45)
     #   to work, we divide time into 15-minute buckets and later combine these
@@ -87,7 +87,8 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def select_dimension(q, key, "time:minute", :sessions, query) do
+  def select_dimension(q, key, "time:minute", :sessions, query)
+      when query.smear_session_metrics do
     q
     |> join(:inner, [s], time_slot in time_slots(query, 60),
       as: :time_slot,
@@ -188,6 +189,49 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def select_dimension(q, key, "visit:city_name", _table, _query),
     do: select_merge_as(q, [t], %{key => t.city_name})
+
+  def select_dimension_internal(q, "visit:entry_page") do
+    select_merge_as(q, [t], %{
+      entry_page: fragment("any(?)", field(t, :entry_page))
+    })
+  end
+
+  def select_dimension_internal(q, "visit:entry_page_hostname") do
+    select_merge_as(q, [t], %{
+      entry_page_hostname: fragment("any(?)", field(t, :entry_page_hostname))
+    })
+  end
+
+  def select_dimension_internal(q, "visit:exit_page") do
+    # As exit page changes with every pageview event over the lifetime
+    # of a session, only the most recent value must be considered. 
+    select_merge_as(q, [t], %{
+      exit_page: fragment("argMax(?, ?)", field(t, :exit_page), field(t, :events))
+    })
+  end
+
+  def select_dimension_internal(q, "visit:exit_page_hostname") do
+    select_merge_as(q, [t], %{
+      exit_page_hostname:
+        fragment("argMax(?, ?)", field(t, :exit_page_hostname), field(t, :events))
+    })
+  end
+
+  def select_dimension_internal(q, _dimension), do: q
+
+  def select_dimension_from_join(q, key, "visit:entry_page"),
+    do: select_merge_as(q, [..., t], %{key => t.entry_page})
+
+  def select_dimension_from_join(q, key, "visit:entry_page_hostname"),
+    do: select_merge_as(q, [..., t], %{key => t.entry_page_hostaname})
+
+  def select_dimension_from_join(q, key, "visit:exit_page"),
+    do: select_merge_as(q, [..., t], %{key => t.exit_page})
+
+  def select_dimension_from_join(q, key, "visit:exit_page_hostname"),
+    do: select_merge_as(q, [..., t], %{key => t.exit_page_hostname})
+
+  def select_dimension_from_join(q, _key, _dimension), do: q
 
   def event_metric(:pageviews, _query) do
     wrap_alias([e], %{
@@ -328,31 +372,37 @@ defmodule Plausible.Stats.SQL.Expression do
           ^condition,
           ^condition
         ),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
   def session_metric(:exit_rate, _query) do
     wrap_alias([s], %{
-      __internal_visits: fragment("toUInt32(sum(sign))")
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
+    })
+  end
+
+  def session_metric(:visits, query) when query.smear_session_metrics do
+    wrap_alias([s], %{
+      visits: scale_sample(fragment("uniq(?)", s.session_id))
     })
   end
 
   def session_metric(:visits, _query) do
     wrap_alias([s], %{
-      visits: scale_sample(fragment("sum(?)", s.sign))
+      visits: scale_sample(fragment("greatest(sum(?), 0)", s.sign))
     })
   end
 
   def session_metric(:pageviews, _query) do
     wrap_alias([s], %{
-      pageviews: scale_sample(fragment("sum(? * ?)", s.sign, s.pageviews))
+      pageviews: scale_sample(fragment("greatest(sum(? * ?), 0)", s.sign, s.pageviews))
     })
   end
 
   def session_metric(:events, _query) do
     wrap_alias([s], %{
-      events: scale_sample(fragment("sum(? * ?)", s.sign, s.events))
+      events: scale_sample(fragment("greatest(sum(? * ?), 0)", s.sign, s.events))
     })
   end
 
@@ -365,8 +415,8 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:visit_duration, _query) do
     wrap_alias([], %{
       visit_duration:
-        fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+        fragment("toUInt32(greatest(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0), 0))"),
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
@@ -374,12 +424,12 @@ defmodule Plausible.Stats.SQL.Expression do
     wrap_alias([s], %{
       views_per_visit:
         fragment(
-          "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
+          "greatest(ifNotFinite(round(sum(? * ?) / sum(?), 2), 0), 0)",
           s.sign,
           s.pageviews,
           s.sign
         ),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 

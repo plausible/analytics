@@ -21,14 +21,13 @@ defmodule Plausible.Ingestion.Event do
             salts: nil,
             changeset: nil
 
-  @verification_user_agent Plausible.Verification.user_agent()
-
   @type drop_reason() ::
           :bot
           | :spam_referrer
           | GateKeeper.policy()
           | :invalid
           | :dc_ip
+          | :threat_ip
           | :site_ip_blocklist
           | :site_country_blocklist
           | :site_page_blocklist
@@ -36,6 +35,9 @@ defmodule Plausible.Ingestion.Event do
           | :verification_agent
           | :lock_timeout
           | :no_session_for_engagement
+          | :persist_timeout
+          | :persist_error
+          | :persist_decode_error
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -129,6 +131,7 @@ defmodule Plausible.Ingestion.Event do
     [
       drop_verification_agent: &drop_verification_agent/2,
       drop_datacenter_ip: &drop_datacenter_ip/2,
+      drop_threat_ip: &drop_threat_ip/2,
       drop_shield_rule_hostname: &drop_shield_rule_hostname/2,
       drop_shield_rule_page: &drop_shield_rule_page/2,
       drop_shield_rule_ip: &drop_shield_rule_ip/2,
@@ -143,8 +146,7 @@ defmodule Plausible.Ingestion.Event do
       put_salts: &put_salts/2,
       put_user_id: &put_user_id/2,
       validate_clickhouse_event: &validate_clickhouse_event/2,
-      register_session: &register_session/2,
-      write_to_buffer: &write_to_buffer/2
+      register_session: &register_session/2
     ]
   end
 
@@ -191,20 +193,36 @@ defmodule Plausible.Ingestion.Event do
     struct!(event, clickhouse_session_attrs: Map.merge(event.clickhouse_session_attrs, attrs))
   end
 
-  defp drop_verification_agent(%__MODULE__{} = event, _context) do
-    case event.request.user_agent do
-      @verification_user_agent ->
-        drop(event, :verification_agent)
+  on_ee do
+    @verification_user_agent Plausible.InstallationSupport.user_agent()
 
-      _ ->
-        event
+    defp drop_verification_agent(%__MODULE__{} = event, _context) do
+      case event.request.user_agent do
+        @verification_user_agent ->
+          drop(event, :verification_agent)
+
+        _ ->
+          event
+      end
     end
+  else
+    defp drop_verification_agent(%__MODULE__{} = event, _context), do: event
   end
 
   defp drop_datacenter_ip(%__MODULE__{} = event, _context) do
     case event.request.ip_classification do
       "dc_ip" ->
         drop(event, :dc_ip)
+
+      _any ->
+        event
+    end
+  end
+
+  defp drop_threat_ip(%__MODULE__{} = event, _context) do
+    case event.request.ip_classification do
+      "threat_ip" ->
+        drop(event, :threat_ip)
 
       _any ->
         event
@@ -381,8 +399,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp register_session(%__MODULE__{} = event, context) do
-    write_buffer_insert =
-      Keyword.get(context, :session_write_buffer_insert, &Plausible.Session.WriteBuffer.insert/1)
+    persistor_opts = Keyword.get(context, :persistor_opts, [])
 
     previous_user_id =
       generate_user_id(
@@ -392,33 +409,14 @@ defmodule Plausible.Ingestion.Event do
         event.salts.previous
       )
 
-    session_result =
-      Plausible.Session.CacheStore.on_event(
-        event.clickhouse_event,
-        event.clickhouse_session_attrs,
-        previous_user_id,
-        buffer_insert: write_buffer_insert
-      )
+    case Plausible.Ingestion.Persistor.persist_event(event, previous_user_id, persistor_opts) do
+      {:ok, event} ->
+        emit_telemetry_buffered(event)
+        event
 
-    case session_result do
-      {:ok, :no_session_for_engagement} ->
-        drop(event, :no_session_for_engagement)
-
-      {:error, :timeout} ->
-        drop(event, :lock_timeout)
-
-      {:ok, session} ->
-        %{
-          event
-          | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
-        }
+      {:error, reason} ->
+        drop(event, reason)
     end
-  end
-
-  defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event, _context) do
-    {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
-    emit_telemetry_buffered(event)
-    event
   end
 
   @click_id_params ["gclid", "gbraid", "wbraid", "msclkid", "fbclid", "twclid"]

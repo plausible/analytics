@@ -32,9 +32,10 @@ const TabButtonText = ({
   active: boolean
 }) => (
   <span
-    className={classNames('truncate text-left', {
-      'hover:text-indigo-600 cursor-pointer': !active,
-      'text-indigo-700 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-700 dark:decoration-indigo-500':
+    className={classNames('truncate text-left transition-colors duration-150', {
+      'hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer':
+        !active,
+      'text-indigo-600 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-600 dark:decoration-indigo-500':
         active
     })}
   >
@@ -78,7 +79,7 @@ export const DropdownTabButton = ({
         <>
           <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
           <Popover.Button
-            className="inline-flex justify-between rounded-sm"
+            className="inline-flex justify-between rounded-xs"
             ref={dropdownButtonRef}
           >
             <TabButtonText active={active}>{children}</TabButtonText>
@@ -144,12 +145,7 @@ const Items = ({
     'w-full text-left',
     popover.items.classNames.navigationLink,
     popover.items.classNames.selectedOption,
-    popover.items.classNames.hoverLink,
-    {
-      [popover.items.classNames.roundedStart]: !searchable || !showSearch
-      // when the menu is not searchable, the first item needs rounded top
-    },
-    popover.items.classNames.roundedEnd
+    popover.items.classNames.hoverLink
   )
 
   return (

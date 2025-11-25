@@ -21,6 +21,23 @@ defmodule Plausible.Teams.Team do
   @trial_accept_traffic_until_offset_days 14
   @subscription_accept_traffic_until_offset_days 30
 
+  on_ee do
+    @derive {Plausible.Audit.Encoder,
+             only: [
+               :id,
+               :identifier,
+               :name,
+               :trial_expiry_date,
+               :accept_traffic_until,
+               :allow_next_upgrade_override,
+               :locked,
+               :setup_complete,
+               :setup_at,
+               :hourly_api_request_limit,
+               :policy
+             ]}
+  end
+
   schema "teams" do
     field :identifier, Ecto.UUID
     field :name, :string
@@ -38,10 +55,8 @@ defmodule Plausible.Teams.Team do
     # Field for purely informational purposes in CRM context
     field :notes, :string
 
-    on_ee do
-      # Embed for storing team-wide policies
-      embeds_one :policy, Plausible.Teams.Policy, on_replace: :update, defaults_to_struct: true
-    end
+    # Embed for storing team-wide policies
+    embeds_one :policy, Plausible.Teams.Policy, on_replace: :update, defaults_to_struct: true
 
     embeds_one :grace_period, Plausible.Teams.GracePeriod, on_replace: :update
 
@@ -78,6 +93,7 @@ defmodule Plausible.Teams.Team do
       :allow_next_upgrade_override,
       :accept_traffic_until
     ])
+    |> maybe_bump_accept_traffic_until()
   end
 
   def changeset(team \\ %__MODULE__{}, attrs \\ %{}, today \\ Date.utc_today()) do

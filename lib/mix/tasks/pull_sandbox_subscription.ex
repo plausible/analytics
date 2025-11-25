@@ -58,7 +58,7 @@ defmodule Mix.Tasks.PullSandboxSubscription do
           Subscription.changeset(%Subscription{}, subscription)
           |> Repo.insert!()
 
-          Logger.info("Subscription created for user #{user.id} (#{user.email})")
+          Logger.notice("Subscription created for user #{user.id} (#{user.email})")
         else
           Logger.error(body["error"])
         end

@@ -2,36 +2,32 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   @moduledoc """
   Custom plan price estimation
   """
-  @spec estimate(
-          String.t(),
-          pos_integer(),
-          pos_integer(),
-          pos_integer(),
-          pos_integer(),
-          list(String.t())
-        ) :: Decimal.t()
-  def estimate(
-        billing_interval,
-        pageviews_per_month,
-        sites_limit,
-        team_members_limit,
-        api_calls_limit,
-        features
-      ) do
+  @spec estimate(Keyword.t()) :: Decimal.t()
+  def estimate(basis) do
+    basis =
+      Keyword.validate!(basis, [
+        :billing_interval,
+        :pageviews_per_month,
+        :sites_limit,
+        :team_members_limit,
+        :api_calls_limit,
+        :features,
+        :managed_proxy_price_modifier
+      ])
+
     pv_rate =
-      pv_rate(pageviews_per_month)
+      pv_rate(basis[:pageviews_per_month])
 
     sites_rate =
-      sites_rate(sites_limit)
+      sites_rate(basis[:sites_limit])
 
-    team_members_rate =
-      team_members_rate(team_members_limit)
+    team_members_rate = team_members_rate(basis[:team_members_limit])
 
     api_calls_rate =
-      api_calls_rate(api_calls_limit)
+      api_calls_rate(basis[:api_calls_limit])
 
     features_rate =
-      features_rate(features)
+      features_rate(basis[:features])
 
     cost_per_month =
       Decimal.from_float(
@@ -39,16 +35,20 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
            sites_rate +
            team_members_rate +
            api_calls_rate +
-           features_rate) * 1.0
+           features_rate + managed_proxy_price_modifier(basis[:managed_proxy_price_modifier])) *
+          1.0
       )
       |> Decimal.round(2)
 
-    if billing_interval == "monthly" do
+    if basis[:billing_interval] == "monthly" do
       cost_per_month
     else
       cost_per_month |> Decimal.mult(10) |> Decimal.round(2)
     end
   end
+
+  def managed_proxy_price_modifier(true), do: 199.0
+  def managed_proxy_price_modifier(_), do: 0
 
   def pv_rate(pvs) when pvs <= 10_000, do: 19
   def pv_rate(pvs) when pvs <= 100_000, do: 39
@@ -71,13 +71,20 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def sites_rate(n) when n <= 50, do: 0
   def sites_rate(n), do: n * 0.1
 
-  def team_members_rate(n) when n > 10, do: (n - 10) * 5
+  def team_members_rate(n) when n > 10, do: (n - 10) * 15
   def team_members_rate(_), do: 0
 
   def api_calls_rate(n) when n <= 600, do: 0
   def api_calls_rate(n) when n > 600, do: round(n / 1_000) * 100
 
-  def features_rate(f) do
-    if "sites_api" in f, do: 99, else: 0
+  @feature_rates %{
+    "sites_api" => 99,
+    "sso" => 299
+  }
+
+  def features_rate(features) do
+    features
+    |> Enum.map(&Map.get(@feature_rates, &1, 0))
+    |> Enum.sum()
   end
 end

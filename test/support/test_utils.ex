@@ -75,7 +75,7 @@ defmodule Plausible.TestUtils do
       Factory.insert(:site_import,
         site: site,
         start_date: ~D[2005-01-01],
-        end_date: Timex.today(),
+        end_date: Date.utc_today(),
         source: :universal_analytics,
         legacy: opts[:create_legacy_import?] == true
       )
@@ -121,8 +121,8 @@ defmodule Plausible.TestUtils do
       {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
     end
 
-    def provision_sso_user(%{user: user}) do
-      identity = new_identity(user.name, user.email)
+    def provision_sso_user(%{user: user, sso_integration: integration}) do
+      identity = new_identity(user.name, user.email, integration)
       {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
       {:ok, user: sso_user}
@@ -222,7 +222,7 @@ defmodule Plausible.TestUtils do
 
   def relative_time(shifts) do
     NaiveDateTime.utc_now()
-    |> Timex.shift(shifts)
+    |> NaiveDateTime.shift(shifts)
     |> NaiveDateTime.truncate(:second)
   end
 
@@ -265,6 +265,10 @@ defmodule Plausible.TestUtils do
 
   def random_ip() do
     Enum.map_join(1..4, ".", fn _ -> Enum.random(1..254) end)
+  end
+
+  def htmlize_quotes(string) do
+    String.replace(string, "'", "&#39;")
   end
 
   def minio_running? do
@@ -360,9 +364,10 @@ defmodule Plausible.TestUtils do
   end
 
   on_ee do
-    def new_identity(name, email, id \\ Ecto.UUID.generate()) do
+    def new_identity(name, email, integration, id \\ Ecto.UUID.generate()) do
       %Plausible.Auth.SSO.Identity{
         id: id,
+        integration_id: integration.identifier,
         name: name,
         email: email,
         expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)

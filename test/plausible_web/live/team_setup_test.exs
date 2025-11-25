@@ -1,10 +1,8 @@
 defmodule PlausibleWeb.Live.TeamSetupTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
   use Bamboo.Test, shared: true
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Teams
   alias Plausible.Repo
@@ -35,9 +33,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, _lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "Jane Smith's Team"
+               "Jane Smith's team"
 
-      assert Repo.reload!(team).name == "Jane Smith's Team"
+      assert Repo.reload!(team).name == "Jane Smith's team"
     end
 
     test "renames even if team already has non-default name", %{conn: conn, team: team} do
@@ -46,9 +44,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, _lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "Jane Smith's Team"
+               "Jane Smith's team"
 
-      assert Repo.reload!(team).name == "Jane Smith's Team"
+      assert Repo.reload!(team).name == "Jane Smith's team"
     end
 
     test "renders form", %{conn: conn} do
@@ -75,7 +73,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "#{user.name}'s Team"
+               "#{user.name}'s team"
 
       type_into_input(lv, "team[name]", "Team Name 1")
       _ = render(lv)
@@ -93,10 +91,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       {:ok, _lv, html} = live(conn, @url)
 
-      assert class_of_element(html, "#feature-gate-inner-block-container") =~
-               "pointer-events-none"
-
-      assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur-[6px]"
+      assert element_exists?(html, "#feature-gate-inner-block-container")
+      assert element_exists?(html, "#feature-gate-overlay")
+      assert text_of_element(html, "#feature-gate-overlay") =~ "Upgrade to unlock"
     end
   end
 
@@ -117,7 +114,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "new@example.com"
       assert member_row1 =~ "Invited User"
-      assert member_row1 =~ "Invitation Pending"
+      assert member_row1 =~ "Invitation pending"
 
       member_row2 = find(html, "#{member_el()}:nth-of-type(2)") |> text()
       assert member_row2 =~ "#{user.name}"
@@ -196,14 +193,14 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert length(find(html, member_el())) == 1
+      assert elem_count(html, member_el()) == 1
 
       assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
 
       change_role(lv, 1, "viewer", guest_el())
       html = render(lv)
 
-      assert length(find(html, member_el())) == 2
+      assert elem_count(html, member_el()) == 2
       refute element_exists?(html, "#guest-list")
 
       save_layout(lv)
@@ -215,7 +212,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
 
     @tag :ee_only
-    test "fails to save layout with limits breached", %{conn: conn} do
+    test "fails to save layout with limits breached", %{conn: conn, team: team} do
+      insert(:growth_subscription, team: team)
+
       lv = get_child_lv(conn)
       html = render(lv)
       refute attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
@@ -261,8 +260,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = lv |> render()
 
-      assert [_ | _] = find(html, "#{member_el()}:nth-of-type(1) a")
-      assert find(html, "#{member_el()}:nth-of-type(2) a") == []
+      assert element_exists?(html, "#{member_el()}:nth-of-type(1) a")
+      refute element_exists?(html, "#{member_el()}:nth-of-type(2) a")
     end
 
     test "allows removing any type of entry", %{
@@ -286,8 +285,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert html |> find(member_el()) |> Enum.count() == 4
-      assert html |> find(guest_el()) |> Enum.count() == 1
+      assert elem_count(html, member_el()) == 4
+      assert elem_count(html, guest_el()) == 1
 
       pending = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       sent = find(html, "#{member_el()}:nth-of-type(2)") |> text()
@@ -296,10 +295,10 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert pending =~ "Invitation Pending"
-      assert sent =~ "Invitation Sent"
+      assert pending =~ "Invitation pending"
+      assert sent =~ "Invitation sent"
       assert owner =~ "You"
-      assert admin =~ "Team Member"
+      assert admin != ""
       assert guest_member =~ "Guest"
 
       remove_member(lv, 1)
@@ -313,9 +312,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation Pending"
-      refute html =~ "Invitation Sent"
-      refute html =~ "Team Member"
+      refute html =~ "Invitation pending"
+      refute html =~ "Invitation sent"
+      refute html =~ "Team member"
       refute html =~ "Guest"
 
       save_layout(lv)
@@ -349,7 +348,6 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert find(html, "#{member_el()}:nth-of-type(1)") |> text() =~ "Team Member"
       assert find(html, "#{member_el()}:nth-of-type(2)") |> text() =~ "You"
 
       save_layout(lv)

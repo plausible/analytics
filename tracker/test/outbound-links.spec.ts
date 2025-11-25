@@ -3,7 +3,12 @@ import {
   mockManyRequests,
   resolveWithTimestamps
 } from './support/mock-many-requests'
-import { expectPlausibleInAction, switchByMode } from './support/test-utils'
+import {
+  expectPlausibleInAction,
+  isEngagementEvent,
+  isPageviewEvent,
+  switchByMode
+} from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { ScriptConfig } from './support/types'
 import { LOCAL_SERVER_ADDR } from './support/server'
@@ -12,6 +17,104 @@ const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
   endpoint: `${LOCAL_SERVER_ADDR}/api/event`,
   captureOnLocalhost: true
+}
+
+for (const mode of ['web', 'esm']) {
+  test.describe(`respects "outboundLinks" v2 config option (${mode})`, () => {
+    test('does not track outbound links when "outboundLinks: false"', async ({
+      page
+    }, { testId }) => {
+      const outboundUrl = 'https://other.example.com/target'
+      const outboundMock = await mockManyRequests({
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: OTHER_PAGE_BODY
+        },
+        awaitedRequestCount: 1
+      })
+      const config = { ...DEFAULT_CONFIG, outboundLinks: false }
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: config,
+            esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
+              config
+            )})</script>`
+          },
+          mode
+        ),
+        bodyContent: /* HTML */ `<a href="${outboundUrl}">➡️</a>`
+      })
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await page.goto(url)
+          await page.click('a')
+        },
+        expectedRequests: [
+          {
+            n: 'pageview',
+            d: DEFAULT_CONFIG.domain,
+            u: `${LOCAL_SERVER_ADDR}${url}`
+          }
+        ],
+        refutedRequests: [{ n: 'Outbound Link: Click' }],
+        shouldIgnoreRequest: isEngagementEvent
+      })
+      await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
+    })
+
+    test('tracks outbound links when "outboundLinks: true"', async ({ page }, {
+      testId
+    }) => {
+      const outboundUrl = 'https://other.example.com/target'
+      const outboundMock = await mockManyRequests({
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: OTHER_PAGE_BODY
+        },
+        awaitedRequestCount: 1
+      })
+      const config = { ...DEFAULT_CONFIG, outboundLinks: true }
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: config,
+            esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
+              config
+            )})</script>`
+          },
+          mode
+        ),
+        bodyContent: /* HTML */ `<a href="${outboundUrl}">➡️</a>`
+      })
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await page.goto(url)
+          await page.click('a')
+        },
+        expectedRequests: [
+          {
+            n: 'pageview',
+            d: DEFAULT_CONFIG.domain,
+            u: `${LOCAL_SERVER_ADDR}${url}`
+          },
+          { n: 'Outbound Link: Click', p: { url: outboundUrl } }
+        ],
+        shouldIgnoreRequest: isEngagementEvent
+      })
+      await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
+    })
+  })
 }
 
 for (const mode of ['legacy', 'web'])
@@ -48,7 +151,7 @@ for (const mode of ['legacy', 'web'])
           fulfill: {
             status: 200,
             contentType: 'text/html',
-            body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+            body: OTHER_PAGE_BODY
           },
           awaitedRequestCount: 1
         })
@@ -62,11 +165,11 @@ for (const mode of ['legacy', 'web'])
                 outboundLinks: true
               },
               legacy:
-                '<script defer src="/tracker/js/plausible.local.manual.outbound-links.js"></script>'
+                '<script async src="/tracker/js/plausible.local.manual.outbound-links.js"></script>'
             },
             mode
           ),
-          bodyContent: `<a href="${outboundUrl}"><h1>➡️</h1></a>`
+          bodyContent: /* HTML */ `<a href="${outboundUrl}"><h1>➡️</h1></a>`
         })
         await page.goto(url)
 
@@ -98,7 +201,7 @@ for (const mode of ['legacy', 'web'])
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: OTHER_PAGE_BODY
         },
         awaitedRequestCount: 1
       })
@@ -112,11 +215,11 @@ for (const mode of ['legacy', 'web'])
               autoCapturePageviews: false
             },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.manual.outbound-links.js"></script>'
+              '<script async src="/tracker/js/plausible.local.manual.outbound-links.js"></script>'
           },
           mode
         ),
-        bodyContent: `<a href="${outboundUrl}">>➡️</a>`
+        bodyContent: /* HTML */ `<a href="${outboundUrl}">>➡️</a>`
       })
       await page.goto(url)
       await page.click('a')
@@ -138,6 +241,55 @@ for (const mode of ['legacy', 'web'])
           }
         })
       ])
+    })
+
+    test('limitation: does not track outbound links within svg elements', async ({
+      page
+    }, { testId }) => {
+      const outboundUrl = 'https://other.example.com/target'
+      const outboundMock = await mockManyRequests({
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: OTHER_PAGE_BODY
+        },
+        awaitedRequestCount: 1
+      })
+
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, outboundLinks: true },
+            legacy:
+              '<script async src="/tracker/js/plausible.local.outbound-links.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: /* HTML */ `
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <a href="${outboundUrl}">
+              <circle cx="50" cy="50" r="50" />
+            </a>
+          </svg>
+        `
+      })
+
+      const pageErrors: Error[] = []
+      page.on('pageerror', (err) => pageErrors.push(err))
+
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('a'),
+        refutedRequests: [{ n: 'Outbound Link: Click' }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+
+      expect(pageErrors).toHaveLength(0)
+      await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
     })
   })
 
@@ -188,7 +340,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: OTHER_PAGE_BODY
         },
         awaitedRequestCount: 2,
         mockRequestTimeout: 2000
@@ -206,8 +358,10 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       const { url } = await initializePageDynamically(page, {
         testId,
         scriptConfig:
-          '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-        bodyContent: `<a ${linkAttributes} href="${outboundUrl}"><h1>➡️</h1></a>`
+          '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
+        bodyContent: /* HTML */ `<a ${linkAttributes} href="${outboundUrl}"
+          ><h1>➡️</h1></a
+        >`
       })
       await page.goto(url)
 
@@ -242,15 +396,15 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       fulfill: {
         status: 200,
         contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        body: OTHER_PAGE_BODY
       },
       awaitedRequestCount: 1
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-      bodyContent: `<a href="${outboundUrl}">📥</a>`
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
+      bodyContent: /* HTML */ `<a href="${outboundUrl}">📥</a>`
     })
     await page.goto(url)
 
@@ -277,7 +431,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     ])
   })
 
-  test('if the tracking requests delays navigation for more than 5s, it navigates anyway, without waiting for the request to resolve ', async ({
+  test('if the tracking requests delays navigation for more than 5s, it navigates anyway, without waiting for the request to resolve', async ({
     page
   }, { testId }) => {
     test.setTimeout(20000)
@@ -294,15 +448,15 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       fulfill: {
         status: 200,
         contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        body: OTHER_PAGE_BODY
       },
       awaitedRequestCount: 1
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-      bodyContent: `<a href="${outboundUrl}">➡️</a>`
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
+      bodyContent: /* HTML */ `<a href="${outboundUrl}">➡️</a>`
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(outboundUrl, {
@@ -313,4 +467,68 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
   })
+
+  test(`limitation: does not track outbound links within svg elements, but follows link properly`, async ({
+    page
+  }, { testId }) => {
+    const outboundUrl = 'https://other.example.com/target'
+    const outboundMockOptions = {
+      page,
+      path: outboundUrl,
+      fulfill: {
+        status: 200,
+        contentType: 'text/html',
+        body: OTHER_PAGE_BODY
+      },
+      awaitedRequestCount: 2,
+      mockRequestTimeout: 2000
+    }
+
+    const outboundMockForOtherPages = await mockManyRequests({
+      ...outboundMockOptions,
+      scopeMockToPage: false
+    })
+    const outboundMockForSamePage = await mockManyRequests({
+      ...outboundMockOptions,
+      scopeMockToPage: true
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig:
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
+      bodyContent: /* HTML */ `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <a href="${outboundUrl}">
+            <circle cx="50" cy="50" r="50" />
+          </a>
+        </svg>
+      `
+    })
+    await page.goto(url)
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('a'),
+      refutedRequests: [{ n: 'Outbound Link: Click' }]
+    })
+
+    const [requestsOnOtherPages, requestsOnSamePage] = await Promise.all([
+      outboundMockForOtherPages.getRequestList().then((d) => d.length),
+      outboundMockForSamePage.getRequestList().then((d) => d.length)
+    ])
+    expect({ requestsOnOtherPages, requestsOnSamePage }).toEqual({
+      requestsOnOtherPages: 0,
+      requestsOnSamePage: 1
+    })
+  })
 })
+
+const OTHER_PAGE_BODY = /* HTML */ `<!DOCTYPE html>
+  <html>
+    <head>
+      <title>other page</title>
+    </head>
+    <body>
+      other page
+    </body>
+  </html>`

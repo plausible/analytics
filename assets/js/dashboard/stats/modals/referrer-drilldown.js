@@ -9,15 +9,19 @@ import {
 import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
-import { addFilter } from '../../query'
+import { addFilter, revenueAvailable } from '../../query'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { SortDirection } from '../../hooks/use-order-by'
+import { SourceFavicon } from '../sources/source-favicon'
 
 function ReferrerDrilldownModal() {
   const { referrer } = useParams()
   const { query } = useQueryContext()
   const site = useSiteContext()
+
+  /*global BUILD_EXTRA*/
+  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
     title: 'Referrer Drilldown',
@@ -60,8 +64,10 @@ function ReferrerDrilldownModal() {
           renderLabel: (_query) => 'Conversions',
           width: 'w-28'
         }),
-        metrics.createConversionRate()
-      ]
+        metrics.createConversionRate(),
+        showRevenueMetrics && metrics.createTotalRevenue(),
+        showRevenueMetrics && metrics.createAverageRevenue()
+      ].filter((metric) => !!metric)
     }
 
     if (isRealTimeDashboard(query)) {
@@ -82,10 +88,9 @@ function ReferrerDrilldownModal() {
 
   const renderIcon = useCallback((listItem) => {
     return (
-      <img
-        alt=""
-        src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        className="h-4 w-4 mr-2 align-middle inline"
+      <SourceFavicon
+        name={listItem.name}
+        className="size-4 mr-2 align-middle inline"
       />
     )
   }, [])

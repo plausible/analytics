@@ -4,13 +4,13 @@
       <a id="invoices">Invoices</a>
     </:title>
     <:subtitle>
-      Download your invoices
+      Download your invoices.
     </:subtitle>
     <%= case @invoices do %>
       <% {:error, :no_invoices} -> %>
         <p class="mt-12 mb-8 text-center text-sm">
           <span>
-            Your invoice will be created once you upgrade to a subscription
+            Your invoice will be created once you upgrade to a subscription.
           </span>
         </p>
       <% {:error, :request_failed} -> %>
@@ -43,8 +43,13 @@
             </:tbody>
             <tr :if={length(invoice_list) > 12}>
               <td colspan="3" class="text-center pt-8 pb-4">
-                <.button_link href={} theme="bright" x-on:click="showAll = true" x-show="!showAll">
-                  Show More
+                <.button_link
+                  href={}
+                  theme="secondary"
+                  x-on:click="showAll = true"
+                  x-show="!showAll"
+                >
+                  Show more
                 </.button_link>
               </td>
             </tr>

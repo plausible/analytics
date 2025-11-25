@@ -25,6 +25,8 @@ defmodule Plausible.Stats.QueryOptimizer do
     3. Updating "time" dimension in order_by to the right granularity
     4. Updates event:hostname filters to also apply on visit level for sane results.
     5. Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.
+    6. Trims the date range to the current time if query.include.trim_relative_date_range is true.
+    7. Sets the join_type for the query based on the query.
 
   """
   def optimize(query) do
@@ -39,18 +41,12 @@ defmodule Plausible.Stats.QueryOptimizer do
   for sessions.
   """
   def split(query) do
-    {event_metrics, sessions_metrics, _other_metrics} =
-      query.metrics
-      |> Util.maybe_add_visitors_metric()
-      |> TableDecider.partition_metrics(query)
-
-    {
-      Query.set(query,
-        metrics: event_metrics,
-        include_imported: query.include_imported
-      ),
-      split_sessions_query(query, sessions_metrics)
-    }
+    query.metrics
+    |> Util.maybe_add_visitors_metric()
+    |> TableDecider.partition_metrics(query)
+    |> Enum.map(fn {table_type, metrics} ->
+      build_split_query(table_type, metrics, query)
+    end)
   end
 
   defp pipeline() do
@@ -60,7 +56,9 @@ defmodule Plausible.Stats.QueryOptimizer do
       &update_time_in_order_by/1,
       &extend_hostname_filters_to_visit/1,
       &remove_revenue_metrics_if_unavailable/1,
-      &set_time_on_page_data/1
+      &set_time_on_page_data/1,
+      &trim_relative_date_range/1,
+      &set_sql_join_type/1
     ]
   end
 
@@ -97,7 +95,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     cond do
       DateTime.diff(last, first, :hour) <= 48 -> "time:hour"
       DateTime.diff(last, first, :day) <= 40 -> "time:day"
-      Timex.diff(last, first, :weeks) <= 52 -> "time:week"
+      Plausible.Times.diff(last, first, :week) <= 52 -> "time:week"
       true -> "time:month"
     end
   end
@@ -160,7 +158,17 @@ defmodule Plausible.Stats.QueryOptimizer do
     Enum.find(query.dimensions, &Time.time_dimension?/1)
   end
 
-  defp split_sessions_query(query, session_metrics) do
+  defp build_split_query(:events, metrics, query) do
+    {
+      :events,
+      Query.set(query,
+        metrics: metrics,
+        include_imported: query.include_imported
+      )
+    }
+  end
+
+  defp build_split_query(:sessions, metrics, query) do
     dimensions =
       query.dimensions
       |> Enum.map(fn
@@ -177,12 +185,21 @@ defmodule Plausible.Stats.QueryOptimizer do
         query.filters
       end
 
-    Query.set(query,
-      filters: filters,
-      metrics: session_metrics,
-      dimensions: dimensions,
-      include_imported: query.include_imported
-    )
+    {
+      :sessions,
+      Query.set(query,
+        filters: filters,
+        metrics: metrics,
+        dimensions: dimensions,
+        include_imported: query.include_imported
+      )
+    }
+  end
+
+  defp build_split_query(:sessions_smeared, metrics, query) do
+    {_, query} = build_split_query(:sessions, metrics, query)
+
+    {:sessions, Query.set(query, smear_session_metrics: true)}
   end
 
   on_ee do
@@ -229,6 +246,87 @@ defmodule Plausible.Stats.QueryOptimizer do
               cutoff: nil
             })
         )
+    end
+  end
+
+  defp trim_relative_date_range(%Query{include: %{trim_relative_date_range: true}} = query) do
+    # This is here to trim future bucket labels on the main graph
+    if should_trim_date_range?(query) do
+      trimmed_range = trim_date_range_to_now(query)
+      %Query{query | utc_time_range: trimmed_range}
+    else
+      query
+    end
+  end
+
+  defp trim_relative_date_range(query), do: query
+
+  defp should_trim_date_range?(%Query{input_date_range: "month"} = query) do
+    today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+    date_range = Query.date_range(query)
+
+    current_month_start = Date.beginning_of_month(today)
+    current_month_end = Date.end_of_month(today)
+
+    date_range.first == current_month_start and date_range.last == current_month_end
+  end
+
+  defp should_trim_date_range?(%Query{input_date_range: "year"} = query) do
+    today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+    date_range = Query.date_range(query)
+
+    current_year_start = Date.new!(today.year, 1, 1)
+    current_year_end = Date.new!(today.year, 12, 31)
+
+    date_range.first == current_year_start and date_range.last == current_year_end
+  end
+
+  defp should_trim_date_range?(%Query{input_date_range: "day"} = query) do
+    today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+    date_range = Query.date_range(query)
+
+    is_nil(query.include.comparisons) and date_range.first == today and date_range.last == today
+  end
+
+  defp should_trim_date_range?(_query), do: false
+
+  defp trim_date_range_to_now(query) do
+    if query.input_date_range == "day" do
+      time_range = query.utc_time_range |> DateTimeRange.to_timezone(query.timezone)
+
+      current_hour =
+        query.now
+        |> DateTime.shift_zone!(query.timezone)
+        |> Map.merge(%{minute: 59, second: 59, millisecond: 999})
+
+      time_range.first
+      |> DateTimeRange.new!(current_hour)
+      |> DateTimeRange.to_timezone("Etc/UTC")
+    else
+      date_range = Query.date_range(query)
+      today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+
+      trimmed_to_date =
+        Enum.min([date_range.last, today], Date)
+
+      date_range.first
+      |> DateTimeRange.new!(trimmed_to_date, query.timezone)
+      |> DateTimeRange.to_timezone("Etc/UTC")
+    end
+  end
+
+  # Normally we can always LEFT JOIN as this is more performant and tables
+  # are expected to contain the same dimensions.
+
+  # The only exception is using the "time:minute"/"time:hour" dimension where the sessions
+  # subquery might return more rows than the events one. That's because we're
+  # counting sessions in all time buckets they were active in even if no event
+  # occurred during that particular bucket.
+  defp set_sql_join_type(query) do
+    if "time:minute" in query.dimensions or "time:hour" in query.dimensions do
+      Query.set(query, sql_join_type: :full)
+    else
+      query
     end
   end
 end

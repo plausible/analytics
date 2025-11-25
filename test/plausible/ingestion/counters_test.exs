@@ -1,6 +1,5 @@
 defmodule Plausible.Ingestion.CountersTest do
   use Plausible.DataCase, async: false
-  use Plausible.Teams.Test
   import Ecto.Query
 
   alias Plausible.Ingestion.Counters
@@ -121,7 +120,7 @@ defmodule Plausible.Ingestion.CountersTest do
     }
 
     conn = build_conn(:post, "/api/event", payload)
-    assert {:ok, request} = Request.build(conn, at)
+    assert {:ok, request, _conn} = Request.build(conn, at)
     assert {:ok, %{dropped: [dropped]}} = Event.build_and_buffer(request)
     {:ok, dropped}
   end
@@ -139,7 +138,7 @@ defmodule Plausible.Ingestion.CountersTest do
     }
 
     conn = build_conn(:post, "/api/event", payload)
-    assert {:ok, request} = Request.build(conn, at)
+    assert {:ok, request, _conn} = Request.build(conn, at)
     assert {:ok, %{buffered: [buffered]}} = Event.build_and_buffer(request)
 
     {:ok, buffered}

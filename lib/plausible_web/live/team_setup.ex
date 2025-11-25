@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         %Teams.Team{} ->
           team_name_form =
             current_team
-            |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s Team"})
+            |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s team"})
             |> Repo.update!()
             |> Teams.Team.name_changeset(%{})
             |> to_form()
@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
       <div class="relative -mt-8 pt-4 pb-8 px-8">
         <PlausibleWeb.Components.Billing.feature_gate
-          current_role={@current_team_role}
+          current_user={@current_user}
           current_team={@current_team}
           locked?={@locked?}
         >
@@ -90,7 +90,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
           >
             <.input
               type="text"
-              placeholder={"#{@current_user.name}'s Team"}
+              placeholder={"#{@current_user.name}'s team"}
               autofocus={not @locked?}
               field={f[:name]}
               label="Name"
@@ -100,7 +100,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
           </.form>
 
           <.label class="mb-2">
-            Team Members
+            Team members
           </.label>
           {live_render(@socket, PlausibleWeb.Live.TeamManagement,
             id: "team-management-setup",

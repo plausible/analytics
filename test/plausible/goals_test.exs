@@ -1,8 +1,8 @@
 defmodule Plausible.GoalsTest do
   use Plausible.DataCase
-  use Plausible
-  use Plausible.Teams.Test
   alias Plausible.Goals
+
+  doctest Plausible.Goals.SystemGoals, import: true
 
   test "create/2 creates goals and trims input" do
     site = new_site()
@@ -159,6 +159,19 @@ defmodule Plausible.GoalsTest do
 
     {:error, :upgrade_required} =
       Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
+  end
+
+  on_ee do
+    test "create/2 returns error when creating a revenue goal for consolidated view" do
+      user = new_user()
+      new_site(owner: user)
+      new_site(owner: user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      site = new_consolidated_view(team)
+
+      {:error, :revenue_goals_unavailable} =
+        Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
+    end
   end
 
   @tag :ee_only

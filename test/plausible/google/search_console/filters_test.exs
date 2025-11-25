@@ -186,6 +186,24 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
            ]
   end
 
+  test "visit:source and visit:channel filters are ignored" do
+    filters = [
+      [:is, "visit:source", ["Google"]],
+      [:is, "visit:channel", ["Organic search"]],
+      [:is, "visit:screen", ["Desktop"]]
+    ]
+
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
+
+    assert transformed == [
+             %{
+               filters: [
+                 %{dimension: "device", operator: "includingRegex", expression: "DESKTOP"}
+               ]
+             }
+           ]
+  end
+
   test "when unsupported filter is included the whole set becomes invalid" do
     filters = [
       [:matches_wildcard, "visit:entry_page", "*web-analytics*"],

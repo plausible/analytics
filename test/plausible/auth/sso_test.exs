@@ -1,10 +1,8 @@
 defmodule Plausible.Auth.SSOTest do
   use Plausible.DataCase, async: true
-  use Plausible
 
   on_ee do
     use Oban.Testing, repo: Plausible.Repo
-    use Plausible.Teams.Test
 
     alias Plausible.Auth
     alias Plausible.Auth.SSO
@@ -19,6 +17,11 @@ defmodule Plausible.Auth.SSOTest do
         assert integration.team_id == team.id
         assert is_binary(integration.identifier)
         assert %SSO.SAMLConfig{} = integration.config
+
+        assert audited_entry("saml_integration_initiated",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
 
       test "does nothing if integration is already initiated" do
@@ -84,6 +87,11 @@ defmodule Plausible.Auth.SSOTest do
 
         assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
                  X509.Certificate.from_pem(@cert_pem)
+
+        assert audited_entry("sso_integration_updated",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
 
       test "updates integration with whitespace around PEM" do
@@ -109,6 +117,49 @@ defmodule Plausible.Auth.SSOTest do
 
         assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
                  X509.Certificate.from_pem(@cert_pem)
+      end
+
+      test "updates integration with PEM missing boundaries" do
+        boundless_pem =
+          "MIIDqjCCApKgAwIBAgIGAZfpTJclMA0GCSqGSIb3DQEBCwUAMIGVMQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzENMAsGA1UECgwET2t0YTEUMBIGA1UECwwLU1NPUHJvdmlkZXIxFjAUBgNVBAMMDXRyaWFsLTU1OTk4NzkxHDAaBgkqhkiG9w0BCQEWDWluZm9Ab2t0YS5jb20wHhcNMjUwNzA4MDkwOTAwWhcNMzUwNzA4MDkxMDAwWjCBlTELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xDTALBgNVBAoMBE9rdGExFDASBgNVBAsMC1NTT1Byb3ZpZGVyMRYwFAYDVQQDDA10cmlhbC01NTk5ODc5MRwwGgYJKoZIhvcNAQkBFg1pbmZvQG9rdGEuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzmF1LGsjEQkdLfCR6epCX5uKaJnowd3ZE8/t+kPiW0TIIvp4a3bH7r+pBbbili7Wz8LRs6C99RmtG4KjfBd6IAS1vYVba1RJ3XkoiIfVeDCP5sXKPyRquNj1/gyZkYxTYZVnh3ibXXUmlIkCDrF0TeO+4VfrWXQlc5/vNz7fbhH3bYCFj8jy3tKqXsE18X5USALRH22K4N2ZcGujNMwxzXIqGkPyPfRpnSY+AS8tGnW36Xn4WnKs9ciAnmTtTMXNrGrc6OLkbAEKLxSegpV9oSugChZ21siJXFf2Xz3jp71C12kbEDCXQ8Xi86iS3PnBYvp2ThT0Qiby1vscdNGaUwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCEbceBacHt0sx6Q0sU68E6CyyEfYVHPUOxLwBq4lrqeh9b0fctNuyFAceJbejIto9sqQ+RQzqob5PGfNpFanPbrcOx5F4NLgS9keR/bJGetSfiQe0nw/2ikNd7O0mWeWo1LvRtTGOAS2o3NTkLv3W1mxCkgjbi24hQs6eR5ARY6//AqYQWwWIDMIZotuIuRh285A8Gn1Vxj6ApWski3jttCLzU7NDJU7I6CXfzbDdEpr9I18CEZ7oOei/61q4wNq/x3CT4TsbDnVLVcYs0qqe/EKwQ6alqkHqlp2zxThOVvMW6tz0X8hNnxrXmmZdp7WF6s/8/Pw9Dq691L0AIKnIL"
+
+        pem = """
+        -----BEGIN CERTIFICATE-----
+        MIIDqjCCApKgAwIBAgIGAZfpTJclMA0GCSqGSIb3DQEBCwUAMIGVMQswCQYDVQQGEwJVUzETMBEG
+        A1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzENMAsGA1UECgwET2t0YTEU
+        MBIGA1UECwwLU1NPUHJvdmlkZXIxFjAUBgNVBAMMDXRyaWFsLTU1OTk4NzkxHDAaBgkqhkiG9w0B
+        CQEWDWluZm9Ab2t0YS5jb20wHhcNMjUwNzA4MDkwOTAwWhcNMzUwNzA4MDkxMDAwWjCBlTELMAkG
+        A1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xDTAL
+        BgNVBAoMBE9rdGExFDASBgNVBAsMC1NTT1Byb3ZpZGVyMRYwFAYDVQQDDA10cmlhbC01NTk5ODc5
+        MRwwGgYJKoZIhvcNAQkBFg1pbmZvQG9rdGEuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+        CgKCAQEAzmF1LGsjEQkdLfCR6epCX5uKaJnowd3ZE8/t+kPiW0TIIvp4a3bH7r+pBbbili7Wz8LR
+        s6C99RmtG4KjfBd6IAS1vYVba1RJ3XkoiIfVeDCP5sXKPyRquNj1/gyZkYxTYZVnh3ibXXUmlIkC
+        DrF0TeO+4VfrWXQlc5/vNz7fbhH3bYCFj8jy3tKqXsE18X5USALRH22K4N2ZcGujNMwxzXIqGkPy
+        PfRpnSY+AS8tGnW36Xn4WnKs9ciAnmTtTMXNrGrc6OLkbAEKLxSegpV9oSugChZ21siJXFf2Xz3j
+        p71C12kbEDCXQ8Xi86iS3PnBYvp2ThT0Qiby1vscdNGaUwIDAQABMA0GCSqGSIb3DQEBCwUAA4IB
+        AQCEbceBacHt0sx6Q0sU68E6CyyEfYVHPUOxLwBq4lrqeh9b0fctNuyFAceJbejIto9sqQ+RQzqo
+        b5PGfNpFanPbrcOx5F4NLgS9keR/bJGetSfiQe0nw/2ikNd7O0mWeWo1LvRtTGOAS2o3NTkLv3W1
+        mxCkgjbi24hQs6eR5ARY6//AqYQWwWIDMIZotuIuRh285A8Gn1Vxj6ApWski3jttCLzU7NDJU7I6
+        CXfzbDdEpr9I18CEZ7oOei/61q4wNq/x3CT4TsbDnVLVcYs0qqe/EKwQ6alqkHqlp2zxThOVvMW6
+        tz0X8hNnxrXmmZdp7WF6s/8/Pw9Dq691L0AIKnIL
+        -----END CERTIFICATE-----
+        """
+
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+
+        assert {:ok, integration} =
+                 SSO.update_integration(integration, %{
+                   idp_signin_url: "https://example.com",
+                   idp_entity_id: "some-entity",
+                   idp_cert_pem: boundless_pem
+                 })
+
+        assert integration.config.idp_signin_url == "https://example.com"
+        assert integration.config.idp_entity_id == "some-entity"
+
+        assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
+                 X509.Certificate.from_pem(pem)
       end
 
       test "optionally accepts metadata" do
@@ -191,6 +242,31 @@ defmodule Plausible.Auth.SSOTest do
                    opts[:validation]
                  end)
       end
+
+      test "returns error on invalid certificate (#2)" do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+
+        invalid_cert = """
+        -----BEGIN CERTIFICATE-----
+        MIIFdTCCA12gAwIBAgIUNcATm3CidmlEMMsZa9KBZpWYCVcwDQYJKoZIhvcNAQEL
+        BQAwYzELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoM
+        """
+
+        assert {:error, changeset} =
+                 SSO.update_integration(integration, %{
+                   idp_signin_url: "https://example.com",
+                   idp_entity_id: "some-entity",
+                   idp_cert_pem: invalid_cert
+                 })
+
+        assert %{
+                 idp_cert_pem: [:cert_pem]
+               } =
+                 Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
+                   opts[:validation]
+                 end)
+      end
     end
 
     describe "provision_user/1" do
@@ -211,7 +287,7 @@ defmodule Plausible.Auth.SSOTest do
         sso_domain: sso_domain,
         team: team
       } do
-        identity = new_identity("Jane Sculley", "jane@" <> domain)
+        identity = new_identity("Jane Sculley", "jane@" <> domain, integration)
 
         assert {:ok, :identity, matched_team, user} = SSO.provision_user(identity)
 
@@ -226,6 +302,22 @@ defmodule Plausible.Auth.SSOTest do
         assert user.email_verified
         assert user.last_sso_login
         assert_team_membership(user, team, :viewer)
+
+        assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
+      end
+
+      test "does not provision a user from identity when identity integration does not match", %{
+        domain: domain
+      } do
+        other_team = new_site().team
+        other_integration = SSO.initiate_saml_integration(other_team)
+        other_domain = "other-example-#{Enum.random(1..10_000)}.com"
+        {:ok, other_sso_domain} = SSO.Domains.add(other_integration, other_domain)
+        _other_sso_domain = SSO.Domains.verify(other_sso_domain, skip_checks?: true)
+
+        identity = new_identity("Jane Sculley", "jane@" <> domain, other_integration)
+
+        assert {:error, :integration_not_found} = SSO.provision_user(identity)
       end
 
       test "provisions SSO user from existing user", %{
@@ -241,7 +333,7 @@ defmodule Plausible.Auth.SSOTest do
         another_team_site = new_site()
         add_guest(another_team_site, user: user, role: :editor)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:ok, :standard, matched_team, sso_user} = SSO.provision_user(identity)
 
@@ -255,6 +347,8 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.sso_domain_id == sso_domain.id
         assert sso_user.email_verified
         assert sso_user.last_sso_login
+
+        assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
       end
 
       test "provisions SSO user from existing user with personal team", %{
@@ -271,7 +365,7 @@ defmodule Plausible.Auth.SSOTest do
         another_team_site = new_site()
         add_guest(another_team_site, user: user, role: :editor)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:ok, :standard, matched_team, sso_user} = SSO.provision_user(identity)
 
@@ -295,7 +389,7 @@ defmodule Plausible.Auth.SSOTest do
       } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         add_member(team, user: user, role: :editor)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
         {:ok, :standard, _team, user} = SSO.provision_user(identity)
 
         assert {:ok, :sso, matched_team, sso_user} = SSO.provision_user(identity)
@@ -309,49 +403,65 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.sso_integration_id == integration.id
         assert sso_user.sso_domain_id == sso_domain.id
         assert sso_user.last_sso_login
+
+        assert audited_entries(2, "sso_user_provisioned",
+                 team_id: team.id,
+                 entity_id: "#{sso_user.id}"
+               )
       end
 
-      test "does not provision user without matching setup integration", %{team: team} do
+      test "does not provision user without matching setup integration", %{
+        integration: integration,
+        team: team
+      } do
         # rogue e-mail
-        identity = new_identity("Rodney Williams", "rodney@example.com")
+        identity = new_identity("Rodney Williams", "rodney@example.com", integration)
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
 
         # member without setup domain
         user = new_user(email: "jane@example.com", name: "Jane Sculley")
         add_member(team, user: user, role: :editor)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
       end
 
-      test "does not provision non-member even if e-mail matches domain", %{domain: domain} do
+      test "does not provision non-member even if e-mail matches domain", %{
+        integration: integration,
+        domain: domain
+      } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         another_team = new_site().team
         add_member(another_team, user: user, role: :editor)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
       end
 
-      test "does not provision guest member", %{team: team, domain: domain} do
+      test "does not provision guest member", %{
+        team: team,
+        domain: domain,
+        integration: integration
+      } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         site = new_site(team: team)
         add_guest(site, user: user, role: :editor)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
       end
 
       test "does not provision when user is member of more than one team", %{
         domain: domain,
-        team: team
+        team: team,
+        integration: integration
       } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         add_member(team, user: user, role: :editor)
         another_team = new_site().team |> Plausible.Teams.complete_setup()
         add_member(another_team, user: user, role: :viewer)
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :multiple_memberships, matched_team, matched_user} =
                  SSO.provision_user(identity)
@@ -362,14 +472,15 @@ defmodule Plausible.Auth.SSOTest do
 
       test "does not provision from existing user with personal team with subscription", %{
         team: team,
-        domain: domain
+        domain: domain,
+        integration: integration
       } do
         user =
           new_user(email: "jane@" <> domain, name: "Jane Sculley") |> subscribe_to_growth_plan()
 
         add_member(team, user: user, role: :editor)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :active_personal_team, matched_team, matched_user} =
                  SSO.provision_user(identity)
@@ -380,7 +491,8 @@ defmodule Plausible.Auth.SSOTest do
 
       test "does not provision from existing user with personal team with site", %{
         team: team,
-        domain: domain
+        domain: domain,
+        integration: integration
       } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
 
@@ -388,7 +500,7 @@ defmodule Plausible.Auth.SSOTest do
 
         add_member(team, user: user, role: :editor)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         assert {:error, :active_personal_team, matched_team, matched_user} =
                  SSO.provision_user(identity)
@@ -399,21 +511,25 @@ defmodule Plausible.Auth.SSOTest do
 
       test "does not provision new SSO user from identity when team is over members limit", %{
         domain: domain,
-        team: team
+        team: team,
+        integration: integration
       } do
+        insert(:growth_subscription, team: team)
+
         add_member(team, role: :viewer)
         add_member(team, role: :viewer)
         add_member(team, role: :viewer)
 
-        identity = new_identity("Jane Sculley", "jane@" <> domain)
+        identity = new_identity("Jane Sculley", "jane@" <> domain, integration)
 
         assert {:error, :over_limit} = SSO.provision_user(identity)
       end
 
       test "does not provision existing SSO user when email domain is not allowlisted", %{
-        domain: domain
+        domain: domain,
+        integration: integration
       } do
-        identity = new_identity("Jane Sculley", "jane@" <> domain)
+        identity = new_identity("Jane Sculley", "jane@" <> domain, integration)
 
         assert {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
@@ -421,6 +537,7 @@ defmodule Plausible.Auth.SSOTest do
           new_identity(
             "Jane Sculley on New Email",
             "jane@new.example.com",
+            integration,
             sso_user.sso_identity_id
           )
 
@@ -437,7 +554,7 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity("Clarence Fortridge", "clarence@" <> domain)
+        identity = new_identity("Clarence Fortridge", "clarence@" <> domain, integration)
         {:ok, _, _, user} = SSO.provision_user(identity)
 
         user = Repo.reload!(user)
@@ -451,6 +568,11 @@ defmodule Plausible.Auth.SSOTest do
         refute updated_user.sso_identity_id
         refute updated_user.sso_integration_id
         refute updated_user.sso_domain_id
+
+        assert audited_entry("sso_user_deprovioned",
+                 team_id: team.id,
+                 entity_id: "#{updated_user.id}"
+               )
       end
 
       test "handles standard user gracefully without revoking existing sessions" do
@@ -484,6 +606,11 @@ defmodule Plausible.Auth.SSOTest do
 
         assert team.policy.sso_default_role == :editor
         assert team.policy.sso_session_timeout_minutes == 600
+
+        assert audited_entry("sso_policy_updated",
+                 team_id: team.id,
+                 entity_id: "#{team.id}"
+               )
       end
 
       test "accepts single attributes leaving others as they are" do
@@ -496,6 +623,34 @@ defmodule Plausible.Auth.SSOTest do
 
         assert team.policy.sso_default_role == :editor
         assert team.policy.sso_session_timeout_minutes == 360
+      end
+
+      test "handles empty policy default gracefully" do
+        team = new_site().team
+
+        Repo.update_all(
+          from(t in Teams.Team,
+            where: t.id == ^team.id,
+            update: [set: [policy: fragment("'{}'::json")]]
+          ),
+          []
+        )
+
+        team = Repo.reload!(team)
+
+        assert {:ok, team} = SSO.update_policy(team, sso_default_role: "editor")
+
+        assert team.policy.sso_default_role == :editor
+        assert team.policy.sso_session_timeout_minutes == 360
+
+        team = Repo.reload!(team)
+
+        assert {:ok, team} = SSO.update_policy(team, sso_session_timeout_minutes: 200)
+
+        team = Repo.reload!(team)
+
+        assert team.policy.sso_default_role == :editor
+        assert team.policy.sso_session_timeout_minutes == 200
       end
 
       test "returns changeset on invalid input" do
@@ -513,7 +668,7 @@ defmodule Plausible.Auth.SSOTest do
 
     describe "check_force_sso/2" do
       test "returns ok when conditions are met for setting all_but_owners" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -528,19 +683,19 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         assert :ok = SSO.check_force_sso(team, :all_but_owners)
       end
 
-      test "returns error when one owner does not have MFA configured" do
+      test "returns error when one owner does not have 2FA configured" do
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
-        # Owner without MFA
+        # Owner without 2FA
         another_owner = new_user()
         add_member(team, user: another_owner, role: :owner)
 
@@ -553,14 +708,14 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Carrie Mower", "lance@" <> domain)
+        identity = new_identity("Carrie Mower", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
-        assert {:error, :owner_mfa_disabled} = SSO.check_force_sso(team, :all_but_owners)
+        assert {:error, :owner_2fa_disabled} = SSO.check_force_sso(team, :all_but_owners)
       end
 
       test "returns error when there's no provisioned SSO user present" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -577,7 +732,7 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error when there's no verified SSO domain present" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -594,7 +749,7 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error when there's no SSO domain present" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -607,7 +762,7 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error when there's no SSO integration present" do
-        # Owner with MFA enabled
+        # Owner with 2FA enabled
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
         {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
@@ -623,7 +778,7 @@ defmodule Plausible.Auth.SSOTest do
       end
     end
 
-    describe "set_enforce_sso/2" do
+    describe "set_force_sso/2" do
       test "sets enforce mode to all_but_owners when conditions met" do
         owner = new_user()
         {:ok, owner, _} = Auth.TOTP.initiate(owner)
@@ -639,13 +794,59 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         assert {:ok, updated_team} = SSO.set_force_sso(team, :all_but_owners)
 
         assert updated_team.id == team.id
         assert updated_team.policy.force_sso == :all_but_owners
+
+        assert audited_entry("sso_force_mode_changed", team_id: team.id, entity_id: "#{team.id}")
+      end
+
+      test "handles empty policy default gracefully" do
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
+        team = new_site(owner: owner).team
+
+        Repo.update_all(
+          from(t in Teams.Team,
+            where: t.id == ^team.id,
+            update: [set: [policy: fragment("'{}'::json")]]
+          ),
+          []
+        )
+
+        team = Repo.reload!(team)
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        assert {:ok, updated_team} = SSO.set_force_sso(team, :all_but_owners)
+
+        assert updated_team.id == team.id
+        assert updated_team.policy.force_sso == :all_but_owners
+
+        # Set another team policy setting to check if it remains intact
+        {:ok, team} = SSO.update_policy(updated_team, sso_default_role: "editor")
+
+        assert {:ok, updated_team} = SSO.set_force_sso(team, :none)
+
+        updated_team = Repo.reload!(updated_team)
+
+        assert updated_team.policy.force_sso == :none
+        assert updated_team.policy.sso_default_role == :editor
       end
 
       test "returns error when conditions not met" do
@@ -669,7 +870,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         {:ok, team} = SSO.set_force_sso(team, :all_but_owners)
@@ -697,7 +898,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         # SSO user deprovisioned
@@ -722,7 +923,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         # Force SSO enabled
@@ -750,7 +951,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         integration = Repo.reload!(integration)
@@ -774,7 +975,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         # SSO user deprovisioned
@@ -785,6 +986,11 @@ defmodule Plausible.Auth.SSOTest do
         assert :ok = SSO.remove_integration(integration)
         refute Repo.reload(integration)
         refute Repo.reload(sso_domain)
+
+        assert audited_entry("sso_integration_removed",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
 
       test "returns error when conditions not met" do
@@ -802,7 +1008,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, _sso_user} = SSO.provision_user(identity)
 
         integration = Repo.reload!(integration)
@@ -827,7 +1033,7 @@ defmodule Plausible.Auth.SSOTest do
 
         # Provisioned SSO identity
         #
-        identity = new_identity("Carrie Mower", "carrie@" <> domain)
+        identity = new_identity("Carrie Mower", "carrie@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         integration = Repo.reload!(integration)
@@ -851,8 +1057,8 @@ defmodule Plausible.Auth.SSOTest do
         domain1 = "example-#{Enum.random(1..10_000)}.com"
         domain2 = "test-#{Enum.random(1..10_000)}.com"
 
-        {:ok, _} = SSO.Domains.add(integration, domain1)
-        {:ok, _} = SSO.Domains.add(integration, domain2)
+        {:ok, d1} = SSO.Domains.add(integration, domain1)
+        {:ok, d2} = SSO.Domains.add(integration, domain2)
 
         {:ok, _} = SSO.Domains.start_verification(domain1)
         {:ok, _} = SSO.Domains.start_verification(domain2)
@@ -865,6 +1071,21 @@ defmodule Plausible.Auth.SSOTest do
         refute Repo.reload(integration)
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain1})
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain2})
+
+        assert audited_entry("sso_domain_verification_cancelled",
+                 team_id: team.id,
+                 entity_id: "#{d1.id}"
+               )
+
+        assert audited_entry("sso_domain_verification_cancelled",
+                 team_id: team.id,
+                 entity_id: "#{d2.id}"
+               )
+
+        assert audited_entry("sso_integration_removed",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
 
       test "cancels verification jobs when integration is force removed with SSO users" do
@@ -876,16 +1097,26 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity("Test User", "test@" <> domain)
+        identity = new_identity("Test User", "test@" <> domain, integration)
         {:ok, _, _, _} = SSO.provision_user(identity)
 
-        {:ok, _} = SSO.Domains.start_verification(domain)
+        {:ok, sso_domain} = SSO.Domains.start_verification(domain)
         assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
 
         assert :ok = SSO.remove_integration(integration, force_deprovision?: true)
 
         refute Repo.reload(integration)
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
+
+        assert audited_entry("sso_domain_verification_cancelled",
+                 team_id: team.id,
+                 entity_id: "#{sso_domain.id}"
+               )
+
+        assert audited_entry("sso_integration_removed",
+                 team_id: team.id,
+                 entity_id: "#{integration.id}"
+               )
       end
     end
 
@@ -910,8 +1141,12 @@ defmodule Plausible.Auth.SSOTest do
          domain: domain}
       end
 
-      test "returns ok for user who is already of type SSO", %{domain: domain, team: team} do
-        identity = new_identity("Lance Wurst", "lance@" <> domain)
+      test "returns ok for user who is already of type SSO", %{
+        domain: domain,
+        team: team,
+        integration: integration
+      } do
+        identity = new_identity("Lance Wurst", "lance@" <> domain, integration)
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         assert :ok = SSO.check_ready_to_provision(sso_user, team)

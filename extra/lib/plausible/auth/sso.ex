@@ -56,7 +56,10 @@ defmodule Plausible.Auth.SSO do
   def initiate_saml_integration(team) do
     changeset = SSO.Integration.init_changeset(team)
 
-    Repo.insert!(changeset,
+    Repo.insert_with_audit!(
+      changeset,
+      "saml_integration_initiated",
+      %{team_id: team.id},
       on_conflict: [set: [updated_at: NaiveDateTime.utc_now(:second)]],
       conflict_target: :team_id,
       returning: true
@@ -68,7 +71,9 @@ defmodule Plausible.Auth.SSO do
   def update_integration(integration, params) do
     changeset = SSO.Integration.update_changeset(integration, params)
 
-    case Repo.update(changeset) do
+    case Repo.update_with_audit(changeset, "sso_integration_updated", %{
+           team_id: integration.team_id
+         }) do
       {:ok, integration} -> {:ok, integration}
       {:error, changeset} -> {:error, changeset.changes.config}
     end
@@ -108,21 +113,20 @@ defmodule Plausible.Auth.SSO do
     |> Ecto.Changeset.put_change(:sso_identity_id, nil)
     |> Ecto.Changeset.put_assoc(:sso_integration, nil)
     |> Ecto.Changeset.put_assoc(:sso_domain, nil)
-    |> Repo.update!()
+    |> Repo.update_with_audit!("sso_user_deprovioned", %{team_id: user.sso_integration.team_id})
   end
 
   @spec update_policy(Teams.Team.t(), [policy_attr()]) ::
           {:ok, Teams.Team.t()} | {:error, Ecto.Changeset.t()}
   def update_policy(team, attrs \\ []) do
     params = Map.new(attrs)
-    policy_changeset = Teams.Policy.update_changeset(team.policy, params)
 
     changeset =
       team
-      |> Ecto.Changeset.change()
-      |> Ecto.Changeset.put_embed(:policy, policy_changeset)
+      |> Ecto.Changeset.cast(%{policy: params}, [])
+      |> Ecto.Changeset.cast_embed(:policy, with: &Teams.Policy.update_changeset/2)
 
-    case Repo.update(changeset) do
+    case Repo.update_with_audit(changeset, "sso_policy_updated", %{team_id: team.id}) do
       {:ok, integration} -> {:ok, integration}
       {:error, changeset} -> {:error, changeset.changes.policy}
     end
@@ -134,16 +138,18 @@ defmodule Plausible.Auth.SSO do
              :no_integration
              | :no_domain
              | :no_verified_domain
-             | :owner_mfa_disabled
+             | :owner_2fa_disabled
              | :no_sso_user}
   def set_force_sso(team, mode) do
     with :ok <- check_force_sso(team, mode) do
-      policy_changeset = Teams.Policy.force_sso_changeset(team.policy, mode)
+      params = %{policy: %{force_sso: mode}}
 
       team
-      |> Ecto.Changeset.change()
-      |> Ecto.Changeset.put_embed(:policy, policy_changeset)
-      |> Repo.update()
+      |> Ecto.Changeset.cast(params, [])
+      |> Ecto.Changeset.cast_embed(:policy,
+        with: &Teams.Policy.force_sso_changeset(&1, &2.force_sso)
+      )
+      |> Repo.update_with_audit("sso_force_mode_changed", %{team_id: team.id})
     end
   end
 
@@ -153,14 +159,14 @@ defmodule Plausible.Auth.SSO do
              :no_integration
              | :no_domain
              | :no_verified_domain
-             | :owner_mfa_disabled
+             | :owner_2fa_disabled
              | :no_sso_user}
   def check_force_sso(_team, :none), do: :ok
 
   def check_force_sso(team, :all_but_owners) do
     with :ok <- check_integration_configured(team),
          :ok <- check_sso_user_present(team) do
-      check_owners_mfa_enabled(team)
+      check_owners_2fa_enabled(team)
     end
   end
 
@@ -193,7 +199,11 @@ defmodule Plausible.Auth.SSO do
           Repo.transaction(fn ->
             integration = Repo.preload(integration, :sso_domains)
             Enum.each(integration.sso_domains, &SSO.Domains.cancel_verification(&1.domain))
-            Repo.delete!(integration)
+
+            Repo.delete_with_audit!(integration, "sso_integration_removed", %{
+              team_id: integration.team_id
+            })
+
             :ok
           end)
 
@@ -206,7 +216,11 @@ defmodule Plausible.Auth.SSO do
             integration = Repo.preload(integration, :sso_domains)
             Enum.each(users, &deprovision_user!/1)
             Enum.each(integration.sso_domains, &SSO.Domains.cancel_verification(&1.domain))
-            Repo.delete!(integration)
+
+            Repo.delete_with_audit!(integration, "sso_integration_removed", %{
+              team_id: integration.team_id
+            })
+
             :ok
           end)
 
@@ -300,8 +314,8 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp check_owners_mfa_enabled(team) do
-    disabled_mfa_count =
+  defp check_owners_2fa_enabled(team) do
+    disabled_2fa_count =
       Repo.aggregate(
         from(
           tm in Teams.Membership,
@@ -313,10 +327,10 @@ defmodule Plausible.Auth.SSO do
         :count
       )
 
-    if disabled_mfa_count == 0 do
+    if disabled_2fa_count == 0 do
       :ok
     else
-      {:error, :owner_mfa_disabled}
+      {:error, :owner_2fa_disabled}
     end
   end
 
@@ -331,15 +345,21 @@ defmodule Plausible.Auth.SSO do
   end
 
   defp find_user_with_fallback(identity) do
-    with {:error, :not_found} <- find_by_identity(identity) do
-      find_by_email(identity.email)
+    with {:ok, integration} <- get_integration(identity.integration_id),
+         {:error, :not_found} <- find_by_identity(identity, integration) do
+      find_by_email(identity.email, integration)
     end
   end
 
-  defp find_by_identity(identity) do
-    if user = Repo.get_by(Auth.User, sso_identity_id: identity.id, type: :sso) do
+  defp find_by_identity(identity, integration) do
+    if user =
+         Repo.get_by(Auth.User,
+           sso_integration_id: integration.id,
+           sso_identity_id: identity.id,
+           type: :sso
+         ) do
       with {:ok, sso_domain} <- SSO.Domains.lookup(identity.email),
-           :ok <- check_domain_integration_match(sso_domain, user) do
+           :ok <- check_domain_integration_match(sso_domain, integration) do
         user = Repo.preload(user, sso_integration: :team)
 
         {:ok, user.type, user, user.sso_integration, sso_domain}
@@ -349,9 +369,10 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp find_by_email(email) do
-    with {:ok, sso_domain} <- SSO.Domains.lookup(email) do
-      case find_by_email(sso_domain.sso_integration.team, email) do
+  defp find_by_email(email, integration) do
+    with {:ok, sso_domain} <- SSO.Domains.lookup(email),
+         :ok <- check_domain_integration_match(sso_domain, integration) do
+      case find_in_team_by_email(sso_domain.sso_integration.team, email) do
         {:ok, user} ->
           {:ok, user.type, user, sso_domain.sso_integration, sso_domain}
 
@@ -361,7 +382,7 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp find_by_email(team, email) do
+  defp find_in_team_by_email(team, email) do
     result =
       Repo.one(
         from(
@@ -380,8 +401,8 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp check_domain_integration_match(sso_domain, user) do
-    if sso_domain.sso_integration_id == user.sso_integration_id do
+  defp check_domain_integration_match(sso_domain, integration) do
+    if sso_domain.sso_integration_id == integration.id do
       :ok
     else
       {:error, :not_found}
@@ -398,7 +419,10 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
       |> put_assoc(:sso_domain, domain)
 
-    with {:ok, user} <- Repo.update(changeset) do
+    with {:ok, user} <-
+           Repo.update_with_audit(changeset, "sso_user_provisioned", %{
+             team_id: integration.team_id
+           }) do
       {:ok, :sso, integration.team, user}
     end
   end
@@ -418,7 +442,10 @@ defmodule Plausible.Auth.SSO do
          :ok <- ensure_one_membership(user, integration.team),
          :ok <- ensure_empty_personal_team(user, integration.team),
          :ok <- Auth.UserSessions.revoke_all(user),
-         {:ok, user} <- Repo.update(changeset) do
+         {:ok, user} <-
+           Repo.update_with_audit(changeset, "sso_user_provisioned", %{
+             team_id: integration.team_id
+           }) do
       {:ok, :standard, integration.team, user}
     end
   end
@@ -451,7 +478,8 @@ defmodule Plausible.Auth.SSO do
 
     result =
       Repo.transaction(fn ->
-        with {:ok, user} <- Repo.insert(changeset),
+        with {:ok, user} <-
+               Repo.insert_with_audit(changeset, "sso_user_provisioned", %{team_id: team.id}),
              :ok <- Teams.Invitations.check_team_member_limit(team, role, user.email),
              {:ok, team_membership} <-
                Teams.Invitations.create_team_membership(team, role, user, now) do

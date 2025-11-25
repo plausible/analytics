@@ -1,11 +1,8 @@
 defmodule Plausible.Billing.QuotaTest do
   alias Plausible.Billing.EnterprisePlan
   use Plausible.DataCase, async: true
-  use Plausible
   alias Plausible.Billing.{Quota, Plans}
   alias Plausible.Billing.Feature.{Goals, Props, StatsAPI, SharedLinks}
-
-  use Plausible.Teams.Test
 
   on_ee do
     alias Plausible.Billing.Feature.{Funnels, RevenueGoals, SitesAPI}
@@ -91,9 +88,10 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  test "site_usage/1 returns the amount of sites the user owns" do
+  test "site_usage/1 returns the amount of sites the user owns (excludes consolidated)" do
     user = new_user()
     for _ <- 1..3, do: new_site(owner: user)
+    new_site(owner: user, consolidated: true)
     add_guest(new_site(), user: user, role: :editor)
     add_guest(new_site(), user: user, role: :viewer)
     team = team_of(user)
@@ -440,10 +438,10 @@ defmodule Plausible.Billing.QuotaTest do
         assert :unlimited == Plausible.Teams.Billing.team_member_limit(team)
       end
 
-      test "returns 5 when user in on trial" do
+      test "returns 10 when user in on trial" do
         team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
 
-        assert 3 == Plausible.Teams.Billing.team_member_limit(team)
+        assert 10 == Plausible.Teams.Billing.team_member_limit(team)
       end
 
       test "returns the enterprise plan limit" do
@@ -590,7 +588,7 @@ defmodule Plausible.Billing.QuotaTest do
       subscribe_to_plan(user, "free_10k")
       team = team_of(user)
 
-      assert [Goals, Props, StatsAPI, SharedLinks] ==
+      assert [Props, StatsAPI, SharedLinks, Goals] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -613,7 +611,8 @@ defmodule Plausible.Billing.QuotaTest do
         assert [
                  Plausible.Billing.Feature.StatsAPI,
                  Plausible.Billing.Feature.Funnels,
-                 Plausible.Billing.Feature.SharedLinks
+                 Plausible.Billing.Feature.SharedLinks,
+                 Plausible.Billing.Feature.Goals
                ] ==
                  Plausible.Teams.Billing.allowed_features_for(team)
       end
@@ -662,7 +661,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       team = team_of(user)
 
-      assert [Plausible.Billing.Feature.StatsAPI] ==
+      assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Goals] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -677,7 +676,8 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert [
                Plausible.Billing.Feature.StatsAPI,
-               Plausible.Billing.Feature.SitesAPI
+               Plausible.Billing.Feature.SitesAPI,
+               Plausible.Billing.Feature.Goals
              ] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
@@ -708,12 +708,12 @@ defmodule Plausible.Billing.QuotaTest do
       now = NaiveDateTime.utc_now()
 
       populate_stats(site, [
-        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -40), name: "custom"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -10), name: "custom"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -9), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -8), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -7), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -6), name: "custom")
       ])
 
       assert %{
@@ -733,9 +733,9 @@ defmodule Plausible.Billing.QuotaTest do
       now = NaiveDateTime.utc_now()
 
       populate_stats(site, [
-        build(:event, timestamp: Timex.shift(now, days: -8), name: "custom"),
-        build(:pageview, user_id: 199, timestamp: Timex.shift(now, days: -5, minutes: -2)),
-        build(:engagement, user_id: 199, timestamp: Timex.shift(now, days: -5))
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -8), name: "custom"),
+        build(:pageview, user_id: 199, timestamp: NaiveDateTime.shift(now, day: -5, minute: -2)),
+        build(:engagement, user_id: 199, timestamp: NaiveDateTime.shift(now, day: -5))
       ])
 
       assert %{
@@ -759,12 +759,12 @@ defmodule Plausible.Billing.QuotaTest do
       now = NaiveDateTime.utc_now()
 
       populate_stats(site, [
-        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -40), name: "custom"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -10), name: "custom"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -9), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -8), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -7), name: "pageview"),
+        build(:event, timestamp: NaiveDateTime.shift(now, day: -6), name: "custom")
       ])
 
       assert %{
@@ -804,12 +804,12 @@ defmodule Plausible.Billing.QuotaTest do
 
       for site <- [site1, site2, site3] do
         populate_stats(site, [
-          build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-          build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-          build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -40), name: "custom"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -10), name: "custom"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -9), name: "pageview"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -8), name: "pageview"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -7), name: "pageview"),
+          build(:event, timestamp: NaiveDateTime.shift(now, day: -6), name: "custom")
         ])
       end
 

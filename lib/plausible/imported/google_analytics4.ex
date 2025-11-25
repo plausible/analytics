@@ -337,7 +337,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
 
   defp get_date(%{dimensions: %{"date" => date}}) do
     date
-    |> Timex.parse!("%Y%m%d", :strftime)
+    |> Plausible.Times.parse!("%Y%m%d", :strftime)
     |> NaiveDateTime.to_date()
   end
 

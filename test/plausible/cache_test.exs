@@ -115,6 +115,15 @@ defmodule Plausible.CacheTest do
       assert :changed == ExampleCache.get("item1", cache_name: test, force?: true)
       assert :item2 == ExampleCache.get("item2", cache_name: test, force?: true)
     end
+
+    test "broadcast_put puts into local cache", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      :ok = ExampleCache.broadcast_put("item1", :item1, cache_name: test)
+
+      assert eventually(fn ->
+               {ExampleCache.get("item1", cache_name: test, force?: true) == :item1, :ok}
+             end)
+    end
   end
 
   describe "warming the cache" do

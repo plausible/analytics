@@ -26,10 +26,58 @@ test.beforeEach(async ({ page }) => {
       await route.fulfill({
         status: 200,
         contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>mocked page</title></head><body>mocked page</body></html>'
+        body: /* HTML */ `<!DOCTYPE html>
+          <html>
+            <head>
+              <title>mocked page</title>
+            </head>
+            <body>
+              mocked page
+            </body>
+          </html>`
       })
     })
 })
+
+for (const mode of ['web', 'esm']) {
+  test(`tagged events tracking is always on (${mode})`, async ({ page }, {
+    testId
+  }) => {
+    const config = { ...DEFAULT_CONFIG }
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: switchByMode(
+        {
+          web: config,
+          esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; init(${JSON.stringify(
+            config
+          )})</script>`
+        },
+        mode
+      ),
+      bodyContent: /* HTML */ `<a
+        class="plausible-event-name=Purchase plausible-event-discounted=true plausible-revenue-currency=EUR plausible-revenue-amount=13.32"
+        href="https://example.com/target"
+        >Purchase</a
+      >`
+    })
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await page.goto(url)
+        await page.click('a')
+      },
+      expectedRequests: [
+        {
+          n: 'Purchase',
+          p: { discounted: 'true', url: 'https://example.com/target' },
+          $: { currency: 'EUR', amount: '13.32' }
+        }
+      ],
+      shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+    })
+    await expect(page.getByText('mocked page')).toBeVisible()
+  })
+}
 
 for (const mode of ['legacy', 'web']) {
   test.describe(`tagged events feature legacy/v2 parity (${mode})`, () => {
@@ -42,13 +90,15 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `
-        <a class="plausible-event-name--Payment+Complete should ignore-this plausible-event-amount--100 plausible-event-method--Credit+Card" href="https://example.com/payment?secret=foo">
-            <h1>✅</h1>
+        bodyContent: /* HTML */ ` <a
+          class="plausible-event-name--Payment+Complete should ignore-this plausible-event-amount--100 plausible-event-method--Credit+Card"
+          href="https://example.com/payment?secret=foo"
+        >
+          <h1>✅</h1>
         </a>`
       })
       await page.goto(url)
@@ -85,12 +135,16 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `<div class="plausible-event-name=Reset+Password plausible-event-foo=bar">
-          <a href="https://example.com/reset?verification=123">Reset password</a>
+        bodyContent: /* HTML */ `<div
+          class="plausible-event-name=Reset+Password plausible-event-foo=bar"
+        >
+          <a href="https://example.com/reset?verification=123"
+            >Reset password</a
+          >
         </div>`
       })
       await page.goto(url)
@@ -119,12 +173,15 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `
-        <form class="plausible-event-name=Signup plausible-event-type=Newsletter" action="https://example.com/register" method="post">
+        bodyContent: /* HTML */ ` <form
+          class="plausible-event-name=Signup plausible-event-type=Newsletter"
+          action="https://example.com/register"
+          method="post"
+        >
           <h2>Newsletter Signup</h2>
           <label for="email">Email:</label>
           <input type="email" />
@@ -168,14 +225,13 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `
-        <div class="plausible-event-name=Form+Submit">
+        bodyContent: /* HTML */ ` <div class="plausible-event-name=Form+Submit">
           <form action="https://example.com/register" method="post">
-            <input type="text"/>
+            <input type="text" />
             <input type="submit" value="Submit" />
           </form>
         </div>`
@@ -212,11 +268,14 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `<span class="plausible-event-name=Custom+Event plausible-event-foo=bar"><strong>any</strong>text</span>`
+        bodyContent: /* HTML */ `<span
+          class="plausible-event-name=Custom+Event plausible-event-foo=bar"
+          ><strong>any</strong>text</span
+        >`
       })
       await page.goto(url)
 
@@ -247,11 +306,15 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `<button class="plausible-event-name=Custom+Event plausible-event-foo=bar">✅</button>`
+        bodyContent: /* HTML */ `<button
+          class="plausible-event-name=Custom+Event plausible-event-foo=bar"
+        >
+          ✅
+        </button>`
       })
       await page.goto(url)
 
@@ -276,7 +339,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
@@ -288,7 +351,7 @@ for (const mode of ['legacy', 'web']) {
         return new Promise((resolve) => {
           let taggedElement
           while (!taggedElement) {
-            if ((window as any).plausible?.l !== true) {
+            if (window.plausible?.l !== true) {
               continue
             } else {
               taggedElement = document.createElement('button')
@@ -324,7 +387,7 @@ for (const mode of ['legacy', 'web']) {
       const targetPage = await initializePageDynamically(page, {
         testId,
         scriptConfig: '',
-        bodyContent: `<h1>Subscription successful</h1>`,
+        bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
         path: '/target'
       })
       const { url } = await initializePageDynamically(page, {
@@ -333,11 +396,15 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, autoCapturePageviews: false },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.manual.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.manual.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `<a class="plausible-event-name=Subscribe" href="${targetPage.url}">Click to subscribe</a>`
+        bodyContent: /* HTML */ `<a
+          class="plausible-event-name=Subscribe"
+          href="${targetPage.url}"
+          >Click to subscribe</a
+        >`
       })
       await page.goto(url)
       const navigationPromise = page.waitForRequest(targetPage.url, {
@@ -361,6 +428,58 @@ for (const mode of ['legacy', 'web']) {
       ])
     })
 
+    test('tracks tagged link clicks even if the link is within an svg tag, but fails to include href properly', async ({
+      page
+    }, { testId }) => {
+      const targetPage = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: '',
+        bodyContent: /* HTML */ `<h1>Navigation successful</h1>`,
+        path: '/target'
+      })
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG },
+            legacy:
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: /* HTML */ `
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <a class="plausible-event-name=link+click" href="${targetPage.url}">
+              <circle cx="50" cy="50" r="50" />
+            </a>
+          </svg>
+        `
+      })
+
+      const pageErrors: Error[] = []
+      page.on('pageerror', (err) => pageErrors.push(err))
+
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click('circle'),
+        expectedRequests: [
+          {
+            n: 'link click',
+            p: {
+              expected: { url: {} },
+              __expectation__: (actual) =>
+                actual && JSON.stringify(actual) === '{"url":{}}'
+            }
+          }
+        ],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+
+      expect(pageErrors).toHaveLength(0)
+      await expect(page.getByText('Navigation successful')).toBeVisible()
+    })
+
     test('does not track button without plausible-event-name class', async ({
       page
     }, { testId }) => {
@@ -370,17 +489,17 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `<button class="anything">✅</button>`
+        bodyContent: /* HTML */ `<button class="anything">✅</button>`
       })
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
         action: () => page.click('button'),
-        refutedRequests: [{ n: expect.any(String) }],
+        refutedRequests: [{}],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
     })
@@ -394,17 +513,19 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG },
             legacy:
-              '<script defer src="/tracker/js/plausible.local.tagged-events.js"></script>'
+              '<script async src="/tracker/js/plausible.local.tagged-events.js"></script>'
           },
           mode
         ),
-        bodyContent: `<span class="plausible-event-name=">anything</span>`
+        bodyContent: /* HTML */ `<span class="plausible-event-name="
+          >anything</span
+        >`
       })
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
         action: () => page.click('span'),
-        refutedRequests: [{ n: expect.any(String) }],
+        refutedRequests: [{}],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
     })
@@ -459,7 +580,15 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
         fulfill: {
           status: 200,
           contentType: 'text/html',
-          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+          body: /* HTML */ `<!DOCTYPE html>
+            <html>
+              <head>
+                <title>other page</title>
+              </head>
+              <body>
+                other page
+              </body>
+            </html>`
         },
         awaitedRequestCount: 2,
         mockRequestTimeout: 2000
@@ -477,8 +606,13 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       const { url } = await initializePageDynamically(page, {
         testId,
         scriptConfig:
-          '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-        bodyContent: `<a class="plausible-event-name=outbound" ${linkAttributes} href="${outboundUrl}"><h1>➡️</h1></a>`
+          '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+        bodyContent: /* HTML */ `<a
+          class="plausible-event-name=outbound"
+          ${linkAttributes}
+          href="${outboundUrl}"
+          ><h1>➡️</h1></a
+        >`
       })
       await page.goto(url)
 
@@ -507,14 +641,18 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const targetPage = await initializePageDynamically(page, {
       testId,
       scriptConfig: '',
-      bodyContent: `<h1>Subscription successful</h1>`,
+      bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
       path: '/target'
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-      bodyContent: `<a class="plausible-event-name=Subscribe" href="${targetPage.url}">Click to subscribe</a>`
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+      bodyContent: /* HTML */ `<a
+        class="plausible-event-name=Subscribe"
+        href="${targetPage.url}"
+        >Click to subscribe</a
+      >`
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(targetPage.url, {
@@ -527,7 +665,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const [[, trackingResponseTime], [, navigationTime]] =
       await resolveWithTimestamps([trackingPromise, navigationPromise])
     await expect(page.getByText('Subscription successful')).toBeVisible()
-    expect(trackingResponseTime).toBeLessThan(navigationTime)
+    expect(trackingResponseTime).toBeLessThanOrEqual(navigationTime)
     await expect(eventsApiMock.getRequestList()).resolves.toEqual([
       expect.objectContaining({
         n: 'Subscribe',
@@ -551,14 +689,18 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const targetPage = await initializePageDynamically(page, {
       testId,
       scriptConfig: '',
-      bodyContent: `<h1>Subscription successful</h1>`,
+      bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
       path: '/target'
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-      bodyContent: `<a class="plausible-event-name=Subscribe" href="${targetPage.url}">Click to subscribe</a>`
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+      bodyContent: /* HTML */ `<a
+        class="plausible-event-name=Subscribe"
+        href="${targetPage.url}"
+        >Click to subscribe</a
+      >`
     })
     await page.goto(url)
     const navigationPromise = page.waitForRequest(targetPage.url, {
@@ -575,22 +717,61 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const targetPage = await initializePageDynamically(page, {
       testId,
       scriptConfig: '',
-      bodyContent: `<h1>Subscription successful</h1>`,
+      bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
       path: '/target'
     })
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
-      bodyContent: `<a class="plausible-event-key=value" href="${targetPage.url}">Click to subscribe</a>`
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+      bodyContent: /* HTML */ `<a
+        class="plausible-event-key=value"
+        href="${targetPage.url}"
+        >Click to subscribe</a
+      >`
     })
     await page.goto(url)
 
     await expectPlausibleInAction(page, {
       action: () => page.click('a'),
-      refutedRequests: [{ n: expect.any(String) }],
-      shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      refutedRequests: [{}]
     })
+
+    await expect(page.getByText('Subscription successful')).toBeVisible()
+  })
+
+  test('does not intercept navigation for links within svgs, causing slow track requests to fail', async ({
+    page
+  }, { testId }) => {
+    const targetPage = await initializePageDynamically(page, {
+      testId,
+      scriptConfig: '',
+      bodyContent: /* HTML */ `<h1>Subscription successful</h1>`,
+      path: '/target'
+    })
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig:
+        '<script id="plausible" async src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+      bodyContent: /* HTML */ `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <a class="plausible-event-name=link+click" href="${targetPage.url}">
+            <circle cx="50" cy="50" r="50" />
+          </a>
+        </svg>
+      `
+    })
+    const pageErrors: Error[] = []
+    page.on('pageerror', (err) => pageErrors.push(err))
+    await page.goto(url)
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('a'),
+      refutedRequests: [{}],
+      responseDelay: 500,
+      mockRequestTimeout: 250
+    })
+    expect(pageErrors).toHaveLength(0)
 
     await expect(page.getByText('Subscription successful')).toBeVisible()
   })

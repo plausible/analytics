@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   attr(:current_team, :any, required: true)
-  attr(:current_role, :atom, required: true)
+  attr(:current_user, :atom, required: true)
   attr(:limit, :integer, required: true)
   attr(:resource, :string, required: true)
   attr(:rest, :global)
@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       {account_label(@current_team)} is limited to {pretty_print_resource_limit(@limit, @resource)}. To increase this limit,
       <PlausibleWeb.Components.Billing.upgrade_call_to_action
         current_team={@current_team}
-        current_role={@current_role}
+        current_user={@current_user}
       />.
     </.notice>
     """
@@ -283,8 +283,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   defp lose_grandfathering_warning(%{subscription: subscription} = assigns) do
     plan = Plans.get_regular_plan(subscription, only_non_expired: true)
-    latest_generation = if FunWithFlags.enabled?(:starter_tier), do: 5, else: 4
-    loses_grandfathering? = plan && plan.generation < latest_generation
+    loses_grandfathering? = plan && plan.generation < 5
 
     assigns = assign(assigns, :loses_grandfathering?, loses_grandfathering?)
 

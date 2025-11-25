@@ -1,10 +1,16 @@
 import { sendRequest } from './networking'
-import { prePageviewTrack, postPageviewTrack, onPageviewIgnored } from './engagement'
-import { config, scriptEl, location, document } from './config'
+import {
+  prePageviewTrack,
+  postPageviewTrack,
+  onPageviewIgnored
+} from './engagement'
+import { config, scriptEl } from './config'
 
 export function track(eventName, options) {
   if (COMPILE_PLAUSIBLE_NPM && !config.isInitialized) {
-    throw new Error('plausible.track() can only be called after plausible.init()')
+    throw new Error(
+      'plausible.track() can only be called after plausible.init()'
+    )
   }
 
   var isPageview = eventName === 'pageview'
@@ -14,10 +20,21 @@ export function track(eventName, options) {
   }
 
   if (!(COMPILE_LOCAL && (!COMPILE_CONFIG || config.captureOnLocalhost))) {
-    if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
+    if (
+      /^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(
+        location.hostname
+      ) ||
+      location.protocol === 'file:'
+    ) {
       return onIgnoredEvent(eventName, options, 'localhost')
     }
-    if ((window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) && !window.__plausible) {
+    if (
+      (window._phantom ||
+        window.__nightmare ||
+        window.navigator.webdriver ||
+        window.Cypress) &&
+      !window.__plausible
+    ) {
       return onIgnoredEvent(eventName, options)
     }
   }
@@ -25,9 +42,10 @@ export function track(eventName, options) {
     if (window.localStorage.plausible_ignore === 'true') {
       return onIgnoredEvent(eventName, options, 'localStorage flag')
     }
-  } catch (e) {
-
+  } catch (_error) {
+    // ignore error
   }
+
   if (COMPILE_EXCLUSIONS) {
     var dataIncludeAttr = scriptEl && scriptEl.getAttribute('data-include')
     var dataExcludeAttr = scriptEl && scriptEl.getAttribute('data-exclude')
@@ -39,14 +57,29 @@ export function track(eventName, options) {
         actualPath += location.hash
       }
 
-      return actualPath.match(new RegExp('^' + wildcardPath.trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$'))
+      return actualPath.match(
+        new RegExp(
+          '^' +
+            wildcardPath
+              .trim()
+              .replace(/\*\*/g, '.*')
+              // eslint-disable-next-line no-useless-escape
+              .replace(/([^\.])\*/g, '$1[^\\s\/]*') +
+            // eslint-disable-next-line no-useless-escape
+            '\/?$'
+        )
+      )
     }
 
     if (isPageview) {
-      var isIncluded = !dataIncludeAttr || (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
-      var isExcluded = dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
+      var isIncluded =
+        !dataIncludeAttr ||
+        (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
+      var isExcluded =
+        dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
 
-      if (!isIncluded || isExcluded) return onIgnoredEvent(eventName, options, 'exclusion rule')
+      if (!isIncluded || isExcluded)
+        return onIgnoredEvent(eventName, options, 'exclusion rule')
     }
   }
 
@@ -97,6 +130,7 @@ export function track(eventName, options) {
 
   // Track custom properties for pageviews and other events
   if (COMPILE_CUSTOM_PROPERTIES && config.customProperties) {
+    // eslint-disable-next-line no-redeclare
     var props = config.customProperties
     if (typeof props === 'function') {
       props = config.customProperties(eventName)
@@ -111,7 +145,10 @@ export function track(eventName, options) {
     payload.h = 1
   }
 
-  if ((COMPILE_PLAUSIBLE_WEB || COMPILE_PLAUSIBLE_NPM) && typeof config.transformRequest === 'function') {
+  if (
+    (COMPILE_PLAUSIBLE_WEB || COMPILE_PLAUSIBLE_NPM) &&
+    typeof config.transformRequest === 'function'
+  ) {
     payload = config.transformRequest(payload)
 
     if (!payload) {
@@ -126,10 +163,9 @@ export function track(eventName, options) {
   sendRequest(config.endpoint, payload, options)
 }
 
-
 function onIgnoredEvent(eventName, options, reason) {
   if (reason && config.logging) {
-    console.warn('Ignoring Event: ' + reason);
+    console.warn('Ignoring Event: ' + reason)
   }
 
   options && options.callback && options.callback()

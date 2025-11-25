@@ -1,13 +1,9 @@
 defmodule PlausibleWeb.SSOControllerTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
 
   @moduletag :ee_only
 
   on_ee do
-    import Plausible.Teams.Test
-    import Plausible.Test.Support.HTML
-
     alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Repo
@@ -38,7 +34,8 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On"
+        assert html =~ "/settings/sso/general"
+        refute html =~ "/settings/sso/info"
       end
 
       test "sso team settings item is hidden when there's no SSO plan feature", %{conn: conn} do
@@ -51,7 +48,8 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        refute html =~ "Single Sign-On"
+        refute html =~ "/settings/sso/general"
+        assert html =~ "/settings/sso/info"
       end
     end
 
@@ -61,9 +59,9 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Enter your Single Sign-on email"
+        assert html =~ "Enter your Single Sign-On email"
         assert element_exists?(html, "input[name=email]")
-        assert text_of_attr(html, "input[name=return_to]", "value") == ""
+        assert text_of_attr(html, ~s|input[name="return_to"]|, "value") == nil
       end
 
       test "renders autosubmit js snippet when instructed", %{conn: conn} do
@@ -79,7 +77,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Enter your Single Sign-on email"
+        assert html =~ "Enter your Single Sign-On email"
         assert text_of_attr(html, "input[name=email]", "value") == "user@example.com"
         assert html =~ ~s|document.getElementById("sso-login-form").submit()|
       end
@@ -132,7 +130,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         domain: domain,
         integration: integration
       } do
-        email = "paul@" <> domain
+        email = "claire@" <> domain
 
         conn =
           post(conn, Routes.sso_path(conn, :login), %{"email" => email, "return_to" => "/sites"})
@@ -155,11 +153,32 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
       end
+
+      test "limits login attempts to 5 per minute", %{conn: conn} do
+        conn = put_req_header(conn, "x-forwarded-for", "1.2.3.9")
+        email = "invalid@example.com"
+
+        response =
+          eventually(
+            fn ->
+              Enum.each(1..5, fn _ ->
+                post(conn, Routes.sso_path(conn, :login), %{"email" => email})
+              end)
+
+              conn = post(conn, Routes.sso_path(conn, :login), %{"email" => email})
+
+              {conn.status == 429, conn}
+            end,
+            500
+          )
+
+        assert html_response(response, 429) =~ "Too many login attempts"
+      end
     end
 
     describe "saml_signin/2 (fake SAML)" do
       test "renders autosubmitted form", %{conn: conn, domain: domain, integration: integration} do
-        email = "paul@" <> domain
+        email = "jesper@" <> domain
 
         conn =
           get(
@@ -172,7 +191,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Processing Single Sign-on request..."
+        assert html =~ "Processing Single Sign-On request..."
 
         assert text_of_attr(html, "form#sso-req-form", "action") ==
                  Routes.sso_path(conn, :saml_consume, integration.identifier)
@@ -366,24 +385,27 @@ defmodule PlausibleWeb.SSOControllerTest do
         {:ok, conn: conn}
       end
 
-      test "lists SSO sessions", %{conn: conn, domain: domain} do
+      test "lists SSO sessions", %{conn: conn, domain: domain, integration: integration} do
         now = NaiveDateTime.utc_now(:second)
 
         %{user: user1} =
-          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}}
+          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}, sso_integration: integration}
           |> setup_do(&provision_sso_user/1)
 
         Auth.UserSessions.create!(user1, "Device 1", now: NaiveDateTime.shift(now, hour: -3))
 
         %{user: user2} =
-          %{user: %{name: "Grace Holmes", email: "grace@" <> domain}}
+          %{
+            user: %{name: "Grace Holmes", email: "grace@" <> domain},
+            sso_integration: integration
+          }
           |> setup_do(&provision_sso_user/1)
 
         Auth.UserSessions.create!(user2, "Device 2")
         Auth.UserSessions.create!(user2, "Device 3", now: NaiveDateTime.shift(now, hour: -6))
 
         %{user: user3} =
-          %{user: %{name: "Kate Loselet", email: "kate@" <> domain}}
+          %{user: %{name: "Kate Loselet", email: "kate@" <> domain}, sso_integration: integration}
           |> setup_do(&provision_sso_user/1)
 
         Auth.UserSessions.create!(user3, "Device 4", now: NaiveDateTime.shift(now, hour: -2))
@@ -394,13 +416,11 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert ["Grace Holmes", "Kate Loselet", "Frank Rubin", "Grace Holmes"] =
                  find(html, "table#sso-sessions-list tr td:nth-of-type(1)")
-                 |> Enum.map(&Floki.text/1)
-                 |> Enum.map(&String.trim/1)
+                 |> Enum.map(&text/1)
 
         assert ["Device 2", "Device 4", "Device 1", "Device 3"] =
                  find(html, "table#sso-sessions-list tr td:nth-of-type(2)")
-                 |> Enum.map(&Floki.text/1)
-                 |> Enum.map(&String.trim/1)
+                 |> Enum.map(&text/1)
       end
 
       test "shows empty state when there are no sessions", %{conn: conn} do
@@ -423,9 +443,13 @@ defmodule PlausibleWeb.SSOControllerTest do
         {:ok, conn: conn}
       end
 
-      test "revokes session and redirects back to sessions list", %{conn: conn, domain: domain} do
+      test "revokes session and redirects back to sessions list", %{
+        conn: conn,
+        domain: domain,
+        integration: integration
+      } do
         %{user: user} =
-          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}}
+          %{user: %{name: "Frank Rubin", email: "frank@" <> domain}, sso_integration: integration}
           |> setup_do(&provision_sso_user/1)
 
         session = Auth.UserSessions.create!(user, "Unknown")

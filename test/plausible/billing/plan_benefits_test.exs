@@ -80,7 +80,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Stats API (600 requests per hour)",
                "Looker Studio Connector",
                "Ecommerce revenue attribution",
-               "Funnels"
+               "Funnels",
+               "Consolidated View"
              ]
     end
 
@@ -99,7 +100,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Funnels",
                "Stats API (600 requests per hour)",
                "Looker Studio Connector",
-               "Shared Segments"
+               "Shared Segments",
+               "Consolidated View"
              ]
     end
 
@@ -120,7 +122,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Everything in Growth",
                  "Ecommerce revenue attribution",
                  "Funnels",
-                 "Shared Segments"
+                 "Shared Segments",
+                 "Consolidated View"
                ]
       end
     end
@@ -140,8 +143,9 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "10+ team members",
                "600+ Stats API requests per hour",
                "Sites API",
+               "Single Sign-On (SSO)",
+               "Managed Proxy",
                "5+ years of data retention",
-               "Technical onboarding",
                "Priority support"
              ]
     end
@@ -159,8 +163,9 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "10+ team members",
                "600+ Stats API requests per hour",
                "Sites API",
+               "Single Sign-On (SSO)",
+               "Managed Proxy",
                "5+ years of data retention",
-               "Technical onboarding",
                "Priority support"
              ]
     end
@@ -177,7 +182,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "50+ sites",
                "600+ Stats API requests per hour",
                "Sites API",
-               "Technical onboarding",
+               "Single Sign-On (SSO)",
+               "Managed Proxy",
                "Priority support"
              ]
     end

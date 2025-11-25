@@ -2,7 +2,6 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  use Plausible.Teams.Test
 
   alias Plausible.Workers.SendSiteSetupEmails
 
@@ -75,6 +74,37 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
         subject: "Plausible is now tracking your website stats"
       )
     end
+
+    test "do not send the setup help email for consolidated site" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      populate_stats(site, [build(:pageview)])
+
+      perform_job(SendSiteSetupEmails, %{})
+
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible is now tracking your website stats"
+      )
+
+      new_site(owner: user, consolidated: true, inserted_at: hours_ago(49))
+
+      perform_job(SendSiteSetupEmails, %{})
+
+      assert_no_emails_delivered()
+    end
+
+    test "do not send the setup success email for consolidated website" do
+      user = new_user()
+
+      # for test purposes, set stats_start_date for a consolidated site
+      new_site(owner: user, consolidated: true, stats_start_date: Date.utc_today())
+
+      perform_job(SendSiteSetupEmails, %{})
+
+      assert_no_emails_delivered()
+    end
   end
 
   describe "trial user who has not set up a website" do
@@ -101,6 +131,6 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   defp hours_ago(hours) do
     NaiveDateTime.utc_now()
     |> NaiveDateTime.truncate(:second)
-    |> Timex.shift(hours: -hours)
+    |> NaiveDateTime.shift(hour: -hours)
   end
 end

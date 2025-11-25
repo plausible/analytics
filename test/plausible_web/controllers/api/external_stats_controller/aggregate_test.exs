@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
-  import Plausible.TestUtils
   alias Plausible.Billing.Feature
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key]
@@ -403,7 +401,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         get(conn, "/api/v1/stats/aggregate", %{
           "site_id" => site.domain,
           "period" => "6mo",
-          "date" => "2021-03-01",
+          "date" => "2021-04-11",
           "metrics" => "pageviews,visitors,bounce_rate,visit_duration",
           "compare" => "previous_period"
         })
@@ -418,7 +416,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
     test "can compare conversion_rate with previous period", %{conn: conn, site: site} do
       today = ~N[2023-05-05 12:00:00]
-      yesterday = Timex.shift(today, days: -1)
+      yesterday = NaiveDateTime.shift(today, day: -1)
 
       populate_stats(site, [
         build(:event, name: "Signup", timestamp: yesterday),

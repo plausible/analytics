@@ -13,6 +13,8 @@ defmodule Plausible.Auth do
   alias Plausible.RateLimit
   alias Plausible.Teams
 
+  require Logger
+
   @rate_limits %{
     login_ip: %{
       prefix: "login:ip",
@@ -50,6 +52,15 @@ defmodule Plausible.Auth do
       {:allow, _} -> :ok
       {:deny, _} -> {:error, {:rate_limit, limit_type}}
     end
+  end
+
+  @spec log_failed_login_attempt(String.t()) :: :ok
+  def log_failed_login_attempt(message) do
+    if Application.get_env(:plausible, :log_failed_login_attempts) do
+      Logger.warning("[login] #{message}")
+    end
+
+    :ok
   end
 
   @spec find_user_by(Keyword.t()) :: Auth.User.t() | nil
@@ -288,7 +299,7 @@ defmodule Plausible.Auth do
 
   defp find_team_by_site(domain) do
     Repo.one(
-      from s in Plausible.Site,
+      from s in Plausible.Site.regular(),
         inner_join: t in assoc(s, :team),
         where: s.domain == ^domain or s.domain_changed_from == ^domain,
         select: t

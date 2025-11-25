@@ -13,12 +13,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     site =
-      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
-        :owner,
-        :admin,
-        :editor,
-        :super_admin
-      ])
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain,
+        roles: [
+          :owner,
+          :admin,
+          :editor,
+          :super_admin
+        ]
+      )
 
     # We'll have the options trimmed to only the data we care about, to keep
     # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
@@ -46,7 +48,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def render(assigns) do
     ~H"""
     <div
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"
+      class="fixed inset-0 bg-gray-500/75 transition-opacity z-50"
       phx-window-keydown="cancel-add-funnel"
       phx-key="Escape"
     >
@@ -62,10 +64,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             phx-target="#funnel-form"
             phx-click-away="cancel-add-funnel"
             onkeydown="return event.key != 'Enter';"
-            class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
+            class="bg-white dark:bg-gray-900 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
           >
             <.title class="mb-6">
-              {if @funnel, do: "Edit", else: "Add"} Funnel
+              {if @funnel, do: "Edit", else: "Add"} funnel
             </.title>
 
             <.input
@@ -74,15 +76,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               autocomplete="off"
               placeholder="e.g. From Blog to Purchase"
               autofocus
-              label="Funnel Name"
+              label="Funnel name"
             />
 
             <div id="steps-builder" class="mt-6">
               <.label>
-                Funnel Steps
+                Funnel steps
               </.label>
 
-              <div :for={step_idx <- @step_ids} class="flex mb-3 mt-3">
+              <div :for={step_idx <- @step_ids} class="flex my-3">
                 <div class="w-2/5 flex-1">
                   <.live_component
                     selected={find_preselected(@funnel, @funnel_modified?, step_idx)}
@@ -115,13 +117,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 </div>
               </div>
 
-              <.add_step_button :if={
-                length(@step_ids) < Funnel.max_steps() and
-                  map_size(@selections_made) < length(@goals)
-              } />
-
-              <div class="mt-6">
-                <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 text-sm mt-2 mb-2">
+              <div class="flex flex-col gap-y-4 mt-6">
+                <.add_step_button :if={
+                  length(@step_ids) < Funnel.max_steps() and
+                    map_size(@selections_made) < length(@goals)
+                } />
+                <p id="funnel-eval" class="text-gray-800 dark:text-gray-200 text-sm">
                   <%= if @evaluation_result do %>
                     Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
                   <% end %>
@@ -137,7 +138,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                     length(@step_ids) > map_size(@selections_made)
                 }
               >
-                <span>{if @funnel, do: "Update", else: "Add"} Funnel</span>
+                <span>{if @funnel, do: "Update", else: "Add"} funnel</span>
               </.button>
             </div>
           </.form>
@@ -177,7 +178,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def add_step_button(assigns) do
     ~H"""
-    <a class="underline text-indigo-500 text-sm cursor-pointer mt-6" phx-click="add-step">
+    <a class="text-indigo-500 text-sm font-medium cursor-pointer" phx-click="add-step">
       + Add another step
     </a>
     """
@@ -347,7 +348,17 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         steps
       )
 
-    query = Plausible.Stats.Query.from(site, %{"period" => "month"})
+    query =
+      Plausible.Stats.Query.parse_and_build!(
+        site,
+        :internal,
+        %{
+          "site_id" => site.domain,
+          "date_range" => "month",
+          "metrics" => ["pageviews"]
+        }
+      )
+
     {:ok, {definition, query}}
   end
 

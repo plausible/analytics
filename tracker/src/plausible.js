@@ -1,18 +1,20 @@
 import { init as initEngagementTracking } from './engagement'
-import { init as initConfig, config } from './config'
-import { init as initCustomEvents, DEFAULT_FILE_TYPES } from './custom-events'
+import { init as initConfig, getOptionsWithDefaults, config } from './config'
+import { init as initCustomEvents } from './custom-events'
 import { init as initAutocapture } from './autocapture'
 import { track } from './track'
 
 function init(overrides) {
-  initConfig(overrides || {})
+  const options = getOptionsWithDefaults(overrides || {})
 
   if (COMPILE_PLAUSIBLE_WEB && window.plausible && window.plausible.l) {
-    if (config.logging) {
+    if (options.logging) {
       console.warn('Plausible analytics script was already initialized, skipping init')
     }
     return
   }
+
+  initConfig(options)
 
   initEngagementTracking()
 
@@ -34,6 +36,21 @@ function init(overrides) {
 
     window.plausible = track
     window.plausible.init = init
+    window.plausible.v = COMPILE_TRACKER_SCRIPT_VERSION
+
+    if (COMPILE_PLAUSIBLE_WEB) {
+      window.plausible.s = config.lib
+    }
+
+    window.plausible.l = true
+  }
+
+  // Bind to window to be detectable by the verifier tool
+  // This is done in a 'safe' way to avoid breaking the page if window is frozen or running without window
+  if (COMPILE_PLAUSIBLE_NPM && config.bindToWindow && typeof window !== 'undefined') {
+    window.plausible = track
+    window.plausible.s = 'npm'
+    window.plausible.v = COMPILE_TRACKER_SCRIPT_VERSION
     window.plausible.l = true
   }
 }

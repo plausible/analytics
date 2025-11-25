@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
@@ -1205,7 +1204,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       site_import =
         insert(:site_import,
           start_date: ~D[2005-01-01],
-          end_date: Timex.today(),
+          end_date: Date.utc_today(),
           source: :universal_analytics
         )
 
@@ -1244,7 +1243,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         insert(:site_import,
           site: site,
           start_date: ~D[2005-01-01],
-          end_date: Timex.today(),
+          end_date: Date.utc_today(),
           source: :universal_analytics
         )
 

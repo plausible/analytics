@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.4] - 2025-10-31
+
+- Convert all TypeScript definition comments from `//` style to JSDoc `/** */` style for better IDE integration and TypeScript tooling support
+
+## [0.4.3] - 2025-09-15
+
+- Fix formatting issues.
+
+## [0.4.2] - 2025-09-04
+
+- Remove redeclared variables from the tracker.
+
+## [0.4.1] - 2025-09-01
+
+- Minor update: Allow setting `lib` option for other tools integrating with Plausible.
+
+## [0.4.0] - 2025-08-12
+
+- Move package under `@plausible-analytics/tracker`
+
+## [0.3.6] - 2025-08-04
+
+- Fix issue with a second init() call changing the config option unexpectedly.
+
+## [0.3.5] - 2025-08-04
+
+- Fix issue with link tracking features (tagged events, file downloads, outbound links) causing errors on the page when clicking on `a` tags within `svg` tags.
+
+## [0.3.4] - 2025-07-23
+
+- Plausible loaded indicator `window.plausible.l = true` is set last in initialisation functions
+
+## [0.3.3] - 2025-07-22
+
+- Bind the `track` function into `window.plausible`. This makes it possible for the Plausible verification agent to verify a successful installation. Can be disabled setting the `bindToWindow` config option to `false`.
+
+## [0.3.2] - 2025-07-14
+
+- "Form: Submission" event payload does not need to contain props.path any more: it is saved to be the same as the pathname of the event
+
+## [0.3.1] - 2025-07-08
+
+- Do not send "Form: Submission" event if the form is tagged
+
 ## [0.3.0] - 2025-06-27
 
 - Remove now unnecessary navigation delays on link clicks and form submissions.

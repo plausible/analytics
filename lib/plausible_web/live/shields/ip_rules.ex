@@ -31,89 +31,113 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
     <div>
       <.settings_tiles>
         <.tile docs="excluding">
-          <:title>IP Block List</:title>
-          <:subtitle>Reject incoming traffic from specific IP addresses</:subtitle>
-          <.filter_bar :if={@ip_rules_count < Shields.maximum_ip_rules()} filtering_enabled?={false}>
-            <.button
-              id="add-ip-rule"
-              x-data
-              x-on:click={Modal.JS.open("ip-rule-form-modal")}
-              mt?={false}
+          <:title>IP block list</:title>
+          <:subtitle :if={not Enum.empty?(@ip_rules)}>
+            Reject incoming traffic from specific IP addresses.
+          </:subtitle>
+
+          <%= if Enum.empty?(@ip_rules) do %>
+            <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+              <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+                Block an IP address
+              </h3>
+              <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+                Reject incoming traffic from specific IP addresses.
+                <.styled_link href="https://plausible.io/docs/excluding" target="_blank">
+                  Learn more
+                </.styled_link>
+              </p>
+              <.button
+                :if={@ip_rules_count < Shields.maximum_ip_rules()}
+                id="add-ip-rule"
+                x-data
+                x-on:click={Modal.JS.open("ip-rule-form-modal")}
+                class="mt-4"
+              >
+                Add IP address
+              </.button>
+            </div>
+          <% else %>
+            <.filter_bar :if={@ip_rules_count < Shields.maximum_ip_rules()} filtering_enabled?={false}>
+              <.button
+                id="add-ip-rule"
+                x-data
+                x-on:click={Modal.JS.open("ip-rule-form-modal")}
+                mt?={false}
+              >
+                Add IP address
+              </.button>
+            </.filter_bar>
+
+            <.notice
+              :if={@ip_rules_count >= Shields.maximum_ip_rules()}
+              class="mt-4"
+              title="Maximum number of addresses reached"
+              theme={:gray}
             >
-              Add IP Address
-            </.button>
-          </.filter_bar>
+              <p>
+                You've reached the maximum number of IP addresses you can block ({Shields.maximum_ip_rules()}). Please remove one before adding another.
+              </p>
+            </.notice>
 
-          <.notice
-            :if={@ip_rules_count >= Shields.maximum_ip_rules()}
-            class="mt-4"
-            title="Maximum number of addresses reached"
-            theme={:gray}
-          >
-            <p>
-              You've reached the maximum number of IP addresses you can block ({Shields.maximum_ip_rules()}). Please remove one before adding another.
-            </p>
-          </.notice>
-
-          <p :if={Enum.empty?(@ip_rules)} class="mt-12 mb-8 text-center text-sm">
-            No IP Rules configured for this site.
-          </p>
-
-          <.table :if={not Enum.empty?(@ip_rules)} rows={@ip_rules}>
-            <:thead>
-              <.th>IP Address</.th>
-              <.th hide_on_mobile>Status</.th>
-              <.th hide_on_mobile>Description</.th>
-              <.th invisible>Actions</.th>
-            </:thead>
-            <:tbody :let={rule}>
-              <.td max_width="max-w-40">
-                <div class="flex items-center truncate">
-                  <span
-                    :if={to_string(rule.inet) == @remote_ip}
-                    class="inline-flex items-center gap-x-1.5 rounded-md px-2 mr-2 py-1 text-xs font-medium text-gray-700 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700"
-                  >
-                    <svg class="h-1.5 w-1.5 fill-green-400" viewBox="0 0 6 6" aria-hidden="true">
-                      <circle cx="3" cy="3" r="3" />
-                    </svg>
-                    YOU
-                  </span>
-                  <span
-                    id={"inet-#{rule.id}"}
-                    class="cursor-help"
-                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
-                  >
-                    {rule.inet}
-                  </span>
-                </div>
-              </.td>
-              <.td hide_on_mobile>
-                <span :if={rule.action == :deny}>
-                  Blocked
-                </span>
-                <span :if={rule.action == :allow}>
-                  Allowed
-                </span>
-              </.td>
-              <.td hide_on_mobile truncate>
-                <span :if={rule.description} title={rule.description}>
-                  {rule.description}
-                </span>
-                <span :if={!rule.description} class="text-gray-400 dark:text-gray-600">
-                  --
-                </span>
-              </.td>
-              <.td actions>
-                <.delete_button
-                  id={"remove-ip-rule-#{rule.id}"}
-                  phx-target={@myself}
-                  phx-click="remove-ip-rule"
-                  phx-value-rule-id={rule.id}
-                  data-confirm="Are you sure you want to revoke this rule?"
-                />
-              </.td>
-            </:tbody>
-          </.table>
+            <div class="mt-6">
+              <.table rows={@ip_rules}>
+                <:thead>
+                  <.th>IP address</.th>
+                  <.th hide_on_mobile>Status</.th>
+                  <.th hide_on_mobile>Description</.th>
+                  <.th invisible>Actions</.th>
+                </:thead>
+                <:tbody :let={rule}>
+                  <.td max_width="max-w-40">
+                    <div class="flex items-center truncate">
+                      <span
+                        :if={to_string(rule.inet) == @remote_ip}
+                        class="inline-flex items-center gap-x-1.5 rounded-md px-2 mr-2 py-1 text-xs font-medium text-gray-700 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700"
+                      >
+                        <svg class="h-1.5 w-1.5 fill-green-400" viewBox="0 0 6 6" aria-hidden="true">
+                          <circle cx="3" cy="3" r="3" />
+                        </svg>
+                        YOU
+                      </span>
+                      <span
+                        id={"inet-#{rule.id}"}
+                        class="cursor-help"
+                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                      >
+                        {rule.inet}
+                      </span>
+                    </div>
+                  </.td>
+                  <.td hide_on_mobile>
+                    <span :if={rule.action == :deny}>
+                      Blocked
+                    </span>
+                    <span :if={rule.action == :allow}>
+                      Allowed
+                    </span>
+                  </.td>
+                  <.td hide_on_mobile truncate>
+                    <span :if={rule.description} title={rule.description}>
+                      {rule.description}
+                    </span>
+                    <span :if={!rule.description} class="text-gray-400 dark:text-gray-600">
+                      --
+                    </span>
+                  </.td>
+                  <.td actions>
+                    <.delete_button
+                      id={"remove-ip-rule-#{rule.id}"}
+                      phx-target={@myself}
+                      phx-click="remove-ip-rule"
+                      phx-value-rule-id={rule.id}
+                      data-confirm="Are you sure you want to revoke this rule?"
+                    />
+                  </.td>
+                </:tbody>
+              </.table>
+            </div>
+          <% end %>
 
           <.live_component module={Modal} id="ip-rule-form-modal">
             <.form
@@ -121,9 +145,9 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               for={@form}
               phx-submit="save-ip-rule"
               phx-target={@myself}
-              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+              class="max-w-md w-full mx-auto"
             >
-              <.title>Add IP to Block List</.title>
+              <.title>Add IP to block list</.title>
 
               <div class="mt-4">
                 <p
@@ -140,7 +164,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 <.input
                   autofocus
                   field={f[:inet]}
-                  label="IP Address"
+                  label="IP address"
                   placeholder="e.g. 192.168.127.12"
                 />
               </div>
@@ -155,7 +179,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 Once added, we will start rejecting traffic from this IP within a few minutes.
               </p>
               <.button type="submit" class="w-full">
-                Add IP Address →
+                Add IP address
               </.button>
             </.form>
           </.live_component>

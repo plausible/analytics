@@ -52,30 +52,44 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def site_settings_sidebar(conn) do
+    regular_site? = Plausible.Sites.regular?(conn.assigns.site)
+
     [
       %{key: "General", value: "general", icon: :rocket_launch},
-      %{key: "People", value: "people", icon: :users},
-      %{key: "Visibility", value: "visibility", icon: :eye},
+      if regular_site? do
+        %{key: "People", value: "people", icon: :users}
+      end,
+      if regular_site? do
+        %{key: "Visibility", value: "visibility", icon: :eye}
+      end,
       %{key: "Goals", value: "goals", icon: :check_circle},
       on_ee do
-        %{key: "Funnels", value: "funnels", icon: :funnel}
+        if regular_site? do
+          %{key: "Funnels", value: "funnels", icon: :funnel}
+        end
       end,
-      %{key: "Custom Properties", value: "properties", icon: :document_text},
-      %{key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square},
-      %{key: "Imports & Exports", value: "imports-exports", icon: :arrows_up_down},
-      %{
-        key: "Shields",
-        icon: :shield_exclamation,
-        value: [
-          %{key: "IP Addresses", value: "shields/ip_addresses"},
-          %{key: "Countries", value: "shields/countries"},
-          %{key: "Pages", value: "shields/pages"},
-          %{key: "Hostnames", value: "shields/hostnames"}
-        ]
-      },
-      %{key: "Email Reports", value: "email-reports", icon: :envelope},
-      if conn.assigns[:site_role] in [:owner, :admin] do
-        %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
+      %{key: "Custom properties", value: "properties", icon: :document_text},
+      if regular_site? do
+        %{key: "Integrations", value: "integrations", icon: :puzzle_piece}
+      end,
+      if regular_site? do
+        %{key: "Imports & exports", value: "imports-exports", icon: :arrow_down_tray}
+      end,
+      if regular_site? do
+        %{
+          key: "Shields",
+          icon: :shield_exclamation,
+          value: [
+            %{key: "IP addresses", value: "shields/ip_addresses"},
+            %{key: "Countries", value: "shields/countries"},
+            %{key: "Pages", value: "shields/pages"},
+            %{key: "Hostnames", value: "shields/hostnames"}
+          ]
+        }
+      end,
+      %{key: "Email reports", value: "email-reports", icon: :envelope},
+      if regular_site? and conn.assigns[:site_role] in [:owner, :admin] do
+        %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]
     |> Enum.reject(&is_nil/1)
@@ -85,22 +99,25 @@ defmodule PlausibleWeb.LayoutView do
     current_team = conn.assigns[:current_team]
     current_team_role = conn.assigns[:current_team_role]
 
+    # NOTE: Subscription will still exist if it has expired or cancelled
+    subscription? = !!(conn.assigns[:current_team] && conn.assigns.current_team.subscription)
+
     options = %{
-      "Account Settings" =>
+      "Account" =>
         [
           %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
           %{key: "Security", value: "security", icon: :lock_closed},
-          if(not Teams.setup?(current_team),
+          if(ee?() and not Teams.setup?(current_team),
             do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
           ),
-          if(not Teams.setup?(current_team),
+          if(ee?() and not Teams.setup?(current_team) and subscription?,
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(not Teams.setup?(current_team),
-            do: %{key: "API Keys", value: "api-keys", icon: :key}
+            do: %{key: "API keys", value: "api-keys", icon: :key}
           ),
           if(Plausible.Users.type(conn.assigns.current_user) == :standard,
-            do: %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
+            do: %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
           )
         ]
         |> Enum.reject(&is_nil/1)
@@ -109,20 +126,20 @@ defmodule PlausibleWeb.LayoutView do
     if Teams.setup?(current_team) do
       Map.put(
         options,
-        "Team Settings",
+        "Team",
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
-          if(current_team_role in [:owner, :billing],
+          if(ee?() and current_team_role in [:owner, :billing],
             do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
           ),
-          if(current_team_role in [:owner, :billing],
+          if(ee?() and current_team_role in [:owner, :billing] and subscription?,
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(current_team_role in [:owner, :billing, :admin, :editor],
-            do: %{key: "API Keys", value: "api-keys", icon: :key}
+            do: %{key: "API keys", value: "api-keys", icon: :key}
           ),
           if(
-            Plausible.sso_enabled?() and current_team_role == :owner and
+            ee?() and current_team_role == :owner and
               Plausible.Billing.Feature.SSO.check_availability(current_team) == :ok,
             do: %{
               key: "Single Sign-On",
@@ -133,8 +150,16 @@ defmodule PlausibleWeb.LayoutView do
               ]
             }
           ),
+          if(
+            ee?() and Plausible.Billing.Feature.SSO.check_availability(current_team) != :ok,
+            do: %{
+              key: "Single Sign-On",
+              value: "sso/info",
+              icon: :cloud
+            }
+          ),
           if(current_team_role == :owner,
-            do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
+            do: %{key: "Danger zone", value: "team/delete", icon: :exclamation_triangle}
           )
         ]
         |> Enum.reject(&is_nil/1)

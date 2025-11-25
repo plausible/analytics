@@ -3,7 +3,6 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
   use Oban.Testing, repo: Plausible.Repo
 
   import Mox
-  import Plausible.Test.Support.HTML
 
   alias Plausible.HTTPClient
   alias Plausible.Imported.SiteImport

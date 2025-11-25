@@ -63,7 +63,10 @@ defmodule Plausible.Release do
     streaks = migration_streaks(pending)
 
     Enum.each(streaks, fn {repo, up_to_version} ->
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, to: up_to_version))
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, to: up_to_version),
+          log: :notice
+        )
     end)
   end
 

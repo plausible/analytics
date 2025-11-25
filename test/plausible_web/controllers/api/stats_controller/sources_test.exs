@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
@@ -422,17 +421,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview,
           referrer_source: "Google",
           referrer: "google.com",
-          timestamp: relative_time(minutes: -3)
+          timestamp: relative_time(minute: -3)
         ),
         build(:pageview,
           referrer_source: "Google",
           referrer: "google.com",
-          timestamp: relative_time(minutes: -2)
+          timestamp: relative_time(minute: -2)
         ),
         build(:pageview,
           referrer_source: "DuckDuckGo",
           referrer: "duckduckgo.com",
-          timestamp: relative_time(minutes: -1)
+          timestamp: relative_time(minute: -1)
         )
       ])
 
@@ -678,6 +677,139 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                "comparison_date_range_label" => "1 Jan 2021"
              }
     end
+
+    @tag :ee_only
+    test "return revenue metrics for sources breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:pageview,
+          user_id: 4,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        ),
+        build(:pageview,
+          user_id: 8,
+          referrer_source: "Bing",
+          referrer: "bing.com"
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/sources#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Direct / None",
+                 "visitors" => 2,
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$600.00",
+                   "short" => "$600.0",
+                   "value" => 600.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$600.00",
+                   "short" => "$600.0",
+                   "value" => 600.0
+                 },
+                 "total_visitors" => 2
+               },
+               %{
+                 "name" => "Google",
+                 "visitors" => 2,
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3
+               },
+               %{
+                 "name" => "DuckDuckGo",
+                 "visitors" => 1,
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2
+               }
+             ]
+    end
   end
 
   describe "UTM parameters with hostname filter" do
@@ -771,6 +903,134 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "return revenue metrics for channels breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:pageview,
+          user_id: 4,
+          referrer_source: "Facebook",
+          utm_source: "fb-ads"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          referrer_source: "Facebook",
+          utm_source: "fb-ads"
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/channels#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Direct",
+                 "visitors" => 2,
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$600.00",
+                   "short" => "$600.0",
+                   "value" => 600.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$600.00",
+                   "short" => "$600.0",
+                   "value" => 600.0
+                 },
+                 "total_visitors" => 2
+               },
+               %{
+                 "name" => "Organic Search",
+                 "visitors" => 2,
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3
+               },
+               %{
+                 "name" => "Paid Social",
+                 "visitors" => 1,
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2
                }
              ]
     end
@@ -923,6 +1183,111 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 2,
                  "bounce_rate" => 50,
                  "visit_duration" => 800.0
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "return revenue metrics for UTM mediums breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          utm_medium: "social"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          utm_medium: "social"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          utm_medium: "social"
+        ),
+        build(:pageview,
+          user_id: 4,
+          utm_medium: "email"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          utm_medium: "email"
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/utm_mediums#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "name" => "social",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "name" => "email",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 1
                }
              ]
     end
@@ -1086,6 +1451,111 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
     end
+
+    @tag :ee_only
+    test "return revenue metrics for UTM campaigns breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          utm_campaign: "profile"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          utm_campaign: "profile"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          utm_campaign: "profile"
+        ),
+        build(:pageview,
+          user_id: 4,
+          utm_campaign: "august"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          utm_campaign: "august"
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/utm_campaigns#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "name" => "profile",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "name" => "august",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 1
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/utm_sources" do
@@ -1131,6 +1601,111 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "return revenue metrics for UTM sources breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          utm_source: "Twitter"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          utm_source: "Twitter"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          utm_source: "Twitter"
+        ),
+        build(:pageview,
+          user_id: 4,
+          utm_source: "newsletter"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          utm_source: "newsletter"
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/utm_sources#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "name" => "Twitter",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "name" => "newsletter",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 1
                }
              ]
     end
@@ -1294,6 +1869,111 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
     end
+
+    @tag :ee_only
+    test "return revenue metrics for UTM terms breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          utm_term: "oat milk"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          utm_term: "oat milk"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          utm_term: "oat milk"
+        ),
+        build(:pageview,
+          user_id: 4,
+          utm_term: "Sweden"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          utm_term: "Sweden"
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/utm_terms#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "name" => "oat milk",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "name" => "Sweden",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 1
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/utm_contents" do
@@ -1451,6 +2131,111 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 2,
                  "bounce_rate" => 50,
                  "visit_duration" => 800.0
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "return revenue metrics for UTM contents breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          utm_content: "ad"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("1000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 2,
+          utm_content: "ad"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("2000"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 3,
+          utm_content: "ad"
+        ),
+        build(:pageview,
+          user_id: 4,
+          utm_content: "blog"
+        ),
+        build(:event,
+          name: "Payment",
+          user_id: 4,
+          revenue_reporting_amount: Decimal.new("500"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview,
+          user_id: 5,
+          utm_content: "blog"
+        ),
+        build(:pageview, user_id: 6),
+        build(:event,
+          name: "Payment",
+          user_id: 6,
+          revenue_reporting_amount: Decimal.new("600"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 7),
+        build(:event,
+          name: "Payment",
+          user_id: 7,
+          revenue_reporting_amount: nil
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
+
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/utm_contents#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "name" => "ad",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "name" => "blog",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 1
                }
              ]
     end

@@ -1,368 +1,699 @@
 defmodule PlausibleWeb.Live.InstallationTest do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase
+  use Plausible.Test.Support.DNS
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Site.TrackerScriptConfiguration
+
+  @migration_guide_link "https://plausible.io/docs/script-update-guide"
 
   setup [:create_user, :log_in, :create_site]
 
   describe "GET /:domain/installation" do
-    test "static verification screen renders", %{conn: conn, site: site} do
+    @tag :ee_only
+    test "renders loading installation screen on EE", %{conn: conn, site: site} do
       resp = get(conn, "/#{site.domain}/installation") |> html_response(200)
 
-      assert resp =~ "Determining installation type"
-      refute resp =~ "Review your existing installation."
+      assert resp =~ "animate-spin"
     end
 
-    test "static verification screen renders for flow=review", %{conn: conn, site: site} do
-      resp =
-        conn
-        |> get("/#{site.domain}/installation?flow=review&installation_type=manual")
-        |> html_response(200)
+    @tag :ce_build_only
+    test "no loading spinner, no GTM tab on CE", %{conn: conn, site: site} do
+      resp = get(conn, "/#{site.domain}/installation") |> html_response(200)
 
-      assert resp =~ "Review your existing installation."
-      assert resp =~ "Verify your installation"
+      tabs_text = text_of_element(resp, "a[data-phx-link='patch']")
 
-      assert resp =~
-               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 flow: PlausibleWeb.Flows.review()
-               )
-    end
+      assert length(String.split(tabs_text)) == 3
 
-    test "static verification screen renders for flow=domain_change", %{conn: conn, site: site} do
-      Plausible.Repo.insert!(%TrackerScriptConfiguration{
-        site_id: site.id,
-        installation_type: :manual
-      })
+      assert tabs_text =~ "Script"
+      assert tabs_text =~ "WordPress"
+      assert tabs_text =~ "NPM"
 
-      resp =
-        conn
-        |> get("/#{site.domain}/installation?flow=#{PlausibleWeb.Flows.domain_change()}")
-        |> html_response(200)
-
-      assert resp =~ "Your domain has been changed"
-      assert resp =~ "I understand, I'll update my website"
-      assert resp =~ "Manual installation"
-      refute resp =~ "Review your existing installation."
-
-      assert resp =~
-               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 flow: PlausibleWeb.Flows.domain_change()
-               )
-    end
-
-    test "static verification screen renders for flow=domain_change using original installation type",
-         %{conn: conn, site: site} do
-      Plausible.Repo.insert!(%TrackerScriptConfiguration{
-        site_id: site.id,
-        installation_type: :wordpress
-      })
-
-      resp =
-        conn
-        |> get("/#{site.domain}/installation?flow=#{PlausibleWeb.Flows.domain_change()}")
-        |> html_response(200)
-
-      assert resp =~ "Your domain has been changed"
-      assert resp =~ "I understand, I'll update my website"
-      assert resp =~ "WordPress plugin"
-      refute resp =~ "Manual installation"
-      refute resp =~ "Review your existing installation."
-
-      assert resp =~
-               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 flow: PlausibleWeb.Flows.domain_change()
-               )
-    end
-
-    test "renders pre-determined installation type: WordPress", %{conn: conn, site: site} do
-      resp =
-        conn
-        |> get("/#{site.domain}/installation?installation_type=wordpress")
-        |> html_response(200)
-
-      assert resp =~ "Install WordPress plugin"
-      assert resp =~ "Start collecting data"
-      refute resp =~ "Review your existing installation."
-
-      assert resp =~
-               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 installation_type: "wordpress"
-               )
-    end
-
-    test "renders pre-determined installation type: GTM", %{conn: conn, site: site} do
-      resp =
-        conn |> get("/#{site.domain}/installation?installation_type=gtm") |> html_response(200)
-
-      assert resp =~ "Install Google Tag Manager"
-      assert resp =~ "Start collecting data"
-      refute resp =~ "Review your existing installation."
-
-      assert resp =~
-               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 installation_type: "gtm"
-               )
-    end
-
-    test "renders pre-determined installation type: manual", %{conn: conn, site: site} do
-      resp =
-        conn |> get("/#{site.domain}/installation?installation_type=manual") |> html_response(200)
-
-      assert resp =~ "Manual installation"
-      assert resp =~ "Start collecting data"
-      refute resp =~ "Review your existing installation."
-
-      assert resp =~
-               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 installation_type: "manual"
-               )
-    end
-
-    test "ignores unknown installation types", %{conn: conn, site: site} do
-      resp =
-        conn |> get("/#{site.domain}/installation?installation_type=UM_NO") |> html_response(200)
-
-      assert resp =~ "Determining installation type"
+      refute resp =~ "animate-spin"
     end
   end
 
   describe "LiveView" do
-    test "mounts and detects installation type", %{conn: conn, site: site} do
-      stub_fetch_body(200, "wp-content")
+    @tag :ee_only
+    test "detects installation type when mounted", %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+      stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site)
 
+      html = render_async(lv, 500)
+      assert text(html) =~ "Verify WordPress installation"
+    end
+
+    @tag :ee_only
+    test "When ?type=wordpress URL parameter is supplied, detected type is unused", %{
+      conn: conn,
+      site: site
+    } do
+      stub_lookup_a_records(site.domain)
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?type=wordpress")
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Verify WordPress installation"
+    end
+
+    @tag :ee_only
+    test "When ?type=gtm URL parameter is supplied, detected type is unused", %{
+      conn: conn,
+      site: site
+    } do
+      stub_lookup_a_records(site.domain)
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site, "?type=gtm")
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Verify Tag Manager installation"
+    end
+
+    @tag :ee_only
+    test "When ?type=npm URL parameter is supplied, detected type is unused", %{
+      conn: conn,
+      site: site
+    } do
+      stub_lookup_a_records(site.domain)
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site, "?type=npm")
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Verify NPM installation"
+    end
+
+    @tag :ee_only
+    test "When ?type=manual URL parameter is supplied, detected type is unused", %{
+      conn: conn,
+      site: site
+    } do
+      stub_lookup_a_records(site.domain)
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site, "?type=manual")
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Verify Script installation"
+    end
+
+    @tag :ee_only
+    test "allows switching between installation tabs (EE)", %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+      stub_detection_manual()
+
+      {lv, _html} = get_lv(conn, site, "?type=manual")
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
+
+      lv
+      |> element("a[href*=\"type=wordpress\"]")
+      |> render_click()
+
+      html = render(lv)
+      assert html =~ "Verify WordPress installation"
+
+      lv
+      |> element("a[href*=\"type=gtm\"]")
+      |> render_click()
+
+      html = render(lv)
+      assert html =~ "Verify Tag Manager installation"
+
+      lv
+      |> element("a[href*=\"type=npm\"]")
+      |> render_click()
+
+      html = render(lv)
+      assert html =~ "Verify NPM installation"
+    end
+
+    @tag :ce_build_only
+    test "allows switching between installation tabs (CE)", %{conn: conn, site: site} do
+      {lv, _html} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
+
+      lv
+      |> element("a[href*=\"type=wordpress\"]")
+      |> render_click()
+
+      html = render(lv)
+      assert html =~ "Verify WordPress installation"
+    end
+
+    test "manual installations has script snippet with expected ID", %{conn: conn, site: site} do
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
+
+      {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
+
       assert eventually(fn ->
                html = render(lv)
-
-               {
-                 text(html) =~ "Install WordPress",
-                 html
-               }
+               {html =~ "Verify Script installation", html}
              end)
 
-      _ = render(lv)
+      html = render(lv)
+      config = Plausible.Repo.get_by!(TrackerScriptConfiguration, site_id: site.id)
+      assert html =~ "Privacy-friendly analytics by Plausible"
+      assert html =~ "/js/#{config.id}.js"
+      assert html =~ "async"
     end
 
-    @tag :slow
-    test "mounts and does not detect installation type, if it's provided", %{
+    test "manual installation shows optional measurements", %{conn: conn, site: site} do
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
+
+      {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
+      assert html =~ "Optional measurements"
+      assert html =~ "Outbound links"
+      assert html =~ "File downloads"
+      assert html =~ "Form submissions"
+    end
+
+    test "manual installation shows advanced options in disclosure", %{conn: conn, site: site} do
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
+
+      {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
+      assert html =~ "Advanced options"
+      assert html =~ "Manual tagging"
+      assert html =~ "404 error pages"
+      assert html =~ "Hashed page paths"
+      assert html =~ "Custom properties"
+      assert html =~ "Ecommerce revenue"
+    end
+
+    test "toggling optional measurements updates tracker configuration", %{
       conn: conn,
       site: site
     } do
-      stub_fetch_body(200, "wp-content")
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
 
-      {lv, _} = get_lv(conn, site, "?installation_type=gtm")
+      {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
-      refute eventually(fn ->
-               html = render(lv)
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
 
-               {
-                 text(html) =~ "Install WordPress",
-                 html
-               }
-             end)
+      config = TrackerScriptConfiguration |> Plausible.Repo.get_by!(site_id: site.id)
+      assert config.outbound_links == true
+      assert config.file_downloads == true
+      assert config.form_submissions == true
 
-      _ = render(lv)
+      lv
+      |> element("form[phx-submit='submit']")
+      |> render_submit(%{
+        "tracker_script_configuration" => %{
+          "installation_type" => "manual",
+          "outbound_links" => "false",
+          "file_downloads" => "true",
+          "form_submissions" => "true"
+        }
+      })
+
+      updated_config = TrackerScriptConfiguration |> Plausible.Repo.get_by!(site_id: site.id)
+      assert updated_config.outbound_links == false
+      assert updated_config.file_downloads == true
+      assert updated_config.form_submissions == true
     end
 
-    test "allows manual snippet customization", %{conn: conn, site: site} do
-      {lv, html} = get_lv(conn, site, "?installation_type=manual")
+    on_ee do
+      for {type, expected_text} <- [
+            {"manual", "Verify Script installation"},
+            {"wordpress", "Verify WordPress installation"},
+            {"gtm", "Verify Tag Manager installation"},
+            {"npm", "Verify NPM installation"}
+          ] do
+        test "submitting form with #{type} redirects to verification (EE)", %{
+          conn: conn,
+          site: site
+        } do
+          stub_lookup_a_records(site.domain)
+          stub_detection_manual()
+          {lv, _html} = get_lv(conn, site, "?type=#{unquote(type)}")
 
-      assert text_of_element(html, "textarea#snippet") ==
-               "&amp;lt;script defer data-domain=&amp;quot;#{site.domain}&amp;quot; src=&amp;quot;http://localhost:8000/js/script.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;"
+          html = render_async(lv, 500)
+          assert html =~ unquote(expected_text)
 
-      for {param, script_extension} <- PlausibleWeb.Live.Installation.script_extension_params() do
-        lv
-        |> element(~s|form#snippet-form|)
-        |> render_change(%{
-          param => "on"
-        })
+          lv
+          |> element("form[phx-submit='submit']")
+          |> render_submit(%{
+            "tracker_script_configuration" => %{
+              "installation_type" => unquote(type),
+              "outbound_links" => "true",
+              "file_downloads" => "true",
+              "form_submissions" => "true"
+            }
+          })
 
-        html = lv |> render()
-        assert text_of_element(html, "textarea#snippet") =~ "/js/script.#{script_extension}.js"
-
-        lv
-        |> element(~s|form#snippet-form|)
-        |> render_change(%{})
-
-        html = lv |> render()
-        assert text_of_element(html, "textarea#snippet") =~ "/js/script.js"
-
-        assert html =~ "Snippet updated"
+          assert_redirect(
+            lv,
+            Routes.site_path(conn, :verification, site.domain,
+              flow: "provisioning",
+              installation_type: unquote(type)
+            )
+          )
+        end
       end
     end
 
-    test "allows GTM snippet customization", %{conn: conn, site: site} do
-      {lv, html} = get_lv(conn, site, "?installation_type=gtm")
+    @tag :ce_build_only
+    test "submitting the form redirects to verification (CE)", %{conn: conn, site: site} do
+      {lv, _html} = get_lv(conn, site)
 
-      assert text_of_element(html, "textarea#snippet") =~ "script.defer = true"
+      lv
+      |> element("form[phx-submit='submit']")
+      |> render_submit(%{
+        "tracker_script_configuration" => %{
+          "installation_type" => "manual",
+          "outbound_links" => "true",
+          "file_downloads" => "true",
+          "form_submissions" => "true"
+        }
+      })
 
-      for {param, script_extension} <- PlausibleWeb.Live.Installation.script_extension_params() do
-        lv
-        |> element(~s|form#snippet-form|)
-        |> render_change(%{
-          param => "on"
-        })
+      assert_redirect(
+        lv,
+        Routes.site_path(conn, :verification, site.domain,
+          flow: "provisioning",
+          installation_type: "manual"
+        )
+      )
+    end
 
-        html = lv |> render()
-        assert text_of_element(html, "textarea#snippet") =~ "/js/script.#{script_extension}.js"
+    test "404 goal gets created regardless of user options", %{conn: conn, site: site} do
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
 
-        lv
-        |> element(~s|form#snippet-form|)
-        |> render_change(%{})
+      {lv, _html} = get_lv(conn, site, "?type=manual")
 
-        html = lv |> render()
-        assert text_of_element(html, "textarea#snippet") =~ "/js/script.js"
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
 
-        assert html =~ "Snippet updated"
+      # Test with all options disabled
+      lv
+      |> element("form[phx-submit='submit']")
+      |> render_submit(%{
+        "tracker_script_configuration" => %{
+          "installation_type" => "manual",
+          "outbound_links" => "false",
+          "file_downloads" => "false",
+          "form_submissions" => "false"
+        }
+      })
+
+      # 404 goal should still be created
+      goals = Plausible.Goals.for_site(site)
+      assert Enum.any?(goals, &(&1.event_name == "404"))
+    end
+
+    test "submitting form with review flow redirects to verification with flow param", %{
+      conn: conn,
+      site: site
+    } do
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
+
+      {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
+
+      lv
+      |> element("form[phx-submit='submit']")
+      |> render_submit(%{
+        "tracker_script_configuration" => %{
+          "installation_type" => "manual",
+          "outbound_links" => "true",
+          "file_downloads" => "true",
+          "form_submissions" => "true"
+        }
+      })
+
+      assert_redirect(
+        lv,
+        Routes.site_path(conn, :verification, site.domain,
+          flow: "review",
+          installation_type: "manual"
+        )
+      )
+    end
+
+    @tag :ee_only
+    test "detected WordPress installation shows special message", %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "We've detected your website is using WordPress"
+    end
+
+    @tag :ee_only
+    test "if ratelimit for detection is exceeded, does not make detection request and falls back to recommending manual installation",
+         %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+
+      # exceed the rate limit for site detection
+      Plausible.RateLimit.check_rate(
+        Plausible.RateLimit,
+        "site_detection:#{site.domain}",
+        :timer.minutes(60),
+        1,
+        100
+      )
+
+      # this won't be used: if it were used, the output would be different
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+
+      refute text(html) =~ "We've detected your website is using WordPress"
+      assert text(html) =~ "Verify Script installation"
+    end
+
+    @tag :ee_only
+    test "detected GTM installation shows special message", %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+      stub_detection_gtm()
+
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Tag Manager installation"
+
+      assert text(html) =~ "We've detected your website is using Google Tag Manager"
+    end
+
+    @tag :ee_only
+    test "detected NPM installation shows npm tab", %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+
+      stub_detection_result(%{
+        "v1Detected" => false,
+        "gtmLikely" => false,
+        "npm" => true,
+        "wordpressLikely" => false,
+        "wordpressPlugin" => false
+      })
+
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify NPM installation"
+    end
+
+    @tag :ee_only
+    test "shows v1 detection warning and migration guide link for manual installation", %{
+      conn: conn,
+      site: site
+    } do
+      stub_lookup_a_records(site.domain)
+      stub_detection_manual_with_v1()
+
+      {lv, _} = get_lv(conn, site, "?type=manual")
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Your website is running an outdated version of the tracking script"
+      assert element_exists?(html, "a[href='#{@migration_guide_link}']")
+    end
+
+    @tag :ce_build_only
+    test "shows v1 migration guide link for manual instructions", %{conn: conn, site: site} do
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+      assert text(html) =~ "Still using the legacy snippet"
+      assert element_exists?(html, "a[href='#{@migration_guide_link}']")
+    end
+
+    test "does not render link to migrate guide on WordPress installation tab", %{
+      conn: conn,
+      site: site
+    } do
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_wordpress_with_v1()
+      end
+
+      {lv, _} = get_lv(conn, site, "?type=wordpress")
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify WordPress installation"
+      refute element_exists?(html, "a[href='#{@migration_guide_link}']")
+    end
+
+    @tag :ee_only
+    test "falls back to manual installation when detection fails at dns check level", %{
+      conn: conn,
+      site: site
+    } do
+      stub_lookup_a_records(site.domain, [])
+
+      ExUnit.CaptureLog.capture_log(fn ->
+        {lv, _} = get_lv(conn, site)
+
+        assert eventually(fn ->
+                 html = render(lv)
+                 # Should default to manual installation when detection returns {:error, _}
+                 {html =~ "Verify Script installation", html}
+               end)
+      end)
+    end
+
+    @tag :ee_only
+    test "falls back to manual installation when dns succeeds but detection fails", %{
+      conn: conn,
+      site: site
+    } do
+      stub_lookup_a_records(site.domain)
+      stub_detection_error()
+
+      ExUnit.CaptureLog.capture_log(fn ->
+        {lv, _} = get_lv(conn, site)
+
+        html = render_async(lv, 500)
+        # Should default to manual installation when detection returns {:error, _}
+        assert html =~ "Verify Script installation"
+      end)
+    end
+  end
+
+  describe "Authorization" do
+    test "requires site access permissions", %{conn: conn} do
+      other_user = insert(:user)
+      other_site = new_site(owner: other_user)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        get_lv(conn, other_site)
       end
     end
 
-    test "allows manual snippet customization with 404 links", %{conn: conn, site: site} do
-      {lv, _html} = get_lv(conn, site, "?installation_type=manual")
+    test "allows viewer access to installation page", %{conn: conn, user: user} do
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
 
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{
-        "track_404_pages" => "on"
-      })
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
 
-      html = lv |> render()
+      {lv, _} = get_lv(conn, site)
 
-      assert text_of_element(html, "textarea#snippet") =~
-               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }&amp;lt;/script&amp;gt;"
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{})
-
-      html = lv |> render()
-
-      refute text_of_element(html, "textarea#snippet") =~
-               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }&amp;lt;/script&amp;gt;"
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
     end
 
-    test "turning on file-downloads, outbound-links and 404 creates special goals", %{
-      conn: conn,
-      site: site
-    } do
-      {lv, _html} = get_lv(conn, site, "?installation_type=manual")
+    test "allows editor access to installation page", %{conn: conn, user: user} do
+      site = new_site()
+      add_guest(site, user: user, role: :editor)
 
-      assert Plausible.Goals.for_site(site) == []
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
 
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{
-        "file_downloads" => "on",
-        "outbound_links" => "on",
-        "track_404_pages" => "on"
-      })
+      {lv, _} = get_lv(conn, site)
 
-      lv |> render()
-
-      assert [track_404_pages, downloads, clicks] =
-               Plausible.Goals.for_site(site) |> Enum.sort_by(& &1.event_name)
-
-      assert track_404_pages.event_name == "404"
-      assert downloads.event_name == "File Download"
-      assert clicks.event_name == "Outbound Link: Click"
-    end
-
-    test "turning off file-downloads, outbound-links and 404 deletes special goals", %{
-      conn: conn,
-      site: site
-    } do
-      {lv, _html} = get_lv(conn, site, "?installation_type=manual")
-
-      assert Plausible.Goals.for_site(site) == []
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{
-        "file_downloads" => "on",
-        "outbound_links" => "on",
-        "track_404_pages" => "on"
-      })
-
-      assert [_, _, _] = Plausible.Goals.for_site(site)
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{
-        "file_downloads" => "on",
-        "outbound_links" => "on"
-      })
-
-      assert render(lv) =~ "Snippet updated and goal deleted"
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{
-        "file_downloads" => "on"
-      })
-
-      assert render(lv) =~ "Snippet updated and goal deleted"
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{})
-
-      assert render(lv) =~ "Snippet updated and goal deleted"
-
-      assert [] = Plausible.Goals.for_site(site)
-    end
-
-    test "turning off remaining checkboxes doesn't render goal deleted flash", %{
-      conn: conn,
-      site: site
-    } do
-      {lv, _html} = get_lv(conn, site, "?installation_type=manual")
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{
-        "tagged_events" => "on",
-        "hash_based_routing" => "on",
-        "pageview_props" => "on",
-        "revenue_tracking" => "on"
-      })
-
-      assert render(lv) =~ "Snippet updated. Please insert the newest snippet into your site"
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{})
-
-      assert render(lv) =~ "Snippet updated. Please insert the newest snippet into your site"
-    end
-
-    test "no changes", %{conn: conn, site: site} do
-      {lv, _html} = get_lv(conn, site, "?installation_type=manual")
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{})
-
-      lv
-      |> element(~s|form#snippet-form|)
-      |> render_change(%{})
-
-      refute render(lv) =~ "Snippet updated"
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
     end
   end
 
-  defp stub_fetch_body(f) when is_function(f, 1) do
-    Req.Test.stub(Plausible.Verification.Checks.FetchBody, f)
+  describe "URL Parameter Handling" do
+    test "falls back to manual installation when invalid installation type parameter supplied",
+         %{
+           conn: conn,
+           site: site
+         } do
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
+
+      {lv, _} = get_lv(conn, site, "?type=invalid")
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
+    end
+
+    test "falls back to provisioning flow when invalid flow parameter supplied", %{
+      conn: conn,
+      site: site
+    } do
+      on_ee do
+        stub_lookup_a_records(site.domain)
+        stub_detection_manual()
+      end
+
+      {lv, _} = get_lv(conn, site, "?flow=invalid")
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Script installation"
+    end
   end
 
-  defp stub_fetch_body(status, body) do
-    stub_fetch_body(fn conn ->
+  describe "Detection Result Combinations" do
+    @describetag :ee_only
+
+    test "When GTM + Wordpress detected, GTM takes precedence", %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+
+      stub_detection_result(%{
+        "v1Detected" => false,
+        "gtmLikely" => true,
+        "wordpressLikely" => true,
+        "wordpressPlugin" => false
+      })
+
+      {lv, _} = get_lv(conn, site)
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify Tag Manager installation"
+    end
+  end
+
+  describe "Legacy Installations" do
+    @tag :ee_only
+    test "uses detected type in review flow when installation_type is nil", %{
+      conn: conn,
+      site: site
+    } do
+      _config =
+        PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+          installation_type: nil,
+          outbound_links: true,
+          file_downloads: false,
+          form_submissions: true
+        })
+
+      stub_lookup_a_records(site.domain)
+      stub_detection_wordpress()
+
+      {lv, _} = get_lv(conn, site, "?flow=review")
+
+      html = render_async(lv, 500)
+      assert html =~ "Verify WordPress installation"
+    end
+  end
+
+  defp stub_detection_manual do
+    stub_detection_result(%{
+      "v1Detected" => false,
+      "gtmLikely" => false,
+      "npm" => false,
+      "wordpressLikely" => false,
+      "wordpressPlugin" => false
+    })
+  end
+
+  defp stub_detection_wordpress do
+    stub_detection_result(%{
+      "v1Detected" => false,
+      "gtmLikely" => false,
+      "npm" => false,
+      "wordpressLikely" => true,
+      "wordpressPlugin" => false
+    })
+  end
+
+  defp stub_detection_gtm do
+    stub_detection_result(%{
+      "v1Detected" => false,
+      "gtmLikely" => true,
+      "npm" => false,
+      "wordpressLikely" => false,
+      "wordpressPlugin" => false
+    })
+  end
+
+  defp stub_detection_manual_with_v1 do
+    stub_detection_result(%{
+      "v1Detected" => true,
+      "gtmLikely" => false,
+      "npm" => false,
+      "wordpressLikely" => false,
+      "wordpressPlugin" => false
+    })
+  end
+
+  on_ee do
+    defp stub_detection_wordpress_with_v1 do
+      stub_detection_result(%{
+        "v1Detected" => true,
+        "gtmLikely" => false,
+        "npm" => false,
+        "wordpressLikely" => true,
+        "wordpressPlugin" => false
+      })
+    end
+  end
+
+  defp stub_detection_result(js_data) do
+    Req.Test.stub(Plausible.InstallationSupport.Checks.Detection, fn conn ->
       conn
-      |> put_resp_content_type("text/html")
-      |> send_resp(status, body)
+      |> put_resp_content_type("application/json")
+      |> send_resp(200, Jason.encode!(%{"data" => Map.put(js_data, "completed", true)}))
+    end)
+  end
+
+  defp stub_detection_error do
+    Req.Test.stub(Plausible.InstallationSupport.Checks.Detection, fn conn ->
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{"data" => %{"error" => %{"message" => "Simulated browser error"}}})
+      )
     end)
   end
 

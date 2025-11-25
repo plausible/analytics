@@ -1,7 +1,5 @@
 defmodule Plausible.HelpScoutTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
-  use Plausible
 
   @moduletag :ee_only
 
@@ -9,6 +7,8 @@ defmodule Plausible.HelpScoutTest do
     alias Plausible.Billing.Subscription
     alias Plausible.HelpScout
     alias Plausible.Repo
+
+    alias PlausibleWeb.Router.Helpers, as: Routes
 
     require Plausible.Billing.Subscription.Status
 
@@ -59,7 +59,7 @@ defmodule Plausible.HelpScoutTest do
         stub_help_scout_requests(email)
         team = team_of(user)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team.id}"
+        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
 
         assert {:ok,
                 %{
@@ -407,7 +407,7 @@ defmodule Plausible.HelpScoutTest do
 
         team = team_of(user)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team.id}"
+        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
 
         assert {:ok,
                 %{
@@ -442,7 +442,7 @@ defmodule Plausible.HelpScoutTest do
         new_site(owner: user2)
         team2 = team_of(user2)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team2.id}"
+        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team2.id)
 
         assert {:ok,
                 %{
@@ -475,6 +475,9 @@ defmodule Plausible.HelpScoutTest do
         user3 = new_user(email: "user3@umatched.example.com")
         new_site(owner: user3)
         new_site(domain: "big.match.example.com/hit", owner: user3)
+
+        # excluded
+        new_site(domain: "consolidated.example.com", owner: user3, consolidated: true)
 
         assert HelpScout.search_users("match.example.co", "123") == [
                  %{email: user3.email, sites_count: 2},

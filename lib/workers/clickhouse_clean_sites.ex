@@ -37,7 +37,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     deleted_sites = get_deleted_sites_with_clickhouse_data()
 
     if not Enum.empty?(deleted_sites) do
-      Logger.info(
+      Logger.notice(
         "Clearing ClickHouse data for the following #{length(deleted_sites)} sites which have been deleted: #{inspect(deleted_sites)}"
       )
 
@@ -55,7 +55,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
 
   def get_deleted_sites_with_clickhouse_data() do
     pg_sites =
-      from(s in Plausible.Site, select: s.id)
+      from(s in Plausible.Site.regular(), select: s.id)
       |> Plausible.Repo.all()
       |> MapSet.new()
 

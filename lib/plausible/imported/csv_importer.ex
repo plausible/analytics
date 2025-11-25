@@ -18,6 +18,8 @@ defmodule Plausible.Imported.CSVImporter do
 
   @impl true
   def parse_args(%{"uploads" => uploads, "storage" => storage}) do
+    uploads = Enum.reject(uploads, &String.starts_with?(&1["filename"], "imported_custom_props_"))
+
     [uploads: uploads, storage: storage]
   end
 
@@ -207,6 +209,14 @@ defmodule Plausible.Imported.CSVImporter do
   @spec date_range([String.t() | %{String.t() => String.t()}, ...]) :: Date.Range.t() | nil
   def date_range([_ | _] = uploads), do: date_range(uploads, _start_date = nil, _end_date = nil)
   def date_range([]), do: nil
+
+  defp date_range(
+         [%{"filename" => "imported_custom_props_" <> _} | uploads],
+         prev_start_date,
+         prev_end_date
+       ) do
+    date_range(uploads, prev_start_date, prev_end_date)
+  end
 
   defp date_range([upload | uploads], prev_start_date, prev_end_date) do
     filename =

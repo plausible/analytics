@@ -2,11 +2,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   use PlausibleWeb.ConnCase, async: true
 
   on_ee do
-    use Plausible.Teams.Test
     @moduletag :ee_only
 
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
+
     require Plausible.Billing.Subscription.Status
     alias Plausible.{Repo, Billing, Billing.Subscription}
 
@@ -29,7 +28,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     @slider_value "#slider-value"
 
     @starter_plan_box "#starter-plan-box"
-    @starter_plan_tooltip "#starter-plan-box .tooltip-content"
+    @starter_plan_tooltip "#starter-plan-box [data-testid='plan-tooltip']"
     @starter_price_tag_amount "#starter-price-tag-amount"
     @starter_price_tag_interval "#starter-price-tag-interval"
     @starter_discount_price_tag_amount "#starter-discount-price-tag-amount"
@@ -39,7 +38,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     @starter_checkout_button "#starter-checkout"
 
     @growth_plan_box "#growth-plan-box"
-    @growth_plan_tooltip "#growth-plan-box .tooltip-content"
+    @growth_plan_tooltip "#growth-plan-box [data-testid='plan-tooltip']"
     @growth_price_tag_amount "#growth-price-tag-amount"
     @growth_price_tag_interval "#growth-price-tag-interval"
     @growth_discount_price_tag_amount "#growth-discount-price-tag-amount"
@@ -65,22 +64,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     describe "for a user with no subscription" do
       setup [:create_user, :create_site, :log_in]
 
-      setup %{user: user} do
-        {:ok, team} = Plausible.Teams.get_or_create(user)
-
-        trial_expiry_date = Plausible.Teams.Billing.starter_tier_launch() |> Date.shift(day: -30)
-
-        Ecto.Changeset.change(team, %{trial_expiry_date: trial_expiry_date})
-        |> Repo.update()
-
-        :ok
-      end
-
       test "displays basic page content", %{conn: conn} do
         {:ok, _lv, doc} = get_liveview(conn)
 
         assert doc =~ "Upgrade your trial"
-        assert doc =~ "Back to Settings"
+        assert doc =~ "Back to settings"
         assert doc =~ "You have used"
         assert doc =~ "<b>0</b>"
         assert doc =~ "billable pageviews in the last 30 days"
@@ -132,7 +120,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "10+ sites"
         assert enterprise_box =~ "600+ Stats API requests per hour"
         assert enterprise_box =~ "Sites API access for"
-        assert enterprise_box =~ "Technical onboarding"
+        assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
 
         assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
@@ -398,15 +386,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       @tag :slow
       test "allows upgrade to a 100k plan with a pageview allowance margin of 0.15 when trial is active",
            %{conn: conn, site: site, user: user} do
-        {:ok, team} = Plausible.Teams.get_or_create(user)
-
-        new_trial_expiry_date =
-          Plausible.Teams.Billing.starter_tier_launch() |> Date.shift(day: 31)
-
-        # NOTE: This is temporary, making sure that the trial is treated as active,
-        # but at the same time, ineligible for seeing the old upgrade page.
-        Ecto.Changeset.change(team, %{trial_expiry_date: new_trial_expiry_date})
-        |> Repo.update!()
+        Plausible.Teams.get_or_create(user)
 
         generate_usage_for(site, 115_000)
 
@@ -433,23 +413,15 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       test "allows upgrade to a 10k plan with a pageview allowance margin of 0.3 when trial ended 10 days ago",
            %{conn: conn, site: site, user: user} do
-        team =
-          user
-          |> team_of()
-          |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
-          |> Repo.update!()
+        user
+        |> team_of()
+        |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
+        |> Repo.update!()
 
         generate_usage_for(site, 13_000)
 
         {:ok, lv, _doc} = get_liveview(conn)
         doc = set_slider(lv, "10k")
-
-        # NOTE: drop the else clause once Starter tier is live for a trial that ended recently
-        if Plausible.Teams.Billing.show_new_upgrade_page?(team) do
-          refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
-        else
-          refute element_exists?(doc, @starter_plan_box)
-        end
 
         refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
         refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
@@ -458,13 +430,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
         {:ok, lv, _doc} = get_liveview(conn)
         doc = set_slider(lv, "10k")
-
-        # NOTE: drop the else clause once Starter tier is live for a trial that ended recently
-        if Plausible.Teams.Billing.show_new_upgrade_page?(team) do
-          refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
-        else
-          refute element_exists?(doc, @starter_plan_box)
-        end
 
         assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
         assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
@@ -478,7 +443,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
            } do
         user
         |> team_of()
-        |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -30))
+        |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -11))
         |> Repo.update!()
 
         generate_usage_for(site, 11_000)
@@ -486,7 +451,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         {:ok, lv, _doc} = get_liveview(conn)
         doc = set_slider(lv, "10k")
 
-        refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
         refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
         refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
 
@@ -495,7 +459,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         {:ok, lv, _doc} = get_liveview(conn)
         doc = set_slider(lv, "10k")
 
-        assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
         assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
         assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
       end
@@ -555,7 +518,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "10+ sites"
         assert enterprise_box =~ "600+ Stats API requests per hour"
         assert enterprise_box =~ "Sites API access for"
-        assert enterprise_box =~ "Technical onboarding"
+        assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
         assert enterprise_box =~ "5+ years of data retention"
 
@@ -894,8 +857,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
            } do
         now = NaiveDateTime.utc_now()
 
-        generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
-        generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
+        generate_usage_for(site, 11_000, NaiveDateTime.shift(now, day: -5))
+        generate_usage_for(site, 11_000, NaiveDateTime.shift(now, day: -35))
 
         user
         |> team_of()
@@ -971,7 +934,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "50+ sites"
         assert enterprise_box =~ "600+ Stats API requests per hour"
         assert enterprise_box =~ "Sites API access for"
-        assert enterprise_box =~ "Technical onboarding"
+        assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
 
         refute enterprise_box =~ "team members"
@@ -1088,7 +1051,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         |> team_of()
         |> Repo.preload(:subscription)
         |> Map.fetch!(:subscription)
-        |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
+        |> Subscription.changeset(%{
+          next_bill_date: DateTime.shift(DateTime.utc_now(), month: -2)
+        })
         |> Repo.update!()
 
         :ok
@@ -1220,7 +1185,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "50+ sites"
         assert enterprise_box =~ "600+ Stats API requests per hour"
         assert enterprise_box =~ "Sites API access for"
-        assert enterprise_box =~ "Technical onboarding"
+        assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
 
         assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~

@@ -34,8 +34,6 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   const site = useSiteContext()
 
   const isRealtime = query.period === 'realtime'
-  const isDarkTheme =
-    document.querySelector('html').classList.contains('dark') || false
 
   const topStatsBoundary = useRef(null)
 
@@ -168,7 +166,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   return (
     <div
       className={
-        'relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825'
+        'relative w-full mt-2 bg-white rounded-md shadow dark:bg-gray-900'
       }
     >
       {(topStatsLoading || graphLoading) && renderLoader()}
@@ -209,7 +207,6 @@ export default function VisitorGraph({ updateImportedDataInView }) {
               ...graphData,
               interval: getCurrentInterval(site, query)
             }}
-            darkTheme={isDarkTheme}
           />
         </div>
       </FadeIn>

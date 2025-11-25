@@ -33,7 +33,7 @@
       <.input type="hidden" field={f[:team_identifier]} />
       <.input
         field={f[:code]}
-        class="tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-200 dark:bg-gray-900 text-center"
+        class="tracking-widest font-medium shadow-xs focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-200 dark:bg-gray-900 text-center"
         oninput="this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()"
         onclick="this.select();"
         maxlength="4"

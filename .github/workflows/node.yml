@@ -16,12 +16,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Read .tool-versions
       uses: marocchino/tool-versions-action@v1
       id: versions
     - name: Set up Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: ${{steps.versions.outputs.nodejs}}
     - run: npm install --prefix ./assets
@@ -31,4 +31,6 @@ jobs:
     - run: npm run lint --prefix ./assets
     - run: npm run check-format --prefix ./assets
     - run: npm run test --prefix ./assets
+    - run: npm run lint --prefix ./tracker
+    - run: npm run check-format --prefix ./tracker
     - run: npm run deploy --prefix ./tracker

@@ -1,9 +1,7 @@
 defmodule PlausibleWeb.Live.SitesTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Repo
 
@@ -33,8 +31,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert text =~ "Meine Websites"
       refute text =~ "You don't have any sites yet"
-      assert text =~ "You currently have no personal sites"
-      assert text =~ "Go to your team"
+      assert text =~ "Add your first personal site"
+      assert text =~ "Go to team sites"
     end
 
     test "renders settings link when current team is set", %{user: user, conn: conn} do
@@ -73,45 +71,25 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
                "G.I. Jane has invited you to join the \"Meine Websites\" as editor member."
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}"]|
-               )
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}"]|
+             )
 
-      assert [_] =
-               find(
-                 html,
-                 ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}"]|
-               )
-    end
-
-    test "renders metadata for invitation", %{
-      conn: conn,
-      user: user
-    } do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-
-      invitation = invite_guest(site, user, inviter: inviter, role: :viewer)
-
-      {:ok, _lv, html} = live(conn, "/sites")
-
-      invitation_data = get_invitation_data(html)
-
-      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "invitation"])
+      assert element_exists?(
+               html,
+               ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}"]|
+             )
     end
 
     @tag :ee_only
@@ -126,9 +104,10 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      invitation_data = get_invitation_data(html)
+      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
 
-      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "no_plan"])
+      assert text(template) =~
+               "You are unable to accept the ownership of this site because your account does not have a subscription"
     end
 
     @tag :ee_only
@@ -224,10 +203,9 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      invitation_data = get_invitation_data(html)
+      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
 
-      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "exceeded_limits"]) ==
-               "site limit"
+      assert text(template) =~ "Owning this site would exceed your site limit"
     end
 
     @tag :ee_only
@@ -244,10 +222,10 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      invitation_data = get_invitation_data(html)
+      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
 
-      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "missing_features"]) ==
-               "Custom Properties"
+      assert text(template) =~
+               "The site uses Custom Properties, which your current subscription does not support"
     end
 
     test "renders 24h visitors correctly", %{conn: conn, user: user} do
@@ -301,6 +279,243 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
   end
 
+  on_ee do
+    describe "consolidated views appearance" do
+      test "consolidated view shows up", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+        team = user |> team_of()
+
+        conn = set_current_team(conn, team)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+
+        team = Plausible.Teams.complete_setup(team)
+        conn = set_current_team(conn, team)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-chart-loaded"]|)
+      end
+
+      test "consolidated view presents consolidated stats", %{conn: conn, user: user} do
+        site1 = new_site(owner: user)
+        site2 = new_site(owner: user)
+
+        populate_stats(site1, [
+          build(:pageview, user_id: 1),
+          build(:pageview, user_id: 1),
+          build(:pageview)
+        ])
+
+        populate_stats(site2, [
+          build(:pageview, user_id: 3)
+        ])
+
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+
+        conn = set_current_team(conn, team)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        stats = text_of_element(html, ~s|[data-test-id="consolidated-view-stats-loaded"]|)
+        assert stats =~ "Unique visitors 3"
+        assert stats =~ "Total visits 3"
+        assert stats =~ "Total pageviews 4"
+        assert stats =~ "Views per visit 1.33"
+      end
+
+      test "consolidated view disappears when trial ends - CTA is shown instead", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+
+        conn = set_current_team(conn, team)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+
+        team |> Plausible.Teams.Team.end_trial() |> Plausible.Repo.update!()
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "Upgrade to the Business plan to enable consolidated view."
+
+        assert element_exists?(
+                 html,
+                 ~s|[data-test-id="consolidated-view-card-cta"] a[href$="/billing/choose-plan"]|
+               )
+      end
+
+      test "CTA for insufficient custom plans", %{conn: conn, user: user} do
+        user
+        |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.Goals])
+        |> team_of()
+
+        new_site(owner: user)
+        new_site(owner: user)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "Your plan does not include consolidated view. Contact us to discuss an upgrade."
+      end
+
+      test "a team that hasn't been set up shows different CTA", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "To create a consolidated view, you'll need to set up a team."
+      end
+
+      test "single site won't show neither CTA or view - team not setup", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+      end
+
+      test "single site won't show neither CTA or view - team setup", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+
+        user |> team_of() |> Plausible.Teams.complete_setup()
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+      end
+
+      test "CTA advertises contacting team owner to viewers", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        subscribe_to_growth_plan(user)
+
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+
+        viewer = add_member(team, role: :viewer)
+
+        {:ok, conn: conn} = log_in(%{user: viewer, conn: conn})
+
+        {:ok, _lv, html} = live(conn, "/sites?__team=#{team.identifier}")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        assert text_of_element(html, ~s|[data-test-id="consolidated-view-card-cta"]|) =~
+                 "Available on Business plans. Contact your team owner to create it."
+
+        refute element_exists?(
+                 html,
+                 ~s|[data-test-id="consolidated-view-card-cta"] a[href="/billing/choose-plan"]|
+               )
+      end
+
+      test "CTA can be permanently dismissed, in which case dropdown option to restore it shows up",
+           %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        dismiss_selector = ~s|[phx-click="consolidated-view-cta-dismiss"]|
+        cta_selector = ~s|[data-test-id="consolidated-view-card-cta"]|
+        restore_selector = ~s|[phx-click="consolidated-view-cta-restore"]|
+
+        subscribe_to_growth_plan(user)
+
+        {:ok, lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, cta_selector)
+        refute element_exists?(html, restore_selector)
+
+        lv
+        |> element(dismiss_selector)
+        |> render_click()
+
+        html = render(lv)
+
+        refute element_exists?(html, cta_selector)
+        assert element_exists?(html, restore_selector)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+        refute element_exists?(html, cta_selector)
+
+        lv
+        |> element(restore_selector)
+        |> render_click()
+
+        html = render(lv)
+        assert element_exists?(html, cta_selector)
+      end
+
+      test "consolidated view card disappears when searching", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        team = user |> team_of() |> Plausible.Teams.complete_setup()
+        conn = set_current_team(conn, team)
+
+        {:ok, lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+
+        type_into_input(lv, "filter-text", "a")
+
+        html = render(lv)
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card"]|)
+      end
+
+      test "CTA card disappears when searching", %{conn: conn, user: user} do
+        new_site(owner: user)
+        new_site(owner: user)
+
+        {:ok, lv, html} = live(conn, "/sites")
+
+        assert element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+
+        type_into_input(lv, "filter-text", "a")
+
+        html = render(lv)
+
+        refute element_exists?(html, ~s|[data-test-id="consolidated-view-card-cta"]|)
+      end
+    end
+  end
+
   describe "pinning" do
     test "renders pin site option when site not pinned", %{conn: conn, user: user} do
       site = new_site(owner: user)
@@ -310,7 +525,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text_of_element(
                html,
                ~s/li[data-domain="#{site.domain}"] a[phx-value-domain]/
-             ) == "Pin Site"
+             ) == "Pin site"
     end
 
     test "site state changes when pin toggled", %{conn: conn, user: user} do
@@ -327,7 +542,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert html =~ "Site pinned"
 
-      assert text_of_element(html, button_selector) == "Unpin Site"
+      assert text_of_element(html, button_selector) == "Unpin site"
 
       html =
         lv
@@ -336,7 +551,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert html =~ "Site unpinned"
 
-      assert text_of_element(html, button_selector) == "Pin Site"
+      assert text_of_element(html, button_selector) == "Pin site"
     end
 
     test "shows error when pins limit hit", %{conn: conn, user: user} do
@@ -356,7 +571,8 @@ defmodule PlausibleWeb.Live.SitesTest do
         |> element(button_selector)
         |> render_click()
 
-      assert text(html) =~ "Looks like you've hit the pinned sites limit!"
+      assert html =~
+               LazyHTML.html_escape("Looks like you've hit the pinned sites limit!")
     end
 
     test "does not allow pinning site user doesn't have access to", %{conn: conn, user: user} do
@@ -374,15 +590,5 @@ defmodule PlausibleWeb.Live.SitesTest do
     lv
     |> element("form")
     |> render_change(%{id => text})
-  end
-
-  defp get_invitation_data(html) do
-    html
-    |> text_of_attr("div[x-ref=\"invitation_data\"][x-data]", "x-data")
-    |> String.trim("dropdown")
-    |> String.replace("selectedInvitation:", "\"selectedInvitation\":")
-    |> String.replace("invitationOpen:", "\"invitationOpen\":")
-    |> String.replace("invitations:", "\"invitations\":")
-    |> Jason.decode!()
   end
 end

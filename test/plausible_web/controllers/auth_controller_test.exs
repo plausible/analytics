@@ -1,10 +1,8 @@
 defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
-  use Plausible.Teams.Test
   use Plausible.Repo
 
-  import Plausible.Test.Support.HTML
   import Mox
 
   require Logger
@@ -329,7 +327,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "regenerates an activation pin even if there's one already", %{conn: conn, user: user} do
       five_minutes_ago =
         NaiveDateTime.utc_now()
-        |> Timex.shift(minutes: -5)
+        |> NaiveDateTime.shift(minute: -5)
         |> NaiveDateTime.truncate(:second)
 
       {:ok, verification} = Auth.EmailVerification.issue_code(user, five_minutes_ago)
@@ -380,7 +378,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "with expired pin - reloads the form with error", %{conn: conn, user: user} do
       one_day_ago =
         NaiveDateTime.utc_now()
-        |> Timex.shift(days: -1)
+        |> NaiveDateTime.shift(day: -1)
         |> NaiveDateTime.truncate(:second)
 
       {:ok, verification} = Auth.EmailVerification.issue_code(user, one_day_ago)
@@ -480,11 +478,10 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "renders `return_to` query param as hidden input", %{conn: conn} do
       conn = get(conn, "/login?return_to=/dummy.site")
 
-      [input_value] =
+      input_value =
         conn
         |> html_response(200)
-        |> Floki.parse_document!()
-        |> Floki.attribute("input[name=return_to]", "value")
+        |> text_of_attr("input[name=return_to]", "value")
 
       assert input_value == "/dummy.site"
     end
@@ -612,7 +609,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
         _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(owner.name, owner.email)
+        identity = new_identity(owner.name, owner.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
 
         conn = post(conn, "/login", email: owner.email, password: "password")
@@ -636,7 +633,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
         _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(member.name, member.email)
+        identity = new_identity(member.name, member.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
 
         conn = post(conn, "/login", email: member.email, password: "password")
@@ -660,7 +657,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
         _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(member.name, member.email)
+        identity = new_identity(member.name, member.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
 
         conn = post(conn, "/login", email: member.email, password: "password")
@@ -705,6 +702,36 @@ defmodule PlausibleWeb.AuthControllerTest do
         )
 
       assert html_response(response, 429) =~ "Too many login attempts"
+    end
+
+    test "malicious automated logins", %{conn: conn1} do
+      conn =
+        post(conn1, "/login", %{
+          "g-recaptcha-response" => "NwBMkEWbh",
+          "user[email]" => "some@example.com",
+          "user[name]" => "CJCtGVXVgfORdNN",
+          "user[password]" => "[Filtered]",
+          "user[password_confirmation]" => "[Filtered]",
+          "user[register_action]" => "register_form"
+        })
+
+      assert response(conn, 403)
+
+      conn =
+        conn1
+        |> put_req_header("content-type", "application/json")
+        |> post("/login", """
+          {
+          "g-recaptcha-response": "NwBMkEWbh",
+          "user[email]": "some@example.com",
+          "user[name]": "CJCtGVXVgfORdNN",
+          "user[password]": "[Filtered]",
+          "user[password_confirmation]": "[Filtered]",
+          "user[register_action]": "register_form"
+          }
+        """)
+
+      assert response(conn, 403)
     end
   end
 
@@ -1118,6 +1145,14 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert element_exists?(html, "svg")
       assert html =~ secret
+      refute html =~ "You've been redirected here because your team enforces 2FA."
+    end
+
+    test "shows additional notice when `force` parameter set", %{conn: conn} do
+      conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup, force: "true"))
+
+      assert html = html_response(conn, 200)
+      assert html =~ "You've been redirected here because your team enforces 2FA."
     end
 
     test "redirects back to settings if 2FA is already setup", %{conn: conn, user: user} do
@@ -1150,7 +1185,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert element_exists?(
                html,
-               ~s|a[data-method="post"][data-to="#{Routes.auth_path(conn, :initiate_2fa_setup)}"|
+               ~s|a[data-method="post"][data-to="#{Routes.auth_path(conn, :initiate_2fa_setup)}"]|
              )
     end
 
@@ -1175,7 +1210,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert html = html_response(conn, 200)
 
-      assert list = [_ | _] = find(html, "#recovery-codes-list > *")
+      assert list = [_ | _] = find(html, "#recovery-codes-list > *") |> LazyHTML.to_tree()
       assert length(list) == 10
 
       assert user |> Repo.reload!() |> Auth.TOTP.enabled?()
@@ -1260,7 +1295,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert html = html_response(conn, 200)
 
-      assert list = [_ | _] = find(html, "#recovery-codes-list > *")
+      assert list = [_ | _] = find(html, "#recovery-codes-list > *") |> LazyHTML.to_tree()
       assert length(list) == 10
     end
 
@@ -1774,7 +1809,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     })
     |> recycle()
     |> Map.put(:secret_key_base, secret_key_base())
-    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+    |> Plug.Conn.put_req_header("x-forwarded-for", random_ip())
   end
 
   defp set_remember_2fa_cookie(conn, user) do
@@ -1782,7 +1817,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     |> PlausibleWeb.TwoFactor.Session.maybe_set_remember_2fa(user, "true")
     |> recycle()
     |> Map.put(:secret_key_base, secret_key_base())
-    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+    |> Plug.Conn.put_req_header("x-forwarded-for", random_ip())
   end
 
   defp mock_captcha_success() do

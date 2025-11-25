@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
       phx-change="validate"
       phx-submit="set"
       phx-trigger-action={@trigger_submit}
-      class="bg-white dark:bg-gray-800 max-w-md w-full mx-auto shadow-md rounded px-8 py-6 mt-8"
+      class="bg-white dark:bg-gray-800 max-w-md w-full mx-auto shadow-md rounded-sm px-8 py-6 mt-8"
     >
       <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
       <h2 class="text-xl font-black dark:text-gray-100">
@@ -51,16 +51,14 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
           field={f[:password]}
           strength={@password_strength}
           phx-debounce={200}
-          class="transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
+          class="transition bg-gray-100 dark:bg-gray-900 outline-hidden appearance-none border border-transparent rounded-xs w-full p-2 text-gray-700 dark:text-gray-300 leading-normal focus:outline-hidden focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
         />
       </div>
       <.button id="set" type="submit" class="mt-4 w-full">
         Set password →
       </.button>
       <p class="text-center text-gray-500 text-xs mt-4">
-        Don't have an account?
-        <.styled_link href="/register">Register</.styled_link>
-        instead.
+        Don't have an account? <.styled_link href="/register">Register</.styled_link> instead.
       </p>
     </.form>
     """

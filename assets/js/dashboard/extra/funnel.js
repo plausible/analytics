@@ -12,6 +12,35 @@ import * as api from '../api'
 import LazyLoader from '../components/lazy-loader'
 import { useQueryContext } from '../query-context'
 import { useSiteContext } from '../site-context'
+import { UIMode, useTheme } from '../theme-context'
+
+const getPalette = (theme) => {
+  if (theme.mode === UIMode.dark) {
+    return {
+      dataLabelBackground: 'rgb(9, 9, 11)',
+      dataLabelTextColor: 'rgb(244, 244, 245)',
+      visitorsBackground: 'rgb(99, 102, 241)',
+      dropoffBackground: 'rgb(63, 63, 70)',
+      dropoffStripes: 'rgb(9, 9, 11)',
+      stepNameLegendColor: 'rgb(228, 228, 231)',
+      visitorsLegendClass: 'bg-indigo-500',
+      dropoffLegendClass: 'bg-gray-600',
+      smallBarClass: 'bg-indigo-500'
+    }
+  } else {
+    return {
+      dataLabelBackground: 'rgb(39, 39, 42)',
+      dataLabelTextColor: 'rgb(244, 244, 245)',
+      visitorsBackground: 'rgb(99, 102, 241)',
+      dropoffBackground: 'rgb(224, 231, 255)',
+      dropoffStripes: 'rgb(255, 255, 255)',
+      stepNameLegendColor: 'rgb(24, 24, 27)',
+      visitorsLegendClass: 'bg-indigo-500',
+      dropoffLegendClass: 'bg-indigo-100',
+      smallBarClass: 'bg-indigo-300'
+    }
+  }
+}
 
 export default function Funnel({ funnelName, tabs }) {
   const site = useSiteContext()
@@ -21,6 +50,7 @@ export default function Funnel({ funnelName, tabs }) {
   const [error, setError] = useState(undefined)
   const [funnel, setFunnel] = useState(null)
   const [isSmallScreen, setSmallScreen] = useState(false)
+  const theme = useTheme()
   const chartRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -50,10 +80,10 @@ export default function Funnel({ funnelName, tabs }) {
 
   useEffect(() => {
     if (canvasRef.current && funnel && visible && !isSmallScreen) {
-      initialiseChart()
+      initialiseChart(getPalette(theme))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [funnel, visible])
+  }, [funnel, visible, theme])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 768px)')
@@ -67,37 +97,28 @@ export default function Funnel({ funnelName, tabs }) {
     }
   }, [])
 
-  const isDarkMode = () => {
-    return document.querySelector('html').classList.contains('dark') || false
-  }
-
-  const getPalette = () => {
-    if (isDarkMode()) {
-      return {
-        dataLabelBackground: 'rgba(25, 30, 56, 0.97)',
-        dataLabelTextColor: 'rgb(243, 244, 246)',
-        visitorsBackground: 'rgb(99, 102, 241)',
-        dropoffBackground: '#2F3949',
-        dropoffStripes: 'rgb(25, 30, 56)',
-        stepNameLegendColor: 'rgb(228, 228, 231)',
-        visitorsLegendClass: 'bg-indigo-500',
-        dropoffLegendClass: 'bg-gray-600',
-        smallBarClass: 'bg-indigo-500'
+  const repositionFunnelTooltip = (e) => {
+    const tooltipEl = document.getElementById('chartjs-tooltip-funnel')
+    if (tooltipEl && window.innerWidth >= 768) {
+      if (e.clientX > 0.66 * window.innerWidth) {
+        tooltipEl.style.right =
+          window.innerWidth - e.clientX + window.pageXOffset + 'px'
+        tooltipEl.style.left = null
+      } else {
+        tooltipEl.style.right = null
+        tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
       }
-    } else {
-      return {
-        dataLabelBackground: 'rgba(25, 30, 56, 0.97)',
-        dataLabelTextColor: 'rgb(243, 244, 246)',
-        visitorsBackground: 'rgb(99, 102, 241)',
-        dropoffBackground: 'rgb(224, 231, 255)',
-        dropoffStripes: 'rgb(255, 255, 255)',
-        stepNameLegendColor: 'rgb(12, 24, 39)',
-        visitorsLegendClass: 'bg-indigo-500',
-        dropoffLegendClass: 'bg-indigo-100',
-        smallBarClass: 'bg-indigo-300'
-      }
+      tooltipEl.style.top = e.clientY + window.pageYOffset + 'px'
+      tooltipEl.style.opacity = 1
     }
   }
+
+  useEffect(() => {
+    window.addEventListener('mousemove', repositionFunnelTooltip)
+    return () => {
+      window.removeEventListener('mousemove', repositionFunnelTooltip)
+    }
+  }, [])
 
   const formatDataLabel = (visitors, ctx) => {
     if (ctx.dataset.label === 'Visitors') {
@@ -137,12 +158,10 @@ export default function Funnel({ funnelName, tabs }) {
     }
   }
 
-  const initialiseChart = () => {
+  const initialiseChart = (palette) => {
     if (chartRef.current) {
       chartRef.current.destroy()
     }
-
-    const palette = getPalette()
 
     const createDiagonalPattern = (color1, color2) => {
       // create a 10x10 px canvas for the pattern's base shape
@@ -311,7 +330,7 @@ export default function Funnel({ funnelName, tabs }) {
     }
   }
 
-  const renderInner = () => {
+  const renderInner = (theme) => {
     if (loading) {
       return (
         <div className="mx-auto loading pt-44">
@@ -331,15 +350,16 @@ export default function Funnel({ funnelName, tabs }) {
             {funnel.steps.length}-step funnel • {conversionRate}% conversion
             rate
           </p>
-          {isSmallScreen && <div className="mt-4">{renderBars(funnel)}</div>}
+          {isSmallScreen && (
+            <div className="mt-4">{renderBars(funnel, theme)}</div>
+          )}
         </div>
       )
     }
   }
 
-  const renderBar = (step) => {
-    const palette = getPalette()
-
+  const renderBar = (step, theme) => {
+    const palette = getPalette(theme)
     return (
       <>
         <div className="flex items-center justify-between my-1 text-sm">
@@ -366,7 +386,7 @@ export default function Funnel({ funnelName, tabs }) {
     )
   }
 
-  const renderBars = (funnel) => {
+  const renderBars = (funnel, theme) => {
     return (
       <>
         <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
@@ -375,7 +395,9 @@ export default function Funnel({ funnelName, tabs }) {
             <span className="inline-block w-20">Visitors</span>
           </span>
         </div>
-        <FlipMove>{funnel.steps.map(renderBar)}</FlipMove>
+        <FlipMove>
+          {funnel.steps.map((step) => renderBar(step, theme))}
+        </FlipMove>
       </>
     )
   }
@@ -383,7 +405,7 @@ export default function Funnel({ funnelName, tabs }) {
   return (
     <div style={{ minHeight: '400px' }}>
       <LazyLoader onVisible={() => setVisible(true)}>
-        {renderInner()}
+        {renderInner(theme)}
       </LazyLoader>
       {!isSmallScreen && (
         <canvas className="" id="funnel" ref={canvasRef}></canvas>

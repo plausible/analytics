@@ -8,6 +8,7 @@ import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsuppor
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { referrersDrilldownRoute } from '../../router'
+import { SourceFavicon } from './source-favicon'
 
 const NO_REFERRER = 'Direkt / Keine'
 
@@ -52,11 +53,9 @@ export default function Referrers({ source }) {
 
   function renderIcon(listItem) {
     return (
-      <img
-        alt=""
-        src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        referrerPolicy="no-referrer"
-        className="inline w-4 h-4 mr-2 -mt-px align-middle"
+      <SourceFavicon
+        name={listItem.name}
+        className="inline size-4 mr-2 -mt-px align-middle"
       />
     )
   }
@@ -69,7 +68,7 @@ export default function Referrers({ source }) {
   }
 
   return (
-    <div className="flex flex-col flex-grow">
+    <div className="flex flex-col grow">
       <div className="flex gap-x-1">
         <h3 className="font-bold dark:text-gray-100">Top Verweiser</h3>
         <ImportedQueryUnsupportedWarning

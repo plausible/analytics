@@ -25,6 +25,7 @@ Use `node compile.js --watch` to watch for changes.
 Use `node compile.js --web-snippet` if you need to update web snippet code.
 
 ### Tests
+
 Tests can be run in UI mode via `npm run playwright --ui`. This helps with debugging.
 
 ### NPM package
@@ -40,10 +41,12 @@ More instructions can be found in [yalc repo](https://github.com/wclr/yalc).
 ## Cloud deployment
 
 Handled via PRs. When making tracker changes, it's required to:
+
 - Tag your PR with a `tracker release:` label
 - Update `tracker/CHANGELOG.md`
 
 After merge github actions automatically:
+
 - includes the updated tracker scripts in the next cloud deploy
 - updates npm package package.json and CHANGELOG.md with the new version
 - releases the new package version on NPM.

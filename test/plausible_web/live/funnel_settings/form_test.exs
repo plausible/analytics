@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
   @moduletag :ee_only
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   describe "integration - live rendering" do
     setup [:create_user, :log_in, :create_site]
@@ -70,8 +69,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
         |> element("li#dropdown-step-1-option-1 a")
         |> render_click()
 
-      assert element_exists?(doc, ~s/#li#dropdown-step-1-option-15/)
-      refute element_exists?(doc, ~s/#li#dropdown-step-1-option-16/)
+      assert element_exists?(doc, ~s/li#dropdown-step-1-option-15/)
+      refute element_exists?(doc, ~s/li#dropdown-step-1-option-16/)
     end
 
     test "removing one option alters suggestions for other", %{conn: conn, site: site} do

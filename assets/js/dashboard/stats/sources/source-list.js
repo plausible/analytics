@@ -13,6 +13,7 @@ import {
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
+import { SourceFavicon } from './source-favicon'
 import {
   sourcesRoute,
   channelsRoute,
@@ -63,13 +64,7 @@ function AllSources({ afterFetchData }) {
   }
 
   function renderIcon(listItem) {
-    return (
-      <img
-        alt=""
-        src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        className="w-4 h-4 mr-2"
-      />
-    )
+    return <SourceFavicon name={listItem.name} className="size-4 mr-2" />
   }
 
   function chooseMetrics() {
@@ -88,7 +83,7 @@ function AllSources({ afterFetchData }) {
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: sourcesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      color="bg-blue-50"
+      color="bg-blue-50 group-hover:bg-blue-100"
     />
   )
 }
@@ -127,7 +122,7 @@ function Channels({ onClick, afterFetchData }) {
         path: channelsRoute.path,
         search: (search) => search
       }}
-      color="bg-blue-50"
+      color="bg-blue-50 group-hover:bg-blue-100"
     />
   )
 }
@@ -171,7 +166,7 @@ function UTMSources({ tab, afterFetchData }) {
       keyLabel={utmTag.label}
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: route?.path, search: (search) => search }}
-      color="bg-blue-50"
+      color="bg-blue-50 group-hover:bg-blue-100"
     />
   )
 }

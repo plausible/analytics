@@ -1,0 +1,162 @@
+defmodule Plausible.InstallationSupport.Checks.Detection do
+  @moduledoc """
+  Calls the browserless.io service (local instance can be spawned with `make browserless`)
+  and runs detector script via the [function API](https://docs.browserless.io/HTTP-APIs/function).
+
+  * v1_detected (optional - detection can take up to @plausible_window_check_timeout_ms)
+  * gtm_likely
+  * wordpress_likely
+  * wordpress_plugin
+
+  These diagnostics are used to determine what installation type to recommend,
+  and whether to provide a notice for upgrading an existing v1 integration to v2.
+  """
+
+  require Logger
+  use Plausible.InstallationSupport.Check
+  alias Plausible.InstallationSupport.BrowserlessConfig
+
+  @detector_code_path "priv/tracker/installation_support/detector.js"
+  @external_resource @detector_code_path
+
+  # On CI, the file might not be present for static checks so we default to empty string
+  @detector_code (case File.read(Application.app_dir(:plausible, @detector_code_path)) do
+                    {:ok, content} -> content
+                    {:error, _} -> ""
+                  end)
+
+  # Puppeteer wrapper function that executes the vanilla JS detector code
+  @puppeteer_wrapper_code """
+  export default async function({ page, context: { url, userAgent, ...functionContext } }) {
+    try {
+      await page.setUserAgent(userAgent);
+      await page.goto(url);
+
+      await page.evaluate(() => {
+        #{@detector_code} // injects window.scanPageBeforePlausibleInstallation
+      });
+
+      return await page.evaluate(
+        (c) => window.scanPageBeforePlausibleInstallation(c),
+        { ...functionContext }
+      );
+    } catch (error) {
+      return {
+        data: {
+          completed: false,
+          error: {
+            message: error?.message ?? JSON.stringify(error)
+          }
+        }
+      }
+    }
+  }
+  """
+
+  # This timeout determines how long we wait for window.plausible to be initialized on the page, used for detecting whether v1 installed
+  @plausible_window_check_timeout_ms 1_500
+
+  # To support browserless API being unavailable or overloaded, we retry the endpoint call if it doesn't return a successful response
+  @max_retries 1
+
+  @impl true
+  def report_progress_as, do: "We're checking your site to recommend the best installation method"
+
+  @impl true
+  def perform(%State{url: url, assigns: %{detect_v1?: detect_v1?}} = state, opts) do
+    check_timeout = Keyword.fetch!(opts, :timeout)
+
+    # We rely on Req's `:receive_timeout` to avoid waiting too long for a response, but
+    # we also pass the same timeout (+ 1s) via a query param to the Browserless /function API
+    # to not waste resources and leave a redundant process running there.
+    req_timeout = check_timeout - 1000
+    browserless_api_timeout = check_timeout
+
+    opts =
+      [
+        headers: %{content_type: "application/json"},
+        body:
+          Jason.encode!(%{
+            code: @puppeteer_wrapper_code,
+            context: %{
+              url: Plausible.InstallationSupport.URL.bust_url(url),
+              userAgent: Plausible.InstallationSupport.user_agent(),
+              detectV1: detect_v1?,
+              timeoutMs: @plausible_window_check_timeout_ms,
+              debug: Application.get_env(:plausible, :environment) == "dev"
+            }
+          }),
+        params: %{timeout: browserless_api_timeout},
+        retry: fn _request, response_or_error ->
+          case response_or_error do
+            %{status: status} -> Map.get(BrowserlessConfig.retry_policy(), status, false)
+            _ -> false
+          end
+        end,
+        receive_timeout: req_timeout,
+        retry_log_level: :warning,
+        max_retries: @max_retries
+      ]
+      |> Keyword.merge(Application.get_env(:plausible, __MODULE__)[:req_opts] || [])
+
+    case Req.post(BrowserlessConfig.browserless_function_api_endpoint(), opts) do
+      {:ok, %{body: body, status: status}} ->
+        handle_browserless_response(state, body, status)
+
+      {:error, %Req.TransportError{reason: :timeout}} ->
+        put_diagnostics(state, service_error: %{code: :browserless_timeout})
+
+      {:error, %{reason: reason}} ->
+        Logger.warning(warning_message("Browserless request error: #{inspect(reason)}", state))
+
+        put_diagnostics(state, service_error: %{code: :req_error, extra: reason})
+    end
+  end
+
+  defp handle_browserless_response(
+         state,
+         %{"data" => %{"completed" => completed} = data},
+         _status
+       ) do
+    if completed do
+      put_diagnostics(
+        state,
+        parse_to_diagnostics(data)
+      )
+    else
+      Logger.warning(
+        warning_message(
+          "Browserless function returned with completed: false, error.message: #{inspect(data["error"]["message"])}",
+          state
+        )
+      )
+
+      put_diagnostics(state,
+        service_error: %{code: :browserless_client_error, extra: data["error"]["message"]}
+      )
+    end
+  end
+
+  defp handle_browserless_response(state, body, status) do
+    error = "Unhandled browserless response with status: #{status}"
+
+    warning_message("#{error}; body: #{inspect(body)}", state)
+    |> Logger.warning()
+
+    put_diagnostics(state, service_error: %{code: :bad_browserless_response, extra: status})
+  end
+
+  defp warning_message(message, state) do
+    "[DETECTION] #{message} (data_domain='#{state.data_domain}')"
+  end
+
+  defp parse_to_diagnostics(data),
+    do: [
+      v1_detected: data["v1Detected"],
+      gtm_likely: data["gtmLikely"],
+      npm: data["npm"],
+      wordpress_likely: data["wordpressLikely"],
+      wordpress_plugin: data["wordpressPlugin"],
+      service_error: nil
+    ]
+end

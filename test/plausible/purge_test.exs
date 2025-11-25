@@ -1,6 +1,5 @@
 defmodule Plausible.PurgeTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
 
   setup do
     user = new_user()
@@ -9,7 +8,7 @@ defmodule Plausible.PurgeTest do
     import_params = %{
       source: :universal_analytics,
       start_date: ~D[2005-01-01],
-      end_date: Timex.today()
+      end_date: Date.utc_today()
     }
 
     [site_import1, site_import2] =

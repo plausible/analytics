@@ -11,12 +11,15 @@ defmodule PlausibleWeb.Live.PropsSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [
-          :owner,
-          :admin,
-          :editor,
-          :super_admin
-        ])
+        Plausible.Sites.get_for_user!(current_user, domain,
+          roles: [
+            :owner,
+            :admin,
+            :editor,
+            :super_admin
+          ],
+          include_consolidated?: true
+        )
       end)
       |> assign_new(:all_props, fn %{site: site} ->
         site.allowed_event_props || []
@@ -39,26 +42,43 @@ defmodule PlausibleWeb.Live.PropsSettings do
     ~H"""
     <section id="props-settings-main">
       <.flash_messages flash={@flash} />
-      <%= if @add_prop? do %>
-        {live_render(
-          @socket,
-          PlausibleWeb.Live.PropsSettings.Form,
-          id: "props-form",
-          session: %{
-            "domain" => @domain,
-            "site_id" => @site_id,
-            "rendered_by" => self()
-          }
-        )}
-      <% end %>
+      <.tile
+        docs="custom-props/introduction"
+        feature_mod={Plausible.Billing.Feature.Props}
+        feature_toggle?={true}
+        show_content?={!Plausible.Billing.Feature.Props.opted_out?(@site)}
+        site={@site}
+        current_user={@current_user}
+        current_team={@current_team}
+      >
+        <:title>
+          Custom properties
+        </:title>
+        <:subtitle :if={Enum.count(@all_props) > 0}>
+          Attach custom properties when sending a pageview or an event to
+          create custom metrics.
+        </:subtitle>
+        <%= if @add_prop? do %>
+          {live_render(
+            @socket,
+            PlausibleWeb.Live.PropsSettings.Form,
+            id: "props-form",
+            session: %{
+              "domain" => @domain,
+              "site_id" => @site_id,
+              "rendered_by" => self()
+            }
+          )}
+        <% end %>
 
-      <.live_component
-        module={PlausibleWeb.Live.PropsSettings.List}
-        id="props-list"
-        props={@displayed_props}
-        domain={@domain}
-        filter_text={@filter_text}
-      />
+        <.live_component
+          module={PlausibleWeb.Live.PropsSettings.List}
+          id="props-list"
+          props={@displayed_props}
+          domain={@domain}
+          filter_text={@filter_text}
+        />
+      </.tile>
     </section>
     """
   end
@@ -126,6 +146,10 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   def handle_info(:cancel_add_prop, socket) do
     {:noreply, assign(socket, add_prop?: false)}
+  end
+
+  def handle_info({:feature_toggled, flash_msg, updated_site}, socket) do
+    {:noreply, assign(put_flash(socket, :success, flash_msg), site: updated_site)}
   end
 
   def handle_info({:props_allowed, props}, socket) when is_list(props) do

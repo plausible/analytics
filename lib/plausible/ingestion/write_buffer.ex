@@ -49,7 +49,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
     }
 
     if state.buffer_size >= state.max_buffer_size do
-      Logger.info("#{state.name} buffer full, flushing to ClickHouse")
+      Logger.notice("#{state.name} buffer full, flushing to ClickHouse")
       Process.cancel_timer(state.timer)
       do_flush(state)
       new_timer = Process.send_after(self(), :tick, state.flush_interval_ms)
@@ -77,7 +77,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
 
   @impl true
   def terminate(_reason, %{name: name} = state) do
-    Logger.info("Flushing #{name} buffer before shutdown...")
+    Logger.notice("Flushing #{name} buffer before shutdown...")
     do_flush(state)
   end
 
@@ -96,7 +96,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
         nil
 
       _not_empty ->
-        Logger.info("Flushing #{buffer_size} byte(s) RowBinary from #{name}")
+        Logger.notice("Flushing #{buffer_size} byte(s) RowBinary from #{name}")
         IngestRepo.query!(insert_sql, [header | buffer], insert_opts)
     end
   end

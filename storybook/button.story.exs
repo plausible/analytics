@@ -23,10 +23,10 @@ defmodule PlausibleWeb.Storybook.Button do
         slots: ["Click me!"]
       },
       %Variation{
-        id: :bright,
-        description: "Bright button",
+        id: :secondary,
+        description: "Secondary button",
         attributes: %{
-          "theme" => "bright"
+          "theme" => "secondary"
         },
         slots: ["Click me!"]
       },

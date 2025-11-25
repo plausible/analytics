@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.Live.CustomerSupportTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
-  use Plausible
 
   @moduletag :ee_only
 
@@ -9,7 +7,6 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
     @cs_index Routes.customer_support_path(PlausibleWeb.Endpoint, :index)
 
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     alias Plausible.Auth.SSO
 
@@ -38,9 +35,11 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         conn = get(conn, @cs_index)
         resp = html_response(conn, 200)
         team = team_of(user)
+        consolidated_site = new_site(owner: user, consolidated: true)
         assert_search_result(resp, "site", site.id)
         assert_search_result(resp, "team", team.id)
         assert_search_result(resp, "user", user.id)
+        refute_search_result(resp, "site", consolidated_site.id)
       end
 
       test "filters as you type", %{conn: conn, site: site, user: user} do
@@ -64,14 +63,9 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         assert_search_result(html, "site", site2.id)
       end
 
-      test "search teams", %{conn: conn} do
+      test "search teams by name", %{conn: conn} do
         team1 = new_user(team: [name: "Team One"]) |> team_of()
-
-        team2 =
-          new_user(team: [name: "Team Two"])
-          |> subscribe_to_growth_plan()
-          |> team_of()
-
+        team2 = new_user(team: [name: "Team Two"]) |> team_of()
         team3 = new_user(team: [name: "Team Three"]) |> team_of()
 
         {:ok, lv, _html} = live(conn, @cs_index)
@@ -82,6 +76,14 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         assert_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         assert_search_result(html, "team", team3.id)
+      end
+
+      test "search teams by partial name", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:Team T")
         html = render(lv)
@@ -89,6 +91,14 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         refute_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         assert_search_result(html, "team", team3.id)
+      end
+
+      test "search teams with subscription filter", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> subscribe_to_growth_plan() |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:Team T +sub")
         html = render(lv)
@@ -96,24 +106,49 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         refute_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         refute_search_result(html, "team", team3.id)
+      end
+
+      test "search teams with sso filter before integration", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> subscribe_to_growth_plan() |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:Team T +sso")
         html = render(lv)
         refute_search_result(html, "team", team1.id)
         refute_search_result(html, "team", team2.id)
         refute_search_result(html, "team", team3.id)
+      end
+
+      test "search teams with sso filter after integration", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> subscribe_to_growth_plan() |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
 
         integration = SSO.initiate_saml_integration(team2)
-
         SSO.Domains.add(integration, "some-sso.example.com")
-
         SSO.initiate_saml_integration(team3)
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:Team T +sso")
         html = render(lv)
         refute_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
         assert_search_result(html, "team", team3.id)
+      end
+
+      test "search teams by sso domain", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> subscribe_to_growth_plan() |> team_of()
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        integration = SSO.initiate_saml_integration(team2)
+        SSO.Domains.add(integration, "some-sso.example.com")
+
+        {:ok, lv, _html} = live(conn, @cs_index)
 
         type_into_input(lv, "filter-text", "team:some-sso +sso")
         html = render(lv)
@@ -122,23 +157,34 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         assert_search_result(html, "team", team2.id)
         refute_search_result(html, "team", team3.id)
       end
+
+      test "search teams by identifier", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+        team2 = new_user(team: [name: "Team Two"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
+
+        type_into_input(lv, "filter-text", "team:#{team2.identifier}")
+        html = render(lv)
+
+        refute_search_result(html, "team", team1.id)
+        assert_search_result(html, "team", team2.id)
+      end
     end
 
     defp assert_search_result(doc, type, id) do
-      assert [link] = find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
+      assert link = find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
 
       assert text_of_attr(link, "href") ==
-               Routes.customer_support_resource_path(
+               apply(Routes, :"customer_support_#{type}_path", [
                  PlausibleWeb.Endpoint,
-                 :details,
-                 "#{type}s",
-                 type,
+                 :show,
                  id
-               )
+               ])
     end
 
     defp refute_search_result(doc, type, id) do
-      assert find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|) == []
+      refute element_exists?(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
     end
 
     defp type_into_input(lv, id, text) do

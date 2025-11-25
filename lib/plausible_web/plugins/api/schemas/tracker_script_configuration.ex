@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.TrackerScriptConfiguration do
           installation_type: %Schema{
             type: :string,
             description: "Tracker Script Installation Type",
-            enum: ["manual", "wordpress", "gtm"]
+            enum: ["manual", "wordpress", "gtm", "npm"]
           },
           hash_based_routing: %Schema{type: :boolean, description: "Hash Based Routing"},
           outbound_links: %Schema{type: :boolean, description: "Track Outbound Links"},

@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Tracker do
   use Plausible
   use Plausible.Repo
   alias Plausible.Site.TrackerScriptConfiguration
+  import Ecto.Query
 
   path = Application.app_dir(:plausible, "priv/tracker/js/plausible-web.js")
   # On CI, the file might not be present for static checks so we create an empty one
@@ -14,7 +15,40 @@ defmodule PlausibleWeb.Tracker do
   @plausible_main_script File.read!(path)
   @external_resource "priv/tracker/js/plausible-web.js"
 
-  def plausible_main_script_tag(tracker_script_configuration) do
+  @spec get_plausible_main_script(String.t(), Keyword.t()) :: String.t() | nil
+  def get_plausible_main_script(id, cache_opts \\ []) do
+    on_ee do
+      # On cloud:
+      # 1. Check if tracker script ID is in the cache
+      # 2. If it is, generate the script on the fly
+      #
+      # Note that EE is relying on CDN caching the script
+      if PlausibleWeb.TrackerScriptCache.get(id, cache_opts) do
+        get_tracker_script_configuration_by_id(id)
+        |> build_script()
+      end
+    else
+      # On self-hosted, we have a pre-warmed cache for the script
+      PlausibleWeb.TrackerScriptCache.get(id, cache_opts)
+    end
+  end
+
+  # Exposed for testing
+  def plausible_main_config(
+        %TrackerScriptConfiguration{site: %{domain: _domain}} = tracker_script_configuration
+      ) do
+    %{
+      domain: tracker_script_configuration.site.domain,
+      endpoint: tracker_ingestion_endpoint(),
+      outboundLinks: tracker_script_configuration.outbound_links,
+      fileDownloads: tracker_script_configuration.file_downloads,
+      formSubmissions: tracker_script_configuration.form_submissions
+    }
+  end
+
+  def build_script(
+        %TrackerScriptConfiguration{site: %{domain: _domain}} = tracker_script_configuration
+      ) do
     config_js_content =
       tracker_script_configuration
       |> plausible_main_config()
@@ -32,71 +66,139 @@ defmodule PlausibleWeb.Tracker do
     |> String.replace("\"<%= @config_js %>\"", "{#{config_js_content}}")
   end
 
-  def plausible_main_config(tracker_script_configuration) do
-    %{
-      domain: tracker_script_configuration.site.domain,
-      endpoint: tracker_ingestion_endpoint(),
-      outboundLinks: tracker_script_configuration.outbound_links,
-      fileDownloads: tracker_script_configuration.file_downloads,
-      formSubmissions: tracker_script_configuration.form_submissions
-    }
+  def build_script(nil), do: nil
+
+  defp broadcast_script_upsert(tracker_script_configuration) do
+    PlausibleWeb.TrackerScriptCache.broadcast_put(
+      tracker_script_configuration.id,
+      PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
+    )
   end
 
   def update_script_configuration(site, config_update, changeset_type) do
-    {:ok, updated_config} =
-      Repo.transaction(fn ->
-        original_config = get_or_create_tracker_script_configuration!(site)
-        changeset = changeset(original_config, config_update, changeset_type)
-
-        updated_config = Repo.update!(changeset)
-
-        sync_goals(site, original_config, updated_config)
+    Repo.transact(fn ->
+      with {:ok, original_config} <- get_or_create_tracker_script_configuration(site),
+           changeset <- changeset(original_config, config_update, changeset_type),
+           {:ok, updated_config} <-
+             Repo.update(changeset),
+           %TrackerScriptConfiguration{} = reloaded_config <-
+             maybe_reload_tracker_script_configuration(updated_config) do
+        sync_goals(site, original_config, reloaded_config)
 
         on_ee do
-          if Map.keys(changeset.changes) != [:installation_type] do
-            Plausible.Workers.PurgeCDNCache.new(
-              %{id: updated_config.id},
-              # See PurgeCDNCache.ex for more details
-              schedule_in: 10,
-              replace: [scheduled: [:scheduled_at]]
-            )
-            |> Oban.insert!()
+          if should_purge_cache?(changeset) do
+            purge_cache!(reloaded_config.id)
           end
+        else
+          :ok = broadcast_script_upsert(reloaded_config)
         end
 
-        updated_config
-      end)
+        {:ok, reloaded_config}
+      end
+    end)
+  end
 
+  on_ee do
+    def purge_tracker_script_cache!(site) do
+      tracker_script_configuration = get_or_create_tracker_script_configuration!(site)
+      purge_cache!(tracker_script_configuration.id)
+    end
+
+    defp should_purge_cache?(changeset) do
+      Map.keys(changeset.changes) != [:installation_type]
+    end
+
+    defp purge_cache!(config_id) do
+      Plausible.Workers.PurgeCDNCache.new(
+        %{id: config_id},
+        # See PurgeCDNCache.ex for more details
+        schedule_in: 10,
+        replace: [scheduled: [:scheduled_at]]
+      )
+      |> Oban.insert!()
+    end
+  else
+    def purge_tracker_script_cache!(_site), do: nil
+  end
+
+  def get_tracker_script_configuration(site) do
+    Repo.get_by(TrackerScriptConfiguration, site_id: site.id)
+  end
+
+  def update_script_configuration!(site, config_update, changeset_type) do
+    {:ok, updated_config} = update_script_configuration(site, config_update, changeset_type)
     updated_config
   end
 
-  def get_or_create_tracker_script_configuration!(site, params \\ %{}) do
-    configuration = Repo.get_by(TrackerScriptConfiguration, site_id: site.id)
+  def get_or_create_tracker_script_configuration(site, params \\ %{}) do
+    configuration = get_tracker_script_configuration(site)
 
     if configuration do
-      configuration
+      {:ok, configuration}
     else
-      {:ok, created_config} =
-        Repo.transaction(fn ->
-          created_config =
-            TrackerScriptConfiguration.installation_changeset(
-              %TrackerScriptConfiguration{site_id: site.id},
-              params
-            )
-            |> Repo.insert!()
+      Repo.transact(fn ->
+        with {:ok, created_config} <-
+               Repo.insert(
+                 TrackerScriptConfiguration.installation_changeset(
+                   %TrackerScriptConfiguration{site_id: site.id},
+                   params
+                 )
+               ),
+             %TrackerScriptConfiguration{} = reloaded_config <-
+               maybe_reload_tracker_script_configuration(created_config) do
+          sync_goals(site, %{}, reloaded_config)
 
-          sync_goals(site, %{}, created_config)
-
-          created_config
-        end)
-
-      created_config
+          :ok = broadcast_script_upsert(reloaded_config)
+          {:ok, reloaded_config}
+        end
+      end)
     end
+  end
+
+  def get_or_create_tracker_script_configuration!(site, params \\ %{}) do
+    {:ok, config} = get_or_create_tracker_script_configuration(site, params)
+    config
+  end
+
+  on_ee do
+    def supported_installation_types do
+      ["manual", "wordpress", "gtm", "npm"]
+    end
+  else
+    def supported_installation_types do
+      ["manual", "wordpress", "npm"]
+    end
+  end
+
+  def fallback_installation_type do
+    "manual"
+  end
+
+  def get_tracker_script_configuration_base_query() do
+    from(t in TrackerScriptConfiguration,
+      join: s in assoc(t, :site),
+      select: %{t | site: %{domain: s.domain}}
+    )
+  end
+
+  def get_tracker_script_configuration_by_id(id) do
+    get_tracker_script_configuration_base_query()
+    |> where([t], t.id == ^id)
+    |> Plausible.Repo.one()
+  end
+
+  on_ee do
+    defp maybe_reload_tracker_script_configuration(tracker_script_configuration),
+      do: tracker_script_configuration
+  else
+    # This loads the necessary associations (:site), that aren't returned with inserts and updates
+    defp maybe_reload_tracker_script_configuration(tracker_script_configuration),
+      do: get_tracker_script_configuration_by_id(tracker_script_configuration.id)
   end
 
   # Sync plausible goals with the updated script config
   defp sync_goals(site, original_config, updated_config) do
-    [:track_404_pages, :outbound_links, :file_downloads]
+    [:track_404_pages, :outbound_links, :file_downloads, :form_submissions]
     |> Enum.map(fn key ->
       {key, Map.get(original_config, key, false), Map.get(updated_config, key, false)}
     end)
@@ -107,6 +209,8 @@ defmodule PlausibleWeb.Tracker do
       {:outbound_links, true, false} -> Plausible.Goals.delete_outbound_links(site)
       {:file_downloads, false, true} -> Plausible.Goals.create_file_downloads(site)
       {:file_downloads, true, false} -> Plausible.Goals.delete_file_downloads(site)
+      {:form_submissions, false, true} -> Plausible.Goals.create_form_submissions(site)
+      {:form_submissions, true, false} -> Plausible.Goals.delete_form_submissions(site)
       _ -> nil
     end)
   end

@@ -155,36 +155,30 @@ defmodule PlausibleWeb.Email do
   end
 
   def spike_notification(email, site, stats, dashboard_link) do
-    # Diese E-Mail wurde deaktiviert
-    nil
-    
-    # base_email()
-    # |> to(email)
-    # |> tag("spike-notification")
-    # |> subject("Traffic-Spitze auf #{site.domain}")
-    # |> render("spike_notification.html", %{
-    #   site: site,
-    #   current_visitors: stats.current_visitors,
-    #   sources: stats.sources,
-    #   pages: stats.pages,
-    #   link: dashboard_link
-    # })
+    base_email()
+    |> to(email)
+    |> tag("spike-notification")
+    |> subject("Traffic Spike on #{site.domain}")
+    |> render("spike_notification.html", %{
+      site: site,
+      current_visitors: stats.current_visitors,
+      sources: stats.sources,
+      pages: stats.pages,
+      link: dashboard_link
+    })
   end
 
   def drop_notification(email, site, current_visitors, dashboard_link, installation_link) do
-    # Diese E-Mail wurde deaktiviert
-    nil
-    
-    # base_email()
-    # |> to(email)
-    # |> tag("drop-notification")
-    # |> subject("Traffic-Rückgang auf #{site.domain}")
-    # |> render("drop_notification.html", %{
-    #   site: site,
-    #   current_visitors: current_visitors,
-    #   dashboard_link: dashboard_link,
-    #   installation_link: installation_link
-    # })
+    base_email()
+    |> to(email)
+    |> tag("drop-notification")
+    |> subject("Traffic Drop on #{site.domain}")
+    |> render("drop_notification.html", %{
+      site: site,
+      current_visitors: current_visitors,
+      dashboard_link: dashboard_link,
+      installation_link: installation_link
+    })
   end
 
   def over_limit_email(user, team, usage, suggested_volume) do
@@ -483,6 +477,19 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def team_member_left(team_membership) do
+    priority_email()
+    |> to(team_membership.user.email)
+    |> tag("team-member-left")
+    |> subject(
+      "[#{Plausible.product_name()}] You have left \"#{team_membership.team.name}\" team"
+    )
+    |> render("team_member_left.html",
+      user: team_membership.user,
+      team_membership: team_membership
+    )
+  end
+
   def import_success(site_import, user) do
     import_api = Plausible.Imported.ImportSources.by_name(site_import.source)
     label = import_api.label()
@@ -522,10 +529,7 @@ defmodule PlausibleWeb.Email do
   def export_success(user, site, expires_at) do
     expires_in =
       if expires_at do
-        Timex.Format.DateTime.Formatters.Relative.format!(
-          expires_at,
-          "{relative}"
-        )
+        Plausible.Times.humanize(expires_at)
       end
 
     download_url =
@@ -613,6 +617,13 @@ defmodule PlausibleWeb.Email do
       |> subject("SSO-Domain #{domain} Verifizierung fehlgeschlagen")
       |> render("sso_domain_verification_failure.html", domain: domain)
     end
+  end
+
+  def force_2fa_enabled(team, user, enabling_user) do
+    priority_email()
+    |> to(user.email)
+    |> subject("Your team now requires 2FA")
+    |> render("force_2fa_enabled.html", team: team, enabling_user: enabling_user)
   end
 
   @doc """

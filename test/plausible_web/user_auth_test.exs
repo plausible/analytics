@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
-  use Plausible.Teams.Test
 
   alias Plausible.Repo
   alias PlausibleWeb.UserAuth
@@ -54,7 +52,7 @@ defmodule PlausibleWeb.UserAuthTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         conn =
           conn
@@ -83,7 +81,7 @@ defmodule PlausibleWeb.UserAuthTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
         {:ok, :standard, _, user} = SSO.provision_user(identity)
 
         assert user.type == :sso
@@ -113,7 +111,7 @@ defmodule PlausibleWeb.UserAuthTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         conn |> init_session() |> UserAuth.log_in_user(user)
 
@@ -135,7 +133,8 @@ defmodule PlausibleWeb.UserAuthTest do
         conn: conn,
         user: user
       } do
-        identity = new_identity("Willy Wonka", "wonka@example.com")
+        identity =
+          new_identity("Willy Wonka", "wonka@example.com", %{identifier: Ecto.UUID.generate()})
 
         conn =
           conn
@@ -158,6 +157,7 @@ defmodule PlausibleWeb.UserAuthTest do
         user: user
       } do
         team = new_site().team
+        insert(:growth_subscription, team: team)
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         add_member(team, role: :viewer)
@@ -167,7 +167,7 @@ defmodule PlausibleWeb.UserAuthTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity("Jane Doe", "jane@" <> domain)
+        identity = new_identity("Jane Doe", "jane@" <> domain, integration)
 
         conn =
           conn
@@ -202,7 +202,7 @@ defmodule PlausibleWeb.UserAuthTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         conn =
           conn
@@ -231,7 +231,7 @@ defmodule PlausibleWeb.UserAuthTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity(user.name, user.email)
+        identity = new_identity(user.name, user.email, integration)
 
         conn =
           conn

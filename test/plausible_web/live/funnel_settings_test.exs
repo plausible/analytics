@@ -1,12 +1,9 @@
 defmodule PlausibleWeb.Live.FunnelSettingsTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
-  use Plausible
   @moduletag :ee_only
 
   on_ee do
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     describe "GET /:domain/settings/funnels" do
       setup [:create_user, :log_in, :create_site]
@@ -19,9 +16,9 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         |> Plausible.Repo.update!()
 
         conn = get(conn, "/#{site.domain}/settings/funnels")
-        resp = conn |> html_response(200) |> text()
+        resp = conn |> html_response(200)
 
-        assert resp =~ "please upgrade your subscription"
+        assert text(resp) =~ "upgrade your subscription"
       end
 
       test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
@@ -29,16 +26,16 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
 
         resp = html_response(conn, 200)
-        assert resp =~ "Compose Goals into Funnels"
+        assert resp =~ "Compose goals into funnels"
         assert resp =~ "From blog to signup"
         assert resp =~ "From signup to blog"
         refute resp =~ "Your account does not have access"
-        refute resp =~ "please upgrade your subscription"
+        refute resp =~ "upgrade your subscription"
         assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnel-analysis\"]")
       end
 
       test "search funnels input is rendered", %{conn: conn, site: site} do
-        setup_goals(site)
+        {:ok, _} = setup_funnels(site)
         conn = get(conn, "/#{site.domain}/settings/funnels")
         resp = html_response(conn, 200)
         assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
@@ -53,12 +50,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id=#{f1_id}]#delete-funnel-#{f1_id}/
+                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id="#{f1_id}"]#delete-funnel-#{f1_id}/
                )
 
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id=#{f2_id}]#delete-funnel-#{f2_id}/
+                 ~s/button[phx-click="delete-funnel"][phx-value-funnel-id="#{f2_id}"]#delete-funnel-#{f2_id}/
                )
       end
 
@@ -77,7 +74,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
 
         doc = conn |> html_response(200)
-        assert Floki.text(doc) =~ "Set up a few goals first"
+        assert text(doc) =~ "Set up a few goals"
 
         add_goals_path = Routes.site_path(conn, :settings_goals, site.domain)
         assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)
@@ -89,6 +86,16 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
     describe "FunnelSettings live view" do
       setup [:create_user, :log_in, :create_site]
+
+      test "allows dashboard toggle", %{conn: conn, site: site} do
+        lv = get_liveview(conn, site)
+        lv |> element("#feature-funnels-toggle button") |> render_click()
+        assert render(lv) =~ "Funnels are now hidden from your dashboard"
+        assert Plausible.Billing.Feature.Funnels.opted_out?(Plausible.Repo.reload!(site))
+        lv |> element("#feature-funnels-toggle button") |> render_click()
+        assert render(lv) =~ "Funnels are now visible again on your dashboard"
+        refute Plausible.Billing.Feature.Funnels.opted_out?(Plausible.Repo.reload!(site))
+      end
 
       test "allows list filtering / search", %{conn: conn, site: site} do
         {:ok, _} = setup_funnels(site, ["Funnel One", "Search Me"])
@@ -316,7 +323,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv = get_liveview(conn, site)
 
         lv
-        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{f1_id}"]/)
         |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")
@@ -337,7 +344,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv = get_liveview(conn, site)
 
         lv
-        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{f1_id}"]/)
         |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")

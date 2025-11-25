@@ -1,16 +1,15 @@
 defmodule PlausibleWeb.Components.Billing.NoticeTest do
   use Plausible.DataCase
-  use Plausible.Teams.Test
   import Phoenix.LiveViewTest, only: [render_component: 2]
   alias PlausibleWeb.Components.Billing.Notice
 
   test "limit_exceeded/1 when user is on growth displays upgrade link" do
-    me = new_user() |> subscribe_to_growth_plan()
-    team = team_of(me)
+    user = new_user() |> subscribe_to_growth_plan()
+    team = team_of(user)
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
-        current_role: :owner,
+        current_user: user,
         current_team: team,
         limit: 10,
         resource: "users"
@@ -22,12 +21,12 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   end
 
   test "limit_exceeded/1 prints resource in singular case when limit is 1" do
-    me = new_user() |> subscribe_to_growth_plan()
+    user = new_user() |> subscribe_to_growth_plan()
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
-        current_role: :owner,
-        current_team: team_of(me),
+        current_user: user,
+        current_team: team_of(user),
         limit: 1,
         resource: "users"
       )
@@ -38,29 +37,30 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   end
 
   test "limit_exceeded/1 when current team role is non-owner" do
-    me = new_user() |> subscribe_to_growth_plan()
-    my_team = team_of(me) |> Plausible.Teams.complete_setup()
+    user = new_user() |> subscribe_to_growth_plan()
+    team = team_of(user) |> Plausible.Teams.complete_setup()
+    editor = add_member(team, role: :editor)
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
-        current_role: :editor,
-        current_team: my_team,
+        current_user: editor,
+        current_team: team,
         limit: 10,
         resource: "users"
       )
 
     assert rendered =~ "This team is limited to 10 users"
-    assert rendered =~ "please reach out to the team owner to upgrade their subscription"
+    assert rendered =~ "ask your team owner to upgrade their subscription"
   end
 
   @tag :ee_only
   test "limit_exceeded/1 when user is on trial displays upgrade link" do
-    me = new_user(trial_expiry_date: Date.utc_today())
+    user = new_user(trial_expiry_date: Date.utc_today())
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
-        current_role: :owner,
-        current_team: team_of(me),
+        current_user: user,
+        current_team: team_of(user),
         limit: 10,
         resource: "users"
       )
@@ -72,12 +72,12 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
   @tag :ee_only
   test "limit_exceeded/1 when user is on an enterprise plan displays support email" do
-    me = new_user() |> subscribe_to_enterprise_plan()
+    user = new_user() |> subscribe_to_enterprise_plan()
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
-        current_role: :owner,
-        current_team: team_of(me),
+        current_user: user,
+        current_team: team_of(user),
         limit: 10,
         resource: "users"
       )
@@ -90,12 +90,12 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
   @tag :ee_only
   test "limit_exceeded/1 when user is on a business plan displays support email" do
-    me = new_user() |> subscribe_to_business_plan()
-    team = team_of(me)
+    user = new_user() |> subscribe_to_business_plan()
+    team = team_of(user)
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
-        current_role: :owner,
+        current_user: user,
         current_team: team,
         limit: 10,
         resource: "users"

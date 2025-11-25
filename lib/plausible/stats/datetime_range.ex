@@ -38,6 +38,10 @@ defmodule Plausible.Stats.DateTimeRange do
     new!(first, last)
   end
 
+  def new!(%DateTime{} = first, %DateTime{} = last, _timezone) do
+    new!(first, last)
+  end
+
   def new!(%DateTime{} = first, %DateTime{} = last) do
     first = DateTime.truncate(first, :second)
     last = DateTime.truncate(last, :second)

@@ -1,10 +1,8 @@
 defmodule PlausibleWeb.Live.TeamMangementTest do
   use PlausibleWeb.ConnCase, async: false
   use Bamboo.Test, shared: true
-  use Plausible.Teams.Test
 
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   def team_general_path(), do: Routes.settings_path(PlausibleWeb.Endpoint, :team_general)
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
@@ -61,11 +59,12 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         :setup_team
       ]
 
-      test "fails to save layout with SSO user updated to owner with Force SSO but without MFA",
+      test "fails to save layout with SSO user updated to owner with Force SSO but without 2FA",
            %{
              conn: conn,
              team: team,
-             user: user
+             user: user,
+             sso_integration: integration
            } do
         {:ok, user, _} = Plausible.Auth.TOTP.initiate(user)
         {:ok, _user, _} = Plausible.Auth.TOTP.enable(user, :skip_verify)
@@ -73,11 +72,11 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         member = add_member(team, role: :viewer)
 
         {:ok, _, _, _member} =
-          new_identity(member.name, member.email)
+          new_identity(member.name, member.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
         {:ok, _, _, user} =
-          new_identity(user.name, user.email)
+          new_identity(user.name, user.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
         {:ok, conn: conn} = log_in(%{conn: conn, user: user})
@@ -95,7 +94,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         assert text_of_element(html, "#{member_el()}:nth-of-type(1)") =~ "You (SSO)"
 
         assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
-        assert text_of_element(html, "#{member_el()}:nth-of-type(2)") =~ "SSO Member"
+        assert text_of_element(html, "#{member_el()}:nth-of-type(2)") =~ "SSO"
 
         change_role(lv, 2, "owner")
         html = render(lv)
@@ -122,7 +121,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "new@example.com"
       assert member_row1 =~ "Invited User"
-      assert member_row1 =~ "Invitation Sent"
+      assert member_row1 =~ "Invitation sent"
 
       member_row2 = find(html, "#{member_el()}:nth-of-type(2)") |> text()
       assert member_row2 =~ "#{user.name}"
@@ -165,19 +164,21 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv)
 
-      assert length(find(html, member_el())) == 1
+      assert elem_count(html, member_el()) == 1
 
       assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
 
       change_role(lv, 1, "viewer", guest_el())
       html = render(lv)
 
-      assert length(find(html, member_el())) == 2
+      assert elem_count(html, member_el()) == 2
       refute element_exists?(html, "#guest-list")
     end
 
     @tag :ee_only
     test "fails to save layout with limits breached", %{conn: conn, team: team} do
+      insert(:growth_subscription, team: team)
+
       lv = get_liveview(conn)
       add_invite(lv, "new1@example.com", "admin")
       add_invite(lv, "new2@example.com", "admin")
@@ -205,6 +206,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       user: user,
       team: team
     } do
+      insert(:growth_subscription, team: team)
+
       member2 = add_member(team, role: :admin)
       _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
 
@@ -221,8 +224,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv)
 
-      assert html |> find(member_el()) |> Enum.count() == 4
-      assert html |> find(guest_el()) |> Enum.count() == 1
+      assert elem_count(html, member_el()) == 4
+      assert elem_count(html, guest_el()) == 1
 
       pending = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       sent = find(html, "#{member_el()}:nth-of-type(2)") |> text()
@@ -231,10 +234,10 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert pending =~ "Invitation Pending"
-      assert sent =~ "Invitation Sent"
-      assert owner =~ "You"
-      assert admin =~ "Team Member"
+      assert pending =~ "Invitation pending"
+      assert sent =~ "Invitation sent"
+      assert owner =~ "Owner"
+      assert admin != ""
       assert guest_member =~ "Guest"
 
       remove_member(lv, 1)
@@ -248,14 +251,13 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation Pending"
-      refute html =~ "Invitation Sent"
-      refute html =~ "Team Member"
+      refute html =~ "Invitation pending"
+      refute html =~ "Invitation sent"
       refute html =~ "Guest"
 
       html = render(lv)
 
-      assert html |> find(member_el()) |> Enum.count() == 1
+      assert elem_count(html, member_el()) == 1
       refute element_exists?(html, "#guest-list")
 
       assert_email_delivered_with(
@@ -271,7 +273,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_no_emails_delivered()
     end
 
-    @tag :ce_only
+    @tag :ce_build_only
     test "allows removing any type of entry (CE)", %{
       conn: conn,
       user: user,
@@ -292,8 +294,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv)
 
-      assert html |> find(member_el()) |> Enum.count() == 3
-      assert html |> find(guest_el()) |> Enum.count() == 1
+      assert elem_count(html, member_el()) == 3
+      assert elem_count(html, guest_el()) == 1
 
       sent = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       owner = find(html, "#{member_el()}:nth-of-type(2)") |> text()
@@ -301,9 +303,9 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert sent =~ "Invitation Sent"
-      assert owner =~ "You"
-      assert admin =~ "Team Member"
+      assert sent =~ "Invitation sent"
+      assert owner =~ "Owner"
+      assert admin != ""
       assert guest_member =~ "Guest"
 
       remove_member(lv, 1)
@@ -315,13 +317,12 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation Sent"
-      refute html =~ "Team Member"
+      refute html =~ "Invitation sent"
       refute html =~ "Guest"
 
       html = render(lv)
 
-      assert html |> find(member_el()) |> Enum.count() == 1
+      assert elem_count(html, member_el()) == 1
       refute element_exists?(html, "#guest-list")
 
       assert_email_delivered_with(

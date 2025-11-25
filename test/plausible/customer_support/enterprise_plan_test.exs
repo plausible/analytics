@@ -1,5 +1,4 @@
 defmodule Plausible.CustomerSupport.EnterprisePlanTest do
-  use Plausible
   use Plausible.DataCase, async: true
   @moduletag :ee_only
 
@@ -10,26 +9,40 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "calculates cost for business plan with monthly billing" do
         result =
           EnterprisePlan.estimate(
-            "monthly",
-            20_000_000,
-            1000,
-            30,
-            1_000,
-            ["sites_api"]
+            billing_interval: "monthly",
+            pageviews_per_month: 20_000_000,
+            sites_limit: 1000,
+            team_members_limit: 30,
+            api_calls_limit: 1_000,
+            features: ["sites_api"]
           )
 
-        assert result == Decimal.new("1038.00")
+        assert result == Decimal.new("1238.00")
+      end
+
+      test "calculates cost for business plan with monthly billing, SSO enabled and extra members" do
+        result =
+          EnterprisePlan.estimate(
+            billing_interval: "monthly",
+            pageviews_per_month: 20_000_000,
+            sites_limit: 1000,
+            team_members_limit: 30,
+            api_calls_limit: 1_000,
+            features: ["sites_api", "sso"]
+          )
+
+        assert result == Decimal.new("1537.00")
       end
 
       test "bugfix - from float" do
         result =
           EnterprisePlan.estimate(
-            "monthly",
-            20_000_000,
-            0,
-            0,
-            0,
-            ["sites_api"]
+            billing_interval: "monthly",
+            pageviews_per_month: 20_000_000,
+            sites_limit: 0,
+            team_members_limit: 0,
+            api_calls_limit: 0,
+            features: ["sites_api"]
           )
 
         assert result == Decimal.new("738.00")
@@ -38,29 +51,44 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "Bogdan's example (https://3.basecamp.com/5308029/buckets/26383192/card_tables/cards/8506177450#__recording_8689686259)" do
         result =
           EnterprisePlan.estimate(
-            "monthly",
-            10_000,
-            500,
-            15,
-            600,
-            []
+            billing_interval: "monthly",
+            pageviews_per_month: 10_000,
+            sites_limit: 500,
+            team_members_limit: 15,
+            api_calls_limit: 600,
+            features: []
           )
 
-        assert result == Decimal.new("94.00")
+        assert result == Decimal.new("144.00")
       end
 
       test "calculates cost for business plan with yearly billing" do
         result =
           EnterprisePlan.estimate(
-            "yearly",
-            20_000_000,
-            1000,
-            30,
-            1_000,
-            ["sites_api"]
+            billing_interval: "yearly",
+            pageviews_per_month: 20_000_000,
+            sites_limit: 1000,
+            team_members_limit: 30,
+            api_calls_limit: 1_000,
+            features: ["sites_api"]
           )
 
-        assert result == Decimal.new("10380.00")
+        assert result == Decimal.new("12380.00")
+      end
+
+      test "Marko's managed proxy request (https://3.basecamp.com/5308029/buckets/26383192/card_tables/cards/9113635206)" do
+        result =
+          EnterprisePlan.estimate(
+            billing_interval: "monthly",
+            pageviews_per_month: 10_000,
+            sites_limit: 500,
+            team_members_limit: 15,
+            api_calls_limit: 600,
+            features: [],
+            managed_proxy_price_modifier: true
+          )
+
+        assert result == Decimal.new("343.00")
       end
     end
 
@@ -99,8 +127,8 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
       test "calculates rate based on number of team members" do
         assert EnterprisePlan.team_members_rate(5) == 0
         assert EnterprisePlan.team_members_rate(10) == 0
-        assert EnterprisePlan.team_members_rate(15) == 25
-        assert EnterprisePlan.team_members_rate(20) == 50
+        assert EnterprisePlan.team_members_rate(15) == 75
+        assert EnterprisePlan.team_members_rate(20) == 150
       end
     end
 
@@ -120,6 +148,9 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
     describe "features_rate/1" do
       test "returns correct rate based on features" do
         assert EnterprisePlan.features_rate(["sites_api"]) == 99
+        assert EnterprisePlan.features_rate(["sso"]) == 299
+        assert EnterprisePlan.features_rate(["sso", "sites_api"]) == 398
+        assert EnterprisePlan.features_rate(["funnels"]) == 0
         assert EnterprisePlan.features_rate([]) == 0
       end
     end

@@ -1,6 +1,5 @@
 defmodule Plausible.Ingestion.EventTelemetryTest do
   import Phoenix.ConnTest
-  import Plausible.Teams.Test
 
   alias Plausible.Ingestion.Request
   alias Plausible.Ingestion.Event
@@ -34,7 +33,7 @@ defmodule Plausible.Ingestion.EventTelemetryTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
+    assert {:ok, request, _conn} = Request.build(conn)
 
     for _ <- 1..3, do: Event.build_and_buffer(request)
 

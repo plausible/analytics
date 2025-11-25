@@ -1,12 +1,15 @@
-import { test, Page } from '@playwright/test'
+import { test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import {
+  e,
+  ensurePlausibleInitialized,
   expectPlausibleInAction,
   isEngagementEvent,
   isPageviewEvent
 } from './support/test-utils'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { ScriptConfig } from './support/types'
+import { customSubmitHandlerStub } from './support/html-fixtures'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -20,13 +23,9 @@ test('does not track form submissions when the feature is disabled', async ({
   const { url } = await initializePageDynamically(page, {
     testId,
     scriptConfig: DEFAULT_CONFIG,
-    bodyContent: `
-      <div>
-        <form>
-          <input type="text" /><input type="submit" value="Submit" />
-        </form>
-      </div>
-      `
+    bodyContent: /* HTML */ `
+      <form><input type="text" /><input type="submit" value="Submit" /></form>
+    `
   })
 
   await expectPlausibleInAction(page, {
@@ -45,18 +44,17 @@ test('does not track form submissions when the feature is disabled', async ({
 })
 
 test.describe('form submissions feature is enabled', () => {
-  test('tracks forms that use GET method', async ({ page }, {
-    testId
-  }) => {
+  test('tracks forms that use GET method', async ({ page }, { testId }) => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-      <div>
+      bodyContent: /* HTML */ `
         <form method="GET">
-          <input id="name" type="text" placeholder="Name" /><input type="submit" value="Submit" />
+          <input id="name" type="text" placeholder="Name" /><input
+            type="submit"
+            value="Submit"
+          />
         </form>
-      </div>
       `
     })
 
@@ -71,7 +69,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -83,12 +82,10 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-      <div>
-        <form onsubmit="${customSubmitHandlerStub}">
+      bodyContent: /* HTML */ `
+        <form onsubmit=${customSubmitHandlerStub}>
           <input type="text" /><input type="submit" value="Submit" />
         </form>
-      </div>
       `
     })
 
@@ -102,7 +99,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -112,21 +110,24 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-      <div>
-        <button id="dynamically-insert-form" onclick="createForm()">Open form</button>
-        <script>
-          function createForm() {
-            const form = document.createElement('form');
-            form.setAttribute('onsubmit', "${customSubmitHandlerStub}");
-            const submit = document.createElement('input');
-            submit.type = 'submit';
-            submit.value = 'Submit';
-            form.appendChild(submit);
-            document.body.appendChild(form);
-          }
-        </script>
-      </div>
+      bodyContent: /* HTML */ `
+        <div>
+          <button id="dynamically-insert-form" onclick="createForm()">
+            Open form
+          </button>
+          <script>
+            function createForm() {
+              const form = document.createElement('form')
+              /* prettier-ignore */
+              form.onsubmit = ${customSubmitHandlerStub}
+              const submit = document.createElement('input')
+              submit.type = 'submit'
+              submit.value = 'Submit'
+              form.appendChild(submit)
+              document.body.appendChild(form)
+            }
+          </script>
+        </div>
       `
     })
 
@@ -141,7 +142,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -153,13 +155,11 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-      <div>
-        <form novalidate onsubmit="${customSubmitHandlerStub}">
+      bodyContent: /* HTML */ `
+        <form novalidate onsubmit=${customSubmitHandlerStub}>
           <input type="email" />
           <input type="submit" value="Submit" />
         </form>
-      </div>
       `
     })
 
@@ -175,7 +175,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -187,13 +188,11 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-      <div>
+      bodyContent: /* HTML */ `
         <form>
           <input type="email" />
           <input type="submit" value="Submit" />
         </form>
-      </div>
       `
     })
 
@@ -220,13 +219,16 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-      <div>
+      bodyContent: /* HTML */ `
         <form id="form">
           <input type="text" placeholder="Name" />
         </form>
-        <button id="trigger-FormElement-submit" onclick="document.getElementById('form').submit()">Submit</button>
-      </div>
+        <button
+          id="trigger-FormElement-submit"
+          onclick="document.getElementById('form').submit()"
+        >
+          Submit
+        </button>
       `
     })
 
@@ -253,17 +255,15 @@ test.describe('form submissions feature is enabled', () => {
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
-      bodyContent: `
-      <div>
-        <form onsubmit="${customSubmitHandlerStub}">
+      bodyContent: /* HTML */ `
+        <form onsubmit=${customSubmitHandlerStub}>
           <h2>Form 1</h2>
           <input type="text" /><input type="submit" value="Submit" />
         </form>
-        <form onsubmit="${customSubmitHandlerStub}">
+        <form onsubmit=${customSubmitHandlerStub}>
           <h2>Form 2</h2>
           <input type="email" />
         </form>
-      </div>
       `
     })
 
@@ -277,7 +277,8 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
@@ -291,24 +292,10 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [
         {
           n: 'Form: Submission',
-          p: { path: url }
+          u: `${LOCAL_SERVER_ADDR}${url}`,
+          p: e.toBeUndefined()
         }
       ]
     })
   })
 })
-/**
- * This function ensures that the tracker script has attached the event listener before test is run.
- * Note that this race condition happens in the real world as well:
- * forms submitted before the tracker script is initialized will not be tracked.
- */
-function ensurePlausibleInitialized(page: Page) {
-  return page.waitForFunction(() => (window as any).plausible?.l === true)
-}
-
-/**
- * This is a stub for custom form onsubmit handlers Plausible users may have on their websites.
- * Overriding onsubmit with a custom handler is common practice in web development for a variety of reasons (mostly UX),
- * so it's important to track form submissions from forms with such handlers.
- */
-const customSubmitHandlerStub = "event.preventDefault(); console.log('Form submitted')"

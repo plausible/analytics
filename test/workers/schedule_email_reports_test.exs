@@ -1,7 +1,7 @@
 defmodule Plausible.Workers.ScheduleEmailReportsTest do
   use Plausible.DataCase
   use Oban.Testing, repo: Plausible.Repo
-  import Plausible.Teams.Test
+
   alias Plausible.Workers.{ScheduleEmailReports, SendEmailReport}
 
   describe "weekly reports" do
@@ -16,6 +16,25 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
         args: %{site_id: site.id, interval: "weekly"},
         scheduled_at: ScheduleEmailReports.monday_9am(site.timezone)
       )
+    end
+
+    on_ee do
+      test "schedules weekly report for a consolidated view" do
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+        new_site(team: team)
+        new_site(team: team)
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:weekly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+        perform_job(ScheduleEmailReports, %{})
+
+        assert_enqueued(
+          worker: SendEmailReport,
+          args: %{site_id: consolidated_view.id, interval: "weekly"},
+          scheduled_at: ScheduleEmailReports.monday_9am(consolidated_view.timezone)
+        )
+      end
     end
 
     test "does not schedule more than one weekly report at a time" do
@@ -62,6 +81,25 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
         args: %{site_id: site.id, interval: "monthly"},
         scheduled_at: ScheduleEmailReports.first_of_month_9am(site.timezone)
       )
+    end
+
+    on_ee do
+      test "schedules monthly report for a consolidated view" do
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+        new_site(team: team)
+        new_site(team: team)
+        consolidated_view = new_consolidated_view(team)
+
+        insert(:monthly_report, site: consolidated_view, recipients: ["user@email.com"])
+
+        perform_job(ScheduleEmailReports, %{})
+
+        assert_enqueued(
+          worker: SendEmailReport,
+          args: %{site_id: consolidated_view.id, interval: "monthly"},
+          scheduled_at: ScheduleEmailReports.first_of_month_9am(consolidated_view.timezone)
+        )
+      end
     end
 
     test "does not schedule more than one monthly report at a time" do
