@@ -117,12 +117,16 @@ const WorldMap = ({
       return
     }
 
-    const svg = drawInteractiveCountries(svgRef.current, setTooltip)
+    const svg = drawInteractiveCountries(
+      svgRef.current,
+      setTooltip,
+      onCountryClick
+    )
 
     return () => {
       svg.selectAll('*').remove()
     }
-  }, [])
+  }, [onCountryClick])
 
   useEffect(() => {
     if (svgRef.current) {
@@ -137,11 +141,9 @@ const WorldMap = ({
         svgRef.current,
         getColorForValue,
         dataByCountryCode
-      ).on('click', (_event, countryPath) => {
-        onCountryClick(countryPath as unknown as WorldJsonCountryData)
-      })
+      )
     }
-  }, [mode, maxValue, dataByCountryCode, onCountryClick])
+  }, [mode, maxValue, dataByCountryCode])
 
   const hoveredCountryData = tooltip.hoveredCountryAlpha3Code
     ? dataByCountryCode.get(tooltip.hoveredCountryAlpha3Code)
@@ -262,7 +264,8 @@ function drawInteractiveCountries(
       y: number
       hoveredCountryAlpha3Code: string | null
     }>
-  >
+  >,
+  onCountryClick: (d: WorldJsonCountryData) => void
 ) {
   const path = setupProjetionPath()
   const data = parseWorldTopoJsonToGeoJsonFeatures()
@@ -279,6 +282,8 @@ function drawInteractiveCountries(
     .on('mouseover', function (event, country) {
       const [x, y] = d3.pointer(event, svg.node()?.parentNode)
       setTooltip({ x, y, hoveredCountryAlpha3Code: country.properties.a3 })
+      // Reset all countries first to remove any lingering highlights
+      svg.selectAll('path').attr('class', countryClass)
       // brings country to front
       this.parentNode?.appendChild(this)
       d3.select(this).attr('class', highlightedCountryClass)
@@ -291,7 +296,12 @@ function drawInteractiveCountries(
 
     .on('mouseout', function () {
       setTooltip({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
-      d3.select(this).attr('class', countryClass)
+      // Reset all countries to ensure no highlight remains
+      svg.selectAll('path').attr('class', countryClass)
+    })
+
+    .on('click', (_event, countryPath) => {
+      onCountryClick(countryPath as WorldJsonCountryData)
     })
 
   return svg
