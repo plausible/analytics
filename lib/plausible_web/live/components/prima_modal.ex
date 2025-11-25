@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.Components.PrimaModal do
 
   def modal(assigns) do
     ~H"""
-    <Modal.modal id={@id}>
+    <Modal.modal portal={Mix.env() !== :test} id={@id}>
       <Modal.modal_overlay
         transition_enter={{"ease-out duration-300", "opacity-0", "opacity-100"}}
         transition_leave={{"ease-in duration-200", "opacity-100", "opacity-0"}}
