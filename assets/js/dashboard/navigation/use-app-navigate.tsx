@@ -27,8 +27,6 @@ export type AppNavigationTarget = {
    * - `undefined` empties the search
    */
   search?: (search: Record<string, unknown>) => Record<string, unknown>
-
-  skipLive?: boolean
 }
 
 const getNavigateToOptions = (
@@ -63,17 +61,14 @@ export const useAppNavigate = () => {
       path,
       params,
       search,
-      skipLive,
       ...options
     }: AppNavigationTarget & NavigateOptions) => {
-      console.log('SKIP_LIVE', skipLive)
-      if (!skipLive) {
-        window.dispatchEvent(
-          new CustomEvent('live-navigate-back', {
-            detail: { search: search(window.location.search) }
-          })
-        )
-      }
+      window.dispatchEvent(
+        new CustomEvent('live-navigate-back', {
+          detail: { search: search(window.location.search) }
+        })
+      )
+
       return _navigate(getToOptions({ path, params, search }), options)
     },
     [getToOptions, _navigate]

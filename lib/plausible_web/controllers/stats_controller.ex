@@ -52,7 +52,7 @@ defmodule PlausibleWeb.StatsController do
 
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
 
-  def stats(%{assigns: %{site: site}} = conn, _params) do
+  def stats(%{assigns: %{site: site}} = conn, params) do
     site = Plausible.Repo.preload(site, :owners)
     site_role = conn.assigns[:site_role]
     current_user = conn.assigns[:current_user]
@@ -100,7 +100,9 @@ defmodule PlausibleWeb.StatsController do
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
           consolidated_view?: consolidated_view?,
           consolidated_view_available?: consolidated_view_available?,
-          team_identifier: team_identifier
+          team_identifier: team_identifier,
+          connect_live_socket: true,
+          params: params
         )
 
       !stats_start_date && can_see_stats? ->

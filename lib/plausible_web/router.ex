@@ -715,12 +715,8 @@ defmodule PlausibleWeb.Router do
         live "/:domain/live/pages", Pages, :live_pages, as: :site
       end
 
-      scope alias: Live, assigns: %{connect_live_socket: true} do
-        live "/:domain/*path", Dashboard, :live_stats, as: :site
-      end
-
       get "/:domain/export", StatsController, :csv_export
-      # get "/:domain/*path", StatsController, :stats
+      get "/:domain/*path", StatsController, :stats
     end
   end
 end

@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
                     <span class="w-full md:truncate">
                       <.dashboard_link
                         id={"filter-link-#{idx}"}
-                        href="/dummy.site?f=is,page,/about">
+                        href={"/dummy.site?f=is,page,#{item.name}"}>
                         {trim_name(item.name, @col_min_width)}
                       </.dashboard_link>
                     </span>
