@@ -1,7 +1,6 @@
 defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
-  use Plausible.Teams.Test
   require Plausible.Billing.Subscription.Status
   alias Plausible.Workers.NotifyAnnualRenewal
   alias Plausible.Billing.Subscription

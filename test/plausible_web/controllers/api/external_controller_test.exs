@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.ClickhouseRepo
-  use Plausible.Teams.Test
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
   @user_agent_mobile "Mozilla/5.0 (Linux; Android 6.0; U007 Pro Build/MRA58K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/44.0.2403.119 Mobile Safari/537.36"

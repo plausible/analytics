@@ -3,11 +3,9 @@ defmodule PlausibleWeb.SiteControllerTest do
   use Plausible.Repo
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  use Plausible.Teams.Test
 
   import ExUnit.CaptureLog
   import Mox
-  import Plausible.Test.Support.HTML
 
   alias Plausible.Imported.SiteImport
   alias Plausible.Teams
@@ -872,9 +870,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html_response(conn, 200) =~ "Custom event"
       assert html_response(conn, 200) =~ "Visit /register"
-    end
 
-    test "goal names are HTML safe", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "<some_event>")
 
       conn = get(conn, "/#{site.domain}/settings/goals")

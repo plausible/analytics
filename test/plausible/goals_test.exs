@@ -1,7 +1,5 @@
 defmodule Plausible.GoalsTest do
   use Plausible.DataCase
-  use Plausible
-  use Plausible.Teams.Test
   alias Plausible.Goals
 
   doctest Plausible.Goals.SystemGoals, import: true

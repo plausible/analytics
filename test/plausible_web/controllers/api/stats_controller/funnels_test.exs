@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
-  use Plausible.Teams.Test
   @moduletag :ee_only
 
   on_ee do

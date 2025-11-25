@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
 
   import ExUnit.CaptureLog
 

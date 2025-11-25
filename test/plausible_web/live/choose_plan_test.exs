@@ -2,11 +2,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   use PlausibleWeb.ConnCase, async: true
 
   on_ee do
-    use Plausible.Teams.Test
     @moduletag :ee_only
 
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
+
     require Plausible.Billing.Subscription.Status
     alias Plausible.{Repo, Billing, Billing.Subscription}
 

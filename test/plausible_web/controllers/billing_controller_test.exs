@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.BillingControllerTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
-  import Plausible.Test.Support.HTML
+
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 

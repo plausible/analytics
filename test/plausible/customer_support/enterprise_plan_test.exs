@@ -1,5 +1,4 @@
 defmodule Plausible.CustomerSupport.EnterprisePlanTest do
-  use Plausible
   use Plausible.DataCase, async: true
   @moduletag :ee_only
 

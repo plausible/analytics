@@ -1,7 +1,7 @@
 defmodule Plausible.Workers.ScheduleEmailReportsTest do
   use Plausible.DataCase
   use Oban.Testing, repo: Plausible.Repo
-  import Plausible.Teams.Test
+
   alias Plausible.Workers.{ScheduleEmailReports, SendEmailReport}
 
   describe "weekly reports" do

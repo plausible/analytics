@@ -1,6 +1,5 @@
 defmodule Plausible.AuthTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
   alias Plausible.Auth
 
   test "enterprise_configured?/1 returns whether the user has an enterprise plan" do

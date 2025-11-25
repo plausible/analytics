@@ -6,10 +6,8 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
   on_ee do
     use Bamboo.Test, shared: true
-    use Plausible.Teams.Test
 
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     alias Plausible.Auth
     alias Plausible.Auth.SSO

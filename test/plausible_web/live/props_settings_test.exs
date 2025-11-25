@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.Live.PropsSettingsTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   describe "GET /:domain/settings/properties" do
     setup [:create_user, :log_in, :create_site]

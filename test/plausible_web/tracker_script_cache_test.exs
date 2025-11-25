@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.TrackerScriptCacheTest do
-  use Plausible
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   alias Plausible.Site.TrackerScriptConfiguration
   alias PlausibleWeb.TrackerScriptCache

@@ -1,6 +1,5 @@
 defmodule Plausible.Imported.GoogleAnalytics4Test do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible
   use Oban.Testing, repo: Plausible.Repo
 
   import Mox

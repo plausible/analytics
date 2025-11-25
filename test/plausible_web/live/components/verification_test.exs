@@ -1,10 +1,8 @@
 defmodule PlausibleWeb.Live.Components.VerificationTest do
-  use Plausible
+  use PlausibleWeb.ConnCase, async: true
 
   on_ee do
-    use PlausibleWeb.ConnCase, async: true
     import Phoenix.LiveViewTest, only: [render_component: 2]
-    import Plausible.Test.Support.HTML
 
     alias Plausible.InstallationSupport.{State, Verification}
 

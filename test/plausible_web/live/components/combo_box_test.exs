@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Live.Components.ComboBoxTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
 
   alias PlausibleWeb.Live.Components.ComboBox
 

@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 

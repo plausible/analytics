@@ -1,8 +1,6 @@
 defmodule Plausible.Imported.CSVImporterTest do
-  use Plausible
   use Plausible.Repo
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
   use Bamboo.Test
   alias Plausible.Imported.{CSVImporter, SiteImport}
   require SiteImport

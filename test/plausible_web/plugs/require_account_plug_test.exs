@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.RequireAccountPlugTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
 
   import Plug.Conn
 

@@ -1,10 +1,8 @@
 defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
-  use Plausible.Teams.Test
   use Plausible.Repo
 
-  import Plausible.Test.Support.HTML
   import Mox
 
   require Logger
@@ -1811,7 +1809,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     })
     |> recycle()
     |> Map.put(:secret_key_base, secret_key_base())
-    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+    |> Plug.Conn.put_req_header("x-forwarded-for", random_ip())
   end
 
   defp set_remember_2fa_cookie(conn, user) do
@@ -1819,7 +1817,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     |> PlausibleWeb.TwoFactor.Session.maybe_set_remember_2fa(user, "true")
     |> recycle()
     |> Map.put(:secret_key_base, secret_key_base())
-    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+    |> Plug.Conn.put_req_header("x-forwarded-for", random_ip())
   end
 
   defp mock_captcha_success() do

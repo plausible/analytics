@@ -1,12 +1,9 @@
 defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
   use PlausibleWeb.ConnCase, async: false
-  use Plausible.Teams.Test
-  use Plausible
   @moduletag :ee_only
 
   on_ee do
     import Phoenix.LiveViewTest
-    import Plausible.Test.Support.HTML
 
     alias Plausible.Auth.SSO
 

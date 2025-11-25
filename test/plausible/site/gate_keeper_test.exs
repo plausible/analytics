@@ -1,6 +1,5 @@
 defmodule Plausible.Site.GateKeeperTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   alias Plausible.Site.Cache
   alias Plausible.Site.GateKeeper

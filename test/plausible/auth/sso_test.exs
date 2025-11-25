@@ -1,10 +1,8 @@
 defmodule Plausible.Auth.SSOTest do
   use Plausible.DataCase, async: true
-  use Plausible
 
   on_ee do
     use Oban.Testing, repo: Plausible.Repo
-    use Plausible.Teams.Test
 
     alias Plausible.Auth
     alias Plausible.Auth.SSO

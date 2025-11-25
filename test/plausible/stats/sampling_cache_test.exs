@@ -1,8 +1,6 @@
 defmodule Plausible.Stats.SamplingCacheTest do
   use Plausible.DataCase, async: true
 
-  use Plausible
-
   on_ee do
     alias Plausible.Stats.SamplingCache
 

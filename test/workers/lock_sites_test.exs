@@ -1,6 +1,5 @@
 defmodule Plausible.Workers.LockSitesTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
   require Plausible.Billing.Subscription.Status
   alias Plausible.Workers.LockSites
   alias Plausible.Billing.Subscription

@@ -1,6 +1,5 @@
 defmodule Plausible.Stats.Query.QueryResultTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
   alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer}
 
   setup do
