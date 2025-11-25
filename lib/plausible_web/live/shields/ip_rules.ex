@@ -5,7 +5,6 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
 
   use PlausibleWeb, :live_component
 
-  alias PlausibleWeb.Live.Components.Modal
   alias PlausibleWeb.Live.Components.PrimaModal
   alias Plausible.Shields
   alias Plausible.Shield
