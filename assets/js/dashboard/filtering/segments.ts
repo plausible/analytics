@@ -136,7 +136,9 @@ export function resolveFilters(
       segmentsInFilter++
       const [_operation, _dimension, clauses] = filter
       if (segmentsInFilter > 1 || clauses.length !== 1) {
-        throw new Error('Dashboard can be filtered by only one segment')
+        throw new Error(
+          'Das Dashboard kann nur nach einem Segment gefiltert werden'
+        )
       }
       const segment = segments.find(
         (segment) => String(segment.id) == String(clauses[0])
@@ -184,7 +186,9 @@ export function findAppliedSegmentFilter({ filters }: { filters: Filter[] }) {
   }
   const [_operation, _dimension, clauses] = segmentFilter
   if (clauses.length !== 1) {
-    throw new Error('Dashboard can be filtered by only one segment')
+    throw new Error(
+      'Das Dashboard kann nur nach einem Segment gefiltert werden'
+    )
   }
   return segmentFilter
 }
