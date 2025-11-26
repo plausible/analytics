@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   def render(assigns) do
     ~H"""
     <div id="live-dashboard-container">
-      <div id="pages-breakdown-live-container" target="#pages-breakdown-live">
+      <.portal id="pages-breakdown-live-container" target="#pages-breakdown-live">
         <.live_component 
           module={PlausibleWeb.Live.Dashboard.Pages}
           id="pages-breakdown-component"
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.Dashboard do
           query={@query}
         >
         </.live_component>
-      </div>
+      </.portal>
     </div>
     """
   end
