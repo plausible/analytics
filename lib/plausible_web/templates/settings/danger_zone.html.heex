@@ -1,11 +1,11 @@
 <.notice title="Danger zone" theme={:red}>
-  Destructive actions below can result in irrecoverable data loss. Be careful.
+  Vorsicht: Die folgenden Aktionen können zu unwiderruflichem Datenverlust führen.
 </.notice>
 
 <.settings_tiles>
   <.tile docs="delete-account">
-    <:title>Delete account</:title>
-    <:subtitle>Permanently deletes your sites and all collected stats.</:subtitle>
+    <:title>Account löschen</:title>
+    <:subtitle>Löscht unwiderruflich Ihre Seiten und alle gesammelten Statistiken.</:subtitle>
 
     <%= cond do %>
       <% length(@solely_owned_teams) > 0 -> %>
@@ -33,7 +33,7 @@
           theme="danger"
           mt?={false}
         >
-          Delete my account
+          Meinen Account löschen
         </.button_link>
     <% end %>
   </.tile>

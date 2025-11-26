@@ -105,8 +105,8 @@ defmodule PlausibleWeb.LayoutView do
     options = %{
       "Account" =>
         [
-          %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
-          %{key: "Security", value: "security", icon: :lock_closed},
+          %{key: "Allgemeine Einstellungen", value: "preferences", icon: :cog_6_tooth},
+          %{key: "Sicherheit", value: "security", icon: :lock_closed},
           if(ee?() and not Teams.setup?(current_team),
             do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
           ),
@@ -117,7 +117,7 @@ defmodule PlausibleWeb.LayoutView do
             do: %{key: "API keys", value: "api-keys", icon: :key}
           ),
           if(Plausible.Users.type(conn.assigns.current_user) == :standard,
-            do: %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
+            do: %{key: "Gefahrenzone", value: "danger-zone", icon: :exclamation_triangle}
           )
         ]
         |> Enum.reject(&is_nil/1)

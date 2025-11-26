@@ -206,7 +206,7 @@ export const SiteSwitcher = () => {
                 {canSeeViewAllSites && (
                   <a className={buttonLinkClassName} href={`/sites`}>
                     <ArrowLeftIcon className="size-4 mr-1.5" />
-                    Back to sites
+                    zurück zu Alle Seiten
                   </a>
                 )}
                 {canSeeSiteSettings && (
@@ -215,7 +215,7 @@ export const SiteSwitcher = () => {
                     href={`/${encodeURIComponent(currentSite.domain)}/settings/general`}
                   >
                     <Cog8ToothIcon className="size-4 mr-1.5" />
-                    Site settings
+                    Seiten Einstellungen
                   </a>
                 )}
               </div>

@@ -1,7 +1,7 @@
 <.settings_tiles>
   <.tile :if={Plausible.Users.type(@current_user) == :standard} docs="change-email">
     <:title>
-      <a id="update-email">Email address</a>
+      <a id="update-email">Email-Adresse</a>
     </:title>
     <:subtitle>
       Ändere die mit deinem Konto verknüpfte Adresse
@@ -113,7 +113,7 @@
       <a id="update-2fa">Two-Factor Authentication (2FA)</a>
     </:title>
     <:subtitle>
-      Two-Factor Authentication protects your account by adding an extra security step when you log in
+      Die Zwei-Faktor-Authentifizierung schützt Ihren Account durch einen zusätzlichen Sicherheitsschritt beim Login.
     </:subtitle>
 
     <div x-data="{disable2FAOpen: false, regenerate2FAOpen: false}">
@@ -243,7 +243,7 @@
       <a id="user-sessions">Login management</a>
     </:title>
     <:subtitle>
-      Log out of your account on other devices. Note that logged-in sessions automatically expire after 14 days of inactivity
+      Melden Sie sich auf anderen Geräten von Ihrem Account ab. Beachten Sie, dass eingeloggte Sitzungen nach 14 Tagen Inaktivität automatisch ablaufen.
     </:subtitle>
 
     <.table rows={@user_sessions}>
