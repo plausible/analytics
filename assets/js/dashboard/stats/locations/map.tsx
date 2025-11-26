@@ -105,12 +105,16 @@ const WorldMap = ({
         const labels = cleanLabels(filters, query.labels, 'country', {
           [country.code]: country.name
         })
-        onCountrySelect()
         navigate({ search: (search) => ({ ...search, filters, labels }) })
       }
     },
-    [navigate, query, dataByCountryCode, onCountrySelect]
+    [navigate, query, dataByCountryCode]
   )
+
+  const onCountryClickRef = useRef(onCountryClick)
+  useEffect(() => {
+    onCountryClickRef.current = onCountryClick
+  }, [onCountryClick])
 
   useEffect(() => {
     if (!svgRef.current) {
@@ -120,13 +124,13 @@ const WorldMap = ({
     const svg = drawInteractiveCountries(
       svgRef.current,
       setTooltip,
-      onCountryClick
+      onCountryClickRef
     )
 
     return () => {
       svg.selectAll('*').remove()
     }
-  }, [onCountryClick])
+  }, [])
 
   useEffect(() => {
     if (svgRef.current) {
@@ -143,7 +147,7 @@ const WorldMap = ({
         dataByCountryCode
       )
     }
-  }, [mode, maxValue, dataByCountryCode])
+  }, [mode, maxValue, dataByCountryCode, onCountryClick])
 
   const hoveredCountryData = tooltip.hoveredCountryAlpha3Code
     ? dataByCountryCode.get(tooltip.hoveredCountryAlpha3Code)
@@ -212,12 +216,9 @@ const countryClass = classNames(
 )
 
 const highlightedCountryClass = classNames(
-  sharedCountryClass,
   'stroke-2',
-  'fill-[#f4f4f5]',
   'stroke-[#a78bfa]',
-  'dark:fill-[#3f3f46]',
-  'dark:stroke-[#6366f1]'
+  'dark:stroke-[#a78bfa]'
 )
 
 /**
@@ -265,7 +266,7 @@ function drawInteractiveCountries(
       hoveredCountryAlpha3Code: string | null
     }>
   >,
-  onCountryClick: (d: WorldJsonCountryData) => void
+  onCountryClickRef: React.MutableRefObject<(d: WorldJsonCountryData) => void>
 ) {
   const path = setupProjetionPath()
   const data = parseWorldTopoJsonToGeoJsonFeatures()
@@ -279,14 +280,14 @@ function drawInteractiveCountries(
     .attr('class', countryClass)
     .attr('d', path as never)
 
+    .on('click', (_event, d) => {
+      onCountryClickRef.current(d)
+    })
+
     .on('mouseover', function (event, country) {
       const [x, y] = d3.pointer(event, svg.node()?.parentNode)
       setTooltip({ x, y, hoveredCountryAlpha3Code: country.properties.a3 })
-      // Reset all countries first to remove any lingering highlights
-      svg.selectAll('path').attr('class', countryClass)
-      // brings country to front
-      this.parentNode?.appendChild(this)
-      d3.select(this).attr('class', highlightedCountryClass)
+      d3.select(this).classed(highlightedCountryClass, true)
     })
 
     .on('mousemove', function (event) {
@@ -296,12 +297,7 @@ function drawInteractiveCountries(
 
     .on('mouseout', function () {
       setTooltip({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
-      // Reset all countries to ensure no highlight remains
-      svg.selectAll('path').attr('class', countryClass)
-    })
-
-    .on('click', (_event, countryPath) => {
-      onCountryClick(countryPath as WorldJsonCountryData)
+      d3.select(this).classed(highlightedCountryClass, false)
     })
 
   return svg
