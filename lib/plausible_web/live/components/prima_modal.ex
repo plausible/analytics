@@ -7,13 +7,8 @@ defmodule PlausibleWeb.Live.Components.PrimaModal do
   slot :inner_block, required: true
 
   def modal(assigns) do
-    # credo:disable-for-next-line
-    IO.inspect(Mix.env())
-    # credo:disable-for-next-line
-    IO.inspect(Application.spec(:prima, :vsn))
-
     ~H"""
-    <Modal.modal portal={Mix.env() !== :test} id={@id}>
+    <Modal.modal portal={Mix.env() not in [:test, :ce_test]} id={@id}>
       <Modal.modal_overlay
         transition_enter={{"ease-out duration-300", "opacity-0", "opacity-100"}}
         transition_leave={{"ease-in duration-200", "opacity-100", "opacity-0"}}
