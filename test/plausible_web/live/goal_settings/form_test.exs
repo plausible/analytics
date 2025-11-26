@@ -405,6 +405,15 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
 
+      # If autoconfigure modal shows, click "Add manually" to get to the regular form
+      html = render(lv)
+
+      if html =~ "We detected" do
+        lv
+        |> element("button[phx-click='add-manually']")
+        |> render_click()
+      end
+
       type_into_combo(lv, "event_name_input_modalseq0", "One")
       html = render(lv)
 
@@ -433,6 +442,99 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert text_of_element(html, "#goals-form-modalseq0") =~ "EventOne"
       refute text_of_element(html, "#goals-form-modalseq0") =~ "EventTwo"
       refute text_of_element(html, "#goals-form-modalseq0") =~ "EventThree"
+    end
+  end
+
+  describe "Autoconfigure modal" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows autoconfigure modal when opening custom events modal with available events", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Newsletter Signup"),
+        build(:event, name: "Purchase")
+      ])
+
+      lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
+
+      html = render(lv)
+      assert html =~ "We detected 3 custom"
+      assert html =~ "These events have been sent from your site in the past 6 months"
+    end
+
+    test "clicking 'Add manually' shows the regular form", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Newsletter Signup"),
+        build(:event, name: "Purchase")
+      ])
+
+      lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
+
+      html = render(lv)
+      assert html =~ "We detected 3 custom"
+
+      lv
+      |> element("button[phx-click='add-manually']")
+      |> render_click()
+
+      html = render(lv)
+      refute html =~ "We detected"
+      assert html =~ "Add goal for"
+    end
+
+    test "autoconfigure button adds all events", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Newsletter Signup"),
+        build(:event, name: "Purchase")
+      ])
+
+      lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
+
+      lv
+      |> element("button[phx-click='autoconfigure']")
+      |> render_click()
+
+      # Render again to process the async :autoconfigure message
+      _html = render(lv)
+
+      goals = Plausible.Goals.for_site(site)
+      assert length(goals) == 3
+      assert Enum.any?(goals, &(&1.event_name == "Signup"))
+      assert Enum.any?(goals, &(&1.event_name == "Newsletter Signup"))
+      assert Enum.any?(goals, &(&1.event_name == "Purchase"))
+    end
+
+    test "autoconfigure modal does not show when all events are already goals", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Newsletter Signup"),
+        build(:event, name: "Purchase")
+      ])
+
+      lv = get_liveview(conn, site)
+
+      lv = open_modal_with_goal_type(lv, "custom_events")
+
+      lv
+      |> element("button[phx-click='autoconfigure']")
+      |> render_click()
+
+      # Render again to process the async :autoconfigure message and modal close event
+      _html = render(lv)
+
+      lv = open_modal_with_goal_type(lv, "custom_events")
+
+      html = render(lv)
+      refute html =~ "We detected"
+      refute html =~ "from the last 6 months"
     end
   end
 

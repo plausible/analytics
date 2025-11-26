@@ -30,15 +30,19 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         assigns[:goal_type] || "custom_events"
       end
 
-    event_name_options_count = length(assigns.event_name_options)
+    event_name_options_count = length(assigns.event_name_options || [])
 
     show_autoconfigure_modal =
-      if Map.has_key?(socket.assigns, :show_autoconfigure_modal) do
-        socket.assigns.show_autoconfigure_modal
+      if event_name_options_count == 0 do
+        false
       else
-        is_nil(assigns.goal) &&
-          form_type == "custom_events" &&
-          event_name_options_count > 0
+        if Map.has_key?(socket.assigns, :show_autoconfigure_modal) do
+          socket.assigns.show_autoconfigure_modal
+        else
+          is_nil(assigns.goal) &&
+            form_type == "custom_events" &&
+            event_name_options_count > 0
+        end
       end
 
     socket =
@@ -122,7 +126,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div>
       <.title>
-        We detected {@event_name_options_count} custom {if @event_name_options_count == 1, do: "event", else: "events"}.
+        We detected {@event_name_options_count} custom {if @event_name_options_count == 1,
+          do: "event",
+          else: "events"}.
       </.title>
 
       <p class="mt-2 py-2 text-sm text-gray-600 dark:text-gray-400 text-pretty">
@@ -142,7 +148,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           phx-target={@myself}
         >
           <Heroicons.plus class="size-4" />
-          Add {@event_name_options_count} {if @event_name_options_count == 1, do: "event", else: "events"}
+          Add {@event_name_options_count} {if @event_name_options_count == 1,
+            do: "event",
+            else: "events"}
         </.button>
       </div>
     </div>
@@ -197,7 +205,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="pageviews-form" class="py-2" {@rest}>
       <div class="text-sm pb-6 text-gray-600 dark:text-gray-400 text-pretty">
-        Pageview goals allow you to measure how many people visit a specific page or section of your site. <.styled_link
+        Pageview goals allow you to measure how many people visit a specific page or section of your site.
+        <.styled_link
           href="https://plausible.io/docs/pageview-goals"
           new_tab={true}
         >
@@ -275,7 +284,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="scroll-form" class="py-2" x-data={@js} {@rest}>
       <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
-        Scroll Depth goals allow you to see how many people scroll beyond your desired scroll depth percentage threshold. <.styled_link
+        Scroll Depth goals allow you to see how many people scroll beyond your desired scroll depth percentage threshold.
+        <.styled_link
           href="https://plausible.io/docs/scroll-depth"
           new_tab={true}
         >
