@@ -21,14 +21,13 @@ const WIDGETS = {
   },
   'breakdown-tile': {
     initialize: function () {
-      console.log('Initializing widget', this.el.id)
       const that = this
 
       this.url = window.location.href
 
       this.listeners = []
 
-      const clickListener = this.el.addEventListener('click', (e) => {
+      const clickListener = (e) => {
         const type = e.target.dataset.type || null
 
         if (type && type == 'dashboard-link') {
@@ -45,7 +44,9 @@ const WIDGETS = {
 
           e.preventDefault()
         }
-      })
+      }
+
+      this.el.addEventListener('click', clickListener)
 
       this.listeners.push({
         element: this.el,
@@ -53,33 +54,34 @@ const WIDGETS = {
         callback: clickListener
       })
 
-      // const popListener = window.addEventListener('popstate', (e) => {
-      //   if (that.url !== window.location.href) {
-      //     that.pushEvent('handle_dashboard_params', {
-      //       url: window.location.href
-      //     })
-      //   }
-      // })
-      //
-      // this.listeners.push({
-      //   element: window,
-      //   event: 'popstatae',
-      //   callback: popListener
-      // })
-      //
-      const backListener = window.addEventListener(
-        'live-navigate-back',
-        (e) => {
-          if (
-            typeof e.detail.search === 'string' &&
-            that.url !== window.location.href
-          ) {
-            that.pushEvent('handle_dashboard_params', {
-              url: window.location.href
-            })
-          }
+      const popListener = (e) => {
+        if (that.url !== window.location.href) {
+          that.pushEvent('handle_dashboard_params', {
+            url: window.location.href
+          })
         }
-      )
+      }
+
+      window.addEventListener('popstate', popListener)
+
+      this.listeners.push({
+        element: window,
+        event: 'popstate',
+        callback: popListener
+      })
+
+      const backListener = (e) => {
+        if (
+          typeof e.detail.search === 'string' &&
+          that.url !== window.location.href
+        ) {
+          that.pushEvent('handle_dashboard_params', {
+            url: window.location.href
+          })
+        }
+      }
+
+      window.addEventListener('live-navigate-back', backListener)
 
       this.listeners.push({
         element: window,
@@ -88,10 +90,7 @@ const WIDGETS = {
       })
     },
     cleanup: function () {
-      console.log('Cleaning up widget', this.el.id)
-
       if (this.listeners) {
-        console.log('Cleaning up listeners')
         this.listeners.forEach((l) => {
           l.element.removeEventListener(l.event, l.callback)
         })
