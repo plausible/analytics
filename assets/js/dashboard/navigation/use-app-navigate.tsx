@@ -65,7 +65,7 @@ export const useAppNavigate = () => {
     }: AppNavigationTarget & NavigateOptions) => {
       window.dispatchEvent(
         new CustomEvent('live-navigate-back', {
-          detail: { search: search(window.location.search) }
+          detail: { search: window.location.search }
         })
       )
 

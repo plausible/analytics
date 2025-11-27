@@ -11,6 +11,7 @@ import Behaviours from './stats/behaviours'
 import { useQueryContext } from './query-context'
 import { isRealTimeDashboard } from './util/filters'
 import { useAppNavigate } from './navigation/use-app-navigate'
+import { parseSearch } from './util/url-search-params'
 
 function DashboardStats({
   importedDataInView,
@@ -19,12 +20,14 @@ function DashboardStats({
   importedDataInView?: boolean
   updateImportedDataInView?: (v: boolean) => void
 }) {
-  const navigate = useNavigate()
+  const navigate = useAppNavigate()
 
   useEffect(() => {
-    const unsubscribe = window.addEventListener('live-navigate', (e) => {
-      navigate({ search: e.detail.search, replace: true, skipLive: true })
-    })
+    const unsubscribe = window.addEventListener('live-navigate', ((
+      e: CustomEvent
+    ) => {
+      navigate({ search: () => parseSearch(e.detail.search), replace: true })
+    }) as EventListener)
     return unsubscribe
   }, [navigate])
 
