@@ -15,62 +15,85 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   @data_container_height (@row_height + @row_gap_height) * (@max_items - 1) + @row_height
   @col_min_width 70
 
+  @name_labels %{
+    "pages" => "Page",
+    "entry-pages" => "Entry Page",
+    "exit-pages" => "Exit Page"
+  }
+
   @metrics %{
-    visitors: %{
-      width: "w-24",
-      key: :visitors,
-      label: "Visitors",
-      sortable: true,
-      plot: true
+    "pages" => %{
+      visitors: %{
+        width: "w-24",
+        key: :visitors,
+        label: "Visitors",
+        sortable: true,
+        plot: true
+      },
+      conversion_rate: %{
+        width: "w-24",
+        key: :conversion_rate,
+        label: "CR",
+        sortable: true
+      }
     },
-    conversion_rate: %{
-      width: "w-24",
-      key: :conversion_rate,
-      label: "CR",
-      sortable: true
+    "entry-pages" => %{
+      visitors: %{
+        width: "w-24",
+        key: :visitors,
+        label: "Unique Entrances",
+        sortable: true,
+        plot: true
+      },
+      conversion_rate: %{
+        width: "w-24",
+        key: :conversion_rate,
+        label: "CR",
+        sortable: true
+      }
+    },
+    "exit-pages" => %{
+      visitors: %{
+        width: "w-24",
+        key: :visitors,
+        label: "Unique Exits",
+        sortable: true,
+        plot: true
+      },
+      conversion_rate: %{
+        width: "w-24",
+        key: :conversion_rate,
+        label: "CR",
+        sortable: true
+      }
     }
   }
 
   def update(assigns, socket) do
     socket =
-      assign(socket,
+      socket
+      |> assign(
+        name_labels: @name_labels,
         max_items: @max_items,
         min_height: @min_height,
         row_height: @row_height,
         row_gap_height: @row_gap_height,
         data_container_height: @data_container_height,
         col_min_width: @col_min_width,
-        site: assigns.site
+        site: assigns.site,
+        active_tab: Map.get(socket.assigns, :active_tab, "pages"),
+        query: assigns.query
       )
-
-    query = struct!(assigns.query, dimensions: ["event:page"])
-
-    metrics = breakdown_metrics(query)
-    pagination = parse_pagination(%{})
-
-    %{results: results, meta: meta} = Stats.breakdown(assigns.site, query, metrics, pagination)
-
-    pages =
-      results
-      |> transform_keys(%{page: :name})
-
-    socket =
-      assign(
-        socket,
-        metrics: Enum.map(metrics, &Map.fetch!(@metrics, &1)),
-        results: Enum.take(pages, @max_items),
-        meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
-        skip_imported_reason: meta[:imports_skip_reason]
-      )
+      |> load_metrics()
 
     {:ok, socket}
   end
 
   def render(assigns) do
     tabs = [
-      %{label: "Top Pages", value: "pages", active: true},
-      %{label: "Entry Pages", value: "entry-pages", active: false},
-      %{label: "Exit Pages", value: "exit-pages", active: false}
+      %{label: "Top Pages", value: "pages"},
+      %{label: "Entry Pages", value: "entry-pages"},
+      %{label: "Exit Pages", value: "exit-pages"}
     ]
 
     assigns = assign(assigns, :tabs, tabs)
@@ -84,22 +107,15 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           </h3>
         </div>
 
-        <div class="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline">
-          <button
+        <.tabs>
+          <.tab
             :for={tab <- @tabs}
-            class="rounded-sm truncate text-left transition-colors duration-150"
-          >
-            <span class={
-              if(tab.active,
-                do:
-                  "text-indigo-600 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-600 dark:decoration-indigo-500",
-                else: "hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer"
-              )
-            }>
-              {tab.label}
-            </span>
-          </button>
-        </div>
+            label={tab.label}
+            value={tab.value}
+            active={@active_tab}
+            myself={@myself}
+          />
+        </.tabs>
       </div>
 
       <div
@@ -116,7 +132,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         <div class="h-full flex flex-col">
           <div style={"height: #{@row_height}px"}>
             <div class="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
-              <span class="grow truncate">Page</span>
+              <span class="grow truncate">{@name_labels[@active_tab]}</span>
               <div
                 :for={metric <- @metrics}
                 class={[metric.key, "text-right"]}
@@ -184,6 +200,106 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       </div>
     </div>
     """
+  end
+
+  def handle_event("set-tab", %{"tab" => tab}, socket) do
+    if tab != socket.assigns.active_tab do
+      socket =
+        socket
+        |> assign(:active_tab, tab)
+        |> load_metrics()
+
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def tabs(assigns) do
+    ~H"""
+    <div class="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline">
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  def tab(assigns) do
+    ~H"""
+    <button
+      class="rounded-sm truncate text-left transition-colors duration-150"
+      phx-click="set-tab"
+      phx-value-tab={@value}
+      phx-target={@myself}
+    >
+      <span class={
+        if(@value == @active,
+          do:
+            "text-indigo-600 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-600 dark:decoration-indigo-500",
+          else: "hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer"
+        )
+      }>
+        {@label}
+      </span>
+    </button>
+    """
+  end
+
+  defp load_metrics(socket) do
+    %{results: pages, meta: meta, metrics: metrics} =
+      metrics_for_tab(socket.assigns.active_tab, socket.assigns.site, socket.assigns.query)
+
+    assign(
+      socket,
+      metrics: Enum.map(metrics, &Map.fetch!(@metrics[socket.assigns.active_tab], &1)),
+      results: Enum.take(pages, @max_items),
+      meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(socket.assigns.query)),
+      skip_imported_reason: meta[:imports_skip_reason]
+    )
+  end
+
+  defp metrics_for_tab("pages", site, query) do
+    query = struct!(query, dimensions: ["event:page"])
+
+    metrics = breakdown_metrics(query)
+    pagination = parse_pagination(%{})
+
+    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
+
+    pages =
+      results
+      |> transform_keys(%{page: :name})
+
+    %{results: pages, meta: meta, metrics: metrics}
+  end
+
+  defp metrics_for_tab("entry-pages", site, query) do
+    query = struct!(query, dimensions: ["visit:entry_page"])
+
+    metrics = breakdown_metrics(query)
+    pagination = parse_pagination(%{})
+
+    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
+
+    pages =
+      results
+      |> transform_keys(%{entry_page: :name})
+
+    %{results: pages, meta: meta, metrics: metrics}
+  end
+
+  defp metrics_for_tab("exit-pages", site, query) do
+    query = struct!(query, dimensions: ["visit:exit_page"])
+
+    metrics = breakdown_metrics(query)
+    pagination = parse_pagination(%{})
+
+    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
+
+    pages =
+      results
+      |> transform_keys(%{exit_page: :name})
+
+    %{results: pages, meta: meta, metrics: metrics}
   end
 
   defp trim_name(name, max_length) do
