@@ -455,7 +455,7 @@ defmodule Plausible.GoalsTest do
     assert Enum.count(Goals.for_site(site)) == 10
   end
 
-  test "on Mix.env == :test, max goals per site is 10 and can be overriden" do
+  test "on Mix.env == :test, max goals per site is 10 and can be overridden" do
     assert Plausible.Goals.max_goals_per_site() == 10
     assert Plausible.Goals.max_goals_per_site(max_goals_per_site: 5) == 5
   end
