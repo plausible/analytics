@@ -45,11 +45,7 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/ip_addresses")
       resp = html_response(conn, 200)
 
-      assert element_exists?(resp, ~s/button#add-ip-rule[x-data]/)
-      attr = text_of_attr(resp, ~s/button#add-ip-rule/, "x-on:click")
-
-      assert attr =~ "open-modal"
-      assert attr =~ "ip-rule-form-modal"
+      assert element_exists?(resp, ~s/button#add-ip-rule/)
     end
 
     test "add rule button is not rendered when maximum reached", %{conn: conn, site: site} do

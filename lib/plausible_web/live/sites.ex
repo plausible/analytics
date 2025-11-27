@@ -498,7 +498,7 @@ defmodule PlausibleWeb.Live.Sites do
       class="group relative cursor-pointer"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
-      phx-click={Prima.Modal.open(@modal_id)}
+      phx-click={Prima.Modal.JS.open(@modal_id)}
     >
       <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
         <div class="w-full flex items-center justify-between gap-x-2.5">
@@ -730,7 +730,7 @@ defmodule PlausibleWeb.Live.Sites do
       <div class="p-5 pb-3 sm:p-6 sm:pb-3">
         <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
           <button
-            phx-click={Prima.Modal.close()}
+            phx-click={Prima.Modal.JS.close()}
             class="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400"
           >
             <span class="sr-only">Close</span>
