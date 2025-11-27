@@ -10,7 +10,6 @@ defmodule Plausible.Goals do
   alias Ecto.Changeset
 
   @max_goals_per_site 1_000
-
   @spec max_goals_per_site(Keyword.t()) :: pos_integer()
   def max_goals_per_site(opts \\ []) do
     override = Keyword.get(opts, :max_goals_per_site)
@@ -21,8 +20,6 @@ defmodule Plausible.Goals do
       Application.get_env(:plausible, :max_goals_per_site, @max_goals_per_site)
     end
   end
-
-  @max_goals_per_site 1_000
 
   @spec get(Plausible.Site.t(), pos_integer()) :: nil | Plausible.Goal.t()
   def get(site, id) when is_integer(id) do
@@ -142,7 +139,7 @@ defmodule Plausible.Goals do
       where: g.site_id == ^site.id and not is_nil(g.currency),
       select: %{display_name: g.display_name, currency: g.currency},
       order_by: [desc: g.id],
-      limit: @max_goals_per_site
+      limit: ^max_goals_per_site()
     )
     |> Plausible.Repo.all()
   end
@@ -158,7 +155,7 @@ defmodule Plausible.Goals do
     query =
       from g in Goal,
         order_by: [desc: g.id],
-        limit: @max_goals_per_site
+        limit: ^max_goals_per_site(opts)
 
     query =
       if site do
