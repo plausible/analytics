@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Live.Dashboard do
     ~H"""
     <div id="live-dashboard-container">
       <.portal id="pages-breakdown-live-container" target="#pages-breakdown-live">
-        <.live_component 
+        <.live_component
           module={PlausibleWeb.Live.Dashboard.Pages}
           id="pages-breakdown-component"
           params={@params}

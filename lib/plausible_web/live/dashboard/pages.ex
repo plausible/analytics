@@ -7,7 +7,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   alias Plausible.Stats
   alias Plausible.Stats.Filters
-  alias Plausible.Stats.Query
 
   @max_items 9
   @min_height 380
@@ -129,14 +128,18 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           </div>
 
           <div class="grow" style={"min-height: #{@data_container_height}px;"}>
-            <div :for={{item, idx} <- Enum.with_index(@results)} style={"min-height: #{@row_height}px;"}>
+            <div
+              :for={{item, idx} <- Enum.with_index(@results)}
+              style={"min-height: #{@row_height}px;"}
+            >
               <div class="flex w-full items-center" style={"margin-top: #{@row_gap_height}"}>
                 <div class="grow w-full overflow-hidden">
                   <div class="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
                     <span class="w-full md:truncate">
                       <.dashboard_link
                         id={"filter-link-#{idx}"}
-                        href={"/dummy.site?f=is,page,#{item.name}"}>
+                        href={"/dummy.site?f=is,page,#{item.name}"}
+                      >
                         {trim_name(item.name, @col_min_width)}
                       </.dashboard_link>
                     </span>

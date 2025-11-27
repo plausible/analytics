@@ -54,7 +54,15 @@
     data-team-identifier={@team_identifier}
   >
   </div>
-  {live_render(@conn, PlausibleWeb.Live.Dashboard, id: "live-dashboard-lv", session: Map.merge(@params, %{"site_id" => @site.id, "domain" => @site.domain, "url" => Plug.Conn.request_url(@conn)}))}
+  {live_render(@conn, PlausibleWeb.Live.Dashboard,
+    id: "live-dashboard-lv",
+    session:
+      Map.merge(@params, %{
+        "site_id" => @site.id,
+        "domain" => @site.domain,
+        "url" => Plug.Conn.request_url(@conn)
+      })
+  )}
   <div id="modal_root"></div>
   <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
     <div class="py-12 lg:py-16 lg:flex lg:items-center lg:justify-between">

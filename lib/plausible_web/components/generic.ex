@@ -423,7 +423,8 @@ defmodule PlausibleWeb.Components.Generic do
     <.link
       data-type="dashboard-link"
       href={@href}
-      {@rest}>
+      {@rest}
+    >
       {render_slot(@inner_block)}
     </.link>
     """

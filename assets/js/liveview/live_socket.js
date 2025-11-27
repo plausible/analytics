@@ -2,13 +2,14 @@
   The modules below this comment block are resolved from '../deps' folder,
   which does not exist when running the lint command in Github CI
 */
-
+/* eslint-disable import/no-unresolved */
 import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 import { Modal, Dropdown } from 'prima'
 import LiveDashboard from './live_dashboard'
 import topbar from 'topbar'
+/* eslint-enable import/no-unresolved */
 
 import Alpine from 'alpinejs'
 

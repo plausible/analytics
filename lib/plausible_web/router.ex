@@ -59,10 +59,6 @@ defmodule PlausibleWeb.Router do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
-  pipeline :embedded_liveview_layout do
-    plug :put_root_layout, html: {PlausibleWeb.LayoutView, :embedded_liveview}
-  end
-
   pipeline :external_api do
     plug :accepts, ["json"]
   end
@@ -708,12 +704,6 @@ defmodule PlausibleWeb.Router do
       get "/:domain/settings/email-reports", SiteController, :settings_email_reports
 
       put "/:domain/settings", SiteController, :update_settings
-
-      scope alias: Live.Dashboard do
-        pipe_through [:embedded_liveview_layout]
-
-        live "/:domain/live/pages", Pages, :live_pages, as: :site
-      end
 
       get "/:domain/export", StatsController, :csv_export
 

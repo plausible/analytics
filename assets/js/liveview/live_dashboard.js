@@ -1,24 +1,4 @@
 const WIDGETS = {
-  // 'navigation-tracker': {
-  //   initialize: function () {
-  //     console.log('Setting up navigation tracker...')
-  //
-  //     this.listener = window.addEventListener('phx:navigate', () => {
-  //       console.log('STATE PUSHED!', document.location)
-  //     })
-  //   },
-  //   cleanup: function () {
-  //     if (this.listener) {
-  //       console.log('Removing navigation tracker...')
-  //       window.removeEventListener('phx:navigate', this.listener)
-  //       this.listener = null
-  //     }
-  //   }
-  // },
-  'modal-button': {
-    initialize: function () {},
-    cleanup: function () {}
-  },
   'breakdown-tile': {
     initialize: function () {
       const that = this
