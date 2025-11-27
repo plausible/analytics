@@ -110,7 +110,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
   defp setup_goals(site, goal_names) when is_list(goal_names) do
     goals =
       Enum.map(goal_names, fn goal_name ->
-        {:ok, g} = Plausible.Goals.create(site, %{"event_name" => goal_name})
+        {:ok, g} =
+          Plausible.Goals.create(site, %{"event_name" => goal_name}, max_goals_per_site: 100)
+
         g
       end)
 
