@@ -170,6 +170,19 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         refute_search_result(html, "team", team1.id)
         assert_search_result(html, "team", team2.id)
       end
+
+      test "search sites by domain_changed_from", %{conn: conn, user: user} do
+        {:ok, site} =
+          new_site(domain: "old.example.com", owner: user)
+          |> Plausible.Site.Domain.change("new.example.net")
+
+        {:ok, lv, _html} = live(conn, @cs_index)
+
+        type_into_input(lv, "filter-text", "site:old")
+        html = render(lv)
+
+        assert_search_result(html, "site", site.id)
+      end
     end
 
     defp assert_search_result(doc, type, id) do
