@@ -409,10 +409,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         H.bad_request(conn, "Parameter `#{param}` is required to create a goal")
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        message =
-          changeset.errors
-          |> Enum.map(&translate_error/1)
-          |> Enum.join(", ")
+        message = Enum.map_join(changeset.errors, ", ", &translate_error/1)
 
         H.bad_request(conn, message)
 
