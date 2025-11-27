@@ -128,8 +128,8 @@ defmodule Plausible.Goals do
 
   def find_or_create(_, %{"goal_type" => "event"}, _), do: {:missing, "event_name"}
 
-  def find_or_create(site, %{"goal_type" => "page", "page_path" => _} = params, _) do
-    create(site, params, do_upsert())
+  def find_or_create(site, %{"goal_type" => "page", "page_path" => _} = params, opts) do
+    create(site, params, do_upsert(opts))
   end
 
   def find_or_create(_, %{"goal_type" => "page"}, _), do: {:missing, "page_path"}
