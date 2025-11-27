@@ -1391,7 +1391,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def conversions(conn, params) do
     pagination = parse_pagination(params)
-    site = Plausible.Repo.preload(conn.assigns.site, :goals)
+
+    site =
+      Plausible.Repo.preload(conn.assigns.site,
+        goals: Plausible.Goals.for_site_query()
+      )
+
+    Logger.configure(level: :error)
 
     params =
       params

@@ -26,9 +26,7 @@ defmodule Plausible.Stats.GoalSuggestions do
   def suggest_event_names(site, search_input, opts \\ []) do
     matches = "%#{search_input}%"
 
-    site =
-      site
-      |> Repo.preload(:goals)
+    site = Repo.preload(site, goals: Plausible.Goals.for_site_query())
 
     excluded =
       opts

@@ -8,6 +8,8 @@ defmodule Plausible.Goals do
   alias Plausible.Goal
   alias Ecto.Multi
 
+  @max_goals_per_site 1_000
+
   @spec get(Plausible.Site.t(), pos_integer()) :: nil | Plausible.Goal.t()
   def get(site, id) when is_integer(id) do
     q =
@@ -121,7 +123,9 @@ defmodule Plausible.Goals do
   def list_revenue_goals(site) do
     from(g in Plausible.Goal,
       where: g.site_id == ^site.id and not is_nil(g.currency),
-      select: %{display_name: g.display_name, currency: g.currency}
+      select: %{display_name: g.display_name, currency: g.currency},
+      order_by: [desc: g.id],
+      limit: @max_goals_per_site
     )
     |> Plausible.Repo.all()
   end
@@ -133,13 +137,21 @@ defmodule Plausible.Goals do
     |> Enum.map(&maybe_trim/1)
   end
 
-  def for_site_query(site, opts \\ []) do
+  def for_site_query(site \\ nil, opts \\ []) do
     query =
       from g in Goal,
-        inner_join: assoc(g, :site),
-        where: g.site_id == ^site.id,
         order_by: [desc: g.id],
-        preload: [:site]
+        limit: @max_goals_per_site
+
+    query =
+      if site do
+        from g in query,
+          inner_join: assoc(g, :site),
+          where: g.site_id == ^site.id,
+          preload: [:site]
+      else
+        query
+      end
 
     if ee?() and opts[:preload_funnels?] == true do
       from(g in query,
