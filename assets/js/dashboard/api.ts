@@ -94,7 +94,7 @@ function getSharedLinkSearchParams(): Record<string, string> {
   return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
 }
 
-export function getUrl(
+export async function get(
   url: string,
   query?: DashboardQuery,
   ...extraQueryParams: unknown[]
@@ -103,16 +103,7 @@ export function getUrl(
     ? queryToSearchParams(query, [...extraQueryParams])
     : serializeUrlParams(getSharedLinkSearchParams())
 
-  return queryString ? `${url}?${queryString}` : url;
-}
-
-export async function get(
-  url: string,
-  query?: DashboardQuery,
-  ...extraQueryParams: unknown[]
-) {
-  const fullUrl = getUrl(url, query, ...extraQueryParams)
-  const response = await fetch(fullUrl, {
+  const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     signal: abortController.signal,
     headers: { ...getHeaders(), Accept: 'application/json' }
   })
