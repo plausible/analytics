@@ -1397,8 +1397,6 @@ defmodule PlausibleWeb.Api.StatsController do
         goals: Plausible.Goals.for_site_query()
       )
 
-    Logger.configure(level: :error)
-
     params =
       params
       |> realtime_period_to_30m()
