@@ -7,6 +7,19 @@ const WIDGETS = {
 
       this.listeners = []
 
+      const localStorageListener = (e) => {
+        console.log('localStorage updated', e.detail)
+        localStorage.setItem(e.detail.key, e.detail.value)
+      }
+
+      window.addEventListener('phx:update_local_storage', localStorageListener)
+
+      this.listeners.push({
+        element: window,
+        event: 'phx:update_local_storage',
+        callback: localStorageListener
+      })
+
       const clickListener = (e) => {
         const type = e.target.dataset.type || null
 

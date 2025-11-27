@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   alias Plausible.Stats.Query
 
   def mount(_params, %{"domain" => domain, "url" => url} = session, socket) do
+    user_prefs = get_connect_params(socket)["user_prefs"] || %{}
     current_user = socket.assigns[:current_user]
 
     site =
@@ -15,7 +16,10 @@ defmodule PlausibleWeb.Live.Dashboard do
       |> Plausible.Sites.get_for_user(domain)
       |> Plausible.Repo.preload(:owners)
 
-    socket = assign(socket, :site, site)
+    socket =
+      socket
+      |> assign(:site, site)
+      |> assign(:user_prefs, user_prefs)
 
     params = Map.drop(session, ["domain", "site_id", "url"])
 
@@ -53,6 +57,7 @@ defmodule PlausibleWeb.Live.Dashboard do
           params={@params}
           site={@site}
           query={@query}
+          user_prefs={@user_prefs}
         >
         </.live_component>
       </.portal>

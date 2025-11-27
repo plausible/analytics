@@ -70,6 +70,8 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   }
 
   def update(assigns, socket) do
+    active_tab = assigns.user_prefs["page_tab"] || "pages"
+
     socket =
       socket
       |> assign(
@@ -81,8 +83,9 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         data_container_height: @data_container_height,
         col_min_width: @col_min_width,
         site: assigns.site,
-        active_tab: Map.get(socket.assigns, :active_tab, "pages"),
-        query: assigns.query
+        active_tab: active_tab,
+        query: assigns.query,
+        user_prefs: Map.get(socket.assigns, :user_prefs, assigns.user_prefs)
       )
       |> load_metrics()
 
@@ -207,6 +210,10 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       socket =
         socket
         |> assign(:active_tab, tab)
+        |> push_event("update_local_storage", %{
+          key: "pageTab__#{socket.assigns.site.domain}",
+          value: tab
+        })
         |> load_metrics()
 
       {:noreply, socket}

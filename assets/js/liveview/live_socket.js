@@ -18,6 +18,7 @@ let websocketUrl = document.querySelector("meta[name='websocket-url']")
 let disablePushStateFlag = document.querySelector(
   "meta[name='live-socket-disable-push-state']"
 )
+let domain = document.querySelector("meta[name='dashboard-domain']")
 if (csrfToken && websocketUrl) {
   let Hooks = { Modal, Dropdown, LiveDashboard }
   Hooks.Metrics = {
@@ -55,10 +56,10 @@ if (csrfToken && websocketUrl) {
   let disablePushState =
     !!disablePushStateFlag &&
     disablePushStateFlag.getAttribute('content') === 'true'
+  let domainName = domain && domain.getAttribute('content')
   let liveSocket = new LiveSocket(liveUrl, Socket, {
     disablePushState: disablePushState,
     heartbeatIntervalMs: 10000,
-    params: { _csrf_token: token },
     hooks: Hooks,
     uploaders: Uploaders,
     dom: {
@@ -67,6 +68,18 @@ if (csrfToken && websocketUrl) {
         if (from._x_dataStack) {
           Alpine.clone(from, to)
         }
+      }
+    },
+    params: () => {
+      if (domainName) {
+        return {
+          user_prefs: {
+            page_tab: localStorage.getItem(`pageTab__${domainName}`)
+          },
+          _csrf_token: token
+        }
+      } else {
+        return { _csrf_token: token }
       }
     }
   })
