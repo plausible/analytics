@@ -276,6 +276,14 @@ defmodule Plausible.GoalsTest do
     assert [%{page_path: "/Signup"}, %{event_name: "Signup"}] = goals
   end
 
+  test "for_site/1 returns goals up to a limit" do
+    site = new_site()
+    for i <- 1..11, do: insert(:goal, %{site: site, event_name: "G#{i}"})
+
+    assert Goals.count(site) == 11
+    assert length(Goals.for_site(site)) == 10
+  end
+
   test "goals are present after domain change" do
     site = new_site()
     insert(:goal, %{site: site, event_name: " Signup "})
