@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
-import Pages from './stats/pages'
 import { LiveViewPortal } from './components/liveview-portal'
 import Locations from './stats/locations'
 import Devices from './stats/devices'
@@ -42,7 +40,6 @@ function DashboardStats({
           <Sources />
         </div>
         <div className={statsBoxClass}>
-          {/* <Pages /> */}
           <LiveViewPortal
             id="pages-breakdown-live"
             className="w-full h-full border-0 overflow-hidden"

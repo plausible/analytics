@@ -1,14 +1,11 @@
 const WIDGETS = {
   'breakdown-tile': {
     initialize: function () {
-      const that = this
-
       this.url = window.location.href
 
       this.listeners = []
 
       const localStorageListener = (e) => {
-        console.log('localStorage updated', e.detail)
         localStorage.setItem(e.detail.key, e.detail.value)
       }
 
@@ -20,24 +17,24 @@ const WIDGETS = {
         callback: localStorageListener
       })
 
-      const clickListener = (e) => {
+      const clickListener = ((e) => {
         const type = e.target.dataset.type || null
 
         if (type && type == 'dashboard-link') {
-          that.url = e.target.href
-          const uri = new URL(that.url)
-          that.el.dispatchEvent(
+          this.url = e.target.href
+          const uri = new URL(this.url)
+          this.el.dispatchEvent(
             new CustomEvent('live-navigate', {
               bubbles: true,
               detail: { search: uri.search }
             })
           )
 
-          that.pushEvent('handle_dashboard_params', { url: that.url })
+          this.pushEvent('handle_dashboard_params', { url: this.url })
 
           e.preventDefault()
         }
-      }
+      }).bind(this)
 
       this.el.addEventListener('click', clickListener)
 
@@ -47,13 +44,13 @@ const WIDGETS = {
         callback: clickListener
       })
 
-      const popListener = (e) => {
-        if (that.url !== window.location.href) {
-          that.pushEvent('handle_dashboard_params', {
+      const popListener = (() => {
+        if (this.url !== window.location.href) {
+          this.pushEvent('handle_dashboard_params', {
             url: window.location.href
           })
         }
-      }
+      }).bind(this)
 
       window.addEventListener('popstate', popListener)
 
@@ -63,16 +60,16 @@ const WIDGETS = {
         callback: popListener
       })
 
-      const backListener = (e) => {
+      const backListener = ((e) => {
         if (
           typeof e.detail.search === 'string' &&
-          that.url !== window.location.href
+          this.url !== window.location.href
         ) {
-          that.pushEvent('handle_dashboard_params', {
+          this.pushEvent('handle_dashboard_params', {
             url: window.location.href
           })
         }
-      }
+      }).bind(this)
 
       window.addEventListener('live-navigate-back', backListener)
 
