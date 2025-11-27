@@ -408,6 +408,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:missing, param} ->
         H.bad_request(conn, "Parameter `#{param}` is required to create a goal")
 
+      {:error, %Ecto.Changeset{} = changeset} ->
+        message = Enum.map_join(changeset.errors, ", ", &translate_error/1)
+
+        H.bad_request(conn, message)
+
       e ->
         H.bad_request(conn, "Something went wrong: #{inspect(e)}")
     end
@@ -604,5 +609,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     |> Map.take([:domain, :timezone, :tracker_script_configuration])
     # remap to `custom_properties`
     |> Map.put(:custom_properties, site.allowed_event_props || [])
+  end
+
+  defp translate_error({field, {msg, opts}}) do
+    Enum.reduce(opts, "#{field}: #{msg}", fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
+    end)
   end
 end

@@ -280,6 +280,32 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert [%{page_path: "/checkout"}] = Plausible.Goals.for_site(site)
     end
 
+    test "fails to create goal when max goals per site limit reached", %{
+      conn: conn,
+      token: token,
+      site: site
+    } do
+      for i <- 1..10, do: {:ok, _} = Plausible.Goals.create(site, %{"event_name" => "G#{i}"})
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
+
+      payload = %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}}
+
+      resp =
+        conn
+        |> authenticate(site.domain, token)
+        |> put_req_header("content-type", "application/json")
+        |> put(url, payload)
+        |> json_response(422)
+        |> assert_schema("UnprocessableEntityError", spec())
+
+      assert %Schemas.Error{
+               detail: "event_name: Maximum number of goals reached"
+             } in resp.errors
+
+      assert Plausible.Goals.count(site) == 10
+    end
+
     test "is idempotent", %{conn: conn, token: token, site: site} do
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 

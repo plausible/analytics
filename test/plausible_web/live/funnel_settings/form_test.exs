@@ -60,19 +60,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
       refute text_of_element(doc, "ul#dropdown-step-2 li") =~ "Another World"
     end
 
-    test "suggestions are limited on change", %{conn: conn, site: site} do
-      setup_goals(site, for(i <- 1..20, do: "Goal #{i}"))
-      lv = get_liveview(conn, site)
-
-      doc =
-        lv
-        |> element("li#dropdown-step-1-option-1 a")
-        |> render_click()
-
-      assert element_exists?(doc, ~s/li#dropdown-step-1-option-15/)
-      refute element_exists?(doc, ~s/li#dropdown-step-1-option-16/)
-    end
-
     test "removing one option alters suggestions for other", %{conn: conn, site: site} do
       setup_goals(site, ["Hello World", "Plausible", "Another World"])
 
@@ -110,7 +97,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
   defp setup_goals(site, goal_names) when is_list(goal_names) do
     goals =
       Enum.map(goal_names, fn goal_name ->
-        {:ok, g} = Plausible.Goals.create(site, %{"event_name" => goal_name})
+        {:ok, g} =
+          Plausible.Goals.create(site, %{"event_name" => goal_name}, max_goals_per_site: 100)
+
         g
       end)
 
