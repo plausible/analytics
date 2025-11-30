@@ -650,6 +650,21 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         res = json_response(conn, 400)
         assert res["error"] == "Parameter `page_path` is required to create a goal"
       end
+
+      test "fails when max goals per site limit reached", %{conn: conn, site: site} do
+        for i <- 1..10, do: {:ok, _} = Plausible.Goals.create(site, %{"event_name" => "G#{i}"})
+
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Signup"
+          })
+
+        res = json_response(conn, 400)
+
+        assert res["error"] =~ "Maximum number of goals reached"
+      end
     end
 
     describe "DELETE /api/v1/sites/custom-props/:property" do

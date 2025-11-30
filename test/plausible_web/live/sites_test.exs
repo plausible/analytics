@@ -104,9 +104,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
-
-      assert text(template) =~
+      assert text_of_element(html, "#invitation-modal-#{transfer.transfer_id}") =~
                "You are unable to accept the ownership of this site because your account does not have a subscription"
     end
 
@@ -203,9 +201,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
-
-      assert text(template) =~ "Owning this site would exceed your site limit"
+      assert text_of_element(html, "#invitation-modal-#{transfer.transfer_id}") =~
+               "Owning this site would exceed your site limit"
     end
 
     @tag :ee_only
@@ -222,9 +219,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      template = find_portal_template(html, "#invitation-modal-#{transfer.transfer_id}")
-
-      assert text(template) =~
+      assert text_of_element(html, "#invitation-modal-#{transfer.transfer_id}") =~
                "The site uses Custom Properties, which your current subscription does not support"
     end
 

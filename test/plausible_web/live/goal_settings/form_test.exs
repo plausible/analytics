@@ -198,6 +198,24 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       html = render(lv)
       assert html =~ "Visit /page/**"
       assert html =~ "Pageview"
+
+      assert Plausible.Goals.count(site) == 1
+    end
+
+    test "fails to create a goal above limit", %{conn: conn, site: site} do
+      for i <- 1..10, do: {:ok, _} = Plausible.Goals.create(site, %{"event_name" => "G#{i}"})
+
+      lv = get_liveview(conn, site)
+      refute render(lv) =~ "Visit /page/**"
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{page_path: "/page/**"}})
+
+      html = render(lv)
+      assert html =~ "Maximum number of goals reached"
+
+      assert Plausible.Goals.count(site) == 10
     end
   end
 
