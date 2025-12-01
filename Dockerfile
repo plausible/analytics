@@ -1,8 +1,11 @@
 # we can not use the pre-built tar because the distribution is
 # platform specific, it makes sense to build it in the docker
 
+#### Alpine version
+ARG ALPINE_VERSION=3.22.2
+
 #### Builder
-FROM hexpm/elixir:1.19.4-erlang-27.3.4.6-alpine-3.22.2 AS buildcontainer
+FROM hexpm/elixir:1.19.4-erlang-27.3.4.6-alpine-${ALPINE_VERSION} AS buildcontainer
 
 ARG MIX_ENV=ce
 
@@ -54,7 +57,7 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.22.2
+FROM alpine:${ALPINE_VERSION}
 LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}
@@ -84,3 +87,4 @@ EXPOSE 8000
 ENV DEFAULT_DATA_DIR=/var/lib/plausible
 VOLUME /var/lib/plausible
 CMD ["run"]
+
