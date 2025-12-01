@@ -36,11 +36,23 @@ defmodule Plausible.Goals do
           {:ok, Goal.t()}
           | {:error, Changeset.t()}
           | {:error, :upgrade_required}
+          | {:error, :revenue_goals_unavailable}
   @doc """
   Creates a Goal for a site.
 
   If the created goal is a revenue goal, it sets site.updated_at to be
   refreshed by the sites cache, as revenue goals are used during ingestion.
+
+  Returns `{:ok, goal}` or `{:error, changeset}` when creation fails due to
+  invalid fields. It can also return:
+
+  * `{:error, :upgrade_required}` - Adding a revenue goal is not allowed
+    for team's subscription.
+
+  * `{:error, :revenue_goals_unavailable}` - When the site is a consolidated
+    view and the goal created is a revenue goal. Revenue goal creation is not
+    allowed for consolidated views due to the inability to force a single
+    currency on a goal across all consolidated sites.
   """
   def create(site, params, opts \\ []) do
     Repo.transaction(fn ->
