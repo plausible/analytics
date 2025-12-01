@@ -70,7 +70,10 @@ function AllSources({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -106,7 +109,10 @@ function Channels({ onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -154,7 +160,10 @@ function UTMSources({ tab, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -241,7 +250,7 @@ export default function SourceList() {
   }
 
   return (
-    <div>
+    <div className="group/report overflow-x-hidden">
       {/* Header Container */}
       <div className="w-full flex justify-between">
         <div className="flex gap-x-1">

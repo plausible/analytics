@@ -475,7 +475,9 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     extra_metrics =
-      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+      if params["detailed"],
+        do: [:percentage, :bounce_rate, :visit_duration],
+        else: [:percentage]
 
     metrics =
       breakdown_metrics(query,
@@ -513,7 +515,9 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     extra_metrics =
-      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+      if params["detailed"],
+        do: [:percentage, :bounce_rate, :visit_duration],
+        else: [:percentage]
 
     metrics =
       breakdown_metrics(query,
@@ -606,7 +610,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -641,7 +645,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -676,7 +680,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -711,7 +715,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -746,7 +750,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -781,7 +785,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -873,7 +877,9 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     extra_metrics =
-      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+      if params["detailed"],
+        do: [:percentage, :bounce_rate, :visit_duration],
+        else: [:percentage]
 
     metrics =
       breakdown_metrics(query,
