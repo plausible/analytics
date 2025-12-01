@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomProps do
   use PlausibleWeb, :plugins_api_controller
 
   operation(:enable,
-    id: "CustomProp.GetOrEnable",
+    operation_id: "CustomProp.GetOrEnable",
     summary: "Get or enable CustomProp(s)",
     request_body:
       {"CustomProp enable params", "application/json", Schemas.CustomProp.EnableRequest},
@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomProps do
   end
 
   operation(:disable,
-    id: "CustomProp.DisableBulk",
+    operation_id: "CustomProp.DisableBulk",
     summary: "Disable CustomProp(s)",
     request_body:
       {"CustomProp disable params", "application/json", Schemas.CustomProp.DisableRequest},
