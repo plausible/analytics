@@ -157,7 +157,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
                     <span class="w-full md:truncate">
                       <.dashboard_link
                         id={"filter-link-#{idx}"}
-                        href={"/dummy.site?f=is,page,#{item.name}"}
+                        href={"/#{@site.domain}?f=is,page,#{item.name}"}
                       >
                         {trim_name(item.name, @col_min_width)}
                       </.dashboard_link>
@@ -179,8 +179,8 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
           <div class="w-full text-center">
             <a
-              id="modal-link"
-              href="#"
+              data-type="dashboard-link"
+              href={"/#{@site.domain}/pages"}
               class="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 tracking-wide"
             >
               <svg

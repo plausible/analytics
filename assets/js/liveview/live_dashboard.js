@@ -17,16 +17,34 @@ const WIDGETS = {
         callback: localStorageListener
       })
 
+      const closeModalListener = ((e) => {
+        this.el.dispatchEvent(
+          new CustomEvent('live-navigate', {
+            bubbles: true,
+            detail: { path: '/', search: window.location.search }
+          })
+        )
+      }).bind(this)
+
+      window.addEventListener('dashboard:close_modal', closeModalListener)
+
+      this.listeners.push({
+        element: window,
+        event: 'dashboard:close_modal',
+        callback: closeModalListener
+      })
+
       const clickListener = ((e) => {
         const type = e.target.dataset.type || null
 
         if (type && type == 'dashboard-link') {
           this.url = e.target.href
           const uri = new URL(this.url)
+          const path = '/' + uri.pathname.split('/').slice(2).join('/')
           this.el.dispatchEvent(
             new CustomEvent('live-navigate', {
               bubbles: true,
-              detail: { search: uri.search }
+              detail: { path: path, search: uri.search }
             })
           )
 

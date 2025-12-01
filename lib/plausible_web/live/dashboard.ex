@@ -20,6 +20,7 @@ defmodule PlausibleWeb.Live.Dashboard do
       socket
       |> assign(:site, site)
       |> assign(:user_prefs, user_prefs)
+      |> assign(:modal, nil)
 
     params = Map.drop(session, ["domain", "site_id", "url"])
 
@@ -42,6 +43,19 @@ defmodule PlausibleWeb.Live.Dashboard do
 
     query = Query.from(socket.assigns.site, params, %{})
 
+    modal = uri.path |> String.split("/") |> Enum.at(2)
+
+    socket =
+      if modal do
+        socket
+        |> Prima.Modal.push_open("details-#{modal}-breakdown-modal")
+        |> assign(:modal, modal)
+      else
+        socket
+        |> Prima.Modal.push_close("details-#{modal}-breakdown-modal")
+        |> assign(:modal, nil)
+      end
+
     socket = assign(socket, :query, query)
 
     {:noreply, socket}
@@ -61,6 +75,15 @@ defmodule PlausibleWeb.Live.Dashboard do
         >
         </.live_component>
       </.portal>
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.Details.Pages}
+        id="details-pages-breakdown-component"
+        params={@params}
+        site={@site}
+        query={@query}
+        user_prefs={@user_prefs}
+      >
+      </.live_component>
     </div>
     """
   end

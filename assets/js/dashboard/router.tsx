@@ -212,7 +212,7 @@ export function createAppRouter(site: PlausibleSite) {
           utmTermsRoute,
           referrersGoogleRoute,
           referrersDrilldownRoute,
-          topPagesRoute,
+          // topPagesRoute,
           entryPagesRoute,
           exitPagesRoute,
           countriesRoute,

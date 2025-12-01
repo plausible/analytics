@@ -24,7 +24,11 @@ function DashboardStats({
     const unsubscribe = window.addEventListener('live-navigate', ((
       e: CustomEvent
     ) => {
-      navigate({ search: () => parseSearch(e.detail.search), replace: true })
+      navigate({
+        path: e.detail.path,
+        search: () => parseSearch(e.detail.search),
+        replace: true
+      })
     }) as EventListener)
     return unsubscribe
   }, [navigate])
