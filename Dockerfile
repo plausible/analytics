@@ -1,7 +1,6 @@
 # we can not use the pre-built tar because the distribution is
 # platform specific, it makes sense to build it in the docker
 
-#### Alpine version
 ARG ALPINE_VERSION=3.22.2
 
 #### Builder
