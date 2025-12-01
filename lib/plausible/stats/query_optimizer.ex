@@ -100,7 +100,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     end
   end
 
-  defp update_time_in_order_by(query) do
+  defp update_time_in_order_by(query = %Query{}) do
     order_by =
       query.order_by
       |> Enum.map(fn
@@ -126,7 +126,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   # To avoid showing referrers across hostnames when event:hostname
   # filter is present for breakdowns, add entry/exit page hostname
   # filters
-  defp extend_hostname_filters_to_visit(query) do
+  defp extend_hostname_filters_to_visit(query = %Query{}) do
     # Note: Only works since event:hostname is only allowed as a top level filter
     hostname_filters =
       query.filters

@@ -1,4 +1,4 @@
-defmodule Plausible.CondolidatedView.CacheTestSync do
+defmodule Plausible.CondolidatedView.CacheSyncTest do
   use Plausible.DataCase, async: false
 
   on_ee do

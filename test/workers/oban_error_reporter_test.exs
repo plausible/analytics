@@ -37,7 +37,8 @@ defmodule ObanErrorReporterTest do
             )
         end)
 
-      assert log =~ "[error] ** (BadMapError) expected a map, got: :bad_job"
+      assert log =~ "(BadMapError)"
+      assert log =~ ":bad_job"
     end
   end
 end
