@@ -54,7 +54,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
         search: (search) => search
       }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -93,7 +93,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: regionsRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -131,7 +131,7 @@ function Cities({ query, site, afterFetchData }) {
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }

@@ -83,7 +83,7 @@ function AllSources({ afterFetchData }) {
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: sourcesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      color="bg-blue-50 group-hover:bg-blue-100"
+      color="bg-blue-50 group-hover/row:bg-blue-100"
     />
   )
 }
@@ -122,7 +122,7 @@ function Channels({ onClick, afterFetchData }) {
         path: channelsRoute.path,
         search: (search) => search
       }}
-      color="bg-blue-50 group-hover:bg-blue-100"
+      color="bg-blue-50 group-hover/row:bg-blue-100"
     />
   )
 }
@@ -166,7 +166,7 @@ function UTMSources({ tab, afterFetchData }) {
       keyLabel={utmTag.label}
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: route?.path, search: (search) => search }}
-      color="bg-blue-50 group-hover:bg-blue-100"
+      color="bg-blue-50 group-hover/row:bg-blue-100"
     />
   )
 }

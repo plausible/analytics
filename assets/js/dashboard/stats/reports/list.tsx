@@ -22,7 +22,7 @@ const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT =
   (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
-const COL_MIN_WIDTH = 70
+const COL_MIN_WIDTH = 64
 
 function ExternalLink<T>({
   item,
@@ -38,15 +38,21 @@ function ExternalLink<T>({
         target="_blank"
         rel="noreferrer"
         href={dest}
-        className="w-4 h-4 invisible group-hover:visible"
+        className="invisible group-hover:visible"
       >
         <svg
-          className="inline w-full h-full ml-1 -mt-1 text-gray-600 dark:text-gray-400"
-          fill="currentColor"
-          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          className="inline size-3.5 mb-0.5 text-gray-600 dark:text-gray-400"
         >
-          <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path>
-          <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path>
+          <path
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M9 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 12l9-9-.303.303M14 3h7v7"
+          />
         </svg>
       </a>
     )
@@ -129,6 +135,7 @@ export default function ListReport<
     meta: BreakdownResultMeta | null
   }>({ loading: true, list: null, meta: null })
   const [visible, setVisible] = useState(false)
+  const [tappedRow, setTappedRow] = useState<string | null>(null)
 
   const isRealtime = isRealTimeDashboard(query)
   const goalFilterApplied = hasConversionGoalFilter(query)
@@ -194,6 +201,38 @@ export default function ListReport<
     }
   }
 
+  function showOnHoverClass(metric: Metric, listItemName: string) {
+    if (!metric.meta.showOnHover) {
+      return ''
+    }
+
+    // On mobile: show if row is tapped, hide otherwise
+    // On desktop: slide in from right when hovering
+    if (tappedRow === listItemName) {
+      return 'translate-x-0 opacity-100 transition-all duration-300'
+    } else {
+      return 'translate-x-[100%] opacity-0 transition-all duration-300 md:group-hover/devices:translate-x-0 md:group-hover/devices:opacity-100'
+    }
+  }
+
+  function slideLeftClass(
+    metricIndex: number,
+    showOnHoverIndex: number,
+    hasShowOnHoverMetric: boolean,
+    listItemName: string
+  ) {
+    // Columns before the showOnHover column should slide left when it appears
+    if (!hasShowOnHoverMetric || metricIndex >= showOnHoverIndex) {
+      return ''
+    }
+
+    if (tappedRow === listItemName) {
+      return 'transition-transform duration-300 translate-x-0'
+    } else {
+      return 'transition-transform duration-300 translate-x-[100%] md:group-hover/devices:translate-x-0'
+    }
+  }
+
   function renderReport() {
     if (state.list && state.list.length > 0) {
       return (
@@ -223,17 +262,19 @@ export default function ListReport<
   }
 
   function renderReportHeader() {
-    const metricLabels = getAvailableMetrics().map((metric) => {
-      return (
-        <div
-          key={metric.key}
-          className={`${metric.key} text-right ${hiddenOnMobileClass(metric)}`}
-          style={{ minWidth: colMinWidth }}
-        >
-          {metric.renderLabel(query)}
-        </div>
-      )
-    })
+    const metricLabels = getAvailableMetrics()
+      .filter((metric) => !metric.meta.showOnHover)
+      .map((metric) => {
+        return (
+          <div
+            key={metric.key}
+            className={`${metric.key} text-right ${hiddenOnMobileClass(metric)}`}
+            style={{ minWidth: colMinWidth }}
+          >
+            {metric.renderLabel(query)}
+          </div>
+        )
+      })
 
     return (
       <div className="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
@@ -244,11 +285,22 @@ export default function ListReport<
   }
 
   function renderRow(listItem: TListItem) {
+    const handleRowClick = (e: React.MouseEvent) => {
+      if (window.innerWidth < 768 && !(e.target as HTMLElement).closest('a')) {
+        if (tappedRow === listItem.name) {
+          setTappedRow(null)
+        } else {
+          setTappedRow(listItem.name)
+        }
+      }
+    }
+
     return (
       <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
         <div
-          className="group flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm transition-colors duration-150"
+          className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm transition-colors duration-150 md:cursor-default cursor-pointer"
           style={{ marginTop: ROW_GAP_HEIGHT }}
+          onClick={handleRowClick}
         >
           {renderBarFor(listItem)}
           {renderMetricValuesFor(listItem)}
@@ -258,7 +310,7 @@ export default function ListReport<
   }
 
   function renderBarFor(listItem: TListItem) {
-    const lightBackground = color || 'bg-green-50 group-hover:bg-green-100'
+    const lightBackground = color || 'bg-green-50 group-hover/row:bg-green-100'
     const metricToPlot = metrics.find((metric) => metric.meta.plot)?.key
 
     return (
@@ -267,10 +319,10 @@ export default function ListReport<
           maxWidthDeduction={undefined}
           count={listItem[metricToPlot]}
           all={state.list}
-          bg={`${lightBackground} dark:bg-gray-500/15 dark:group-hover:bg-gray-500/30`}
+          bg={`${lightBackground} dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`}
           plot={metricToPlot}
         >
-          <div className="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
+          <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
             <DrilldownLink
               filterInfo={getFilterInfo(listItem)}
               onClick={onClick}
@@ -299,19 +351,33 @@ export default function ListReport<
   }
 
   function renderMetricValuesFor(listItem: TListItem) {
-    return getAvailableMetrics().map((metric) => {
-      return (
-        <div
-          key={`${listItem.name}__${metric.key}`}
-          className={`text-right ${hiddenOnMobileClass(metric)}`}
-          style={{ width: colMinWidth, minWidth: colMinWidth }}
-        >
-          <span className="font-medium text-sm dark:text-gray-200 text-right">
-            {metric.renderValue(listItem, state.meta)}
-          </span>
-        </div>
-      )
-    })
+    const availableMetrics = getAvailableMetrics()
+    const showOnHoverIndex = availableMetrics.findIndex(
+      (m) => m.meta.showOnHover
+    )
+    const hasShowOnHoverMetric = showOnHoverIndex !== -1
+
+    return (
+      <>
+        {availableMetrics.map((metric, index) => {
+          const isShowOnHover = metric.meta.showOnHover
+
+          return (
+            <div
+              key={`${listItem.name}__${metric.key}`}
+              className={`text-right ${hiddenOnMobileClass(metric)} ${showOnHoverClass(metric, listItem.name)} ${slideLeftClass(index, showOnHoverIndex, hasShowOnHoverMetric, listItem.name)}`}
+              style={{ width: colMinWidth, minWidth: colMinWidth }}
+            >
+              <span
+                className={`font-medium text-sm text-right ${isShowOnHover ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}
+              >
+                {metric.renderValue(listItem, state.meta)}
+              </span>
+            </div>
+          )
+        })}
+      </>
+    )
   }
 
   function renderLoading() {

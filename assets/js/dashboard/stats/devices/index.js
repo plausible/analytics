@@ -76,8 +76,10 @@ function Browsers({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -121,8 +123,10 @@ function BrowserVersions({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -187,9 +191,12 @@ function OperatingSystems({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
       !hasConversionGoalFilter(query) &&
-        metrics.createPercentage({ meta: { hiddenonMobile: true } })
+        metrics.createPercentage({
+          meta: { showOnHover: true, hiddenOnMobile: true }
+        }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -238,8 +245,10 @@ function OperatingSystemVersions({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -281,8 +290,10 @@ function ScreenSizes({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -432,7 +443,7 @@ export default function Devices() {
   }
 
   return (
-    <div>
+    <div className="group/devices overflow-x-hidden">
       <div className="flex justify-between w-full">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">Devices</h3>

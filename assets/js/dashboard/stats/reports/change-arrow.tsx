@@ -22,15 +22,13 @@ export function ChangeArrow({
   let icon = null
   const arrowClassName = classNames(
     color(change, metric),
-    'inline-block h-3 w-3 stroke-[1px] stroke-current'
+    'mb-0.5 inline-block size-3 stroke-[1px] stroke-current'
   )
 
   if (change > 0) {
     icon = <ArrowUpRightIcon className={arrowClassName} />
   } else if (change < 0) {
     icon = <ArrowDownRightIcon className={arrowClassName} />
-  } else if (change === 0 && !hideNumber) {
-    icon = <>&#12336;</>
   }
 
   return (

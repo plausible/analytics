@@ -138,7 +138,7 @@ export default function Properties({ afterFetchData }) {
           search: (search) => search
         }}
         maybeHideDetails={true}
-        color="bg-red-50 group-hover:bg-red-100"
+        color="bg-red-50 group-hover/row:bg-red-100"
         colMinWidth={90}
       />
     )
