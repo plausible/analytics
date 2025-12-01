@@ -6,10 +6,11 @@ defmodule PlausibleWeb.Live.Components.PrimaModal do
   attr :id, :string, required: true
   attr :use_portal?, :boolean, default: Mix.env() not in [:test, :ce_test]
   slot :inner_block, required: true
+  attr :on_close, JS, default: %JS{}
 
   def modal(assigns) do
     ~H"""
-    <Modal.modal portal={@use_portal?} id={@id}>
+    <Modal.modal portal={@use_portal?} id={@id} on_close={@on_close}>
       <Modal.modal_overlay
         transition_enter={{"ease-out duration-300", "opacity-0", "opacity-100"}}
         transition_leave={{"ease-in duration-200", "opacity-100", "opacity-0"}}
