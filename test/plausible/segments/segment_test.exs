@@ -66,7 +66,7 @@ defmodule Plausible.Segments.SegmentTest do
   end
 
   test "changeset allows setting nil owner_id to a user id (to be able to recover dangling site segments)",
-    %{segment: valid_segment = %Segment{}} do
+       %{segment: valid_segment = %Segment{}} do
     assert Segment.changeset(
              %Segment{
                valid_segment
