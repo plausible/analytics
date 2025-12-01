@@ -330,7 +330,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">batch_create_event_goals(names, site, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L181" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L193" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -350,7 +350,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">count(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L265" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L277" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -378,7 +378,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">create(site, params, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L45" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L57" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -392,12 +392,18 @@ Pages
           <pre translate="no"><span class="attribute">@spec</span> create(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
   {:ok, <a href="Plausible.Goal.html#t:t/0">Plausible.Goal.t</a>()}
   | {:error, <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}
-  | {:error, :upgrade_required}</pre>
+  | {:error, :upgrade_required}
+  | {:error, :revenue_goals_unavailable}</pre>
 
       </div>
 
 <p>Creates a Goal for a site.</p><p>If the created goal is a revenue goal, it sets site.updated_at to be
-refreshed by the sites cache, as revenue goals are used during ingestion.</p>
+refreshed by the sites cache, as revenue goals are used during ingestion.</p><p>Returns <code class="inline">{:ok, goal}</code> or <code class="inline">{:error, changeset}</code> when creation fails due to
+invalid fields. It can also return:</p><ul><li><p><code class="inline">{:error, :upgrade_required}</code> - Adding a revenue goal is not allowed
+for team's subscription.</p></li><li><p><code class="inline">{:error, :revenue_goals_unavailable}</code> - When the site is a consolidated
+view and the goal created is a revenue goal. Revenue goal creation is not
+allowed for consolidated views due to the inability to force a single
+currency on a goal across all consolidated sites.</p></li></ul>
   </section>
 </section>
 <section class="detail" id="create_404/1">
@@ -408,7 +414,7 @@ refreshed by the sites cache, as revenue goals are used during ingestion.</p>
     </a>
     <h1 class="signature" translate="no">create_404(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L294" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L306" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -434,7 +440,7 @@ refreshed by the sites cache, as revenue goals are used during ingestion.</p>
     </a>
     <h1 class="signature" translate="no">create_file_downloads(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L282" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L294" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -460,7 +466,7 @@ refreshed by the sites cache, as revenue goals are used during ingestion.</p>
     </a>
     <h1 class="signature" translate="no">create_form_submissions(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L288" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L300" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -486,7 +492,7 @@ refreshed by the sites cache, as revenue goals are used during ingestion.</p>
     </a>
     <h1 class="signature" translate="no">create_outbound_links(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L276" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L288" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -512,7 +518,7 @@ refreshed by the sites cache, as revenue goals are used during ingestion.</p>
     </a>
     <h1 class="signature" translate="no">delete(id, site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L201" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L213" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -536,7 +542,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">delete_404(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L322" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L334" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -562,7 +568,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">delete_file_downloads(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L311" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L323" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -588,7 +594,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">delete_form_submissions(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L333" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L345" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -614,7 +620,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">delete_outbound_links(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L300" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L312" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -642,7 +648,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">find_or_create(site, params, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L94" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L106" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -664,7 +670,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">for_site(site, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L147" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L159" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -688,7 +694,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">for_site_query(site \\ nil, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L154" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L166" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -734,7 +740,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">list_revenue_goals(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L137" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L149" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -782,7 +788,7 @@ funnel record(s) are removed completely along with the targeted goal.</p>
     </a>
     <h1 class="signature" translate="no">update(goal, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L70" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L82" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
