@@ -47,7 +47,7 @@ defmodule Plausible.Goals do
   invalid fields. It can also return:
 
   * `{:error, :upgrade_required}` - Adding a revenue goal is not allowed
-    for Growth subscriptions.
+    for team's subscription.
 
   * `{:error, :revenue_goals_unavailable}` - When the site is a consolidated
     view and the goal created is a revenue goal. Revenue goal creation is not
