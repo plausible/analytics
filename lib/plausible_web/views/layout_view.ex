@@ -5,6 +5,7 @@ defmodule PlausibleWeb.LayoutView do
   alias Plausible.Teams
   alias PlausibleWeb.Components.Billing.Notice
   alias PlausibleWeb.Components.Layout
+  alias PlausibleWeb.Components.PrimaDropdown
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()
@@ -206,29 +207,35 @@ defmodule PlausibleWeb.LayoutView do
         |> assign(:selected_id, selected_id)
 
       ~H"""
-      <.dropdown_item>
-        <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
-      </.dropdown_item>
-      <.dropdown_item
-        :for={team <- @teams}
-        href={Routes.site_path(@conn, :index, __team: team.identifier)}
-      >
-        <p
-          class={[
-            if(team.id == @selected_id,
-              do: "border-r-4 border-indigo-400 font-bold",
-              else: "font-medium"
-            ),
-            "truncate text-gray-900 dark:text-gray-100 pr-4"
-          ]}
-          role="none"
+      <PlausibleWeb.Components.PrimaDropdown.dropdown_section>
+        <PlausibleWeb.Components.PrimaDropdown.dropdown_heading>
+          Teams
+        </PlausibleWeb.Components.PrimaDropdown.dropdown_heading>
+        <PlausibleWeb.Components.PrimaDropdown.dropdown_item
+          :for={team <- @teams}
+          as={&link/1}
+          href={Routes.site_path(@conn, :index, __team: team.identifier)}
         >
-          {Teams.name(team)}
-        </p>
-      </.dropdown_item>
-      <.dropdown_item :if={@more_teams?} href={Routes.auth_path(@conn, :select_team)}>
-        Switch to Another Team
-      </.dropdown_item>
+          <p
+            class={[
+              if(team.id == @selected_id,
+                do: "border-r-4 border-indigo-400 font-bold"
+              ),
+              "truncate pr-4"
+            ]}
+            role="none"
+          >
+            {Teams.name(team)}
+          </p>
+        </PlausibleWeb.Components.PrimaDropdown.dropdown_item>
+        <PlausibleWeb.Components.PrimaDropdown.dropdown_item
+          :if={@more_teams?}
+          as={&link/1}
+          href={Routes.auth_path(@conn, :select_team)}
+        >
+          Switch to Another Team
+        </PlausibleWeb.Components.PrimaDropdown.dropdown_item>
+      </PlausibleWeb.Components.PrimaDropdown.dropdown_section>
       """
     else
       ~H""

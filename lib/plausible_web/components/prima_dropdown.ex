@@ -10,14 +10,9 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
 
   slot(:inner_block, required: true)
 
-  # placement: bottom-end should probably be default in prima. Feels more natural
-  # for dropdown menus than bottom-start which is the current default
   def dropdown_menu(assigns) do
     ~H"""
-    <Dropdown.dropdown_menu
-      placement="bottom-end"
-      class="bg-white rounded-md shadow-lg ring-1 ring-black/5 focus:outline-none p-1.5 dark:bg-gray-800"
-    >
+    <Dropdown.dropdown_menu class="bg-white rounded-md shadow-lg ring-1 ring-black/5 focus:outline-none p-1.5 dark:bg-gray-800">
       {render_slot(@inner_block)}
     </Dropdown.dropdown_menu>
     """
@@ -25,19 +20,66 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
 
   attr(:as, :any, default: nil)
   attr(:disabled, :boolean, default: false)
+  attr(:class, :string, default: "")
   attr(:rest, :global, include: ~w(navigate patch href))
   slot(:inner_block, required: true)
 
   def dropdown_item(assigns) do
+    classes = [
+      "flex items-center gap-x-2 min-w-max w-full rounded-md px-3 py-1.5 text-gray-700 text-sm dark:text-gray-300 data-focus:bg-gray-100 dark:data-focus:bg-gray-700 data-focus:text-gray-900 dark:data-focus:text-gray-100",
+      assigns.class
+    ]
+
+    assigns = assign(assigns, :class, Enum.join(classes, " "))
+
     ~H"""
     <Dropdown.dropdown_item
       as={@as}
       disabled={@disabled}
-      class="group/item z-50 flex items-center gap-x-2 min-w-max w-full rounded-md pl-3 pr-5 py-2 text-gray-700 text-sm dark:text-gray-300 data-focus:bg-gray-100 dark:data-focus:bg-gray-700 data-focus:text-gray-900 dark:data-focus:text-gray-100"
+      class={@class}
       {@rest}
     >
       {render_slot(@inner_block)}
     </Dropdown.dropdown_item>
+    """
+  end
+
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+
+  def dropdown_separator(assigns) do
+    classes = ["mx-3.5 my-1 h-px border-0 bg-gray-950/5 dark:bg-white/10", assigns.class]
+    assigns = assign(assigns, :classes, Enum.join(classes, " "))
+
+    ~H"""
+    <Dropdown.dropdown_separator class={@classes} {@rest} />
+    """
+  end
+
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
+
+  def dropdown_section(assigns) do
+    ~H"""
+    <Dropdown.dropdown_section class={@class} {@rest}>
+      {render_slot(@inner_block)}
+    </Dropdown.dropdown_section>
+    """
+  end
+
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
+
+  def dropdown_heading(assigns) do
+    classes = ["px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400", assigns.class]
+    assigns = assign(assigns, :classes, Enum.join(classes, " "))
+
+    ~H"""
+    <Dropdown.dropdown_heading class={@classes} {@rest}>
+      {render_slot(@inner_block)}
+    </Dropdown.dropdown_heading>
     """
   end
 

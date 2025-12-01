@@ -62,8 +62,8 @@
                 </div>
               </li>
               <li class="w-full sm:w-auto">
-                <.dropdown>
-                  <:button class="flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-md transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800">
+                <PrimaDropdown.dropdown id="user-menu-dropdown">
+                  <PrimaDropdown.dropdown_trigger class="flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-md transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800">
                     <span class="hidden md:block text-sm font-medium truncate dark:text-gray-100">
                       {@conn.assigns[:current_user].name}
                     </span>
@@ -71,14 +71,23 @@
                       src={Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user])}
                       class="-my-0.5 w-7 rounded-full"
                     />
-                  </:button>
-                  <:menu>
-                    <.dropdown_item>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Signed in as</div>
-                      <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
-                        {@conn.assigns[:current_user].email}
-                      </p>
-                    </.dropdown_item>
+                  </PrimaDropdown.dropdown_trigger>
+
+                  <PrimaDropdown.dropdown_menu>
+                    <PrimaDropdown.dropdown_section>
+                      <PrimaDropdown.dropdown_heading>
+                        <span>Signed in as</span>
+                        <p
+                          class="text-sm truncate font-medium text-gray-900 dark:text-gray-100"
+                          role="none"
+                        >
+                          {@conn.assigns[:current_user].email}
+                        </p>
+                      </PrimaDropdown.dropdown_heading>
+                    </PrimaDropdown.dropdown_section>
+
+                    <PrimaDropdown.dropdown_separator />
+
                     <.team_switcher
                       conn={@conn}
                       teams={@teams}
@@ -86,65 +95,97 @@
                       current_team={@current_team}
                       more_teams?={@more_teams?}
                     />
-                    <.dropdown_divider />
-                    <.dropdown_item href={Routes.settings_path(@conn, :index)}>
-                      Account settings
-                    </.dropdown_item>
 
-                    <div :if={@my_team && @my_team.id == @current_team.id}>
-                      <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
-                        <span data-test="create-a-team-cta" class="flex-1">
-                          Create a team
-                        </span>
-                      </.dropdown_item>
-                      <.dropdown_divider />
-                    </div>
+                    <PrimaDropdown.dropdown_separator />
 
-                    <div :if={Plausible.Teams.setup?(@current_team)}>
-                      <.dropdown_item
-                        class="flex"
+                    <PrimaDropdown.dropdown_section>
+                      <PrimaDropdown.dropdown_item
+                        as={&link/1}
+                        href={Routes.settings_path(@conn, :index)}
+                      >
+                        Account settings
+                      </PrimaDropdown.dropdown_item>
+
+                      <PrimaDropdown.dropdown_item
+                        :if={@my_team && @my_team.id == @current_team.id}
+                        as={&link/1}
+                        href={Routes.team_setup_path(@conn, :setup)}
+                      >
+                        <span data-test="create-a-team-cta">Create a team</span>
+                      </PrimaDropdown.dropdown_item>
+
+                      <PrimaDropdown.dropdown_item
+                        :if={Plausible.Teams.setup?(@current_team)}
+                        as={&link/1}
                         href={Routes.settings_path(@conn, :team_general)}
                       >
-                        <span class="flex-1">
-                          Team settings
-                        </span>
-                      </.dropdown_item>
-                      <.dropdown_divider />
-                    </div>
-                    <.dropdown_item
-                      class="!flex justify-between gap-x-12"
-                      new_tab
-                      href="https://plausible.io/docs"
-                    >
-                      Help center
-                    </.dropdown_item>
-                    <.dropdown_item
-                      :if={ee?()}
-                      class="!flex justify-between gap-x-12"
-                      new_tab
-                      href="https://plausible.io/contact"
-                    >
-                      Contact support
-                    </.dropdown_item>
-                    <.dropdown_item
-                      :if={ee?()}
-                      class="!flex justify-between gap-x-12"
-                      new_tab
-                      href={feedback_link(@conn.assigns[:current_user])}
-                    >
-                      Feature requests
-                    </.dropdown_item>
-                    <.dropdown_item
-                      :if={ce?()}
-                      class="!flex justify-between gap-x-12"
-                      new_tab
-                      href="https://github.com/plausible/analytics"
-                    >
-                      Github repo
-                    </.dropdown_item>
-                    <.dropdown_item href="/logout">Log out</.dropdown_item>
-                  </:menu>
-                </.dropdown>
+                        Team settings
+                      </PrimaDropdown.dropdown_item>
+                    </PrimaDropdown.dropdown_section>
+
+                    <PrimaDropdown.dropdown_separator />
+
+                    <PrimaDropdown.dropdown_section>
+                      <PrimaDropdown.dropdown_item
+                        as={&link/1}
+                        class="justify-between"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href="https://plausible.io/docs"
+                      >
+                        Help center
+                        <Heroicons.arrow_top_right_on_square class={
+                          PrimaDropdown.dropdown_item_icon_class()
+                        } />
+                      </PrimaDropdown.dropdown_item>
+                      <PrimaDropdown.dropdown_item
+                        :if={ee?()}
+                        as={&link/1}
+                        class="justify-between"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href="https://plausible.io/contact"
+                      >
+                        Contact support
+                        <Heroicons.arrow_top_right_on_square class={
+                          PrimaDropdown.dropdown_item_icon_class()
+                        } />
+                      </PrimaDropdown.dropdown_item>
+                      <PrimaDropdown.dropdown_item
+                        :if={ee?()}
+                        as={&link/1}
+                        class="justify-between"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href={feedback_link(@conn.assigns[:current_user])}
+                      >
+                        Feature requests
+                        <Heroicons.arrow_top_right_on_square class={
+                          PrimaDropdown.dropdown_item_icon_class()
+                        } />
+                      </PrimaDropdown.dropdown_item>
+                      <PrimaDropdown.dropdown_item
+                        :if={ce?()}
+                        as={&link/1}
+                        class="justify-between"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href="https://github.com/plausible/analytics"
+                      >
+                        Github repo
+                        <Heroicons.arrow_top_right_on_square class={
+                          PrimaDropdown.dropdown_item_icon_class()
+                        } />
+                      </PrimaDropdown.dropdown_item>
+                    </PrimaDropdown.dropdown_section>
+
+                    <PrimaDropdown.dropdown_separator />
+
+                    <PrimaDropdown.dropdown_item as={&link/1} href="/logout">
+                      Log out
+                    </PrimaDropdown.dropdown_item>
+                  </PrimaDropdown.dropdown_menu>
+                </PrimaDropdown.dropdown>
               </li>
               <%= if @conn.assigns[:current_user] && ee?() do %>
                 <li id="changelog-notification" class="relative py-2"></li>
