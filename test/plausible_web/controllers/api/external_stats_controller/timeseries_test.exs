@@ -615,7 +615,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:25:00]
         ),
-        build(:pageview, pathname: "/blog", user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+        build(:pageview,
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
         build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00])
       ])
 

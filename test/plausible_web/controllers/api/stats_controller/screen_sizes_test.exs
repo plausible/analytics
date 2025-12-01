@@ -21,8 +21,16 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
 
     test "returns bounce_rate and visit_duration when detailed=true", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Desktop"),
-        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 12:10:00], screen_size: "Desktop"),
+        build(:pageview,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 12:00:00],
+          screen_size: "Desktop"
+        ),
+        build(:pageview,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 12:10:00],
+          screen_size: "Desktop"
+        ),
         build(:pageview, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Desktop"),
         build(:pageview, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Laptop")
       ])
