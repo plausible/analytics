@@ -1099,7 +1099,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:region")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, include_revenue?: !!params["detailed"])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1140,7 +1145,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:city")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, include_revenue?: !!params["detailed"])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 

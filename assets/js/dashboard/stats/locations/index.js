@@ -37,7 +37,10 @@ function Countries({ query, site, onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -79,7 +82,10 @@ function Regions({ query, site, onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -118,7 +124,10 @@ function Cities({ query, site, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) &&
+        metrics.createConversionRate({ meta: { showOnHover: true } })
     ].filter((metric) => !!metric)
   }
 
@@ -247,7 +256,7 @@ class Locations extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="group/report overflow-x-hidden">
         <div className="w-full flex justify-between">
           <div className="flex gap-x-1">
             <h3 className="font-bold dark:text-gray-100">

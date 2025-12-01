@@ -22,7 +22,7 @@ const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT =
   (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
-const COL_MIN_WIDTH = 64
+const COL_MIN_WIDTH = 70
 
 function ExternalLink<T>({
   item,
@@ -211,7 +211,7 @@ export default function ListReport<
     if (tappedRow === listItemName) {
       return 'translate-x-0 opacity-100 transition-all duration-300'
     } else {
-      return 'translate-x-[100%] opacity-0 transition-all duration-300 md:group-hover/devices:translate-x-0 md:group-hover/devices:opacity-100'
+      return 'translate-x-[100%] opacity-0 transition-all duration-300 md:group-hover/report:translate-x-0 md:group-hover/report:opacity-100'
     }
   }
 
@@ -229,7 +229,7 @@ export default function ListReport<
     if (tappedRow === listItemName) {
       return 'transition-transform duration-300 translate-x-0'
     } else {
-      return 'transition-transform duration-300 translate-x-[100%] md:group-hover/devices:translate-x-0'
+      return 'transition-transform duration-300 translate-x-[100%] md:group-hover/report:translate-x-0'
     }
   }
 
