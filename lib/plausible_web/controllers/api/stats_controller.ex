@@ -908,9 +908,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     extra_metrics =
       if params["detailed"] do
-        [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
+        [:percentage, :pageviews, :bounce_rate, :time_on_page, :scroll_depth]
       else
-        []
+        [:percentage]
       end
 
     metrics =
@@ -953,7 +953,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:visits, :visit_duration, :bounce_rate],
+        extra_metrics: [:percentage, :visits, :visit_duration, :bounce_rate],
         include_revenue?: !!params["detailed"]
       )
 
@@ -996,9 +996,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     extra_metrics =
       if TableDecider.sessions_join_events?(query) do
-        [:visits]
+        [:percentage, :visits]
       else
-        [:visits, :exit_rate]
+        [:percentage, :visits, :exit_rate]
       end
 
     metrics =
