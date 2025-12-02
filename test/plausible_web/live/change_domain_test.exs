@@ -20,6 +20,15 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
           [{192, 168, 1, 2}]
         end)
 
+        # Stub detection by default to prevent async task race conditions
+        # Tests that need specific detection results can override this stub
+        stub_detection_result(%{
+          "v1Detected" => false,
+          "gtmLikely" => false,
+          "wordpressLikely" => false,
+          "wordpressPlugin" => false
+        })
+
         :ok
       end
     end
@@ -74,15 +83,6 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
     end
 
     test "successful form submission updates database", %{conn: conn, site: site} do
-      on_ee do
-        stub_detection_result(%{
-          "v1Detected" => false,
-          "gtmLikely" => false,
-          "wordpressLikely" => false,
-          "wordpressPlugin" => false
-        })
-      end
-
       original_domain = site.domain
       new_domain = "new.#{site.domain}"
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
@@ -90,6 +90,10 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       lv
       |> element("form")
       |> render_submit(%{site: %{domain: new_domain}})
+
+      on_ee do
+        render_async(lv, 500)
+      end
 
       site = Repo.reload!(site)
       assert site.domain == new_domain
