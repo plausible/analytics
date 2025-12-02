@@ -75,7 +75,7 @@ defmodule Plausible.MixProject do
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 3.0"},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:double, "~> 0.8.0", only: [:dev, :test, :ce_test, :ce_dev]},
       {:ecto, "~> 3.13.5"},
