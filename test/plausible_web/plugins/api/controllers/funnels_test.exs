@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
           |> authenticate(site.domain, token)
           |> get(url)
           |> json_response(200)
-       
+
         schema = assert_schema(resp, "Funnel", spec())
 
         assert schema.funnel.id == funnel.id
