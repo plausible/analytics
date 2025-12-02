@@ -3,7 +3,8 @@ defmodule Plausible.Repo.Migrations.AddLimitedToSegmentToSharedLinks do
 
   def change do
     alter table(:shared_links) do
-      add :limited_to_segment_id, :integer, null: true
+      add :segment_id, references(:segments, on_delete: :delete_all)
     end
+    create index(:shared_links, [:segment_id])
   end
 end
