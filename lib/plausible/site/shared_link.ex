@@ -10,17 +10,19 @@ defmodule Plausible.Site.SharedLink do
     field :slug, :string
     field :password_hash, :string
     field :password, :string, virtual: true
+    belongs_to :segment, Plausible.Segments.Segment
 
     timestamps()
   end
 
   def changeset(link, attrs \\ %{}, opts \\ []) do
     link
-    |> cast(attrs, [:slug, :password, :name])
+    |> cast(attrs, [:slug, :password, :name, :segment_id])
     |> validate_required([:slug, :name])
     |> validate_special_name(opts)
     |> unique_constraint(:slug)
     |> unique_constraint(:name, name: :shared_links_site_id_name_index)
+    |> foreign_key_constraint(:segment_id)
     |> hash_password()
   end
 

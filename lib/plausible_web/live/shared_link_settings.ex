@@ -133,7 +133,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
                       </:tooltip_content>
                       <Heroicons.lock_open class="feather ml-2 mb-0.5" />
                     </.tooltip>
-                    <.tooltip enabled?={true} centered?={true}>
+                    <.tooltip :if={link.segment_id} enabled?={true} centered?={true}>
                       <:tooltip_content>
                         Limited view
                       </:tooltip_content>
@@ -176,7 +176,10 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
   end
 
   def handle_event("edit-shared-link", %{"slug" => slug}, socket) do
-    shared_link = Plausible.Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+    shared_link =
+      Plausible.Site.SharedLink
+      |> Plausible.Repo.get_by(slug: slug)
+      |> Plausible.Repo.preload(:segment)
 
     socket =
       socket |> assign(form_shared_link: shared_link) |> Modal.open("shared-links-form-modal")

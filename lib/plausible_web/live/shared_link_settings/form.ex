@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
   use Plausible
 
   alias Plausible.Sites
+  alias PlausibleWeb.Live.Components.ComboBox
 
   def update(assigns, socket) do
     form =
@@ -44,11 +45,13 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
       <.input field={f[:name]} label="Name" required="required" autocomplete="off" />
 
       <div
-        x-data="{ limitViewEnabled: false }"
+        x-data={"{ limitViewEnabled: #{not is_nil(f[:segment_id].value)} }"}
         x-effect="
-          const select = document.getElementById('segment_id');
-          if (select && !limitViewEnabled) {
-            select.value = '';
+          const input = document.getElementById('submit-segment_id');
+          if (input) {
+            if (!limitViewEnabled) {
+              input.value = '';
+            }
           }
         "
         class="flex flex-col gap-y-2"
@@ -61,25 +64,21 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
           help_text="Filter your dashboard to show only a segment."
         />
         <div x-show="limitViewEnabled" x-cloak>
-          <.input
-            name="segment_id"
+          <.live_component
             id="segment_id"
-            type="select"
-            value=""
-            options={[{"Filter by segment", ""}]}
-            prompt="Filter by segment"
-            mt?={false}
-          >
-            <:link>
-              <PlausibleWeb.Components.Generic.unstyled_link
-                href="https://plausible.io/docs/filters-segments#how-to-save-a-segment"
-                new_tab
-                class="text-xs text-indigo-600 dark:text-indigo-400"
-              >
-                Learn about segments
-              </PlausibleWeb.Components.Generic.unstyled_link>
-            </:link>
-          </.input>
+            submit_name="shared_link[segment_id]"
+            module={ComboBox}
+            suggest_fun={
+              fn input, _ ->
+                {:ok, segments} = Plausible.Segments.search_by_name(assigns.site, input, type: :site)
+                Enum.map(segments, &{&1.id, &1.name})
+              end
+            }
+            selected={
+              @shared_link.segment_id &&
+                {@shared_link.limited_to_segment.id, @shared_link.limited_to_segment.name}
+            }
+          />
         </div>
       </div>
 
@@ -130,11 +129,13 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
       </div>
 
       <div
-        x-data="{ limitViewEnabled: false }"
+        x-data={"{ limitViewEnabled: #{not is_nil(f[:segment_id].value)} }"}
         x-effect="
-          const select = document.getElementById('segment_id');
-          if (select && !limitViewEnabled) {
-            select.value = '';
+          const input = document.getElementById('submit-segment_id');
+          if (input) {
+            if (!limitViewEnabled) {
+              input.value = '';
+            }
           }
         "
         class="flex flex-col gap-y-2"
@@ -147,28 +148,20 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
           help_text="Filter your dashboard to show only a segment."
         />
         <div x-show="limitViewEnabled" x-cloak>
-          <.input
-            name="segment_id"
+          <.live_component
             id="segment_id"
-            type="select"
-            value=""
-            options={[{"Filter by segment", ""}]}
-            prompt="Filter by segment"
-            mt?={false}
-          >
-            <:link>
-              <PlausibleWeb.Components.Generic.unstyled_link
-                href="https://plausible.io/docs/filters-segments#how-to-save-a-segment"
-                new_tab
-                class="text-xs text-indigo-600 dark:text-indigo-400"
-              >
-                Learn about segments
-              </PlausibleWeb.Components.Generic.unstyled_link>
-            </:link>
-          </.input>
+            submit_name="shared_link[segment_id]"
+            module={ComboBox}
+            suggest_fun={
+              fn input, _ ->
+                {:ok, segments} = Plausible.Segments.search_by_name(assigns.site, input, type: :site)
+                Enum.map(segments, &{&1.id, &1.name})
+              end
+            }
+            selected={nil}
+          />
         </div>
       </div>
-
       <.button type="submit" class="w-full">
         Create shared link
       </.button>
@@ -182,7 +175,8 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
         %{assigns: %{shared_link: nil}} = socket
       ) do
     case Sites.create_shared_link(socket.assigns.site, shared_link_params["name"],
-           password: shared_link_params["password"]
+           password: shared_link_params["password"],
+           segment_id: shared_link_params["segment_id"]
          ) do
       {:ok, shared_link} ->
         socket = socket.assigns.on_save_shared_link.(shared_link, socket)
@@ -205,7 +199,11 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
         %{"shared_link" => shared_link_params},
         %{assigns: %{shared_link: %Plausible.Site.SharedLink{} = shared_link}} = socket
       ) do
-    changeset = Plausible.Site.SharedLink.changeset(shared_link, shared_link_params)
+    changeset =
+      Plausible.Site.SharedLink.changeset(
+        shared_link,
+        shared_link_params
+      )
 
     case Plausible.Repo.update(changeset) do
       {:ok, updated_shared_link} ->

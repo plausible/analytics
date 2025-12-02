@@ -78,7 +78,7 @@ export const TestContextProviders = ({
           }
         }
       >
-        <SegmentsContextProvider preloadedSegments={preloaded?.segments ?? []}>
+        <SegmentsContextProvider limitedToSegmentId={null} preloadedSegments={preloaded?.segments ?? []}>
           <MemoryRouter
             basename={getRouterBasepath(site)}
             initialEntries={defaultInitialEntries}

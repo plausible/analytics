@@ -17,17 +17,23 @@ export function parsePreloadedSegments(dataset: DOMStringMap): SavedSegments {
   return JSON.parse(dataset.segments!).map(handleSegmentResponse)
 }
 
+export function parseLimitedToSegmentId(dataset: DOMStringMap): number | null {
+  return JSON.parse(dataset.limitedToSegmentId!)
+}
+
 type ChangeSegmentState = (
   segment: (SavedSegment | SavedSegmentPublic) & { segment_data: SegmentData }
 ) => void
 
 const initialValue: {
   segments: SavedSegments
+  limitedToSegmentId: number | null
   updateOne: ChangeSegmentState
   addOne: ChangeSegmentState
   removeOne: ChangeSegmentState
 } = {
   segments: [],
+  limitedToSegmentId: null,
   updateOne: () => {},
   addOne: () => {},
   removeOne: () => {}
@@ -41,9 +47,11 @@ export const useSegmentsContext = () => {
 
 export const SegmentsContextProvider = ({
   preloadedSegments,
+  limitedToSegmentId,
   children
 }: {
   preloadedSegments: SavedSegments
+  limitedToSegmentId: number | null
   children: ReactNode
 }) => {
   const [segments, setSegments] = useState(preloadedSegments)
@@ -73,7 +81,13 @@ export const SegmentsContextProvider = ({
 
   return (
     <SegmentsContext.Provider
-      value={{ segments, removeOne, updateOne, addOne }}
+      value={{
+        segments,
+        limitedToSegmentId: limitedToSegmentId ?? null,
+        removeOne,
+        updateOne,
+        addOne
+      }}
     >
       {children}
     </SegmentsContext.Provider>

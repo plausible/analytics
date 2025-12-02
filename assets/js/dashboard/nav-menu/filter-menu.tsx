@@ -11,6 +11,7 @@ import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { SearchableSegmentsSection } from './segments/searchable-segments-section'
+import { useSegmentsContext } from '../filtering/segments-context'
 
 export function getFilterListItems({
   propsAvailable
@@ -49,6 +50,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
   const columns = useMemo(() => getFilterListItems(site), [site])
   const buttonRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const { limitedToSegmentId } = useSegmentsContext()
 
   return (
     <>
@@ -107,10 +109,12 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
               </div>
             ))}
           </div>
-          <SearchableSegmentsSection
-            closeList={closeDropdown}
-            tooltipContainerRef={panelRef}
-          />
+          {limitedToSegmentId === null && (
+            <SearchableSegmentsSection
+              closeList={closeDropdown}
+              tooltipContainerRef={panelRef}
+            />
+          )}
         </Popover.Panel>
       </Transition>
     </>

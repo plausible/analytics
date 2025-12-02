@@ -70,6 +70,63 @@ defmodule Plausible.Segments do
     {:ok, Repo.all(query)}
   end
 
+  def search_by_name(%Plausible.Site{} = site, name, opts) do
+    type = Keyword.fetch!(opts, :type)
+    fields = Keyword.get(opts, :fields, [:id, :name])
+
+    name_empty? = is_nil(name) or (is_binary(name) and String.trim(name) == "")
+
+    base_query =
+      from(segment in Segment,
+        where: segment.site_id == ^site.id,
+        where: segment.type == ^type,
+        limit: 20
+      )
+
+    query =
+      if name_empty? do
+        from([segment] in base_query,
+          select: ^fields,
+          order_by: [desc: segment.updated_at]
+        )
+      else
+        from([segment] in base_query,
+          select: %{
+            id: segment.id,
+            name: segment.name,
+            match_rank:
+              fragment(
+                "CASE
+                WHEN lower(?) = lower(?) THEN 0                    -- exact match
+                WHEN lower(?) LIKE lower(?) || '%' THEN 1          -- starts with
+                WHEN lower(?) LIKE '% ' || lower(?) || '%' THEN 2  -- after a space
+                WHEN lower(?) LIKE ? THEN 3                        -- anywhere
+              END AS match_rank",
+                segment.name,
+                ^name,
+                segment.name,
+                ^name,
+                segment.name,
+                ^name,
+                segment.name,
+                ^"%name%"
+              ),
+            pos:
+              fragment(
+                "position(lower(?) IN lower(?)) AS pos",
+                segment.name,
+                ^name
+              ),
+            len_diff: fragment("abs(length(?) - length(?)) AS len_diff", segment.name, ^name)
+          },
+          where: fragment("? ilike ?", segment.name, ^"%#{name}%"),
+          order_by: fragment("match_rank asc, pos asc, len_diff asc, updated_at desc")
+        )
+      end
+
+    {:ok, Repo.all(query)}
+  end
+
   @spec get_one(pos_integer(), Plausible.Site.t(), atom(), pos_integer() | nil) ::
           {:ok, Segment.t()}
           | error_not_enough_permissions()

@@ -100,7 +100,8 @@ defmodule PlausibleWeb.StatsController do
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
           consolidated_view?: consolidated_view?,
           consolidated_view_available?: consolidated_view_available?,
-          team_identifier: team_identifier
+          team_identifier: team_identifier,
+          limited_to_segment_id: nil
         )
 
       !stats_start_date && can_see_stats? ->
@@ -396,12 +397,28 @@ defmodule PlausibleWeb.StatsController do
       not Teams.locked?(shared_link.site.team) ->
         current_user = conn.assigns[:current_user]
         site_role = get_fallback_site_role(conn)
-        shared_link = Plausible.Repo.preload(shared_link, site: :owners)
+        shared_link = Plausible.Repo.preload(shared_link, site: [:owners], segment: [])
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
         flags = get_flags(current_user, shared_link.site)
+        limited_to_segment_id = shared_link.segment && shared_link.segment.id
 
-        {:ok, segments} = Plausible.Segments.get_all_for_site(shared_link.site, site_role)
+        segments =
+          if is_nil(limited_to_segment_id) do
+            {:ok, segments} = Plausible.Segments.get_all_for_site(shared_link.site, site_role)
+            segments
+          else
+            shared_link.segment
+            |> Map.take([
+              :id,
+              :name,
+              :type,
+              :inserted_at,
+              :updated_at,
+              :segment_data
+            ])
+            |> List.wrap()
+          end
 
         embedded? = conn.params["embed"] == "true"
 
@@ -435,7 +452,8 @@ defmodule PlausibleWeb.StatsController do
           # no shared links for consolidated views
           consolidated_view?: false,
           consolidated_view_available?: false,
-          team_identifier: team_identifier
+          team_identifier: team_identifier,
+          limited_to_segment_id: limited_to_segment_id
         )
     end
   end

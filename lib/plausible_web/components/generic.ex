@@ -838,7 +838,9 @@ defmodule PlausibleWeb.Components.Generic do
     <td
       class={[
         @height,
-        "text-sm px-6 py-4 first:pl-0 last:pr-0 whitespace-nowrap overflow-visible",
+        "text-sm px-6 py-4 first:pl-0 last:pr-0 whitespace-nowrap",
+         # allow tooltips overflow cells vertically
+        "overflow-visible",
         @truncate && "truncate",
         @max_width,
         @actions && "flex text-right justify-end",

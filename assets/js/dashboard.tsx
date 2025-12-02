@@ -19,6 +19,7 @@ import {
   SomethingWentWrongMessage
 } from './dashboard/error/something-went-wrong'
 import {
+  parseLimitedToSegmentId,
   parsePreloadedSegments,
   SegmentsContextProvider
 } from './dashboard/filtering/segments-context'
@@ -83,6 +84,7 @@ if (container && container.dataset) {
               }
             >
               <SegmentsContextProvider
+                limitedToSegmentId={parseLimitedToSegmentId(container.dataset)}
                 preloadedSegments={parsePreloadedSegments(container.dataset)}
               >
                 <RouterProvider router={router} />
