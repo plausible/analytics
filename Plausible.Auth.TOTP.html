@@ -146,9 +146,9 @@ Pages
 </h2>
 <p>TOTP setup is started with <a href="#initiate/1"><code class="inline">initiate/1</code></a>. At this stage, a random secret
 binary is generated for user and stored under <code class="inline">User.totp_secret</code>. The secret
-is additionally encrypted while stored in the database using <a href="https://hexdocs.pm/cloak/1.1.2/Cloak.html"><code class="inline">Cloak</code></a>. The
+is additionally encrypted while stored in the database using <a href="https://hexdocs.pm/cloak/1.1.4/Cloak.html"><code class="inline">Cloak</code></a>. The
 vault for safe storage is configured in <a href="Plausible.Auth.TOTP.Vault.html"><code class="inline">Plausible.Auth.TOTP.Vault</code></a> via
-a dedicated <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.html"><code class="inline">Ecto</code></a> type defined in <a href="Plausible.Auth.TOTP.EncryptedBinary.html"><code class="inline">Plausible.Auth.TOTP.EncryptedBinary</code></a>.
+a dedicated <a href="https://hexdocs.pm/ecto/3.13.5/Ecto.html"><code class="inline">Ecto</code></a> type defined in <a href="Plausible.Auth.TOTP.EncryptedBinary.html"><code class="inline">Plausible.Auth.TOTP.EncryptedBinary</code></a>.
 The function returns updated user along with TOTP URI and a readable form
 of secret. Both - the URI and readable secret - are meant for exposure
 in the user's setup screen. The URI should be encoded as a QR code.</p><p>After initiation, user is expected to confirm valid setup with <a href="#enable/2"><code class="inline">enable/2</code></a>,
