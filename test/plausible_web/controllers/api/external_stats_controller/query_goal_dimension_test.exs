@@ -129,6 +129,38 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
                %{"dimensions" => ["Signup"], "metrics" => [50.0]}
              ]
     end
+
+    test "returns goals up to a limit", %{conn: conn, site: site} do
+      for i <- 1..11, do: insert(:goal, %{site: site, event_name: "G#{i}"})
+
+      populate_stats(
+        site,
+        for(
+          i <- 1..11,
+          do:
+            build(:event,
+              name: "G#{i}",
+              timestamp: NaiveDateTime.add(~N[2021-01-01 00:00:03], i, :second)
+            )
+        )
+      )
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"]
+        })
+
+      results = json_response(conn, 200)["results"]
+
+      assert Enum.find(results, &(&1["dimensions"] == ["G11"]))
+      assert Enum.find(results, &(&1["dimensions"] == ["G2"]))
+      refute Enum.find(results, &(&1["dimensions"] == ["G1"]))
+
+      assert length(results) == Plausible.Goals.max_goals_per_site()
+    end
   end
 
   describe "page scroll goals" do

@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_VERSION: v15
+  CACHE_VERSION: v17
   PERSISTENT_CACHE_DIR: cached
 
 jobs:
@@ -63,7 +63,7 @@ jobs:
             --health-timeout 5s
             --health-retries 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -131,7 +131,7 @@ jobs:
       MIX_ENV: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 

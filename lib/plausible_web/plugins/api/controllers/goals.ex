@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
   use PlausibleWeb, :plugins_api_controller
 
   operation(:create,
-    id: "Goal.GetOrCreate",
+    operation_id: "Goal.GetOrCreate",
     summary: "Get or create Goal",
     request_body: {"Goal params", "application/json", Schemas.Goal.CreateRequest},
     responses: %{
@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
   end
 
   operation(:delete_bulk,
-    id: "Goal.DeleteBulk",
+    operation_id: "Goal.DeleteBulk",
     summary: "Delete Goals in bulk",
     request_body: {"Goal params", "application/json", Schemas.Goal.DeleteBulkRequest},
     responses: %{

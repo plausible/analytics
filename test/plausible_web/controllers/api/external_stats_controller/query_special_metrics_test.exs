@@ -224,7 +224,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
         build(:pageview, user_id: 1, pathname: "/two", timestamp: ~N[2021-01-01 00:10:00]),
         build(:pageview, user_id: 3, pathname: "/one", timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, user_id: 3, pathname: "/never-exit", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, user_id: 3, name: "a", pathname: "/one", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event,
+          user_id: 3,
+          name: "a",
+          pathname: "/one",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
         build(:pageview, user_id: 3, pathname: "/one", timestamp: ~N[2021-01-01 00:10:00])
       ])
 
@@ -323,8 +328,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
 
     test "in visit:exit_page breakdown filtered by visit:country", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, pathname: "/one", country_code: "EE", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, pathname: "/one", country_code: "US", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview,
+          pathname: "/one",
+          country_code: "EE",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/one",
+          country_code: "US",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
         build(:pageview,
           user_id: 1,
           pathname: "/one",

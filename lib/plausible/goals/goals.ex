@@ -7,6 +7,19 @@ defmodule Plausible.Goals do
 
   alias Plausible.Goal
   alias Ecto.Multi
+  alias Ecto.Changeset
+
+  @max_goals_per_site 1_000
+  @spec max_goals_per_site(Keyword.t()) :: pos_integer()
+  def max_goals_per_site(opts \\ []) do
+    override = Keyword.get(opts, :max_goals_per_site)
+
+    if override do
+      override
+    else
+      Application.get_env(:plausible, :max_goals_per_site, @max_goals_per_site)
+    end
+  end
 
   @spec get(Plausible.Site.t(), pos_integer()) :: nil | Plausible.Goal.t()
   def get(site, id) when is_integer(id) do
@@ -20,18 +33,30 @@ defmodule Plausible.Goals do
   end
 
   @spec create(Plausible.Site.t(), map(), Keyword.t()) ::
-          {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
+          {:ok, Goal.t()}
+          | {:error, Changeset.t()}
+          | {:error, :upgrade_required}
+          | {:error, :revenue_goals_unavailable}
   @doc """
   Creates a Goal for a site.
 
   If the created goal is a revenue goal, it sets site.updated_at to be
   refreshed by the sites cache, as revenue goals are used during ingestion.
+
+  Returns `{:ok, goal}` or `{:error, changeset}` when creation fails due to
+  invalid fields. It can also return:
+
+  * `{:error, :upgrade_required}` - Adding a revenue goal is not allowed
+    for team's subscription.
+
+  * `{:error, :revenue_goals_unavailable}` - When the site is a consolidated
+    view and the goal created is a revenue goal. Revenue goal creation is not
+    allowed for consolidated views due to the inability to force a single
+    currency on a goal across all consolidated sites.
   """
   def create(site, params, opts \\ []) do
-    upsert? = Keyword.get(opts, :upsert?, false)
-
     Repo.transaction(fn ->
-      case insert_goal(site, params, upsert?) do
+      case insert_goal(site, params, opts) do
         {:ok, :insert, goal} ->
           on_ee do
             now = Keyword.get(opts, :now, DateTime.utc_now())
@@ -53,7 +78,7 @@ defmodule Plausible.Goals do
   end
 
   @spec update(Plausible.Goal.t(), map()) ::
-          {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
+          {:ok, Goal.t()} | {:error, Changeset.t()} | {:error, :upgrade_required}
   def update(goal, params) do
     changeset = Goal.changeset(goal, params)
 
@@ -69,7 +94,7 @@ defmodule Plausible.Goals do
           updated_goal
         end
       else
-        {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, %Changeset{} = changeset} ->
           Repo.rollback(changeset)
 
         {:error, :upgrade_required} ->
@@ -78,16 +103,19 @@ defmodule Plausible.Goals do
     end)
   end
 
+  def find_or_create(site, params, opts \\ [])
+
   def find_or_create(
         site,
         %{
           "goal_type" => "event",
           "event_name" => event_name,
           "currency" => currency
-        } = params
+        } = params,
+        opts
       )
       when is_binary(event_name) and is_binary(currency) do
-    with {:ok, goal} <- create(site, params, upsert?: true) do
+    with {:ok, goal} <- create(site, params, do_upsert(opts)) do
       if to_string(goal.currency) == currency do
         {:ok, goal}
       else
@@ -95,7 +123,7 @@ defmodule Plausible.Goals do
         changeset =
           goal
           |> Goal.changeset()
-          |> Ecto.Changeset.add_error(
+          |> Changeset.add_error(
             :event_name,
             "'#{goal.event_name}' (with currency: #{goal.currency}) has already been taken"
           )
@@ -105,23 +133,25 @@ defmodule Plausible.Goals do
     end
   end
 
-  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name} = params)
+  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name} = params, opts)
       when is_binary(event_name) do
-    create(site, params, upsert?: true)
+    create(site, params, do_upsert(opts))
   end
 
-  def find_or_create(_, %{"goal_type" => "event"}), do: {:missing, "event_name"}
+  def find_or_create(_, %{"goal_type" => "event"}, _), do: {:missing, "event_name"}
 
-  def find_or_create(site, %{"goal_type" => "page", "page_path" => _} = params) do
-    create(site, params, upsert?: true)
+  def find_or_create(site, %{"goal_type" => "page", "page_path" => _} = params, opts) do
+    create(site, params, do_upsert(opts))
   end
 
-  def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}
+  def find_or_create(_, %{"goal_type" => "page"}, _), do: {:missing, "page_path"}
 
   def list_revenue_goals(site) do
     from(g in Plausible.Goal,
       where: g.site_id == ^site.id and not is_nil(g.currency),
-      select: %{display_name: g.display_name, currency: g.currency}
+      select: %{display_name: g.display_name, currency: g.currency},
+      order_by: [desc: g.id],
+      limit: ^max_goals_per_site()
     )
     |> Plausible.Repo.all()
   end
@@ -133,13 +163,21 @@ defmodule Plausible.Goals do
     |> Enum.map(&maybe_trim/1)
   end
 
-  def for_site_query(site, opts \\ []) do
+  def for_site_query(site \\ nil, opts \\ []) do
     query =
       from g in Goal,
-        inner_join: assoc(g, :site),
-        where: g.site_id == ^site.id,
         order_by: [desc: g.id],
-        preload: [:site]
+        limit: ^max_goals_per_site(opts)
+
+    query =
+      if site do
+        from g in query,
+          inner_join: assoc(g, :site),
+          where: g.site_id == ^site.id,
+          preload: [:site]
+      else
+        query
+      end
 
     if ee?() and opts[:preload_funnels?] == true do
       from(g in query,
@@ -152,9 +190,9 @@ defmodule Plausible.Goals do
     end
   end
 
-  def batch_create_event_goals(names, site) do
+  def batch_create_event_goals(names, site, opts \\ []) do
     Enum.reduce(names, [], fn name, acc ->
-      case insert_goal(site, %{event_name: name}, true) do
+      case insert_goal(site, %{event_name: name}, do_upsert(opts)) do
         {:ok, _, goal} -> acc ++ [goal]
         _ -> acc
       end
@@ -248,25 +286,25 @@ defmodule Plausible.Goals do
 
   @spec create_outbound_links(Plausible.Site.t()) :: :ok
   def create_outbound_links(%Plausible.Site{} = site) do
-    create(site, %{"event_name" => "Outbound Link: Click"}, upsert?: true)
+    create(site, %{"event_name" => "Outbound Link: Click"}, do_upsert())
     :ok
   end
 
   @spec create_file_downloads(Plausible.Site.t()) :: :ok
   def create_file_downloads(%Plausible.Site{} = site) do
-    create(site, %{"event_name" => "File Download"}, upsert?: true)
+    create(site, %{"event_name" => "File Download"}, do_upsert())
     :ok
   end
 
   @spec create_form_submissions(Plausible.Site.t()) :: :ok
   def create_form_submissions(%Plausible.Site{} = site) do
-    create(site, %{"event_name" => "Form: Submission"}, upsert?: true)
+    create(site, %{"event_name" => "Form: Submission"}, do_upsert())
     :ok
   end
 
   @spec create_404(Plausible.Site.t()) :: :ok
   def create_404(%Plausible.Site{} = site) do
-    create(site, %{"event_name" => "404"}, upsert?: true)
+    create(site, %{"event_name" => "404"}, do_upsert())
     :ok
   end
 
@@ -314,11 +352,11 @@ defmodule Plausible.Goals do
     :ok
   end
 
-  defp insert_goal(site, params, upsert?) do
+  defp insert_goal(site, params, opts) do
     params = Map.delete(params, "site_id")
 
     insert_opts =
-      if upsert? do
+      if upsert?(opts) do
         [on_conflict: :nothing]
       else
         []
@@ -328,6 +366,7 @@ defmodule Plausible.Goals do
 
     with :ok <- maybe_check_feature_access(site, changeset),
          :ok <- check_no_currency_if_consolidated(site, changeset),
+         :ok <- check_goals_limit(site, changeset, opts),
          {:ok, goal} <- Repo.insert(changeset, insert_opts) do
       # Upsert with `on_conflict: :nothing` strategy
       # will result in goal struct missing primary key field
@@ -346,7 +385,7 @@ defmodule Plausible.Goals do
   end
 
   defp maybe_check_feature_access(site, changeset) do
-    if Ecto.Changeset.get_field(changeset, :currency) do
+    if Changeset.get_field(changeset, :currency) do
       site = Plausible.Repo.preload(site, :team)
       Plausible.Billing.Feature.RevenueGoals.check_availability(site.team)
     else
@@ -354,8 +393,23 @@ defmodule Plausible.Goals do
     end
   end
 
+  defp check_goals_limit(site, changeset, opts) do
+    if upsert?(opts) and goal_exists_for_upsert?(site, changeset) do
+      :ok
+    else
+      if count(site) >= max_goals_per_site(opts) and changeset.valid? do
+        changeset
+        |> Changeset.add_error(:page_path, "Maximum number of goals reached")
+        |> Changeset.add_error(:event_name, "Maximum number of goals reached")
+        |> Changeset.apply_action(:insert)
+      else
+        :ok
+      end
+    end
+  end
+
   defp check_no_currency_if_consolidated(site, changeset) do
-    if Plausible.Sites.consolidated?(site) && Ecto.Changeset.get_field(changeset, :currency) do
+    if Plausible.Sites.consolidated?(site) && Changeset.get_field(changeset, :currency) do
       {:error, :revenue_goals_unavailable}
     else
       :ok
@@ -377,4 +431,29 @@ defmodule Plausible.Goals do
   defp maybe_trim(other) do
     other
   end
+
+  defp upsert?(opts) do
+    Keyword.get(opts, :upsert?, false)
+  end
+
+  defp do_upsert(opts \\ []) do
+    Keyword.put(opts, :upsert?, true)
+  end
+
+  defp goal_exists_for_upsert?(site, changeset) do
+    event_name = Changeset.get_field(changeset, :event_name)
+    page_path = Changeset.get_field(changeset, :page_path)
+    scroll_threshold = Changeset.get_field(changeset, :scroll_threshold)
+
+    query_params =
+      [site_id: site.id]
+      |> maybe_add_filter(:event_name, event_name)
+      |> maybe_add_filter(:page_path, page_path)
+      |> maybe_add_filter(:scroll_threshold, scroll_threshold)
+
+    Repo.exists?(from(g in Goal, where: ^query_params))
+  end
+
+  defp maybe_add_filter(params, _key, nil), do: params
+  defp maybe_add_filter(params, key, value), do: Keyword.put(params, key, value)
 end

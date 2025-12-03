@@ -36,9 +36,11 @@ defmodule Plausible.CustomerSupport.Resource.Site do
         inner_join: o in assoc(t, :owners),
         where:
           ilike(s.domain, ^"%#{input}%") or ilike(t.name, ^"%#{input}%") or
-            ilike(o.name, ^"%#{input}%") or ilike(o.email, ^"%#{input}%"),
+            ilike(o.name, ^"%#{input}%") or ilike(o.email, ^"%#{input}%") or
+            ilike(s.domain_changed_from, ^"%#{input}%"),
         order_by: [
           desc: fragment("?.domain = ?", s, ^input),
+          desc: fragment("?.domain_changed_from = ?", s, ^input),
           desc: fragment("?.name = ?", t, ^input),
           desc: fragment("?.name = ?", o, ^input),
           desc: fragment("?.email = ?", o, ^input),

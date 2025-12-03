@@ -134,12 +134,12 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> put_req_header("content-type", "application/json")
         |> put(url, payload)
 
-      resp =
-        conn
-        |> json_response(201)
-        |> assert_schema("Goal.ListResponse", spec())
+      resp = json_response(conn, 201)
 
-      resp.goals
+      schema = assert_schema(resp, "Goal.ListResponse", spec())
+
+      resp
+      |> Map.fetch!("goals")
       |> List.first()
       |> assert_schema("Goal.CustomEvent", spec())
 
@@ -149,7 +149,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
                Routes.plugins_api_goals_url(
                  PlausibleWeb.Endpoint,
                  :get,
-                 List.first(resp.goals).goal.id
+                 List.first(schema.goals).goal.id
                )
 
       assert [%{event_name: "Signup"}] = Plausible.Goals.for_site(site)
@@ -172,12 +172,12 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> put_req_header("content-type", "application/json")
         |> put(url, payload)
 
-      resp =
-        conn
-        |> json_response(201)
-        |> assert_schema("Goal.ListResponse", spec())
+      resp = json_response(conn, 201)
 
-      resp.goals
+      schema = assert_schema(resp, "Goal.ListResponse", spec())
+
+      resp
+      |> Map.fetch!("goals")
       |> List.first()
       |> assert_schema("Goal.Revenue", spec())
 
@@ -187,7 +187,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
                Routes.plugins_api_goals_url(
                  PlausibleWeb.Endpoint,
                  :get,
-                 List.first(resp.goals).goal.id
+                 List.first(schema.goals).goal.id
                )
 
       assert [%{event_name: "Purchase", currency: :EUR}] = Plausible.Goals.for_site(site)
@@ -259,12 +259,11 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> put_req_header("content-type", "application/json")
         |> put(url, payload)
 
-      resp =
-        conn
-        |> json_response(201)
-        |> assert_schema("Goal.ListResponse", spec())
+      resp = json_response(conn, 201)
+      schema = assert_schema(resp, "Goal.ListResponse", spec())
 
-      resp.goals
+      resp
+      |> Map.fetch!("goals")
       |> List.first()
       |> assert_schema("Goal.Pageview", spec())
 
@@ -274,10 +273,36 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
                Routes.plugins_api_goals_url(
                  PlausibleWeb.Endpoint,
                  :get,
-                 List.first(resp.goals).goal.id
+                 List.first(schema.goals).goal.id
                )
 
       assert [%{page_path: "/checkout"}] = Plausible.Goals.for_site(site)
+    end
+
+    test "fails to create goal when max goals per site limit reached", %{
+      conn: conn,
+      token: token,
+      site: site
+    } do
+      for i <- 1..10, do: {:ok, _} = Plausible.Goals.create(site, %{"event_name" => "G#{i}"})
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
+
+      payload = %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}}
+
+      resp =
+        conn
+        |> authenticate(site.domain, token)
+        |> put_req_header("content-type", "application/json")
+        |> put(url, payload)
+        |> json_response(422)
+        |> assert_schema("UnprocessableEntityError", spec())
+
+      assert %Schemas.Error{
+               detail: "event_name: Maximum number of goals reached"
+             } in resp.errors
+
+      assert Plausible.Goals.count(site) == 10
     end
 
     test "is idempotent", %{conn: conn, token: token, site: site} do
@@ -292,16 +317,18 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         initial_conn
         |> put(url, %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}})
         |> json_response(201)
-        |> assert_schema("Goal.ListResponse", spec())
 
-      resp1.goals
+      schema = assert_schema(resp1, "Goal.ListResponse", spec())
+
+      resp1
+      |> Map.fetch!("goals")
       |> List.first()
       |> assert_schema("Goal.Pageview", spec())
 
       assert initial_conn
              |> put(url, %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}})
              |> json_response(201)
-             |> assert_schema("Goal.ListResponse", spec()) == resp1
+             |> assert_schema("Goal.ListResponse", spec()) == schema
     end
   end
 
@@ -491,12 +518,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> authenticate(site.domain, token)
         |> get(url)
         |> json_response(200)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.Revenue", spec())
 
-      assert resp.goal.id == goal.id
-      assert resp.goal_type == "Goal.Revenue"
-      assert resp.goal.display_name == "Purchase"
+      assert_schema(resp, "Goal", spec())
+      schema = assert_schema(resp, "Goal.Revenue", spec())
+
+      assert schema.goal.id == goal.id
+      assert schema.goal_type == "Goal.Revenue"
+      assert schema.goal.display_name == "Purchase"
     end
 
     test "retrieves pageview goal by ID", %{conn: conn, site: site, token: token} do
@@ -509,12 +537,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> authenticate(site.domain, token)
         |> get(url)
         |> json_response(200)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.Pageview", spec())
 
-      assert resp.goal.id == goal.id
-      assert resp.goal_type == "Goal.Pageview"
-      assert resp.goal.display_name == "Visit /checkout"
+      assert_schema(resp, "Goal", spec())
+      schema = assert_schema(resp, "Goal.Pageview", spec())
+
+      assert schema.goal.id == goal.id
+      assert schema.goal_type == "Goal.Pageview"
+      assert schema.goal.display_name == "Visit /checkout"
     end
 
     test "retrieves custom event goal by ID", %{conn: conn, site: site, token: token} do
@@ -527,12 +556,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> authenticate(site.domain, token)
         |> get(url)
         |> json_response(200)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.CustomEvent", spec())
 
-      assert resp.goal.id == goal.id
-      assert resp.goal_type == "Goal.CustomEvent"
-      assert resp.goal.display_name == "Signup"
+      assert_schema(resp, "Goal", spec())
+      schema = assert_schema(resp, "Goal.CustomEvent", spec())
+
+      assert schema.goal.id == goal.id
+      assert schema.goal_type == "Goal.CustomEvent"
+      assert schema.goal.display_name == "Signup"
     end
   end
 

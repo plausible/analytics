@@ -202,7 +202,7 @@ defmodule Plausible.Google.GA4.API do
     end
   end
 
-  defp prepare_request(report_request, date_range, property, access_token) do
+  defp prepare_request(%GA4.ReportRequest{} = report_request, date_range, property, access_token) do
     %GA4.ReportRequest{
       report_request
       | date_range: date_range,

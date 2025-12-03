@@ -276,6 +276,14 @@ defmodule Plausible.GoalsTest do
     assert [%{page_path: "/Signup"}, %{event_name: "Signup"}] = goals
   end
 
+  test "for_site/1 returns goals up to a limit" do
+    site = new_site()
+    for i <- 1..11, do: insert(:goal, %{site: site, event_name: "G#{i}"})
+
+    assert Goals.count(site) == 11
+    assert length(Goals.for_site(site)) == 10
+  end
+
   test "goals are present after domain change" do
     site = new_site()
     insert(:goal, %{site: site, event_name: " Signup "})
@@ -387,5 +395,76 @@ defmodule Plausible.GoalsTest do
              Goals.create(site, %{"page_path" => "/foo", "event_name" => "/foo"})
 
     assert {"cannot co-exist with page_path", _} = changeset.errors[:event_name]
+  end
+
+  test "enforces goal limit per site" do
+    site = new_site()
+
+    for i <- 1..3 do
+      assert {:ok, _goal} = Goals.create(site, %{"event_name" => "Event #{i}"})
+    end
+
+    assert {:ok, _} =
+             Goals.create(site, %{"event_name" => "Event 4"})
+
+    assert {:error, changeset} =
+             Goals.create(site, %{"event_name" => "Event 5"}, max_goals_per_site: 4)
+
+    assert {"Maximum number of goals reached", _} = changeset.errors[:event_name]
+    assert {"Maximum number of goals reached", _} = changeset.errors[:page_path]
+  end
+
+  test "find_or_create with upsert bypasses limit check" do
+    site = new_site()
+
+    for i <- 1..3 do
+      assert {:ok, _goal} = Goals.create(site, %{"event_name" => "Event #{i}"})
+    end
+
+    assert {:ok, goal} =
+             Goals.find_or_create(site, %{"goal_type" => "event", "event_name" => "Event 1"},
+               max_goals_per_site: 3
+             )
+
+    assert goal.event_name == "Event 1"
+  end
+
+  test "allows creating goals after deleting some" do
+    site = new_site()
+
+    for i <- 1..3 do
+      assert {:ok, _goal} = Goals.create(site, %{"event_name" => "Event #{i}"})
+    end
+
+    assert {:error, changeset} =
+             Goals.create(site, %{"event_name" => "Event 4"}, max_goals_per_site: 3)
+
+    assert {"Maximum number of goals reached", _} = changeset.errors[:event_name]
+    assert {"Maximum number of goals reached", _} = changeset.errors[:page_path]
+
+    [goal | _] = Goals.for_site(site)
+    :ok = Goals.delete(goal.id, site)
+
+    assert {:ok, _goal} = Goals.create(site, %{"event_name" => "Event 4"}, max_goals_per_site: 3)
+  end
+
+  test "batch_create_event_goals respects limit" do
+    site = new_site()
+
+    for i <- 1..6 do
+      assert {:ok, _goal} = Goals.create(site, %{"event_name" => "Event #{i}"})
+    end
+
+    event_names = for i <- 6..20, do: "Event #{i}"
+
+    created_goals = Goals.batch_create_event_goals(event_names, site, max_goals_per_site: 10)
+
+    assert length(created_goals) == 5
+    assert Enum.count(Goals.for_site(site)) == 10
+  end
+
+  test "on Mix.env == :test, max goals per site is 10 and can be overridden" do
+    assert Plausible.Goals.max_goals_per_site() == 10
+    assert Plausible.Goals.max_goals_per_site(max_goals_per_site: 5) == 5
   end
 end

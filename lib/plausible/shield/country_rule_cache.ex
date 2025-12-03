@@ -44,7 +44,7 @@ defmodule Plausible.Shield.CountryRuleCache do
       |> where([rule, site], rule.country_code == ^country_code and site.domain == ^domain)
 
     case Plausible.Repo.one(query) do
-      {_, _, rule} -> %CountryRule{rule | from_cache?: false}
+      {_, _, rule = %CountryRule{}} -> %CountryRule{rule | from_cache?: false}
       _any -> nil
     end
   end
