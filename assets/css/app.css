@@ -294,16 +294,12 @@ blockquote {
   display: inline;
 }
 
-.table-striped tbody tr:nth-child(odd) {
+.table-striped tbody tr:nth-child(odd) td {
   background-color: var(--color-gray-100);
 }
 
-.dark .table-striped tbody tr:nth-child(odd) {
+.dark .table-striped tbody tr:nth-child(odd) td {
   background-color: var(--color-gray-800);
-}
-
-.dark .table-striped tbody tr:nth-child(even) {
-  background-color: var(--color-gray-900);
 }
 
 .fade-enter {

@@ -58,7 +58,13 @@ export const TableCell = ({
   align?: 'left' | 'right'
 }) => {
   return (
-    <td className={classNames('p-2 font-medium', className)} align={align}>
+    <td
+      className={classNames(
+        'p-2 font-medium first:rounded-s-sm last:rounded-e-sm',
+        className
+      )}
+      align={align}
+    >
       {children}
     </td>
   )

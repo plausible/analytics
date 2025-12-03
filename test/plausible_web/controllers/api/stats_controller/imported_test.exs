@@ -969,7 +969,13 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           )
 
         assert json_response(conn, 200)["results"] == [
-                 %{"code" => 588_335, "name" => "Tartu", "visitors" => 1, "country_flag" => "🇪🇪", "percentage" => 50.0},
+                 %{
+                   "code" => 588_335,
+                   "name" => "Tartu",
+                   "visitors" => 1,
+                   "country_flag" => "🇪🇪",
+                   "percentage" => 50.0
+                 },
                  %{
                    "code" => 2_650_225,
                    "name" => "Edinburgh",

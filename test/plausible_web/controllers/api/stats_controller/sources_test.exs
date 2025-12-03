@@ -599,10 +599,34 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn1, 200)["results"] == [
-               %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0, "percentage" => 25.0},
-               %{"name" => "A", "visitors" => 2, "bounce_rate" => 100, "visit_duration" => 0, "percentage" => 50.0},
-               %{"name" => "C", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 30, "percentage" => 25.0},
-               %{"name" => "B", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 45, "percentage" => 25.0}
+               %{
+                 "name" => "Z",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "percentage" => 25.0
+               },
+               %{
+                 "name" => "A",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "percentage" => 50.0
+               },
+               %{
+                 "name" => "C",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 30,
+                 "percentage" => 25.0
+               },
+               %{
+                 "name" => "B",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 45,
+                 "percentage" => 25.0
+               }
              ]
 
       order_by_flipped = Jason.encode!([["visit_duration", "desc"], ["visit:source", "asc"]])
@@ -614,10 +638,34 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn2, 200)["results"] == [
-               %{"name" => "B", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 45, "percentage" => 25.0},
-               %{"name" => "C", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 30, "percentage" => 25.0},
-               %{"name" => "A", "visitors" => 2, "bounce_rate" => 100, "visit_duration" => 0, "percentage" => 50.0},
-               %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0, "percentage" => 25.0}
+               %{
+                 "name" => "B",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 45,
+                 "percentage" => 25.0
+               },
+               %{
+                 "name" => "C",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 30,
+                 "percentage" => 25.0
+               },
+               %{
+                 "name" => "A",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "percentage" => 50.0
+               },
+               %{
+                 "name" => "Z",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "percentage" => 25.0
+               }
              ]
     end
 
@@ -663,7 +711,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                    "bounce_rate" => 0,
                    "visit_duration" => nil,
                    "percentage" => 0.0,
-                   "change" => %{"visitors" => 100, "bounce_rate" => nil, "visit_duration" => nil, "percentage" => 100}
+                   "change" => %{
+                     "visitors" => 100,
+                     "bounce_rate" => nil,
+                     "visit_duration" => nil,
+                     "percentage" => 100
+                   }
                  }
                },
                %{
@@ -677,7 +730,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                    "bounce_rate" => 100,
                    "visit_duration" => 0,
                    "percentage" => 100.0,
-                   "change" => %{"visitors" => 0, "bounce_rate" => 0, "visit_duration" => 0, "percentage" => -67}
+                   "change" => %{
+                     "visitors" => 0,
+                     "bounce_rate" => 0,
+                     "visit_duration" => 0,
+                     "percentage" => -67
+                   }
                  }
                }
              ]

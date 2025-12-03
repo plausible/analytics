@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { XMarkIcon } from '@heroicons/react/20/solid'
 import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
@@ -78,10 +79,16 @@ class Modal extends React.Component {
         />
         <div className="modal is-open" onClick={this.props.onClick}>
           <div className="modal__overlay">
-            <button className="modal__close"></button>
+            <button
+              className="fixed top-3 right-6 text-gray-300 hover:text-gray-100 transition-colors duration-150"
+              onClick={this.props.onClose}
+              aria-label="Close modal"
+            >
+              <XMarkIcon className="size-10" />
+            </button>
             <div
               ref={this.node}
-              className="modal__container dark:bg-gray-900 focus:outline-hidden"
+              className="bg-white p-6 my-16 mx-auto box-border min-h-[509px] transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden"
               style={this.getStyle()}
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}
