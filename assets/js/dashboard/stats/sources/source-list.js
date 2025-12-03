@@ -27,26 +27,26 @@ import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
 
 const UTM_TAGS = {
   utm_medium: {
-    title: 'UTM Mediums',
+    title: 'UTM mediums',
     label: 'Medium',
     endpoint: '/utm_mediums'
   },
   utm_source: {
-    title: 'UTM Sources',
+    title: 'UTM sources',
     label: 'Source',
     endpoint: '/utm_sources'
   },
   utm_campaign: {
-    title: 'UTM Campaigns',
+    title: 'UTM campaigns',
     label: 'Campaign',
     endpoint: '/utm_campaigns'
   },
   utm_content: {
-    title: 'UTM Contents',
+    title: 'UTM contents',
     label: 'Content',
     endpoint: '/utm_contents'
   },
-  utm_term: { title: 'UTM Terms', label: 'Term', endpoint: '/utm_terms' }
+  utm_term: { title: 'UTM terms', label: 'Term', endpoint: '/utm_terms' }
 }
 
 function AllSources({ afterFetchData }) {
@@ -181,8 +181,8 @@ function UTMSources({ tab, afterFetchData }) {
 }
 
 const labelFor = {
-  channels: 'Top Channels',
-  all: 'Top Sources'
+  channels: 'Top channels',
+  all: 'Top sources'
 }
 
 for (const [key, utm_tag] of Object.entries(UTM_TAGS)) {

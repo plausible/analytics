@@ -1,17 +1,17 @@
 export const METRIC_LABELS = {
   visitors: 'Visitors',
   pageviews: 'Pageviews',
-  events: 'Total Conversions',
-  views_per_visit: 'Views per Visit',
+  events: 'Total conversions',
+  views_per_visit: 'Views per visit',
   visits: 'Visits',
-  bounce_rate: 'Bounce Rate',
-  visit_duration: 'Visit Duration',
-  conversions: 'Converted Visitors',
-  conversion_rate: 'Conversion Rate',
-  average_revenue: 'Average Revenue',
-  total_revenue: 'Total Revenue',
-  scroll_depth: 'Scroll Depth',
-  time_on_page: 'Time on Page'
+  bounce_rate: 'Bounce rate',
+  visit_duration: 'Visit duration',
+  conversions: 'Converted visitors',
+  conversion_rate: 'Conversion rate',
+  average_revenue: 'Average revenue',
+  total_revenue: 'Total revenue',
+  scroll_depth: 'Scroll depth',
+  time_on_page: 'Time on page'
 }
 
 function plottable(dataArray) {

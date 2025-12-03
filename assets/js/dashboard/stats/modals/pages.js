@@ -20,7 +20,7 @@ function PagesModal() {
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
-    title: 'Top Pages',
+    title: 'Top pages',
     dimension: 'page',
     endpoint: url.apiPath(site, '/pages'),
     dimensionLabel: 'Page url',

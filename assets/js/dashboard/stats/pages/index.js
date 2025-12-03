@@ -33,7 +33,7 @@ function EntryPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({
-        defaultLabel: 'Unique Entrances',
+        defaultLabel: 'Unique entrances',
         width: 'w-36',
         meta: { plot: true }
       }),
@@ -82,7 +82,7 @@ function ExitPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({
-        defaultLabel: 'Unique Exits',
+        defaultLabel: 'Unique exits',
         width: 'w-36',
         meta: { plot: true }
       }),
@@ -156,9 +156,9 @@ function TopPages({ afterFetchData }) {
 }
 
 const labelFor = {
-  pages: 'Top Pages',
-  'entry-pages': 'Entry Pages',
-  'exit-pages': 'Exit Pages'
+  pages: 'Top pages',
+  'entry-pages': 'Entry pages',
+  'exit-pages': 'Exit pages'
 }
 
 export default function Pages() {
@@ -210,9 +210,9 @@ export default function Pages() {
         </div>
         <TabWrapper>
           {[
-            { label: 'Top Pages', value: 'pages' },
-            { label: 'Entry Pages', value: 'entry-pages' },
-            { label: 'Exit Pages', value: 'exit-pages' }
+            { label: 'Top pages', value: 'pages' },
+            { label: 'Entry pages', value: 'entry-pages' },
+            { label: 'Exit pages', value: 'exit-pages' }
           ].map(({ value, label }) => (
             <TabButton
               active={mode === value}
