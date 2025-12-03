@@ -18,7 +18,6 @@ defmodule Plausible.Stats.QueryBuilder do
 
   def build(site, parsed_query_params, debug_metadata \\ %{}) do
     with {:ok, parsed_query_params} <- resolve_segments_in_filters(parsed_query_params, site),
-         parsed_query_params = build_comparison_datetime_range(parsed_query_params, site),
          query = do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
@@ -141,6 +140,8 @@ defmodule Plausible.Stats.QueryBuilder do
       filters: filters,
       dimensions: dimensions
     } = parsed_query_params
+
+    parsed_query_params = build_comparison_datetime_range(parsed_query_params, site)
 
     utc_time_range =
       input_date_range
