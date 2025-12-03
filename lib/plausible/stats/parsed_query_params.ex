@@ -36,12 +36,10 @@ defmodule Plausible.Stats.ParsedQueryParams do
   def default_pagination(), do: @default_pagination
 
   def new!(params) when is_map(params) do
-    [_ | _] = metrics = Map.fetch!(params, :metrics)
-
     %__MODULE__{
       now: params[:now],
       input_date_range: Map.fetch!(params, :input_date_range),
-      metrics: metrics,
+      metrics: params[:metrics],
       filters: params[:filters] || [],
       dimensions: params[:dimensions] || [],
       order_by: params[:order_by],
