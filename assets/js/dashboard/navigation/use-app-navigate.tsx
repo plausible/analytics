@@ -63,6 +63,12 @@ export const useAppNavigate = () => {
       search,
       ...options
     }: AppNavigationTarget & NavigateOptions) => {
+      window.dispatchEvent(
+        new CustomEvent('dashboard:live-navigate-back', {
+          detail: { search: window.location.search }
+        })
+      )
+
       return _navigate(getToOptions({ path, params, search }), options)
     },
     [getToOptions, _navigate]
