@@ -247,11 +247,11 @@ class LineGraph extends React.Component {
 
     if (this.props.graphData.interval === 'month') {
       this.props.navigate({
-        search: (search) => ({ ...search, period: 'month', date })
+        search: (searchRecord) => ({ ...searchRecord, period: 'month', date })
       })
     } else if (this.props.graphData.interval === 'day') {
       this.props.navigate({
-        search: (search) => ({ ...search, period: 'day', date })
+        search: (searchRecord) => ({ ...searchRecord, period: 'day', date })
       })
     }
   }

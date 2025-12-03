@@ -88,8 +88,8 @@ export const AppliedFilterPillsList = React.forwardRef<
             )
 
             navigate({
-              search: (search) => ({
-                ...search,
+              search: (searchRecord) => ({
+                ...searchRecord,
                 filters: newFilters,
                 labels: cleanLabels(newFilters, query.labels)
               })

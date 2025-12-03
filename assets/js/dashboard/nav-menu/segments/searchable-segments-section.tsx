@@ -2,14 +2,12 @@ import React, { RefObject } from 'react'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import {
-  formatSegmentIdAsLabelKey,
-  isSegmentFilter,
   SavedSegmentPublic,
   SavedSegment,
   SEGMENT_TYPE_LABELS,
-  isListableSegment
+  isListableSegment,
+  getSearchToSetSegmentFilter
 } from '../../filtering/segments'
-import { cleanLabels } from '../../util/filters'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
 import { SegmentAuthorship } from '../../segments/segment-authorship'
@@ -170,26 +168,12 @@ const SegmentLink = ({
 }: Pick<SavedSegment, 'id' | 'name'> & {
   closeList: () => void
 }) => {
-  const { query } = useQueryContext()
-
   return (
     <AppNavigationLink
       className={linkClassName}
       key={id}
       onClick={closeList}
-      search={(search) => {
-        const otherFilters = query.filters.filter((f) => !isSegmentFilter(f))
-
-        const updatedFilters = [['is', 'segment', [id]], ...otherFilters]
-
-        return {
-          ...search,
-          filters: updatedFilters,
-          labels: cleanLabels(updatedFilters, query.labels, 'segment', {
-            [formatSegmentIdAsLabelKey(id)]: name
-          })
-        }
-      }}
+      search={getSearchToSetSegmentFilter({ id, name })}
     >
       <div className="truncate">{name}</div>
     </AppNavigationLink>

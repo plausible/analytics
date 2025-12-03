@@ -111,8 +111,8 @@ class FilterModal extends React.Component {
   selectFiltersAndCloseModal(filters) {
     this.props.navigate({
       path: rootRoute.path,
-      search: (search) => ({
-        ...search,
+      search: (searchRecord) => ({
+        ...searchRecord,
         filters: filters,
         labels: cleanLabels(filters, this.state.labelState)
       }),
