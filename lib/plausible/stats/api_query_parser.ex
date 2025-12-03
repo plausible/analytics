@@ -6,7 +6,6 @@ defmodule Plausible.Stats.ApiQueryParser do
   alias Plausible.Stats.{Filters, Metrics, DateTimeRange, JSONSchema}
 
   def parse(schema_type, params) when is_map(params) do
-    now = Plausible.Stats.Query.Test.get_fixed_now()
     input_date_range = Map.get(params, "date_range")
 
     with :ok <- JSONSchema.validate(schema_type, params),
@@ -19,7 +18,6 @@ defmodule Plausible.Stats.ApiQueryParser do
          {:ok, include} <- parse_include(params["include"]) do
       {:ok,
        Plausible.Stats.ParsedQueryParams.new!(%{
-         now: now,
          input_date_range: input_date_range,
          metrics: metrics,
          filters: filters,
