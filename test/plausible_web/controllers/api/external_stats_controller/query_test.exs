@@ -1592,6 +1592,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     end
 
     test "shows month to date with time labels trimmed", %{conn: conn, site: site} do
+      Plausible.Stats.Query.Test.fix_now(~U[2021-01-15 12:00:00Z])
+
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
@@ -1603,7 +1605,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => "month",
-          "date" => "2021-01-15",
           "dimensions" => ["time:day"],
           "include" => %{"trim_relative_date_range" => true}
         })

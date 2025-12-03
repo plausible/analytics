@@ -40,7 +40,7 @@ defmodule Plausible.Stats.Query do
     Imported,
     Legacy,
     Comparisons,
-    QueryParser,
+    ApiQueryParser,
     ParsedQueryParams,
     QueryBuilder
   }
@@ -54,8 +54,8 @@ defmodule Plausible.Stats.Query do
         debug_metadata \\ %{}
       ) do
     with {:ok, %ParsedQueryParams{} = parsed_query_params} <-
-           QueryParser.parse(site, schema_type, params) do
-      QueryBuilder.build(site, parsed_query_params, params, debug_metadata)
+           ApiQueryParser.parse(schema_type, params) do
+      QueryBuilder.build(site, parsed_query_params, debug_metadata)
     end
   end
 
@@ -160,7 +160,7 @@ defmodule Plausible.Stats.Query do
   end
 
   defp get_imports_in_range(_site, %__MODULE__{input_date_range: period})
-       when period in ["realtime", "30m"] do
+       when period in [:realtime, :realtime_30m] do
     []
   end
 

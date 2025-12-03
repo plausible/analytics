@@ -5,11 +5,20 @@ defmodule Plausible.Stats.QueryBuilder do
 
   use Plausible
   alias Plausible.Segments
-  alias Plausible.Stats.{Query, ParsedQueryParams, Comparisons, Filters, Time, TableDecider}
 
-  def build(site, parsed_query_params, params, debug_metadata \\ %{}) do
+  alias Plausible.Stats.{
+    Query,
+    ParsedQueryParams,
+    Comparisons,
+    Filters,
+    Time,
+    TableDecider,
+    DateTimeRange
+  }
+
+  def build(site, parsed_query_params, debug_metadata \\ %{}) do
     with {:ok, parsed_query_params} <- resolve_segments_in_filters(parsed_query_params, site),
-         query = do_build(parsed_query_params, site, params, debug_metadata),
+         query = do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
@@ -45,9 +54,99 @@ defmodule Plausible.Stats.QueryBuilder do
     end
   end
 
-  defp do_build(parsed_query_params, site, params, debug_metadata) do
-    %ParsedQueryParams{metrics: metrics, filters: filters, dimensions: dimensions} =
-      parsed_query_params
+  defp build_datetime_range(input_date_range, _site, now)
+       when input_date_range in [:realtime, :realtime_30m] do
+    duration_minutes =
+      case input_date_range do
+        :realtime -> 5
+        :realtime_30m -> 30
+      end
+
+    first_datetime = DateTime.shift(now, minute: -duration_minutes)
+    last_datetime = DateTime.shift(now, second: 5)
+
+    DateTimeRange.new!(first_datetime, last_datetime)
+  end
+
+  defp build_datetime_range(:day, site, now) do
+    today = today_from_now(site, now)
+    DateTimeRange.new!(today, today, site.timezone)
+  end
+
+  defp build_datetime_range(:month, site, now) do
+    today = today_from_now(site, now)
+    first = today |> Date.beginning_of_month()
+    last = today |> Date.end_of_month()
+    DateTimeRange.new!(first, last, site.timezone)
+  end
+
+  defp build_datetime_range(:year, site, now) do
+    today = today_from_now(site, now)
+    first = today |> Plausible.Times.beginning_of_year()
+    last = today |> Plausible.Times.end_of_year()
+    DateTimeRange.new!(first, last, site.timezone)
+  end
+
+  defp build_datetime_range(:all, site, now) do
+    today = today_from_now(site, now)
+    start_date = Plausible.Sites.stats_start_date(site) || today
+    DateTimeRange.new!(start_date, today, site.timezone)
+  end
+
+  defp build_datetime_range({:last_n_days, n}, site, now) do
+    today = today_from_now(site, now)
+    last = today |> Date.add(-1)
+    first = today |> Date.add(-n)
+    DateTimeRange.new!(first, last, site.timezone)
+  end
+
+  defp build_datetime_range({:last_n_months, n}, site, now) do
+    today = today_from_now(site, now)
+    last = today |> Date.shift(month: -1) |> Date.end_of_month()
+    first = today |> Date.shift(month: -n) |> Date.beginning_of_month()
+    DateTimeRange.new!(first, last, site.timezone)
+  end
+
+  defp build_datetime_range({:date_range, from, to}, site, _now) do
+    DateTimeRange.new!(from, to, site.timezone)
+  end
+
+  defp build_datetime_range({:datetime_range, from, to}, _site, _now) do
+    DateTimeRange.new!(from, to)
+  end
+
+  defp build_comparison_datetime_range(
+         %ParsedQueryParams{include: %{comparisons: %{date_range: date_range}}} =
+           parsed_query_params,
+         site
+       ) do
+    comparison_date_range = build_datetime_range(date_range, site, parsed_query_params.now)
+
+    new_include =
+      put_in(parsed_query_params.include, [:comparisons, :date_range], comparison_date_range)
+
+    struct(parsed_query_params, include: new_include)
+  end
+
+  defp build_comparison_datetime_range(%ParsedQueryParams{} = parsed_query_params, _site) do
+    parsed_query_params
+  end
+
+  defp do_build(parsed_query_params, site, debug_metadata) do
+    %ParsedQueryParams{
+      input_date_range: input_date_range,
+      now: now,
+      metrics: metrics,
+      filters: filters,
+      dimensions: dimensions
+    } = parsed_query_params
+
+    parsed_query_params = build_comparison_datetime_range(parsed_query_params, site)
+
+    utc_time_range =
+      input_date_range
+      |> build_datetime_range(site, now)
+      |> DateTimeRange.to_timezone("Etc/UTC")
 
     {preloaded_goals, revenue_warning, revenue_currencies} =
       preload_goals_and_revenue(site, metrics, filters, dimensions)
@@ -65,7 +164,7 @@ defmodule Plausible.Stats.QueryBuilder do
         preloaded_goals: preloaded_goals,
         revenue_warning: revenue_warning,
         revenue_currencies: revenue_currencies,
-        input_date_range: Map.get(params, "date_range"),
+        utc_time_range: utc_time_range,
         debug_metadata: debug_metadata
       )
 
@@ -348,6 +447,10 @@ defmodule Plausible.Stats.QueryBuilder do
     else
       :ok
     end
+  end
+
+  defp today_from_now(site, now) do
+    now |> DateTime.shift_zone!(site.timezone) |> DateTime.to_date()
   end
 
   defp i(value), do: inspect(value, charlists: :as_lists)
