@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def pageview_fields(assigns) do
     ~H"""
-    <div id="pageviews-form" class="py-2" {@rest}>
+    <div id="pageviews-form" class="py-2" x-data="{ addCustomProperty: false }" {@rest}>
       <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
         Pageview goals allow you to measure how many people visit a specific page or section of your site. Learn more in <.styled_link
           href="https://plausible.io/docs/pageview-goals"
@@ -204,6 +204,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
       />
+
+      <.custom_property_section suffix={@suffix} />
     </div>
     """
   end
@@ -222,6 +224,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           scrollThreshold: '90',
           pagePath: '',
           displayName: '',
+          addCustomProperty: false,
           updateDisplayName() {
             if (this.scrollThreshold && this.pagePath) {
               this.displayName = `Scroll ${this.scrollThreshold}% on ${this.pagePath}`
@@ -235,6 +238,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           scrollThreshold: '#{assigns.goal.scroll_threshold}',
           pagePath: '#{assigns.goal.page_path}',
           displayName: '#{assigns.goal.display_name}',
+          addCustomProperty: false,
           updateDisplayName() {}
         }
         """
@@ -299,6 +303,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
       />
+
+      <.custom_property_section suffix={@suffix} />
     </div>
     """
   end
@@ -317,7 +323,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def custom_event_fields(assigns) do
     ~H"""
-    <div id="custom-events-form" class="py-2" {@rest}>
+    <div id="custom-events-form" class="py-2" x-data="{ addCustomProperty: false }" {@rest}>
       <div id="event-fields">
         <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
           Custom Events are not tracked by default - you have to configure them on your site to be sent to Plausible. See examples and learn more in <.styled_link
@@ -364,6 +370,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           />
         </div>
 
+        <.custom_property_section suffix={@suffix} />
+
         <%= if ee?() and Plausible.Sites.regular?(@site) and not editing_non_revenue_goal?(assigns) do %>
           <.revenue_goal_settings
             f={@f}
@@ -382,6 +390,43 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     """
   end
 
+  attr(:suffix, :string, required: true)
+
+  def custom_property_section(assigns) do
+    ~H"""
+    <div class="mt-6 mb-2 flex items-center justify-between">
+      <span class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
+        Add custom property
+      </span>
+      <.toggle_switch
+        id="add-custom-property"
+        id_suffix={@suffix}
+        js_active_var="addCustomProperty"
+      />
+    </div>
+
+    <div x-show="addCustomProperty" class="flex items-center gap-3">
+      <.live_component
+        id={"property_input_#{@suffix}"}
+        submit_name="goal[property]"
+        placeholder="Select property"
+        module={ComboBox}
+        suggest_fun={fn _input, _options -> [] end}
+        creatable
+      />
+      <span class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">is</span>
+      <.live_component
+        id={"value_input_#{@suffix}"}
+        submit_name="goal[value]"
+        placeholder="Select value"
+        module={ComboBox}
+        suggest_fun={fn _input, _options -> [] end}
+        creatable
+      />
+    </div>
+    """
+  end
+
   def revenue_goal_settings(assigns) do
     js_data =
       Jason.encode!(%{
@@ -394,7 +439,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div x-data={@js_data} data-test-id="revenue-goal-settings">
       <%= if is_nil(@goal) do %>
-        <div class="mt-6 mb-3">
+        <div class="mt-6 mb-2">
           <.revenue_toggle {assigns} />
         </div>
       <% else %>
@@ -515,15 +560,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           />.
         </div>
       </:tooltip_content>
-      <div class="flex itemx-center mb-3">
-        <PlausibleWeb.Components.Generic.toggle_switch
-          id="enable-revenue-tracking"
-          id_suffix={@suffix}
-          js_active_var="active"
-          disabled={not @has_access_to_revenue_goals?}
-        />
+      <div class="flex items-center justify-between">
         <span class={[
-          "ml-3 text-sm font-medium",
+          "text-sm/6 font-medium",
           if(@has_access_to_revenue_goals?,
             do: "text-gray-900 dark:text-gray-100",
             else: "text-gray-500 dark:text-gray-400"
@@ -531,6 +570,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         ]}>
           Enable revenue tracking
         </span>
+        <PlausibleWeb.Components.Generic.toggle_switch
+          id="enable-revenue-tracking"
+          id_suffix={@suffix}
+          js_active_var="active"
+          disabled={not @has_access_to_revenue_goals?}
+        />
       </div>
     </.tooltip>
     """
