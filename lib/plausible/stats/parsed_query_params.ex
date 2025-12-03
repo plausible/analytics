@@ -3,7 +3,7 @@ defmodule Plausible.Stats.ParsedQueryParams do
 
   defstruct [
     :now,
-    :utc_time_range,
+    :input_date_range,
     :metrics,
     :filters,
     :dimensions,
@@ -11,8 +11,6 @@ defmodule Plausible.Stats.ParsedQueryParams do
     :pagination,
     :include
   ]
-
-  alias Plausible.Stats.DateTimeRange
 
   @default_include %{
     imports: false,
@@ -38,12 +36,11 @@ defmodule Plausible.Stats.ParsedQueryParams do
   def default_pagination(), do: @default_pagination
 
   def new!(params) when is_map(params) do
-    %DateTimeRange{} = utc_time_range = Map.fetch!(params, :utc_time_range)
     [_ | _] = metrics = Map.fetch!(params, :metrics)
 
     %__MODULE__{
       now: params[:now],
-      utc_time_range: utc_time_range,
+      input_date_range: Map.fetch!(params, :input_date_range),
       metrics: metrics,
       filters: params[:filters] || [],
       dimensions: params[:dimensions] || [],
