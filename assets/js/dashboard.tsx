@@ -7,7 +7,7 @@ import { createAppRouter } from './dashboard/router'
 import ErrorBoundary from './dashboard/error/error-boundary'
 import * as api from './dashboard/api'
 import * as timer from './dashboard/util/realtime-update-timer'
-import { redirectForLegacyParams } from './dashboard/util/url-search-params'
+import { maybeDoFERedirect } from './dashboard/util/url-search-params'
 import SiteContextProvider, {
   parseSiteFromDataset
 } from './dashboard/site-context'
@@ -19,6 +19,7 @@ import {
   SomethingWentWrongMessage
 } from './dashboard/error/something-went-wrong'
 import {
+  getLimitedToSegment,
   parseLimitedToSegmentId,
   parsePreloadedSegments,
   SegmentsContextProvider
@@ -40,8 +41,15 @@ if (container && container.dataset) {
       api.setSharedLinkAuth(sharedLinkAuth)
     }
 
+    const limitedToSegmentId = parseLimitedToSegmentId(container.dataset)
+    const preloadedSegments = parsePreloadedSegments(container.dataset)
+    const limitedToSegment = getLimitedToSegment(
+      limitedToSegmentId,
+      preloadedSegments
+    )
+
     try {
-      redirectForLegacyParams(window.location, window.history)
+      maybeDoFERedirect(window.location, window.history, limitedToSegment)
     } catch (e) {
       console.error('Error redirecting in a backwards compatible way', e)
     }
@@ -84,8 +92,8 @@ if (container && container.dataset) {
               }
             >
               <SegmentsContextProvider
-                limitedToSegmentId={parseLimitedToSegmentId(container.dataset)}
-                preloadedSegments={parsePreloadedSegments(container.dataset)}
+                limitedToSegment={limitedToSegment}
+                preloadedSegments={preloadedSegments}
               >
                 <RouterProvider router={router} />
               </SegmentsContextProvider>

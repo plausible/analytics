@@ -9,6 +9,8 @@ import {
   LinkProps
 } from 'react-router-dom'
 import { parseSearch, stringifySearch } from '../util/url-search-params'
+import { useSegmentsContext } from '../filtering/segments-context'
+import { getSearchToSetSegmentFilter } from '../filtering/segments'
 
 export type AppNavigationTarget = {
   /**
@@ -44,11 +46,24 @@ const getNavigateToOptions = (
 
 export const useGetNavigateOptions = () => {
   const location = useLocation()
+  const { limitedToSegment } = useSegmentsContext()
+
   const getToOptions = useCallback(
     ({ path, params, search }: AppNavigationTarget) => {
-      return getNavigateToOptions(location.search, { path, params, search })
+      const wrappedSearch: typeof search = (searchRecord) => {
+        const updatedSearchRecord =
+          typeof search === 'function' ? search(searchRecord) : searchRecord
+        return limitedToSegment
+          ? getSearchToSetSegmentFilter(limitedToSegment)(updatedSearchRecord)
+          : updatedSearchRecord
+      }
+      return getNavigateToOptions(location.search, {
+        path,
+        params,
+        search: wrappedSearch
+      })
     },
-    [location.search]
+    [location.search, limitedToSegment]
   )
   return getToOptions
 }

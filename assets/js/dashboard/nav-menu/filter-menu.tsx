@@ -50,7 +50,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
   const columns = useMemo(() => getFilterListItems(site), [site])
   const buttonRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const { limitedToSegmentId } = useSegmentsContext()
+  const { limitedToSegment } = useSegmentsContext()
 
   return (
     <>
@@ -109,7 +109,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
               </div>
             ))}
           </div>
-          {limitedToSegmentId === null && (
+          {limitedToSegment === null && (
             <SearchableSegmentsSection
               closeList={closeDropdown}
               tooltipContainerRef={panelRef}

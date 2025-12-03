@@ -35,7 +35,7 @@ describe('SegmentsContext functions', () => {
   test('deleteOne works', () => {
     render(
       <SegmentsContextProvider
-        limitedToSegmentId={null}
+        limitedToSegment={null}
         preloadedSegments={[segmentOpenSource, segmentAPAC]}
       >
         <TestComponent />
@@ -53,7 +53,7 @@ describe('SegmentsContext functions', () => {
   test('addOne adds to head of list', async () => {
     render(
       <SegmentsContextProvider
-        limitedToSegmentId={null}
+        limitedToSegment={null}
         preloadedSegments={[segmentAPAC]}
       >
         <TestComponent />
@@ -72,7 +72,7 @@ describe('SegmentsContext functions', () => {
   test('updateOne works: updated segment is at head of list', () => {
     render(
       <SegmentsContextProvider
-        limitedToSegmentId={null}
+        limitedToSegment={null}
         preloadedSegments={[segmentOpenSource, segmentAPAC]}
       >
         <TestComponent />
