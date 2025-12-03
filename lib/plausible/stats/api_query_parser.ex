@@ -188,14 +188,14 @@ defmodule Plausible.Stats.ApiQueryParser do
   defp parse_date_strings(from, to) do
     with {:ok, from_date} <- Date.from_iso8601(from),
          {:ok, to_date} <- Date.from_iso8601(to) do
-      {:ok, [from_date, to_date]}
+      {:ok, {:date_range, from_date, to_date}}
     end
   end
 
   defp parse_timestamp_strings(from, to) do
     with {:ok, from_datetime, _offset} <- DateTime.from_iso8601(from),
          {:ok, to_datetime, _offset} <- DateTime.from_iso8601(to) do
-      {:ok, [from_datetime, to_datetime]}
+      {:ok, {:datetime_range, from_datetime, to_datetime}}
     else
       _ -> {:error, "Invalid date_range '#{i([from, to])}'."}
     end

@@ -108,8 +108,12 @@ defmodule Plausible.Stats.QueryBuilder do
     DateTimeRange.new!(first, last, site.timezone)
   end
 
-  defp build_datetime_range([from, to], site, _now) do
+  defp build_datetime_range({:date_range, from, to}, site, _now) do
     DateTimeRange.new!(from, to, site.timezone)
+  end
+
+  defp build_datetime_range({:datetime_range, from, to}, _site, _now) do
+    DateTimeRange.new!(from, to)
   end
 
   defp build_comparison_datetime_range(
