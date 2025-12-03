@@ -273,7 +273,7 @@ defmodule Plausible.Stats.SQL.Expression do
         [e],
         %{
           average_revenue:
-            fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
+            fragment("toDecimal64(avg(?), 3)", e.revenue_reporting_amount)
         }
       )
     end
