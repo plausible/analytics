@@ -47,7 +47,7 @@ defmodule Plausible.Stats.Interval do
 
   def default_for_query(%Query{} = query) do
     case query.input_date_range do
-      period when period in [:realtime, :"30m"] -> "minute"
+      period when period in [:realtime, :realtime_30m] -> "minute"
       :day -> "hour"
       {:last_n_days, _} -> "day"
       period when period in [:custom, :month] -> "day"

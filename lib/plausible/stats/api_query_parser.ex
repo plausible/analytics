@@ -160,7 +160,7 @@ defmodule Plausible.Stats.ApiQueryParser do
   end
 
   defp parse_input_date_range("realtime"), do: {:ok, :realtime}
-  defp parse_input_date_range("30m"), do: {:ok, :"30m"}
+  defp parse_input_date_range("30m"), do: {:ok, :realtime_30m}
   defp parse_input_date_range("day"), do: {:ok, :day}
   defp parse_input_date_range("month"), do: {:ok, :month}
   defp parse_input_date_range("year"), do: {:ok, :year}

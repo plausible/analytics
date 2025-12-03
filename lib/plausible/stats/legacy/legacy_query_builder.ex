@@ -87,7 +87,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     {duration_minutes, input_date_range_atom} =
       case period do
         "realtime" -> {5, :realtime}
-        "30m" -> {30, :"30m"}
+        "30m" -> {30, :realtime_30m}
       end
 
     first_datetime = DateTime.shift(now, minute: -duration_minutes)

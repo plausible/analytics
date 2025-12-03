@@ -56,11 +56,11 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp build_datetime_range(input_date_range, _site, now)
-       when input_date_range in [:realtime, :"30m"] do
+       when input_date_range in [:realtime, :realtime_30m] do
     duration_minutes =
       case input_date_range do
         :realtime -> 5
-        :"30m" -> 30
+        :realtime_30m -> 30
       end
 
     first_datetime = DateTime.shift(now, minute: -duration_minutes)

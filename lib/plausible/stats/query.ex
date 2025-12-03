@@ -160,7 +160,7 @@ defmodule Plausible.Stats.Query do
   end
 
   defp get_imports_in_range(_site, %__MODULE__{input_date_range: period})
-       when period in [:realtime, :"30m"] do
+       when period in [:realtime, :realtime_30m] do
     []
   end
 
