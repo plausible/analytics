@@ -30,19 +30,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         assigns[:goal_type] || "custom_events"
       end
 
-    event_name_options_count = length(assigns.event_name_options || [])
+    event_name_options_count = length(assigns.event_name_options)
 
-    show_autoconfigure_modal =
-      if event_name_options_count == 0 do
-        false
-      else
-        if Map.has_key?(socket.assigns, :show_autoconfigure_modal) do
-          socket.assigns.show_autoconfigure_modal
-        else
-          is_nil(assigns.goal) &&
-            form_type == "custom_events" &&
-            event_name_options_count > 0
-        end
+    show_autoconfigure_modal? =
+      case form_type do
+        "custom_events" when event_name_options_count > 0 and is_nil(assigns.goal) ->
+          true
+
+        _ ->
+          Map.get(socket.assigns, :show_autoconfigure_modal?, false)
       end
 
     socket =
@@ -64,7 +60,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         on_autoconfigure: assigns.on_autoconfigure,
         goal: assigns.goal,
         goal_type: assigns[:goal_type],
-        show_autoconfigure_modal: show_autoconfigure_modal
+        show_autoconfigure_modal?: show_autoconfigure_modal?
       )
 
     {:ok, socket}
@@ -77,8 +73,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id={@id}>
       {if @goal, do: edit_form(assigns)}
-      {if is_nil(@goal) && @show_autoconfigure_modal, do: autoconfigure_modal(assigns)}
-      {if is_nil(@goal) && !@show_autoconfigure_modal, do: create_form(assigns)}
+      {if is_nil(@goal) && @show_autoconfigure_modal?, do: autoconfigure_modal(assigns)}
+      {if is_nil(@goal) && not @show_autoconfigure_modal?, do: create_form(assigns)}
     </div>
     """
   end
@@ -124,7 +120,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def autoconfigure_modal(assigns) do
     ~H"""
-    <div>
+    <div data-test-id="autoconfigure-modal">
       <.title>
         We detected {@event_name_options_count} custom {if @event_name_options_count == 1,
           do: "event",
@@ -500,11 +496,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def handle_event("autoconfigure", _params, socket) do
+    socket = assign(socket, show_autoconfigure_modal?: false)
     {:noreply, socket.assigns.on_autoconfigure.(socket)}
   end
 
   def handle_event("add-manually", _params, socket) do
-    {:noreply, assign(socket, show_autoconfigure_modal: false)}
+    {:noreply, assign(socket, show_autoconfigure_modal?: false)}
   end
 
   def suggest_page_paths(input, site) do
