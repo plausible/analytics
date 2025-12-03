@@ -13,6 +13,7 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
 
+  plug(:validate_shared_link_password_plug)
   plug(:date_validation_plug)
 
   @doc """
@@ -1596,6 +1597,25 @@ defmodule PlausibleWeb.Api.StatsController do
     case parse_date_params(conn.params) do
       {:ok, _dates} -> conn
       {:error, message} when is_binary(message) -> bad_request(conn, message)
+    end
+  end
+
+  defp validate_shared_link_password_plug(conn, _opts) do
+    shared_link = conn.assigns.shared_link
+    if shared_link &&
+         Plausible.Site.SharedLink.get_type(shared_link) == :password_protected do
+      case PlausibleWeb.StatsController.validate_shared_link_password(conn, shared_link) do
+        {:ok, _} ->
+          conn
+
+        {:error, :unauthorized} ->
+          conn
+          |> put_status(403)
+          |> json(%{"error" => "Unauthorized"})
+          |> halt()
+      end
+    else
+      conn
     end
   end
 
