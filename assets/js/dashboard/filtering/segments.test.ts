@@ -1,7 +1,7 @@
 import { remapToApiFilters } from '../util/filters'
 import {
   formatSegmentIdAsLabelKey,
-  getSearchToApplySingleSegmentFilter,
+  getSearchToSetSegmentFilter,
   getSegmentNamePlaceholder,
   isSegmentIdLabelKey,
   parseApiSegmentData,
@@ -64,9 +64,57 @@ describe(`${parseApiSegmentData.name}`, () => {
   })
 })
 
-describe(`${getSearchToApplySingleSegmentFilter.name}`, () => {
-  test('generated search function applies single segment correctly', () => {
-    const searchFunction = getSearchToApplySingleSegmentFilter({
+describe(`${getSearchToSetSegmentFilter.name}`, () => {
+  test('generated search function omits other filters segment correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter(
+      {
+        name: 'APAC',
+        id: 500
+      },
+      { omitAllOtherFilters: true }
+    )
+    const existingSearch = {
+      date: '2025-02-10',
+      filters: [
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States' }
+    }
+    expect(searchFunction(existingSearch)).toEqual({
+      date: '2025-02-10',
+      filters: [['is', 'segment', [500]]],
+      labels: { 'segment-500': 'APAC' }
+    })
+  })
+
+  test('generated search function replaces existing segment filter correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter({
+      name: 'APAC',
+      id: 500
+    })
+    const existingSearch = {
+      date: '2025-02-10',
+      filters: [
+        ['is', 'segment', [100]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-100': 'Scandinavia' }
+    }
+    expect(searchFunction(existingSearch)).toEqual({
+      date: '2025-02-10',
+      filters: [
+        ['is', 'segment', [500]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-500': 'APAC' }
+    })
+  })
+
+  test('generated search function sets new segment filter correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter({
       name: 'APAC',
       id: 500
     })
@@ -80,8 +128,12 @@ describe(`${getSearchToApplySingleSegmentFilter.name}`, () => {
     }
     expect(searchFunction(existingSearch)).toEqual({
       date: '2025-02-10',
-      filters: [['is', 'segment', [500]]],
-      labels: { 'segment-500': 'APAC' }
+      filters: [
+        ['is', 'segment', [500]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-500': 'APAC' }
     })
   })
 })

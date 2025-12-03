@@ -105,12 +105,22 @@ export const parseApiSegmentData = ({
   ...rest
 })
 
-export function getSearchToApplySingleSegmentFilter(
-  segment: Pick<SavedSegment, 'id' | 'name'>
+export function getSearchToSetSegmentFilter(
+  segment: Pick<SavedSegment, 'id' | 'name'>,
+  options: { omitAllOtherFilters?: boolean } = {}
 ): Required<AppNavigationTarget>['search'] {
   return (search) => {
-    const filters = [['is', 'segment', [segment.id]]]
-    const labels = cleanLabels(filters, {}, 'segment', {
+    const otherFilters = (
+      (Array.isArray(search.filters) ? search.filters : []) as Filter[]
+    ).filter((f) => !isSegmentFilter(f))
+    const currentLabels = search.labels ?? {}
+
+    const filters = [
+      ['is', 'segment', [segment.id]],
+      ...(options.omitAllOtherFilters ? [] : otherFilters)
+    ]
+
+    const labels = cleanLabels(filters, currentLabels, 'segment', {
       [formatSegmentIdAsLabelKey(segment.id)]: segment.name
     })
     return {
