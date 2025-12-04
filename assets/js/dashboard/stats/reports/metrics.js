@@ -51,6 +51,7 @@ export class Metric {
         renderLabel={this.renderLabel}
         meta={meta}
         formatter={this.formatter}
+        showTooltip={this.meta.showTooltip !== false}
       />
     )
   }
@@ -104,14 +105,18 @@ export const createConversionRate = (props) => {
   })
 }
 
-export const createPercentage = (props) => {
+export const createPercentage = (props = {}) => {
   const renderLabel = (_query) => '%'
   return new Metric({
     width: 'w-24',
-    ...props,
     key: 'percentage',
     renderLabel,
-    sortable: true
+    sortable: true,
+    ...props,
+    meta: {
+      showTooltip: false,
+      ...(props.meta || {})
+    }
   })
 }
 
@@ -142,7 +147,7 @@ export const createAverageRevenue = (props) => {
 }
 
 export const createTotalVisitors = (props) => {
-  const renderLabel = (_query) => 'Total Visitors'
+  const renderLabel = (_query) => 'Total visitors'
   return new Metric({
     width: 'w-28',
     ...props,
@@ -157,7 +162,7 @@ export const createVisits = (props) => {
 }
 
 export const createVisitDuration = (props) => {
-  const renderLabel = (_query) => 'Visit Duration'
+  const renderLabel = (_query) => 'Visit duration'
   return new Metric({
     width: 'w-36',
     ...props,
@@ -168,7 +173,7 @@ export const createVisitDuration = (props) => {
 }
 
 export const createBounceRate = (props) => {
-  const renderLabel = (_query) => 'Bounce Rate'
+  const renderLabel = (_query) => 'Bounce rate'
   return new Metric({
     width: 'w-28',
     ...props,
@@ -190,7 +195,7 @@ export const createPageviews = (props) => {
 }
 
 export const createTimeOnPage = (props) => {
-  const renderLabel = (_query) => 'Time on Page'
+  const renderLabel = (_query) => 'Time on page'
   return new Metric({
     width: 'w-32',
     ...props,
@@ -201,7 +206,7 @@ export const createTimeOnPage = (props) => {
 }
 
 export const createExitRate = (props) => {
-  const renderLabel = (_query) => 'Exit Rate'
+  const renderLabel = (_query) => 'Exit rate'
   return new Metric({
     width: 'w-28',
     ...props,
@@ -212,7 +217,7 @@ export const createExitRate = (props) => {
 }
 
 export const createScrollDepth = (props) => {
-  const renderLabel = (_query) => 'Scroll Depth'
+  const renderLabel = (_query) => 'Scroll depth'
   return new Metric({
     width: 'w-28',
     ...props,

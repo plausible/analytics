@@ -32,29 +32,6 @@
   overflow: auto;
 }
 
-.modal__container {
-  background-color: #fff;
-  padding: 1rem 2rem;
-  border-radius: 4px;
-  margin: 50px auto;
-  box-sizing: border-box;
-  min-height: 509px;
-  transition: height 200ms ease-in;
-}
-
-.modal__close {
-  position: fixed;
-  color: #b8c2cc;
-  font-size: 48px;
-  font-weight: bold;
-  top: 12px;
-  right: 24px;
-}
-
-.modal__close::before {
-  content: '\2715';
-}
-
 .modal__content {
   margin-bottom: 2rem;
 }

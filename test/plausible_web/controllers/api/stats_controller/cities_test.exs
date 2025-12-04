@@ -38,8 +38,20 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
       conn = get(conn, "/api/stats/#{site.domain}/cities?period=day")
 
       assert json_response(conn, 200)["results"] == [
-               %{"code" => 588_409, "country_flag" => "🇪🇪", "name" => "Tallinn", "visitors" => 3},
-               %{"code" => 591_632, "country_flag" => "🇪🇪", "name" => "Kärdla", "visitors" => 2}
+               %{
+                 "code" => 588_409,
+                 "country_flag" => "🇪🇪",
+                 "name" => "Tallinn",
+                 "visitors" => 3,
+                 "percentage" => 60.0
+               },
+               %{
+                 "code" => 591_632,
+                 "country_flag" => "🇪🇪",
+                 "name" => "Kärdla",
+                 "visitors" => 2,
+                 "percentage" => 40.0
+               }
              ]
     end
 
@@ -48,7 +60,13 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
       conn = get(conn, "/api/stats/#{site.domain}/cities?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"code" => 591_632, "country_flag" => "🇪🇪", "name" => "Kärdla", "visitors" => 2}
+               %{
+                 "code" => 591_632,
+                 "country_flag" => "🇪🇪",
+                 "name" => "Kärdla",
+                 "visitors" => 2,
+                 "percentage" => 100.0
+               }
              ]
     end
 
@@ -62,8 +80,20 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
       conn = get(conn, "/api/stats/#{site.domain}/cities?period=day&with_imported=true")
 
       assert json_response(conn, 200)["results"] == [
-               %{"code" => 588_409, "country_flag" => "🇪🇪", "name" => "Tallinn", "visitors" => 4},
-               %{"code" => 591_632, "country_flag" => "🇪🇪", "name" => "Kärdla", "visitors" => 2}
+               %{
+                 "code" => 588_409,
+                 "country_flag" => "🇪🇪",
+                 "name" => "Tallinn",
+                 "visitors" => 4,
+                 "percentage" => 66.7
+               },
+               %{
+                 "code" => 591_632,
+                 "country_flag" => "🇪🇪",
+                 "name" => "Kärdla",
+                 "visitors" => 2,
+                 "percentage" => 33.3
+               }
              ]
     end
 

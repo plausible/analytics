@@ -21,7 +21,7 @@ function PropsModal() {
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
-    title: specialTitleWhenGoalFilter(query, 'Custom Property Breakdown'),
+    title: specialTitleWhenGoalFilter(query, 'Custom property breakdown'),
     dimension: propKey,
     endpoint: url.apiPath(
       site,

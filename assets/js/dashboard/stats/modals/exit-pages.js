@@ -17,7 +17,7 @@ function ExitPagesModal() {
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
-    title: 'Exit Pages',
+    title: 'Exit pages',
     dimension: 'exit_page',
     endpoint: url.apiPath(site, '/exit-pages'),
     dimensionLabel: 'Page url',
