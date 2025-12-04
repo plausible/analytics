@@ -209,9 +209,9 @@ export default function ListReport<
     // On mobile: show if row is tapped, hide otherwise
     // On desktop: slide in from right when hovering
     if (tappedRow === listItemName) {
-      return 'translate-x-0 opacity-100 transition-all duration-300'
+      return 'translate-x-0 opacity-100 transition-all duration-150'
     } else {
-      return 'translate-x-[100%] opacity-0 transition-all duration-300 md:group-hover/report:translate-x-0 md:group-hover/report:opacity-100'
+      return 'translate-x-[100%] opacity-0 transition-all duration-150 md:group-hover/report:translate-x-0 md:group-hover/report:opacity-100'
     }
   }
 
@@ -227,9 +227,9 @@ export default function ListReport<
     }
 
     if (tappedRow === listItemName) {
-      return 'transition-transform duration-300 translate-x-0'
+      return 'transition-transform duration-150 translate-x-0'
     } else {
-      return 'transition-transform duration-300 translate-x-[100%] md:group-hover/report:translate-x-0'
+      return 'transition-transform duration-150 translate-x-[100%] md:group-hover/report:translate-x-0'
     }
   }
 
@@ -298,7 +298,7 @@ export default function ListReport<
     return (
       <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
         <div
-          className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm transition-colors duration-150 md:cursor-default cursor-pointer"
+          className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm md:cursor-default cursor-pointer"
           style={{ marginTop: ROW_GAP_HEIGHT }}
           onClick={handleRowClick}
         >
