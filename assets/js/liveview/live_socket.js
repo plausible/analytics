@@ -59,6 +59,7 @@ if (csrfToken && websocketUrl) {
     disablePushStateFlag.getAttribute('content') === 'true'
   let domainName = domain && domain.getAttribute('content')
   let liveSocket = new LiveSocket(liveUrl, Socket, {
+    // For dashboard LV migration
     disablePushState: disablePushState,
     heartbeatIntervalMs: 10000,
     hooks: Hooks,
@@ -74,6 +75,8 @@ if (csrfToken && websocketUrl) {
     params: () => {
       if (domainName) {
         return {
+          // The prefs are used by dashboard LiveView to persist
+          // user preferences across the reloads.
           user_prefs: {
             pages_tab: localStorage.getItem(`pageTab__${domainName}`)
           },

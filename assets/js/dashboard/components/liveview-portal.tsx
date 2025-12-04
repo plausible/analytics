@@ -1,3 +1,10 @@
+/**
+ * Component used for embedding LiveView components inside React.
+ *
+ * The content of the portal is completely excluded from React re-renders with
+ * a hardwired `React.memo`.
+ */
+
 import React from 'react'
 import classNames from 'classnames'
 

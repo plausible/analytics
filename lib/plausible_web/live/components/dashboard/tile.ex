@@ -1,10 +1,15 @@
 defmodule PlausibleWeb.Components.Dashboard.Tile do
-  @moduledoc false
+  @moduledoc """
+  Components for rendering dashboard tile contents.
+  """
 
   use PlausibleWeb, :component
 
   attr :id, :string, required: true
   attr :title, :string, required: true
+  # Optimistic rendering requires preventing LV patching of
+  # title and tabs. The udpate of those is handle by
+  # `tab` widget hook.
   attr :connected?, :boolean, required: true
 
   slot :tabs

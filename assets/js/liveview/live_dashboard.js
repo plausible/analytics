@@ -1,9 +1,13 @@
 /**
- * Hook used for LiveView dashboard. Currently its main purpose
- * is facilitiating migration from React to LiveView.
+ * Hook used by LiveView dashboard.
+ *
+ * Defines various widgets to use by various dashboard specific components.
  */
 
 const WIDGETS = {
+  // Hook widget delegating navigation events to and from React.
+  // Necessary to emulate navigation events in LiveView with pushState
+  // manipulation disabled.
   'dashboard-root': {
     initialize: function () {
       this.url = window.location.href
@@ -14,6 +18,8 @@ const WIDGETS = {
         if (type === 'dashboard-link') {
           this.url = e.target.href
           const uri = new URL(this.url)
+          // Domain is dropped from URL prefix, because that's what react-dom-router
+          // expects.
           const path = '/' + uri.pathname.split('/').slice(2).join('/')
           this.el.dispatchEvent(
             new CustomEvent('dashboard:live-navigate', {
@@ -28,6 +34,7 @@ const WIDGETS = {
         }
       })
 
+      // Browser back and forward navigation triggers that event.
       addListener.bind(this)('popstate', window, () => {
         if (this.url !== window.location.href) {
           this.pushEvent('handle_dashboard_params', {
@@ -36,6 +43,8 @@ const WIDGETS = {
         }
       })
 
+      // Navigation events triggered from liveview are propagated via this
+      // handler.
       addListener.bind(this)('dashboard:live-navigate-back', window, (e) => {
         if (
           typeof e.detail.search === 'string' &&
@@ -51,6 +60,8 @@ const WIDGETS = {
       removeListeners.bind(this)()
     }
   },
+  // Hook widget for optimistic loading of tabs and
+  // client-side persistence of selection using localStorage.
   tabs: {
     initialize: function () {
       const domain = getDomain(window.location.href)

@@ -23,6 +23,9 @@ function DashboardStats({
   const navigate = useAppNavigate()
   const site = useSiteContext()
 
+  // Handler for navigation events delegated from LiveView dashboard.
+  // Necessary to emulate navigation events in LiveView with pushState
+  // manipulation disabled.
   useEffect(() => {
     const unsubscribe = window.addEventListener('dashboard:live-navigate', ((
       e: CustomEvent
