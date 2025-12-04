@@ -24,7 +24,8 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         site: assigns.site,
         tabs: @tabs,
         tab_labels: @tab_labels,
-        active_tab: active_tab
+        active_tab: active_tab,
+        connected?: assigns.connected?
       )
 
     {:ok, socket}
@@ -33,7 +34,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   def render(assigns) do
     ~H"""
     <div>
-      <Tile.tile id="breakdown-tile-pages" title={@tab_labels[@active_tab]}>
+      <Tile.tile id="breakdown-tile-pages" title={@tab_labels[@active_tab]} connected?={@connected?}>
         <:tabs>
           <Tile.tab
             :for={{value, label} <- @tabs}

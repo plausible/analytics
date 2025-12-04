@@ -31,6 +31,7 @@ defmodule PlausibleWeb.Live.Dashboard do
 
     socket =
       socket
+      |> assign(:connected?, connected?(socket))
       |> assign(:site, site)
       |> assign(:user_prefs, user_prefs)
       |> assign(:params, %{})
@@ -53,6 +54,7 @@ defmodule PlausibleWeb.Live.Dashboard do
           id="pages-breakdown-component"
           site={@site}
           user_prefs={@user_prefs}
+          connected?={@connected?}
         />
       </.portal>
     </div>
