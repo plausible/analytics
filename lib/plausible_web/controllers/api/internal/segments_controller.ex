@@ -100,6 +100,30 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   def delete(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
 
+  def get_related_shared_links(
+        %Plug.Conn{
+          assigns: %{
+            site: site,
+            current_user: %{id: _user_id},
+            site_role: site_role
+          }
+        } =
+          conn,
+        %{} = params
+      ) do
+    segment_id = normalize_segment_id_param(params["segment_id"])
+
+    case Segments.get_related_shared_links(site, site_role, segment_id) do
+      {:error, :not_enough_permissions} ->
+        H.not_enough_permissions(conn, "Not enough permissions to get related shared links")
+
+      {:ok, shared_links} ->
+        json(conn, shared_links |> Enum.map(& &1.name))
+    end
+  end
+
+  def get_related_shared_links(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
+
   @spec normalize_segment_id_param(any()) :: nil | pos_integer()
   defp normalize_segment_id_param(input) do
     case Integer.parse(input) do

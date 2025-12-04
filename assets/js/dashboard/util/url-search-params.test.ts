@@ -1,8 +1,9 @@
 import { Filter } from '../query'
 import {
   encodeURIComponentPermissive,
+  getSearchWithEnforcedSegment,
   isSearchEntryDefined,
-  getRedirectTarget,
+  maybeGetLatestReadableSearch,
   parseFilter,
   parseLabelsEntry,
   parseSearch,
@@ -206,57 +207,45 @@ describe(`${stringifySearch.name}`, () => {
   })
 })
 
-describe(`${getRedirectTarget.name}`, () => {
+describe(`${maybeGetLatestReadableSearch.name}`, () => {
   it.each([
     [''],
     ['?auth=_Y6YOjUl2beUJF_XzG1hk&theme=light&background=%23ee00ee'],
     ['?keybindHint=Escape&with_imported=true'],
     ['?f=is,page,/blog/:category/:article-name&date=2024-10-10&period=day'],
     ['?f=is,country,US&l=US,United%20States']
-  ])('for modern search %p returns null', (search) => {
-    expect(
-      getRedirectTarget({
-        pathname: '/example.com%2Fdeep%2Fpath',
-        search
-      } as Location)
-    ).toBeNull()
+  ])('for modern search string %p returns null', (search) => {
+    expect(maybeGetLatestReadableSearch(search)).toBeNull()
   })
 
-  it('returns updated URL for jsonurl style filters (v2), and running the updated value through the function again returns null (no redirect loop)', () => {
-    const pathname = '/'
+  it('returns updated search string for jsonurl style filters (v2), and running the updated value through the function again returns null (no redirect loop)', () => {
     const search =
       '?filters=((is,exit_page,(/plausible.io)),(is,source,(Brave)),(is,city,(993800)))&labels=(993800:Johannesburg)'
     const expectedUpdatedSearch =
       '?f=is,exit_page,/plausible.io&f=is,source,Brave&f=is,city,993800&l=993800,Johannesburg&r=v2'
-    expect(
-      getRedirectTarget({
-        pathname,
-        search
-      } as Location)
-    ).toEqual(`${pathname}${expectedUpdatedSearch}`)
-    expect(
-      getRedirectTarget({
-        pathname,
-        search: expectedUpdatedSearch
-      } as Location)
-    ).toBeNull()
+    expect(maybeGetLatestReadableSearch(search)).toEqual(expectedUpdatedSearch)
+    expect(maybeGetLatestReadableSearch(expectedUpdatedSearch)).toBeNull()
   })
 
-  it('returns updated URL for page=... style filters (v1), and running the updated value through the function again returns null (no redirect loop)', () => {
-    const pathname = '/'
+  it('returns updated search string for page=... style filters (v1), and running the updated value through the function again returns null (no redirect loop)', () => {
     const search = '?page=/docs'
     const expectedUpdatedSearch = '?f=is,page,/docs&r=v1'
+    expect(maybeGetLatestReadableSearch(search)).toEqual(expectedUpdatedSearch)
+    expect(maybeGetLatestReadableSearch(expectedUpdatedSearch)).toBeNull()
+  })
+})
+
+describe(`${getSearchWithEnforcedSegment.name}`, () => {
+  it('adds enforced segment appropriately, and running the updated value through the function again returns the same value', () => {
+    const segment = { id: 100, name: 'Eastern Europe' }
+    const search = '?auth=foo&embed=true'
+    const expectedUpdatedSearch =
+      '?f=is,segment,100&l=s-100,Eastern%20Europe&auth=foo&embed=true'
+    expect(getSearchWithEnforcedSegment(search, segment)).toEqual(
+      expectedUpdatedSearch
+    )
     expect(
-      getRedirectTarget({
-        pathname,
-        search
-      } as Location)
-    ).toEqual(`${pathname}${expectedUpdatedSearch}`)
-    expect(
-      getRedirectTarget({
-        pathname,
-        search: expectedUpdatedSearch
-      } as Location)
-    ).toBeNull()
+      getSearchWithEnforcedSegment(expectedUpdatedSearch, segment)
+    ).toEqual(expectedUpdatedSearch)
   })
 })

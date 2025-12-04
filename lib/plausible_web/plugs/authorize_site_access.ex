@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
             team: [:owners, subscription: Teams.last_subscription_query()]
           ])
 
-        conn = merge_assigns(conn, site: site, site_role: role)
+        conn = merge_assigns(conn, site: site, site_role: role, shared_link: shared_link)
 
         # Switch current team if user is a team member in it
         conn =
