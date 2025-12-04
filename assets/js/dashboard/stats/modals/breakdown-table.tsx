@@ -38,7 +38,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
   const searchRef = useRef<HTMLInputElement>(null)
 
   return (
-    <div className="w-full h-full">
+    <>
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2">
           <h1 className="text-lg font-bold dark:text-gray-100">{title}</h1>
@@ -54,8 +54,8 @@ export const BreakdownTable = <TListItem extends { name: string }>({
           />
         )}
       </div>
-      <div className="my-3 border-b border-gray-250 dark:border-gray-700"></div>
-      <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
+      <div className="my-4 border-b border-gray-250 dark:border-gray-700"></div>
+      <div className="flex-1 overflow-y-auto pr-3 -mr-3" style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
         {displayError && status === 'error' && <ErrorMessage error={error} />}
         {isPending && <InitialLoadingSpinner />}
         {data && <Table<TListItem> data={data} columns={columns} />}
@@ -66,7 +66,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
           />
         )}
       </div>
-    </div>
+    </>
   )
 }
 

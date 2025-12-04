@@ -38,7 +38,7 @@ export const TableHeaderCell = ({
   return (
     <th
       className={classNames(
-        'p-2 text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wide',
+        'p-2 text-xs font-semibold text-gray-500 dark:text-gray-400',
         className
       )}
       align={align}
@@ -82,7 +82,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
   columns: ColumnConfiguraton<T>[]
 }) => {
   return (
-    <tr className="text-sm dark:text-gray-200">
+    <tr className="group text-sm dark:text-gray-200">
       {columns.map(({ key, width, align, renderValue, renderItem }) => (
         <TableCell
           key={`${(pageIndex ?? null) === null ? '' : `page_${pageIndex}_`}row_${rowIndex}_${String(key)}`}
@@ -131,13 +131,13 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
   }
 
   return (
-    <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
-      <thead>
-        <tr className="text-xs font-bold text-gray-500 dark:text-gray-400">
+    <table className="w-full border-collapse table-striped table-fixed">
+      <thead className="sticky top-0 bg-white dark:bg-gray-900 z-10">
+        <tr className="text-xs font-semibold text-gray-500 dark:text-gray-400">
           {columns.map((column) => (
             <TableHeaderCell
               key={`header_${String(column.key)}`}
-              className={classNames('p-2 tracking-wide', column.width)}
+              className={classNames('p-2', column.width)}
               align={column.align}
             >
               {column.onSort ? (

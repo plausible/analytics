@@ -13,7 +13,7 @@ function ScreenSizesModal() {
   const site = useSiteContext()
 
   const reportInfo = {
-    title: 'Screen Sizes',
+    title: 'Screen sizes',
     dimension: 'screen',
     endpoint: url.apiPath(site, '/screen-sizes'),
     dimensionLabel: 'Screen size',

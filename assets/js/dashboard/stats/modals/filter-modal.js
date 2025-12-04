@@ -170,7 +170,7 @@ class FilterModal extends React.Component {
   render() {
     return (
       <Modal maxWidth="460px">
-        <h1 className="text-xl font-bold dark:text-gray-100">
+        <h1 className="text-lg font-bold dark:text-gray-100">
           Filter by {formatFilterGroup(this.props.modalType)}
         </h1>
 

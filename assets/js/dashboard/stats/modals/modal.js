@@ -62,7 +62,7 @@ class Modal extends React.Component {
     if (maxWidth) {
       styleObject.maxWidth = maxWidth
     } else {
-      styleObject.width = viewport <= MD_WIDTH ? 'min-content' : '860px'
+      styleObject.width = viewport <= MD_WIDTH ? 'min-content' : '880px'
     }
     return styleObject
   }
@@ -88,7 +88,7 @@ class Modal extends React.Component {
             </button>
             <div
               ref={this.node}
-              className="bg-white p-6 my-16 mx-auto box-border min-h-[509px] transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden"
+              className="[--gap:4rem] my-[var(--gap)] max-h-[calc(100dvh_-_var(--gap)*2)] flex flex-col bg-white px-6 py-4 mx-auto box-border transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden"
               style={this.getStyle()}
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}
