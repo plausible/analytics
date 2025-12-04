@@ -74,7 +74,11 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       other_link =
-          insert(:shared_link, name: "other link", site: site, password_hash: Plausible.Auth.Password.hash("password"))
+        insert(:shared_link,
+          name: "other link",
+          site: site,
+          password_hash: Plausible.Auth.Password.hash("password")
+        )
 
       other_link_token = Plausible.Auth.Token.sign_shared_link(other_link.slug)
       cookie_name = "shared-link-" <> link.slug

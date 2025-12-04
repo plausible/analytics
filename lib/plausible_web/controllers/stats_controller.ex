@@ -292,8 +292,7 @@ defmodule PlausibleWeb.StatsController do
   end
 
   def validate_shared_link_password(conn, shared_link) do
-    with conn <- Plug.Conn.fetch_cookies(conn),
-         {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(shared_link.slug)),
+    with {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(shared_link.slug)),
          {:ok, %{slug: token_slug}} <- Plausible.Auth.Token.verify_shared_link(token),
          true <- token_slug == shared_link.slug do
       {:ok, shared_link}
@@ -303,6 +302,8 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp render_password_protected_shared_link(conn, shared_link) do
+    conn = Plug.Conn.fetch_cookies(conn)
+
     case validate_shared_link_password(conn, shared_link) do
       {:ok, shared_link} ->
         render_shared_link(conn, shared_link)

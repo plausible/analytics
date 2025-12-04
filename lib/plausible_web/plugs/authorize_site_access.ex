@@ -205,7 +205,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
              Repo.get_by(Plausible.Site.SharedLink, slug: slug, site_id: site.id),
            {:password_protected, shared_link} <-
              {Plausible.Site.SharedLink.get_type(shared_link), shared_link},
-           {:ok, _} <-
+           {:ok, shared_link} <-
              PlausibleWeb.StatsController.validate_shared_link_password(conn, shared_link) do
         {:ok, shared_link}
       else
