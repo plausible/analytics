@@ -20,8 +20,8 @@ import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-import { MutationStatus } from '@tanstack/react-query'
-import { ApiError } from '../api'
+import { MutationStatus, useQuery } from '@tanstack/react-query'
+import { ApiError, get } from '../api'
 import { ErrorPanel } from '../components/error-panel'
 import { useSegmentsContext } from '../filtering/segments-context'
 import { useSiteContext } from '../site-context'
@@ -167,6 +167,7 @@ export const DeleteSegmentModal = ({
       {!!segment.segment_data && (
         <FiltersInSegment segment_data={segment.segment_data} />
       )}
+      <RelatedSharedLinks segment={segment} />
 
       <ButtonsRow>
         <button
@@ -198,6 +199,57 @@ export const DeleteSegmentModal = ({
         />
       )}
     </SegmentActionModal>
+  )
+}
+
+const RelatedSharedLinks = ({
+  segment
+}: {
+  segment: Pick<SavedSegment, 'id'>
+}) => {
+  const site = useSiteContext()
+  const getRelatedSharedLinks = useQuery({
+    queryKey: [segment.id],
+    queryFn: async () => {
+      const response: string[] = await get(
+        `/api/${encodeURIComponent(site.domain)}/segments/${segment.id}/shared-links`
+      )
+      return response
+    }
+  })
+
+  return (
+    <div className="mt-4">
+      {getRelatedSharedLinks.status === 'pending' &&
+        'Loading shared links limited to this segment'}
+      {getRelatedSharedLinks.status !== 'pending' && (
+        <>
+          <SecondaryTitle>Shared links</SecondaryTitle>
+          <div className="mt-2">
+            {getRelatedSharedLinks.status === 'error' &&
+              'Error loading shared links limited to this segment'}
+
+            {getRelatedSharedLinks.status === 'success' &&
+              !getRelatedSharedLinks.data.length &&
+              'No shared links limited to this segment'}
+
+            {getRelatedSharedLinks.status === 'success' &&
+              !!getRelatedSharedLinks.data.length && (
+                <FilterPillsList
+                  className="flex-wrap"
+                  direction="horizontal"
+                  pills={getRelatedSharedLinks.data.map((name) => ({
+                    className: 'dark:!shadow-gray-950/60',
+                    plainText: name,
+                    children: name,
+                    interactive: false
+                  }))}
+                />
+              )}
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -456,7 +508,7 @@ export const UpdateSegmentModal = ({
 const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
   return (
     <>
-      <h2 className="font-bold dark:text-gray-100">Filters in segment</h2>
+      <SecondaryTitle>Filters in segment</SecondaryTitle>
       <div className="mt-2">
         <FilterPillsList
           className="flex-wrap"
@@ -472,6 +524,10 @@ const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
     </>
   )
 }
+
+const SecondaryTitle = ({ children }: { children: ReactNode }) => (
+  <h2 className="font-bold dark:text-gray-100">{children}</h2>
+)
 
 const Placeholder = ({
   children,

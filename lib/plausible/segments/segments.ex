@@ -338,6 +338,24 @@ defmodule Plausible.Segments do
     end
   end
 
+  def get_related_shared_links(
+        %Plausible.Site{} = site,
+        site_role,
+        segment_id
+      ) do
+    if site_role in roles_with_personal_segments() do
+      {:ok, Repo.all(
+        from(shared_link in Plausible.Site.SharedLink,
+          select: [:name],
+          where: shared_link.segment_id == ^segment_id,
+          where: shared_link.site_id == ^site.id
+        )
+      )}
+    else
+      {:error, :not_enough_permissions}
+    end
+  end
+
   @spec do_get_one(pos_integer(), pos_integer(), pos_integer() | nil) ::
           Segment.t() | nil
   defp do_get_one(user_id, site_id, segment_id)
