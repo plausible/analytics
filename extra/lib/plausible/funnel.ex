@@ -41,6 +41,7 @@ defmodule Plausible.Funnel do
   @type t() :: %__MODULE__{}
   schema "funnels" do
     field :name, :string
+    field :open, :boolean, default: false
     belongs_to :site, Plausible.Site
 
     has_many :steps, Step,
@@ -55,7 +56,7 @@ defmodule Plausible.Funnel do
 
   def changeset(funnel \\ %__MODULE__{}, attrs \\ %{}) do
     funnel
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :open])
     |> validate_required([:name])
     |> put_steps(attrs[:steps] || attrs["steps"])
     |> validate_length(:steps, min: @min_steps, max: @max_steps)
