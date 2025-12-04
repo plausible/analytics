@@ -73,7 +73,7 @@ if (csrfToken && websocketUrl) {
       if (domainName) {
         return {
           user_prefs: {
-            page_tab: localStorage.getItem(`pageTab__${domainName}`)
+            pages_tab: localStorage.getItem(`pageTab__${domainName}`)
           },
           _csrf_token: token
         }

@@ -21,7 +21,8 @@ defmodule PlausibleWeb.Live.Dashboard do
     # As domain is passed via session, the associated site has already passed
     # validation logic on plug level.
     site =
-      Repo.get_by!(Plausible.Site, domain: domain)
+      Plausible.Site
+      |> Repo.get_by!(domain: domain)
       |> Repo.preload([
         :owners,
         :completed_imports,
@@ -45,7 +46,16 @@ defmodule PlausibleWeb.Live.Dashboard do
 
   def render(assigns) do
     ~H"""
-    <div id="live-dashboard-container"></div>
+    <div id="live-dashboard-container" phx-hook="LiveDashboard" data-widget="dashboard-root">
+      <.portal id="pages-breakdown-live-container" target="#pages-breakdown-live">
+        <.live_component
+          module={PlausibleWeb.Live.Dashboard.Pages}
+          id="pages-breakdown-component"
+          site={@site}
+          user_prefs={@user_prefs}
+        />
+      </.portal>
+    </div>
     """
   end
 

@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react'
+import { LiveViewPortal } from './components/liveview-portal'
 import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
 import Pages from './stats/pages'
@@ -7,6 +8,7 @@ import Devices from './stats/devices'
 import { TopBar } from './nav-menu/top-bar'
 import Behaviours from './stats/behaviours'
 import { useQueryContext } from './query-context'
+import { useSiteContext } from './site-context'
 import { isRealTimeDashboard } from './util/filters'
 import { useAppNavigate } from './navigation/use-app-navigate'
 import { parseSearch } from './util/url-search-params'
@@ -19,6 +21,7 @@ function DashboardStats({
   updateImportedDataInView?: (v: boolean) => void
 }) {
   const navigate = useAppNavigate()
+  const site = useSiteContext()
 
   useEffect(() => {
     const unsubscribe = window.addEventListener('dashboard:live-navigate', ((
@@ -44,7 +47,14 @@ function DashboardStats({
           <Sources />
         </div>
         <div className={statsBoxClass}>
-          <Pages />
+          {site.flags.live_dashboard ? (
+            <LiveViewPortal
+              id="pages-breakdown-live"
+              className="w-full h-full border-0 overflow-hidden"
+            />
+          ) : (
+            <Pages />
+          )}
         </div>
       </div>
 
