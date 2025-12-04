@@ -836,17 +836,19 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <td
-      class={[
-        @height,
-        "text-sm px-6 py-4 first:pl-0 last:pr-0 whitespace-nowrap",
-         # allow tooltips overflow cells vertically
-        "overflow-visible",
-        @truncate && "truncate",
-        @max_width,
-        @actions && "flex text-right justify-end",
-        @hide_on_mobile && "hidden md:table-cell",
-        @class
-      ]}
+      class={
+        [
+          @height,
+          "text-sm px-6 py-4 first:pl-0 last:pr-0 whitespace-nowrap",
+          # allow tooltips overflow cells vertically
+          "overflow-visible",
+          @truncate && "truncate",
+          @max_width,
+          @actions && "flex text-right justify-end",
+          @hide_on_mobile && "hidden md:table-cell",
+          @class
+        ]
+      }
       {@rest}
     >
       <div :if={@actions} class="flex gap-1">

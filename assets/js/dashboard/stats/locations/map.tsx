@@ -106,7 +106,9 @@ const WorldMap = ({
           [country.code]: country.name
         })
         onCountrySelect()
-        navigate({ search: (searchRecord) => ({ ...searchRecord, filters, labels }) })
+        navigate({
+          search: (searchRecord) => ({ ...searchRecord, filters, labels })
+        })
       }
     },
     [navigate, query, dataByCountryCode, onCountrySelect]
