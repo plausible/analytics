@@ -1,17 +1,19 @@
 import React, { ReactNode, useCallback, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
+  canRemoveFilter,
   canSeeSegmentDetails,
+  getSearchToRemoveSegmentFilter,
   isListableSegment,
-  isSegmentFilter,
   SavedSegment,
   SEGMENT_TYPE_LABELS,
   SegmentData,
   SegmentType
 } from '../filtering/segments'
-import { useQueryContext } from '../query-context'
-import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { cleanLabels } from '../util/filters'
+import {
+  AppNavigationLink,
+  useAppNavigate
+} from '../navigation/use-app-navigate'
 import { plainFilterText, styledFilterText } from '../util/filter-text'
 import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
@@ -498,8 +500,8 @@ const hasSiteSegmentPermission = (user: UserContextValue) => {
 export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
   const site = useSiteContext()
   const user = useUserContext()
-  const { query } = useQueryContext()
-  const { segments } = useSegmentsContext()
+  const { segments, limitedToSegment } = useSegmentsContext()
+  const navigate = useAppNavigate()
 
   const segment = segments
     .filter((s) => isListableSegment({ segment: s, site, user }))
@@ -518,6 +520,11 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
   }
 
   const data = !error ? segment : null
+
+  const enableClearButton = canRemoveFilter(
+    ['is', 'segment', [id]],
+    limitedToSegment
+  )
 
   return (
     <ModalWithRouting maxWidth="460px">
@@ -562,27 +569,21 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                   Edit segment
                 </AppNavigationLink>
 
-                <AppNavigationLink
+                <button
+                  disabled={!enableClearButton}
                   className={removeFilterButtonClassname}
-                  path={rootRoute.path}
-                  search={(s) => {
-                    const nonSegmentFilters = query.filters.filter(
-                      (f) => !isSegmentFilter(f)
-                    )
-                    return {
-                      ...s,
-                      filters: nonSegmentFilters,
-                      labels: cleanLabels(
-                        nonSegmentFilters,
-                        query.labels,
-                        'segment',
-                        {}
-                      )
-                    }
-                  }}
+                  onClick={
+                    enableClearButton
+                      ? () =>
+                          navigate({
+                            path: rootRoute.path,
+                            search: getSearchToRemoveSegmentFilter()
+                          })
+                      : () => {}
+                  }
                 >
                   Remove filter
-                </AppNavigationLink>
+                </button>
               </ButtonsRow>
             </div>
           </>

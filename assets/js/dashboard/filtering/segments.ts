@@ -105,15 +105,33 @@ export const parseApiSegmentData = ({
   ...rest
 })
 
+export function getSearchToRemoveSegmentFilter(): Required<AppNavigationTarget>['search'] {
+  return (searchRecord) => {
+    const updatedFilters = (
+      (Array.isArray(searchRecord.filters)
+        ? searchRecord.filters
+        : []) as Filter[]
+    ).filter((f) => !isSegmentFilter(f))
+    const currentLabels = searchRecord.labels ?? {}
+    return {
+      ...searchRecord,
+      filters: updatedFilters,
+      labels: cleanLabels(updatedFilters, currentLabels)
+    }
+  }
+}
+
 export function getSearchToSetSegmentFilter(
   segment: Pick<SavedSegment, 'id' | 'name'>,
   options: { omitAllOtherFilters?: boolean } = {}
 ): Required<AppNavigationTarget>['search'] {
-  return (search) => {
+  return (searchRecord) => {
     const otherFilters = (
-      (Array.isArray(search.filters) ? search.filters : []) as Filter[]
+      (Array.isArray(searchRecord.filters)
+        ? searchRecord.filters
+        : []) as Filter[]
     ).filter((f) => !isSegmentFilter(f))
-    const currentLabels = search.labels ?? {}
+    const currentLabels = searchRecord.labels ?? {}
 
     const filters = [
       ['is', 'segment', [segment.id]],
@@ -124,7 +142,7 @@ export function getSearchToSetSegmentFilter(
       [formatSegmentIdAsLabelKey(segment.id)]: segment.name
     })
     return {
-      ...search,
+      ...searchRecord,
       filters,
       labels
     }
@@ -185,6 +203,19 @@ export function isListableSegment({
 
 export function canSeeSegmentDetails({ user }: { user: UserContextValue }) {
   return user.loggedIn && user.role !== Role.public
+}
+
+export function canRemoveFilter(
+  filter: Filter,
+  limitedToSegment: Pick<SavedSegment, 'id' | 'name'> | null
+) {
+  if (isSegmentFilter(filter) && limitedToSegment) {
+    const [_operation, _dimension, clauses] = filter
+    return (
+      clauses.length === 1 && String(limitedToSegment.id) === String(clauses[1])
+    )
+  }
+  return true
 }
 
 export function findAppliedSegmentFilter({ filters }: { filters: Filter[] }) {

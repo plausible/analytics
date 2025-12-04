@@ -26,7 +26,7 @@ export type AppNavigationTarget = {
    * - `(s) => s` preserves current search value,
    * - `(s) => ({ ...s, calendar: !s.calendar })` toggles the value for calendar search parameter,
    * - `() => ({ page: 5 })` sets the search to `?page=5`,
-   * - `undefined` empties the search, except for the enforced segment 
+   * - `undefined` empties the search, except for the enforced segment
    */
   search?: (search: Record<string, unknown>) => Record<string, unknown>
 }

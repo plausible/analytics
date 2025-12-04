@@ -10,6 +10,8 @@ import { styledFilterText, plainFilterText } from '../util/filter-text'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { filterRoute } from '../router'
+import { canRemoveFilter } from '../filtering/segments'
+import { useSegmentsContext } from '../filtering/segments-context'
 
 export const PILL_X_GAP_PX = 16
 export const PILL_Y_GAP_PX = 8
@@ -48,6 +50,7 @@ export const AppliedFilterPillsList = React.forwardRef<
   AppliedFilterPillsListProps
 >(({ className, style, slice, direction, pillClassName }, ref) => {
   const { query } = useQueryContext()
+  const { limitedToSegment } = useSegmentsContext()
   const navigate = useAppNavigate()
 
   const renderableFilters =
@@ -67,36 +70,45 @@ export const AppliedFilterPillsList = React.forwardRef<
 
   return (
     <FilterPillsList
-      pills={renderableFilters.map((filter, index) => ({
-        className: classNames(isInvisible(index) && 'invisible', pillClassName),
-        plainText: plainFilterText(query, filter),
-        children: styledFilterText(query, filter),
-        interactive: {
-          navigationTarget: {
-            path: filterRoute.path,
-            search: (s) => s,
-            params: {
-              field:
-                FILTER_GROUP_TO_MODAL_TYPE[
-                  filter[1].startsWith(EVENT_PROPS_PREFIX) ? 'props' : filter[1]
-                ]
-            }
-          },
-          onRemoveClick: () => {
-            const newFilters = query.filters.filter(
-              (_, i) => i !== index + indexAdjustment
-            )
+      pills={renderableFilters.map((filter, index) => {
+        return {
+          className: classNames(
+            isInvisible(index) && 'invisible',
+            pillClassName
+          ),
+          plainText: plainFilterText(query, filter),
+          children: styledFilterText(query, filter),
+          interactive: {
+            navigationTarget: {
+              path: filterRoute.path,
+              search: (s) => s,
+              params: {
+                field:
+                  FILTER_GROUP_TO_MODAL_TYPE[
+                    filter[1].startsWith(EVENT_PROPS_PREFIX)
+                      ? 'props'
+                      : filter[1]
+                  ]
+              }
+            },
+            onRemoveClick: canRemoveFilter(filter, limitedToSegment)
+              ? () => {
+                  const newFilters = query.filters.filter(
+                    (_, i) => i !== index + indexAdjustment
+                  )
 
-            navigate({
-              search: (searchRecord) => ({
-                ...searchRecord,
-                filters: newFilters,
-                labels: cleanLabels(newFilters, query.labels)
-              })
-            })
+                  navigate({
+                    search: (searchRecord) => ({
+                      ...searchRecord,
+                      filters: newFilters,
+                      labels: cleanLabels(newFilters, query.labels)
+                    })
+                  })
+                }
+              : undefined
           }
         }
-      }))}
+      })}
       className={className}
       style={style}
       ref={ref}
