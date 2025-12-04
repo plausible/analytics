@@ -45,7 +45,8 @@ const primaryNeutralButtonClassName = 'button !px-3'
 
 const primaryNegativeButtonClassName = classNames(
   'button !px-3.5',
-  'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
+  'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap',
+  'disabled:!bg-red-400'
 )
 
 const secondaryButtonClassName = classNames(
@@ -108,7 +109,7 @@ export const CreateSegmentModal = ({
 
   return (
     <SegmentActionModal onClose={onClose}>
-      <FormTitle>Create segment</FormTitle>
+      <FormTitle className="mb-8">Create segment</FormTitle>
       <SegmentNameInput
         value={name}
         onChange={setName}
@@ -158,23 +159,63 @@ export const DeleteSegmentModal = ({
   onSave: (input: Pick<SavedSegment, 'id'>) => void
   segment: SavedSegment & { segment_data?: SegmentData }
 } & ApiRequestProps) => {
+  const site = useSiteContext()
+  const [confirmedDeleteSharedLinks, setConfirmedDeleteSharedLinks] =
+    useState(false)
+  const getRelatedSharedLinks = useQuery({
+    queryKey: [segment.id],
+    queryFn: async () => {
+      const response: string[] = await get(
+        `/api/${encodeURIComponent(site.domain)}/segments/${segment.id}/shared-links`
+      )
+      return response
+    }
+  })
+
+  const deleteDisabled =
+    status === 'pending' ||
+    getRelatedSharedLinks.status !== 'success' ||
+    (!!getRelatedSharedLinks.data?.length && confirmedDeleteSharedLinks)
+
   return (
     <SegmentActionModal onClose={onClose}>
-      <FormTitle>
+      <FormTitle className="mb-2">
         Delete {SEGMENT_TYPE_LABELS[segment.type].toLowerCase()}
         <span className="break-all">{` "${segment.name}"?`}</span>
       </FormTitle>
+      {getRelatedSharedLinks.status === 'pending' && (
+        <div className="loading">
+          <div />
+        </div>
+      )}
+      {!!getRelatedSharedLinks.data?.length && (
+        <ErrorPanel errorMessage="This segment is used in shared links. To delete it, you also need to delete the shared links."></ErrorPanel>
+      )}
       {!!segment.segment_data && (
         <FiltersInSegment segment_data={segment.segment_data} />
       )}
-      <RelatedSharedLinks segment={segment} />
-
+      {!!getRelatedSharedLinks.data?.length && (
+        <>
+          <RelatedSharedLinks sharedLinks={getRelatedSharedLinks.data} />
+          <input
+            id="confirm-delete-shared-links"
+            type="checkbox"
+            checked={confirmedDeleteSharedLinks}
+            onChange={(e) =>
+              setConfirmedDeleteSharedLinks(e.currentTarget.checked)
+            }
+          ></input>
+          <label htmlFor="confirm-delete-shared-links">
+            Yes, delete the associated shared links
+          </label>
+        </>
+      )}
       <ButtonsRow>
         <button
           className={primaryNegativeButtonClassName}
-          disabled={status === 'pending'}
+          disabled={deleteDisabled}
           onClick={
-            status === 'pending'
+            deleteDisabled
               ? () => {}
               : () => {
                   onSave({ id: segment.id })
@@ -202,59 +243,39 @@ export const DeleteSegmentModal = ({
   )
 }
 
-const RelatedSharedLinks = ({
-  segment
-}: {
-  segment: Pick<SavedSegment, 'id'>
-}) => {
-  const site = useSiteContext()
-  const getRelatedSharedLinks = useQuery({
-    queryKey: [segment.id],
-    queryFn: async () => {
-      const response: string[] = await get(
-        `/api/${encodeURIComponent(site.domain)}/segments/${segment.id}/shared-links`
-      )
-      return response
-    }
-  })
-
+const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
   return (
     <div className="mt-4">
-      {getRelatedSharedLinks.status === 'pending' &&
-        'Loading shared links limited to this segment'}
-      {getRelatedSharedLinks.status !== 'pending' && (
-        <>
-          <SecondaryTitle>Shared links</SecondaryTitle>
-          <div className="mt-2">
-            {getRelatedSharedLinks.status === 'error' &&
-              'Error loading shared links limited to this segment'}
-
-            {getRelatedSharedLinks.status === 'success' &&
-              !getRelatedSharedLinks.data.length &&
-              'No shared links limited to this segment'}
-
-            {getRelatedSharedLinks.status === 'success' &&
-              !!getRelatedSharedLinks.data.length && (
-                <FilterPillsList
-                  className="flex-wrap"
-                  direction="horizontal"
-                  pills={getRelatedSharedLinks.data.map((name) => ({
-                    className: 'dark:!shadow-gray-950/60',
-                    plainText: name,
-                    children: name,
-                    interactive: false
-                  }))}
-                />
-              )}
-          </div>
-        </>
-      )}
+      <SecondaryTitle>Shared links</SecondaryTitle>
+      <div className="mt-2">
+        <FilterPillsList
+          className="flex-wrap"
+          direction="horizontal"
+          pills={sharedLinks.map((name) => ({
+            className: 'dark:!shadow-gray-950/60',
+            plainText: name,
+            children: name,
+            interactive: false
+          }))}
+        />
+      </div>
     </div>
   )
 }
 
-const FormTitle = ({ children }: { children?: ReactNode }) => (
-  <h1 className="text-lg font-medium text-gray-900 dark:text-gray-100 leading-7 mb-8">
+const FormTitle = ({
+  className,
+  children
+}: {
+  className?: string
+  children?: ReactNode
+}) => (
+  <h1
+    className={classNames(
+      'text-lg font-medium text-gray-900 dark:text-gray-100 leading-7',
+      className
+    )}
+  >
     {children}
   </h1>
 )
@@ -467,7 +488,7 @@ export const UpdateSegmentModal = ({
 
   return (
     <SegmentActionModal onClose={onClose}>
-      <FormTitle>Update segment</FormTitle>
+      <FormTitle className="mb-8">Update segment</FormTitle>
       <SegmentNameInput
         value={name}
         onChange={setName}
