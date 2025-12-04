@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Funnels do
   use PlausibleWeb, :plugins_api_controller
 
   operation(:create,
-    id: "Funnel.GetOrCreate",
+    operation_id: "Funnel.GetOrCreate",
     summary: "Get or create Funnel",
     request_body: {"Funnel params", "application/json", Schemas.Funnel.CreateRequest},
     responses: %{

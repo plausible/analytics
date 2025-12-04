@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Interval do
   `week`, and `month`.
   """
 
-  alias Plausible.Stats.DateTimeRange
+  alias Plausible.Stats.{DateTimeRange, Query}
 
   @type t() :: String.t()
   @type(opt() :: {:site, Plausible.Site.t()} | {:from, Date.t()}, {:to, Date.t()})
@@ -23,24 +23,16 @@ defmodule Plausible.Stats.Interval do
     interval in @intervals
   end
 
-  @spec default_for_period(period()) :: t()
+  @spec default_for_query(Query.t()) :: t()
   @doc """
-  Returns the suggested interval for the given time period.
+  Returns the suggested interval (i.e. the time dimension) for the given query.
   """
-  def default_for_period(period) do
-    case period do
-      period when period in ["realtime", "30m"] -> "minute"
-      "day" -> "hour"
-      period when period in ["custom", "7d", "28d", "30d", "91d", "month"] -> "day"
-      period when period in ["6mo", "12mo", "year"] -> "month"
-    end
-  end
+  def default_for_query(query)
 
-  @spec default_for_date_range(DateTimeRange.t()) :: t()
-  @doc """
-  Returns the suggested interval for the given `DateTimeRange` struct.
-  """
-  def default_for_date_range(%DateTimeRange{first: first, last: last}) do
+  def default_for_query(%Query{
+        input_date_range: :all,
+        utc_time_range: %DateTimeRange{first: first, last: last}
+      }) do
     cond do
       Plausible.Times.diff(last, first, :month) > 0 ->
         "month"
@@ -50,6 +42,17 @@ defmodule Plausible.Stats.Interval do
 
       true ->
         "hour"
+    end
+  end
+
+  def default_for_query(%Query{} = query) do
+    case query.input_date_range do
+      period when period in [:realtime, :realtime_30m] -> "minute"
+      :day -> "hour"
+      {:last_n_days, _} -> "day"
+      period when period in [:custom, :month] -> "day"
+      {:last_n_months, _} -> "month"
+      :year -> "month"
     end
   end
 

@@ -1,22 +1,20 @@
-defmodule Plausible.Stats.Query.QueryParserTest do
+defmodule Plausible.Stats.ApiQueryParserTest do
   use Plausible.DataCase
-  import Plausible.Stats.QueryParser
+  import Plausible.Stats.ApiQueryParser
 
-  setup [:create_user, :create_site]
-
-  test "parsing empty map fails", %{site: site} do
+  test "parsing empty map fails" do
     assert {:error, "#: Required properties site_id, metrics, date_range were not present."} =
-             parse(site, :public, %{})
+             parse(:public, %{})
   end
 
-  test "invalid metric passed", %{site: site} do
+  test "invalid metric passed" do
     params = %{
-      "site_id" => site.domain,
+      "site_id" => "example.com",
       "metrics" => ["visitors", "event:name"],
       "date_range" => "all"
     }
 
     assert {:error, "#/metrics/1: Invalid metric \"event:name\""} =
-             parse(site, :public, params)
+             parse(:public, params)
   end
 end

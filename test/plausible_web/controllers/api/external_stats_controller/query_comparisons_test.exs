@@ -118,7 +118,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
          conn: conn,
          site: site
        } do
-    today = ~D[2021-06-10]
+    now = ~U[2021-06-10 12:00:00Z]
+    Plausible.Stats.Query.Test.fix_now(now)
+
+    today = DateTime.to_date(now)
 
     make_request = fn match_day_of_week ->
       conn
@@ -126,7 +129,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "28d",
-        "date" => Date.to_iso8601(today),
         "dimensions" => ["time"],
         "include" => %{
           "time_labels" => true,

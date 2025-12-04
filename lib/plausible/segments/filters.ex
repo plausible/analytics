@@ -3,7 +3,7 @@ defmodule Plausible.Segments.Filters do
   This module contains functions that enable resolving segments in filters.
   """
   alias Plausible.Segments
-  alias Plausible.Stats.{Filters, QueryParser}
+  alias Plausible.Stats.{Filters, ApiQueryParser}
 
   @max_segment_filters_count 10
 
@@ -48,7 +48,7 @@ defmodule Plausible.Segments.Filters do
               segments,
               %{},
               fn %Segments.Segment{id: id, segment_data: segment_data} ->
-                case QueryParser.parse_filters(segment_data["filters"]) do
+                case ApiQueryParser.parse_filters(segment_data["filters"]) do
                   {:ok, filters} -> {id, filters}
                   _ -> {id, nil}
                 end
