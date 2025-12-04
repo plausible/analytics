@@ -46,10 +46,6 @@ defmodule Plausible.Site.SharedLink do
     end
   end
 
-  def get_type(link) do
-    case link do
-      %__MODULE__{password_hash: hash} when not is_nil(hash) -> :password_protected
-      %__MODULE__{} -> :unlisted
-    end
-  end
+  def get_type(%__MODULE__{password_hash: hash}) when not is_nil(hash), do: :password_protected
+  def get_type(%__MODULE__{}), do: :unlisted
 end
