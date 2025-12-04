@@ -317,7 +317,7 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def find_shared_link(domain, auth) do
+  defp find_shared_link(domain, auth) do
     link_query =
       from(link in Plausible.Site.SharedLink,
         inner_join: site in assoc(link, :site),

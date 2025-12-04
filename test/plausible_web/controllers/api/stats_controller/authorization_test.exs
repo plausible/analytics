@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
-  use PlausibleWeb.ConnCase,async: true
+  use PlausibleWeb.ConnCase, async: true
 
   describe "API authorization - as anonymous user" do
     test "returns 404 for a site that doesn't exist", %{conn: conn} do
@@ -73,12 +73,15 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
-      token = Plausible.Auth.Token.sign_shared_link(link.slug)
+      other_link =
+          insert(:shared_link, name: "other link", site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      other_link_token = Plausible.Auth.Token.sign_shared_link(other_link.slug)
       cookie_name = "shared-link-" <> link.slug
 
       conn =
         conn
-        |> put_req_cookie(cookie_name, "invalid-#{token}")
+        |> put_req_cookie(cookie_name, other_link_token)
         |> get("/api/stats/#{site.domain}/top-stats?auth=#{link.slug}")
 
       assert json_response(conn, 404) == %{

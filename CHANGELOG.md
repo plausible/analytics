@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- To make internal stats API requests for password-protected shared links, shared link auth cookie must be set in the requests
+
 ## v3.1.0 - 2025-11-13
 
 ### Added
