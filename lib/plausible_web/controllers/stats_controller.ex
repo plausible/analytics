@@ -258,13 +258,14 @@ defmodule PlausibleWeb.StatsController do
   """
   def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
     case find_shared_link(domain, auth) do
-      {:password_protected, shared_link} ->
-        render_password_protected_shared_link(conn, shared_link)
+      {:ok, shared_link} ->
+        if Plausible.Site.SharedLink.password_protected?(shared_link) do
+          render_password_protected_shared_link(conn, shared_link)
+        else
+          render_shared_link(conn, shared_link)
+        end
 
-      {:unlisted, shared_link} ->
-        render_shared_link(conn, shared_link)
-
-      :not_found ->
+      {:error, :not_found} ->
         render_error(conn, 404)
     end
   end
@@ -331,10 +332,10 @@ defmodule PlausibleWeb.StatsController do
 
     case Repo.one(link_query) do
       %Plausible.Site.SharedLink{} = link ->
-        {Plausible.Site.SharedLink.get_type(link), link}
+        {:ok, link}
 
       nil ->
-        :not_found
+        {:error, :not_found}
     end
   end
 
