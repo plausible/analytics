@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   def render(assigns) do
     ~H"""
     <div id="live-dashboard-container" phx-hook="LiveDashboard" data-widget="dashboard-root">
-      <.portal id="pages-breakdown-live-container" target="#pages-breakdown-live">
+      <.portal_wrapper id="pages-breakdown-live-container" target="#pages-breakdown-live">
         <.live_component
           module={PlausibleWeb.Live.Dashboard.Pages}
           id="pages-breakdown-component"
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.Dashboard do
           user_prefs={@user_prefs}
           connected?={@connected?}
         />
-      </.portal>
+      </.portal_wrapper>
     </div>
     """
   end
@@ -70,5 +70,24 @@ defmodule PlausibleWeb.Live.Dashboard do
     params = URI.decode_query(query || "")
 
     handle_params_internal(params, url, socket)
+  end
+
+  attr :id, :string, required: true
+  attr :target, :string, required: true
+
+  slot :inner_block
+
+  if Mix.env() in [:test, :ce_test] do
+    defp portal_wrapper(assigns) do
+      ~H"""
+      <div id={@id}>{render_slot(@inner_block)}</div>
+      """
+    end
+  else
+    defp portal_wrapper(assigns) do
+      ~H"""
+      <.portal id={@id} target={@target}>{render_slot(@inner_block)}</.portal>
+      """
+    end
   end
 end
