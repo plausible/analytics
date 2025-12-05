@@ -201,10 +201,18 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     slug = conn.path_params["slug"] || conn.params["auth"]
 
     if valid_path_fragment?(slug) do
-      if shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug, site_id: site.id) do
+      with %Plausible.Site.SharedLink{} = shared_link <-
+             Repo.get_by(Plausible.Site.SharedLink, slug: slug, site_id: site.id),
+           {%{password_protected?: true}, shared_link} <-
+             {%{password_protected?: Plausible.Site.SharedLink.password_protected?(shared_link)},
+              shared_link},
+           {:ok, shared_link} <-
+             PlausibleWeb.StatsController.validate_shared_link_password(conn, shared_link) do
         {:ok, shared_link}
       else
-        error_not_found(conn)
+        {%{password_protected?: false}, shared_link} -> {:ok, shared_link}
+        {:error, :unauthorized} -> error_not_found(conn)
+        nil -> error_not_found(conn)
       end
     else
       {:ok, nil}

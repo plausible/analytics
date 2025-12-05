@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Plugins.API.Views.SharedLink do
       shared_link: %{
         id: shared_link.id,
         name: shared_link.name,
-        password_protected: is_binary(shared_link.password_hash),
+        password_protected: Plausible.Site.SharedLink.password_protected?(shared_link),
         href: Plausible.Sites.shared_link_url(site, shared_link)
       }
     }

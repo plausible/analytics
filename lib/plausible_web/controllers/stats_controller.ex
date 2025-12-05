@@ -258,13 +258,14 @@ defmodule PlausibleWeb.StatsController do
   """
   def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
     case find_shared_link(domain, auth) do
-      {:password_protected, shared_link} ->
-        render_password_protected_shared_link(conn, shared_link)
+      {:ok, shared_link} ->
+        if Plausible.Site.SharedLink.password_protected?(shared_link) do
+          render_password_protected_shared_link(conn, shared_link)
+        else
+          render_shared_link(conn, shared_link)
+        end
 
-      {:unlisted, shared_link} ->
-        render_shared_link(conn, shared_link)
-
-      :not_found ->
+      {:error, :not_found} ->
         render_error(conn, 404)
     end
   end
@@ -291,14 +292,24 @@ defmodule PlausibleWeb.StatsController do
     render_error(conn, 400)
   end
 
-  defp render_password_protected_shared_link(conn, shared_link) do
-    with conn <- Plug.Conn.fetch_cookies(conn),
-         {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(shared_link.slug)),
+  def validate_shared_link_password(conn, shared_link) do
+    with {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(shared_link.slug)),
          {:ok, %{slug: token_slug}} <- Plausible.Auth.Token.verify_shared_link(token),
          true <- token_slug == shared_link.slug do
-      render_shared_link(conn, shared_link)
+      {:ok, shared_link}
     else
-      _e ->
+      _e -> {:error, :unauthorized}
+    end
+  end
+
+  defp render_password_protected_shared_link(conn, shared_link) do
+    conn = Plug.Conn.fetch_cookies(conn)
+
+    case validate_shared_link_password(conn, shared_link) do
+      {:ok, shared_link} ->
+        render_shared_link(conn, shared_link)
+
+      _ ->
         conn
         |> render("shared_link_password.html",
           link: shared_link,
@@ -320,14 +331,11 @@ defmodule PlausibleWeb.StatsController do
       )
 
     case Repo.one(link_query) do
-      %Plausible.Site.SharedLink{password_hash: hash} = link when not is_nil(hash) ->
-        {:password_protected, link}
-
       %Plausible.Site.SharedLink{} = link ->
-        {:unlisted, link}
+        {:ok, link}
 
       nil ->
-        :not_found
+        {:error, :not_found}
     end
   end
 
