@@ -8,8 +8,8 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   attr :id, :string, required: true
   attr :title, :string, required: true
   # Optimistic rendering requires preventing LV patching of
-  # title and tabs. The udpate of those is handle by
-  # `tab` widget hook.
+  # title and tabs. The update of those is handled by `tab` 
+  # widget hook.
   attr :connected?, :boolean, required: true
 
   slot :tabs
