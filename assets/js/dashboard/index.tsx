@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import { LiveViewPortal } from './components/liveview-portal'
 import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
@@ -26,17 +26,28 @@ function DashboardStats({
   // Handler for navigation events delegated from LiveView dashboard.
   // Necessary to emulate navigation events in LiveView with pushState
   // manipulation disabled.
-  useEffect(() => {
-    const unsubscribe = window.addEventListener('dashboard:live-navigate', ((
-      e: CustomEvent
-    ) => {
+  const onLiveNavigate = useCallback(
+    (e: CustomEvent) => {
       navigate({
         path: e.detail.path,
-        search: () => parseSearch(e.detail.search),
-        replace: true
+        search: () => parseSearch(e.detail.search)
       })
-    }) as EventListener)
-    return unsubscribe
+    },
+    [navigate]
+  )
+
+  useEffect(() => {
+    window.addEventListener(
+      'dashboard:live-navigate',
+      onLiveNavigate as EventListener
+    )
+
+    return () => {
+      window.removeEventListener(
+        'dashboard:live-navigate',
+        onLiveNavigate as EventListener
+      )
+    }
   }, [navigate])
 
   const statsBoxClass =
