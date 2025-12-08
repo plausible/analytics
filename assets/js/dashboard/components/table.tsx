@@ -21,7 +21,7 @@ export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   /**
    * Function used to transform the value found at item[key] for the cell. Superseded by renderItem if present. @example 1120 => "1.1k"
    */
-  renderValue?: (item: T) => ReactNode
+  renderValue?: (item: T, isRowHovered?: boolean) => ReactNode
   /** Function used to create richer cells */
   renderItem?: (item: T) => ReactNode
 }
@@ -81,8 +81,14 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
   item: T
   columns: ColumnConfiguraton<T>[]
 }) => {
+  const [isHovered, setIsHovered] = React.useState(false)
+
   return (
-    <tr className="group text-sm dark:text-gray-200">
+    <tr
+      className="group text-sm dark:text-gray-200"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {columns.map(({ key, width, align, renderValue, renderItem }) => (
         <TableCell
           key={`${(pageIndex ?? null) === null ? '' : `page_${pageIndex}_`}row_${rowIndex}_${String(key)}`}
@@ -92,7 +98,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
           {renderItem
             ? renderItem(item)
             : renderValue
-              ? renderValue(item)
+              ? renderValue(item, isHovered)
               : (item[key] ?? '')}
         </TableCell>
       ))}

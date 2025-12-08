@@ -43,7 +43,8 @@ export class Metric {
     this.renderValue = this.renderValue.bind(this)
   }
 
-  renderValue(listItem, meta) {
+  renderValue(listItem, meta, options = {}) {
+    const { detailedView = false, isRowHovered = false } = options
     return (
       <MetricValue
         listItem={listItem}
@@ -51,6 +52,8 @@ export class Metric {
         renderLabel={this.renderLabel}
         meta={meta}
         formatter={this.formatter}
+        detailedView={detailedView}
+        isRowHovered={isRowHovered}
       />
     )
   }
@@ -85,7 +88,7 @@ export const createVisitors = (props) => {
   }
 
   return new Metric({
-    width: 'w-24',
+    width: 'w-36',
     sortable: true,
     ...props,
     key: 'visitors',
@@ -159,7 +162,7 @@ export const createVisits = (props) => {
 export const createVisitDuration = (props) => {
   const renderLabel = (_query) => 'Visit duration'
   return new Metric({
-    width: 'w-36',
+    width: 'w-24',
     ...props,
     key: 'visit_duration',
     renderLabel,
@@ -170,7 +173,7 @@ export const createVisitDuration = (props) => {
 export const createBounceRate = (props) => {
   const renderLabel = (_query) => 'Bounce rate'
   return new Metric({
-    width: 'w-28',
+    width: 'w-24',
     ...props,
     key: 'bounce_rate',
     renderLabel,
@@ -192,7 +195,7 @@ export const createPageviews = (props) => {
 export const createTimeOnPage = (props) => {
   const renderLabel = (_query) => 'Time on page'
   return new Metric({
-    width: 'w-32',
+    width: 'w-24',
     ...props,
     key: 'time_on_page',
     renderLabel,
@@ -203,7 +206,7 @@ export const createTimeOnPage = (props) => {
 export const createExitRate = (props) => {
   const renderLabel = (_query) => 'Exit rate'
   return new Metric({
-    width: 'w-28',
+    width: 'w-24',
     ...props,
     key: 'exit_rate',
     renderLabel,
@@ -214,7 +217,7 @@ export const createExitRate = (props) => {
 export const createScrollDepth = (props) => {
   const renderLabel = (_query) => 'Scroll depth'
   return new Metric({
-    width: 'w-28',
+    width: 'w-24',
     ...props,
     key: 'scroll_depth',
     renderLabel,

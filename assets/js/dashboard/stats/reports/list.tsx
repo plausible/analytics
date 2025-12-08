@@ -378,7 +378,7 @@ export default function ListReport<
               <span
                 className={`font-medium text-sm text-right ${isShowOnHover ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}
               >
-                {metric.renderValue(listItem, state.meta)}
+                {metric.renderValue(listItem, state.meta, { detailedView: false, isRowHovered: false })}
               </span>
             </div>
           )

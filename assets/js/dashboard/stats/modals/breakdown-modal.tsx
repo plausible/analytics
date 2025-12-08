@@ -143,7 +143,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           width: m.width,
           align: 'right',
           metricWarning: getMetricWarning(m, meta),
-          renderValue: (item) => m.renderValue(item, meta),
+          renderValue: (item, isRowHovered) => m.renderValue(item, meta, { detailedView: true, isRowHovered }),
           onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
           sortDirection: orderByDictionary[m.key]
         })

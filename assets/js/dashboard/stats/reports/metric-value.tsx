@@ -36,6 +36,8 @@ export default function MetricValue(props: {
   renderLabel: (query: DashboardQuery) => string
   formatter?: (value: ValueType) => string
   meta: BreakdownResultMeta | null
+  detailedView?: boolean
+  isRowHovered?: boolean
 }) {
   const { query } = useQueryContext()
   const portalRef = useRef<HTMLElement | null>(null)
@@ -46,7 +48,7 @@ export default function MetricValue(props: {
     }
   }, [])
 
-  const { metric, listItem } = props
+  const { metric, listItem, detailedView = false, isRowHovered = false } = props
   const { value, comparison } = useMemo(
     () => valueRenderProps(listItem, metric),
     [listItem, metric]
@@ -60,10 +62,15 @@ export default function MetricValue(props: {
     return shortFormatter(value) !== longFormatter(value)
   }, [value, shortFormatter, longFormatter])
   
-  const showTooltip = !!comparison || isAbbreviated
+  const showTooltip = detailedView
+    ? !!comparison
+    : !!comparison || isAbbreviated
+
+  const shouldShowLongFormat = detailedView && !comparison && isRowHovered && isAbbreviated
+  const displayFormatter = shouldShowLongFormat ? longFormatter : shortFormatter
 
   if (value === null && (!comparison || comparison.value === null)) {
-    return <span data-testid="metric-value">{shortFormatter(value)}</span>
+    return <span data-testid="metric-value">{displayFormatter(value)}</span>
   }
 
   const valueContent = (
@@ -71,7 +78,7 @@ export default function MetricValue(props: {
       className={showTooltip ? 'cursor-default' : ''}
       data-testid="metric-value"
     >
-      {shortFormatter(value)}
+      {displayFormatter(value)}
       {comparison ? (
         <ChangeArrow
           change={comparison.change}
