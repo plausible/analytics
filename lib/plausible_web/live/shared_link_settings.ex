@@ -121,13 +121,21 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
                 <.td truncate hide_on_mobile>
                   <div class="flex items-center">
                     {link.name}
-                    <.tooltip :if={link.password_hash} enabled?={true} centered?={true}>
+                    <.tooltip
+                      :if={Plausible.Site.SharedLink.password_protected?(link)}
+                      enabled?={true}
+                      centered?={true}
+                    >
                       <:tooltip_content>
                         Password protected
                       </:tooltip_content>
                       <Heroicons.lock_closed class="feather ml-2 mb-0.5" />
                     </.tooltip>
-                    <.tooltip :if={!link.password_hash} enabled?={true} centered?={true}>
+                    <.tooltip
+                      :if={!Plausible.Site.SharedLink.password_protected?(link)}
+                      enabled?={true}
+                      centered?={true}
+                    >
                       <:tooltip_content>
                         No password protection
                       </:tooltip_content>
