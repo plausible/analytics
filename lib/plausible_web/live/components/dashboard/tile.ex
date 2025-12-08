@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
 
     ~H"""
     <div data-tile id={@id}>
-      <div data-tile class="w-full flex justify-between h-full">
+      <div class="w-full flex justify-between h-full">
         <div id={@id <> "-title"} class="flex gap-x-1" phx-update={@update_mode}>
           <h3 data-title class="font-bold dark:text-gray-100">{@title}</h3>
         </div>
