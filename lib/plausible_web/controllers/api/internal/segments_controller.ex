@@ -117,6 +117,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to get related shared links")
 
+      {:error, :segment_not_found} ->
+        segment_not_found(conn, params["segment_id"])
+
       {:ok, shared_links} ->
         json(conn, shared_links |> Enum.map(& &1.name))
     end

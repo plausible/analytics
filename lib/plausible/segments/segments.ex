@@ -339,6 +339,14 @@ defmodule Plausible.Segments do
   end
 
   def get_related_shared_links(
+        _site,
+        _site_role,
+        nil
+      ) do
+    {:error, :segment_not_found}
+  end
+
+  def get_related_shared_links(
         %Plausible.Site{} = site,
         site_role,
         segment_id
@@ -355,14 +363,6 @@ defmodule Plausible.Segments do
     else
       {:error, :not_enough_permissions}
     end
-  end
-
-  def get_related_shared_links(
-        %Plausible.Site{} = site,
-        site_role,
-        nil
-      ) do
-    {:error, :segment_not_found}
   end
 
   @spec do_get_one(pos_integer(), pos_integer(), pos_integer() | nil) ::

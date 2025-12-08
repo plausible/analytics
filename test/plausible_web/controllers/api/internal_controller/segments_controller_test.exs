@@ -469,6 +469,63 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       end
     end
 
+    test "deleting a segment deletes the shared links linked to it", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          name: "any",
+          type: :personal,
+          segment_data: %{"filters" => [["is", "event:goal", ["Signup"]]]}
+        )
+
+      other_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          name: "other",
+          type: :site,
+          segment_data: %{"filters" => [["is", "event:goal", ["Signup"]]]}
+        )
+
+      shared_links_with_segments =
+        insert_list(3, :shared_link,
+          site: site,
+          segment_id: segment.id
+        )
+
+      shared_link_with_other_segment =
+        insert(:shared_link, site: site, name: "Gamma", segment_id: other_segment.id)
+
+      shared_link_with_no_segment = insert(:shared_link, site: site, name: "Delta")
+
+      response =
+        delete(conn, "/api/#{site.domain}/segments/#{segment.id}")
+        |> json_response(200)
+
+      assert %{
+               "owner_id" => user.id,
+               "owner_name" => user.name,
+               "id" => segment.id,
+               "name" => segment.name,
+               "segment_data" => segment.segment_data,
+               "type" => "#{segment.type}",
+               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%dT%H:%M:%S"),
+               "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%dT%H:%M:%S")
+             } == response
+
+      assert Repo.reload(shared_link_with_other_segment)
+      assert Repo.reload(shared_link_with_no_segment)
+
+      for link <- shared_links_with_segments do
+        refute Repo.reload(link)
+      end
+    end
+
     test "site owner can delete a site segment owned by someone else, even if it contains a non-existing goal",
          %{conn: conn, site: site} do
       other_user = add_guest(site, role: :editor)
@@ -506,16 +563,18 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
 
     for %{role: role} <- [
           %{role: :viewer},
-          %{role: :editor}
+          %{role: :editor},
+          %{role: :admin},
+          %{role: :billing},
+          %{role: :owner}
         ] do
       test "#{role} can get related shared links for a segment", %{
         conn: conn,
-        user: user,
         site: site
       } do
-        add_guest(site, user: user, role: unquote(role))
+        user = add_member(site.team, role: unquote(role))
 
-        segment = insert(:segment, site: site, name: "Test Segment", type: :personal, owner: user)
+        segment = insert(:segment, site: site, name: "Test Segment", type: :site, owner: user)
 
         insert(:shared_link, site: site, name: "Shared Link 1", segment_id: segment.id)
         insert(:shared_link, site: site, name: "Shared Link 2", segment_id: segment.id)
@@ -531,129 +590,71 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           get(conn, "/api/#{site.domain}/segments/#{segment.id}/shared-links")
           |> json_response(200)
 
-        assert is_list(response)
-        assert length(response) == 2
-        assert "Shared Link 1" in response
-        assert "Shared Link 2" in response
-        refute "Other Shared Link" in response
-        refute "No Segment Link" in response
-      end
-
-      test "#{role} gets empty list when no shared links are related to the segment", %{
-        conn: conn,
-        user: user,
-        site: site
-      } do
-        add_guest(site, user: user, role: unquote(role))
-
-        segment = insert(:segment, site: site, name: "Test Segment", type: :personal, owner: user)
-
-        response =
-          get(conn, "/api/#{site.domain}/segments/#{segment.id}/shared-links")
-          |> json_response(200)
-
-        assert response == []
-      end
-
-      test "#{role} only gets shared links for the correct site", %{
-        conn: conn,
-        user: user,
-        site: site
-      } do
-        add_guest(site, user: user, role: unquote(role))
-
-        other_site = insert(:site)
-        segment = insert(:segment, site: site, name: "Test Segment", type: :personal, owner: user)
-
-        # Create shared link for this site and segment
-        insert(:shared_link, site: site, name: "Correct Site Link", segment_id: segment.id)
-
-        # Create shared link for other site with same segment ID (different site)
-        # This shouldn't appear in results
-        other_site_segment = insert(:segment, site: other_site, name: "Other Site Segment")
-
-        insert(:shared_link,
-          site: other_site,
-          name: "Other Site Link",
-          segment_id: other_site_segment.id
-        )
-
-        response =
-          get(conn, "/api/#{site.domain}/segments/#{segment.id}/shared-links")
-          |> json_response(200)
-
-        assert response == ["Correct Site Link"]
-      end
-
-      test "#{role} gets empty list when segment_id does not exist", %{
-        conn: conn,
-        user: user,
-        site: site
-      } do
-        add_guest(site, user: user, role: unquote(role))
-
-        non_existent_segment_id = 999_999
-
-        response =
-          get(conn, "/api/#{site.domain}/segments/#{non_existent_segment_id}/shared-links")
-          |> json_response(200)
-
-        assert response == []
+        assert response == ["Shared Link 1", "Shared Link 2"]
       end
     end
 
-    test "owner can get related shared links for a segment", %{
+    test "returns empty list when no shared links are related to the segment", %{
       conn: conn,
       user: user,
       site: site
     } do
-      # Owner is the user from create_site, no need to add_guest
       segment = insert(:segment, site: site, name: "Test Segment", type: :personal, owner: user)
-
-      insert(:shared_link, site: site, name: "Shared Link 1", segment_id: segment.id)
-      insert(:shared_link, site: site, name: "Shared Link 2", segment_id: segment.id)
 
       response =
         get(conn, "/api/#{site.domain}/segments/#{segment.id}/shared-links")
         |> json_response(200)
-
-      assert is_list(response)
-      assert length(response) == 2
-      assert "Shared Link 1" in response
-      assert "Shared Link 2" in response
-    end
-
-    test "returns shared links in correct format (array of names)", %{
-      conn: conn,
-      user: user,
-      site: site
-    } do
-      add_guest(site, user: user, role: :editor)
-
-      segment = insert(:segment, site: site, name: "Test Segment", type: :personal, owner: user)
-
-      insert(:shared_link, site: site, name: "First Link", segment_id: segment.id)
-      insert(:shared_link, site: site, name: "Second Link", segment_id: segment.id)
-      insert(:shared_link, site: site, name: "Third Link", segment_id: segment.id)
-
-      response =
-        get(conn, "/api/#{site.domain}/segments/#{segment.id}/shared-links")
-        |> json_response(200)
-
-      assert ["First Link", "Second Link", "Third Link"] == response
-    end
-
-    test "handles invalid segment_id parameter gracefully", %{conn: conn, user: user, site: site} do
-      add_guest(site, user: user, role: :editor)
-
-      # The normalize_segment_id_param returns nil for invalid input
-      # The query with nil segment_id would match records where segment_id IS NULL
-      # but since this test doesn't create any shared links, we expect an empty list
-      conn = get(conn, "/api/#{site.domain}/segments/invalid/shared-links")
-
-      response = json_response(conn, 200)
 
       assert response == []
+    end
+
+    test "returns empty list when giving a segment ID that doesn't exist", %{
+      conn: conn,
+      site: site
+    } do
+      response =
+        get(conn, "/api/#{site.domain}/segments/9999999/shared-links")
+        |> json_response(200)
+
+      assert response == []
+    end
+
+    test "returns empty list when requesting with the segment_id of another site", %{
+      conn: conn,
+      site: site
+    } do
+      other_site = new_site()
+      other_site_segment = insert(:segment, site: other_site, name: "Test Segment")
+
+      insert(:shared_link,
+        site: other_site,
+        name: "Link",
+        segment_id: other_site_segment.id
+      )
+
+      response =
+        get(conn, "/api/#{site.domain}/segments/#{other_site_segment.id}/shared-links")
+        |> json_response(200)
+
+      assert response == []
+    end
+
+    test "returns 404 for invalid segment_id", %{conn: conn, site: site} do
+      conn = get(conn, "/api/#{site.domain}/segments/invalid/shared-links")
+
+      assert %{"error" => "Segment not found with ID \"invalid\""} ==
+               json_response(conn, 404)
+    end
+
+    test "returns 403 when looking at a public site", %{conn: conn} do
+      public_site = new_site(public: true)
+      segment = insert(:segment, site: public_site, name: "segment", type: :site)
+
+      conn =
+        get(conn, "/api/#{public_site.domain}/segments/#{segment.id}/shared-links")
+
+      assert %{"error" => "Not enough permissions to get related shared links"} ==
+               json_response(conn, 403)
     end
   end
 
