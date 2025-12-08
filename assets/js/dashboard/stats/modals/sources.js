@@ -140,7 +140,7 @@ function SourcesModal({ currentView }) {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',
-          width: 'w-36'
+          width: 'w-32'
         })
       ]
     }

@@ -74,20 +74,41 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
   rowIndex,
   pageIndex,
   item,
-  columns
+  columns,
+  tappedRowName,
+  onRowTap
 }: {
   rowIndex: number
   pageIndex?: number
   item: T
   columns: ColumnConfiguraton<T>[]
+  tappedRowName?: string | null
+  onRowTap?: (rowName: string | null) => void
 }) => {
   const [isHovered, setIsHovered] = React.useState(false)
+  
+  const rowName = (item as unknown as { name: string }).name
+  const isTapped = tappedRowName === rowName
+  const isRowActive = isHovered || isTapped
+
+  const handleRowClick = (e: React.MouseEvent) => {
+    if (window.innerWidth < 768 && !(e.target as HTMLElement).closest('a')) {
+      if (onRowTap) {
+        if (isTapped) {
+          onRowTap(null)
+        } else {
+          onRowTap(rowName)
+        }
+      }
+    }
+  }
 
   return (
     <tr
-      className="group text-sm dark:text-gray-200"
+      className="group text-sm dark:text-gray-200 md:cursor-default cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleRowClick}
     >
       {columns.map(({ key, width, align, renderValue, renderItem }) => (
         <TableCell
@@ -98,7 +119,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
           {renderItem
             ? renderItem(item)
             : renderValue
-              ? renderValue(item, isHovered)
+              ? renderValue(item, isRowActive)
               : (item[key] ?? '')}
         </TableCell>
       ))}
@@ -113,6 +134,8 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
   columns: ColumnConfiguraton<T>[]
   data: T[] | { pages: T[][] }
 }) => {
+  const [tappedRowName, setTappedRowName] = React.useState<string | null>(null)
+
   const renderColumnLabel = (column: ColumnConfiguraton<T>) => {
     if (column.metricWarning) {
       return (
@@ -168,6 +191,8 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
                 columns={columns}
                 rowIndex={rowIndex}
                 key={rowIndex}
+                tappedRowName={tappedRowName}
+                onRowTap={setTappedRowName}
               />
             ))
           : data.pages.map((page, pageIndex) =>
@@ -178,6 +203,8 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
                   rowIndex={rowIndex}
                   pageIndex={pageIndex}
                   key={`page_${pageIndex}_row_${rowIndex}`}
+                  tappedRowName={tappedRowName}
+                  onRowTap={setTappedRowName}
                 />
               ))
             )}

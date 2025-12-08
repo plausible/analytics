@@ -125,7 +125,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       {
         label: reportInfo.dimensionLabel,
         key: 'name',
-        width: 'w-48',
+        width: 'w-40 md:w-48',
         align: 'left',
         renderItem: (item) => (
           <NameCell
@@ -190,7 +190,7 @@ const NameCell = <TListItem extends { name: string }>({
   renderIcon?: (item: TListItem) => ReactNode
   getExternalLinkUrl?: (listItem: TListItem) => string
 }) => (
-  <div className="max-w-full break-all">
+  <div className="max-w-full break-all flex items-center">
     {typeof renderIcon === 'function' && renderIcon(item)}
     <DrilldownLink
       path={rootRoute.path}

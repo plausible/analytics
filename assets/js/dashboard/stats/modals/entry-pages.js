@@ -67,7 +67,7 @@ function EntryPagesModal() {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',
-          width: 'w-36'
+          width: 'w-32'
         })
       ]
     }
@@ -76,7 +76,7 @@ function EntryPagesModal() {
       metrics.createVisitors({ renderLabel: (_query) => 'Visitors' }),
       metrics.createVisits({
         renderLabel: (_query) => 'Total entrances',
-        width: 'w-36'
+        width: 'w-32'
       }),
       metrics.createBounceRate(),
       metrics.createVisitDuration()

@@ -147,7 +147,7 @@ export const createAverageRevenue = (props) => {
 export const createTotalVisitors = (props) => {
   const renderLabel = (_query) => 'Total visitors'
   return new Metric({
-    width: 'w-28',
+    width: 'w-32',
     ...props,
     key: 'total_visitors',
     renderLabel,

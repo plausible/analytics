@@ -64,7 +64,7 @@ function ExitPagesModal() {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',
-          width: 'w-36'
+          width: 'w-32'
         })
       ]
     }
@@ -76,6 +76,7 @@ function ExitPagesModal() {
       }),
       metrics.createVisits({
         renderLabel: (_query) => 'Total exits',
+        width: 'w-32',
         sortable: true
       }),
       metrics.createExitRate()
