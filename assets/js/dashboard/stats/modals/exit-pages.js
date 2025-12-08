@@ -75,7 +75,7 @@ function ExitPagesModal() {
         sortable: true
       }),
       metrics.createVisits({
-        renderLabel: (_query) => 'Total Exits',
+        renderLabel: (_query) => 'Total exits',
         sortable: true
       }),
       metrics.createExitRate()

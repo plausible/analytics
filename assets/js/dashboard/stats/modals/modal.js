@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { XMarkIcon } from '@heroicons/react/20/solid'
 import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
@@ -62,7 +61,7 @@ class Modal extends React.Component {
     if (maxWidth) {
       styleObject.maxWidth = maxWidth
     } else {
-      styleObject.width = viewport <= MD_WIDTH ? 'min-content' : '880px'
+      styleObject.maxWidth = '880px'
     }
     return styleObject
   }
@@ -79,22 +78,17 @@ class Modal extends React.Component {
         />
         <div className="modal is-open" onClick={this.props.onClick}>
           <div className="modal__overlay">
-            <button
-              className="fixed top-3 right-6 text-gray-300 hover:text-gray-100 transition-colors duration-150"
-              onClick={this.props.onClose}
-              aria-label="Close modal"
-            >
-              <XMarkIcon className="size-10" />
-            </button>
-            <div
-              ref={this.node}
-              className="[--gap:4rem] my-[var(--gap)] max-h-[calc(100dvh_-_var(--gap)*2)] flex flex-col bg-white px-6 py-4 mx-auto box-border transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden"
-              style={this.getStyle()}
-              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-              tabIndex={0}
-            >
-              <FocusOnMount focusableRef={this.node} />
-              {this.props.children}
+            <div className="[--gap:1rem] sm:[--gap:2rem] md:[--gap:4rem] flex h-full w-full items-end md:items-start justify-center px-[var(--gap)] py-[var(--gap)] box-border">
+              <div
+                ref={this.node}
+                className="max-h-[calc(100dvh_-_var(--gap)*2)] md:min-h-120 w-full flex flex-col bg-white p-3 md:px-6 md:py-4 overflow-hidden box-border transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden"
+                style={this.getStyle()}
+                // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+                tabIndex={0}
+              >
+                <FocusOnMount focusableRef={this.node} />
+                {this.props.children}
+              </div>
             </div>
           </div>
         </div>

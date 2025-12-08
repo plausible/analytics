@@ -32,10 +32,6 @@
   overflow: auto;
 }
 
-.modal__content {
-  margin-bottom: 2rem;
-}
-
 @keyframes mm-fade-in {
   from {
     opacity: 0;

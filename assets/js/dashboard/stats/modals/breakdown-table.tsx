@@ -5,8 +5,6 @@ import { ColumnConfiguraton, Table } from '../../components/table'
 import RocketIcon from './rocket-icon'
 import { QueryStatus } from '@tanstack/react-query'
 
-const MIN_HEIGHT_PX = 500
-
 export const BreakdownTable = <TListItem extends { name: string }>({
   title,
   isPending,
@@ -39,9 +37,9 @@ export const BreakdownTable = <TListItem extends { name: string }>({
 
   return (
     <>
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-x-2">
-          <h1 className="text-lg font-bold dark:text-gray-100">{title}</h1>
+      <div className="flex justify-between items-center gap-4">
+        <div className="flex items-center gap-x-2 shrink-0">
+          <h1 className="shrink-0 text-base md:text-lg font-bold dark:text-gray-100">{title}</h1>
           {!isPending && isFetching && <SmallLoadingSpinner />}
         </div>
         {!!onSearch && (
@@ -54,8 +52,8 @@ export const BreakdownTable = <TListItem extends { name: string }>({
           />
         )}
       </div>
-      <div className="my-4 border-b border-gray-250 dark:border-gray-700"></div>
-      <div className="flex-1 overflow-y-auto pr-3 -mr-3" style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
+      <div className="my-3 md:my-4 border-b border-gray-250 dark:border-gray-700"></div>
+      <div className="flex-1 overflow-auto pr-4 -mr-4">
         {displayError && status === 'error' && <ErrorMessage error={error} />}
         {isPending && <InitialLoadingSpinner />}
         {data && <Table<TListItem> data={data} columns={columns} />}
@@ -73,7 +71,6 @@ export const BreakdownTable = <TListItem extends { name: string }>({
 const InitialLoadingSpinner = () => (
   <div
     className="w-full h-full flex flex-col justify-center"
-    style={{ minHeight: `${MIN_HEIGHT_PX}px` }}
   >
     <div className="mx-auto loading">
       <div />
@@ -90,7 +87,6 @@ const SmallLoadingSpinner = () => (
 const ErrorMessage = ({ error }: { error?: unknown }) => (
   <div
     className="grid grid-rows-2 text-gray-700 dark:text-gray-300"
-    style={{ height: `${MIN_HEIGHT_PX}px` }}
   >
     <div className="text-center self-end">
       <RocketIcon />

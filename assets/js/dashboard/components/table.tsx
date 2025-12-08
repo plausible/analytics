@@ -131,7 +131,7 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
   }
 
   return (
-    <table className="w-full border-collapse table-striped table-fixed">
+    <table className="border-collapse table-striped table-fixed w-max min-w-full">
       <thead className="sticky top-0 bg-white dark:bg-gray-900 z-10">
         <tr className="text-xs font-semibold text-gray-500 dark:text-gray-400">
           {columns.map((column) => (

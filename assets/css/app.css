@@ -90,6 +90,7 @@
   --color-gray-950: var(--color-zinc-950);
 
   /* Custom gray shades from config (override some zinc values) */
+  --color-gray-75: rgb(247 247 248);
   --color-gray-150: rgb(236 236 238);
   --color-gray-750: rgb(50 50 54);
   --color-gray-825: rgb(35 35 38);
@@ -295,7 +296,7 @@ blockquote {
 }
 
 .table-striped tbody tr:nth-child(odd) td {
-  background-color: var(--color-gray-100);
+  background-color: var(--color-gray-75);
 }
 
 .dark .table-striped tbody tr:nth-child(odd) td {

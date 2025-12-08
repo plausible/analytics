@@ -1,4 +1,5 @@
 import React from 'react'
+import { XMarkIcon } from '@heroicons/react/20/solid'
 import { useParams } from 'react-router-dom'
 
 import Modal from './modal'
@@ -68,6 +69,7 @@ class FilterModal extends React.Component {
     )
 
     this.handleKeydown = this.handleKeydown.bind(this)
+    this.closeModal = this.closeModal.bind(this)
     this.state = {
       query,
       filterState,
@@ -106,6 +108,13 @@ class FilterModal extends React.Component {
     return Object.values(this.state.filterState).every(
       ([_operation, _key, clauses]) => clauses.length === 0
     )
+  }
+
+  closeModal() {
+    this.props.navigate({
+      path: rootRoute.path,
+      search: (search) => search
+    })
   }
 
   selectFiltersAndCloseModal(filters) {
@@ -169,13 +178,23 @@ class FilterModal extends React.Component {
 
   render() {
     return (
-      <Modal maxWidth="460px">
-        <h1 className="text-lg font-bold dark:text-gray-100">
-          Filter by {formatFilterGroup(this.props.modalType)}
-        </h1>
+      <Modal maxWidth="460px" onClose={this.closeModal}>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-base md:text-lg font-bold dark:text-gray-100">
+            Filter by {formatFilterGroup(this.props.modalType)}
+          </h1>
+          <button
+            type="button"
+            onClick={this.closeModal}
+            aria-label="Close modal"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+          >
+            <XMarkIcon className="size-5" />
+          </button>
+        </div>
 
-        <div className="mt-4 border-b border-gray-300 dark:border-gray-700"></div>
-        <main className="modal__content">
+        <div className="mt-2 md:mt-4 border-b border-gray-300 dark:border-gray-700"></div>
+        <main>
           <form
             className="flex flex-col"
             onSubmit={this.handleSubmit.bind(this)}
@@ -192,7 +211,7 @@ class FilterModal extends React.Component {
               />
             ))}
 
-            <div className="mt-6 flex gap-x-4 items-center justify-start">
+            <div className="mt-6 mb-3 flex gap-x-4 items-center justify-start">
               <button
                 type="submit"
                 className="button !px-3"
