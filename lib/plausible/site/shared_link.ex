@@ -47,4 +47,7 @@ defmodule Plausible.Site.SharedLink do
         change(link, password_hash: hash)
     end
   end
+
+  def password_protected?(%__MODULE__{password_hash: hash}) when not is_nil(hash), do: true
+  def password_protected?(%__MODULE__{}), do: false
 end

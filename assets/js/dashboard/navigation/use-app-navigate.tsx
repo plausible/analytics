@@ -78,6 +78,15 @@ export const useAppNavigate = () => {
       search,
       ...options
     }: AppNavigationTarget & NavigateOptions) => {
+      // Event dispatched for handling by LiveView dashboard via hook.
+      // Necessary to emulate navigation events in LiveView with pushState
+      // manipulation disabled.
+      window.dispatchEvent(
+        new CustomEvent('dashboard:live-navigate-back', {
+          detail: { search: window.location.search }
+        })
+      )
+
       return _navigate(getToOptions({ path, params, search }), options)
     },
     [getToOptions, _navigate]
