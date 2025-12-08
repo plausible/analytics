@@ -56,18 +56,30 @@ export default function MetricValue(props: {
   const metricLabel = useMemo(() => props.renderLabel(query), [query, props])
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
   const longFormatter = props.formatter ?? MetricFormatterLong[metric]
-  
+
   const isAbbreviated = useMemo(() => {
     if (value === null) return false
     return shortFormatter(value) !== longFormatter(value)
   }, [value, shortFormatter, longFormatter])
-  
+
   const showTooltip = detailedView
     ? !!comparison
     : !!comparison || isAbbreviated
 
-  const shouldShowLongFormat = detailedView && !comparison && isRowHovered && isAbbreviated
+  const shouldShowLongFormat =
+    detailedView && !comparison && isRowHovered && isAbbreviated
   const displayFormatter = shouldShowLongFormat ? longFormatter : shortFormatter
+
+  const percentageValue = listItem['percentage' as Metric]
+  const shouldShowPercentage =
+    detailedView &&
+    metric === 'visitors' &&
+    isRowHovered &&
+    percentageValue != null
+  const percentageFormatter = MetricFormatterShort['percentage']
+  const percentageDisplay = shouldShowPercentage
+    ? percentageFormatter(percentageValue)
+    : null
 
   if (value === null && (!comparison || comparison.value === null)) {
     return <span data-testid="metric-value">{displayFormatter(value)}</span>
@@ -78,6 +90,11 @@ export default function MetricValue(props: {
       className={showTooltip ? 'cursor-default' : ''}
       data-testid="metric-value"
     >
+      {percentageDisplay && (
+        <span className="mr-3 text-gray-500 dark:text-gray-400">
+          {percentageDisplay}
+        </span>
+      )}
       {displayFormatter(value)}
       {comparison ? (
         <ChangeArrow
@@ -168,10 +185,6 @@ function ComparisonTooltipContent({
       </div>
     )
   } else {
-    return (
-      <div className="whitespace-nowrap">
-        {longFormatter(value)}
-      </div>
-    )
+    return <div className="whitespace-nowrap">{longFormatter(value)}</div>
   }
 }

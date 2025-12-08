@@ -39,7 +39,9 @@ export const BreakdownTable = <TListItem extends { name: string }>({
     <>
       <div className="flex justify-between items-center gap-4">
         <div className="flex items-center gap-x-2 shrink-0">
-          <h1 className="shrink-0 text-base md:text-lg font-bold dark:text-gray-100">{title}</h1>
+          <h1 className="shrink-0 text-base md:text-lg font-bold dark:text-gray-100">
+            {title}
+          </h1>
           {!isPending && isFetching && <SmallLoadingSpinner />}
         </div>
         {!!onSearch && (
@@ -69,9 +71,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
 }
 
 const InitialLoadingSpinner = () => (
-  <div
-    className="w-full h-full flex flex-col justify-center"
-  >
+  <div className="w-full h-full flex flex-col justify-center">
     <div className="mx-auto loading">
       <div />
     </div>
@@ -85,9 +85,7 @@ const SmallLoadingSpinner = () => (
 )
 
 const ErrorMessage = ({ error }: { error?: unknown }) => (
-  <div
-    className="grid grid-rows-2 text-gray-700 dark:text-gray-300"
-  >
+  <div className="grid grid-rows-2 text-gray-700 dark:text-gray-300">
     <div className="text-center self-end">
       <RocketIcon />
     </div>

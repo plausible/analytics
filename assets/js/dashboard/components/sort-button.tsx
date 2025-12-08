@@ -15,7 +15,11 @@ export const SortButton = ({
   return (
     <button
       onClick={toggleSort}
-      className={classNames('group', 'hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-100', 'relative')}
+      className={classNames(
+        'group',
+        'hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-100',
+        'relative'
+      )}
     >
       {children}
       <span

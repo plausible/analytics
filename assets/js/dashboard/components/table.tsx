@@ -86,7 +86,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
   onRowTap?: (rowName: string | null) => void
 }) => {
   const [isHovered, setIsHovered] = React.useState(false)
-  
+
   const rowName = (item as unknown as { name: string }).name
   const isTapped = tappedRowName === rowName
   const isRowActive = isHovered || isTapped

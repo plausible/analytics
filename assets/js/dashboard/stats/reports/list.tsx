@@ -35,17 +35,12 @@ function ExternalLink<T>({
 }) {
   const dest = getExternalLinkUrl && getExternalLinkUrl(item)
   if (dest) {
-    const className = isTapped 
-      ? "visible md:invisible md:group-hover/row:visible" 
-      : "invisible md:group-hover/row:visible"
-    
+    const className = isTapped
+      ? 'visible md:invisible md:group-hover/row:visible'
+      : 'invisible md:group-hover/row:visible'
+
     return (
-      <a
-        target="_blank"
-        rel="noreferrer"
-        href={dest}
-        className={className}
-      >
+      <a target="_blank" rel="noreferrer" href={dest} className={className}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -378,7 +373,10 @@ export default function ListReport<
               <span
                 className={`font-medium text-sm text-right ${isShowOnHover ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}
               >
-                {metric.renderValue(listItem, state.meta, { detailedView: false, isRowHovered: false })}
+                {metric.renderValue(listItem, state.meta, {
+                  detailedView: false,
+                  isRowHovered: false
+                })}
               </span>
             </div>
           )
