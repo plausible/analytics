@@ -36,7 +36,6 @@ export default function MetricValue(props: {
   renderLabel: (query: DashboardQuery) => string
   formatter?: (value: ValueType) => string
   meta: BreakdownResultMeta | null
-  showTooltip?: boolean
 }) {
   const { query } = useQueryContext()
   const portalRef = useRef<HTMLElement | null>(null)

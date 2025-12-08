@@ -51,7 +51,6 @@ export class Metric {
         renderLabel={this.renderLabel}
         meta={meta}
         formatter={this.formatter}
-        showTooltip={this.meta.showTooltip !== false}
       />
     )
   }
@@ -105,18 +104,14 @@ export const createConversionRate = (props) => {
   })
 }
 
-export const createPercentage = (props = {}) => {
+export const createPercentage = (props) => {
   const renderLabel = (_query) => '%'
   return new Metric({
     width: 'w-24',
+    ...props,
     key: 'percentage',
     renderLabel,
-    sortable: true,
-    ...props,
-    meta: {
-      showTooltip: false,
-      ...(props.meta || {})
-    }
+    sortable: true
   })
 }
 
