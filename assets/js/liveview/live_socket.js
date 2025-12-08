@@ -10,7 +10,7 @@ import { LiveSocket } from 'phoenix_live_view'
 import { Modal, Dropdown } from 'prima'
 import LiveDashboard from './live_dashboard'
 import topbar from 'topbar'
-/* eslint-disable import/no-unresolved */
+/* eslint-enable import/no-unresolved */
 
 import Alpine from 'alpinejs'
 
