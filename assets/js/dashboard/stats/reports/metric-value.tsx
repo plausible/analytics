@@ -54,7 +54,14 @@ export default function MetricValue(props: {
   )
   const metricLabel = useMemo(() => props.renderLabel(query), [query, props])
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
-  const showTooltip = props.showTooltip !== false || !!comparison
+  const longFormatter = props.formatter ?? MetricFormatterLong[metric]
+  
+  const isAbbreviated = useMemo(() => {
+    if (value === null) return false
+    return shortFormatter(value) !== longFormatter(value)
+  }, [value, shortFormatter, longFormatter])
+  
+  const showTooltip = !!comparison || isAbbreviated
 
   if (value === null && (!comparison || comparison.value === null)) {
     return <span data-testid="metric-value">{shortFormatter(value)}</span>
@@ -157,7 +164,7 @@ function ComparisonTooltipContent({
   } else {
     return (
       <div className="whitespace-nowrap">
-        {longFormatter(value)} {label}
+        {longFormatter(value)}
       </div>
     )
   }
