@@ -281,10 +281,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   @doc """
   ### Examples:
     iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(nil)
-    Plausible.Stats.ParsedQueryParams.default_include()
+    Plausible.Stats.ApiQueryParser.default_include()
 
     iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(~s({"total_rows": true}))
-    Map.merge(Plausible.Stats.ParsedQueryParams.default_include(), %{total_rows: true})
+    Map.merge(Plausible.Stats.ApiQueryParser.default_include(), %{total_rows: true})
   """
   def parse_include(include) do
     include =
@@ -296,7 +296,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
         _ -> %{}
       end
 
-    Plausible.Stats.ParsedQueryParams.default_include()
+    Plausible.Stats.ApiQueryParser.default_include()
     |> Map.merge(include)
   end
 

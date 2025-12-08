@@ -11,10 +11,10 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
       relative_date: nil,
       metrics: nil,
       filters: [],
-      dimensions: [],
+      dimensions: nil,
       order_by: nil,
-      pagination: ParsedQueryParams.default_pagination(),
-      include: ParsedQueryParams.default_include()
+      pagination: nil,
+      include: nil
     }
 
     assert parsed == expected

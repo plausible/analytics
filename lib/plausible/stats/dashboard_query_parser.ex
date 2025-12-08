@@ -5,7 +5,27 @@ defmodule Plausible.Stats.DashboardQueryParser do
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.ParsedQueryParams
+  alias Plausible.Stats.{ParsedQueryParams}
+
+  @default_include %{
+    imports: true,
+    # `include.imports_meta` can be true even when `include.imports`
+    # is false. Even if we don't want to include imported data, we
+    # might still want to know whether imported data can be toggled
+    # on/off on the dashboard.
+    imports_meta: true,
+    time_labels: true,
+    total_rows: false,
+    trim_relative_date_range: true,
+    comparisons: nil,
+    legacy_time_on_page_cutoff: nil
+  }
+
+  def default_include(), do: @default_include
+
+  @default_pagination nil
+
+  def default_pagination(), do: @default_pagination
 
   def parse(query_string) when is_binary(query_string) do
     query_string = String.trim_leading(query_string, "?")
