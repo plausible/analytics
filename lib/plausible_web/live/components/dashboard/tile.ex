@@ -42,22 +42,6 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
     """
   end
 
-  attr :id, :string, required: true
-  slot :inner_block, required: true
-
-  def tabs(assigns) do
-    ~H"""
-    <div
-      id={@id}
-      phx-hook="LiveDashboard"
-      data-widget="tabs"
-      class="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
-    >
-      {render_slot(@inner_block)}
-    </div>
-    """
-  end
-
   attr :label, :string, required: true
   attr :value, :string, required: true
   attr :active, :string, required: true
