@@ -26,19 +26,25 @@ const COL_MIN_WIDTH = 70
 
 function ExternalLink<T>({
   item,
-  getExternalLinkUrl
+  getExternalLinkUrl,
+  isTapped
 }: {
   item: T
   getExternalLinkUrl?: (item: T) => string
+  isTapped?: boolean
 }) {
   const dest = getExternalLinkUrl && getExternalLinkUrl(item)
   if (dest) {
+    const className = isTapped 
+      ? "visible md:invisible md:group-hover/row:visible" 
+      : "invisible md:group-hover/row:visible"
+    
     return (
       <a
         target="_blank"
         rel="noreferrer"
         href={dest}
-        className="invisible group-hover:visible"
+        className={className}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -337,6 +343,7 @@ export default function ListReport<
             <ExternalLink
               item={listItem}
               getExternalLinkUrl={getExternalLinkUrl}
+              isTapped={tappedRow === listItem.name}
             />
           </div>
         </Bar>
