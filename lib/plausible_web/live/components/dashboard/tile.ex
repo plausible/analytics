@@ -16,19 +16,17 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   slot :inner_block, required: true
 
   def tile(assigns) do
-    assigns = assign(assigns, :update_mode, if(assigns.connected?, do: "ignore", else: "replace"))
-
     ~H"""
     <div data-tile id={@id}>
       <div class="w-full flex justify-between h-full">
-        <div id={@id <> "-title"} class="flex gap-x-1" phx-update={@update_mode}>
+        <div id={@id <> "-title"} class="flex gap-x-1" phx-update="ignore">
           <h3 data-title class="font-bold dark:text-gray-100">{@title}</h3>
         </div>
 
         <div
           :if={@tabs != []}
           id={@id <> "-tabs"}
-          phx-update={@update_mode}
+          phx-update="ignore"
           phx-hook="LiveDashboard"
           data-widget="tabs"
           class="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
