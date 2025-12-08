@@ -46,7 +46,7 @@ const primaryNeutralButtonClassName = 'button !px-3'
 const primaryNegativeButtonClassName = classNames(
   'button !px-3.5',
   'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap',
-  'disabled:!bg-red-400'
+  'disabled:!bg-red-400 disabled:cursor-not-allowed'
 )
 
 const secondaryButtonClassName = classNames(
@@ -147,6 +147,12 @@ export const CreateSegmentModal = ({
   )
 }
 
+function getLinksDeleteNotice(links: string[]) {
+  return links.length === 1
+    ? 'This segment is used in a shared link. To delete it, you also need to delete the shared link.'
+    : `This segment is used in ${links.length} shared links. To delete it, you also need to delete the shared links.`
+}
+
 export const DeleteSegmentModal = ({
   onClose,
   onSave,
@@ -160,9 +166,9 @@ export const DeleteSegmentModal = ({
   segment: SavedSegment & { segment_data?: SegmentData }
 } & ApiRequestProps) => {
   const site = useSiteContext()
-  const [confirmedDeleteSharedLinks, setConfirmedDeleteSharedLinks] =
-    useState(false)
-  const getRelatedSharedLinks = useQuery({
+  const [confirmed, setConfirmed] = useState(false)
+
+  const linksQuery = useQuery({
     queryKey: [segment.id],
     queryFn: async () => {
       const response: string[] = await get(
@@ -174,40 +180,60 @@ export const DeleteSegmentModal = ({
 
   const deleteDisabled =
     status === 'pending' ||
-    getRelatedSharedLinks.status !== 'success' ||
-    (!!getRelatedSharedLinks.data?.length && confirmedDeleteSharedLinks)
+    linksQuery.status !== 'success' ||
+    (!!linksQuery.data?.length && !confirmed)
 
   return (
     <SegmentActionModal onClose={onClose}>
-      <FormTitle className="mb-2">
+      <FormTitle className="mb-4">
         Delete {SEGMENT_TYPE_LABELS[segment.type].toLowerCase()}
         <span className="break-all">{` "${segment.name}"?`}</span>
       </FormTitle>
-      {getRelatedSharedLinks.status === 'pending' && (
-        <div className="loading">
+      {linksQuery.status === 'pending' && (
+        <div className="loading sm">
           <div />
         </div>
       )}
-      {!!getRelatedSharedLinks.data?.length && (
-        <ErrorPanel errorMessage="This segment is used in shared links. To delete it, you also need to delete the shared links."></ErrorPanel>
+      {linksQuery.status === 'success' && !!linksQuery.data?.length && (
+        <ErrorPanel
+          errorMessage={
+            <span className="break-normal">
+              {getLinksDeleteNotice(linksQuery.data)}
+            </span>
+          }
+        />
+      )}
+      {linksQuery.status === 'error' && (
+        <ErrorPanel
+          errorMessage="Error loading related shared links"
+          onRetry={linksQuery.refetch}
+        />
       )}
       {!!segment.segment_data && (
-        <FiltersInSegment segment_data={segment.segment_data} />
+        <div className="mt-4">
+          <FiltersInSegment segment_data={segment.segment_data} />
+        </div>
       )}
-      {!!getRelatedSharedLinks.data?.length && (
+      {!!linksQuery.data?.length && (
         <>
-          <RelatedSharedLinks sharedLinks={getRelatedSharedLinks.data} />
-          <input
-            id="confirm-delete-shared-links"
-            type="checkbox"
-            checked={confirmedDeleteSharedLinks}
-            onChange={(e) =>
-              setConfirmedDeleteSharedLinks(e.currentTarget.checked)
-            }
-          ></input>
-          <label htmlFor="confirm-delete-shared-links">
-            Yes, delete the associated shared links
-          </label>
+          <div className="mt-4">
+            <RelatedSharedLinks sharedLinks={linksQuery.data} />
+          </div>
+          <div className="mt-4">
+            <label
+              className="text-sm block font-medium dark:text-gray-100 font-normal gap-x-2 flex flex-inline items-center justify-start"
+              htmlFor="confirm-delete-shared-links"
+            >
+              <input
+                className="block size-5 rounded-sm dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
+                id="confirm-delete-shared-links"
+                type="checkbox"
+                checked={confirmed}
+                onChange={(e) => setConfirmed(e.currentTarget.checked)}
+              />
+              Yes, delete the associated shared links
+            </label>
+          </div>
         </>
       )}
       <ButtonsRow>
@@ -245,7 +271,7 @@ export const DeleteSegmentModal = ({
 
 const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
   return (
-    <div className="mt-4">
+    <>
       <SecondaryTitle>Shared links</SecondaryTitle>
       <div className="mt-2">
         <FilterPillsList
@@ -259,7 +285,7 @@ const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
           }))}
         />
       </div>
-    </div>
+    </>
   )
 }
 

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import classNames from 'classnames'
 import {
   ArrowPathIcon,
@@ -12,7 +12,7 @@ export const ErrorPanel = ({
   onClose,
   onRetry
 }: {
-  errorMessage: string
+  errorMessage: ReactNode
   className?: string
   onClose?: () => void
   onRetry?: () => void
