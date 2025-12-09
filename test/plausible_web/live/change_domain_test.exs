@@ -39,6 +39,14 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert html =~ "Change your website domain"
     end
 
+    test "mounts and renders form for guest editor", %{conn: conn} do
+      site = new_site()
+      add_guest(site, role: :editor)
+      {:ok, _lv, html} = live(conn, "/#{site.domain}/change-domain")
+
+      assert html =~ "Change your website domain"
+    end
+
     test "form submission when no change is made", %{conn: conn, site: site} do
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
 
