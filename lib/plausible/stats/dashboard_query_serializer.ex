@@ -68,7 +68,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
     []
   end
 
-  # These charcters are not URL encoded to have more readable URLs.
+  # These characters are not URL encoded to have more readable URLs.
   # Browsers seem to handle this just fine. `?f=is,page,/my/page/:some_param`
   # vs `?f=is,page,%2Fmy%2Fpage%2F%3Asome_param`
   @do_not_url_encode [":", "/"]

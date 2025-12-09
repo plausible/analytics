@@ -3,7 +3,7 @@ import { v1 } from './url-search-params-v1'
 import { v2 } from './url-search-params-v2'
 
 /**
- * These charcters are not URL encoded to have more readable URLs.
+ * These characters are not URL encoded to have more readable URLs.
  * Browsers seem to handle this just fine.
  * `?f=is,page,/my/page/:some_param` vs `?f=is,page,%2Fmy%2Fpage%2F%3Asome_param``
  */
