@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Query.QueryOptimizerTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.Stats.{Query, QueryOptimizer, DateTimeRange, ParsedQueryParams}
+  alias Plausible.Stats.{Query, QueryOptimizer, DateTimeRange, ApiQueryParser}
 
   @default_params %{metrics: [:visitors]}
 
@@ -163,7 +163,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :month,
           now: now,
           timezone: "UTC",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, true)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, true)
         })
 
       assert result.utc_time_range.first == ~U[2024-01-01 00:00:00Z]
@@ -179,7 +179,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :year,
           now: now,
           timezone: "UTC",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, true)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, true)
         })
 
       assert result.utc_time_range.first == ~U[2024-01-01 00:00:00Z]
@@ -195,7 +195,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :day,
           now: now,
           timezone: "UTC",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, true)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, true)
         })
 
       assert result.utc_time_range.first == ~U[2024-01-15 00:00:00Z]
@@ -212,7 +212,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :month,
           now: now,
           timezone: "UTC",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, true)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, true)
         })
 
       assert result.utc_time_range == original_range
@@ -228,7 +228,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :year,
           now: now,
           timezone: "UTC",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, true)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, true)
         })
 
       assert result.utc_time_range == original_range
@@ -244,7 +244,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :day,
           now: now,
           timezone: "UTC",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, true)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, true)
         })
 
       assert result.utc_time_range == original_range
@@ -262,7 +262,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           timezone: "UTC",
           include:
             Map.merge(
-              ParsedQueryParams.default_include(),
+              ApiQueryParser.default_include(),
               %{comparisons: %{mode: "previous_period"}, trim_relative_date_range: true}
             )
         })
@@ -281,7 +281,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           timezone: "UTC",
           include:
             Map.merge(
-              ParsedQueryParams.default_include(),
+              ApiQueryParser.default_include(),
               %{comparisons: %{mode: "previous_period"}, trim_relative_date_range: true}
             )
         })
@@ -300,7 +300,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :month,
           now: now,
           timezone: "UTC",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, false)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, false)
         })
 
       assert result.utc_time_range == original_range
@@ -316,7 +316,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :month,
           now: now,
           timezone: "UTC",
-          include: ParsedQueryParams.default_include()
+          include: ApiQueryParser.default_include()
         })
 
       assert result.utc_time_range == original_range
@@ -333,7 +333,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: {:last_n_days, 7},
           now: now,
           timezone: "UTC",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, true)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, true)
         })
 
       assert result.utc_time_range == original_range
@@ -350,7 +350,7 @@ defmodule Plausible.Stats.Query.QueryOptimizerTest do
           input_date_range: :year,
           now: now,
           timezone: "America/New_York",
-          include: Map.put(ParsedQueryParams.default_include(), :trim_relative_date_range, true)
+          include: Map.put(ApiQueryParser.default_include(), :trim_relative_date_range, true)
         })
 
       nyc_mar_15_end =

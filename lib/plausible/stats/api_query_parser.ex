@@ -5,8 +5,23 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   alias Plausible.Stats.{Filters, Metrics, DateTimeRange, JSONSchema}
 
+  @default_include %{
+    imports: false,
+    imports_meta: false,
+    time_labels: false,
+    total_rows: false,
+    trim_relative_date_range: false,
+    comparisons: nil,
+    legacy_time_on_page_cutoff: nil
+  }
+
+  def default_include(), do: @default_include
+
+  @default_pagination %{limit: 10_000, offset: 0}
+
+  def default_pagination(), do: @default_pagination
+
   def parse(schema_type, params) when is_map(params) do
-    now = Plausible.Stats.Query.Test.get_fixed_now()
     input_date_range = Map.get(params, "date_range")
 
     with :ok <- JSONSchema.validate(schema_type, params),
@@ -19,7 +34,6 @@ defmodule Plausible.Stats.ApiQueryParser do
          {:ok, include} <- parse_include(params["include"]) do
       {:ok,
        Plausible.Stats.ParsedQueryParams.new!(%{
-         now: now,
          input_date_range: input_date_range,
          metrics: metrics,
          filters: filters,
@@ -61,7 +75,7 @@ defmodule Plausible.Stats.ApiQueryParser do
     parse_list(filters, &parse_filter/1)
   end
 
-  def parse_filters(nil), do: {:ok, nil}
+  def parse_filters(nil), do: {:ok, []}
 
   defp parse_filter(filter) do
     with {:ok, operator} <- parse_operator(filter),
@@ -208,7 +222,7 @@ defmodule Plausible.Stats.ApiQueryParser do
     )
   end
 
-  defp parse_dimensions(nil), do: {:ok, nil}
+  defp parse_dimensions(nil), do: {:ok, []}
 
   def parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)
@@ -261,17 +275,18 @@ defmodule Plausible.Stats.ApiQueryParser do
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
   def parse_include(include) when is_map(include) do
-    with {:ok, include} <- atomize_include_keys(include) do
-      parse_comparison_date_range(include)
+    with {:ok, include} <- atomize_include_keys(include),
+         {:ok, include} <- parse_comparison_date_range(include) do
+      {:ok, Map.merge(@default_include, include)}
     end
   end
 
-  def parse_include(nil), do: {:ok, nil}
+  def parse_include(nil), do: {:ok, @default_include}
   def parse_include(include), do: {:error, "Invalid include '#{i(include)}'."}
 
   defp atomize_include_keys(map) do
     expected_keys =
-      Plausible.Stats.ParsedQueryParams.default_include()
+      @default_include
       |> Map.keys()
       |> Enum.map(&Atom.to_string/1)
 
@@ -291,11 +306,10 @@ defmodule Plausible.Stats.ApiQueryParser do
   defp parse_comparison_date_range(include), do: {:ok, include}
 
   defp parse_pagination(pagination) when is_map(pagination) do
-    {:ok,
-     Map.merge(Plausible.Stats.ParsedQueryParams.default_pagination(), atomize_keys(pagination))}
+    {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
   end
 
-  defp parse_pagination(nil), do: {:ok, nil}
+  defp parse_pagination(nil), do: {:ok, @default_pagination}
 
   defp atomize_keys(map) when is_map(map) do
     Map.new(map, fn {key, value} ->
