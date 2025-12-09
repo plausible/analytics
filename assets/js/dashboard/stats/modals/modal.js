@@ -112,7 +112,7 @@ class Modal extends React.Component {
     const deltaY = this.lastTouchY - this.touchStartY
     this.touchStartY = null
     this.lastTouchY = null
-    if (deltaY > 70) {
+    if (deltaY > 150) {
       this.setState(
         {
           dragOffset: Math.max(deltaY, window.innerHeight * 0.6),
