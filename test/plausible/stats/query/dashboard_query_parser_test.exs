@@ -52,11 +52,11 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
              } = parsed
     end
 
-    test "defaults to :day when period param is invalid" do
+    test "defaults to nil when period param is invalid" do
       {:ok, parsed} = parse("?period=abcde")
 
       assert %ParsedQueryParams{
-               input_date_range: :day
+               input_date_range: nil
              } = parsed
     end
   end
