@@ -79,12 +79,13 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
   # Browsers seem to handle this just fine. `?f=is,page,/my/page/:some_param`
   # vs `?f=is,page,%2Fmy%2Fpage%2F%3Asome_param`
   @do_not_url_encode [":", "/"]
+  @do_not_url_encode_map Enum.into(@do_not_url_encode, %{}, fn char ->
+                           {URI.encode_www_form(char), char}
+                         end)
 
   defp uri_encode_permissive(input) do
-    @do_not_url_encode
-    |> Enum.map(fn char -> {char, URI.encode_www_form(char)} end)
-    |> Enum.reduce(URI.encode_www_form(input), fn {char, char_encoded}, acc ->
-      String.replace(acc, char_encoded, char)
-    end)
+    input
+    |> URI.encode_www_form()
+    |> String.replace(Map.keys(@do_not_url_encode_map), &@do_not_url_encode_map[&1])
   end
 end
