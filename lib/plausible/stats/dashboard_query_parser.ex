@@ -85,18 +85,18 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
   defp decode_filters(query_string) do
     query_string
-    |> String.split("&")
-    |> Enum.filter(&String.starts_with?(&1, "f="))
-    |> Enum.reduce_while({:ok, []}, fn filter, {:ok, acc} ->
-      case decode_filter(filter) do
+    |> URI.query_decoder()
+    |> Enum.filter(fn {key, _value} -> key == "f" end)
+    |> Enum.reduce_while({:ok, []}, fn {_, filter_expression}, {:ok, acc} ->
+      case decode_filter(filter_expression) do
         {:ok, filter} -> {:cont, {:ok, acc ++ [filter]}}
         {:error, _} -> {:halt, {:error, :invalid_filters}}
       end
     end)
   end
 
-  defp decode_filter("f=" <> filter_string) do
-    case String.split(filter_string, ",") do
+  defp decode_filter(filter_expression) do
+    case String.split(filter_expression, ",") do
       [operator, dimension | clauses] ->
         {:ok,
          [
