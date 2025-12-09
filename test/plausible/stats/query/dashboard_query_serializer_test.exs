@@ -1,7 +1,21 @@
 defmodule Plausible.Stats.DashboardQuerySerializerTest do
   use Plausible.DataCase
-  import Plausible.Stats.{DashboardQuerySerializer}
+  import Plausible.Stats.{DashboardQuerySerializer, DashboardQueryParser}
   alias Plausible.Stats.ParsedQueryParams
+
+  describe "parse -> serialize is a reversible transformation" do
+    for query_string <- ["", "?date=2021-07-07&f=is,browser,Chrome,Firefox&period=day"] do
+      test "with query string being '#{query_string}'" do
+        {:ok, parsed} = parse(unquote(query_string))
+        assert serialize(parsed) == unquote(query_string)
+      end
+    end
+
+    test "but alphabetical ordering by key is enforced" do
+      {:ok, parsed} = parse("?period=day&date=2021-07-07")
+      assert serialize(parsed) == "?date=2021-07-07&period=day"
+    end
+  end
 
   describe "input_date_range -> period (+ from, to)" do
     for input_date_range <- [:realtime, :day, :month, :year, :all] do

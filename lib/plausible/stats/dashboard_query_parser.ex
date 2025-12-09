@@ -60,7 +60,7 @@ defmodule Plausible.Stats.DashboardQueryParser do
     {:date_range, from_date, to_date}
   end
 
-  defp parse_input_date_range(_), do: :day
+  defp parse_input_date_range(_), do: nil
 
   defp parse_relative_date(%{"date" => date}) do
     case Date.from_iso8601(date) do

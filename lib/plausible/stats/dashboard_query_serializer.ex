@@ -11,6 +11,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
       params
       |> Map.to_list()
       |> Enum.flat_map(&get_serialized_fields/1)
+      |> Enum.sort_by(&elem(&1, 0))
       |> Enum.map(fn {key, value} -> "#{key}=#{value}" end)
       |> Enum.join("&")
 

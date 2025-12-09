@@ -3,11 +3,11 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
   import Plausible.Stats.DashboardQueryParser
   alias Plausible.Stats.ParsedQueryParams
 
-  test "falls back to defaults given an empty query string" do
+  test "parses an empty query string" do
     {:ok, parsed} = parse("")
 
     expected = %Plausible.Stats.ParsedQueryParams{
-      input_date_range: :day,
+      input_date_range: nil,
       relative_date: nil,
       metrics: nil,
       filters: [],
