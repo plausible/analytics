@@ -240,7 +240,7 @@ describe(`${getSearchWithEnforcedSegment.name}`, () => {
     const segment = { id: 100, name: 'Eastern Europe' }
     const search = '?auth=foo&embed=true'
     const expectedUpdatedSearch =
-      '?f=is,segment,100&l=s-100,Eastern%20Europe&auth=foo&embed=true'
+      '?f=is,segment,100&l=segment-100,Eastern%20Europe&auth=foo&embed=true'
     expect(getSearchWithEnforcedSegment(search, segment)).toEqual(
       expectedUpdatedSearch
     )
