@@ -13,11 +13,18 @@ class Modal extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      viewport: DEFAULT_WIDTH
+      viewport: DEFAULT_WIDTH,
+      dragOffset: 0,
+      isClosing: false
     }
     this.node = React.createRef()
     this.handleClickOutside = this.handleClickOutside.bind(this)
     this.handleResize = this.handleResize.bind(this)
+    this.handleTouchStart = this.handleTouchStart.bind(this)
+    this.handleTouchMove = this.handleTouchMove.bind(this)
+    this.handleTouchEnd = this.handleTouchEnd.bind(this)
+    this.touchStartY = null
+    this.lastTouchY = null
   }
 
   componentDidMount() {
@@ -63,7 +70,63 @@ class Modal extends React.Component {
     } else {
       styleObject.maxWidth = '880px'
     }
+    styleObject.transform = `translateY(${this.state.dragOffset}px)`
+    if (this.state.isClosing) {
+      styleObject.transition = 'transform 150ms ease-out'
+    } else {
+      styleObject.transition =
+        this.state.dragOffset > 0 ? 'none' : 'transform 150ms ease-out'
+    }
     return styleObject
+  }
+
+  handleTouchStart(e) {
+    if (this.state.viewport >= MD_WIDTH) return
+    this.setState({ isClosing: false })
+    const touch = e.touches[0]
+    this.touchStartY = touch.clientY
+    this.lastTouchY = touch.clientY
+  }
+
+  handleTouchMove(e) {
+    if (this.state.viewport >= MD_WIDTH) return
+    if (this.touchStartY === null) return
+    const touch = e.touches[0]
+    const deltaY = touch.clientY - this.touchStartY
+    this.lastTouchY = touch.clientY
+    if (deltaY <= 0) {
+      this.setState({ dragOffset: 0 })
+      return
+    }
+    e.preventDefault()
+    this.setState({ dragOffset: deltaY })
+  }
+
+  handleTouchEnd() {
+    if (this.state.viewport >= MD_WIDTH) return
+    if (this.touchStartY === null || this.lastTouchY === null) {
+      this.touchStartY = null
+      this.lastTouchY = null
+      return
+    }
+    const deltaY = this.lastTouchY - this.touchStartY
+    this.touchStartY = null
+    this.lastTouchY = null
+    if (deltaY > 70) {
+      this.setState(
+        {
+          dragOffset: Math.max(deltaY, window.innerHeight * 0.6),
+          isClosing: true
+        },
+        () => {
+          setTimeout(() => {
+            this.props.onClose()
+          }, 150)
+        }
+      )
+      return
+    }
+    this.setState({ dragOffset: 0, isClosing: false })
   }
 
   render() {
@@ -78,13 +141,16 @@ class Modal extends React.Component {
         />
         <div className="modal is-open" onClick={this.props.onClick}>
           <div className="modal__overlay">
-            <div className="[--gap:1rem] sm:[--gap:2rem] md:[--gap:4rem] flex h-full w-full items-end md:items-start justify-center px-[var(--gap)] py-[var(--gap)] box-border">
+            <div className="[--gap:1rem] sm:[--gap:2rem] md:[--gap:4rem] flex h-full w-full items-end md:items-start justify-center md:px-[var(--gap)] md:py-[var(--gap)] box-border">
               <div
                 ref={this.node}
-                className="max-h-[calc(100dvh_-_var(--gap)*2)] md:min-h-120 w-full flex flex-col bg-white p-3 md:px-6 md:py-4 overflow-hidden box-border transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden"
+                className="max-h-[calc(100dvh_-_var(--gap)*2)] min-h-[66vh] md:min-h-120 w-full flex flex-col bg-white p-3 md:px-6 md:py-4 overflow-hidden box-border transition-[height] duration-200 ease-in shadow-2xl rounded-t-lg md:rounded-lg dark:bg-gray-900 focus:outline-hidden"
                 style={this.getStyle()}
                 // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                 tabIndex={0}
+                onTouchStart={this.handleTouchStart}
+                onTouchMove={this.handleTouchMove}
+                onTouchEnd={this.handleTouchEnd}
               >
                 <FocusOnMount focusableRef={this.node} />
                 {this.props.children}
