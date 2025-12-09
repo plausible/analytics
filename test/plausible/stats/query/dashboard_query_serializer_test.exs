@@ -45,7 +45,7 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-03-05]}
         })
 
-      assert serialized == "?period=custom&from=2021-01-01&to=2021-03-05"
+      assert serialized == "?from=2021-01-01&period=custom&to=2021-03-05"
     end
   end
 
