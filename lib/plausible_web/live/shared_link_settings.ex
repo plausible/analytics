@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
                     </.tooltip>
                     <.tooltip :if={link.segment_id} enabled?={true} centered?={true}>
                       <:tooltip_content>
-                        Limited view
+                        Limited to segment of data
                       </:tooltip_content>
                       <Heroicons.eye_slash class="feather ml-1" />
                     </.tooltip>

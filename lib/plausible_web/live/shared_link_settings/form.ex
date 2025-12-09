@@ -60,8 +60,8 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
           id="limit-view"
           id_suffix=""
           js_active_var="limitViewEnabled"
-          label="Limit view"
-          help_text="Filter your dashboard to show only a segment."
+          label="Limit to segment"
+          help_text="Restrict this link to a segment of the data."
         />
         <div x-show="limitViewEnabled" x-cloak>
           <.live_component
@@ -144,8 +144,8 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
           id="limit-view"
           id_suffix=""
           js_active_var="limitViewEnabled"
-          label="Limit view"
-          help_text="Filter your dashboard to show only a segment."
+          label="Limit to segment"
+          help_text="Restrict this link to a segment of the data."
         />
         <div x-show="limitViewEnabled" x-cloak>
           <.live_component
