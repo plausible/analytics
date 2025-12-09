@@ -15,6 +15,11 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
       {:ok, parsed} = parse("?period=day&date=2021-07-07")
       assert serialize(parsed) == "?date=2021-07-07&period=day"
     end
+
+    test "but redundant values get removed" do
+      {:ok, parsed} = parse("?with_imported=true")
+      assert serialize(parsed) == ""
+    end
   end
 
   describe "input_date_range -> period (+ from, to)" do
@@ -53,6 +58,13 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
     test "serializes a date struct into iso8601" do
       serialized = serialize(%ParsedQueryParams{relative_date: ~D[2021-05-05]})
       assert serialized == "?date=2021-05-05"
+    end
+  end
+
+  describe "include.imports -> with_imported" do
+    test "false -> false" do
+      serialized = serialize(%ParsedQueryParams{include: %{default_include() | imports: false}})
+      assert serialized == "?with_imported=false"
     end
   end
 

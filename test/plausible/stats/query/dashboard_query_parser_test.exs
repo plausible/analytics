@@ -14,7 +14,7 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
       dimensions: nil,
       order_by: nil,
       pagination: nil,
-      include: nil
+      include: default_include()
     }
 
     assert parsed == expected
@@ -69,6 +69,23 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
 
     test "errors when invalid date" do
       {:error, :invalid_date} = parse("?date=2021-13-32")
+    end
+  end
+
+  describe "with_imported -> include.imports" do
+    test "true -> true" do
+      {:ok, parsed} = parse("?with_imported=true")
+      assert %ParsedQueryParams{include: %{imports: true}} = parsed
+    end
+
+    test "invalid -> true" do
+      {:ok, parsed} = parse("?with_imported=foo")
+      assert %ParsedQueryParams{include: %{imports: true}} = parsed
+    end
+
+    test "false -> false" do
+      {:ok, parsed} = parse("?with_imported=false")
+      assert %ParsedQueryParams{include: %{imports: false}} = parsed
     end
   end
 

@@ -4,7 +4,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
   string.
   """
 
-  alias Plausible.Stats.ParsedQueryParams
+  alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser}
 
   def serialize(%ParsedQueryParams{} = params) do
     encoded_query =
@@ -61,6 +61,14 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
       dimension = String.split(dimension, ":", parts: 2) |> List.last()
       {"f", "#{operator},#{dimension},#{clauses}"}
     end)
+  end
+
+  defp get_serialized_fields({:include, include}) do
+    if include.imports == DashboardQueryParser.default_include().imports do
+      []
+    else
+      [{"with_imported", to_string(include.imports)}]
+    end
   end
 
   defp get_serialized_fields(_) do

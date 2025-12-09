@@ -33,11 +33,14 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
     with {:ok, filters} <- parse_filters(query_string),
          {:ok, relative_date} <- parse_relative_date(params_map) do
+      include_imports? = parse_include_imports(params_map)
+
       {:ok,
        ParsedQueryParams.new!(%{
          input_date_range: parse_input_date_range(params_map),
          relative_date: relative_date,
-         filters: filters
+         filters: filters,
+         include: Map.merge(@default_include, %{imports: include_imports?})
        })}
     end
   end
@@ -70,6 +73,9 @@ defmodule Plausible.Stats.DashboardQueryParser do
   end
 
   defp parse_relative_date(_), do: {:ok, nil}
+
+  defp parse_include_imports(%{"with_imported" => "false"}), do: false
+  defp parse_include_imports(_), do: true
 
   defp parse_filters(query_string) do
     with {:ok, filters} <- decode_filters(query_string) do
