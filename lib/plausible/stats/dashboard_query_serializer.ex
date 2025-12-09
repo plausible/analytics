@@ -7,17 +7,11 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
   alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser}
 
   def serialize(%ParsedQueryParams{} = params) do
-    encoded_query =
-      params
-      |> Map.to_list()
-      |> Enum.flat_map(&get_serialized_fields/1)
-      |> Enum.sort_by(&elem(&1, 0))
-      |> Enum.map_join("&", fn {key, value} -> "#{key}=#{value}" end)
-
-    case encoded_query do
-      "" -> ""
-      encoded_query -> "?" <> encoded_query
-    end
+    params
+    |> Map.to_list()
+    |> Enum.flat_map(&get_serialized_fields/1)
+    |> Enum.sort_by(&elem(&1, 0))
+    |> Enum.map_join("&", fn {key, value} -> "#{key}=#{value}" end)
   end
 
   defp get_serialized_fields({_, nil}), do: []
