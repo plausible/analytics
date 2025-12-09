@@ -19,9 +19,11 @@ class Modal extends React.Component {
       isDragging: false
     }
     this.node = React.createRef()
+    this.canDrag = true
     this.hammerInstance = null
     this.handleClickOutside = this.handleClickOutside.bind(this)
     this.handleResize = this.handleResize.bind(this)
+    this.handlePanStart = this.handlePanStart.bind(this)
     this.handlePanMove = this.handlePanMove.bind(this)
     this.handlePanEnd = this.handlePanEnd.bind(this)
     this.handlePanCancel = this.handlePanCancel.bind(this)
@@ -65,6 +67,7 @@ class Modal extends React.Component {
 
       const hammer = new Hammer(this.node.current)
       hammer.get('pan').set({ direction: Hammer.DIRECTION_VERTICAL, threshold: 0 })
+      hammer.on('panstart', this.handlePanStart)
       hammer.on('panmove', this.handlePanMove)
       hammer.on('panend', this.handlePanEnd)
       hammer.on('pancancel', this.handlePanCancel)
@@ -74,13 +77,27 @@ class Modal extends React.Component {
     }
   }
 
+  handlePanStart(ev) {
+    // Block drag if gesture starts inside a scrollable element (e.g., inner table)
+    this.canDrag = !this.isFromScrollableTarget(ev.srcEvent?.target)
+    if (!this.canDrag) {
+      this.setState({ dragOffset: 0, isDragging: false })
+    }
+  }
+
   handlePanMove(ev) {
+    if (!this.canDrag) return
     if (ev.direction === Hammer.DIRECTION_DOWN || ev.deltaY > 0) {
       this.setState({ dragOffset: ev.deltaY, isDragging: true })
     }
   }
 
   handlePanEnd(ev) {
+    if (!this.canDrag) {
+      this.setState({ dragOffset: 0, isDragging: false })
+      return
+    }
+
     const shouldClose = ev.deltaY > 80 || ev.velocityY > 0.35
     if (shouldClose) {
       this.props.onClose()
@@ -93,6 +110,7 @@ class Modal extends React.Component {
 
   handlePanCancel() {
     this.setState({ dragOffset: 0, isDragging: false })
+    this.canDrag = true
   }
 
   getDragStyle() {
@@ -108,12 +126,30 @@ class Modal extends React.Component {
 
   teardownHammer() {
     if (this.hammerInstance) {
+      this.hammerInstance.off('panstart', this.handlePanStart)
       this.hammerInstance.off('panmove', this.handlePanMove)
       this.hammerInstance.off('panend', this.handlePanEnd)
       this.hammerInstance.off('pancancel', this.handlePanCancel)
       this.hammerInstance.destroy()
       this.hammerInstance = null
     }
+  }
+
+  isFromScrollableTarget(target) {
+    if (!target || !this.node.current) return false
+
+    let el = target
+    while (el && el !== this.node.current) {
+      const style = window.getComputedStyle(el)
+      const isScrollable =
+        (style.overflowY === 'auto' || style.overflowY === 'scroll') &&
+        el.scrollHeight > el.clientHeight
+      if (isScrollable) {
+        return true
+      }
+      el = el.parentElement
+    }
+    return false
   }
 
   /**
