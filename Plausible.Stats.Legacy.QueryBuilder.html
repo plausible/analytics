@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-EC043BA4.js"></script>
+    <script src="dist/sidebar_items-B01CF96C.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -179,7 +179,7 @@ and v1 of our Stats API.</p><p>@deprecated</p>
       </div>
 
         <div class="summary-synopsis"><h3>Examples:</h3><p>  iex&gt; Plausible.Stats.Legacy.QueryBuilder.parse_include(nil)
-  Plausible.Stats.ParsedQueryParams.default_include()</p></div>
+  Plausible.Stats.ApiQueryParser.default_include()</p></div>
 
     </div>
 
@@ -273,8 +273,8 @@ and v1 of our Stats API.</p><p>@deprecated</p>
   <span class="text">Examples:</span>
 </h3>
 <p>  iex&gt; Plausible.Stats.Legacy.QueryBuilder.parse_include(nil)
-  Plausible.Stats.ParsedQueryParams.default_include()</p><p>  iex&gt; Plausible.Stats.Legacy.QueryBuilder.parse_include(~s({&quot;total_rows&quot;: true}))
-  Map.merge(Plausible.Stats.ParsedQueryParams.default_include(), %{total_rows: true})</p>
+  Plausible.Stats.ApiQueryParser.default_include()</p><p>  iex&gt; Plausible.Stats.Legacy.QueryBuilder.parse_include(~s({&quot;total_rows&quot;: true}))
+  Map.merge(Plausible.Stats.ApiQueryParser.default_include(), %{total_rows: true})</p>
   </section>
 </section>
 <section class="detail" id="parse_order_by/1">
