@@ -66,7 +66,9 @@ class Modal extends React.Component {
       if (this.hammerInstance) return
 
       const hammer = new Hammer(this.node.current)
-      hammer.get('pan').set({ direction: Hammer.DIRECTION_VERTICAL, threshold: 0 })
+      hammer
+        .get('pan')
+        .set({ direction: Hammer.DIRECTION_VERTICAL, threshold: 0 })
       hammer.on('panstart', this.handlePanStart)
       hammer.on('panmove', this.handlePanMove)
       hammer.on('panend', this.handlePanEnd)
@@ -120,7 +122,9 @@ class Modal extends React.Component {
     return {
       transform: `translateY(${clamped}px)`,
       opacity,
-      transition: isDragging ? 'none' : 'transform 150ms ease-out, opacity 150ms ease-out'
+      transition: isDragging
+        ? 'none'
+        : 'transform 150ms ease-out, opacity 150ms ease-out'
     }
   }
 

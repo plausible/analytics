@@ -371,7 +371,7 @@ export default function ListReport<
               style={{ width: colMinWidth, minWidth: colMinWidth }}
             >
               <span
-                className={`font-medium text-sm text-right ${isShowOnHover ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}
+                className={`font-medium text-sm text-right ${isShowOnHover ? 'text-gray-500 group-hover/row:text-gray-800 dark:group-hover/row:text-gray-200' : 'text-gray-800 dark:text-gray-200'}`}
               >
                 {metric.renderValue(listItem, state.meta, {
                   detailedView: false,

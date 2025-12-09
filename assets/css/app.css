@@ -300,7 +300,7 @@ blockquote {
 }
 
 .dark .table-striped tbody tr:nth-child(odd) td {
-  background-color: var(--color-gray-800);
+  background-color: var(--color-gray-850);
 }
 
 .fade-enter {

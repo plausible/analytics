@@ -54,7 +54,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
           />
         )}
       </div>
-      <div className="my-3 md:my-4 border-b border-gray-250 dark:border-gray-700"></div>
+      <div className="my-3 md:my-4 border-b border-gray-250 dark:border-gray-750"></div>
       <div className="flex-1 overflow-auto pr-4 -mr-4">
         {displayError && status === 'error' && <ErrorMessage error={error} />}
         {isPending && <InitialLoadingSpinner />}
