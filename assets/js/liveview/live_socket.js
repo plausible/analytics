@@ -8,7 +8,8 @@ import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 import { Modal, Dropdown } from 'prima'
-import LiveDashboard from './live_dashboard'
+import DashboardRoot from './dashboard_root'
+import DashboardTabs from './dashboard_tabs.js'
 import topbar from 'topbar'
 /* eslint-enable import/no-unresolved */
 
@@ -21,7 +22,7 @@ let disablePushStateFlag = document.querySelector(
 )
 let domain = document.querySelector("meta[name='dashboard-domain']")
 if (csrfToken && websocketUrl) {
-  let Hooks = { Modal, Dropdown, LiveDashboard }
+  let Hooks = { Modal, Dropdown, DashboardRoot, DashboardTabs }
   Hooks.Metrics = {
     mounted() {
       this.handleEvent('send-metrics', ({ event_name }) => {

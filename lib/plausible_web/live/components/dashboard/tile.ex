@@ -27,8 +27,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
           :if={@tabs != []}
           id={@id <> "-tabs"}
           phx-update="ignore"
-          phx-hook="LiveDashboard"
-          data-widget="tabs"
+          phx-hook="DashboardTabs"
           class="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
         >
           {render_slot(@tabs)}
