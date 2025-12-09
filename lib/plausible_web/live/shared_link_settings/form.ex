@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
             suggest_fun={fn input, _ -> get_segment_suggestions(assigns.site, input) end}
             selected={
               @shared_link.segment_id &&
-                {@shared_link.limited_to_segment.id, @shared_link.limited_to_segment.name}
+                {@shared_link.segment.id, @shared_link.segment.name}
             }
           />
         </div>
