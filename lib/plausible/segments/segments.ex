@@ -70,9 +70,9 @@ defmodule Plausible.Segments do
     {:ok, Repo.all(query)}
   end
 
-  def search_by_name(%Plausible.Site{} = site, name, opts) do
-    type = Keyword.fetch!(opts, :type)
-    fields = Keyword.get(opts, :fields, [:id, :name])
+  def search_by_name(%Plausible.Site{} = site, name) do
+    type = :site
+    fields = [:id, :name]
 
     name_empty? = is_nil(name) or (is_binary(name) and String.trim(name) == "")
 
@@ -97,11 +97,11 @@ defmodule Plausible.Segments do
             match_rank:
               fragment(
                 "CASE
-                WHEN lower(?) = lower(?) THEN 0                    -- exact match
-                WHEN lower(?) LIKE lower(?) || '%' THEN 1          -- starts with
-                WHEN lower(?) LIKE '% ' || lower(?) || '%' THEN 2  -- after a space
-                WHEN lower(?) LIKE ? THEN 3                        -- anywhere
-              END AS match_rank",
+                  WHEN lower(?) = lower(?) THEN 0                    -- exact match
+                  WHEN lower(?) LIKE lower(?) || '%' THEN 1          -- starts with
+                  WHEN lower(?) LIKE '% ' || lower(?) || '%' THEN 2  -- after a space
+                  WHEN lower(?) ILIKE ? THEN 3                        -- anywhere
+                END AS match_rank",
                 segment.name,
                 ^name,
                 segment.name,
@@ -109,13 +109,13 @@ defmodule Plausible.Segments do
                 segment.name,
                 ^name,
                 segment.name,
-                ^"%name%"
+                ^"%#{name}%"
               ),
             pos:
               fragment(
                 "position(lower(?) IN lower(?)) AS pos",
-                segment.name,
-                ^name
+                ^name,
+                segment.name
               ),
             len_diff: fragment("abs(length(?) - length(?)) AS len_diff", segment.name, ^name)
           },

@@ -68,12 +68,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
             id="segment_id"
             submit_name="shared_link[segment_id]"
             module={ComboBox}
-            suggest_fun={
-              fn input, _ ->
-                {:ok, segments} = Plausible.Segments.search_by_name(assigns.site, input, type: :site)
-                Enum.map(segments, &{&1.id, &1.name})
-              end
-            }
+            suggest_fun={fn input, _ -> get_segment_suggestions(assigns.site, input) end}
             selected={
               @shared_link.segment_id &&
                 {@shared_link.limited_to_segment.id, @shared_link.limited_to_segment.name}
@@ -152,12 +147,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
             id="segment_id"
             submit_name="shared_link[segment_id]"
             module={ComboBox}
-            suggest_fun={
-              fn input, _ ->
-                {:ok, segments} = Plausible.Segments.search_by_name(assigns.site, input, type: :site)
-                Enum.map(segments, &{&1.id, &1.name})
-              end
-            }
+            suggest_fun={fn input, _ -> get_segment_suggestions(assigns.site, input) end}
             selected={nil}
           />
         </div>
@@ -167,6 +157,11 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
       </.button>
     </.form>
     """
+  end
+
+  defp get_segment_suggestions(site, input) do
+    {:ok, segments} = Plausible.Segments.search_by_name(site, input)
+    Enum.map(segments, &{&1.id, &1.name})
   end
 
   def handle_event(
