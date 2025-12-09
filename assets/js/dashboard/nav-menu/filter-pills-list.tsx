@@ -70,45 +70,38 @@ export const AppliedFilterPillsList = React.forwardRef<
 
   return (
     <FilterPillsList
-      pills={renderableFilters.map((filter, index) => {
-        return {
-          className: classNames(
-            isInvisible(index) && 'invisible',
-            pillClassName
-          ),
-          plainText: plainFilterText(query, filter),
-          children: styledFilterText(query, filter),
-          interactive: {
-            navigationTarget: {
-              path: filterRoute.path,
-              search: (s) => s,
-              params: {
-                field:
-                  FILTER_GROUP_TO_MODAL_TYPE[
-                    filter[1].startsWith(EVENT_PROPS_PREFIX)
-                      ? 'props'
-                      : filter[1]
-                  ]
-              }
-            },
-            onRemoveClick: canRemoveFilter(filter, limitedToSegment)
-              ? () => {
-                  const newFilters = query.filters.filter(
-                    (_, i) => i !== index + indexAdjustment
-                  )
+      pills={renderableFilters.map((filter, index) => ({
+        className: classNames(isInvisible(index) && 'invisible', pillClassName),
+        plainText: plainFilterText(query, filter),
+        children: styledFilterText(query, filter),
+        interactive: {
+          navigationTarget: {
+            path: filterRoute.path,
+            search: (s) => s,
+            params: {
+              field:
+                FILTER_GROUP_TO_MODAL_TYPE[
+                  filter[1].startsWith(EVENT_PROPS_PREFIX) ? 'props' : filter[1]
+                ]
+            }
+          },
+          onRemoveClick: canRemoveFilter(filter, limitedToSegment)
+            ? () => {
+                const newFilters = query.filters.filter(
+                  (_, i) => i !== index + indexAdjustment
+                )
 
-                  navigate({
-                    search: (searchRecord) => ({
-                      ...searchRecord,
-                      filters: newFilters,
-                      labels: cleanLabels(newFilters, query.labels)
-                    })
+                navigate({
+                  search: (searchRecord) => ({
+                    ...searchRecord,
+                    filters: newFilters,
+                    labels: cleanLabels(newFilters, query.labels)
                   })
-                }
-              : undefined
-          }
+                })
+              }
+            : undefined
         }
-      })}
+      }))}
       className={className}
       style={style}
       ref={ref}

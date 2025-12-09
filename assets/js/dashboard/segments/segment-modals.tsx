@@ -220,19 +220,13 @@ export const DeleteSegmentModal = ({
             <RelatedSharedLinks sharedLinks={linksQuery.data} />
           </div>
           <div className="mt-4">
-            <label
-              className="text-sm block font-medium dark:text-gray-100 font-normal gap-x-2 flex flex-inline items-center justify-start"
-              htmlFor="confirm-delete-shared-links"
+            <Checkbox
+              id="confirm"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.currentTarget.checked)}
             >
-              <input
-                className="block size-5 rounded-sm dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
-                id="confirm-delete-shared-links"
-                type="checkbox"
-                checked={confirmed}
-                onChange={(e) => setConfirmed(e.currentTarget.checked)}
-              />
               Yes, delete the associated shared links
-            </label>
+            </Checkbox>
           </div>
         </>
       )}
@@ -575,6 +569,33 @@ const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
 const SecondaryTitle = ({ children }: { children: ReactNode }) => (
   <h2 className="font-bold dark:text-gray-100">{children}</h2>
 )
+
+/** Keep this component styled the same as checkboxes in PlausibleWeb.Live.Installation.Instructions */
+const Checkbox = ({
+  id,
+  checked,
+  onChange,
+  children
+}: React.DetailedHTMLProps<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  HTMLInputElement
+>) => {
+  return (
+    <label
+      className="text-sm block font-medium dark:text-gray-100 font-normal gap-x-2 flex flex-inline items-center justify-start"
+      htmlFor={id}
+    >
+      <input
+        className="block size-5 rounded-sm dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+      />
+      {children}
+    </label>
+  )
+}
 
 const Placeholder = ({
   children,
