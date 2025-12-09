@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import Hammer from 'hammerjs'
 import { createPortal } from 'react-dom'
 import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { rootRoute } from '../../router'
@@ -15,16 +16,15 @@ class Modal extends React.Component {
     this.state = {
       viewport: DEFAULT_WIDTH,
       dragOffset: 0,
-      isClosing: false
+      isDragging: false
     }
     this.node = React.createRef()
+    this.hammerInstance = null
     this.handleClickOutside = this.handleClickOutside.bind(this)
     this.handleResize = this.handleResize.bind(this)
-    this.handleTouchStart = this.handleTouchStart.bind(this)
-    this.handleTouchMove = this.handleTouchMove.bind(this)
-    this.handleTouchEnd = this.handleTouchEnd.bind(this)
-    this.touchStartY = null
-    this.lastTouchY = null
+    this.handlePanMove = this.handlePanMove.bind(this)
+    this.handlePanEnd = this.handlePanEnd.bind(this)
+    this.handlePanCancel = this.handlePanCancel.bind(this)
   }
 
   componentDidMount() {
@@ -36,6 +36,7 @@ class Modal extends React.Component {
   }
 
   componentWillUnmount() {
+    this.teardownHammer()
     document.body.style.overflow = null
     document.body.style.height = null
     document.removeEventListener('mousedown', this.handleClickOutside)
@@ -51,7 +52,68 @@ class Modal extends React.Component {
   }
 
   handleResize() {
-    this.setState({ viewport: window.innerWidth })
+    const viewport = window.innerWidth
+    this.setState({ viewport })
+    this.updateSwipeListener(viewport)
+  }
+
+  updateSwipeListener(viewport) {
+    if (!this.node.current) return
+
+    if (viewport < MD_WIDTH) {
+      if (this.hammerInstance) return
+
+      const hammer = new Hammer(this.node.current)
+      hammer.get('pan').set({ direction: Hammer.DIRECTION_VERTICAL, threshold: 0 })
+      hammer.on('panmove', this.handlePanMove)
+      hammer.on('panend', this.handlePanEnd)
+      hammer.on('pancancel', this.handlePanCancel)
+      this.hammerInstance = hammer
+    } else {
+      this.teardownHammer()
+    }
+  }
+
+  handlePanMove(ev) {
+    if (ev.direction === Hammer.DIRECTION_DOWN || ev.deltaY > 0) {
+      this.setState({ dragOffset: ev.deltaY, isDragging: true })
+    }
+  }
+
+  handlePanEnd(ev) {
+    const shouldClose = ev.deltaY > 80 || ev.velocityY > 0.35
+    if (shouldClose) {
+      this.props.onClose()
+      return
+    }
+
+    // Snap back
+    this.setState({ dragOffset: 0, isDragging: false })
+  }
+
+  handlePanCancel() {
+    this.setState({ dragOffset: 0, isDragging: false })
+  }
+
+  getDragStyle() {
+    const { dragOffset, isDragging } = this.state
+    const clamped = Math.max(0, dragOffset)
+    const opacity = Math.max(0, Math.min(1, 1 - clamped / 200))
+    return {
+      transform: `translateY(${clamped}px)`,
+      opacity,
+      transition: isDragging ? 'none' : 'transform 150ms ease-out, opacity 150ms ease-out'
+    }
+  }
+
+  teardownHammer() {
+    if (this.hammerInstance) {
+      this.hammerInstance.off('panmove', this.handlePanMove)
+      this.hammerInstance.off('panend', this.handlePanEnd)
+      this.hammerInstance.off('pancancel', this.handlePanCancel)
+      this.hammerInstance.destroy()
+      this.hammerInstance = null
+    }
   }
 
   /**
@@ -70,63 +132,7 @@ class Modal extends React.Component {
     } else {
       styleObject.maxWidth = '880px'
     }
-    styleObject.transform = `translateY(${this.state.dragOffset}px)`
-    if (this.state.isClosing) {
-      styleObject.transition = 'transform 150ms ease-out'
-    } else {
-      styleObject.transition =
-        this.state.dragOffset > 0 ? 'none' : 'transform 150ms ease-out'
-    }
     return styleObject
-  }
-
-  handleTouchStart(e) {
-    if (this.state.viewport >= MD_WIDTH) return
-    this.setState({ isClosing: false })
-    const touch = e.touches[0]
-    this.touchStartY = touch.clientY
-    this.lastTouchY = touch.clientY
-  }
-
-  handleTouchMove(e) {
-    if (this.state.viewport >= MD_WIDTH) return
-    if (this.touchStartY === null) return
-    const touch = e.touches[0]
-    const deltaY = touch.clientY - this.touchStartY
-    this.lastTouchY = touch.clientY
-    if (deltaY <= 0) {
-      this.setState({ dragOffset: 0 })
-      return
-    }
-    e.preventDefault()
-    this.setState({ dragOffset: deltaY })
-  }
-
-  handleTouchEnd() {
-    if (this.state.viewport >= MD_WIDTH) return
-    if (this.touchStartY === null || this.lastTouchY === null) {
-      this.touchStartY = null
-      this.lastTouchY = null
-      return
-    }
-    const deltaY = this.lastTouchY - this.touchStartY
-    this.touchStartY = null
-    this.lastTouchY = null
-    if (deltaY > 150) {
-      this.setState(
-        {
-          dragOffset: Math.max(deltaY, window.innerHeight * 0.6),
-          isClosing: true
-        },
-        () => {
-          setTimeout(() => {
-            this.props.onClose()
-          }, 150)
-        }
-      )
-      return
-    }
-    this.setState({ dragOffset: 0, isClosing: false })
   }
 
   render() {
@@ -145,12 +151,9 @@ class Modal extends React.Component {
               <div
                 ref={this.node}
                 className="max-h-[calc(100dvh_-_var(--gap)*2)] min-h-[66vh] md:min-h-120 w-full flex flex-col bg-white p-3 md:px-6 md:py-4 overflow-hidden box-border transition-[height] duration-200 ease-in shadow-2xl rounded-t-lg md:rounded-lg dark:bg-gray-900 focus:outline-hidden"
-                style={this.getStyle()}
+                style={{ ...this.getStyle(), ...this.getDragStyle() }}
                 // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                 tabIndex={0}
-                onTouchStart={this.handleTouchStart}
-                onTouchMove={this.handleTouchMove}
-                onTouchEnd={this.handleTouchEnd}
               >
                 <FocusOnMount focusableRef={this.node} />
                 {this.props.children}
