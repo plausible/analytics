@@ -112,6 +112,13 @@ defmodule Plausible.Teams.Test do
     end
   end
 
+  def add_site_guest_or_team_member(site, args \\ []) do
+    case Keyword.pop!(args, :membership_type) do
+      {:site_guest, args} -> add_guest(site, args)
+      {:team_member, args} -> add_member(site.team, args)
+    end
+  end
+
   def add_guest(site, args \\ []) do
     user = Keyword.get(args, :user, new_user())
     role = Keyword.fetch!(args, :role)
