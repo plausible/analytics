@@ -5,11 +5,20 @@ defmodule Plausible.Stats.QueryBuilder do
 
   use Plausible
   alias Plausible.Segments
-  alias Plausible.Stats.{Query, ParsedQueryParams, Comparisons, Filters, Time, TableDecider}
 
-  def build(site, parsed_query_params, params, debug_metadata \\ %{}) do
+  alias Plausible.Stats.{
+    Query,
+    ParsedQueryParams,
+    Comparisons,
+    Filters,
+    Time,
+    TableDecider,
+    DateTimeRange
+  }
+
+  def build(site, parsed_query_params, debug_metadata \\ %{}) do
     with {:ok, parsed_query_params} <- resolve_segments_in_filters(parsed_query_params, site),
-         query = do_build(parsed_query_params, site, params, debug_metadata),
+         query = do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
@@ -45,31 +54,122 @@ defmodule Plausible.Stats.QueryBuilder do
     end
   end
 
-  defp do_build(parsed_query_params, site, params, debug_metadata) do
-    %ParsedQueryParams{metrics: metrics, filters: filters, dimensions: dimensions} =
-      parsed_query_params
+  defp build_datetime_range(input_date_range, _site, _relative_date, now)
+       when input_date_range in [:realtime, :realtime_30m] do
+    duration_minutes =
+      case input_date_range do
+        :realtime -> 5
+        :realtime_30m -> 30
+      end
+
+    first_datetime = DateTime.shift(now, minute: -duration_minutes)
+    last_datetime = DateTime.shift(now, second: 5)
+
+    DateTimeRange.new!(first_datetime, last_datetime)
+  end
+
+  defp build_datetime_range(:day, site, relative_date, _now) do
+    DateTimeRange.new!(relative_date, relative_date, site.timezone)
+  end
+
+  defp build_datetime_range(:month, site, relative_date, _now) do
+    first = relative_date |> Date.beginning_of_month()
+    last = relative_date |> Date.end_of_month()
+    DateTimeRange.new!(first, last, site.timezone)
+  end
+
+  defp build_datetime_range(:year, site, relative_date, _now) do
+    first = relative_date |> Plausible.Times.beginning_of_year()
+    last = relative_date |> Plausible.Times.end_of_year()
+    DateTimeRange.new!(first, last, site.timezone)
+  end
+
+  defp build_datetime_range(:all, site, relative_date, _now) do
+    start_date = Plausible.Sites.stats_start_date(site) || relative_date
+    DateTimeRange.new!(start_date, relative_date, site.timezone)
+  end
+
+  defp build_datetime_range({:last_n_days, n}, site, relative_date, _now) do
+    last = relative_date |> Date.add(-1)
+    first = relative_date |> Date.add(-n)
+    DateTimeRange.new!(first, last, site.timezone)
+  end
+
+  defp build_datetime_range({:last_n_months, n}, site, relative_date, _now) do
+    last = relative_date |> Date.shift(month: -1) |> Date.end_of_month()
+    first = relative_date |> Date.shift(month: -n) |> Date.beginning_of_month()
+    DateTimeRange.new!(first, last, site.timezone)
+  end
+
+  defp build_datetime_range({:date_range, from, to}, site, _relative_date, _now) do
+    DateTimeRange.new!(from, to, site.timezone)
+  end
+
+  defp build_datetime_range({:datetime_range, from, to}, _site, _relative_date, _now) do
+    DateTimeRange.new!(from, to)
+  end
+
+  defp build_comparison_datetime_range(
+         %ParsedQueryParams{include: %{comparisons: %{date_range: date_range}}} =
+           parsed_query_params,
+         site
+       ) do
+    comparison_date_range = build_datetime_range(date_range, site, nil, nil)
+
+    new_include =
+      put_in(parsed_query_params.include, [:comparisons, :date_range], comparison_date_range)
+
+    struct(parsed_query_params, include: new_include)
+  end
+
+  defp build_comparison_datetime_range(%ParsedQueryParams{} = parsed_query_params, _site) do
+    parsed_query_params
+  end
+
+  defp do_build(parsed_query_params, site, debug_metadata) do
+    now = Plausible.Stats.Query.Test.get_fixed_now()
+
+    %ParsedQueryParams{
+      input_date_range: input_date_range,
+      relative_date: relative_date,
+      metrics: metrics,
+      filters: filters,
+      dimensions: dimensions
+    } = parsed_query_params
+
+    parsed_query_params = build_comparison_datetime_range(parsed_query_params, site)
+
+    relative_date = relative_date || today_from_now(site, now)
+
+    utc_time_range =
+      input_date_range
+      |> build_datetime_range(site, relative_date, now)
+      |> DateTimeRange.to_timezone("Etc/UTC")
 
     {preloaded_goals, revenue_warning, revenue_currencies} =
       preload_goals_and_revenue(site, metrics, filters, dimensions)
 
     consolidated_site_ids = get_consolidated_site_ids(site)
 
-    all_params =
-      parsed_query_params
-      |> Map.to_list()
-      |> Keyword.merge(
-        site_id: site.id,
-        site_native_stats_start_at: site.native_stats_start_at,
-        consolidated_site_ids: consolidated_site_ids,
-        timezone: site.timezone,
-        preloaded_goals: preloaded_goals,
-        revenue_warning: revenue_warning,
-        revenue_currencies: revenue_currencies,
-        input_date_range: Map.get(params, "date_range"),
-        debug_metadata: debug_metadata
-      )
-
-    struct!(%Query{}, all_params)
+    struct!(%Query{},
+      now: now,
+      input_date_range: input_date_range,
+      utc_time_range: utc_time_range,
+      site_id: site.id,
+      metrics: metrics,
+      dimensions: dimensions,
+      filters: filters,
+      order_by: parsed_query_params.order_by,
+      pagination: parsed_query_params.pagination,
+      include: parsed_query_params.include,
+      site_native_stats_start_at: site.native_stats_start_at,
+      consolidated_site_ids: consolidated_site_ids,
+      timezone: site.timezone,
+      preloaded_goals: preloaded_goals,
+      revenue_warning: revenue_warning,
+      revenue_currencies: revenue_currencies,
+      debug_metadata: debug_metadata
+    )
   end
 
   on_ee do
@@ -348,6 +448,10 @@ defmodule Plausible.Stats.QueryBuilder do
     else
       :ok
     end
+  end
+
+  defp today_from_now(site, now) do
+    now |> DateTime.shift_zone!(site.timezone) |> DateTime.to_date()
   end
 
   defp i(value), do: inspect(value, charlists: :as_lists)

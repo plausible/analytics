@@ -31,7 +31,7 @@ defmodule PlausibleWeb.AvatarController do
   end
 
   @forwarded_headers ["content-type", "cache-control", "expires"]
-  defp forward_headers(conn, headers) do
+  defp forward_headers(%Plug.Conn{} = conn, headers) do
     headers_to_forward = Enum.filter(headers, fn {k, _} -> k in @forwarded_headers end)
     %Plug.Conn{conn | resp_headers: headers_to_forward}
   end

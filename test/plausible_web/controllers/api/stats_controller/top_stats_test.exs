@@ -1279,7 +1279,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       populate_stats(site, [
         build(:pageview, pathname: "/index", hostname: "example.com"),
         build(:pageview, pathname: "/index", hostname: "example.com", user_id: @user_id),
-        build(:pageview, pathname: "/blog/post1", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview,
+          pathname: "/blog/post1",
+          hostname: "blog.example.com",
+          user_id: @user_id
+        ),
         build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com")
       ])
 
@@ -1306,8 +1310,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       populate_stats(site, [
         build(:pageview, pathname: "/index", hostname: "example.com"),
         build(:pageview, pathname: "/index", hostname: "example.com", user_id: @user_id),
-        build(:pageview, pathname: "/blog/post1", hostname: "blog.example.com", user_id: @user_id),
-        build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview,
+          pathname: "/blog/post1",
+          hostname: "blog.example.com",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          pathname: "/blog/post2",
+          hostname: "blog.example.com",
+          user_id: @user_id
+        ),
         build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com"),
         build(:pageview, pathname: "/blog/post2", hostname: "about.example.com")
       ])
@@ -1336,8 +1348,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       populate_stats(site, [
         build(:pageview, pathname: "/index", hostname: "example.com"),
         build(:pageview, pathname: "/index", hostname: "example.com", user_id: @user_id),
-        build(:pageview, pathname: "/blog/post1", hostname: "blog.example.com", user_id: @user_id),
-        build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview,
+          pathname: "/blog/post1",
+          hostname: "blog.example.com",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          pathname: "/blog/post2",
+          hostname: "blog.example.com",
+          user_id: @user_id
+        ),
         build(:pageview, pathname: "/blog/post3", hostname: "blog.example.com"),
         build(:pageview,
           pathname: "/blog/post2",

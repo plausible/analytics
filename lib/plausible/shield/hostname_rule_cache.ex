@@ -45,7 +45,7 @@ defmodule Plausible.Shield.HostnameRuleCache do
 
     case Plausible.Repo.all(query) do
       [_ | _] = results ->
-        Enum.map(results, fn {_, _, rule} ->
+        Enum.map(results, fn {_, _, rule = %HostnameRule{}} ->
           %HostnameRule{rule | from_cache?: false}
         end)
 

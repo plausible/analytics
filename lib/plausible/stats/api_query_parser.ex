@@ -1,29 +1,40 @@
-defmodule Plausible.Stats.QueryParser do
+defmodule Plausible.Stats.ApiQueryParser do
   @moduledoc false
 
   use Plausible
 
   alias Plausible.Stats.{Filters, Metrics, DateTimeRange, JSONSchema}
 
-  def parse(site, schema_type, params, now \\ nil) when is_map(params) do
-    now = now || Plausible.Stats.Query.Test.get_fixed_now()
-    date = now |> DateTime.shift_zone!(site.timezone) |> DateTime.to_date()
+  @default_include %{
+    imports: false,
+    imports_meta: false,
+    time_labels: false,
+    total_rows: false,
+    trim_relative_date_range: false,
+    comparisons: nil,
+    legacy_time_on_page_cutoff: nil
+  }
+
+  def default_include(), do: @default_include
+
+  @default_pagination %{limit: 10_000, offset: 0}
+
+  def default_pagination(), do: @default_pagination
+
+  def parse(schema_type, params) when is_map(params) do
+    input_date_range = Map.get(params, "date_range")
 
     with :ok <- JSONSchema.validate(schema_type, params),
-         {:ok, date, now} <- parse_date(site, Map.get(params, "date"), date, now),
-         {:ok, raw_time_range} <-
-           parse_time_range(site, Map.get(params, "date_range"), date, now),
-         utc_time_range = raw_time_range |> DateTimeRange.to_timezone("Etc/UTC"),
+         {:ok, input_date_range} <- parse_input_date_range(input_date_range),
          {:ok, metrics} <- parse_metrics(Map.fetch!(params, "metrics")),
          {:ok, filters} <- parse_filters(params["filters"]),
          {:ok, dimensions} <- parse_dimensions(params["dimensions"]),
          {:ok, order_by} <- parse_order_by(params["order_by"]),
          {:ok, pagination} <- parse_pagination(params["pagination"]),
-         {:ok, include} <- parse_include(params["include"], site) do
+         {:ok, include} <- parse_include(params["include"]) do
       {:ok,
        Plausible.Stats.ParsedQueryParams.new!(%{
-         now: now,
-         utc_time_range: utc_time_range,
+         input_date_range: input_date_range,
          metrics: metrics,
          filters: filters,
          dimensions: dimensions,
@@ -42,6 +53,13 @@ defmodule Plausible.Stats.QueryParser do
 
   def parse_date_range_pair(_site, unknown), do: {:error, "Invalid date_range '#{i(unknown)}'."}
 
+  defp date_range_from_date_strings(site, from, to) do
+    with {:ok, from_date} <- Date.from_iso8601(from),
+         {:ok, to_date} <- Date.from_iso8601(to) do
+      {:ok, DateTimeRange.new!(from_date, to_date, site.timezone)}
+    end
+  end
+
   defp parse_metrics(metrics) when is_list(metrics) do
     parse_list(metrics, &parse_metric/1)
   end
@@ -57,7 +75,7 @@ defmodule Plausible.Stats.QueryParser do
     parse_list(filters, &parse_filter/1)
   end
 
-  def parse_filters(nil), do: {:ok, nil}
+  def parse_filters(nil), do: {:ok, []}
 
   defp parse_filter(filter) do
     with {:ok, operator} <- parse_operator(filter),
@@ -155,94 +173,43 @@ defmodule Plausible.Stats.QueryParser do
     {:ok, []}
   end
 
-  defp parse_date(site, date_string, _date, _now) when is_binary(date_string) do
-    with {:ok, date} <- Date.from_iso8601(date_string),
-         {:ok, datetime} <- DateTime.new(date, ~T[00:00:00], site.timezone) do
-      {:ok, date, datetime}
-    else
-      {:gap, just_before, _just_after} -> just_before
-      {:ambiguous, first_datetime, _second_datetime} -> first_datetime
-      _ -> {:error, "Invalid date '#{date_string}'."}
-    end
-  end
+  defp parse_input_date_range("realtime"), do: {:ok, :realtime}
+  defp parse_input_date_range("30m"), do: {:ok, :realtime_30m}
+  defp parse_input_date_range("day"), do: {:ok, :day}
+  defp parse_input_date_range("month"), do: {:ok, :month}
+  defp parse_input_date_range("year"), do: {:ok, :year}
+  defp parse_input_date_range("all"), do: {:ok, :all}
 
-  defp parse_date(_site, _date_string, date, now) do
-    {:ok, date, now}
-  end
-
-  defp parse_time_range(_site, date_range, _date, now) when date_range in ["realtime", "30m"] do
-    duration_minutes =
-      case date_range do
-        "realtime" -> 5
-        "30m" -> 30
-      end
-
-    first_datetime = DateTime.shift(now, minute: -duration_minutes)
-    last_datetime = DateTime.shift(now, second: 5)
-
-    {:ok, DateTimeRange.new!(first_datetime, last_datetime)}
-  end
-
-  defp parse_time_range(site, "day", date, _now) do
-    {:ok, DateTimeRange.new!(date, date, site.timezone)}
-  end
-
-  defp parse_time_range(site, "month", date, _now) do
-    last = date |> Date.end_of_month()
-    first = last |> Date.beginning_of_month()
-    {:ok, DateTimeRange.new!(first, last, site.timezone)}
-  end
-
-  defp parse_time_range(site, "year", date, _now) do
-    last = date |> Plausible.Times.end_of_year()
-    first = last |> Plausible.Times.beginning_of_year()
-    {:ok, DateTimeRange.new!(first, last, site.timezone)}
-  end
-
-  defp parse_time_range(site, "all", date, _now) do
-    start_date = Plausible.Sites.stats_start_date(site) || date
-
-    {:ok, DateTimeRange.new!(start_date, date, site.timezone)}
-  end
-
-  defp parse_time_range(site, shorthand, date, _now) when is_binary(shorthand) do
+  defp parse_input_date_range(shorthand) when is_binary(shorthand) do
     case Integer.parse(shorthand) do
-      {n, "d"} when n > 0 and n <= 5_000 ->
-        last = date |> Date.add(-1)
-        first = date |> Date.add(-n)
-        {:ok, DateTimeRange.new!(first, last, site.timezone)}
-
-      {n, "mo"} when n > 0 and n <= 100 ->
-        last = date |> Date.shift(month: -1) |> Date.end_of_month()
-        first = date |> Date.shift(month: -n) |> Date.beginning_of_month()
-        {:ok, DateTimeRange.new!(first, last, site.timezone)}
-
-      _ ->
-        {:error, "Invalid date_range #{i(shorthand)}"}
+      {n, "d"} when n > 0 and n <= 5_000 -> {:ok, {:last_n_days, n}}
+      {n, "mo"} when n > 0 and n <= 100 -> {:ok, {:last_n_months, n}}
+      _ -> {:error, "Invalid date_range #{i(shorthand)}"}
     end
   end
 
-  defp parse_time_range(site, [from, to], _date, _now) when is_binary(from) and is_binary(to) do
-    case date_range_from_date_strings(site, from, to) do
-      {:ok, date_range} -> {:ok, date_range}
-      {:error, _} -> date_range_from_timestamps(from, to)
+  defp parse_input_date_range([from, to]) when is_binary(from) and is_binary(to) do
+    case parse_date_strings(from, to) do
+      {:ok, dates} -> {:ok, dates}
+      {:error, _} -> parse_timestamp_strings(from, to)
     end
   end
 
-  defp parse_time_range(_site, unknown, _date, _now),
-    do: {:error, "Invalid date_range #{i(unknown)}"}
+  defp parse_input_date_range(unknown) do
+    {:error, "Invalid date_range #{i(unknown)}"}
+  end
 
-  defp date_range_from_date_strings(site, from, to) do
+  defp parse_date_strings(from, to) do
     with {:ok, from_date} <- Date.from_iso8601(from),
          {:ok, to_date} <- Date.from_iso8601(to) do
-      {:ok, DateTimeRange.new!(from_date, to_date, site.timezone)}
+      {:ok, {:date_range, from_date, to_date}}
     end
   end
 
-  defp date_range_from_timestamps(from, to) do
+  defp parse_timestamp_strings(from, to) do
     with {:ok, from_datetime, _offset} <- DateTime.from_iso8601(from),
          {:ok, to_datetime, _offset} <- DateTime.from_iso8601(to) do
-      {:ok, DateTimeRange.new!(from_datetime, to_datetime)}
+      {:ok, {:datetime_range, from_datetime, to_datetime}}
     else
       _ -> {:error, "Invalid date_range '#{i([from, to])}'."}
     end
@@ -255,7 +222,7 @@ defmodule Plausible.Stats.QueryParser do
     )
   end
 
-  defp parse_dimensions(nil), do: {:ok, nil}
+  defp parse_dimensions(nil), do: {:ok, []}
 
   def parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)
@@ -307,18 +274,19 @@ defmodule Plausible.Stats.QueryParser do
   defp parse_order_direction([_, "desc"]), do: {:ok, :desc}
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
-  def parse_include(include, site) when is_map(include) do
-    with {:ok, include} <- atomize_include_keys(include) do
-      update_comparisons_date_range(include, site)
+  def parse_include(include) when is_map(include) do
+    with {:ok, include} <- atomize_include_keys(include),
+         {:ok, include} <- parse_comparison_date_range(include) do
+      {:ok, Map.merge(@default_include, include)}
     end
   end
 
-  def parse_include(nil, _site), do: {:ok, nil}
-  def parse_include(include, _site), do: {:error, "Invalid include '#{i(include)}'."}
+  def parse_include(nil), do: {:ok, @default_include}
+  def parse_include(include), do: {:error, "Invalid include '#{i(include)}'."}
 
   defp atomize_include_keys(map) do
     expected_keys =
-      Plausible.Stats.ParsedQueryParams.default_include()
+      @default_include
       |> Map.keys()
       |> Enum.map(&Atom.to_string/1)
 
@@ -329,20 +297,19 @@ defmodule Plausible.Stats.QueryParser do
     end
   end
 
-  defp update_comparisons_date_range(%{comparisons: %{date_range: date_range}} = include, site) do
-    with {:ok, parsed_date_range} <- parse_time_range(site, date_range, nil, nil) do
+  defp parse_comparison_date_range(%{comparisons: %{date_range: date_range}} = include) do
+    with {:ok, parsed_date_range} <- parse_input_date_range(date_range) do
       {:ok, put_in(include, [:comparisons, :date_range], parsed_date_range)}
     end
   end
 
-  defp update_comparisons_date_range(include, _site), do: {:ok, include}
+  defp parse_comparison_date_range(include), do: {:ok, include}
 
   defp parse_pagination(pagination) when is_map(pagination) do
-    {:ok,
-     Map.merge(Plausible.Stats.ParsedQueryParams.default_pagination(), atomize_keys(pagination))}
+    {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
   end
 
-  defp parse_pagination(nil), do: {:ok, nil}
+  defp parse_pagination(nil), do: {:ok, @default_pagination}
 
   defp atomize_keys(map) when is_map(map) do
     Map.new(map, fn {key, value} ->
