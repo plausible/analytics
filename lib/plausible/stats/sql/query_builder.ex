@@ -170,6 +170,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   defp dimension_group_by(q, :events, query, "event:goal" = dimension) do
     goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
+
     if Enum.empty?(goal_join_data.custom_props_keys) do
       from(e in q,
         join: goal in Expression.event_goal_join(goal_join_data),

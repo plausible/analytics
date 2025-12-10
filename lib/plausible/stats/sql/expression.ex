@@ -443,7 +443,7 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:conversion_rate, _query), do: %{}
   def session_metric(:group_conversion_rate, _query), do: %{}
 
- defmacro event_goal_join(goal_join_data) do
+  defmacro event_goal_join(goal_join_data) do
     # whenever this gets updated see `event_goal_with_custom_props_join/1` as well
     quote do
       fragment(
