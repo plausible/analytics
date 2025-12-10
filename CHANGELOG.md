@@ -13,7 +13,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - To make internal stats API requests for password-protected shared links, shared link auth cookie must be set in the requests
-- Fix issue with site guests in Editor role and team members in Editor role not being able to change the domain of site
+- Fixed issue with site guests in Editor role and team members in Editor role not being able to change the domain of site
+- Fixed direct dashboard links that use legacy dashboard filters containing URL encoded special characters (e.g. character `ê` in the legacy filter `?page=%C3%AA`)
 
 ## v3.1.0 - 2025-11-13
 
