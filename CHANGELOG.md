@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - To make internal stats API requests for password-protected shared links, shared link auth cookie must be set in the requests
+- Fix issue with site guests in Editor role and team members in Editor role not being able to change the domain of site
 
 ## v3.1.0 - 2025-11-13
 
