@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
     ~H"""
     <.link
       data-type="dashboard-link"
-      href={@url}
+      patch={@url}
       {@rest}
     >
       {render_slot(@inner_block)}
