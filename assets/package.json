@@ -28,7 +28,6 @@
     "classnames": "^2.3.1",
     "d3": "^7.9.0",
     "dayjs": "^1.11.7",
-    "hammerjs": "^2.0.8",
     "iframe-resizer": "^4.3.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

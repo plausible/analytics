@@ -1,9 +1,12 @@
 import React, { ReactNode, useRef } from 'react'
+import { XMarkIcon } from '@heroicons/react/20/solid'
 
 import { SearchInput } from '../../components/search-input'
 import { ColumnConfiguraton, Table } from '../../components/table'
 import RocketIcon from './rocket-icon'
 import { QueryStatus } from '@tanstack/react-query'
+import { useAppNavigate } from '../../navigation/use-app-navigate'
+import { rootRoute } from '../../router'
 
 export const BreakdownTable = <TListItem extends { name: string }>({
   title,
@@ -17,7 +20,8 @@ export const BreakdownTable = <TListItem extends { name: string }>({
   data,
   status,
   error,
-  displayError
+  displayError,
+  onClose
 }: {
   title: ReactNode
   onSearch?: (input: string) => void
@@ -32,27 +36,39 @@ export const BreakdownTable = <TListItem extends { name: string }>({
   error?: Error | null
   /** Controls whether the component displays API request errors or ignores them. */
   displayError?: boolean
+  onClose?: () => void
 }) => {
   const searchRef = useRef<HTMLInputElement>(null)
+  const navigate = useAppNavigate()
+  const handleClose = onClose ?? (() =>
+    navigate({ path: rootRoute.path, search: (s) => s }))
 
   return (
     <>
       <div className="flex justify-between items-center gap-4">
-        <div className="flex items-center gap-x-2 shrink-0">
-          <h1 className="shrink-0 text-base md:text-lg font-bold dark:text-gray-100">
+        <div className="flex items-center gap-4 w-full">
+          <h1 className="shrink-0 mb-0.5 text-base md:text-lg font-bold dark:text-gray-100">
             {title}
           </h1>
           {!isPending && isFetching && <SmallLoadingSpinner />}
+          {!!onSearch && (
+            <SearchInput
+              searchRef={searchRef}
+              onSearch={onSearch}
+              className={
+                displayError && status === 'error' ? 'pointer-events-none' : ''
+              }
+            />
+          )}
         </div>
-        {!!onSearch && (
-          <SearchInput
-            searchRef={searchRef}
-            onSearch={onSearch}
-            className={
-              displayError && status === 'error' ? 'pointer-events-none' : ''
-            }
-          />
-        )}
+        <button
+          type="button"
+          onClick={handleClose}
+          aria-label="Close modal"
+          className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+        >
+          <XMarkIcon className="size-5" />
+        </button>
       </div>
       <div className="my-3 md:my-4 border-b border-gray-250 dark:border-gray-750"></div>
       <div className="flex-1 overflow-auto pr-4 -mr-4">
