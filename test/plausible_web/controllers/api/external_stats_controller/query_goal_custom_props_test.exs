@@ -66,26 +66,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
         build(:event,
           name: "Purchase",
           "meta.key": ["variant", "plan"],
-          "meta.value": ["A", "premium"],
-          user_id: @user_id
+          "meta.value": ["A", "premium"]
         ),
         build(:event,
           name: "Purchase",
           "meta.key": ["variant", "plan"],
           "meta.value": ["A", "free"],
-          user_id: @user_id + 1
+          user_id: @user_id
         ),
         build(:event,
           name: "Purchase",
           "meta.key": ["variant", "plan"],
           "meta.value": ["B", "premium"],
-          user_id: @user_id + 2
+          user_id: @user_id + 1
         ),
         build(:event,
           name: "Purchase",
           "meta.key": ["variant"],
           "meta.value": ["A"],
-          user_id: @user_id + 3
+          user_id: @user_id + 2
         )
       ])
 
@@ -162,7 +161,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
           name: "Purchase B",
           "meta.key": ["variant"],
           "meta.value": ["B"],
-          user_id: @user_id + 1
+          user_id: @user_id
         )
       ])
 
@@ -232,8 +231,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
         build(:event,
           name: "Purchase",
           "meta.key": ["variant", "plan"],
-          "meta.value": ["A", "premium"],
-          user_id: @user_id
+          "meta.value": ["A", "premium"]
         ),
         build(:event,
           name: "Purchase",
