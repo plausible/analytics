@@ -28,6 +28,7 @@ defmodule PlausibleWeb.Live.ChangeDomain do
     site =
       Plausible.Sites.get_for_user!(socket.assigns.current_user, domain,
         roles: [
+          :editor,
           :owner,
           :admin,
           :super_admin
