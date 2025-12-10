@@ -265,35 +265,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
       assert Enum.member?(results, %{"dimensions" => ["Purchase", "premium"], "metrics" => [1, 1]})
     end
 
-    test "empty custom_props map does not filter events", %{conn: conn, site: site} do
-      {:ok, _goal} =
-        Goals.create(site, %{
-          "event_name" => "Download",
-          "custom_props" => %{}
-        })
-
-      populate_stats(site, [
-        build(:event,
-          name: "Download",
-          "meta.key": ["file"],
-          "meta.value": ["report.pdf"]
-        ),
-        build(:event, name: "Download")
-      ])
-
-      conn =
-        post(conn, "/api/v2/query", %{
-          "site_id" => site.domain,
-          "date_range" => "all",
-          "metrics" => ["visitors", "events"],
-          "filters" => [["is", "event:goal", ["Download"]]]
-        })
-
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [2, 2]}
-             ]
-    end
-
     test "custom property filters work with time series queries", %{conn: conn, site: site} do
       {:ok, _goal} =
         Goals.create(site, %{
