@@ -119,13 +119,13 @@ export const createPercentage = (props) => {
 }
 
 export const createEvents = (props) => {
-  return new Metric({ width: 'w-24', ...props, key: 'events', sortable: true })
+  return new Metric({ width: 'w-28', ...props, key: 'events', sortable: true })
 }
 
 export const createTotalRevenue = (props) => {
   const renderLabel = (_query) => 'Revenue'
   return new Metric({
-    width: 'w-24',
+    width: 'w-32',
     ...props,
     key: 'total_revenue',
     renderLabel,
@@ -136,7 +136,7 @@ export const createTotalRevenue = (props) => {
 export const createAverageRevenue = (props) => {
   const renderLabel = (_query) => 'Average'
   return new Metric({
-    width: 'w-24',
+    width: 'w-28',
     ...props,
     key: 'average_revenue',
     renderLabel,

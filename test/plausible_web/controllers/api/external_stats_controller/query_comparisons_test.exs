@@ -306,7 +306,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
                "comparison" => %{
                  "dimensions" => ["Safari"],
                  "metrics" => [3, 37.5],
-                "change" => [-67, -56]
+                 "change" => [-67, -56]
                }
              }
            ]

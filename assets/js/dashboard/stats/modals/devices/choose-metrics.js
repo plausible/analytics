@@ -14,7 +14,7 @@ export default function chooseMetrics(query, site) {
       metrics.createTotalVisitors(),
       metrics.createVisitors({
         renderLabel: (_query) => 'Conversions',
-        width: 'w-24'
+        width: 'w-36'
       }),
       metrics.createConversionRate(),
       showRevenueMetrics && metrics.createTotalRevenue(),

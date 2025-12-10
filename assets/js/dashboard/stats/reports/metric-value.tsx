@@ -81,6 +81,17 @@ export default function MetricValue(props: {
     ? percentageFormatter(percentageValue)
     : null
 
+  const conversionRateValue = listItem['conversion_rate' as Metric]
+  const shouldShowConversionRate =
+    detailedView &&
+    metric === 'visitors' &&
+    isRowHovered &&
+    conversionRateValue != null
+  const conversionRateFormatter = MetricFormatterShort['conversion_rate']
+  const conversionRateDisplay = shouldShowConversionRate
+    ? conversionRateFormatter(conversionRateValue)
+    : null
+
   if (value === null && (!comparison || comparison.value === null)) {
     return <span data-testid="metric-value">{displayFormatter(value)}</span>
   }
@@ -93,6 +104,11 @@ export default function MetricValue(props: {
       {percentageDisplay && (
         <span className="mr-3 text-gray-500 dark:text-gray-400">
           {percentageDisplay}
+        </span>
+      )}
+      {conversionRateDisplay && (
+        <span className="mr-3 text-gray-500 dark:text-gray-400">
+          {conversionRateDisplay}
         </span>
       )}
       {displayFormatter(value)}

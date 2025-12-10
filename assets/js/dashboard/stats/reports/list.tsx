@@ -95,11 +95,6 @@ type ListReportProps = {
   colMinWidth?: number
   /** Navigation props to be passed to "More" link, if any. */
   detailsLinkProps?: AppNavigationLinkProps
-  /** Set this to `true` if the details button should be hidden on
-   *     the condition that there are less than MAX_ITEMS entries in the list (i.e. nothing
-   *     more to show).
-   */
-  maybeHideDetails?: boolean
   /** Function with additional action to be taken when a list entry is clicked. */
   onClick?: () => void
   /** Color of the comparison bars in light-mode. */
@@ -121,7 +116,6 @@ export default function ListReport<
   colMinWidth = COL_MIN_WIDTH,
   afterFetchData,
   detailsLinkProps,
-  maybeHideDetails,
   onClick,
   color,
   getFilterInfo,
@@ -246,16 +240,14 @@ export default function ListReport<
             </FlipMove>
           </div>
 
-          {!!detailsLinkProps &&
-            !state.loading &&
-            !(maybeHideDetails && !(state.list.length >= MAX_ITEMS)) && (
-              <MoreLink
-                onClick={undefined}
-                className={'mt-2'}
-                linkProps={detailsLinkProps}
-                list={state.list}
-              />
-            )}
+          {!!detailsLinkProps && !state.loading && (
+            <MoreLink
+              onClick={undefined}
+              className={'mt-3'}
+              linkProps={detailsLinkProps}
+              list={state.list}
+            />
+          )}
         </div>
       )
     }
@@ -278,7 +270,7 @@ export default function ListReport<
       })
 
     return (
-      <div className="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
+      <div className="pt-3 w-full text-xs font-semibold text-gray-500 flex items-center dark:text-gray-400">
         <span className="grow truncate">{keyLabel}</span>
         {metricLabels}
       </div>

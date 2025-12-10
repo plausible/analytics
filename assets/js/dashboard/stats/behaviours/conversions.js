@@ -33,7 +33,6 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
         renderLabel: (_query) => 'Total',
         meta: { hiddenOnMobile: true }
       }),
-      metrics.createConversionRate(),
       BUILD_EXTRA &&
         metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
       BUILD_EXTRA &&

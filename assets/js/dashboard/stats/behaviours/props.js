@@ -115,8 +115,6 @@ export default function Properties({ afterFetchData }) {
         renderLabel: (_query) => 'Events',
         meta: { hiddenOnMobile: true }
       }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage(),
       BUILD_EXTRA &&
         metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
       BUILD_EXTRA &&
@@ -137,7 +135,6 @@ export default function Properties({ afterFetchData }) {
           params: { propKey },
           search: (search) => search
         }}
-        maybeHideDetails={true}
         color="bg-red-50 group-hover/row:bg-red-100"
         colMinWidth={90}
       />

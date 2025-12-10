@@ -40,8 +40,8 @@ export const BreakdownTable = <TListItem extends { name: string }>({
 }) => {
   const searchRef = useRef<HTMLInputElement>(null)
   const navigate = useAppNavigate()
-  const handleClose = onClose ?? (() =>
-    navigate({ path: rootRoute.path, search: (s) => s }))
+  const handleClose =
+    onClose ?? (() => navigate({ path: rootRoute.path, search: (s) => s }))
 
   return (
     <>
