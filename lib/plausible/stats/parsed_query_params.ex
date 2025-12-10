@@ -18,4 +18,22 @@ defmodule Plausible.Stats.ParsedQueryParams do
   def new!(params) when is_map(params) do
     struct!(__MODULE__, Map.to_list(params))
   end
+
+  @props_prefix "event:props:"
+
+  def add_or_replace_filter(%__MODULE__{filters: filters} = parsed_query_params, new_filter) do
+    [_, new_filter_dimension, _] = new_filter
+
+    prop_filter? = String.starts_with?(new_filter_dimension, @props_prefix)
+
+    new_filters =
+      filters
+      |> Enum.reject(fn [_, existing_filter_dimension, _] ->
+        existing_filter_dimension == new_filter_dimension or
+          (prop_filter? and String.starts_with?(existing_filter_dimension, @props_prefix))
+      end)
+      |> Enum.concat([new_filter])
+
+    struct!(parsed_query_params, filters: new_filters)
+  end
 end
