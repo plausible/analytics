@@ -3,8 +3,6 @@ import { createPortal } from 'react-dom'
 import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
-// This corresponds to the 'md' breakpoint on TailwindCSS.
-const MD_WIDTH = 768
 // We assume that the dashboard is by default opened on a desktop. This is also a fall-back for when, for any reason, the width is not ascertained.
 const DEFAULT_WIDTH = 1080
 class Modal extends React.Component {
@@ -49,7 +47,6 @@ class Modal extends React.Component {
    */
   getStyle() {
     const { maxWidth } = this.props
-    const { viewport } = this.state
     const styleObject = {}
     if (maxWidth) {
       styleObject.maxWidth = maxWidth

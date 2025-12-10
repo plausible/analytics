@@ -8,8 +8,7 @@ import * as storage from '../../util/storage'
 import {
   EVENT_PROPS_PREFIX,
   getGoalFilter,
-  FILTER_OPERATIONS,
-  hasConversionGoalFilter
+  FILTER_OPERATIONS
 } from '../../util/filters'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
