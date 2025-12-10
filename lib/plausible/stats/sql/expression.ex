@@ -443,7 +443,8 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:conversion_rate, _query), do: %{}
   def session_metric(:group_conversion_rate, _query), do: %{}
 
-  defmacro event_goal_join(goal_join_data) do
+ defmacro event_goal_join(goal_join_data) do
+    # whenever this gets updated see `event_goal_with_custom_props_join/1` as well
     quote do
       fragment(
         """
@@ -464,6 +465,42 @@ defmodule Plausible.Stats.SQL.Expression do
         type(^unquote(goal_join_data).event_names_by_type, {:array, :string}),
         type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
         type(^unquote(goal_join_data).indices, {:array, :integer})
+      )
+    end
+  end
+
+  defmacro event_goal_with_custom_props_join(goal_join_data) do
+    # whenever this gets updated, see `event_goal_join/1` as well
+    quote do
+      fragment(
+        """
+        arrayIntersect(
+        multiMatchAllIndices(?, ?),
+        arrayMap(
+        (expected_name, threshold, index, custom_props_keys, custom_props_values) -> if(
+        expected_name = ? and ? between threshold and 100 and 
+        (arrayAll((k, v) -> ?[indexOf(?, k)] = v, custom_props_keys, custom_props_values)),
+        index, -1
+        ),
+        ?,
+        ?,
+        ?,
+        ?,
+        ?
+        )
+        )
+        """,
+        e.pathname,
+        type(^unquote(goal_join_data).page_regexes, {:array, :string}),
+        e.name,
+        e.scroll_depth,
+        field(e, :"meta.value"),
+        field(e, :"meta.key"),
+        type(^unquote(goal_join_data).event_names_by_type, {:array, :string}),
+        type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
+        type(^unquote(goal_join_data).indices, {:array, :integer}),
+        type(^unquote(goal_join_data).custom_props_keys, {:array, {:array, :string}}),
+        type(^unquote(goal_join_data).custom_props_values, {:array, {:array, :string}})
       )
     end
   end

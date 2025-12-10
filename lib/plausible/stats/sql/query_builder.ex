@@ -170,16 +170,29 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   defp dimension_group_by(q, :events, query, "event:goal" = dimension) do
     goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
-
-    from(e in q,
-      join: goal in Expression.event_goal_join(goal_join_data),
-      hints: "ARRAY",
-      on: true,
-      select_merge: %{
-        ^shortname(query, dimension) => fragment("?", goal)
-      },
-      group_by: goal
-    )
+    if Enum.empty?(goal_join_data.custom_props_keys) do
+      from(e in q,
+        join: goal in Expression.event_goal_join(goal_join_data),
+        hints: "ARRAY",
+        on: true,
+        select_merge: %{
+          ^shortname(query, dimension) => fragment("?", goal)
+        },
+        group_by: goal
+      )
+    else
+      # in the spirit of making it easier to work with goals having custom propos attached, 
+      # we'll take completely separate code path at the expense of some duplication
+      from(e in q,
+        join: goal in Expression.event_goal_with_custom_props_join(goal_join_data),
+        hints: "ARRAY",
+        on: true,
+        select_merge: %{
+          ^shortname(query, dimension) => fragment("?", goal)
+        },
+        group_by: goal
+      )
+    end
   end
 
   defp dimension_group_by(q, table, query, dimension) do
