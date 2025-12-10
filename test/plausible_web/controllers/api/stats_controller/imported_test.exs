@@ -280,11 +280,11 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           |> Enum.sort()
 
         assert results == [
-                 %{"name" => "A Nice Newsletter", "visitors" => 1, "percentage" => 33.3},
-                 %{"name" => "Direct / None", "visitors" => 1, "percentage" => 33.3},
-                 %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 66.7},
-                 %{"name" => "Google", "visitors" => 4, "percentage" => 133.3},
-                 %{"name" => "Twitter", "visitors" => 1, "percentage" => 33.3}
+                 %{"name" => "A Nice Newsletter", "visitors" => 1, "percentage" => 33.33},
+                 %{"name" => "Direct / None", "visitors" => 1, "percentage" => 33.33},
+                 %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 66.67},
+                 %{"name" => "Google", "visitors" => 4, "percentage" => 133.33},
+                 %{"name" => "Twitter", "visitors" => 1, "percentage" => 33.33}
                ]
       end
 
@@ -415,10 +415,10 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           |> Enum.sort()
 
         assert results == [
-                 %{"name" => "(not set)", "visitors" => 1, "percentage" => 33.3},
-                 %{"name" => "Direct", "visitors" => 2, "percentage" => 66.7},
+                 %{"name" => "(not set)", "visitors" => 1, "percentage" => 33.33},
+                 %{"name" => "Direct", "visitors" => 2, "percentage" => 66.67},
                  %{"name" => "Organic Search", "visitors" => 3, "percentage" => 100.0},
-                 %{"name" => "Paid Search", "visitors" => 2, "percentage" => 66.7}
+                 %{"name" => "Paid Search", "visitors" => 2, "percentage" => 66.67}
                ]
       end
 

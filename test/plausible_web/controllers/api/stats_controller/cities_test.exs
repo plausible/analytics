@@ -85,14 +85,14 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
                  "country_flag" => "🇪🇪",
                  "name" => "Tallinn",
                  "visitors" => 4,
-                 "percentage" => 66.7
+                 "percentage" => 66.67
                },
                %{
                  "code" => 591_632,
                  "country_flag" => "🇪🇪",
                  "name" => "Kärdla",
                  "visitors" => 2,
-                 "percentage" => 33.3
+                 "percentage" => 33.33
                }
              ]
     end
