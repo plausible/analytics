@@ -109,7 +109,7 @@ defmodule Plausible.GoalsTest do
     assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
-  test "create/2 succeeds to create the same custom event goal twice with different custom props and different display names each" do
+  test "create/2 succeeds to create the same custom event goal thrice with different custom props and different display names each" do
     site = new_site()
 
     {:ok, _} =
