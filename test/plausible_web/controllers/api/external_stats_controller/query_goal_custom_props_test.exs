@@ -312,38 +312,38 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
     } do
       {:ok, _g1} =
         Goals.create(site, %{
-          "event_name" => "Button Click A",
+          "event_name" => "Button Click",
           "display_name" => "Red Button",
           "custom_props" => %{"color" => "red"}
         })
 
       {:ok, _g2} =
         Goals.create(site, %{
-          "event_name" => "Button Click B",
+          "event_name" => "Button Click",
           "display_name" => "Blue Button",
           "custom_props" => %{"color" => "blue"}
         })
 
       populate_stats(site, [
         build(:event,
-          name: "Button Click A",
+          name: "Button Click",
           "meta.key": ["color"],
           "meta.value": ["red"],
           user_id: @user_id
         ),
         build(:event,
-          name: "Button Click A",
+          name: "Button Click",
           "meta.key": ["color"],
           "meta.value": ["red"],
           user_id: @user_id
         ),
         build(:event,
-          name: "Button Click B",
+          name: "Button Click",
           "meta.key": ["color"],
           "meta.value": ["blue"],
           user_id: @user_id + 1
         ),
-        build(:event, name: "Button Click A", user_id: @user_id + 2)
+        build(:event, name: "Button Click", user_id: @user_id + 2)
       ])
 
       conn =
