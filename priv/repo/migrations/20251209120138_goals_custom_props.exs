@@ -8,7 +8,7 @@ defmodule Plausible.Repo.Migrations.GoalsCustomProps do
   # or broadly speaking "goal configuration"
 
   def change do
-    drop(unique_index(:goals, [:user_id, :event_name], name: :goals_event_name_unique))
+    drop(unique_index(:goals, [:site_id, :event_name], name: :goals_event_name_unique))
 
     drop(
       unique_index(:goals, [:site_id, :page_path, :scroll_threshold],
