@@ -204,7 +204,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def select_dimension_internal(q, "visit:exit_page") do
     # As exit page changes with every pageview event over the lifetime
-    # of a session, only the most recent value must be considered. 
+    # of a session, only the most recent value must be considered.
     select_merge_as(q, [t], %{
       exit_page: fragment("argMax(?, ?)", field(t, :exit_page), field(t, :events))
     })
@@ -443,51 +443,33 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:conversion_rate, _query), do: %{}
   def session_metric(:group_conversion_rate, _query), do: %{}
 
+  @doc """
+  The fragment matches events to goals by:
+  1. Checking if the pathname matches the goal's page regex pattern
+  2. Verifying the event name matches the expected name for the goal type
+  3. Validating scroll depth is within threshold (for scroll goals)
+  4. Ensuring all custom properties match (if any are defined on the goal)
+
+  Returns an array of goal indices that the event matches.
+  """
   defmacro event_goal_join(goal_join_data) do
-    # whenever this gets updated see `event_goal_with_custom_props_join/1` as well
     quote do
       fragment(
         """
         arrayIntersect(
           multiMatchAllIndices(?, ?),
           arrayMap(
-            (expected_name, threshold, index) -> if(expected_name = ? and ? between threshold and 100, index, -1),
+            (expected_name, threshold, index, custom_props_keys, custom_props_values) -> if(
+              expected_name = ? and ? between threshold and 100 and
+              (empty(custom_props_keys) OR arrayAll((k, v) -> ?[indexOf(?, k)] = v, custom_props_keys, custom_props_values)),
+              index, -1
+            ),
+            ?,
+            ?,
             ?,
             ?,
             ?
           )
-        )
-        """,
-        e.pathname,
-        type(^unquote(goal_join_data).page_regexes, {:array, :string}),
-        e.name,
-        e.scroll_depth,
-        type(^unquote(goal_join_data).event_names_by_type, {:array, :string}),
-        type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
-        type(^unquote(goal_join_data).indices, {:array, :integer})
-      )
-    end
-  end
-
-  defmacro event_goal_with_custom_props_join(goal_join_data) do
-    # whenever this gets updated, see `event_goal_join/1` as well
-    quote do
-      fragment(
-        """
-        arrayIntersect(
-        multiMatchAllIndices(?, ?),
-        arrayMap(
-        (expected_name, threshold, index, custom_props_keys, custom_props_values) -> if(
-        expected_name = ? and ? between threshold and 100 and 
-        (arrayAll((k, v) -> ?[indexOf(?, k)] = v, custom_props_keys, custom_props_values)),
-        index, -1
-        ),
-        ?,
-        ?,
-        ?,
-        ?,
-        ?
-        )
         )
         """,
         e.pathname,
