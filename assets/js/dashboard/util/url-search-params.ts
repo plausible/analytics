@@ -241,18 +241,17 @@ export function getRedirectTarget(windowLocation: Location): null | string {
   }
 
   const isV2 = v2.isV2(searchParams)
+  const isV1 = v1.isV1(searchParams)
+
   if (isV2) {
     return `${windowLocation.pathname}${stringifySearch({ ...v2.parseSearch(windowLocation.search), [REDIRECTED_SEARCH_PARAM_NAME]: 'v2' })}`
   }
 
-  const searchRecord = v2.parseSearch(windowLocation.search)
-  const isV1 = v1.isV1(searchRecord)
-
-  if (!isV1) {
-    return null
+  if (isV1) {
+    return `${windowLocation.pathname}${stringifySearch({ ...v1.parseSearch(windowLocation.search), [REDIRECTED_SEARCH_PARAM_NAME]: 'v1' })}`
   }
 
-  return `${windowLocation.pathname}${stringifySearch({ ...v1.parseSearchRecord(searchRecord), [REDIRECTED_SEARCH_PARAM_NAME]: 'v1' })}`
+  return null
 }
 
 /** Called once before React app mounts. If legacy url search params are present, does a redirect to new format. */
