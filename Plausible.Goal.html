@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-392BE75C.js"></script>
+    <script src="dist/sidebar_items-CC9B67B8.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -126,7 +126,7 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal/schema.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal.ex#L1" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
@@ -183,6 +183,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#max_custom_props_per_goal/0" data-no-tooltip translate="no">max_custom_props_per_goal()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#max_event_name_length/0" data-no-tooltip translate="no">max_event_name_length()</a>
 
       </div>
@@ -218,7 +226,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal/schema.ex#L6" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal.ex#L6" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -232,6 +240,7 @@ Pages
           <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Goal{
   __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   currency: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  custom_props: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   display_name: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   event_name: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   funnels: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -271,7 +280,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">changeset(goal, attrs \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal/schema.ex#L34" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal.ex#L48" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -291,7 +300,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">display_name(goal)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal/schema.ex#L67" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal.ex#L83" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -309,6 +318,26 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="max_custom_props_per_goal/0">
+
+  <div class="detail-header">
+    <a href="#max_custom_props_per_goal/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">max_custom_props_per_goal()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal.ex#L46" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="max_event_name_length/0">
 
   <div class="detail-header">
@@ -317,7 +346,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">max_event_name_length()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal/schema.ex#L32" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal.ex#L42" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -337,7 +366,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">type(goal)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal/schema.ex#L72" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goal.ex#L88" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
