@@ -17,8 +17,6 @@ defmodule Plausible.Goals do
     if override do
       override
     else
-      # see: config/test.exs - you can steer this limit for tests
-      # by providing `max_goals_per_site` option to e.g. create/3
       Application.get_env(:plausible, :max_goals_per_site, @max_goals_per_site)
     end
   end
