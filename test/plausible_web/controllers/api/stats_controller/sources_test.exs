@@ -282,8 +282,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn2 = get(conn, "/api/stats/#{site.domain}/sources?period=day&with_imported=true")
 
       assert json_response(conn2, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 4, "percentage" => 133.33},
-               %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 66.67}
+               %{"name" => "Google", "visitors" => 4, "percentage" => 66.67},
+               %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 33.33}
              ]
     end
 
@@ -410,14 +410,14 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 3,
                  "bounce_rate" => 25.0,
                  "visit_duration" => 450.0,
-                 "percentage" => 150.0
+                 "percentage" => 60.0
                },
                %{
                  "name" => "DuckDuckGo",
                  "visitors" => 2,
                  "bounce_rate" => 50.0,
                  "visit_duration" => 50.0,
-                 "percentage" => 100.0
+                 "percentage" => 40.0
                }
              ]
     end

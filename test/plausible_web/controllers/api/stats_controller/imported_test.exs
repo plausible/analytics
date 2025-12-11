@@ -280,11 +280,11 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           |> Enum.sort()
 
         assert results == [
-                 %{"name" => "A Nice Newsletter", "visitors" => 1, "percentage" => 33.33},
-                 %{"name" => "Direct / None", "visitors" => 1, "percentage" => 33.33},
-                 %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 66.67},
-                 %{"name" => "Google", "visitors" => 4, "percentage" => 133.33},
-                 %{"name" => "Twitter", "visitors" => 1, "percentage" => 33.33}
+                 %{"name" => "A Nice Newsletter", "visitors" => 1, "percentage" => 11.11},
+                 %{"name" => "Direct / None", "visitors" => 1, "percentage" => 11.11},
+                 %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 22.22},
+                 %{"name" => "Google", "visitors" => 4, "percentage" => 44.44},
+                 %{"name" => "Twitter", "visitors" => 1, "percentage" => 11.11}
                ]
       end
 
@@ -890,7 +890,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                    "pageviews" => 4,
                    "scroll_depth" => nil,
                    "name" => "/some-other-page",
-                   "percentage" => 300.0
+                   "percentage" => 60.0
                  },
                  %{
                    "bounce_rate" => 25.0,
@@ -899,7 +899,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                    "pageviews" => 2,
                    "scroll_depth" => nil,
                    "name" => "/",
-                   "percentage" => 200.0
+                   "percentage" => 40.0
                  }
                ]
       end

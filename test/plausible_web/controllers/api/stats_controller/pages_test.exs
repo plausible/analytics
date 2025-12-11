@@ -900,7 +900,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 100,
                  "time_on_page" => 28,
                  "scroll_depth" => 50,
-                 "percentage" => 400.0
+                 "percentage" => 100.0
                }
              ]
     end
@@ -970,7 +970,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 0,
                  "time_on_page" => 48,
                  "scroll_depth" => 50,
-                 "percentage" => 500.0
+                 "percentage" => 19.23
                },
                %{
                  "name" => "/native-only",
@@ -979,7 +979,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
                  "scroll_depth" => 40,
-                 "percentage" => 100.0
+                 "percentage" => 3.85
                },
                %{
                  "name" => "/imported-only",
@@ -988,7 +988,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 0,
                  "time_on_page" => 30,
                  "scroll_depth" => 10,
-                 "percentage" => 2000.0
+                 "percentage" => 76.92
                }
              ]
     end
@@ -1862,7 +1862,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 3,
                  "scroll_depth" => 0,
                  "name" => "/",
-                 "percentage" => 150.0
+                 "percentage" => 60.0
                },
                %{
                  "bounce_rate" => 0,
@@ -1871,7 +1871,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "scroll_depth" => 0,
                  "name" => "/some-other-page",
-                 "percentage" => 100.0
+                 "percentage" => 40.0
                }
              ]
     end
