@@ -11,7 +11,7 @@ defmodule Plausible.Repo.Migrations.GoalsCustomPropsDefault do
 
     alter table(:goals) do
       remove :custom_props
-      add custom_props, :map, null: false, default: %{}
+      add :custom_props, :map, null: false, default: %{}
     end
 
     create(
