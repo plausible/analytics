@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Segment filters are displayed to anyone that can see the dashboard filtered by the segment, including for a personal segment applied on a public dashboard
+
 ### Fixed
 
 - To make internal stats API requests for password-protected shared links, shared link auth cookie must be set in the requests

@@ -3,10 +3,11 @@ import { SavedSegmentPublic, SavedSegment } from '../filtering/segments'
 import { dateForSite, formatDayShort } from '../util/date'
 import { useSiteContext } from '../site-context'
 
-type SegmentAuthorshipProps = { className?: string } & (
-  | { showOnlyPublicData: true; segment: SavedSegmentPublic }
-  | { showOnlyPublicData: false; segment: SavedSegment }
-)
+type SegmentAuthorshipProps = {
+  className?: string
+  showOnlyPublicData: boolean
+  segment: SavedSegmentPublic | SavedSegment
+}
 
 export function SegmentAuthorship({
   className,

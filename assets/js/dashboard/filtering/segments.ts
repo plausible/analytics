@@ -10,6 +10,16 @@ export enum SegmentType {
   site = 'site'
 }
 
+/** keep in sync with Plausible.Segments */
+const ROLES_WITH_MAYBE_SITE_SEGMENTS = [Role.admin, Role.editor, Role.owner]
+const ROLES_WITH_PERSONAL_SEGMENTS = [
+  Role.billing,
+  Role.viewer,
+  Role.admin,
+  Role.editor,
+  Role.owner
+]
+
 /** This type signifies that the owner can't be shown. */
 type SegmentOwnershipHidden = { owner_id: null; owner_name: null }
 
@@ -148,6 +158,36 @@ export function resolveFilters(
   })
 }
 
+export function canExpandSegment({
+  segment,
+  site,
+  user
+}: {
+  segment: Pick<SavedSegment, 'id' | 'owner_id' | 'type'>
+  site: Pick<PlausibleSite, 'siteSegmentsAvailable'>
+  user: UserContextValue
+}) {
+  if (
+    segment.type === SegmentType.site &&
+    site.siteSegmentsAvailable &&
+    user.loggedIn &&
+    ROLES_WITH_MAYBE_SITE_SEGMENTS.includes(user.role)
+  ) {
+    return true
+  }
+
+  if (
+    segment.type === SegmentType.personal &&
+    user.loggedIn &&
+    ROLES_WITH_PERSONAL_SEGMENTS.includes(user.role) &&
+    user.id === segment.owner_id
+  ) {
+    return true
+  }
+
+  return false
+}
+
 export function isListableSegment({
   segment,
   site,
@@ -171,10 +211,6 @@ export function isListableSegment({
   }
 
   return false
-}
-
-export function canSeeSegmentDetails({ user }: { user: UserContextValue }) {
-  return user.loggedIn && user.role !== Role.public
 }
 
 export function findAppliedSegmentFilter({ filters }: { filters: Filter[] }) {
