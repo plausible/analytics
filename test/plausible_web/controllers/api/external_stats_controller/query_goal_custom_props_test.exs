@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
     end
 
     test "goals without custom_props filter match all events", %{conn: conn, site: site} do
-      {:ok, _goal} = Goals.create(site, %{"event_name" => "Signup", "custom_props" => nil})
+      {:ok, _goal} = Goals.create(site, %{"event_name" => "Signup"})
 
       populate_stats(site, [
         build(:event,
