@@ -83,8 +83,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
           group_by: s.session_id
         )
 
-      # The session-only dimension columns are explicitly selected in joined 
-      # sessions table. This enables combining session-only dimensions (entry 
+      # The session-only dimension columns are explicitly selected in joined
+      # sessions table. This enables combining session-only dimensions (entry
       # and exit pages) with event-only metrics, like revenue.
       sessions_q =
         Enum.reduce(dimensions, sessions_q, fn dimension, acc ->
