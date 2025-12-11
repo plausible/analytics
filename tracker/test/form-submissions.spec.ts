@@ -299,3 +299,36 @@ test.describe('form submissions feature is enabled', () => {
     })
   })
 })
+
+test('preserves submit button value for forms with custom events', async ({ page }, { testId }) => {
+  const { url } = await initializePageDynamically(page, {
+    testId,
+    scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
+    bodyContent: /* HTML */ `
+      <form class="plausible-event-name--login">
+        <input type="hidden" name="returnUrl" value="/example" />
+        <input type="hidden" name="__RequestVerificationToken" value="token123" />
+        <button type="submit" name="provider" value="Google">Login Google</button>
+        <button type="submit" name="provider" value="Apple">Login Apple</button>
+      </form>
+    `
+  })
+
+  await expectPlausibleInAction(page, {
+    action: async () => {
+      await page.goto(url)
+      await ensurePlausibleInitialized(page)
+      await page.click('button[value="Google"]')
+    },
+    shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
+    expectedRequests: [
+      {
+        n: 'login',
+        u: `${LOCAL_SERVER_ADDR}${url}`,
+        p: e.objectContaining({
+          provider: 'Google'
+        })
+      }
+    ]
+  })
+})
