@@ -72,8 +72,7 @@ function AllSources({ afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -111,8 +110,7 @@ function Channels({ onClick, afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -162,8 +160,7 @@ function UTMSources({ tab, afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 

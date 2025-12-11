@@ -37,6 +37,8 @@ type BreakdownModalProps = {
   /** Function that must return a new query that contains appropriate search filter for searchValue param. */
   addSearchFilter?: (q: DashboardQuery, searchValue: string) => DashboardQuery
   searchEnabled?: boolean
+  /** When true, keep the percentage metric as a permanently visible, sortable column. */
+  showPercentageColumn?: boolean
 }
 
 /**
@@ -64,6 +66,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   renderIcon,
   getExternalLinkUrl,
   searchEnabled = true,
+  showPercentageColumn = false,
   afterFetchData,
   afterFetchNextPage,
   addSearchFilter,
@@ -147,7 +150,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
         )
       },
       ...breakdownMetrics
-        .filter((m) => m.key !== 'percentage')
+        .filter((m) => showPercentageColumn || m.key !== 'percentage')
         .map(
           (m): ColumnConfiguraton<TListItem> => ({
             label: m.renderLabel(query),
@@ -156,7 +159,13 @@ export default function BreakdownModal<TListItem extends { name: string }>({
             align: 'right',
             metricWarning: getMetricWarning(m, meta),
             renderValue: (item, isRowHovered) =>
-              m.renderValue(item, meta, { detailedView: true, isRowHovered }),
+              m.renderValue(
+                showPercentageColumn && m.key === 'visitors'
+                  ? { ...item, percentage: null }
+                  : item,
+                meta,
+                { detailedView: true, isRowHovered }
+              ),
             onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
             sortDirection: orderByDictionary[m.key]
           })
@@ -171,7 +180,8 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       toggleSortByMetric,
       renderIcon,
       getExternalLinkUrl,
-      meta
+      meta,
+      showPercentageColumn
     ]
   )
 

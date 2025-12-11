@@ -39,8 +39,7 @@ function EntryPages({ afterFetchData }) {
       }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -88,8 +87,7 @@ function ExitPages({ afterFetchData }) {
       }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -133,8 +131,7 @@ function TopPages({ afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 

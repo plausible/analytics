@@ -71,6 +71,7 @@ function PropsModal() {
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
         addSearchFilter={addSearchFilter}
+        showPercentageColumn
       />
     </Modal>
   )

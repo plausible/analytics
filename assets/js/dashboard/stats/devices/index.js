@@ -78,8 +78,7 @@ function Browsers({ afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -125,8 +124,7 @@ function BrowserVersions({ afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -195,8 +193,7 @@ function OperatingSystems({ afterFetchData }) {
         metrics.createPercentage({
           meta: { showOnHover: true, hiddenOnMobile: true }
         }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -247,8 +244,7 @@ function OperatingSystemVersions({ afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -292,8 +288,7 @@ function ScreenSizes({ afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) &&
-        metrics.createConversionRate()
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
