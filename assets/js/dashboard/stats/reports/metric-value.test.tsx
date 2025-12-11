@@ -11,10 +11,9 @@ const REVENUE = { long: '$1,659.50', short: '$1.7K' }
 
 describe('single value', () => {
   it('renders small value', async () => {
-    await renderWithTooltip(<MetricValue {...valueProps('visitors', 10)} />)
+    render(<MetricValue {...valueProps('visitors', 10)} />)
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('10')
-    expect(screen.getByRole('tooltip')).toHaveTextContent('10')
   })
 
   it('renders large value', async () => {
@@ -25,23 +24,19 @@ describe('single value', () => {
   })
 
   it('renders percentages', async () => {
-    await renderWithTooltip(<MetricValue {...valueProps('bounce_rate', 5.3)} />)
+    render(<MetricValue {...valueProps('bounce_rate', 5.3)} />)
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('5.3%')
-    expect(screen.getByRole('tooltip')).toHaveTextContent('5.3%')
   })
 
   it('renders durations', async () => {
-    await renderWithTooltip(
-      <MetricValue {...valueProps('visit_duration', 60)} />
-    )
+    render(<MetricValue {...valueProps('visit_duration', 60)} />)
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('1m 00s')
-    expect(screen.getByRole('tooltip')).toHaveTextContent('1m 00s')
   })
 
   it('renders with custom formatter', async () => {
-    await renderWithTooltip(
+    render(
       <MetricValue
         {...valueProps('test_money', 5.3)}
         formatter={(value) => `${value}$`}
@@ -49,7 +44,6 @@ describe('single value', () => {
     )
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('5.3$')
-    expect(screen.getByRole('tooltip')).toHaveTextContent('5.3$')
   })
 
   it('renders revenue properly', async () => {
@@ -80,9 +74,8 @@ describe('comparisons', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent(
       [
         '10 visitors',
-        '↑ 100%',
         '01 Aug - 31 Aug',
-        'vs',
+        '↑ 100%',
         '5 visitors',
         '01 July - 31 July'
       ].join('')
@@ -98,9 +91,8 @@ describe('comparisons', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent(
       [
         '5 visitors',
-        '↓ 50%',
         '01 Aug - 31 Aug',
-        'vs',
+        '↓ 50%',
         '10 visitors',
         '01 July - 31 July'
       ].join('')
@@ -116,9 +108,8 @@ describe('comparisons', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent(
       [
         '10 visitors',
-        '〰 0%',
         '01 Aug - 31 Aug',
-        'vs',
+        '0%',
         '10 visitors',
         '01 July - 31 July'
       ].join('')
@@ -136,9 +127,8 @@ describe('comparisons', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent(
       [
         '10 conversions',
-        '〰 0%',
         '01 Aug - 31 Aug',
-        'vs',
+        '0%',
         '10 conversions',
         '01 July - 31 July'
       ].join('')
@@ -154,14 +144,7 @@ describe('comparisons', () => {
     )
 
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      [
-        '10% ',
-        '〰 0%',
-        '01 Aug - 31 Aug',
-        'vs',
-        '10% ',
-        '01 July - 31 July'
-      ].join('')
+      ['10% ', '01 Aug - 31 Aug', '0%', '10% ', '01 July - 31 July'].join('')
     )
   })
 
@@ -177,9 +160,8 @@ describe('comparisons', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent(
       [
         '10$ test',
-        '↑ 100%',
         '01 Aug - 31 Aug',
-        'vs',
+        '↑ 100%',
         '5$ test',
         '01 July - 31 July'
       ].join('')
@@ -200,9 +182,8 @@ describe('comparisons', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent(
       [
         '$1,659.50 average_revenue',
-        '〰 0%',
         '01 Aug - 31 Aug',
-        'vs',
+        '0%',
         '$1,659.50 average_revenue',
         '01 July - 31 July'
       ].join('')

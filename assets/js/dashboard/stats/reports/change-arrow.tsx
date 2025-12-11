@@ -15,10 +15,6 @@ export function ChangeArrow({
   className: string
   hideNumber?: boolean
 }) {
-  const formattedChange = hideNumber
-    ? null
-    : ` ${numberShortFormatter(Math.abs(change))}%`
-
   let icon = null
   const arrowClassName = classNames(
     color(change, metric),
@@ -30,6 +26,10 @@ export function ChangeArrow({
   } else if (change < 0) {
     icon = <ArrowDownRightIcon className={arrowClassName} />
   }
+
+  const formattedChange = hideNumber
+    ? null
+    : `${icon ? ' ' : ''}${numberShortFormatter(Math.abs(change))}%`
 
   return (
     <span className={className} data-testid="change-arrow">
