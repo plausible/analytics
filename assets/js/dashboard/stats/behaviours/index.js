@@ -31,8 +31,8 @@ export const PROPS = 'props'
 export const FUNNELS = 'funnels'
 
 export const sectionTitles = {
-  [CONVERSIONS]: 'Goal Conversions',
-  [PROPS]: 'Custom Properties',
+  [CONVERSIONS]: 'Goal conversions',
+  [PROPS]: 'Custom properties',
   [FUNNELS]: 'Funnels'
 }
 

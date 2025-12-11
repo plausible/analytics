@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "name" => "Estonia",
                  "flag" => "🇪🇪",
                  "visitors" => 2,
-                 "percentage" => 66.7
+                 "percentage" => 66.67
                },
                %{
                  "code" => "GB",
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "name" => "United Kingdom",
                  "flag" => "🇬🇧",
                  "visitors" => 1,
-                 "percentage" => 33.3
+                 "percentage" => 33.33
                }
              ]
 

@@ -93,7 +93,6 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrlFactory()}
-      maybeHideDetails={true}
       color="bg-red-50"
       colMinWidth={90}
     />

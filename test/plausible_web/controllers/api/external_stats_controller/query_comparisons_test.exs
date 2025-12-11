@@ -280,7 +280,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
              },
              %{
                "dimensions" => ["Firefox"],
-               "metrics" => [2, 33.3],
+               "metrics" => [2, 33.33],
                "comparison" => %{
                  "dimensions" => ["Firefox"],
                  "metrics" => [4, 50.0],
@@ -304,11 +304,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     assert json_response(conn2, 200)["results"] == [
              %{
                "dimensions" => ["Safari"],
-               "metrics" => [1, 16.7],
+               "metrics" => [1, 16.67],
                "comparison" => %{
                  "dimensions" => ["Safari"],
                  "metrics" => [3, 37.5],
-                 "change" => [-67, -55]
+                 "change" => [-67, -56]
                }
              }
            ]
@@ -361,7 +361,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     assert json_response(conn, 200)["results"] == [
              %{
                "dimensions" => ["Chrome"],
-               "metrics" => [2, 66.7],
+               "metrics" => [2, 66.67],
                "comparison" => %{
                  "dimensions" => ["Chrome"],
                  "metrics" => [40, 40.0],
@@ -370,7 +370,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
              },
              %{
                "dimensions" => ["Firefox"],
-               "metrics" => [1, 33.3],
+               "metrics" => [1, 33.33],
                "comparison" => %{
                  "dimensions" => ["Firefox"],
                  "metrics" => [50, 50.0],

@@ -92,7 +92,7 @@ test('user can open and close filters dropdown', async () => {
     'Location',
     'Screen size',
     'Browser',
-    'Operating System',
+    'Operating system',
     'Goal'
   ])
   await userEvent.click(toggleFilters)

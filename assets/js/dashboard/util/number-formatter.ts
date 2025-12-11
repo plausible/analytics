@@ -69,7 +69,11 @@ export function durationFormatter(duration: number): string {
 
 export function percentageFormatter(number: number | null): string {
   if (typeof number === 'number') {
-    return number + '%'
+    if (Math.abs(number) > 0 && Math.abs(number) < 0.1) {
+      return number.toFixed(2) + '%'
+    } else {
+      return number.toFixed(1).replace(/\.0$/, '') + '%'
+    }
   } else {
     return '-'
   }

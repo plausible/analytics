@@ -13,7 +13,7 @@ function ConversionsModal() {
   const site = useSiteContext()
 
   const reportInfo = {
-    title: 'Goal Conversions',
+    title: 'Goal conversions',
     dimension: 'goal',
     endpoint: url.apiPath(site, '/conversions'),
     dimensionLabel: 'Goal'

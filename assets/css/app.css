@@ -90,6 +90,7 @@
   --color-gray-950: var(--color-zinc-950);
 
   /* Custom gray shades from config (override some zinc values) */
+  --color-gray-75: rgb(247 247 248);
   --color-gray-150: rgb(236 236 238);
   --color-gray-750: rgb(50 50 54);
   --color-gray-825: rgb(35 35 38);
@@ -294,16 +295,12 @@ blockquote {
   display: inline;
 }
 
-.table-striped tbody tr:nth-child(odd) {
-  background-color: var(--color-gray-100);
+.table-striped tbody tr:nth-child(odd) td {
+  background-color: var(--color-gray-75);
 }
 
-.dark .table-striped tbody tr:nth-child(odd) {
-  background-color: var(--color-gray-800);
-}
-
-.dark .table-striped tbody tr:nth-child(even) {
-  background-color: var(--color-gray-900);
+.dark .table-striped tbody tr:nth-child(odd) td {
+  background-color: var(--color-gray-850);
 }
 
 .fade-enter {

@@ -11,12 +11,14 @@ import {
   useRememberOrderBy
 } from '../../hooks/use-order-by'
 import { Metric } from '../reports/metrics'
+import * as metricsModule from '../reports/metrics'
 import { BreakdownResultMeta, DashboardQuery } from '../../query'
 import { ColumnConfiguraton } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import { SharedReportProps } from '../reports/list'
+import { hasConversionGoalFilter } from '../../util/filters'
 
 export type ReportInfo = {
   /** Title of the report to render on the top left. */
@@ -35,6 +37,8 @@ type BreakdownModalProps = {
   /** Function that must return a new query that contains appropriate search filter for searchValue param. */
   addSearchFilter?: (q: DashboardQuery, searchValue: string) => DashboardQuery
   searchEnabled?: boolean
+  /** When true, keep the percentage metric as a permanently visible, sortable column. */
+  showPercentageColumn?: boolean
 }
 
 /**
@@ -62,6 +66,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   renderIcon,
   getExternalLinkUrl,
   searchEnabled = true,
+  showPercentageColumn = false,
   afterFetchData,
   afterFetchNextPage,
   addSearchFilter,
@@ -71,20 +76,28 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   const { query } = useQueryContext()
   const [meta, setMeta] = useState<BreakdownResultMeta | null>(null)
 
+  const breakdownMetrics = useMemo(() => {
+    const hasPercentage = metrics.some((m) => m.key === 'percentage')
+    if (!hasPercentage && !hasConversionGoalFilter(query)) {
+      return [...metrics, metricsModule.createPercentage()]
+    }
+    return metrics
+  }, [metrics, query])
+
   const [search, setSearch] = useState('')
   const defaultOrderBy = getStoredOrderBy({
     domain: site.domain,
     reportInfo,
-    metrics,
+    metrics: breakdownMetrics,
     fallbackValue: reportInfo.defaultOrder ? [reportInfo.defaultOrder] : []
   })
   const { orderBy, orderByDictionary, toggleSortByMetric } = useOrderBy({
-    metrics,
+    metrics: breakdownMetrics,
     defaultOrderBy
   })
   useRememberOrderBy({
     effectiveOrderBy: orderBy,
-    metrics,
+    metrics: breakdownMetrics,
     reportInfo
   })
   const apiState = usePaginatedGetAPI<
@@ -125,7 +138,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       {
         label: reportInfo.dimensionLabel,
         key: 'name',
-        width: 'w-48 md:w-full flex items-center break-all',
+        width: 'w-40 md:w-48',
         align: 'left',
         renderItem: (item) => (
           <NameCell
@@ -136,29 +149,39 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           />
         )
       },
-      ...metrics.map(
-        (m): ColumnConfiguraton<TListItem> => ({
-          label: m.renderLabel(query),
-          key: m.key,
-          width: m.width,
-          align: 'right',
-          metricWarning: getMetricWarning(m, meta),
-          renderValue: (item) => m.renderValue(item, meta),
-          onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
-          sortDirection: orderByDictionary[m.key]
-        })
-      )
+      ...breakdownMetrics
+        .filter((m) => showPercentageColumn || m.key !== 'percentage')
+        .map(
+          (m): ColumnConfiguraton<TListItem> => ({
+            label: m.renderLabel(query),
+            key: m.key,
+            width: m.width,
+            align: 'right',
+            metricWarning: getMetricWarning(m, meta),
+            renderValue: (item, isRowHovered) =>
+              m.renderValue(
+                showPercentageColumn && m.key === 'visitors'
+                  ? { ...item, percentage: null }
+                  : item,
+                meta,
+                { detailedView: true, isRowHovered }
+              ),
+            onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
+            sortDirection: orderByDictionary[m.key]
+          })
+        )
     ],
     [
       reportInfo.dimensionLabel,
-      metrics,
+      breakdownMetrics,
       getFilterInfo,
       query,
       orderByDictionary,
       toggleSortByMetric,
       renderIcon,
       getExternalLinkUrl,
-      meta
+      meta,
+      showPercentageColumn
     ]
   )
 
@@ -190,7 +213,7 @@ const NameCell = <TListItem extends { name: string }>({
   renderIcon?: (item: TListItem) => ReactNode
   getExternalLinkUrl?: (listItem: TListItem) => string
 }) => (
-  <>
+  <div className="max-w-full break-all flex items-center">
     {typeof renderIcon === 'function' && renderIcon(item)}
     <DrilldownLink
       path={rootRoute.path}
@@ -203,7 +226,7 @@ const NameCell = <TListItem extends { name: string }>({
     {typeof getExternalLinkUrl === 'function' && (
       <ExternalLinkIcon url={getExternalLinkUrl(item)} />
     )}
-  </>
+  </div>
 )
 
 const ExternalLinkIcon = ({ url }: { url?: string }) =>

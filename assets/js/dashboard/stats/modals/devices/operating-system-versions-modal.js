@@ -14,7 +14,7 @@ function OperatingSystemVersionsModal() {
   const site = useSiteContext()
 
   const reportInfo = {
-    title: 'Operating System Versions',
+    title: 'Operating system versions',
     dimension: 'os_version',
     endpoint: url.apiPath(site, '/operating-system-versions'),
     dimensionLabel: 'Operating system version',

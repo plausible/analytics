@@ -33,10 +33,12 @@ function EntryPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({
-        defaultLabel: 'Unique Entrances',
+        defaultLabel: 'Unique entrances',
         width: 'w-36',
         meta: { plot: true }
       }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -53,7 +55,7 @@ function EntryPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -79,10 +81,12 @@ function ExitPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({
-        defaultLabel: 'Unique Exits',
+        defaultLabel: 'Unique exits',
         width: 'w-36',
         meta: { plot: true }
       }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -99,7 +103,7 @@ function ExitPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -125,6 +129,8 @@ function TopPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -141,15 +147,15 @@ function TopPages({ afterFetchData }) {
         search: (search) => search
       }}
       getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
 
 const labelFor = {
-  pages: 'Top Pages',
-  'entry-pages': 'Entry Pages',
-  'exit-pages': 'Exit Pages'
+  pages: 'Top pages',
+  'entry-pages': 'Entry pages',
+  'exit-pages': 'Exit pages'
 }
 
 export default function Pages() {
@@ -187,7 +193,7 @@ export default function Pages() {
   }
 
   return (
-    <div>
+    <div className="group/report overflow-x-hidden">
       {/* Header Container */}
       <div className="w-full flex justify-between">
         <div className="flex gap-x-1">
@@ -201,9 +207,9 @@ export default function Pages() {
         </div>
         <TabWrapper>
           {[
-            { label: 'Top Pages', value: 'pages' },
-            { label: 'Entry Pages', value: 'entry-pages' },
-            { label: 'Exit Pages', value: 'exit-pages' }
+            { label: 'Top pages', value: 'pages' },
+            { label: 'Entry pages', value: 'entry-pages' },
+            { label: 'Exit pages', value: 'exit-pages' }
           ].map(({ value, label }) => (
             <TabButton
               active={mode === value}

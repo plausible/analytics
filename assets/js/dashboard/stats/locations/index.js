@@ -37,6 +37,8 @@ function Countries({ query, site, onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -54,7 +56,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
         search: (search) => search
       }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -79,6 +81,8 @@ function Regions({ query, site, onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -93,7 +97,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: regionsRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -118,6 +122,8 @@ function Cities({ query, site, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -131,7 +137,7 @@ function Cities({ query, site, afterFetchData }) {
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -247,7 +253,7 @@ class Locations extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="group/report overflow-x-hidden">
         <div className="w-full flex justify-between">
           <div className="flex gap-x-1">
             <h3 className="font-bold dark:text-gray-100">

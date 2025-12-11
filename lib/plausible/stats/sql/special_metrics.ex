@@ -44,7 +44,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     |> select_merge_as([], %{
       percentage:
         fragment(
-          "if(? > 0, round(? / ? * 100, 1), null)",
+          "if(? > 0, round(? / ? * 100, 2), null)",
           selected_as(:total_visitors),
           selected_as(:visitors),
           selected_as(:total_visitors)

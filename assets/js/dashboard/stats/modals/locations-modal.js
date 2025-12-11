@@ -12,21 +12,21 @@ import { SortDirection } from '../../hooks/use-order-by'
 
 const VIEWS = {
   countries: {
-    title: 'Top Countries',
+    title: 'Top countries',
     dimension: 'country',
     endpoint: '/countries',
     dimensionLabel: 'Country',
     defaultOrder: ['visitors', SortDirection.desc]
   },
   regions: {
-    title: 'Top Regions',
+    title: 'Top regions',
     dimension: 'region',
     endpoint: '/regions',
     dimensionLabel: 'Region',
     defaultOrder: ['visitors', SortDirection.desc]
   },
   cities: {
-    title: 'Top Cities',
+    title: 'Top cities',
     dimension: 'city',
     endpoint: '/cities',
     dimensionLabel: 'City',
@@ -88,7 +88,7 @@ function LocationsModal({ currentView }) {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',
-          width: 'w-36'
+          width: 'w-32'
         })
       ]
     }
