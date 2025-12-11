@@ -79,7 +79,7 @@ function Browsers({ afterFetchData }) {
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) &&
-        metrics.createConversionRate({ meta: { showOnHover: true } })
+        metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -126,7 +126,7 @@ function BrowserVersions({ afterFetchData }) {
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) &&
-        metrics.createConversionRate({ meta: { showOnHover: true } })
+        metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -196,7 +196,7 @@ function OperatingSystems({ afterFetchData }) {
           meta: { showOnHover: true, hiddenOnMobile: true }
         }),
       hasConversionGoalFilter(query) &&
-        metrics.createConversionRate({ meta: { showOnHover: true } })
+        metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -248,7 +248,7 @@ function OperatingSystemVersions({ afterFetchData }) {
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) &&
-        metrics.createConversionRate({ meta: { showOnHover: true } })
+        metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -293,7 +293,7 @@ function ScreenSizes({ afterFetchData }) {
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) &&
-        metrics.createConversionRate({ meta: { showOnHover: true } })
+        metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 

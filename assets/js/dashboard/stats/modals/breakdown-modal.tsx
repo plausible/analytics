@@ -147,7 +147,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
         )
       },
       ...breakdownMetrics
-        .filter((m) => m.key !== 'percentage' && m.key !== 'conversion_rate')
+        .filter((m) => m.key !== 'percentage')
         .map(
           (m): ColumnConfiguraton<TListItem> => ({
             label: m.renderLabel(query),

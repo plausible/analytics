@@ -40,7 +40,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) &&
-        metrics.createConversionRate({ meta: { showOnHover: true } })
+        metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -85,7 +85,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) &&
-        metrics.createConversionRate({ meta: { showOnHover: true } })
+        metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -127,7 +127,7 @@ function Cities({ query, site, afterFetchData }) {
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) &&
-        metrics.createConversionRate({ meta: { showOnHover: true } })
+        metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 

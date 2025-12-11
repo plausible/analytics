@@ -8,7 +8,8 @@ import * as storage from '../../util/storage'
 import {
   EVENT_PROPS_PREFIX,
   getGoalFilter,
-  FILTER_OPERATIONS
+  FILTER_OPERATIONS,
+  hasConversionGoalFilter
 } from '../../util/filters'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
@@ -114,6 +115,8 @@ export default function Properties({ afterFetchData }) {
         renderLabel: (_query) => 'Events',
         meta: { hiddenOnMobile: true }
       }),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(query) && metrics.createPercentage(),
       BUILD_EXTRA &&
         metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
       BUILD_EXTRA &&
