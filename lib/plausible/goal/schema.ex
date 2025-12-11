@@ -42,13 +42,8 @@ defmodule Plausible.Goal do
     |> maybe_put_display_name()
     |> unique_constraint(:event_name, name: :goals_event_name_unique)
     |> unique_constraint([:page_path, :scroll_threshold],
-      name: :goals_pageview_config_unique
-    )
-    |> unique_constraint([:page_path, :scroll_threshold],
       name: :goals_page_path_and_scroll_threshold_unique
     )
-    |> unique_constraint(:display_name, name: :goals_display_name_unique)
-    |> unique_constraint(:event_name, name: :goals_event_config_unique)
     |> unique_constraint(:display_name, name: :goals_site_id_display_name_index)
     |> validate_length(:event_name, max: @max_event_name_length)
     |> validate_number(:scroll_threshold,

@@ -105,18 +105,18 @@ defmodule Plausible.GoalsTest do
   test "create/2 fails to create the same custom event goal twice" do
     site = new_site()
     {:ok, _} = Goals.create(site, %{"event_name" => "foo bar"})
-    assert {:error, _changeset} = Goals.create(site, %{"event_name" => "foo bar"})
-    # assert {"has already been taken", _} = changeset.errors[:display_name]
+    assert {:error, changeset} = Goals.create(site, %{"event_name" => "foo bar"})
+    assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
   test "create/2 fails to create the same currency goal twice" do
     site = new_site()
     {:ok, _} = Goals.create(site, %{"event_name" => "foo bar", "currency" => "EUR"})
 
-    assert {:error, _changeset} =
+    assert {:error, changeset} =
              Goals.create(site, %{"event_name" => "foo bar", "currency" => "EUR"})
 
-    # assert {"has already been taken", _} = changeset.errors[:display_name]
+    assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
   test "create/2 fails to create a goal with 'engagement' as event_name (reserved)" do
