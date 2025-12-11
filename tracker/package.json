@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@duckduckgo/autoconsent": "^14.16.0",
+    "@duckduckgo/autoconsent": "^14.38.0",
     "@rollup/plugin-json": "^6.1.0",
     "@swc/core": "^1.11.24",
     "chokidar": "^4.0.3",
