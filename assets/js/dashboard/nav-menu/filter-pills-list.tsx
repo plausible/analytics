@@ -10,6 +10,8 @@ import { styledFilterText, plainFilterText } from '../util/filter-text'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { filterRoute } from '../router'
+import { canRemoveFilter } from '../filtering/segments'
+import { useSegmentsContext } from '../filtering/segments-context'
 
 export const PILL_X_GAP_PX = 16
 export const PILL_Y_GAP_PX = 8
@@ -48,6 +50,7 @@ export const AppliedFilterPillsList = React.forwardRef<
   AppliedFilterPillsListProps
 >(({ className, style, slice, direction, pillClassName }, ref) => {
   const { query } = useQueryContext()
+  const { limitedToSegment } = useSegmentsContext()
   const navigate = useAppNavigate()
 
   const renderableFilters =
@@ -82,19 +85,21 @@ export const AppliedFilterPillsList = React.forwardRef<
                 ]
             }
           },
-          onRemoveClick: () => {
-            const newFilters = query.filters.filter(
-              (_, i) => i !== index + indexAdjustment
-            )
+          onRemoveClick: canRemoveFilter(filter, limitedToSegment)
+            ? () => {
+                const newFilters = query.filters.filter(
+                  (_, i) => i !== index + indexAdjustment
+                )
 
-            navigate({
-              search: (search) => ({
-                ...search,
-                filters: newFilters,
-                labels: cleanLabels(newFilters, query.labels)
-              })
-            })
-          }
+                navigate({
+                  search: (searchRecord) => ({
+                    ...searchRecord,
+                    filters: newFilters,
+                    labels: cleanLabels(newFilters, query.labels)
+                  })
+                })
+              }
+            : undefined
         }
       }))}
       className={className}

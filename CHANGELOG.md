@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Shared Links can now be limited to a particular segment of the data
+
 ### Removed
 
 ### Changed

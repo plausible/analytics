@@ -306,6 +306,7 @@ defmodule PlausibleWeb.Router do
       post "/", SegmentsController, :create
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
+      get "/:segment_id/shared-links", SegmentsController, :get_related_shared_links
     end
   end
 
