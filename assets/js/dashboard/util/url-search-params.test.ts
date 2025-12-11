@@ -242,21 +242,25 @@ describe(`${getRedirectTarget.name}`, () => {
     ).toBeNull()
   })
 
-  it('returns updated URL for page=... style filters (v1), and running the updated value through the function again returns null (no redirect loop)', () => {
-    const pathname = '/'
-    const search = '?page=/docs'
-    const expectedUpdatedSearch = '?f=is,page,/docs&r=v1'
-    expect(
-      getRedirectTarget({
-        pathname,
-        search
-      } as Location)
-    ).toEqual(`${pathname}${expectedUpdatedSearch}`)
-    expect(
-      getRedirectTarget({
-        pathname,
-        search: expectedUpdatedSearch
-      } as Location)
-    ).toBeNull()
-  })
+  it.each([
+    ['?page=/docs', '?f=is,page,/docs&r=v1'],
+    ['?page=%C3%AA&embed=true', '?f=is,page,%C3%AA&embed=true&r=v1']
+  ])(
+    'returns updated URL v1 style filter %s, and running the updated value through the function again returns null (no redirect loop)',
+    (searchString, expectedSearchString) => {
+      const pathname = '/'
+      expect(
+        getRedirectTarget({
+          pathname,
+          search: searchString
+        } as Location)
+      ).toEqual(`${pathname}${expectedSearchString}`)
+      expect(
+        getRedirectTarget({
+          pathname,
+          search: expectedSearchString
+        } as Location)
+      ).toBeNull()
+    }
+  )
 })
