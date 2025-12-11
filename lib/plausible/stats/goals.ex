@@ -67,7 +67,9 @@ defmodule Plausible.Stats.Goals do
           event_names_imports: [String.t()],
           event_names_by_type: [String.t()],
           page_regexes: [String.t()],
-          scroll_thresholds: [non_neg_integer()]
+          scroll_thresholds: [non_neg_integer()],
+          custom_props_keys: [[String.t()]],
+          custom_props_values: [[String.t()]]
         }
 
   @doc """
@@ -77,32 +79,49 @@ defmodule Plausible.Stats.Goals do
   def goal_join_data(query) do
     goals = query.preloaded_goals.matching_toplevel_filters
 
-    %{
-      indices: Enum.with_index(goals, 1) |> Enum.map(fn {_goal, idx} -> idx end),
-      types: Enum.map(goals, &to_string(Plausible.Goal.type(&1))),
-      # :TRICKY: This will contain "" for non-event goals
-      event_names_imports: Enum.map(goals, &to_string(&1.event_name)),
-      event_names_by_type:
-        Enum.map(goals, fn goal ->
-          case Plausible.Goal.type(goal) do
-            :event -> goal.event_name
-            :page -> "pageview"
-            :scroll -> "engagement"
-          end
-        end),
-      # :TRICKY: event goals are considered to match everything for the sake of efficient queries in query_builder.ex
-      # See also Plausible.Stats.SQL.Expression#event_goal_join
-      page_regexes:
-        Enum.map(goals, fn goal ->
-          case Plausible.Goal.type(goal) do
-            :event -> ".?"
-            :page -> Filters.Utils.page_regex(goal.page_path)
-            :scroll -> Filters.Utils.page_regex(goal.page_path)
-          end
-        end),
-      scroll_thresholds: Enum.map(goals, & &1.scroll_threshold)
-    }
+    goals
+    |> Enum.with_index(1)
+    |> Enum.reduce(
+      %{
+        indices: [],
+        types: [],
+        event_names_imports: [],
+        event_names_by_type: [],
+        page_regexes: [],
+        scroll_thresholds: [],
+        custom_props_keys: [],
+        custom_props_values: []
+      },
+      fn {goal, idx}, acc ->
+        goal_type = Plausible.Goal.type(goal)
+        {prop_keys, prop_values} = Enum.unzip(goal.custom_props)
+
+        %{
+          indices: [idx | acc.indices],
+          types: [to_string(goal_type) | acc.types],
+          # This will contain "" for non-event goals
+          event_names_imports: [to_string(goal.event_name) | acc.event_names_imports],
+          event_names_by_type: [event_name_by_type(goal_type, goal) | acc.event_names_by_type],
+          # Event goals are considered to match everything for the sake of efficient queries in query_builder.ex
+          # See also Plausible.Stats.SQL.Expression.event_goal_join/1
+          page_regexes: [page_regex_for_goal(goal_type, goal) | acc.page_regexes],
+          scroll_thresholds: [goal.scroll_threshold | acc.scroll_thresholds],
+          custom_props_keys: [prop_keys | acc.custom_props_keys],
+          custom_props_values: [prop_values | acc.custom_props_values]
+        }
+      end
+    )
+    |> Enum.map(fn {key, list} -> {key, Enum.reverse(list)} end)
+    |> Map.new()
   end
+
+  defp event_name_by_type(:event, goal), do: goal.event_name
+  defp event_name_by_type(:page, _goal), do: "pageview"
+  defp event_name_by_type(:scroll, _goal), do: "engagement"
+
+  defp page_regex_for_goal(:event, _goal), do: ".?"
+  defp page_regex_for_goal(:page, goal), do: Filters.Utils.page_regex(goal.page_path)
+  defp page_regex_for_goal(:scroll, goal), do: Filters.Utils.page_regex(goal.page_path)
 
   def toplevel_scroll_goal_filters?(query) do
     goal_filters? =
@@ -179,7 +198,14 @@ defmodule Plausible.Stats.Goals do
   end
 
   defp goal_condition(:event, goal, _) do
-    dynamic([e], e.name == ^goal.event_name)
+    name_condition = dynamic([e], e.name == ^goal.event_name)
+
+    if map_size(goal.custom_props) > 0 do
+      custom_props_condition = build_custom_props_condition(goal.custom_props)
+      dynamic([e], ^name_condition and ^custom_props_condition)
+    else
+      name_condition
+    end
   end
 
   defp goal_condition(:scroll, goal, false = _imported?) do
@@ -211,6 +237,24 @@ defmodule Plausible.Stats.Goals do
     else
       dynamic([e], field(e, ^db_field) == ^page_path)
     end
+  end
+
+  defp build_custom_props_condition(custom_props) do
+    Enum.reduce(custom_props, true, fn {prop_key, prop_value}, acc ->
+      condition =
+        dynamic(
+          [e],
+          fragment(
+            "?[indexOf(?, ?)] = ?",
+            field(e, :"meta.value"),
+            field(e, :"meta.key"),
+            ^prop_key,
+            ^prop_value
+          )
+        )
+
+      dynamic([e], ^acc and ^condition)
+    end)
   end
 
   def page_path_db_field(true = _imported?), do: :page

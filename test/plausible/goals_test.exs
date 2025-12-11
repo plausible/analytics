@@ -64,7 +64,7 @@ defmodule Plausible.GoalsTest do
              changeset.errors[:scroll_threshold]
   end
 
-  test "create/2 validates uniqueness across page_path and scroll_threshold" do
+  test "create/2 fails when same pageview+scroll threshold config exists with different display name" do
     site = new_site()
 
     {:ok, _} =
@@ -105,18 +105,169 @@ defmodule Plausible.GoalsTest do
   test "create/2 fails to create the same custom event goal twice" do
     site = new_site()
     {:ok, _} = Goals.create(site, %{"event_name" => "foo bar"})
-    assert {:error, _changeset} = Goals.create(site, %{"event_name" => "foo bar"})
-    # assert {"has already been taken", _} = changeset.errors[:display_name]
+    assert {:error, changeset} = Goals.create(site, %{"event_name" => "foo bar"})
+    assert {"has already been taken", _} = changeset.errors[:event_name]
+  end
+
+  test "create/2 succeeds to create the same custom event goal thrice with different custom props and different display names each" do
+    site = new_site()
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "Tablet Purchase",
+        "custom_props" => %{"product" => "tablet"}
+      })
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "Speaker Purchase",
+        "custom_props" => %{"product" => "speaker"}
+      })
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "General Purchase"
+      })
+  end
+
+  test "create/2 fails to create the same custom event goal twice with different display names but no props each" do
+    site = new_site()
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "General Purchase"
+      })
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "General Purchase 2"
+      })
+
+    assert {"has already been taken", _} = changeset.errors[:event_name]
+  end
+
+  test "create/3 fails to create a goal with more than #{Plausible.Goal.max_custom_props_per_goal()} custom props" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "General Purchase",
+        "custom_props" => %{
+          "variant" => "A",
+          "promo" => "true",
+          "product" => "tablet",
+          "limit" => "hit"
+        }
+      })
+
+    assert {"use at most 3 properties per goal", _} = changeset.errors[:custom_props]
+  end
+
+  test "create/2 succeeds to create the same custom event twice with different props and different display names each" do
+    site = new_site()
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "General Purchase",
+        "custom_props" => %{"variant" => "A"}
+      })
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "General Purchase 2",
+        "custom_props" => %{"variant" => "A", "foo" => "bar"}
+      })
   end
 
   test "create/2 fails to create the same currency goal twice" do
     site = new_site()
     {:ok, _} = Goals.create(site, %{"event_name" => "foo bar", "currency" => "EUR"})
 
-    assert {:error, _changeset} =
-             Goals.create(site, %{"event_name" => "foo bar", "currency" => "EUR"})
+    assert {:error, changeset} =
+             Goals.create(site, %{
+               "event_name" => "foo bar",
+               "currency" => "EUR",
+               "display_name" => "Purchase copy"
+             })
 
-    # assert {"has already been taken", _} = changeset.errors[:display_name]
+    assert {"has already been taken", _} = changeset.errors[:event_name]
+  end
+
+  test "create/2 fails to create two pageview goals with same display name" do
+    site = new_site()
+    {:ok, _} = Goals.create(site, %{"page_path" => "/index", "display_name" => "Index"})
+
+    assert {:error, changeset} =
+             Goals.create(site, %{"page_path" => "/index-2", "display_name" => "Index"})
+
+    assert {"has already been taken", _} =
+             changeset.errors[:display_name]
+  end
+
+  test "create/2 fails when same custom props config exists with different display name" do
+    site = new_site()
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "Purchase Event",
+        "custom_props" => %{"product" => "tablet"}
+      })
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "Different Display Name",
+        "custom_props" => %{"product" => "tablet"}
+      })
+
+    assert {"has already been taken", _} = changeset.errors[:event_name]
+  end
+
+  test "create/2 fails when same display name exists despite different custom props config" do
+    site = new_site()
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "My Goal",
+        "custom_props" => %{"product" => "tablet"}
+      })
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "display_name" => "My Goal",
+        "custom_props" => %{"product" => "speaker"}
+      })
+
+    assert {"has already been taken", _} = changeset.errors[:display_name]
+  end
+
+  test "create/2 fails when same display name exists between event and pageview goals" do
+    site = new_site()
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "event_name" => "Signup",
+        "display_name" => "User Action"
+      })
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "page_path" => "/signup",
+        "display_name" => "User Action"
+      })
+
+    assert {"has already been taken", _} = changeset.errors[:display_name]
   end
 
   test "create/2 fails to create a goal with 'engagement' as event_name (reserved)" do
@@ -127,41 +278,38 @@ defmodule Plausible.GoalsTest do
              changeset.errors[:event_name]
   end
 
-  @tag :ee_only
-  test "create/2 sets site.updated_at for revenue goal" do
-    site_1 = new_site(updated_at: DateTime.add(DateTime.utc_now(), -3600))
-
-    {:ok, _goal_1} = Goals.create(site_1, %{"event_name" => "Checkout", "currency" => "BRL"})
-
-    assert NaiveDateTime.compare(site_1.updated_at, Plausible.Repo.reload!(site_1).updated_at) ==
-             :lt
-
-    site_2 = new_site(updated_at: DateTime.add(DateTime.utc_now(), -3600))
-    {:ok, _goal_2} = Goals.create(site_2, %{"event_name" => "Read Article", "currency" => nil})
-
-    assert NaiveDateTime.compare(site_2.updated_at, Plausible.Repo.reload!(site_2).updated_at) ==
-             :eq
-  end
-
-  @tag :ee_only
-  test "create/2 creates revenue goal" do
-    site = new_site()
-    {:ok, goal} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
-    assert goal.event_name == "Purchase"
-    assert goal.page_path == nil
-    assert goal.currency == :EUR
-  end
-
-  @tag :ee_only
-  test "create/2 returns error when site does not have access to revenue goals" do
-    user = new_user() |> subscribe_to_growth_plan()
-    site = new_site(owner: user)
-
-    {:error, :upgrade_required} =
-      Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
-  end
-
   on_ee do
+    test "create/2 sets site.updated_at for revenue goal" do
+      site_1 = new_site(updated_at: DateTime.add(DateTime.utc_now(), -3600))
+
+      {:ok, _goal_1} = Goals.create(site_1, %{"event_name" => "Checkout", "currency" => "BRL"})
+
+      assert NaiveDateTime.compare(site_1.updated_at, Plausible.Repo.reload!(site_1).updated_at) ==
+               :lt
+
+      site_2 = new_site(updated_at: DateTime.add(DateTime.utc_now(), -3600))
+      {:ok, _goal_2} = Goals.create(site_2, %{"event_name" => "Read Article", "currency" => nil})
+
+      assert NaiveDateTime.compare(site_2.updated_at, Plausible.Repo.reload!(site_2).updated_at) ==
+               :eq
+    end
+
+    test "create/2 creates revenue goal" do
+      site = new_site()
+      {:ok, goal} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
+      assert goal.event_name == "Purchase"
+      assert goal.page_path == nil
+      assert goal.currency == :EUR
+    end
+
+    test "create/2 returns error when site does not have access to revenue goals" do
+      user = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: user)
+
+      {:error, :upgrade_required} =
+        Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
+    end
+
     test "create/2 returns error when creating a revenue goal for consolidated view" do
       user = new_user()
       new_site(owner: user)
@@ -172,16 +320,15 @@ defmodule Plausible.GoalsTest do
       {:error, :revenue_goals_unavailable} =
         Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
     end
-  end
 
-  @tag :ee_only
-  test "create/2 fails for unknown currency code" do
-    site = new_site()
+    test "create/2 fails for unknown currency code" do
+      site = new_site()
 
-    assert {:error, changeset} =
-             Goals.create(site, %{"event_name" => "Purchase", "currency" => "Euro"})
+      assert {:error, changeset} =
+               Goals.create(site, %{"event_name" => "Purchase", "currency" => "Euro"})
 
-    assert [currency: {"is invalid", _}] = changeset.errors
+      assert [currency: {"is invalid", _}] = changeset.errors
+    end
   end
 
   test "update/2 updates a goal" do
@@ -240,22 +387,23 @@ defmodule Plausible.GoalsTest do
            }
   end
 
-  @tag :ee_only
-  test "list_revenue_goals/1 lists event_names and currencies for each revenue goal" do
-    site = new_site()
+  on_ee do
+    test "list_revenue_goals/1 lists event_names and currencies for each revenue goal" do
+      site = new_site()
 
-    Goals.create(site, %{"event_name" => "One", "currency" => "EUR"})
-    Goals.create(site, %{"event_name" => "Two", "currency" => "EUR"})
-    Goals.create(site, %{"event_name" => "Three", "currency" => "USD"})
-    Goals.create(site, %{"event_name" => "Four"})
-    Goals.create(site, %{"page_path" => "/some-page"})
+      Goals.create(site, %{"event_name" => "One", "currency" => "EUR"})
+      Goals.create(site, %{"event_name" => "Two", "currency" => "EUR"})
+      Goals.create(site, %{"event_name" => "Three", "currency" => "USD"})
+      Goals.create(site, %{"event_name" => "Four"})
+      Goals.create(site, %{"page_path" => "/some-page"})
 
-    revenue_goals = Goals.list_revenue_goals(site)
+      revenue_goals = Goals.list_revenue_goals(site)
 
-    assert length(revenue_goals) == 3
-    assert %{display_name: "One", currency: :EUR} in revenue_goals
-    assert %{display_name: "Two", currency: :EUR} in revenue_goals
-    assert %{display_name: "Three", currency: :USD} in revenue_goals
+      assert length(revenue_goals) == 3
+      assert %{display_name: "One", currency: :EUR} in revenue_goals
+      assert %{display_name: "Two", currency: :EUR} in revenue_goals
+      assert %{display_name: "Three", currency: :USD} in revenue_goals
+    end
   end
 
   test "create/2 clears currency for pageview goals" do
