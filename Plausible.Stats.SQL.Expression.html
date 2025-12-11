@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-392BE75C.js"></script>
+    <script src="dist/sidebar_items-CC9B67B8.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -163,6 +163,8 @@ usage down the line.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>The fragment matches events to goals by</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -226,7 +228,7 @@ usage down the line.</p>
     </a>
     <h1 class="signature" translate="no">event_goal_join(goal_join_data)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/expression.ex#L446" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/expression.ex#L455" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -237,7 +239,7 @@ usage down the line.</p>
 
   <section class="docstring">
 
-
+<p>The fragment matches events to goals by:</p><ol><li>Checking if the pathname matches the goal's page regex pattern</li><li>Verifying the event name matches the expected name for the goal type</li><li>Validating scroll depth is within threshold (for scroll goals)</li><li>Ensuring all custom properties match (if any are defined on the goal)</li></ol><p>Returns an array of goal indices that the event matches.</p>
   </section>
 </section>
 <section class="detail" id="event_metric/2">
