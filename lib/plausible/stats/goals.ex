@@ -94,7 +94,7 @@ defmodule Plausible.Stats.Goals do
       },
       fn {goal, idx}, acc ->
         goal_type = Plausible.Goal.type(goal)
-        {prop_keys, prop_values} = Enum.unzip(goal.custom_props)
+        {prop_keys, prop_values} = Enum.unzip(goal.custom_props || %{})
 
         %{
           indices: [idx | acc.indices],
@@ -200,7 +200,7 @@ defmodule Plausible.Stats.Goals do
   defp goal_condition(:event, goal, _) do
     name_condition = dynamic([e], e.name == ^goal.event_name)
 
-    if map_size(goal.custom_props) > 0 do
+    if is_map(goal.custom_props) and map_size(goal.custom_props) > 0 do
       custom_props_condition = build_custom_props_condition(goal.custom_props)
       dynamic([e], ^name_condition and ^custom_props_condition)
     else
@@ -239,7 +239,7 @@ defmodule Plausible.Stats.Goals do
     end
   end
 
-  defp build_custom_props_condition(custom_props) do
+  defp build_custom_props_condition(custom_props) when is_map(custom_props) do
     Enum.reduce(custom_props, true, fn {prop_key, prop_value}, acc ->
       condition =
         dynamic(
