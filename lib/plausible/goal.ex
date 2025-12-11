@@ -19,17 +19,31 @@ defmodule Plausible.Goal do
       field :funnels, {:array, :map}, virtual: true, default: []
     end
 
+    field :custom_props, :map, default: %{}
+
     belongs_to :site, Plausible.Site
 
     timestamps()
   end
 
-  @fields [:id, :site_id, :event_name, :page_path, :scroll_threshold, :display_name] ++
+  @fields [
+            :id,
+            :site_id,
+            :event_name,
+            :page_path,
+            :scroll_threshold,
+            :display_name,
+            :custom_props
+          ] ++
             on_ee(do: [:currency], else: [])
 
   @max_event_name_length 120
 
   def max_event_name_length(), do: @max_event_name_length
+
+  @max_custom_props_per_goal 3
+
+  def max_custom_props_per_goal(), do: @max_custom_props_per_goal
 
   def changeset(goal, attrs \\ %{}) do
     goal
@@ -40,16 +54,18 @@ defmodule Plausible.Goal do
     |> validate_event_name_and_page_path()
     |> validate_page_path_for_scroll_goal()
     |> maybe_put_display_name()
-    |> unique_constraint(:event_name, name: :goals_event_name_unique)
+    |> validate_change(:custom_props, fn :custom_props, custom_props ->
+      if map_size(custom_props) > @max_custom_props_per_goal do
+        [custom_props: "use at most #{@max_custom_props_per_goal} properties per goal"]
+      else
+        []
+      end
+    end)
+    |> unique_constraint(:display_name, name: :goals_display_name_unique)
+    |> unique_constraint(:event_name, name: :goals_event_config_unique)
     |> unique_constraint([:page_path, :scroll_threshold],
       name: :goals_pageview_config_unique
     )
-    |> unique_constraint([:page_path, :scroll_threshold],
-      name: :goals_page_path_and_scroll_threshold_unique
-    )
-    |> unique_constraint(:display_name, name: :goals_display_name_unique)
-    |> unique_constraint(:event_name, name: :goals_event_config_unique)
-    |> unique_constraint(:display_name, name: :goals_site_id_display_name_index)
     |> validate_length(:event_name, max: @max_event_name_length)
     |> validate_number(:scroll_threshold,
       greater_than_or_equal_to: -1,
