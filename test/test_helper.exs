@@ -1,5 +1,3 @@
-IO.puts("Schedulers online #{System.schedulers_online()}")
-
 if not Enum.empty?(Path.wildcard("lib/**/*_test.exs")) do
   raise "Oops, test(s) found in `lib/` directory. Move them to `test/`."
 end
