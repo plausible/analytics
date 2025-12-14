@@ -117,7 +117,7 @@ jobs:
       - run: |
           mix test --include slow --include minio --include migrations --max-failures 1 --warnings-as-errors --partitions 6 | tee test_output.log
           if grep -E '\.+[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3} \[[^]]+\]' test_output.log | grep -v 'libcluster'; then
-            echo "The tests are prodcuing output, this usually indicates some error"
+            echo "The tests are producing output, this usually indicates some error"
             exit 1
           fi
         if: env.MIX_ENV == 'test'
@@ -129,7 +129,7 @@ jobs:
       - run: | 
           mix test --include slow --include migrations --max-failures 1 --warnings-as-errors --partitions 4 | tee test_output.log
           if grep -E '\.+[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3} \[[^]]+\]' test_output.log | grep -v 'libcluster'; then
-            echo "The tests are prodcuing output, this usually indicates some error"
+            echo "The tests are producing output, this usually indicates some error"
               exit 1
           fi
         if: env.MIX_ENV == 'ce_test'
