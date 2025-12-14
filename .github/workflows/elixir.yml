@@ -120,6 +120,7 @@ jobs:
             echo "The tests are producing output, this usually indicates some error"
             exit 1
           fi
+        shell: bash
         if: env.MIX_ENV == 'test'
         env:
           MINIO_HOST_FOR_CLICKHOUSE: "172.17.0.1"
@@ -132,6 +133,7 @@ jobs:
             echo "The tests are producing output, this usually indicates some error"
               exit 1
           fi
+        shell: bash
         if: env.MIX_ENV == 'ce_test'
         env:
           MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
