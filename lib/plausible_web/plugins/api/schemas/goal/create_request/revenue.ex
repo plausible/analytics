@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Revenue do
 
   use PlausibleWeb, :open_api_schema
 
+  alias Schemas.Goal.CustomProps
+
   OpenApiSpex.schema(%{
     title: "Goal.CreateRequest.Revenue",
     description: "Revenue Goal creation params",
@@ -22,12 +24,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Revenue do
         properties: %{
           event_name: %Schema{type: :string},
           currency: %Schema{type: :string},
-          custom_props: %Schema{
-            type: :object,
-            description: "Custom properties (max 3, string keys and values)",
-            additionalProperties: %Schema{type: :string},
-            maxProperties: 3
-          }
+          custom_props: CustomProps.request_schema()
         }
       }
     },
