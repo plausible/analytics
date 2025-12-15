@@ -387,9 +387,8 @@ defmodule Plausible.Goals do
   end
 
   defp maybe_check_feature_access(site, changeset) do
-    with :ok <- revenue_goals_access_check(site, changeset),
-         :ok <- custom_props_goals_access_check(site, changeset) do
-      :ok
+    with :ok <- revenue_goals_access_check(site, changeset) do
+      custom_props_goals_access_check(site, changeset)
     end
   end
 
