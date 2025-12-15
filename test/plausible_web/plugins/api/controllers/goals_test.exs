@@ -233,6 +233,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert Enum.any?(resp.errors, &(&1.detail == "null value where string expected"))
     end
 
+    @tag :ee_only
     test "fails without Props feature when custom_props is non-empty", %{
       conn: conn,
       token: token,
