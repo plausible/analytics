@@ -9,9 +9,9 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
     expected = %Plausible.Stats.ParsedQueryParams{
       input_date_range: nil,
       relative_date: nil,
-      metrics: nil,
+      metrics: [],
       filters: [],
-      dimensions: nil,
+      dimensions: [],
       order_by: nil,
       pagination: nil,
       include: default_include()
