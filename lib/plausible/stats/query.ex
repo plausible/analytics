@@ -18,7 +18,7 @@ defmodule Plausible.Stats.Query do
             timezone: nil,
             legacy_breakdown: false,
             preloaded_goals: [],
-            include: Plausible.Stats.ParsedQueryParams.default_include(),
+            include: Plausible.Stats.ApiQueryParser.default_include(),
             debug_metadata: %{},
             pagination: nil,
             # Revenue metric specific metadata

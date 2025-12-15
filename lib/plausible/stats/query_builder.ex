@@ -54,7 +54,7 @@ defmodule Plausible.Stats.QueryBuilder do
     end
   end
 
-  defp build_datetime_range(input_date_range, _site, now)
+  defp build_datetime_range(input_date_range, _site, _relative_date, now)
        when input_date_range in [:realtime, :realtime_30m] do
     duration_minutes =
       case input_date_range do
@@ -68,50 +68,44 @@ defmodule Plausible.Stats.QueryBuilder do
     DateTimeRange.new!(first_datetime, last_datetime)
   end
 
-  defp build_datetime_range(:day, site, now) do
-    today = today_from_now(site, now)
-    DateTimeRange.new!(today, today, site.timezone)
+  defp build_datetime_range(:day, site, relative_date, _now) do
+    DateTimeRange.new!(relative_date, relative_date, site.timezone)
   end
 
-  defp build_datetime_range(:month, site, now) do
-    today = today_from_now(site, now)
-    first = today |> Date.beginning_of_month()
-    last = today |> Date.end_of_month()
+  defp build_datetime_range(:month, site, relative_date, _now) do
+    first = relative_date |> Date.beginning_of_month()
+    last = relative_date |> Date.end_of_month()
     DateTimeRange.new!(first, last, site.timezone)
   end
 
-  defp build_datetime_range(:year, site, now) do
-    today = today_from_now(site, now)
-    first = today |> Plausible.Times.beginning_of_year()
-    last = today |> Plausible.Times.end_of_year()
+  defp build_datetime_range(:year, site, relative_date, _now) do
+    first = relative_date |> Plausible.Times.beginning_of_year()
+    last = relative_date |> Plausible.Times.end_of_year()
     DateTimeRange.new!(first, last, site.timezone)
   end
 
-  defp build_datetime_range(:all, site, now) do
-    today = today_from_now(site, now)
-    start_date = Plausible.Sites.stats_start_date(site) || today
-    DateTimeRange.new!(start_date, today, site.timezone)
+  defp build_datetime_range(:all, site, relative_date, _now) do
+    start_date = Plausible.Sites.stats_start_date(site) || relative_date
+    DateTimeRange.new!(start_date, relative_date, site.timezone)
   end
 
-  defp build_datetime_range({:last_n_days, n}, site, now) do
-    today = today_from_now(site, now)
-    last = today |> Date.add(-1)
-    first = today |> Date.add(-n)
+  defp build_datetime_range({:last_n_days, n}, site, relative_date, _now) do
+    last = relative_date |> Date.add(-1)
+    first = relative_date |> Date.add(-n)
     DateTimeRange.new!(first, last, site.timezone)
   end
 
-  defp build_datetime_range({:last_n_months, n}, site, now) do
-    today = today_from_now(site, now)
-    last = today |> Date.shift(month: -1) |> Date.end_of_month()
-    first = today |> Date.shift(month: -n) |> Date.beginning_of_month()
+  defp build_datetime_range({:last_n_months, n}, site, relative_date, _now) do
+    last = relative_date |> Date.shift(month: -1) |> Date.end_of_month()
+    first = relative_date |> Date.shift(month: -n) |> Date.beginning_of_month()
     DateTimeRange.new!(first, last, site.timezone)
   end
 
-  defp build_datetime_range({:date_range, from, to}, site, _now) do
+  defp build_datetime_range({:date_range, from, to}, site, _relative_date, _now) do
     DateTimeRange.new!(from, to, site.timezone)
   end
 
-  defp build_datetime_range({:datetime_range, from, to}, _site, _now) do
+  defp build_datetime_range({:datetime_range, from, to}, _site, _relative_date, _now) do
     DateTimeRange.new!(from, to)
   end
 
@@ -120,7 +114,7 @@ defmodule Plausible.Stats.QueryBuilder do
            parsed_query_params,
          site
        ) do
-    comparison_date_range = build_datetime_range(date_range, site, parsed_query_params.now)
+    comparison_date_range = build_datetime_range(date_range, site, nil, nil)
 
     new_include =
       put_in(parsed_query_params.include, [:comparisons, :date_range], comparison_date_range)
@@ -133,9 +127,11 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp do_build(parsed_query_params, site, debug_metadata) do
+    now = Plausible.Stats.Query.Test.get_fixed_now()
+
     %ParsedQueryParams{
       input_date_range: input_date_range,
-      now: now,
+      relative_date: relative_date,
       metrics: metrics,
       filters: filters,
       dimensions: dimensions
@@ -143,9 +139,11 @@ defmodule Plausible.Stats.QueryBuilder do
 
     parsed_query_params = build_comparison_datetime_range(parsed_query_params, site)
 
+    relative_date = relative_date || today_from_now(site, now)
+
     utc_time_range =
       input_date_range
-      |> build_datetime_range(site, now)
+      |> build_datetime_range(site, relative_date, now)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
     {preloaded_goals, revenue_warning, revenue_currencies} =
@@ -153,22 +151,25 @@ defmodule Plausible.Stats.QueryBuilder do
 
     consolidated_site_ids = get_consolidated_site_ids(site)
 
-    all_params =
-      parsed_query_params
-      |> Map.to_list()
-      |> Keyword.merge(
-        site_id: site.id,
-        site_native_stats_start_at: site.native_stats_start_at,
-        consolidated_site_ids: consolidated_site_ids,
-        timezone: site.timezone,
-        preloaded_goals: preloaded_goals,
-        revenue_warning: revenue_warning,
-        revenue_currencies: revenue_currencies,
-        utc_time_range: utc_time_range,
-        debug_metadata: debug_metadata
-      )
-
-    struct!(%Query{}, all_params)
+    struct!(%Query{},
+      now: now,
+      input_date_range: input_date_range,
+      utc_time_range: utc_time_range,
+      site_id: site.id,
+      metrics: metrics,
+      dimensions: dimensions,
+      filters: filters,
+      order_by: parsed_query_params.order_by,
+      pagination: parsed_query_params.pagination,
+      include: parsed_query_params.include,
+      site_native_stats_start_at: site.native_stats_start_at,
+      consolidated_site_ids: consolidated_site_ids,
+      timezone: site.timezone,
+      preloaded_goals: preloaded_goals,
+      revenue_warning: revenue_warning,
+      revenue_currencies: revenue_currencies,
+      debug_metadata: debug_metadata
+    )
   end
 
   on_ee do

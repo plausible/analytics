@@ -82,22 +82,38 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    test "successful form submission updates database", %{conn: conn, site: site} do
-      original_domain = site.domain
-      new_domain = "new.#{site.domain}"
-      {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
+    for {role, membership_type} <- [
+          {:editor, :site_guest},
+          {:editor, :team_member},
+          {:admin, :team_member},
+          {:owner, :team_member}
+        ] do
+      test "#{Phoenix.Naming.humanize(membership_type)} with role #{role} can submit the form and it changes the record in the database",
+           %{conn: conn, user: user} do
+        site = new_site()
 
-      lv
-      |> element("form")
-      |> render_submit(%{site: %{domain: new_domain}})
+        add_site_guest_or_team_member(site,
+          user: user,
+          role: unquote(role),
+          membership_type: unquote(membership_type)
+        )
 
-      on_ee do
-        render_async(lv, 500)
+        original_domain = site.domain
+        new_domain = "new.#{site.domain}"
+        {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
+
+        lv
+        |> element("form")
+        |> render_submit(%{site: %{domain: new_domain}})
+
+        on_ee do
+          render_async(lv, 500)
+        end
+
+        site = Repo.reload!(site)
+        assert site.domain == new_domain
+        assert site.domain_changed_from == original_domain
       end
-
-      site = Repo.reload!(site)
-      assert site.domain == new_domain
-      assert site.domain_changed_from == original_domain
     end
 
     test "successful form submission navigates to success page", %{conn: conn, site: site} do

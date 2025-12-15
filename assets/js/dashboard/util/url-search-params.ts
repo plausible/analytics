@@ -7,7 +7,7 @@ import { v1 } from './url-search-params-v1'
 import { v2 } from './url-search-params-v2'
 
 /**
- * These charcters are not URL encoded to have more readable URLs.
+ * These characters are not URL encoded to have more readable URLs.
  * Browsers seem to handle this just fine.
  * `?f=is,page,/my/page/:some_param` vs `?f=is,page,%2Fmy%2Fpage%2F%3Asome_param``
  */
@@ -247,6 +247,8 @@ export function maybeGetLatestReadableSearch(
   }
 
   const isV2 = v2.isV2(searchParams)
+  const isV1 = v1.isV1(searchParams)
+
   if (isV2) {
     return stringifySearch({
       ...v2.parseSearch(searchString),
@@ -254,17 +256,14 @@ export function maybeGetLatestReadableSearch(
     })
   }
 
-  const searchRecord = v2.parseSearch(searchString)
-  const isV1 = v1.isV1(searchRecord)
-
-  if (!isV1) {
-    return null
+  if (isV1) {
+    return stringifySearch({
+      ...v1.parseSearch(searchString),
+      [REDIRECTED_SEARCH_PARAM_NAME]: 'v1'
+    })
   }
 
-  return stringifySearch({
-    ...v1.parseSearchRecord(searchRecord),
-    [REDIRECTED_SEARCH_PARAM_NAME]: 'v1'
-  })
+  return null
 }
 
 /**

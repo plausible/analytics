@@ -227,12 +227,19 @@ describe(`${maybeGetLatestReadableSearch.name}`, () => {
     expect(maybeGetLatestReadableSearch(expectedUpdatedSearch)).toBeNull()
   })
 
-  it('returns updated search string for page=... style filters (v1), and running the updated value through the function again returns null (no redirect loop)', () => {
-    const search = '?page=/docs'
-    const expectedUpdatedSearch = '?f=is,page,/docs&r=v1'
-    expect(maybeGetLatestReadableSearch(search)).toEqual(expectedUpdatedSearch)
-    expect(maybeGetLatestReadableSearch(expectedUpdatedSearch)).toBeNull()
-  })
+  it.each([
+    ['?page=/docs', '?f=is,page,/docs&r=v1'],
+    ['?page=%C3%AA&embed=true', '?f=is,page,%C3%AA&embed=true&r=v1'],
+    ['?page=/|/foo&goal=~Signup&source=!Facebook|Instagram', '?f=is,page,/,/foo&f=contains,goal,Signup&f=is_not,source,Facebook,Instagram&r=v1']
+  ])(
+    'returns updated search string v1 style filter %s, and running the updated value through the function again returns null (no redirect loop)',
+    (searchString, expectedSearchString) => {
+      expect(maybeGetLatestReadableSearch(searchString)).toEqual(
+        expectedSearchString
+      )
+      expect(maybeGetLatestReadableSearch(expectedSearchString)).toBeNull()
+    }
+  )
 })
 
 describe(`${getSearchWithEnforcedSegment.name}`, () => {
