@@ -20,7 +20,13 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.Pageview do
             properties: %{
               id: %Schema{type: :integer, description: "Goal ID", readOnly: true},
               display_name: %Schema{type: :string, description: "Display name", readOnly: true},
-              path: %Schema{type: :string, description: "Page Path"}
+              path: %Schema{type: :string, description: "Page Path"},
+              custom_props: %Schema{
+                type: :object,
+                description: "Custom properties (string keys and values)",
+                additionalProperties: %Schema{type: :string},
+                readOnly: true
+              }
             }
           }
         }

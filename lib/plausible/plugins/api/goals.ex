@@ -51,14 +51,40 @@ defmodule Plausible.Plugins.API.Goals do
     :ok
   end
 
+  defp convert_to_create_params(%CreateRequest.CustomEvent{
+         goal: %{event_name: event_name, custom_props: custom_props}
+       })
+       when is_map(custom_props) do
+    %{"goal_type" => "event", "event_name" => event_name, "custom_props" => custom_props}
+  end
+
   defp convert_to_create_params(%CreateRequest.CustomEvent{goal: %{event_name: event_name}}) do
     %{"goal_type" => "event", "event_name" => event_name}
+  end
+
+  defp convert_to_create_params(%CreateRequest.Revenue{
+         goal: %{event_name: event_name, currency: currency, custom_props: custom_props}
+       })
+       when is_map(custom_props) do
+    %{
+      "goal_type" => "event",
+      "event_name" => event_name,
+      "currency" => currency,
+      "custom_props" => custom_props
+    }
   end
 
   defp convert_to_create_params(%CreateRequest.Revenue{
          goal: %{event_name: event_name, currency: currency}
        }) do
     %{"goal_type" => "event", "event_name" => event_name, "currency" => currency}
+  end
+
+  defp convert_to_create_params(%CreateRequest.Pageview{
+         goal: %{path: page_path, custom_props: custom_props}
+       })
+       when is_map(custom_props) do
+    %{"goal_type" => "page", "page_path" => page_path, "custom_props" => custom_props}
   end
 
   defp convert_to_create_params(%CreateRequest.Pageview{goal: %{path: page_path}}) do

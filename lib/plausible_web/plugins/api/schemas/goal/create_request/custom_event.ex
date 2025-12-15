@@ -20,7 +20,13 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.CustomEvent do
         type: :object,
         required: [:event_name],
         properties: %{
-          event_name: %Schema{type: :string}
+          event_name: %Schema{type: :string},
+          custom_props: %Schema{
+            type: :object,
+            description: "Custom properties (max 3, string keys and values)",
+            additionalProperties: %Schema{type: :string},
+            maxProperties: 3
+          }
         }
       }
     },

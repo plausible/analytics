@@ -21,7 +21,13 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.Revenue do
               id: %Schema{type: :integer, description: "Goal ID", readOnly: true},
               display_name: %Schema{type: :string, description: "Display name", readOnly: true},
               event_name: %Schema{type: :string, description: "Event Name"},
-              currency: %Schema{type: :string, description: "Currency"}
+              currency: %Schema{type: :string, description: "Currency"},
+              custom_props: %Schema{
+                type: :object,
+                description: "Custom properties (string keys and values)",
+                additionalProperties: %Schema{type: :string},
+                readOnly: true
+              }
             }
           }
         }

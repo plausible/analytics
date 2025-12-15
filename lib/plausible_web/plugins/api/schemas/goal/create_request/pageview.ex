@@ -20,7 +20,13 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Pageview do
         type: :object,
         required: [:path],
         properties: %{
-          path: %Schema{type: :string}
+          path: %Schema{type: :string},
+          custom_props: %Schema{
+            type: :object,
+            description: "Custom properties (max 3, string keys and values)",
+            additionalProperties: %Schema{type: :string},
+            maxProperties: 3
+          }
         }
       }
     },
