@@ -169,6 +169,32 @@ defmodule Plausible.GoalsTest do
     assert {"use at most 3 properties per goal", _} = changeset.errors[:custom_props]
   end
 
+  test "create/3 fails to create a goal with non-string custom prop values" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "custom_props" => %{"count" => 42}
+      })
+
+    assert {"must be a map with string keys and string values", _} =
+             changeset.errors[:custom_props]
+  end
+
+  test "create/3 fails to create a goal with null custom prop values" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "custom_props" => %{"product" => nil}
+      })
+
+    assert {"must be a map with string keys and string values", _} =
+             changeset.errors[:custom_props]
+  end
+
   test "create/2 succeeds to create the same custom event twice with different props and different display names each" do
     site = new_site()
 

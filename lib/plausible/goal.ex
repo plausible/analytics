@@ -55,10 +55,17 @@ defmodule Plausible.Goal do
     |> validate_page_path_for_scroll_goal()
     |> maybe_put_display_name()
     |> validate_change(:custom_props, fn :custom_props, custom_props ->
-      if map_size(custom_props) > @max_custom_props_per_goal do
-        [custom_props: "use at most #{@max_custom_props_per_goal} properties per goal"]
-      else
-        []
+      cond do
+        map_size(custom_props) > @max_custom_props_per_goal ->
+          [custom_props: "use at most #{@max_custom_props_per_goal} properties per goal"]
+
+        not Enum.all?(custom_props, fn {k, v} ->
+          is_binary(k) and is_binary(v)
+        end) ->
+          [custom_props: "must be a map with string keys and string values"]
+
+        true ->
+          []
       end
     end)
     |> unique_constraint(:display_name, name: :goals_display_name_unique)
@@ -191,7 +198,7 @@ defimpl Jason.Encoder, for: Plausible.Goal do
 
     value
     |> Map.put(:goal_type, Plausible.Goal.type(value))
-    |> Map.take([:id, :goal_type, :event_name, :page_path])
+    |> Map.take([:id, :goal_type, :event_name, :page_path, :custom_props])
     |> Map.put(:domain, domain)
     |> Map.put(:display_name, value.display_name)
     |> Jason.Encode.map(opts)
