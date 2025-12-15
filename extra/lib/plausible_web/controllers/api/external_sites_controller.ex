@@ -98,7 +98,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
               display_name: goal.display_name,
               goal_type: Goal.type(goal),
               event_name: goal.event_name,
-              page_path: goal.page_path
+              page_path: goal.page_path,
+              custom_props: goal.custom_props
             }
           end),
         meta: pagination_meta(page.metadata)

@@ -665,6 +665,72 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert res["error"] =~ "Maximum number of goals reached"
       end
+
+      test "can create a goal with custom_props", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Purchase",
+            custom_props: %{"product" => "enterprise", "tier" => "premium"}
+          })
+
+        res = json_response(conn, 200)
+        assert res["goal_type"] == "event"
+        assert res["event_name"] == "Purchase"
+        assert res["custom_props"] == %{"product" => "enterprise", "tier" => "premium"}
+      end
+
+      test "custom_props defaults to empty map if not provided", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Signup"
+          })
+
+        res = json_response(conn, 200)
+        assert res["custom_props"] == %{}
+      end
+
+      test "fails when custom_props exceeds max of 3", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Purchase",
+            custom_props: %{"a" => "1", "b" => "2", "c" => "3", "d" => "4"}
+          })
+
+        res = json_response(conn, 400)
+        assert res["error"] =~ "use at most 3 properties per goal"
+      end
+
+      test "fails when custom_props has null values", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Purchase",
+            custom_props: %{"product" => nil}
+          })
+
+        res = json_response(conn, 400)
+        assert res["error"] =~ "must be a map with string keys and string values"
+      end
+
+      test "fails when custom_props has non-string values", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Purchase",
+            custom_props: %{"count" => 42}
+          })
+
+        res = json_response(conn, 400)
+        assert res["error"] =~ "must be a map with string keys and string values"
+      end
     end
 
     describe "DELETE /api/v1/sites/custom-props/:property" do
@@ -1376,21 +1442,24 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                      "display_name" => "Purchase",
                      "goal_type" => "event",
                      "event_name" => "Purchase",
-                     "page_path" => nil
+                     "page_path" => nil,
+                     "custom_props" => %{}
                    },
                    %{
                      "id" => goal2.id,
                      "display_name" => "Signup",
                      "goal_type" => "event",
                      "event_name" => "Signup",
-                     "page_path" => nil
+                     "page_path" => nil,
+                     "custom_props" => %{}
                    },
                    %{
                      "id" => goal1.id,
                      "display_name" => "Visit /login",
                      "goal_type" => "page",
                      "event_name" => nil,
-                     "page_path" => "/login"
+                     "page_path" => "/login",
+                     "custom_props" => %{}
                    }
                  ],
                  "meta" => %{
@@ -1399,6 +1468,28 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                    "limit" => 100
                  }
                }
+      end
+
+      test "returns goals with custom_props", %{conn: conn, site: site} do
+        goal =
+          insert(:goal, %{
+            site: site,
+            event_name: "Purchase",
+            custom_props: %{"product" => "enterprise", "tier" => "premium"}
+          })
+
+        conn = get(conn, "/api/v1/sites/goals?site_id=" <> site.domain)
+
+        goal_id = goal.id
+
+        assert %{
+                 "goals" => [
+                   %{
+                     "id" => ^goal_id,
+                     "custom_props" => %{"product" => "enterprise", "tier" => "premium"}
+                   }
+                 ]
+               } = json_response(conn, 200)
       end
 
       @tag :capture_log
