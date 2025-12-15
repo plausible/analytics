@@ -3,7 +3,7 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Metrics, DateTimeRange, JSONSchema}
+  alias Plausible.Stats.{Filters, Metrics, JSONSchema}
 
   @default_include %Plausible.Stats.QueryInclude{
     imports: false,

@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> preload_goals_and_revenue(site)
       |> put_consolidated_site_ids(site)
       |> put_order_by(params)
-      |> put_include(site, params)
+      |> put_include(params)
       |> QueryBuilder.put_comparison_utc_time_range()
       |> Query.put_imported_opts(site)
       |> QueryBuilder.set_time_on_page_data(site)
@@ -233,7 +233,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
   end
 
-  defp put_include(query, site, params) do
+  defp put_include(query, params) do
     include = parse_include(params["include"])
 
     query
