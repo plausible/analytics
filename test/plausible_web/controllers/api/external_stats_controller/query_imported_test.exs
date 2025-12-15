@@ -1432,7 +1432,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "metrics" => ["visitors", "scroll_depth"],
           "date_range" => ["2022-01-01", "2022-12-31"],
           "filters" => [["is", "event:page", ["/"]]],
-          "include" => %{"imports" => true, "comparisons" => %{"mode" => "previous_period"}}
+          "include" => %{"imports" => true, "compare" => "previous_period"}
         })
 
       assert %{"results" => results, "meta" => meta} = json_response(conn, 200)

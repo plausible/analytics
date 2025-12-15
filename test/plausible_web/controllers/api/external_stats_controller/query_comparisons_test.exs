@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
         "site_id" => site.domain,
         "metrics" => ["pageviews"],
         "date_range" => ["2021-01-07", "2021-01-13"],
-        "include" => %{"comparisons" => %{"mode" => "previous_period"}}
+        "include" => %{"compare" => "previous_period"}
       })
 
     assert json_response(conn, 200)["results"] == [
@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
         "metrics" => ["pageviews"],
         "date_range" => ["2021-01-07", "2021-01-13"],
         "dimensions" => ["time:day"],
-        "include" => %{"comparisons" => %{"mode" => "previous_period"}}
+        "include" => %{"compare" => "previous_period"}
       })
 
     assert json_response(conn, 200)["results"] == [
@@ -132,10 +132,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
         "dimensions" => ["time"],
         "include" => %{
           "time_labels" => true,
-          "comparisons" => %{
-            "mode" => "previous_period",
-            "match_day_of_week" => match_day_of_week
-          }
+          "compare" => "previous_period",
+          "compare_match_day_of_week" => match_day_of_week
         }
       })
       |> json_response(200)
@@ -197,7 +195,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
         "dimensions" => ["time:day"],
         "include" => %{
           "time_labels" => true,
-          "comparisons" => %{"mode" => "year_over_year"}
+          "compare" => "year_over_year"
         }
       })
 
@@ -262,9 +260,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
         "metrics" => ["visitors", "percentage"],
         "date_range" => ["2021-01-07", "2021-01-13"],
         "dimensions" => ["visit:browser"],
-        "include" => %{
-          "comparisons" => %{"mode" => "previous_period"}
-        },
+        "include" => %{"compare" => "previous_period"},
         "pagination" => %{"limit" => 2}
       })
 
@@ -295,9 +291,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
         "metrics" => ["visitors", "percentage"],
         "date_range" => ["2021-01-07", "2021-01-13"],
         "dimensions" => ["visit:browser"],
-        "include" => %{
-          "comparisons" => %{"mode" => "previous_period"}
-        },
+        "include" => %{"compare" => "previous_period"},
         "pagination" => %{"limit" => 2, "offset" => 2}
       })
 
@@ -353,7 +347,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
         "dimensions" => ["visit:browser"],
         "include" => %{
           "imports" => true,
-          "comparisons" => %{"mode" => "previous_period"}
+          "compare" => "previous_period"
         },
         "pagination" => %{"limit" => 2}
       })
@@ -393,9 +387,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
           "site_id" => site.domain,
           "metrics" => ["pageviews"],
           "date_range" => ["2021-01-07", "2021-01-13"],
-          "include" => %{
-            "comparisons" => %{"mode" => "custom", "date_range" => ["2021-01-01", "2021-01-06"]}
-          }
+          "include" => %{"compare" => ["2021-01-01", "2021-01-06"]}
         })
 
       assert json_response(conn, 200)["results"] == [
@@ -407,71 +399,68 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
              ]
     end
 
-    test "can use datetime range for custom comparison", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 01:00:00]),
-        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 05:25:00]),
-        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 05:26:00]),
-        build(:pageview, timestamp: ~N[2021-01-02 04:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-03 02:00:00])
-      ])
+    # TODO: Change (and move) the following two tests to not go through the ExternalStatsController.
+    # We don't want to expose custom comparisons with date range arguments to the public API just yet.
 
-      conn =
-        post(conn, "/api/v2/query-internal-test", %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors", "pageviews"],
-          "date_range" => ["2021-01-02T03:00:00Z", "2021-01-03T02:59:59Z"],
-          "include" => %{
-            "comparisons" => %{
-              "mode" => "custom",
-              "date_range" => ["2021-01-01T03:00:00Z", "2021-01-02T02:59:59Z"]
-            }
-          }
-        })
+    # test "can use datetime range for custom comparison", %{conn: conn, site: site} do
+    #   populate_stats(site, [
+    #     build(:pageview, timestamp: ~N[2021-01-01 01:00:00]),
+    #     build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 05:25:00]),
+    #     build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 05:26:00]),
+    #     build(:pageview, timestamp: ~N[2021-01-02 04:00:00]),
+    #     build(:pageview, timestamp: ~N[2021-01-03 02:00:00])
+    #   ])
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "dimensions" => [],
-                 "metrics" => [2, 2],
-                 "comparison" => %{"change" => [100, 0], "dimensions" => [], "metrics" => [1, 2]}
-               }
-             ]
-    end
+    #   conn =
+    #     post(conn, "/api/v2/query-internal-test", %{
+    #       "site_id" => site.domain,
+    #       "metrics" => ["visitors", "pageviews"],
+    #       "date_range" => ["2021-01-02T03:00:00Z", "2021-01-03T02:59:59Z"],
+    #       "include" => %{
+    #         "compare" => ["2021-01-01T03:00:00Z", "2021-01-02T02:59:59Z"]
+    #       }
+    #     })
 
-    test "custom datetime range comparison handles timezones correctly", %{conn: conn, user: user} do
-      weird_tz_site = new_site(owner: user, timezone: "America/Havana")
+    #   assert json_response(conn, 200)["results"] == [
+    #            %{
+    #              "dimensions" => [],
+    #              "metrics" => [2, 2],
+    #              "comparison" => %{"change" => [100, 0], "dimensions" => [], "metrics" => [1, 2]}
+    #            }
+    #          ]
+    # end
 
-      populate_stats(weird_tz_site, [
-        # 03:00 America/Havana
-        build(:pageview, timestamp: ~N[2021-01-01 08:00:00]),
-        # 05:25 America/Havana
-        build(:pageview, timestamp: ~N[2021-01-01 10:25:00]),
-        # 04:00 America/Havana
-        build(:pageview, timestamp: ~N[2021-01-02 09:00:00]),
-        # 02:00 America/Havana
-        build(:pageview, timestamp: ~N[2021-01-03 08:00:00])
-      ])
+    # test "custom datetime range comparison handles timezones correctly", %{conn: conn, user: user} do
+    #   weird_tz_site = new_site(owner: user, timezone: "America/Havana")
 
-      conn =
-        post(conn, "/api/v2/query-internal-test", %{
-          "site_id" => weird_tz_site.domain,
-          "metrics" => ["pageviews"],
-          "date_range" => ["2021-01-02T03:00:00Z", "2021-01-03T02:59:59Z"],
-          "include" => %{
-            "comparisons" => %{
-              "mode" => "custom",
-              "date_range" => ["2021-01-01T03:00:00Z", "2021-01-02T02:59:59Z"]
-            }
-          }
-        })
+    #   populate_stats(weird_tz_site, [
+    #     # 03:00 America/Havana
+    #     build(:pageview, timestamp: ~N[2021-01-01 08:00:00]),
+    #     # 05:25 America/Havana
+    #     build(:pageview, timestamp: ~N[2021-01-01 10:25:00]),
+    #     # 04:00 America/Havana
+    #     build(:pageview, timestamp: ~N[2021-01-02 09:00:00]),
+    #     # 02:00 America/Havana
+    #     build(:pageview, timestamp: ~N[2021-01-03 08:00:00])
+    #   ])
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "dimensions" => [],
-                 "metrics" => [1],
-                 "comparison" => %{"change" => [-50], "dimensions" => [], "metrics" => [2]}
-               }
-             ]
-    end
+    #   conn =
+    #     post(conn, "/api/v2/query-internal-test", %{
+    #       "site_id" => weird_tz_site.domain,
+    #       "metrics" => ["pageviews"],
+    #       "date_range" => ["2021-01-02T03:00:00Z", "2021-01-03T02:59:59Z"],
+    #       "include" => %{
+    #         "compare" => ["2021-01-01T03:00:00Z", "2021-01-02T02:59:59Z"]
+    #       }
+    #     })
+
+    #   assert json_response(conn, 200)["results"] == [
+    #            %{
+    #              "dimensions" => [],
+    #              "metrics" => [1],
+    #              "comparison" => %{"change" => [-50], "dimensions" => [], "metrics" => [2]}
+    #            }
+    #          ]
+    # end
   end
 end

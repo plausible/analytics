@@ -208,8 +208,8 @@ defmodule PlausibleWeb.Api.StatsController do
       sample_percent: sample_percent,
       with_imported_switch: with_imported_switch_info(meta),
       includes_imported: meta[:imports_included] == true,
-      comparing_from: query.include.comparisons && Query.date_range(comparison_query).first,
-      comparing_to: query.include.comparisons && Query.date_range(comparison_query).last,
+      comparing_from: query.include.compare && Query.date_range(comparison_query).first,
+      comparing_to: query.include.compare && Query.date_range(comparison_query).last,
       from: Query.date_range(query).first,
       to: Query.date_range(query).last
     })
@@ -297,7 +297,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_goal_realtime_top_stats(site, query) do
-    query = Query.set_include(query, :comparisons, nil)
+    query = Query.set_include(query, :compare, nil)
 
     %{
       results: %{
@@ -334,7 +334,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_realtime_top_stats(site, query) do
-    query = Query.set_include(query, :comparisons, nil)
+    query = Query.set_include(query, :compare, nil)
 
     %{
       results: %{
@@ -1710,7 +1710,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def comparison_query(query) do
-    if query.include.comparisons do
+    if query.include.compare do
       Comparisons.get_comparison_query(query)
     end
   end

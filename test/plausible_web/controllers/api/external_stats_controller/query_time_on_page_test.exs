@@ -687,9 +687,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => ["2021-01-03", "2021-01-04"],
           "filters" => [["is", "event:page", ["/"]]],
           "dimensions" => ["time:day"],
-          "include" => %{
-            "comparisons" => %{"mode" => "previous_period"}
-          }
+          "include" => %{"compare" => "previous_period"}
         })
 
       assert json_response(conn, 200)["results"] == [

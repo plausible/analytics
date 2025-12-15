@@ -444,7 +444,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
             "metrics" => ["exit_rate"],
             "date_range" => ["2021-01-10", "2021-01-10"],
             "dimensions" => ["visit:exit_page"],
-            "include" => %{"comparisons" => %{"mode" => "previous_period"}},
+            "include" => %{"compare" => "previous_period"},
             "order_by" => [["exit_rate", "desc"]]
           }
         )

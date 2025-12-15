@@ -8,7 +8,7 @@ defmodule Plausible.Stats.QueryResult do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Query, QueryRunner}
+  alias Plausible.Stats.{Query, QueryRunner}
 
   defstruct results: [],
             meta: %{},
@@ -98,17 +98,15 @@ defmodule Plausible.Stats.QueryResult do
   end
 
   defp include(query) do
-    case get_in(query.include, [:comparisons, :date_range]) do
-      %DateTimeRange{first: first, last: last} ->
-        query.include
-        |> put_in([:comparisons, :date_range], [
-          to_iso8601(first, query.timezone),
-          to_iso8601(last, query.timezone)
-        ])
+    case query.include.compare do
+      {:date_range, first, last} ->
+        # TODO: Should return datetimes of the actual comparison query time range here?
+        struct!(query.include, compare: [Date.to_iso8601(first), Date.to_iso8601(last)])
 
-      nil ->
+      _ ->
         query.include
     end
+    |> Map.from_struct()
   end
 
   defp metric_warnings(%Query{} = query) do

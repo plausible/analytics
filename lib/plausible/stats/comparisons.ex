@@ -10,40 +10,44 @@ defmodule Plausible.Stats.Comparisons do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, DateTimeRange, Time}
 
-  @spec get_comparison_utc_time_range(Stats.Query.t(), map()) :: DateTimeRange.t()
+  @spec get_comparison_utc_time_range(Stats.Query.t()) :: DateTimeRange.t()
   @doc """
-  Generates a `DateTimeRange` for the comparison period by the given source query
-  and comparison options.
+  Generates a `DateTimeRange` representing the comparison period of a given
+  `%Query{}` struct (i.e. the `source_query`).
+
+  There are different modes and options that determine the outcome of the
+  resulting DateTimeRange. Those are specified under `source_query.include`.
 
   Currently only historical periods are supported for comparisons (not `realtime`
   and `30m` periods).
 
-  ## Options
-    * `mode` (required) - specifies the type of comparison and can be one of the
-  following:
+  ## Modes (`source_query.include.compare` field)
 
-      * `"previous_period"` - shifts back the query by the same number of days the
+    * `:previous_period` - shifts back the query by the same number of days the
         source query has.
 
-      * `"year_over_year"` - shifts back the query by 1 year.
+    * `:year_over_year` - shifts back the query by 1 year.
 
-      * `"custom"` - compares the query using a custom date range. See `date_range` for
-        more details.
+    * `{:date_range, from, to}` - compares the query using a custom date range.
 
-    * `:date_range` - a ISO-8601 date string pair used when mode is `"custom"`.
+  ## Options
 
-    * `:match_day_of_week` - determines whether the comparison query should be
-      adjusted to match the day of the week of the source query. When this option
-      is set to true, the comparison query is shifted to start on the same day of
-      the week as the source query, rather than on the exact same date. For
-      example, if the source query starts on Sunday, January 1st, 2023 and the
-      `year_over_year` comparison query is configured to `match_day_of_week`,
-      it will be shifted to start on Sunday, January 2nd, 2022 instead of
-      January 1st. Defaults to false.
+    * `source_query.include.compare_match_day_of_week`
+
+      Determines whether the comparison query should be adjusted to match the
+      day of the week of the source query. When this option is set to true, the
+      comparison query is shifted to start on the same day of the week as the
+      source query, rather than on the exact same date.
+
+      Example: if the source query starts on Sunday, January 1st, 2023 and the
+      `year_over_year` comparison query is configured to `match_day_of_week`, it
+      will be shifted to start on Sunday, January 2nd, 2022 instead of January 1st.
+
+      Note: this option has no effect when custom date range mode is used.
 
   """
-  def get_comparison_utc_time_range(%Stats.Query{} = source_query, options) do
-    comparison_date_range = get_comparison_date_range(source_query, options)
+  def get_comparison_utc_time_range(%Stats.Query{} = source_query) do
+    comparison_date_range = get_comparison_date_range(source_query)
 
     DateTimeRange.new!(
       comparison_date_range.first,
@@ -103,7 +107,7 @@ defmodule Plausible.Stats.Comparisons do
     end
   end
 
-  defp get_comparison_date_range(source_query, %{mode: "year_over_year"} = options) do
+  defp get_comparison_date_range(%Query{include: %{compare: :year_over_year}} = source_query) do
     source_date_range = Query.date_range(source_query, trim_trailing: true)
 
     start_date = source_date_range.first |> Date.shift(year: -1)
@@ -111,10 +115,10 @@ defmodule Plausible.Stats.Comparisons do
     end_date = Date.add(start_date, diff_in_days)
 
     Date.range(start_date, end_date)
-    |> maybe_match_day_of_week(source_date_range, options)
+    |> maybe_match_day_of_week(source_date_range, source_query)
   end
 
-  defp get_comparison_date_range(source_query, %{mode: "previous_period"} = options) do
+  defp get_comparison_date_range(%Query{include: %{compare: :previous_period}} = source_query) do
     source_date_range = Query.date_range(source_query, trim_trailing: true)
 
     last = source_date_range.last
@@ -124,15 +128,15 @@ defmodule Plausible.Stats.Comparisons do
     new_last = Date.add(last, diff_in_days)
 
     Date.range(new_first, new_last)
-    |> maybe_match_day_of_week(source_date_range, options)
+    |> maybe_match_day_of_week(source_date_range, source_query)
   end
 
-  defp get_comparison_date_range(source_query, %{mode: "custom"} = options) do
-    DateTimeRange.new!(options.date_range.first, options.date_range.last, source_query.timezone)
+  defp get_comparison_date_range(%Query{include: %{compare: {:date_range, from_date, to_date}}}) do
+    Date.range(from_date, to_date)
   end
 
-  defp maybe_match_day_of_week(comparison_date_range, source_date_range, options) do
-    if options[:match_day_of_week] do
+  defp maybe_match_day_of_week(comparison_date_range, source_date_range, source_query) do
+    if source_query.include.compare_match_day_of_week do
       day_to_match = Date.day_of_week(source_date_range.first)
 
       new_first =
