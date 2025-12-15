@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
   end
 
   describe "put /goals - create a single goal" do
-    test "creates a custom event goal with custom_props", %{conn: conn, token: token, site: site} do
+    test "creates a custom event goal with custom props", %{conn: conn, token: token, site: site} do
       subscribe_to_business_plan(site.team)
 
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert first_goal["goal"]["custom_props"] == %{"tier" => "premium", "source" => "landing"}
     end
 
-    test "creates a custom event goal with empty custom_props by default", %{
+    test "fails to create goal with custom prop having invalid value", %{
       conn: conn,
       token: token,
       site: site
@@ -177,7 +177,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert Enum.any?(resp.errors, &(&1.detail == "Invalid string. Got: integer"))
     end
 
-    test "fails to create goal with more than 3 custom_props", %{
+    test "fails to create goal with more than 3 custom props", %{
       conn: conn,
       token: token,
       site: site
@@ -208,7 +208,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
              )
     end
 
-    test "fails to create goal with null custom_props values", %{
+    test "fails to create goal with null custom props values", %{
       conn: conn,
       token: token,
       site: site
@@ -234,7 +234,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
 
     @tag :ee_only
-    test "fails without Props feature when custom_props is non-empty", %{
+    test "fails without Props feature when custom props is non-empty", %{
       conn: conn,
       token: token,
       site: site
@@ -722,7 +722,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
   end
 
   describe "get /goals" do
-    test "returns goals with custom_props in response", %{conn: conn, site: site, token: token} do
+    test "returns goals with custom props in response", %{conn: conn, site: site, token: token} do
       {:ok, _g1} =
         Plausible.Goals.create(site, %{
           "event_name" => "Signup",
