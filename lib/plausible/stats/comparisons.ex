@@ -47,14 +47,22 @@ defmodule Plausible.Stats.Comparisons do
 
   """
   def get_comparison_utc_time_range(%Stats.Query{} = source_query) do
-    comparison_date_range = get_comparison_date_range(source_query)
+    datetime_range =
+      case source_query.include.compare do
+        {:datetime_range, from, to} ->
+          DateTimeRange.new!(from, to)
 
-    DateTimeRange.new!(
-      comparison_date_range.first,
-      comparison_date_range.last,
-      source_query.timezone
-    )
-    |> DateTimeRange.to_timezone("Etc/UTC")
+        _ ->
+          comparison_date_range = get_comparison_date_range(source_query)
+
+          DateTimeRange.new!(
+            comparison_date_range.first,
+            comparison_date_range.last,
+            source_query.timezone
+          )
+      end
+
+    DateTimeRange.to_timezone(datetime_range, "Etc/UTC")
   end
 
   def get_comparison_query(

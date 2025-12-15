@@ -1,5 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
   use PlausibleWeb.ConnCase
+  alias Plausible.Stats
+  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryInclude}
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key, :create_site_import]
 
@@ -399,68 +401,69 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
              ]
     end
 
-    # TODO: Change (and move) the following two tests to not go through the ExternalStatsController.
-    # We don't want to expose custom comparisons with date range arguments to the public API just yet.
+    test "can use datetime range for custom comparison", %{site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 01:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 05:25:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 05:26:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 04:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-03 02:00:00])
+      ])
 
-    # test "can use datetime range for custom comparison", %{conn: conn, site: site} do
-    #   populate_stats(site, [
-    #     build(:pageview, timestamp: ~N[2021-01-01 01:00:00]),
-    #     build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 05:25:00]),
-    #     build(:pageview, user_id: 1, timestamp: ~N[2021-01-01 05:26:00]),
-    #     build(:pageview, timestamp: ~N[2021-01-02 04:00:00]),
-    #     build(:pageview, timestamp: ~N[2021-01-03 02:00:00])
-    #   ])
+      assert {:ok, query} =
+               QueryBuilder.build(site, %ParsedQueryParams{
+                 metrics: [:visitors, :pageviews],
+                 input_date_range:
+                   {:datetime_range, ~U[2021-01-02 03:00:00Z], ~U[2021-01-03 02:59:59Z]},
+                 include: %QueryInclude{
+                   compare: {:datetime_range, ~U[2021-01-01 03:00:00Z], ~U[2021-01-02 02:59:59Z]}
+                 }
+               })
 
-    #   conn =
-    #     post(conn, "/api/v2/query-internal-test", %{
-    #       "site_id" => site.domain,
-    #       "metrics" => ["visitors", "pageviews"],
-    #       "date_range" => ["2021-01-02T03:00:00Z", "2021-01-03T02:59:59Z"],
-    #       "include" => %{
-    #         "compare" => ["2021-01-01T03:00:00Z", "2021-01-02T02:59:59Z"]
-    #       }
-    #     })
+      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
 
-    #   assert json_response(conn, 200)["results"] == [
-    #            %{
-    #              "dimensions" => [],
-    #              "metrics" => [2, 2],
-    #              "comparison" => %{"change" => [100, 0], "dimensions" => [], "metrics" => [1, 2]}
-    #            }
-    #          ]
-    # end
+      assert results == [
+               %{
+                 dimensions: [],
+                 metrics: [2, 2],
+                 comparison: %{change: [100, 0], dimensions: [], metrics: [1, 2]}
+               }
+             ]
+    end
 
-    # test "custom datetime range comparison handles timezones correctly", %{conn: conn, user: user} do
-    #   weird_tz_site = new_site(owner: user, timezone: "America/Havana")
+    test "custom datetime range comparison handles timezones correctly", %{user: user} do
+      weird_tz_site = new_site(owner: user, timezone: "America/Havana")
 
-    #   populate_stats(weird_tz_site, [
-    #     # 03:00 America/Havana
-    #     build(:pageview, timestamp: ~N[2021-01-01 08:00:00]),
-    #     # 05:25 America/Havana
-    #     build(:pageview, timestamp: ~N[2021-01-01 10:25:00]),
-    #     # 04:00 America/Havana
-    #     build(:pageview, timestamp: ~N[2021-01-02 09:00:00]),
-    #     # 02:00 America/Havana
-    #     build(:pageview, timestamp: ~N[2021-01-03 08:00:00])
-    #   ])
+      populate_stats(weird_tz_site, [
+        # 03:00 America/Havana
+        build(:pageview, timestamp: ~N[2021-01-01 08:00:00]),
+        # 05:25 America/Havana
+        build(:pageview, timestamp: ~N[2021-01-01 10:25:00]),
+        # 04:00 America/Havana
+        build(:pageview, timestamp: ~N[2021-01-02 09:00:00]),
+        # 02:00 America/Havana
+        build(:pageview, timestamp: ~N[2021-01-03 08:00:00])
+      ])
 
-    #   conn =
-    #     post(conn, "/api/v2/query-internal-test", %{
-    #       "site_id" => weird_tz_site.domain,
-    #       "metrics" => ["pageviews"],
-    #       "date_range" => ["2021-01-02T03:00:00Z", "2021-01-03T02:59:59Z"],
-    #       "include" => %{
-    #         "compare" => ["2021-01-01T03:00:00Z", "2021-01-02T02:59:59Z"]
-    #       }
-    #     })
+      assert {:ok, query} =
+               QueryBuilder.build(weird_tz_site, %ParsedQueryParams{
+                 metrics: [:pageviews],
+                 input_date_range:
+                   {:datetime_range, ~U[2021-01-02 03:00:00Z], ~U[2021-01-03 02:59:59Z]},
+                 include: %QueryInclude{
+                   compare: {:datetime_range, ~U[2021-01-01 03:00:00Z], ~U[2021-01-02 02:59:59Z]}
+                 }
+               })
 
-    #   assert json_response(conn, 200)["results"] == [
-    #            %{
-    #              "dimensions" => [],
-    #              "metrics" => [1],
-    #              "comparison" => %{"change" => [-50], "dimensions" => [], "metrics" => [2]}
-    #            }
-    #          ]
-    # end
+      assert %Stats.QueryResult{results: results} = Stats.query(weird_tz_site, query)
+
+      assert results == [
+               %{
+                 dimensions: [],
+                 metrics: [1],
+                 comparison: %{change: [-50], dimensions: [], metrics: [2]}
+               }
+             ]
+    end
   end
 end
