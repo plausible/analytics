@@ -12,7 +12,7 @@ import QueryContextProvider from '../js/dashboard/query-context'
 import { getRouterBasepath } from '../js/dashboard/router'
 import { RoutelessModalsContextProvider } from '../js/dashboard/navigation/routeless-modals-context'
 import { SegmentsContextProvider } from '../js/dashboard/filtering/segments-context'
-import { SavedSegments } from '../js/dashboard/filtering/segments'
+import { SavedSegment, SavedSegments } from '../js/dashboard/filtering/segments'
 
 type TestContextProvidersProps = {
   children: ReactNode
@@ -20,6 +20,7 @@ type TestContextProvidersProps = {
   siteOptions?: Partial<PlausibleSite>
   user?: UserContextValue
   preloaded?: { segments?: SavedSegments }
+  limitedToSegment?: SavedSegment | null
 }
 
 export const DEFAULT_SITE: PlausibleSite = {
@@ -51,6 +52,7 @@ export const TestContextProviders = ({
   routerProps,
   siteOptions,
   preloaded,
+  limitedToSegment,
   user
 }: TestContextProvidersProps) => {
   const site = { ...DEFAULT_SITE, ...siteOptions }
@@ -79,7 +81,7 @@ export const TestContextProviders = ({
         }
       >
         <SegmentsContextProvider
-          limitedToSegment={null}
+          limitedToSegment={limitedToSegment ?? null}
           preloadedSegments={preloaded?.segments ?? []}
         >
           <MemoryRouter

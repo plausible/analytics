@@ -2,9 +2,8 @@ import React, { ReactNode, useCallback, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
   canRemoveFilter,
-  canSeeSegmentDetails,
   getSearchToRemoveSegmentFilter,
-  isListableSegment,
+  canExpandSegment,
   SavedSegment,
   SEGMENT_TYPE_LABELS,
   SegmentData,
@@ -24,9 +23,9 @@ import { MutationStatus, useQuery } from '@tanstack/react-query'
 import { ApiError, get } from '../api'
 import { ErrorPanel } from '../components/error-panel'
 import { useSegmentsContext } from '../filtering/segments-context'
-import { useSiteContext } from '../site-context'
 import { Role, UserContextValue, useUserContext } from '../user-context'
 import { removeFilterButtonClassname } from '../components/remove-filter-button'
+import { useSiteContext } from '../site-context'
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -622,14 +621,11 @@ const hasSiteSegmentPermission = (user: UserContextValue) => {
 }
 
 export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
-  const site = useSiteContext()
   const user = useUserContext()
   const { segments, limitedToSegment } = useSegmentsContext()
   const navigate = useAppNavigate()
 
-  const segment = segments
-    .filter((s) => isListableSegment({ segment: s, site, user }))
-    .find((s) => String(s.id) === String(id))
+  const segment = segments.find((s) => String(s.id) === String(id))
 
   let error: ApiError | null = null
 
@@ -637,15 +633,11 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
     error = new ApiError(`Segment not found with with ID "${id}"`, {
       error: `Segment not found with with ID "${id}"`
     })
-  } else if (!canSeeSegmentDetails({ user })) {
-    error = new ApiError('Not enough permissions to see segment details', {
-      error: `Not enough permissions to see segment details`
-    })
   }
 
   const data = !error ? segment : null
 
-  const enableClearButton = canRemoveFilter(
+  const showClearButton = canRemoveFilter(
     ['is', 'segment', [id]],
     limitedToSegment
   )
@@ -673,41 +665,41 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
 
             <SegmentAuthorship
               segment={data}
-              showOnlyPublicData={false}
+              showOnlyPublicData={!user.loggedIn || user.role === Role.public}
               className="mt-4 text-sm"
             />
             <div className="mt-4">
               <ButtonsRow>
-                <AppNavigationLink
-                  className={primaryNeutralButtonClassName}
-                  path={rootRoute.path}
-                  search={(s) => ({
-                    ...s,
-                    filters: data.segment_data.filters,
-                    labels: data.segment_data.labels
-                  })}
-                  state={{
-                    expandedSegment: data
-                  }}
-                >
-                  Edit segment
-                </AppNavigationLink>
+                {canExpandSegment({ segment: data, user }) && (
+                  <AppNavigationLink
+                    className={primaryNeutralButtonClassName}
+                    path={rootRoute.path}
+                    search={(s) => ({
+                      ...s,
+                      filters: data.segment_data.filters,
+                      labels: data.segment_data.labels
+                    })}
+                    state={{
+                      expandedSegment: data
+                    }}
+                  >
+                    Edit segment
+                  </AppNavigationLink>
+                )}
 
-                <button
-                  disabled={!enableClearButton}
-                  className={removeFilterButtonClassname}
-                  onClick={
-                    enableClearButton
-                      ? () =>
-                          navigate({
-                            path: rootRoute.path,
-                            search: getSearchToRemoveSegmentFilter()
-                          })
-                      : () => {}
-                  }
-                >
-                  Remove filter
-                </button>
+                {showClearButton && (
+                  <button
+                    className={removeFilterButtonClassname}
+                    onClick={() =>
+                      navigate({
+                        path: rootRoute.path,
+                        search: getSearchToRemoveSegmentFilter()
+                      })
+                    }
+                  >
+                    Remove filter
+                  </button>
+                )}
               </ButtonsRow>
             </div>
           </>
