@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Segment filters are displayed to anyone that can see the dashboard filtered by the segment, including for a personal segment applied on a public dashboard
+- Segment filters are visible to anyone who can view the dashboard with that segment applied, including personal segments on public dashboards
 
 ### Fixed
 
