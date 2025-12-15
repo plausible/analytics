@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert first_goal["goal"]["custom_props"] == %{"tier" => "premium", "source" => "landing"}
     end
 
-    test "creates a goal with empty custom_props by default", %{
+    test "creates a custom event goal with empty custom_props by default", %{
       conn: conn,
       token: token,
       site: site
