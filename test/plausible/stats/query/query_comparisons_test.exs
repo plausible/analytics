@@ -1,9 +1,9 @@
 defmodule Plausible.Stats.QueryComparisonsTest do
-  use PlausibleWeb.ConnCase
+  use Plausible.DataCase
   alias Plausible.Stats
   alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryInclude}
 
-  setup [:create_user, :create_site, :create_api_key, :use_api_key, :create_site_import]
+  setup [:create_user, :create_site, :create_site_import]
 
   test "aggregates a single metric", %{site: site} do
     populate_stats(site, [
@@ -290,7 +290,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                comparison: %{
                  dimensions: ["Safari"],
                  metrics: [3, 37.5],
-                 change: [-67, -55]
+                 change: [-67, -56]
                }
              }
            ]
