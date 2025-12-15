@@ -746,6 +746,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert res["error"] =~ "must be a map with string keys and string values"
       end
 
+      @tag :ee_only
       test "fails without Props feature when custom_props is non-empty", %{conn: conn, site: site} do
         conn =
           put(conn, "/api/v1/sites/goals", %{
