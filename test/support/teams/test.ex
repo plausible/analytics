@@ -248,19 +248,33 @@ defmodule Plausible.Teams.Test do
     user
   end
 
-  def subscribe_to_growth_plan(user, attrs \\ []) do
+  def subscribe_to_growth_plan(user_or_team, attes \\ [])
+
+  def subscribe_to_growth_plan(%Plausible.Auth.User{} = user, attrs) do
     {:ok, team} = Teams.get_or_create(user)
     attrs = Keyword.merge([team: team], attrs)
 
-    insert(:growth_subscription, attrs)
+    subscribe_to_growth_plan(team, attrs)
     user
   end
 
-  def subscribe_to_business_plan(user) do
-    {:ok, team} = Teams.get_or_create(user)
+  def subscribe_to_growth_plan(%Plausible.Teams.Team{} = team, attrs) do
+    attrs = Keyword.merge([team: team], attrs)
 
-    insert(:business_subscription, team: team)
+    insert(:growth_subscription, attrs)
+    team
+  end
+
+  def subscribe_to_business_plan(%Plausible.Auth.User{} = user) do
+    {:ok, team} = Teams.get_or_create(user)
+    subscribe_to_business_plan(team)
+
     user
+  end
+
+  def subscribe_to_business_plan(%Plausible.Teams.Team{} = team) do
+    insert(:business_subscription, team: team)
+    team
   end
 
   def subscribe_to_plan(user, paddle_plan_id, attrs \\ []) do

@@ -131,7 +131,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         subscribe_to_enterprise_plan(user,
           features: [
             Plausible.Billing.Feature.SharedLinks,
-            Plausible.Billing.Feature.StatsAPI,
             Plausible.Billing.Feature.SitesAPI
           ]
         )
@@ -286,7 +285,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         subscribe_to_enterprise_plan(user,
           features: [
             Plausible.Billing.Feature.Props,
-            Plausible.Billing.Feature.StatsAPI,
             Plausible.Billing.Feature.SitesAPI
           ]
         )
@@ -449,7 +447,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       setup %{user: user} do
         subscribe_to_enterprise_plan(user,
-          features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+          features: [Plausible.Billing.Feature.SitesAPI]
         )
 
         :ok
@@ -666,7 +664,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert res["error"] =~ "Maximum number of goals reached"
       end
 
-      test "can create a goal with custom_props", %{conn: conn, site: site} do
+      test "can create a goal with custom_props", %{conn: conn, site: site, user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [Plausible.Billing.Feature.SitesAPI, Plausible.Billing.Feature.Props]
+        )
+
         conn =
           put(conn, "/api/v1/sites/goals", %{
             site_id: site.domain,
@@ -693,7 +695,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert res["custom_props"] == %{}
       end
 
-      test "fails when custom_props exceeds max of 3", %{conn: conn, site: site} do
+      test "fails when custom_props exceeds max of 3", %{conn: conn, site: site, user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [Plausible.Billing.Feature.SitesAPI, Plausible.Billing.Feature.Props]
+        )
+
         conn =
           put(conn, "/api/v1/sites/goals", %{
             site_id: site.domain,
@@ -706,7 +712,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert res["error"] =~ "use at most 3 properties per goal"
       end
 
-      test "fails when custom_props has null values", %{conn: conn, site: site} do
+      test "fails when custom_props has null values", %{conn: conn, site: site, user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [Plausible.Billing.Feature.SitesAPI, Plausible.Billing.Feature.Props]
+        )
+
         conn =
           put(conn, "/api/v1/sites/goals", %{
             site_id: site.domain,
@@ -719,7 +729,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert res["error"] =~ "must be a map with string keys and string values"
       end
 
-      test "fails when custom_props has non-string values", %{conn: conn, site: site} do
+      test "fails when custom_props has non-string values", %{conn: conn, site: site, user: user} do
+        subscribe_to_enterprise_plan(user,
+          features: [Plausible.Billing.Feature.SitesAPI, Plausible.Billing.Feature.Props]
+        )
+
         conn =
           put(conn, "/api/v1/sites/goals", %{
             site_id: site.domain,
@@ -731,6 +745,19 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         res = json_response(conn, 400)
         assert res["error"] =~ "must be a map with string keys and string values"
       end
+
+      test "fails without Props feature when custom_props is non-empty", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Purchase",
+            custom_props: %{"product" => "enterprise"}
+          })
+
+        res = json_response(conn, 402)
+        assert res["error"] =~ "Custom Properties is part of the Plausible Business plan"
+      end
     end
 
     describe "DELETE /api/v1/sites/custom-props/:property" do
@@ -740,7 +767,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         subscribe_to_enterprise_plan(user,
           features: [
             Plausible.Billing.Feature.Props,
-            Plausible.Billing.Feature.StatsAPI,
             Plausible.Billing.Feature.SitesAPI
           ]
         )
@@ -887,7 +913,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       setup %{user: user} do
         subscribe_to_enterprise_plan(user,
           features: [
-            Plausible.Billing.Feature.StatsAPI,
             Plausible.Billing.Feature.SitesAPI
           ]
         )
@@ -1114,7 +1139,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       setup %{user: user} do
         subscribe_to_enterprise_plan(user,
           features: [
-            Plausible.Billing.Feature.StatsAPI,
             Plausible.Billing.Feature.SitesAPI
           ]
         )
@@ -1231,7 +1255,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     describe "DELETE /api/v1/sites/guests" do
       setup %{user: user} do
         subscribe_to_enterprise_plan(user,
-          features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+          features: [Plausible.Billing.Feature.SitesAPI]
         )
 
         :ok

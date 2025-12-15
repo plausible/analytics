@@ -99,6 +99,9 @@ defmodule Plausible.Plugins.API.Goals do
         {:ok, goal} ->
           goal
 
+        {:error, :upgrade_required} ->
+          Repo.rollback(:upgrade_required)
+
         {:error, changeset} ->
           Repo.rollback(changeset)
       end

@@ -414,6 +414,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
         H.bad_request(conn, message)
 
+      {:error, :upgrade_required} ->
+        H.payment_required(
+          conn,
+          "Custom Properties is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+        )
+
       e ->
         H.bad_request(conn, "Something went wrong: #{inspect(e)}")
     end

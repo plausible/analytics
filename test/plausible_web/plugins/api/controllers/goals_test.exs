@@ -52,8 +52,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       conn: conn
     } do
-      [owner | _] = Plausible.Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
+      subscribe_to_growth_plan(site.team)
 
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
@@ -78,8 +77,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       conn: conn
     } do
-      [owner | _] = Plausible.Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
+      subscribe_to_growth_plan(site.team)
 
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
@@ -111,6 +109,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
 
   describe "put /goals - create a single goal" do
     test "creates a custom event goal with custom_props", %{conn: conn, token: token, site: site} do
+      subscribe_to_business_plan(site.team)
+
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{
@@ -157,23 +157,24 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       site: site
     } do
+      subscribe_to_business_plan(site.team)
+
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
-      payload = %{goal_type: "Goal.CustomEvent", goal: %{event_name: "Signup"}}
+      payload = %{
+        goal_type: "Goal.CustomEvent",
+        goal: %{event_name: "Signup", custom_props: %{"count" => 5}}
+      }
 
-      conn =
+      resp =
         conn
         |> authenticate(site.domain, token)
         |> put_req_header("content-type", "application/json")
         |> put(url, payload)
+        |> json_response(422)
+        |> assert_schema("UnprocessableEntityError", spec())
 
-      resp = json_response(conn, 201)
-
-      [goal] = Plausible.Goals.for_site(site)
-      assert goal.custom_props == %{}
-
-      first_goal = List.first(resp["goals"])
-      assert first_goal["goal"]["custom_props"] == %{}
+      assert Enum.any?(resp.errors, &(&1.detail == "Invalid string. Got: integer"))
     end
 
     test "fails to create goal with more than 3 custom_props", %{
@@ -181,6 +182,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       site: site
     } do
+      subscribe_to_business_plan(site.team)
+
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{
@@ -205,34 +208,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
              )
     end
 
-    test "fails to create goal with non-string custom_props values", %{
-      conn: conn,
-      token: token,
-      site: site
-    } do
-      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
-
-      payload = %{
-        goal_type: "Goal.CustomEvent",
-        goal: %{event_name: "Signup", custom_props: %{"count" => 5}}
-      }
-
-      resp =
-        conn
-        |> authenticate(site.domain, token)
-        |> put_req_header("content-type", "application/json")
-        |> put(url, payload)
-        |> json_response(422)
-        |> assert_schema("UnprocessableEntityError", spec())
-
-      assert Enum.any?(resp.errors, &(&1.detail == "Invalid string. Got: integer"))
-    end
-
     test "fails to create goal with null custom_props values", %{
       conn: conn,
       token: token,
       site: site
     } do
+      subscribe_to_business_plan(site.team)
+
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{
@@ -249,6 +231,32 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> assert_schema("UnprocessableEntityError", spec())
 
       assert Enum.any?(resp.errors, &(&1.detail == "null value where string expected"))
+    end
+
+    test "fails without Props feature when custom_props is non-empty", %{
+      conn: conn,
+      token: token,
+      site: site
+    } do
+      site = Plausible.Repo.preload(site, :team)
+      # End trial to ensure team doesn't have access to Props feature
+      site.team
+      |> Ecto.Changeset.change(%{trial_expiry_date: Date.add(Date.utc_today(), -1)})
+      |> Plausible.Repo.update!()
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
+
+      payload = %{
+        goal_type: "Goal.CustomEvent",
+        goal: %{event_name: "Signup", custom_props: %{"tier" => "premium"}}
+      }
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> put(url, payload)
+      |> json_response(402)
+      |> assert_schema("PaymentRequiredError", spec())
     end
 
     test "validates input according to the schema", %{conn: conn, token: token, site: site} do
