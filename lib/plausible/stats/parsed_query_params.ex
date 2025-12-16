@@ -13,7 +13,7 @@ defmodule Plausible.Stats.ParsedQueryParams do
             dimensions: [],
             order_by: nil,
             pagination: nil,
-            include: nil
+            include: %Plausible.Stats.QueryInclude{}
 
   def new!(params) when is_map(params) do
     struct!(__MODULE__, Map.to_list(params))
