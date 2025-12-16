@@ -248,7 +248,7 @@ defmodule Plausible.Teams.Test do
     user
   end
 
-  def subscribe_to_growth_plan(user_or_team, attes \\ [])
+  def subscribe_to_growth_plan(user_or_team, attrs \\ [])
 
   def subscribe_to_growth_plan(%Plausible.Auth.User{} = user, attrs) do
     {:ok, team} = Teams.get_or_create(user)
