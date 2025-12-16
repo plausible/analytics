@@ -3,6 +3,8 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
   import Plausible.Stats.{DashboardQuerySerializer, DashboardQueryParser}
   alias Plausible.Stats.ParsedQueryParams
 
+  @default_include default_include()
+
   describe "parse -> serialize is a reversible transformation" do
     for query_string <- ["", "date=2021-07-07&f=is,browser,Chrome,Firefox&period=day"] do
       test "with query string being '#{query_string}'" do
@@ -30,46 +32,58 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
   describe "input_date_range -> period (+ from, to)" do
     for input_date_range <- [:realtime, :day, :month, :year, :all] do
       test "serializes #{input_date_range} input_date_range" do
-        serialized = serialize(%ParsedQueryParams{input_date_range: unquote(input_date_range)})
-        assert serialized == "period=#{Atom.to_string(unquote(input_date_range))}"
+        params = %ParsedQueryParams{
+          input_date_range: unquote(input_date_range),
+          include: @default_include
+        }
+
+        assert serialize(params) == "period=#{Atom.to_string(unquote(input_date_range))}"
       end
     end
 
     for i <- [7, 28, 30, 91] do
       test "serializes {:last_n_days, #{i}} input_date_range" do
-        serialized = serialize(%ParsedQueryParams{input_date_range: {:last_n_days, unquote(i)}})
-        assert serialized == "period=#{unquote(i)}d"
+        params = %ParsedQueryParams{
+          input_date_range: {:last_n_days, unquote(i)},
+          include: @default_include
+        }
+
+        assert serialize(params) == "period=#{unquote(i)}d"
       end
     end
 
     for i <- [6, 12] do
       test "serializes {:last_n_months, #{i}} input_date_range" do
-        serialized = serialize(%ParsedQueryParams{input_date_range: {:last_n_months, unquote(i)}})
-        assert serialized == "period=#{unquote(i)}mo"
+        params = %ParsedQueryParams{
+          input_date_range: {:last_n_months, unquote(i)},
+          include: @default_include
+        }
+
+        assert serialize(params) == "period=#{unquote(i)}mo"
       end
     end
 
     test "serlializes custom input_date_range" do
-      serialized =
-        serialize(%ParsedQueryParams{
-          input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-03-05]}
-        })
+      params = %ParsedQueryParams{
+        input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-03-05]},
+        include: @default_include
+      }
 
-      assert serialized == "from=2021-01-01&period=custom&to=2021-03-05"
+      assert serialize(params) == "from=2021-01-01&period=custom&to=2021-03-05"
     end
   end
 
   describe "relative_date -> date" do
     test "serializes a date struct into iso8601" do
-      serialized = serialize(%ParsedQueryParams{relative_date: ~D[2021-05-05]})
-      assert serialized == "date=2021-05-05"
+      params = %ParsedQueryParams{relative_date: ~D[2021-05-05], include: @default_include}
+      assert serialize(params) == "date=2021-05-05"
     end
   end
 
   describe "include.imports -> with_imported" do
     test "false -> false" do
-      serialized = serialize(%ParsedQueryParams{include: %{default_include() | imports: false}})
-      assert serialized == "with_imported=false"
+      params = %ParsedQueryParams{include: %{@default_include | imports: false}}
+      assert serialize(params) == "with_imported=false"
     end
   end
 
@@ -81,14 +95,15 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
             [:is, "visit:exit_page", ["/:dashboard"]],
             [:is, "visit:source", ["Bing"]],
             [:is, "event:props:theme", ["system"]]
-          ]
+          ],
+          include: @default_include
         })
 
       assert serialized == "f=is,exit_page,/:dashboard&f=is,source,Bing&f=is,props:theme,system"
     end
 
     test "serializes empty filters" do
-      serialized = serialize(%ParsedQueryParams{filters: []})
+      serialized = serialize(%ParsedQueryParams{filters: [], include: @default_include})
       assert serialized == ""
     end
   end

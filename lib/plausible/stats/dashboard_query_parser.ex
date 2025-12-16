@@ -5,9 +5,9 @@ defmodule Plausible.Stats.DashboardQueryParser do
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams}
+  alias Plausible.Stats.{ParsedQueryParams, QueryInclude}
 
-  @default_include %{
+  @default_include %QueryInclude{
     imports: true,
     # `include.imports_meta` can be true even when `include.imports`
     # is false. Even if we don't want to include imported data, we
@@ -17,7 +17,8 @@ defmodule Plausible.Stats.DashboardQueryParser do
     time_labels: true,
     total_rows: false,
     trim_relative_date_range: true,
-    comparisons: nil,
+    compare: nil,
+    compare_match_day_of_week: true,
     legacy_time_on_page_cutoff: nil
   }
 

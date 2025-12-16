@@ -4,7 +4,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
   string.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser}
+  alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser, QueryInclude}
 
   def serialize(%ParsedQueryParams{} = params) do
     params
@@ -57,7 +57,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
     end)
   end
 
-  defp get_serialized_fields({:include, include}) do
+  defp get_serialized_fields({:include, %QueryInclude{} = include}) do
     if include.imports == DashboardQueryParser.default_include().imports do
       []
     else
