@@ -1528,7 +1528,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       site_link = insert(:shared_link, site: site, inserted_at: ~N[2021-12-31 00:00:00])
 
       conn = get(conn, "/share/#{site_link.slug}")
-      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{site_link.slug}"
+      assert redirected_to(conn, 302) == "/share/#{site.domain}/?auth=#{site_link.slug}"
     end
 
     test "it does nothing for newer links", %{conn: conn} do
@@ -1548,7 +1548,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
-      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{link.slug}"
+      assert redirected_to(conn, 302) == "/share/#{site.domain}/?auth=#{link.slug}"
 
       conn = get(conn, "/share/#{site.domain}?auth=#{link.slug}")
       assert html_response(conn, 200) =~ "stats-react-container"
@@ -1578,7 +1578,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         )
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
-      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{link.slug}"
+      assert redirected_to(conn, 302) == "/share/#{site.domain}/?auth=#{link.slug}"
 
       conn = get(conn, "/share/#{site2.domain}?auth=#{link2.slug}")
       assert html_response(conn, 200) =~ "Enter password"
@@ -1614,7 +1614,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         )
 
       expected_redirect =
-        "/share/#{URI.encode_www_form(site.domain)}?auth=#{link.slug}&#{filters}"
+        "/share/#{URI.encode_www_form(site.domain)}/?auth=#{link.slug}&#{filters}"
 
       assert redirected_to(conn, 302) == expected_redirect
 
@@ -1655,6 +1655,43 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert redirect_path =~ filters
       assert redirect_path =~ "auth=#{link.slug}"
     end
+  end
+
+  test "handles return_to during password authentication", %{conn: conn} do
+    site = new_site()
+
+    link =
+      insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+    filters = "f=is,country,EE&l=EE,Estonia&f=is,browser,Firefox"
+
+    deep_path = "/filter/source"
+
+    conn =
+      get(
+        conn,
+        "/share/#{URI.encode_www_form(site.domain)}#{deep_path}?auth=#{link.slug}&#{filters}"
+      )
+
+    assert html_response(conn, 200) =~ "Enter password"
+    html = html_response(conn, 200)
+
+    expected_action_string =
+      "/share/#{link.slug}/authenticate?auth=#{link.slug}&#{filters}&return_to=#{deep_path}"
+
+    assert html =~ ~s(action="#{expected_action_string |> String.replace("&", "&amp;")}")
+
+    conn =
+      post(
+        conn,
+        expected_action_string,
+        %{password: "password"}
+      )
+
+    expected_redirect =
+      "/share/#{URI.encode_www_form(site.domain)}#{deep_path}?auth=#{link.slug}&#{filters}"
+
+    assert redirected_to(conn, 302) == expected_redirect
   end
 
   describe "dogfood tracking" do
