@@ -14,7 +14,7 @@ defmodule Plausible.Stats.DashboardQueryParser do
     # might still want to know whether imported data can be toggled
     # on/off on the dashboard.
     imports_meta: true,
-    time_labels: true,
+    time_labels: false,
     total_rows: false,
     trim_relative_date_range: true,
     compare: nil,
@@ -28,9 +28,9 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
   def default_pagination(), do: @default_pagination
 
-  def parse(query_string) when is_binary(query_string) do
+  def parse(query_string, defaults \\ %{}) when is_binary(query_string) do
     query_string = String.trim_leading(query_string, "?")
-    params_map = URI.decode_query(query_string)
+    params_map = Map.merge(defaults, URI.decode_query(query_string))
 
     with {:ok, filters} <- parse_filters(query_string),
          {:ok, relative_date} <- parse_relative_date(params_map) do
@@ -43,6 +43,8 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
       {:ok,
        ParsedQueryParams.new!(%{
+         metrics: [],
+         dimensions: [],
          input_date_range: parse_input_date_range(params_map),
          relative_date: relative_date,
          filters: filters,
