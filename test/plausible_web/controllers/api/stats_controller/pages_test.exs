@@ -967,7 +967,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       populate_stats(
         site,
         site_import.id,
-        for(_ <- 1..25, do: build(:imported_visitors, date: ~D[2020-01-01]))
+        for(_ <- 1..24, do: build(:imported_visitors, date: ~D[2020-01-01]))
       )
 
       conn =
@@ -984,7 +984,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 0,
                  "time_on_page" => 48,
                  "scroll_depth" => 50,
-                 "percentage" => 19.23
+                 "percentage" => 20.0
                },
                %{
                  "name" => "/native-only",
@@ -993,7 +993,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
                  "scroll_depth" => 40,
-                 "percentage" => 3.85
+                 "percentage" => 4.0
                },
                %{
                  "name" => "/imported-only",
@@ -1002,7 +1002,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 0,
                  "time_on_page" => 30,
                  "scroll_depth" => 10,
-                 "percentage" => 76.92
+                 "percentage" => 80.0
                }
              ]
     end
