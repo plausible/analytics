@@ -154,6 +154,15 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           )
         ])
 
+        populate_stats(site, import_id, [
+          build(:imported_visitors, date: ~D[2021-01-01]),
+          build(:imported_visitors, date: ~D[2021-01-01]),
+          build(:imported_visitors, date: ~D[2021-01-01]),
+          build(:imported_visitors, date: ~D[2021-01-01]),
+          build(:imported_visitors, date: ~D[2021-01-31]),
+          build(:imported_visitors, date: ~D[2021-01-31])
+        ])
+
         import_data(
           [
             %{
@@ -806,6 +815,13 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
             user_id: @user_id,
             timestamp: ~N[2021-01-01 00:15:00]
           )
+        ])
+
+        populate_stats(site, import_id, [
+          build(:imported_visitors, date: ~D[2021-01-01]),
+          build(:imported_visitors, date: ~D[2021-01-01]),
+          build(:imported_visitors, date: ~D[2021-01-01]),
+          build(:imported_visitors, date: ~D[2021-01-01])
         ])
 
         import_data(

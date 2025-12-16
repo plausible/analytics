@@ -859,7 +859,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
     test "calculates scroll_depth from native and imported data combined", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       populate_stats(site, [
         build(:pageview,
@@ -886,6 +887,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, date: ~D[2020-01-01]),
+        build(:imported_visitors, date: ~D[2020-01-01]),
+        build(:imported_visitors, date: ~D[2020-01-01])
+      ])
+
       conn =
         get(
           conn,
@@ -907,7 +914,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
     test "handles missing scroll_depth data from native and imported sources", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       populate_stats(site, [
         build(:pageview,
@@ -955,6 +963,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           total_scroll_depth_visits: 10
         )
       ])
+
+      populate_stats(
+        site,
+        site_import.id,
+        for(_ <- 1..25, do: build(:imported_visitors, date: ~D[2020-01-01]))
+      )
 
       conn =
         get(
@@ -1792,7 +1806,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
     test "calculates bounce rate and time on page for pages with imported data", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       populate_stats(site, [
         build(:pageview,
@@ -1846,6 +1861,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           total_time_on_page: 60,
           total_time_on_page_visits: 1
         )
+      ])
+
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-01])
       ])
 
       conn =
