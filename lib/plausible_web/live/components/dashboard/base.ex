@@ -49,9 +49,9 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
   slot :inner_block, required: true
 
   def filter_link(assigns) do
-    params_string = replace_filter(assigns.params, assigns.filter)
+    params = replace_filter(assigns.params, assigns.filter)
 
-    assigns = assign(assigns, :params_string, params_string)
+    assigns = assign(assigns, :params, params)
 
     ~H"""
     <.dashboard_link site={@site} params={@params} class={@class} {@rest}>
