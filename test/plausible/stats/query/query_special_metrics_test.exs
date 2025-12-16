@@ -274,4 +274,116 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
              ]
     end
   end
+
+  describe "time_on_page" do
+    test "time_on_page breakdown (with missing data)", %{site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:03:00],
+          engagement_time: 20_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:04:00],
+          engagement_time: 30_000
+        ),
+        build(:pageview, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors, :time_on_page],
+          input_date_range: :all,
+          dimensions: ["event:page"]
+        })
+
+      %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+      assert results == [
+               %{dimensions: ["/"], metrics: [1, 50]},
+               %{dimensions: ["/blog"], metrics: [1, nil]}
+             ]
+    end
+
+    test "can use comparisons together with `legacy_time_on_page_cutoff` in timeseries", %{
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:05:00],
+          engagement_time: 100_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-02 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-02 00:05:00],
+          engagement_time: 200_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-03 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-03 00:05:00],
+          engagement_time: 250_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-04 00:05:00],
+          engagement_time: 200_000
+        ),
+        build(:pageview, user_id: 13, pathname: "/", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:engagement,
+          user_id: 13,
+          pathname: "/",
+          timestamp: ~N[2021-01-04 00:05:00],
+          engagement_time: 100_000
+        )
+      ])
+
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:time_on_page],
+          input_date_range: {:date_range, ~D[2021-01-03], ~D[2021-01-04]},
+          filters: [[:is, "event:page", ["/"]]],
+          dimensions: ["time:day"],
+          include: %QueryInclude{compare: :previous_period}
+        })
+
+      %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+      assert results == [
+               %{
+                 dimensions: ["2021-01-03"],
+                 metrics: [250],
+                 comparison: %{
+                   dimensions: ["2021-01-01"],
+                   metrics: [nil],
+                   change: [nil]
+                 }
+               },
+               %{
+                 dimensions: ["2021-01-04"],
+                 metrics: [150],
+                 comparison: %{
+                   dimensions: ["2021-01-02"],
+                   metrics: [200],
+                   change: [-25]
+                 }
+               }
+             ]
+    end
+  end
 end

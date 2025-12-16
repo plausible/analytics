@@ -168,41 +168,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                    } = json_response(conn, 200)
   end
 
-  test "time_on_page breakdown (with missing data)", %{conn: conn, site: site} do
-    populate_stats(site, [
-      build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
-      build(:engagement,
-        user_id: 12,
-        pathname: "/",
-        timestamp: ~N[2021-01-01 00:03:00],
-        engagement_time: 20_000
-      ),
-      build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
-      build(:engagement,
-        user_id: 12,
-        pathname: "/",
-        timestamp: ~N[2021-01-01 00:04:00],
-        engagement_time: 30_000
-      ),
-      build(:pageview, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00])
-    ])
-
-    conn =
-      post(conn, "/api/v2/query-internal-test", %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors", "time_on_page"],
-        "date_range" => "all",
-        "dimensions" => ["event:page"]
-      })
-
-    assert_matches %{
-                     "results" => [
-                       %{"dimensions" => ["/"], "metrics" => [1, 50]},
-                       %{"dimensions" => ["/blog"], "metrics" => [1, nil]}
-                     ]
-                   } = json_response(conn, 200)
-  end
-
   describe "site.legacy_time_on_page_cutoff" do
     setup %{site: site, site_import: site_import} = context do
       populate_stats(site, site_import.id, [
@@ -671,44 +636,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                %{"dimensions" => ["2021-01-02"], "metrics" => [nil]},
                %{"dimensions" => ["2021-01-03"], "metrics" => [250]},
                %{"dimensions" => ["2021-01-04"], "metrics" => [150]}
-             ]
-    end
-
-    test "can use comparisons together with `legacy_time_on_page_cutoff`", %{
-      conn: conn,
-      site: site
-    } do
-      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
-
-      conn =
-        post(conn, "/api/v2/query-internal-test", %{
-          "site_id" => site.domain,
-          "metrics" => ["time_on_page"],
-          "date_range" => ["2021-01-03", "2021-01-04"],
-          "filters" => [["is", "event:page", ["/"]]],
-          "dimensions" => ["time:day"],
-          "include" => %{"compare" => "previous_period"}
-        })
-
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "dimensions" => ["2021-01-03"],
-                 "metrics" => [250],
-                 "comparison" => %{
-                   "dimensions" => ["2021-01-01"],
-                   "metrics" => [nil],
-                   "change" => [nil]
-                 }
-               },
-               %{
-                 "dimensions" => ["2021-01-04"],
-                 "metrics" => [150],
-                 "comparison" => %{
-                   "dimensions" => ["2021-01-02"],
-                   "metrics" => [200],
-                   "change" => [-25]
-                 }
-               }
              ]
     end
   end
