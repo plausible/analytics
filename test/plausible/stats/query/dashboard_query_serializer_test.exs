@@ -87,6 +87,31 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
     end
   end
 
+  describe "include.compare -> comparison" do
+    for mode <- [:previous_period, :year_over_year] do
+      test "serializes #{mode} mode" do
+        params = %ParsedQueryParams{include: %{@default_include | compare: unquote(mode)}}
+        assert serialize(params) == "comparison=#{unquote(mode)}"
+      end
+    end
+
+    test "serializes custom comparison range" do
+      params = %ParsedQueryParams{
+        include: %{@default_include | compare: {:date_range, ~D[2021-01-01], ~D[2021-04-30]}}
+      }
+
+      assert serialize(params) ==
+               "compare_from=2021-01-01&compare_to=2021-04-30&comparison=custom"
+    end
+  end
+
+  describe "include.compare_match_day_of_week -> match_day_of_week" do
+    test "false -> false" do
+      params = %ParsedQueryParams{include: %{@default_include | compare_match_day_of_week: false}}
+      assert serialize(params) == "match_day_of_week=false"
+    end
+  end
+
   describe "filters" do
     test "serializes multiple filters" do
       serialized =
