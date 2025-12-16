@@ -36,6 +36,49 @@ defmodule PlausibleWeb.TrackerScriptCacheTest do
       refute TrackerScriptCache.get("nonexistent", cache_name: test, force?: true)
     end
 
+    test "refresh all and broadcast put works", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      site1 = new_site()
+      site2 = new_site()
+
+      configs = [create_config(site1), create_config(site2)]
+      cache_opts = [cache_name: test, force?: true]
+
+      for config <- configs do
+        assert TrackerScriptCache.get(config.id, cache_opts) == nil
+      end
+
+      assert :ok = TrackerScriptCache.refresh_all(cache_opts)
+
+      for config <- configs do
+        on_ee do
+          assert TrackerScriptCache.get(config.id, cache_opts) == true
+        else
+          assert is_binary(TrackerScriptCache.get(config.id, cache_opts))
+        end
+      end
+
+      [%TrackerScriptConfiguration{} = updated_config | _] = configs
+
+      TrackerScriptCache.broadcast_put(
+        updated_config.id,
+        %TrackerScriptConfiguration{
+          updated_config
+          | file_downloads: !updated_config.file_downloads
+        },
+        cache_opts
+      )
+
+      for config <- configs do
+        on_ee do
+          assert TrackerScriptCache.get(config.id, cache_opts) == true
+        else
+          assert TrackerScriptCache.get(config.id, cache_opts) =~
+                   ~r/domain:\"#{config.site.domain}\"/
+        end
+      end
+    end
+
     test "refreshes only recently added configurations", %{test: test} do
       {:ok, _} = start_test_cache(test)
 

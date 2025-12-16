@@ -124,6 +124,16 @@ defmodule Plausible.CacheTest do
                {ExampleCache.get("item1", cache_name: test, force?: true) == :item1, :ok}
              end)
     end
+
+    test "broadcast_put works as expected when called two times for a string value", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      :ok = ExampleCache.broadcast_put("message1", "hello", cache_name: test)
+      :ok = ExampleCache.broadcast_put("message1", "world", cache_name: test)
+
+      assert eventually(fn ->
+               {ExampleCache.get("message1", cache_name: test, force?: true) == "world", :ok}
+             end)
+    end
   end
 
   describe "warming the cache" do
