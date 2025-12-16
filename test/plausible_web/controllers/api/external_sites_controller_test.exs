@@ -757,7 +757,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         res = json_response(conn, 402)
-        assert res["error"] =~ "Custom Properties is part of the Plausible Business plan"
+        assert res["error"] == "Your current subscription plan does not include Custom Properties"
       end
     end
 
