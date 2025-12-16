@@ -464,7 +464,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         resp = json_response(conn, 200)
 
         assert_matches ^strict_map(%{
-                         "custom_props" => %{},
+                         "custom_props" => ^strict_map(%{}),
                          "display_name" => "Signup",
                          "domain" => ^site.domain,
                          "event_name" => "Signup",
@@ -485,7 +485,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         resp = json_response(conn, 200)
 
         assert_matches ^strict_map(%{
-                         "custom_props" => %{},
+                         "custom_props" => ^strict_map(%{}),
                          "display_name" => "Visit /signup",
                          "domain" => ^site.domain,
                          "event_name" => nil,
