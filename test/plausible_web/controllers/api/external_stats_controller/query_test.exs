@@ -2045,8 +2045,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       assert results == [
                %{"dimensions" => [unquote(value1)], "metrics" => [3, 50]},
-               %{"dimensions" => [unquote(value2)], "metrics" => [2, 33.3]},
-               %{"dimensions" => [unquote(blank_value)], "metrics" => [1, 16.7]}
+               %{"dimensions" => [unquote(value2)], "metrics" => [2, 33.33]},
+               %{"dimensions" => [unquote(blank_value)], "metrics" => [1, 16.67]}
              ]
     end
   end

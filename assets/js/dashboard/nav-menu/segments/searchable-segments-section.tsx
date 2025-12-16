@@ -84,7 +84,7 @@ export const SearchableSegmentsSection = ({
           <SearchInput
             searchRef={searchRef}
             placeholderUnfocused="Press / to search"
-            className="ml-auto w-full py-1 text-sm"
+            className="ml-auto w-full py-1"
             onSearch={handleSearchInput}
           />
         )}

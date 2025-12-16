@@ -24,9 +24,9 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 3, "name" => "/"},
-               %{"visitors" => 2, "name" => "/register"},
-               %{"visitors" => 1, "name" => "/contact"}
+               %{"visitors" => 3, "name" => "/", "percentage" => 50.0},
+               %{"visitors" => 2, "name" => "/register", "percentage" => 33.33},
+               %{"visitors" => 1, "name" => "/contact", "percentage" => 16.67}
              ]
     end
 
@@ -46,18 +46,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn1, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 3, "name" => "/"},
-               %{"visitors" => 2, "name" => "/register"},
-               %{"visitors" => 1, "name" => "/contact"},
-               %{"visitors" => 1, "name" => "/landing"}
+               %{"visitors" => 3, "name" => "/", "percentage" => 50.0},
+               %{"visitors" => 2, "name" => "/register", "percentage" => 33.33},
+               %{"visitors" => 1, "name" => "/contact", "percentage" => 16.67},
+               %{"visitors" => 1, "name" => "/landing", "percentage" => 16.67}
              ]
 
       filters = Jason.encode!([[:is, "event:hostname", ["d.example.com"]]])
       conn = get(conn1, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 2, "name" => "/register"},
-               %{"visitors" => 1, "name" => "/"}
+               %{"visitors" => 2, "name" => "/register", "percentage" => 66.67},
+               %{"visitors" => 1, "name" => "/", "percentage" => 33.33}
              ]
     end
 
@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 1, "name" => "/blog/john-1"}
+               %{"visitors" => 1, "name" => "/blog/john-1", "percentage" => 100.0}
              ]
     end
 
@@ -106,8 +106,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 1, "name" => "/"},
-               %{"visitors" => 1, "name" => "/blog/other-post"}
+               %{"visitors" => 1, "name" => "/", "percentage" => 50.0},
+               %{"visitors" => 1, "name" => "/blog/other-post", "percentage" => 50.0}
              ]
     end
 
@@ -143,8 +143,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 1, "name" => "/1"},
-               %{"visitors" => 1, "name" => "/2"}
+               %{"visitors" => 1, "name" => "/1", "percentage" => 50.0},
+               %{"visitors" => 1, "name" => "/2", "percentage" => 50.0}
              ]
     end
 
@@ -185,9 +185,9 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 1, "name" => "/1"},
-               %{"visitors" => 1, "name" => "/2"},
-               %{"visitors" => 1, "name" => "/6"}
+               %{"visitors" => 1, "name" => "/1", "percentage" => 33.33},
+               %{"visitors" => 1, "name" => "/2", "percentage" => 33.33},
+               %{"visitors" => 1, "name" => "/6", "percentage" => 33.33}
              ]
     end
 
@@ -228,7 +228,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 1, "name" => "/1"}
+               %{"visitors" => 1, "name" => "/1", "percentage" => 100.0}
              ]
     end
 
@@ -319,7 +319,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "bounce_rate" => 0,
                  "time_on_page" => 315,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                },
                %{
                  "name" => "/blog/john-1",
@@ -327,7 +328,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 50.0
                }
              ]
     end
@@ -419,7 +421,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "bounce_rate" => 0,
                  "time_on_page" => 120,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                },
                %{
                  "name" => "/blog/other-post",
@@ -427,7 +430,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 30,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 50.0
                }
              ]
     end
@@ -500,7 +504,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "bounce_rate" => 50,
                  "time_on_page" => 45,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                },
                %{
                  "name" => "/blog/other-post",
@@ -508,7 +513,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 30,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 50.0
                }
              ]
     end
@@ -589,7 +595,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "bounce_rate" => 100,
                  "time_on_page" => 30,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                },
                %{
                  "name" => "/blog/john-1",
@@ -597,7 +604,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 50.0
                }
              ]
     end
@@ -645,7 +653,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "/firefox",
-                 "visitors" => 2
+                 "visitors" => 2,
+                 "percentage" => 100.0
                }
              ]
     end
@@ -685,7 +694,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "/safari",
-                 "visitors" => 1
+                 "visitors" => 1,
+                 "percentage" => 100.0
                }
              ]
     end
@@ -758,7 +768,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 3,
                  "bounce_rate" => 50,
                  "time_on_page" => 90,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                }
              ]
     end
@@ -831,7 +842,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => 25
+                 "scroll_depth" => 25,
+                 "percentage" => 66.67
                },
                %{
                  "name" => "/blog",
@@ -839,14 +851,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 4,
                  "bounce_rate" => 33,
                  "time_on_page" => 80,
-                 "scroll_depth" => 60
+                 "scroll_depth" => 60,
+                 "percentage" => 100.0
                }
              ]
     end
 
     test "calculates scroll_depth from native and imported data combined", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       populate_stats(site, [
         build(:pageview,
@@ -873,6 +887,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, date: ~D[2020-01-01]),
+        build(:imported_visitors, date: ~D[2020-01-01]),
+        build(:imported_visitors, date: ~D[2020-01-01])
+      ])
+
       conn =
         get(
           conn,
@@ -886,14 +906,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 4,
                  "bounce_rate" => 100,
                  "time_on_page" => 28,
-                 "scroll_depth" => 50
+                 "scroll_depth" => 50,
+                 "percentage" => 100.0
                }
              ]
     end
 
     test "handles missing scroll_depth data from native and imported sources", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       populate_stats(site, [
         build(:pageview,
@@ -942,6 +964,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
+      populate_stats(
+        site,
+        site_import.id,
+        for(_ <- 1..24, do: build(:imported_visitors, date: ~D[2020-01-01]))
+      )
+
       conn =
         get(
           conn,
@@ -955,7 +983,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 5,
                  "bounce_rate" => 0,
                  "time_on_page" => 48,
-                 "scroll_depth" => 50
+                 "scroll_depth" => 50,
+                 "percentage" => 20.0
                },
                %{
                  "name" => "/native-only",
@@ -963,7 +992,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => 40
+                 "scroll_depth" => 40,
+                 "percentage" => 4.0
                },
                %{
                  "name" => "/imported-only",
@@ -971,7 +1001,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 30,
                  "bounce_rate" => 0,
                  "time_on_page" => 30,
-                 "scroll_depth" => 10
+                 "scroll_depth" => 10,
+                 "percentage" => 80.0
                }
              ]
     end
@@ -1017,7 +1048,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 160,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => 10
+                 "scroll_depth" => 10,
+                 "percentage" => nil
                }
              ]
     end
@@ -1097,7 +1129,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 3,
                  "bounce_rate" => 50,
                  "time_on_page" => 75,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 66.67
                },
                %{
                  "name" => "/about",
@@ -1105,7 +1138,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 100,
                  "time_on_page" => 30,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 33.33
                }
              ]
     end
@@ -1185,7 +1219,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 3,
                  "bounce_rate" => 50,
                  "time_on_page" => 75,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                }
              ]
     end
@@ -1265,7 +1300,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "bounce_rate" => 100,
                  "time_on_page" => 30,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 66.67
                },
                %{
                  "name" => "/blog/post-1",
@@ -1273,7 +1309,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 33.33
                },
                %{
                  "name" => "/blog/post-2",
@@ -1281,7 +1318,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 30,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 33.33
                }
              ]
     end
@@ -1339,7 +1377,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                },
                %{
                  "name" => "/blog/(/post-2",
@@ -1347,7 +1386,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 30,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                }
              ]
     end
@@ -1427,7 +1467,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "bounce_rate" => 50,
                  "time_on_page" => 600,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                },
                %{
                  "name" => "/about",
@@ -1435,7 +1476,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 30,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 50.0
                }
              ]
     end
@@ -1455,17 +1497,17 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn1 = get(conn, "/api/stats/#{site.domain}/pages?period=day")
 
       assert json_response(conn1, 200)["results"] == [
-               %{"visitors" => 3, "name" => "/"},
-               %{"visitors" => 2, "name" => "/register"},
-               %{"visitors" => 1, "name" => "/contact"}
+               %{"visitors" => 3, "name" => "/", "percentage" => 50.0},
+               %{"visitors" => 2, "name" => "/register", "percentage" => 33.33},
+               %{"visitors" => 1, "name" => "/contact", "percentage" => 16.67}
              ]
 
       conn2 = get(conn, "/api/stats/#{site.domain}/pages?period=day&with_imported=true")
 
       assert json_response(conn2, 200)["results"] == [
-               %{"visitors" => 4, "name" => "/"},
-               %{"visitors" => 3, "name" => "/register"},
-               %{"visitors" => 1, "name" => "/contact"}
+               %{"visitors" => 4, "name" => "/", "percentage" => 66.67},
+               %{"visitors" => 3, "name" => "/register", "percentage" => 50.0},
+               %{"visitors" => 1, "name" => "/contact", "percentage" => 16.67}
              ]
     end
 
@@ -1559,7 +1601,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "name" => "/",
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                },
                %{
                  "bounce_rate" => 0,
@@ -1567,7 +1610,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 1,
                  "pageviews" => 1,
                  "name" => "/some-other-page",
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 50.0
                }
              ]
     end
@@ -1608,7 +1652,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "time_on_page" => nil,
                  "visitors" => 2,
-                 "scroll_depth" => nil
+                 "scroll_depth" => nil,
+                 "percentage" => 100.0
                }
              ]
     end
@@ -1744,7 +1789,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 3,
                  "time_on_page" => 435,
                  "visitors" => 2,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                },
                %{
                  "bounce_rate" => 0,
@@ -1752,14 +1798,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "time_on_page" => 120,
                  "visitors" => 1,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 50.0
                }
              ]
     end
 
     test "calculates bounce rate and time on page for pages with imported data", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       populate_stats(site, [
         build(:pageview,
@@ -1815,6 +1863,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-01])
+      ])
+
       conn =
         get(
           conn,
@@ -1828,7 +1882,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 3,
                  "pageviews" => 3,
                  "scroll_depth" => 0,
-                 "name" => "/"
+                 "name" => "/",
+                 "percentage" => 60.0
                },
                %{
                  "bounce_rate" => 0,
@@ -1836,7 +1891,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "scroll_depth" => 0,
-                 "name" => "/some-other-page"
+                 "name" => "/some-other-page",
+                 "percentage" => 40.0
                }
              ]
     end
@@ -1851,8 +1907,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=realtime")
 
       assert json_response(conn, 200)["results"] == [
-               %{"visitors" => 2, "name" => "/page1"},
-               %{"visitors" => 1, "name" => "/page2"}
+               %{"visitors" => 2, "name" => "/page1", "percentage" => 66.67},
+               %{"visitors" => 1, "name" => "/page2", "percentage" => 33.33}
              ]
     end
 
@@ -1926,7 +1982,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 4,
                  "time_on_page" => 90.0,
                  "visitors" => 4,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 100.0
                }
              ]
     end
@@ -1989,7 +2046,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 4,
                  "time_on_page" => 90.0,
                  "visitors" => 4,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 80.0
                },
                %{
                  "bounce_rate" => 100,
@@ -1997,7 +2055,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "time_on_page" => 10.0,
                  "visitors" => 1,
-                 "scroll_depth" => nil
+                 "scroll_depth" => nil,
+                 "percentage" => 20.0
                }
              ]
     end
@@ -2055,20 +2114,22 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       assert json_response(conn, 200)["results"] == [
                %{
-                 "bounce_rate" => 50,
+                 "bounce_rate" => 50.0,
                  "name" => "/aaa",
                  "pageviews" => 4,
-                 "time_on_page" => 90.0,
+                 "time_on_page" => 90,
                  "visitors" => 4,
-                 "scroll_depth" => 0
+                 "scroll_depth" => 0,
+                 "percentage" => 80.0
                },
                %{
-                 "bounce_rate" => 100,
+                 "bounce_rate" => 100.0,
                  "name" => "/a",
                  "pageviews" => 1,
-                 "time_on_page" => 10.0,
+                 "time_on_page" => 10,
                  "visitors" => 1,
-                 "scroll_depth" => nil
+                 "scroll_depth" => nil,
+                 "percentage" => 20.0
                }
              ]
     end
@@ -2103,24 +2164,27 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{
                  "bounce_rate" => 100,
                  "comparison" => %{
-                   "bounce_rate" => 0,
+                   "bounce_rate" => 0.0,
                    "pageviews" => 0,
                    "time_on_page" => nil,
                    "visitors" => 0,
                    "scroll_depth" => nil,
+                   "percentage" => 0.0,
                    "change" => %{
                      "bounce_rate" => nil,
                      "pageviews" => 100,
                      "time_on_page" => nil,
                      "visitors" => 100,
-                     "scroll_depth" => nil
+                     "scroll_depth" => nil,
+                     "percentage" => 100
                    }
                  },
                  "name" => "/page2",
                  "pageviews" => 2,
                  "time_on_page" => nil,
                  "visitors" => 2,
-                 "scroll_depth" => nil
+                 "scroll_depth" => nil,
+                 "percentage" => 66.67
                },
                %{
                  "bounce_rate" => 100,
@@ -2129,18 +2193,21 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "time_on_page" => nil,
                  "visitors" => 1,
                  "scroll_depth" => nil,
+                 "percentage" => 33.33,
                  "comparison" => %{
                    "bounce_rate" => 100,
                    "pageviews" => 1,
                    "time_on_page" => nil,
                    "visitors" => 1,
                    "scroll_depth" => nil,
+                   "percentage" => 100.0,
                    "change" => %{
                      "bounce_rate" => 0,
                      "pageviews" => 0,
                      "time_on_page" => nil,
                      "visitors" => 0,
-                     "scroll_depth" => nil
+                     "scroll_depth" => nil,
+                     "percentage" => -67
                    }
                  }
                }
@@ -2177,7 +2244,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                    "pageviews" => 3,
                    "time_on_page" => nil,
                    "visitors" => 3,
-                   "scroll_depth" => nil
+                   "scroll_depth" => nil,
+                   "percentage" => 50.0
                  },
                  %{
                    "bounce_rate" => 100,
@@ -2185,7 +2253,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                    "pageviews" => 2,
                    "time_on_page" => nil,
                    "visitors" => 2,
-                   "scroll_depth" => nil
+                   "scroll_depth" => nil,
+                   "percentage" => 33.33
                  },
                  %{
                    "bounce_rate" => 100,
@@ -2193,7 +2262,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                    "pageviews" => 1,
                    "time_on_page" => nil,
                    "visitors" => 1,
-                   "scroll_depth" => nil
+                   "scroll_depth" => nil,
+                   "percentage" => 16.67
                  }
                ]
       end
@@ -2241,14 +2311,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visits" => 2,
                  "name" => "/page1",
                  "visit_duration" => 0,
-                 "bounce_rate" => 100
+                 "bounce_rate" => 100,
+                 "percentage" => 66.67
                },
                %{
                  "visitors" => 1,
                  "visits" => 2,
                  "name" => "/page2",
                  "visit_duration" => 450,
-                 "bounce_rate" => 50
+                 "bounce_rate" => 50,
+                 "percentage" => 33.33
                }
              ]
     end
@@ -2299,14 +2371,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visits" => 1,
                  "name" => "/blog",
                  "visit_duration" => 60,
-                 "bounce_rate" => 0
+                 "bounce_rate" => 0,
+                 "percentage" => 50.0
                },
                %{
                  "visitors" => 1,
                  "visits" => 1,
                  "name" => "/blog/john-2",
                  "visit_duration" => 0,
-                 "bounce_rate" => 100
+                 "bounce_rate" => 100,
+                 "percentage" => 50.0
                }
              ]
     end
@@ -2356,14 +2430,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visits" => 2,
                  "name" => "/page1",
                  "visit_duration" => 0,
-                 "bounce_rate" => 100
+                 "bounce_rate" => 100,
+                 "percentage" => 66.67
                },
                %{
                  "visitors" => 1,
                  "visits" => 2,
                  "name" => "/page2",
                  "visit_duration" => 450,
-                 "bounce_rate" => 50
+                 "bounce_rate" => 50,
+                 "percentage" => 33.33
                }
              ]
 
@@ -2379,14 +2455,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visits" => 5,
                  "name" => "/page2",
                  "visit_duration" => 240.0,
-                 "bounce_rate" => 20
+                 "bounce_rate" => 20.0,
+                 "percentage" => 60.0
                },
                %{
                  "visitors" => 2,
                  "visits" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0,
-                 "bounce_rate" => 100
+                 "visit_duration" => 0.0,
+                 "bounce_rate" => 100.0,
+                 "percentage" => 40.0
                }
              ]
     end
@@ -2444,14 +2522,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visit_duration" => 0,
                  "visitors" => 1,
                  "visits" => 1,
-                 "bounce_rate" => 100
+                 "bounce_rate" => 100,
+                 "percentage" => 50.0
                },
                %{
                  "name" => "/page2",
                  "visit_duration" => 0,
                  "visitors" => 1,
                  "visits" => 1,
-                 "bounce_rate" => 100
+                 "bounce_rate" => 100,
+                 "percentage" => 50.0
                }
              ]
     end
@@ -2610,21 +2690,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/a",
                  "visits" => 10,
                  "visitors" => 6,
-                 "bounce_rate" => 10
+                 "bounce_rate" => 10.0,
+                 "percentage" => 66.67
                },
                %{
                  "visit_duration" => 50.0,
                  "name" => "/bbb",
                  "visits" => 2,
                  "visitors" => 2,
-                 "bounce_rate" => 0
+                 "bounce_rate" => 0.0,
+                 "percentage" => 22.22
                },
                %{
                  "visit_duration" => 0,
                  "name" => "/aaa",
                  "visits" => 1,
                  "visitors" => 1,
-                 "bounce_rate" => 100
+                 "bounce_rate" => 100.0,
+                 "percentage" => 11.11
                }
              ]
     end
@@ -2658,8 +2741,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01")
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66.7},
-               %{"name" => "/page2", "visitors" => 1, "visits" => 1, "exit_rate" => 100}
+               %{
+                 "name" => "/page1",
+                 "visitors" => 2,
+                 "visits" => 2,
+                 "exit_rate" => 66.7,
+                 "percentage" => 66.67
+               },
+               %{
+                 "name" => "/page2",
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "exit_rate" => 100,
+                 "percentage" => 33.33
+               }
              ]
     end
 
@@ -2692,8 +2787,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "/page2", "visitors" => 1, "visits" => 1, "exit_rate" => 100},
-               %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66.7}
+               %{
+                 "name" => "/page2",
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "exit_rate" => 100.0,
+                 "percentage" => 33.33
+               },
+               %{
+                 "name" => "/page1",
+                 "visitors" => 2,
+                 "visits" => 2,
+                 "exit_rate" => 66.7,
+                 "percentage" => 66.67
+               }
              ]
     end
 
@@ -2740,7 +2847,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       # We're going to only join sessions where the entry hostname matches the filter
       assert json_response(conn, 200)["results"] ==
-               [%{"name" => "/page1", "visitors" => 1, "visits" => 1}]
+               [%{"name" => "/page1", "visitors" => 1, "visits" => 1, "percentage" => 100.0}]
     end
 
     test "returns top exit pages filtered by custom pageview props", %{conn: conn, site: site} do
@@ -2778,7 +2885,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "/", "visitors" => 1, "visits" => 1}
+               %{"name" => "/", "visitors" => 1, "visits" => 1, "percentage" => 100.0}
              ]
     end
 
@@ -2822,8 +2929,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn1 = get(conn, "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01")
 
       assert json_response(conn1, 200)["results"] == [
-               %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66.7},
-               %{"name" => "/page2", "visitors" => 1, "visits" => 1, "exit_rate" => 100}
+               %{
+                 "name" => "/page1",
+                 "visitors" => 2,
+                 "visits" => 2,
+                 "exit_rate" => 66.7,
+                 "percentage" => 66.67
+               },
+               %{
+                 "name" => "/page2",
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "exit_rate" => 100.0,
+                 "percentage" => 33.33
+               }
              ]
 
       conn2 =
@@ -2837,9 +2956,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/page2",
                  "visitors" => 3,
                  "visits" => 4,
-                 "exit_rate" => 80.0
+                 "exit_rate" => 80.0,
+                 "percentage" => 60.0
                },
-               %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66.7}
+               %{
+                 "name" => "/page1",
+                 "visitors" => 2,
+                 "visits" => 2,
+                 "exit_rate" => 66.7,
+                 "percentage" => 40.0
+               }
              ]
     end
 
@@ -2938,8 +3064,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "/exit1", "visitors" => 1, "visits" => 1},
-               %{"name" => "/exit2", "visitors" => 1, "visits" => 1}
+               %{"name" => "/exit1", "visitors" => 1, "visits" => 1, "percentage" => 50.0},
+               %{"name" => "/exit2", "visitors" => 1, "visits" => 1, "percentage" => 50.0}
              ]
     end
 
@@ -2996,19 +3122,22 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "exit_rate" => 50.0,
                  "name" => "/a",
                  "visits" => 10,
-                 "visitors" => 6
+                 "visitors" => 6,
+                 "percentage" => 66.67
                },
                %{
                  "exit_rate" => 100.0,
                  "name" => "/bbb",
                  "visits" => 2,
-                 "visitors" => 2
+                 "visitors" => 2,
+                 "percentage" => 22.22
                },
                %{
                  "exit_rate" => 100.0,
                  "name" => "/aaa",
                  "visits" => 1,
-                 "visitors" => 1
+                 "visitors" => 1,
+                 "percentage" => 11.11
                }
              ]
     end
