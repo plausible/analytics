@@ -1595,33 +1595,21 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn =
         get(
           conn,
-          "/share/#{site.domain}?auth=#{link.slug}&#{filters}"
+          "/share/#{URI.encode_www_form(site.domain)}?auth=#{link.slug}&#{filters}"
         )
 
       assert html_response(conn, 200) =~ "Enter password"
       html = html_response(conn, 200)
 
-      assert html =~ ~s(action="/share/#{link.slug}/authenticate?)
-      assert html =~ "f=is,browser,Firefox"
-      assert html =~ "f=is,country,EE"
-      assert html =~ "l=EE,Estonia"
+      expected_action_string =
+        "/share/#{URI.encode_www_form(link.slug)}/authenticate?auth=#{link.slug}&#{filters}"
+
+      assert text_of_attr(html, "form", "action") == expected_action_string
 
       conn =
         post(
           conn,
-          "/share/#{link.slug}/authenticate?#{filters}",
-          %{password: "password"}
-        )
-
-      expected_redirect =
-        "/share/#{URI.encode_www_form(site.domain)}/?auth=#{link.slug}&#{filters}"
-
-      assert redirected_to(conn, 302) == expected_redirect
-
-      conn =
-        post(
-          conn,
-          "/share/#{link.slug}/authenticate?#{filters}",
+          expected_action_string,
           %{password: "WRONG!"}
         )
 
@@ -1629,31 +1617,22 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert html =~ "Enter password"
       assert html =~ "Incorrect password"
 
-      assert text_of_attr(html, "form", "action") =~ "?#{filters}"
+      assert text_of_attr(html, "form", "action") == expected_action_string
 
       conn =
         post(
           conn,
-          "/share/#{link.slug}/authenticate?#{filters}",
+          expected_action_string,
           %{password: "password"}
         )
 
-      redirected_url = redirected_to(conn, 302)
-      assert redirected_url =~ filters
+      expected_redirect =
+        "/share/#{URI.encode_www_form(site.domain)}?auth=#{link.slug}&#{filters}"
 
-      conn =
-        post(
-          conn,
-          "/share/#{link.slug}/authenticate?#{filters}",
-          %{password: "password"}
-        )
+      assert redirected_to(conn, 302) == expected_redirect
 
-      redirect_path = redirected_to(conn, 302)
-
-      conn = get(conn, redirect_path)
+      conn = get(conn, expected_redirect)
       assert html_response(conn, 200) =~ "stats-react-container"
-      assert redirect_path =~ filters
-      assert redirect_path =~ "auth=#{link.slug}"
     end
   end
 
@@ -1679,7 +1658,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     expected_action_string =
       "/share/#{link.slug}/authenticate?auth=#{link.slug}&#{filters}&return_to=#{deep_path}"
 
-    assert html =~ ~s(action="#{expected_action_string |> String.replace("&", "&amp;")}")
+    assert text_of_attr(html, "form", "action") == expected_action_string
 
     conn =
       post(
