@@ -109,7 +109,6 @@ defmodule Plausible.Stats.QueryResult do
   defp include(query) do
     case query.include.compare do
       {:date_range, first, last} ->
-        # TODO: Should return datetimes of the actual comparison query time range here?
         struct!(query.include, compare: [Date.to_iso8601(first), Date.to_iso8601(last)])
 
       _ ->

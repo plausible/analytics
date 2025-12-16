@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.QueryInclude do
+  @moduledoc false
+
   defstruct imports: false,
             imports_meta: false,
             time_labels: false,
@@ -9,8 +11,7 @@ defmodule Plausible.Stats.QueryInclude do
             legacy_time_on_page_cutoff: nil
 
   @type date_range_tuple() :: {:date_range, Date.t(), Date.t()}
-  # TODO:
-  # @type datetime_range_tuple() :: {:date_range, DateTime.t(), DateTime.t()}
+  @type datetime_range_tuple() :: {:date_range, DateTime.t(), DateTime.t()}
 
   @type t() :: %__MODULE__{
           imports: boolean(),
@@ -18,7 +19,8 @@ defmodule Plausible.Stats.QueryInclude do
           time_labels: boolean(),
           total_rows: boolean(),
           trim_relative_date_range: boolean(),
-          compare: nil | :previous_period | :year_over_year | date_range_tuple(),
+          compare:
+            nil | :previous_period | :year_over_year | date_range_tuple() | datetime_range_tuple(),
           compare_match_day_of_week: boolean(),
           legacy_time_on_page_cutoff: any()
         }
