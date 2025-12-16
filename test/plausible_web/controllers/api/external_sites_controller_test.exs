@@ -461,12 +461,17 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             event_name: "Signup"
           })
 
-        res = json_response(conn, 200)
+        resp = json_response(conn, 200)
 
-        assert res["goal_type"] == "event"
-        assert res["display_name"] == "Signup"
-        assert res["event_name"] == "Signup"
-        assert res["domain"] == site.domain
+        assert_matches ^strict_map(%{
+                         "custom_props" => %{},
+                         "display_name" => "Signup",
+                         "domain" => ^site.domain,
+                         "event_name" => "Signup",
+                         "goal_type" => "event",
+                         "id" => ^any(:integer),
+                         "page_path" => nil
+                       }) = resp
       end
 
       test "can add a goal as page to a site", %{conn: conn, site: site} do
@@ -477,11 +482,17 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             page_path: "/signup"
           })
 
-        res = json_response(conn, 200)
-        assert res["goal_type"] == "page"
-        assert res["page_path"] == "/signup"
-        assert res["display_name"] == "Visit /signup"
-        assert res["domain"] == site.domain
+        resp = json_response(conn, 200)
+
+        assert_matches ^strict_map(%{
+                         "custom_props" => %{},
+                         "display_name" => "Visit /signup",
+                         "domain" => ^site.domain,
+                         "event_name" => nil,
+                         "goal_type" => "page",
+                         "id" => ^any(:integer),
+                         "page_path" => "/signup"
+                       }) = resp
       end
 
       test "can add a goal using old site_id after domain change", %{conn: conn, site: site} do
