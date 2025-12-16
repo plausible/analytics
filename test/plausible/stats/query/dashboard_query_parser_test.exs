@@ -105,6 +105,48 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
     end
   end
 
+  describe "comparison -> include.compare" do
+    for mode <- [:previous_period, :year_over_year] do
+      test "parses #{mode} mode" do
+        {:ok, parsed} = parse("?comparison=#{unquote(mode)}")
+        expected_include = Map.put(@default_include, :compare, unquote(mode))
+        assert_matches %ParsedQueryParams{include: ^expected_include} = parsed
+      end
+    end
+
+    test "parses custom date range mode" do
+      {:ok, parsed} = parse("?comparison=custom&compare_from=2021-01-01&compare_to=2021-04-30")
+
+      expected_include =
+        Map.put(@default_include, :compare, {:date_range, ~D[2021-01-01], ~D[2021-04-30]})
+
+      assert_matches %ParsedQueryParams{include: ^expected_include} = parsed
+    end
+
+    test "invalid -> nil" do
+      {:ok, parsed} = parse("?comparison=invalid_mode")
+      assert %ParsedQueryParams{include: @default_include} = parsed
+    end
+  end
+
+  describe "match_day_of_week -> include.compare_match_day_of_week" do
+    test "true -> true" do
+      {:ok, parsed} = parse("?match_day_of_week=true")
+      assert %ParsedQueryParams{include: @default_include} = parsed
+    end
+
+    test "invalid -> true" do
+      {:ok, parsed} = parse("?match_day_of_week=foo")
+      assert %ParsedQueryParams{include: @default_include} = parsed
+    end
+
+    test "false -> false" do
+      {:ok, parsed} = parse("?match_day_of_week=false")
+      expected_include = Map.put(@default_include, :compare_match_day_of_week, false)
+      assert %ParsedQueryParams{include: ^expected_include} = parsed
+    end
+  end
+
   describe "filters" do
     test "parses valid filters" do
       {:ok, parsed} =
