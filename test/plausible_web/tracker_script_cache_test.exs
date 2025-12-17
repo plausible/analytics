@@ -124,7 +124,7 @@ defmodule PlausibleWeb.TrackerScriptCacheTest do
   end
 
   defp start_test_cache(cache_name) do
-    %{start: {m, f, a}} = TrackerScriptCache.child_spec(cache_name: cache_name)
+    %{start: {m, f, a}} = TrackerScriptCache.child_spec(cache_name: cache_name, ets_options: [:bag])
     apply(m, f, a)
   end
 

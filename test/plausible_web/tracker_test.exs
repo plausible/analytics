@@ -186,7 +186,7 @@ defmodule PlausibleWeb.TrackerTest do
   defp start_test_cache(cache_name) do
     opts = [cache_name: cache_name, force?: true]
 
-    %{start: {m, f, a}} = TrackerScriptCache.child_spec(cache_name: cache_name)
+    %{start: {m, f, a}} = TrackerScriptCache.child_spec(cache_name: cache_name, ets_options: [:bag])
     {:ok, _} = apply(m, f, a)
     TrackerScriptCache.refresh_all(opts)
 
