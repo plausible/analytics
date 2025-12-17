@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Segment filters are visible to anyone who can view the dashboard with that segment applied, including personal segments on public dashboards
+- When accessing a link to a shared password-protected dashboard subpage (e.g. `.../pages`), the viewer will be redirected to that subpage after providing the password
 
 ### Fixed
 
