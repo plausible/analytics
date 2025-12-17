@@ -89,13 +89,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "visitors" => 2,
                  "name" => "K2sna Kalle",
                  "events" => 2,
-                 "percentage" => 66.7
+                 "percentage" => 66.67
                },
                %{
                  "visitors" => 1,
                  "name" => "(none)",
                  "events" => 1,
-                 "percentage" => 33.3
+                 "percentage" => 33.33
                }
              ]
     end
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "visitors" => 2,
                  "name" => "Teet",
                  "events" => 2,
-                 "percentage" => 33.3
+                 "percentage" => 33.33
                }
              ]
 
@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "visitors" => 1,
                  "name" => "(none)",
                  "events" => 1,
-                 "percentage" => 16.7
+                 "percentage" => 16.67
                }
              ]
     end
@@ -1082,13 +1082,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "visitors" => 2,
                  "name" => "K2sna Kalle",
                  "events" => 2,
-                 "percentage" => 66.7
+                 "percentage" => 66.67
                },
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
                  "events" => 1,
-                 "percentage" => 33.3
+                 "percentage" => 33.33
                }
              ]
     end
@@ -1121,13 +1121,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "visitors" => 2,
                  "name" => "bar",
                  "events" => 2,
-                 "percentage" => 66.7
+                 "percentage" => 66.67
                },
                %{
                  "visitors" => 1,
                  "name" => "foobar",
                  "events" => 1,
-                 "percentage" => 33.3
+                 "percentage" => 33.33
                }
              ]
     end

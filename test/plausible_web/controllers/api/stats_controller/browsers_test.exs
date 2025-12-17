@@ -14,8 +14,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.3}
+               %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.67},
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.33}
              ]
     end
 
@@ -132,8 +132,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       conn2 = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
 
       assert json_response(conn2, 200)["results"] == [
-               %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.3}
+               %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.67},
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.33}
              ]
     end
 
@@ -211,7 +211,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                %{
                  "name" => "Chrome",
                  "visitors" => 2,
-                 "percentage" => 66.7,
+                 "percentage" => 66.67,
                  "comparison" => %{
                    "visitors" => 0,
                    "percentage" => 0.0,
@@ -221,7 +221,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                %{
                  "name" => "Firefox",
                  "visitors" => 1,
-                 "percentage" => 33.3,
+                 "percentage" => 33.33,
                  "comparison" => %{
                    "visitors" => 1,
                    "percentage" => 50.0,
@@ -257,7 +257,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                %{
                  "name" => "Chrome",
                  "visitors" => 2,
-                 "percentage" => 66.7,
+                 "percentage" => 66.67,
                  "comparison" => %{
                    "visitors" => 1,
                    "percentage" => 25.0,
@@ -452,14 +452,14 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  "name" => "Chrome 78.0",
                  "version" => "78.0",
                  "visitors" => 2,
-                 "percentage" => 66.7,
+                 "percentage" => 66.67,
                  "browser" => "Chrome"
                },
                %{
                  "name" => "Chrome 77.0",
                  "version" => "77.0",
                  "visitors" => 1,
-                 "percentage" => 33.3,
+                 "percentage" => 33.33,
                  "browser" => "Chrome"
                }
              ]
