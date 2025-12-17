@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.TrackerScriptCacheTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
 
   alias Plausible.Site.TrackerScriptConfiguration
   alias PlausibleWeb.TrackerScriptCache
@@ -8,7 +8,14 @@ defmodule PlausibleWeb.TrackerScriptCacheTest do
     test "cache caches tracker scripts by id", %{test: test} do
       {:ok, _} =
         Supervisor.start_link(
-          [{TrackerScriptCache, [cache_name: test, child_id: :test_cache_tracker_script]}],
+          [
+            {TrackerScriptCache,
+             [
+               cache_name: test,
+               child_id: :test_cache_tracker_script,
+               ets_options: [:bag, read_concurrency: true]
+             ]}
+          ],
           strategy: :one_for_one,
           name: :"cache_supervisor_#{test}"
         )
@@ -51,10 +58,14 @@ defmodule PlausibleWeb.TrackerScriptCacheTest do
       assert :ok = TrackerScriptCache.refresh_all(cache_opts)
 
       for config <- configs do
+        result = TrackerScriptCache.get(config.id, cache_opts)
+
         on_ee do
-          assert TrackerScriptCache.get(config.id, cache_opts) == true
+          assert result == true
         else
-          assert is_binary(TrackerScriptCache.get(config.id, cache_opts))
+          assert is_binary(result)
+          assert result =~ ~r/domain:\"#{config.site.domain}\"/
+          assert result =~ ~r/fileDownloads:\!0/
         end
       end
 
@@ -62,18 +73,29 @@ defmodule PlausibleWeb.TrackerScriptCacheTest do
 
       TrackerScriptCache.broadcast_put(
         updated_config.id,
-        %TrackerScriptConfiguration{
+        TrackerScriptCache.cache_content(%TrackerScriptConfiguration{
           updated_config
-          | file_downloads: !updated_config.file_downloads
-        },
+          | file_downloads: false
+        }),
         cache_opts
       )
 
+      on_ce do
+        # wait for broadcast put to take effect
+        assert eventually(fn ->
+                 result = TrackerScriptCache.get(updated_config.id, cache_opts)
+
+                 {!(result =~ ~r/fileDownloads:\!0/), result}
+               end)
+      end
+
       for config <- configs do
+        result = TrackerScriptCache.get(config.id, cache_opts)
+
         on_ee do
-          assert TrackerScriptCache.get(config.id, cache_opts) == true
+          assert result == true
         else
-          assert TrackerScriptCache.get(config.id, cache_opts) =~
+          assert result =~
                    ~r/domain:\"#{config.site.domain}\"/
         end
       end
