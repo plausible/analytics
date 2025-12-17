@@ -8,7 +8,6 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
     describe "GET /:domain/settings/funnels" do
       setup [:create_user, :log_in, :create_site]
 
-      @tag :ee_only
       test "premium feature notice renders", %{conn: conn, site: site, user: user} do
         user
         |> team_of()
@@ -19,6 +18,21 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         resp = conn |> html_response(200)
 
         assert text(resp) =~ "upgrade your subscription"
+      end
+
+      test "guest editors should be able to access funnel settings", %{site: site, conn: conn} do
+        guest_user = new_user()
+        add_guest(site, user: guest_user, role: :editor)
+
+        {:ok, conn: conn} = log_in(%{user: guest_user, conn: conn})
+
+        lock_notice =
+          conn
+          |> get("/#{site.domain}/settings/funnels")
+          |> html_response(200)
+          |> text_of_element("#lock-notice")
+
+        refute lock_notice =~ "upgrade your subscription"
       end
 
       test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
