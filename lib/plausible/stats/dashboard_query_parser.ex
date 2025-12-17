@@ -116,17 +116,12 @@ defmodule Plausible.Stats.DashboardQueryParser do
   end
 
   defp decode_filter(filter_expression) do
-    case String.split(filter_expression, ",") do
-      [operator, dimension | clauses] ->
-        {:ok,
-         [
-           operator,
-           with_prefix(dimension),
-           Enum.map(clauses, &URI.decode_www_form/1)
-         ]}
-
-      _ ->
-        {:error, :invalid_filter}
+    with [operator, dimension | clauses] <- String.split(filter_expression, ","),
+         dimension = with_prefix(dimension),
+         {:ok, clauses} <- decode_clauses(clauses, dimension) do
+      {:ok, [operator, dimension, clauses]}
+    else
+      _ -> {:error, :invalid_filter}
     end
   end
 
@@ -139,6 +134,19 @@ defmodule Plausible.Stats.DashboardQueryParser do
       event_dimension?(dimension) -> @event_prefix <> dimension
       true -> @visit_prefix <> dimension
     end
+  end
+
+  defp decode_clauses(clauses, "segment") do
+    Enum.reduce_while(clauses, {:ok, []}, fn clause, {:ok, acc} ->
+      case Integer.parse(clause) do
+        {int, ""} -> {:cont, {:ok, acc ++ [int]}}
+        _ -> {:halt, {:error, :invalid_filter}}
+      end
+    end)
+  end
+
+  defp decode_clauses(clauses, _dimension) do
+    {:ok, Enum.map(clauses, &URI.decode_www_form/1)}
   end
 
   @event_props_prefix "props:"

@@ -162,6 +162,15 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
              } = parsed
     end
 
+    test "parses a segment filter" do
+      {:ok, parsed} = parse("?f=is,segment,123")
+
+      assert %ParsedQueryParams{
+               filters: [[:is, "segment", [123]]],
+               include: @default_include
+             } = parsed
+    end
+
     test "errors when filter decoding fails" do
       assert {:error, :invalid_filters} = parse("?f=is,page,/&f=what")
     end
