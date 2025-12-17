@@ -263,7 +263,6 @@ defmodule Plausible.Stats.ApiQueryParser do
   def parse_include(include) when is_map(include) do
     parsed_include_params_or_error =
       include
-      |> Map.to_list()
       |> Enum.reduce_while({:ok, []}, fn {key, value}, {:ok, acc} ->
         case parse_include_entry(key, value) do
           {:ok, parsed_tuple} -> {:cont, {:ok, acc ++ [parsed_tuple]}}
