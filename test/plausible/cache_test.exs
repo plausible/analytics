@@ -118,10 +118,11 @@ defmodule Plausible.CacheTest do
 
     test "put puts into local cache, overwriting as appropriate", %{test: test} do
       {:ok, _} = start_test_cache(test)
-      :ok = ExampleCache.put("key", :item1, cache_name: test)
-      assert ExampleCache.get("key", cache_name: test, force?: true) == :item1
-      :ok = ExampleCache.put("key", :updated, cache_name: test)
-      assert ExampleCache.get("key", cache_name: test, force?: true) == :updated
+      opts = [cache_name: test, force?: true]
+      assert ExampleCache.put("key", :item1, opts)
+      assert ExampleCache.get("key", opts) == :item1
+      assert ExampleCache.put("key", :updated, opts)
+      assert ExampleCache.get("key", opts) == :updated
     end
 
     test "broadcast_put puts into local cache", %{test: test} do

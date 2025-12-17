@@ -64,7 +64,7 @@ defmodule Plausible.Cache do
       alias Plausible.Cache.Adapter
       require Logger
 
-      @spec put(any(), any(), Keyword.t()) :: :ok
+      @spec put(any(), any(), Keyword.t()) :: any()
       def put(key, value, opts \\ []) do
         cache_name = Keyword.get(opts, :cache_name, name())
         Adapter.put(cache_name, key, value)
