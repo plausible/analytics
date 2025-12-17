@@ -199,8 +199,7 @@ defmodule Plausible.Goal do
         String.length(v) not in 1..Plausible.Props.max_prop_value_length()
       end) ->
         [
-          custom_props:
-            "value length is 1..#{Plausible.Props.max_prop_value_length()} characters"
+          custom_props: "value length is 1..#{Plausible.Props.max_prop_value_length()} characters"
         ]
 
       true ->
