@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-CC9B67B8.js"></script>
+    <script src="dist/sidebar_items-856508DF.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -177,12 +177,12 @@ main graph with last month or with the same month from last year.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_comparison_utc_time_range/2" data-no-tooltip translate="no">get_comparison_utc_time_range(source_query, options)</a>
+        <a href="#get_comparison_utc_time_range/1" data-no-tooltip translate="no">get_comparison_utc_time_range(source_query)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Generates a <code class="inline">DateTimeRange</code> for the comparison period by the given source query
-and comparison options.</p></div>
+        <div class="summary-synopsis"><p>Generates a <code class="inline">DateTimeRange</code> representing the comparison period of a given
+<code class="inline">%Query{}</code> struct (i.e. the <code class="inline">source_query</code>).</p></div>
 
     </div>
 
@@ -207,7 +207,7 @@ and comparison options.</p></div>
     </a>
     <h1 class="signature" translate="no">add_comparison_filters(comparison_query, main_results_list)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L70" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L82" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -229,7 +229,7 @@ as main query.</p>
     </a>
     <h1 class="signature" translate="no">get_comparison_query(source_query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L56" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L68" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -241,15 +241,15 @@ as main query.</p>
 
   </section>
 </section>
-<section class="detail" id="get_comparison_utc_time_range/2">
+<section class="detail" id="get_comparison_utc_time_range/1">
 
   <div class="detail-header">
-    <a href="#get_comparison_utc_time_range/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_comparison_utc_time_range/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">get_comparison_utc_time_range(source_query, options)</h1>
+    <h1 class="signature" translate="no">get_comparison_utc_time_range(source_query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L45" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L49" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -260,30 +260,33 @@ as main query.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_comparison_utc_time_range(<a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> get_comparison_utc_time_range(<a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>()) ::
   <a href="Plausible.Stats.DateTimeRange.html#t:t/0">Plausible.Stats.DateTimeRange.t</a>()</pre>
 
       </div>
 
-<p>Generates a <code class="inline">DateTimeRange</code> for the comparison period by the given source query
-and comparison options.</p><p>Currently only historical periods are supported for comparisons (not <code class="inline">realtime</code>
-and <code class="inline">30m</code> periods).</p><h2 id="get_comparison_utc_time_range/2-options" class="section-heading">
-  <a href="#get_comparison_utc_time_range/2-options" class="hover-link">
+<p>Generates a <code class="inline">DateTimeRange</code> representing the comparison period of a given
+<code class="inline">%Query{}</code> struct (i.e. the <code class="inline">source_query</code>).</p><p>There are different modes and options that determine the outcome of the
+resulting DateTimeRange. Those are specified under <code class="inline">source_query.include</code>.</p><p>Currently only historical periods are supported for comparisons (not <code class="inline">realtime</code>
+and <code class="inline">30m</code> periods).</p><h2 id="get_comparison_utc_time_range/1-modes-source_query-include-compare-field" class="section-heading">
+  <a href="#get_comparison_utc_time_range/1-modes-source_query-include-compare-field" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Modes (<code class="inline">source_query.include.compare</code> field)</span>
+</h2>
+<ul><li><p><code class="inline">:previous_period</code> - shifts back the query by the same number of days the
+  source query has.</p></li><li><p><code class="inline">:year_over_year</code> - shifts back the query by 1 year.</p></li><li><p><code class="inline">{:date_range, from, to}</code> - compares the query using a custom date range.</p></li></ul><h2 id="get_comparison_utc_time_range/1-options" class="section-heading">
+  <a href="#get_comparison_utc_time_range/1-options" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Options</span>
 </h2>
-<ul><li><p><code class="inline">mode</code> (required) - specifies the type of comparison and can be one of the
-following:</p><ul><li><p><code class="inline">&quot;previous_period&quot;</code> - shifts back the query by the same number of days the
-source query has.</p></li><li><p><code class="inline">&quot;year_over_year&quot;</code> - shifts back the query by 1 year.</p></li><li><p><code class="inline">&quot;custom&quot;</code> - compares the query using a custom date range. See <code class="inline">date_range</code> for
-more details.</p></li></ul></li><li><p><code class="inline">:date_range</code> - a ISO-8601 date string pair used when mode is <code class="inline">&quot;custom&quot;</code>.</p></li><li><p><code class="inline">:match_day_of_week</code> - determines whether the comparison query should be
-adjusted to match the day of the week of the source query. When this option
-is set to true, the comparison query is shifted to start on the same day of
-the week as the source query, rather than on the exact same date. For
-example, if the source query starts on Sunday, January 1st, 2023 and the
-<code class="inline">year_over_year</code> comparison query is configured to <code class="inline">match_day_of_week</code>,
-it will be shifted to start on Sunday, January 2nd, 2022 instead of
-January 1st. Defaults to false.</p></li></ul>
+<ul><li><p><code class="inline">source_query.include.compare_match_day_of_week</code></p><p>Determines whether the comparison query should be adjusted to match the
+day of the week of the source query. When this option is set to true, the
+comparison query is shifted to start on the same day of the week as the
+source query, rather than on the exact same date.</p><p>Example: if the source query starts on Sunday, January 1st, 2023 and the
+<code class="inline">year_over_year</code> comparison query is configured to <code class="inline">match_day_of_week</code>, it
+will be shifted to start on Sunday, January 2nd, 2022 instead of January 1st.</p><p>Note: this option has no effect when custom date range mode is used.</p></li></ul>
   </section>
 </section>
 
