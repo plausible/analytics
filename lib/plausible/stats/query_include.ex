@@ -11,7 +11,7 @@ defmodule Plausible.Stats.QueryInclude do
             legacy_time_on_page_cutoff: nil
 
   @type date_range_tuple() :: {:date_range, Date.t(), Date.t()}
-  @type datetime_range_tuple() :: {:date_range, DateTime.t(), DateTime.t()}
+  @type datetime_range_tuple() :: {:datetime_range, DateTime.t(), DateTime.t()}
 
   @type t() :: %__MODULE__{
           imports: boolean(),
