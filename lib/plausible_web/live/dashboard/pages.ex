@@ -101,9 +101,15 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   def render(assigns) do
     assigns = assign(assigns, :external_link_fn, &external_link/1)
+
     ~H"""
     <div>
-      <Tile.tile id="breakdown-tile-pages" title={@key_labels[@active_tab]} connected?={@connected?}>
+      <Tile.tile
+        id="breakdown-tile-pages"
+        class="group/report"
+        title={@key_labels[@active_tab]}
+        connected?={@connected?}
+      >
         <:tabs>
           <Tile.tab
             :for={{value, label} <- @tabs}

@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   use PlausibleWeb, :component
 
   attr :id, :string, required: true
+  attr :class, :string, default: ""
   attr :title, :string, required: true
   # Optimistic rendering requires preventing LV patching of
   # title and tabs. The update of those is handled by `tab` 
@@ -17,7 +18,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
 
   def tile(assigns) do
     ~H"""
-    <div data-tile id={@id}>
+    <div class={[@class, "overflow-x-hidden"]} data-tile id={@id}>
       <div class="w-full flex justify-between h-full">
         <div id={@id <> "-title"} class="flex gap-x-1" phx-update="ignore">
           <h3 data-title class="font-bold dark:text-gray-100">{@title}</h3>
