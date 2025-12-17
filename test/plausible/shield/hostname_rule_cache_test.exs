@@ -102,6 +102,29 @@ defmodule Plausible.Shield.HostnameRuleCacheTest do
     end
   end
 
+  test "handles rule deletion correctly between refreshes", %{test: test} do
+    site = insert(:site)
+    cache_opts = [force?: true, cache_name: test]
+
+    {:ok, rule1} = Shields.add_hostname_rule(site, %{"hostname" => "*example.com"})
+    {:ok, _} = Shields.add_hostname_rule(site, %{"hostname" => "another.com"})
+
+    {:ok, _} = start_test_cache(test)
+
+    :ok = HostnameRuleCache.refresh_all(cache_name: test)
+
+    assert [_, _] = HostnameRuleCache.get(site.domain, cache_opts)
+    assert HostnameRuleCache.size(test) == 2
+
+    :ok = Shields.remove_hostname_rule(site, rule1.id)
+
+    :ok = HostnameRuleCache.refresh_all(cache_name: test)
+
+    refute is_list(HostnameRuleCache.get(site.domain, cache_opts))
+    assert HostnameRuleCache.size(test) == 1
+  end
+
+
   test "get_from_source", %{test: test} do
     {:ok, _} = start_test_cache(test)
 

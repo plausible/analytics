@@ -37,4 +37,28 @@ defmodule Plausible.Cache.AdapterTest do
       assert ^iterations = Plausible.Cache.Adapter.size(name)
     end
   end
+
+  describe "ets type: bag" do
+    test "put_many/2 removes dupe keys", %{test: test} do
+      name = :bag_of_keys
+
+      {:ok, _} =
+        Supervisor.start_link(
+          Adapter.child_specs(name, name, [ets_options: [:bag]]),
+          strategy: :one_for_one,
+          name: :"cache_supervisor_#{test}"
+        )
+
+      Adapter.put_many(name, [{1, :one}, {1, :one_dupe}, {2, :two}])
+      assert Adapter.size(name) == 3
+      assert Adapter.get(name, 1) == [:one, :one_dupe]
+      assert Adapter.get(name, 2) == :two
+
+      Adapter.put_many(name, [{1, :just_one}])
+
+      assert Adapter.size(name) == 2
+      assert Adapter.get(name, 1) == :just_one
+      assert Adapter.get(name, 2) == :two
+    end
+  end
 end

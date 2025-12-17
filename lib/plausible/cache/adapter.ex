@@ -99,9 +99,13 @@ defmodule Plausible.Cache.Adapter do
   @spec put_many(atom(), [any()]) :: :ok
   def put_many(cache_name, items) when is_list(items) do
     items
-    |> Enum.group_by(fn {key, _} -> get_name(cache_name, key) end)
-    |> Enum.each(fn {full_cache_name, items} ->
-      true = :ets.insert(ConCache.ets(full_cache_name), items)
+    |> Enum.group_by(fn {key, _} -> {key, get_name(cache_name, key)} end)
+    |> Enum.each(fn {{key, full_cache_name}, items} ->
+      ets = ConCache.ets(full_cache_name)
+      if :ets.info(ets, :type) in [:bag, :duplicate_bag] do
+        :ets.delete(ets, key)
+      end
+      true = :ets.insert(ets, items)
     end)
 
     :ok

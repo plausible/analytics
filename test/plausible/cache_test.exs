@@ -116,6 +116,23 @@ defmodule Plausible.CacheTest do
       assert :item2 == ExampleCache.get("item2", cache_name: test, force?: true)
     end
 
+    test "merging leaves no dupes for :bag cache types", %{test: test} do
+      {:ok, _} = start_test_cache(test, ets_options: [:bag])
+
+      :ok =
+        ExampleCache.merge_items([{"item1", :item1}, {"item2", :item2}],
+          cache_name: test
+        )
+
+      :ok =
+        ExampleCache.merge_items([{"item1", :changed}, {"item2", :item2}],
+          cache_name: test
+        )
+
+      assert :changed == ExampleCache.get("item1", cache_name: test, force?: true)
+      assert :item2 == ExampleCache.get("item2", cache_name: test, force?: true)
+    end
+
     test "broadcast_put puts into local cache", %{test: test} do
       {:ok, _} = start_test_cache(test)
       :ok = ExampleCache.broadcast_put("item1", :item1, cache_name: test)
@@ -189,8 +206,8 @@ defmodule Plausible.CacheTest do
     apply(m, f, a)
   end
 
-  defp start_test_cache(cache_name) do
-    %{start: {m, f, a}} = ExampleCache.child_spec(cache_name: cache_name)
+  defp start_test_cache(cache_name, extra \\ Keyword.new()) do
+    %{start: {m, f, a}} = ExampleCache.child_spec(Keyword.put(extra, :cache_name, cache_name))
     apply(m, f, a)
   end
 end
