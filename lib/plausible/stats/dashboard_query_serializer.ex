@@ -4,7 +4,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
   string.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser}
+  alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser, QueryInclude}
 
   def serialize(%ParsedQueryParams{} = params) do
     params
@@ -57,7 +57,18 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
     end)
   end
 
-  defp get_serialized_fields({:include, include}) do
+  defp get_serialized_fields({:include, %QueryInclude{} = include}) do
+    [:imports, :compare, :compare_match_day_of_week]
+    |> Enum.flat_map(fn include_key ->
+      get_serialized_fields_from_include(include_key, include)
+    end)
+  end
+
+  defp get_serialized_fields(_) do
+    []
+  end
+
+  defp get_serialized_fields_from_include(:imports, %QueryInclude{} = include) do
     if include.imports == DashboardQueryParser.default_include().imports do
       []
     else
@@ -65,8 +76,30 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
     end
   end
 
-  defp get_serialized_fields(_) do
-    []
+  defp get_serialized_fields_from_include(:compare, %QueryInclude{} = include) do
+    case include.compare do
+      nil ->
+        []
+
+      mode when mode in [:previous_period, :year_over_year] ->
+        [{"comparison", to_string(mode)}]
+
+      {:date_range, from_date, to_date} ->
+        [
+          {"comparison", "custom"},
+          {"compare_from", Date.to_iso8601(from_date)},
+          {"compare_to", Date.to_iso8601(to_date)}
+        ]
+    end
+  end
+
+  defp get_serialized_fields_from_include(:compare_match_day_of_week, include) do
+    if include.compare_match_day_of_week ==
+         DashboardQueryParser.default_include().compare_match_day_of_week do
+      []
+    else
+      [{"match_day_of_week", to_string(include.compare_match_day_of_week)}]
+    end
   end
 
   # These characters are not URL encoded to have more readable URLs.

@@ -209,8 +209,8 @@ defmodule PlausibleWeb.Api.StatsController do
       sample_percent: sample_percent,
       with_imported_switch: with_imported_switch_info(meta),
       includes_imported: meta[:imports_included] == true,
-      comparing_from: query.include.comparisons && Query.date_range(comparison_query).first,
-      comparing_to: query.include.comparisons && Query.date_range(comparison_query).last,
+      comparing_from: query.include.compare && Query.date_range(comparison_query).first,
+      comparing_to: query.include.compare && Query.date_range(comparison_query).last,
       from: Query.date_range(query).first,
       to: Query.date_range(query).last
     })
@@ -298,7 +298,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_goal_realtime_top_stats(site, query) do
-    query = Query.set_include(query, :comparisons, nil)
+    query = Query.set_include(query, :compare, nil)
 
     %{
       results: %{
@@ -335,7 +335,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_realtime_top_stats(site, query) do
-    query = Query.set_include(query, :comparisons, nil)
+    query = Query.set_include(query, :compare, nil)
 
     %{
       results: %{
@@ -476,7 +476,9 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     extra_metrics =
-      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+      if params["detailed"],
+        do: [:percentage, :bounce_rate, :visit_duration],
+        else: [:percentage]
 
     metrics =
       breakdown_metrics(query,
@@ -514,7 +516,9 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     extra_metrics =
-      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+      if params["detailed"],
+        do: [:percentage, :bounce_rate, :visit_duration],
+        else: [:percentage]
 
     metrics =
       breakdown_metrics(query,
@@ -607,7 +611,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -642,7 +646,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -677,7 +681,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -712,7 +716,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -747,7 +751,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -782,7 +786,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:bounce_rate, :visit_duration],
+        extra_metrics: [:percentage, :bounce_rate, :visit_duration],
         include_revenue?: !!params["detailed"]
       )
 
@@ -874,7 +878,9 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     extra_metrics =
-      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+      if params["detailed"],
+        do: [:percentage, :bounce_rate, :visit_duration],
+        else: [:percentage]
 
     metrics =
       breakdown_metrics(query,
@@ -903,9 +909,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     extra_metrics =
       if params["detailed"] do
-        [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
+        [:percentage, :pageviews, :bounce_rate, :time_on_page, :scroll_depth]
       else
-        []
+        [:percentage]
       end
 
     metrics =
@@ -948,7 +954,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       breakdown_metrics(query,
-        extra_metrics: [:visits, :visit_duration, :bounce_rate],
+        extra_metrics: [:percentage, :visits, :visit_duration, :bounce_rate],
         include_revenue?: !!params["detailed"]
       )
 
@@ -991,9 +997,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     extra_metrics =
       if TableDecider.sessions_join_events?(query) do
-        [:visits]
+        [:percentage, :visits]
       else
-        [:visits, :exit_rate]
+        [:percentage, :visits, :exit_rate]
       end
 
     metrics =
@@ -1100,7 +1106,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:region")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, include_revenue?: !!params["detailed"])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1141,7 +1152,12 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:city")
     query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, include_revenue?: !!params["detailed"])
+
+    metrics =
+      breakdown_metrics(query,
+        extra_metrics: [:percentage],
+        include_revenue?: !!params["detailed"]
+      )
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, pagination)
 
@@ -1731,7 +1747,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def comparison_query(query) do
-    if query.include.comparisons do
+    if query.include.compare do
       Comparisons.get_comparison_query(query)
     end
   end

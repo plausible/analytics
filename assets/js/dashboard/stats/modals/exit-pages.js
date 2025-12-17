@@ -17,7 +17,7 @@ function ExitPagesModal() {
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
-    title: 'Exit Pages',
+    title: 'Exit pages',
     dimension: 'exit_page',
     endpoint: url.apiPath(site, '/exit-pages'),
     dimensionLabel: 'Page url',
@@ -64,7 +64,7 @@ function ExitPagesModal() {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',
-          width: 'w-36'
+          width: 'w-32'
         })
       ]
     }
@@ -75,7 +75,8 @@ function ExitPagesModal() {
         sortable: true
       }),
       metrics.createVisits({
-        renderLabel: (_query) => 'Total Exits',
+        renderLabel: (_query) => 'Total exits',
+        width: 'w-32',
         sortable: true
       }),
       metrics.createExitRate()

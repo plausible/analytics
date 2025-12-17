@@ -187,7 +187,7 @@ const WorldMap = ({
           path: countriesRoute.path,
           search: (search: Record<string, unknown>) => search
         }}
-        className={undefined}
+        className="mt-3"
         onClick={undefined}
       />
       {site.isDbip && <GeolocationNotice />}

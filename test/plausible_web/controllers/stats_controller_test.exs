@@ -584,10 +584,10 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert result == [
                ["property", "value", "visitors", "events", "percentage"],
                ["author", "(none)", "3", "4", "50.0"],
-               ["author", "uku", "2", "2", "33.3"],
-               ["author", "marko", "1", "1", "16.7"],
-               ["logged_in", "(none)", "5", "5", "83.3"],
-               ["logged_in", "true", "1", "2", "16.7"],
+               ["author", "uku", "2", "2", "33.33"],
+               ["author", "marko", "1", "1", "16.67"],
+               ["logged_in", "(none)", "5", "5", "83.33"],
+               ["logged_in", "true", "1", "2", "16.67"],
                [""]
              ]
     end

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef, useEffect } from 'react'
 import { Metric } from '../../../types/query-api'
 import { Tooltip } from '../../util/tooltip'
 import { ChangeArrow } from './change-arrow'
@@ -36,23 +36,84 @@ export default function MetricValue(props: {
   renderLabel: (query: DashboardQuery) => string
   formatter?: (value: ValueType) => string
   meta: BreakdownResultMeta | null
+  detailedView?: boolean
+  isRowHovered?: boolean
 }) {
   const { query } = useQueryContext()
+  const portalRef = useRef<HTMLElement | null>(null)
 
-  const { metric, listItem } = props
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      portalRef.current = document.body
+    }
+  }, [])
+
+  const { metric, listItem, detailedView = false, isRowHovered = false } = props
   const { value, comparison } = useMemo(
     () => valueRenderProps(listItem, metric),
     [listItem, metric]
   )
   const metricLabel = useMemo(() => props.renderLabel(query), [query, props])
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
+  const longFormatter = props.formatter ?? MetricFormatterLong[metric]
+
+  const isAbbreviated = useMemo(() => {
+    if (value === null) return false
+    return shortFormatter(value) !== longFormatter(value)
+  }, [value, shortFormatter, longFormatter])
+
+  const showTooltip = detailedView
+    ? !!comparison
+    : !!comparison || isAbbreviated
+
+  const shouldShowLongFormat =
+    detailedView && !comparison && isRowHovered && isAbbreviated
+  const displayFormatter = shouldShowLongFormat ? longFormatter : shortFormatter
+
+  const percentageValue = listItem['percentage' as Metric]
+  const shouldShowPercentage =
+    detailedView &&
+    metric === 'visitors' &&
+    isRowHovered &&
+    percentageValue != null
+  const percentageFormatter = MetricFormatterShort['percentage']
+  const percentageDisplay = shouldShowPercentage
+    ? percentageFormatter(percentageValue)
+    : null
 
   if (value === null && (!comparison || comparison.value === null)) {
-    return <span data-testid="metric-value">{shortFormatter(value)}</span>
+    return <span data-testid="metric-value">{displayFormatter(value)}</span>
+  }
+
+  const valueContent = (
+    <span
+      className={showTooltip ? 'cursor-default' : ''}
+      data-testid="metric-value"
+    >
+      {percentageDisplay && (
+        <span className="mr-3 text-gray-500 dark:text-gray-400">
+          {percentageDisplay}
+        </span>
+      )}
+      {displayFormatter(value)}
+      {comparison ? (
+        <ChangeArrow
+          change={comparison.change}
+          metric={metric}
+          className="inline-block pl-1 w-4"
+          hideNumber
+        />
+      ) : null}
+    </span>
+  )
+
+  if (!showTooltip) {
+    return valueContent
   }
 
   return (
     <Tooltip
+      containerRef={portalRef as React.RefObject<HTMLElement>}
       info={
         <ComparisonTooltipContent
           value={value}
@@ -62,17 +123,7 @@ export default function MetricValue(props: {
         />
       }
     >
-      <span className="cursor-default" data-testid="metric-value">
-        {shortFormatter(value)}
-        {comparison ? (
-          <ChangeArrow
-            change={comparison.change}
-            metric={metric}
-            className="inline-block pl-1 w-4"
-            hideNumber
-          />
-        ) : null}
-      </span>
+      {valueContent}
     </Tooltip>
   )
 }
@@ -106,34 +157,34 @@ function ComparisonTooltipContent({
     return (
       <div className="text-left whitespace-nowrap py-1 space-y-2">
         <div>
-          <div className="flex items-center">
-            <span className="font-bold text-base">
-              {longFormatter(value)} {label}
-            </span>
+          <div className="flex gap-x-4">
+            <div className="flex flex-col">
+              <span className="font-medium text-sm/6 text-white">
+                {longFormatter(value)} {label}
+              </span>
+              <div className="font-normal text-xs text-white">
+                {meta.date_range_label}
+              </div>
+            </div>
             <ChangeArrow
               metric={metric}
               change={comparison.change}
-              className="pl-4 text-xs text-gray-100"
+              className="text-xs/6 font-medium text-white"
             />
           </div>
-          <div className="font-normal text-xs">{meta.date_range_label}</div>
         </div>
-        <div>vs</div>
+        <div className="w-full border-t border-gray-600"></div>
         <div>
-          <div className="font-bold text-base">
+          <div className="font-medium text-sm/6 text-gray-300/80">
             {longFormatter(comparison.value)} {label}
           </div>
-          <div className="font-normal text-xs">
+          <div className="font-normal text-xs text-gray-300/80">
             {meta.comparison_date_range_label}
           </div>
         </div>
       </div>
     )
   } else {
-    return (
-      <div className="whitespace-nowrap">
-        {longFormatter(value)} {label}
-      </div>
-    )
+    return <div className="whitespace-nowrap">{longFormatter(value)}</div>
   }
 }
