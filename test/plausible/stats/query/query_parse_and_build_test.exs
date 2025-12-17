@@ -50,12 +50,13 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
     last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
   }
 
-  @default_include %{
+  @default_include %Plausible.Stats.QueryInclude{
     imports: false,
     imports_meta: false,
     time_labels: false,
     total_rows: false,
-    comparisons: nil,
+    compare: nil,
+    compare_match_day_of_week: false,
     legacy_time_on_page_cutoff: nil,
     trim_relative_date_range: false
   }
@@ -918,7 +919,8 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                          imports_meta: false,
                          time_labels: true,
                          total_rows: true,
-                         comparisons: nil,
+                         compare: nil,
+                         compare_match_day_of_week: false,
                          legacy_time_on_page_cutoff: nil,
                          trim_relative_date_range: false
                        },
@@ -951,25 +953,25 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
     end
   end
 
-  describe "include.comparisons" do
+  describe "comparisons" do
     test "not allowed in public API", %{site: site} do
       params = %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
-        "include" => %{"comparisons" => %{"mode" => "previous_period"}}
+        "include" => %{"compare" => "previous_period"}
       }
 
       assert {:error, error} = Query.parse_and_build(site, :public, params)
-      assert error == "#/include/comparisons: Schema does not allow additional properties."
+      assert error == "#/include/compare: Schema does not allow additional properties."
     end
 
-    test "mode=previous_period", %{site: site} do
+    test "previous_period", %{site: site} do
       params = %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
-        "include" => %{"comparisons" => %{"mode" => "previous_period"}}
+        "include" => %{"compare" => "previous_period"}
       }
 
       assert {:ok, query} = Query.parse_and_build(site, :internal, params)
@@ -982,9 +984,8 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                        order_by: nil,
                        timezone: ^site.timezone,
                        include: %{
-                         comparisons: %{
-                           mode: "previous_period"
-                         },
+                         compare: :previous_period,
+                         compare_match_day_of_week: false,
                          imports: false,
                          imports_meta: false,
                          time_labels: false,
@@ -996,12 +997,12 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                      } = query
     end
 
-    test "mode=year_over_year", %{site: site} do
+    test "year_over_year with match_day_of_week", %{site: site} do
       params = %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
-        "include" => %{"comparisons" => %{"mode" => "year_over_year"}}
+        "include" => %{"compare" => "year_over_year", "compare_match_day_of_week" => true}
       }
 
       assert {:ok, query} = Query.parse_and_build(site, :internal, params)
@@ -1014,9 +1015,8 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                        order_by: nil,
                        timezone: ^site.timezone,
                        include: %{
-                         comparisons: %{
-                           mode: "year_over_year"
-                         },
+                         compare: :year_over_year,
+                         compare_match_day_of_week: true,
                          imports: false,
                          imports_meta: false,
                          time_labels: false,
@@ -1028,14 +1028,12 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                      } = query
     end
 
-    test "mode=custom", %{site: site} do
+    test "with custom date range", %{site: site} do
       params = %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
-        "include" => %{
-          "comparisons" => %{"mode" => "custom", "date_range" => ["2021-04-05", "2021-05-04"]}
-        }
+        "include" => %{"compare" => ["2021-04-05", "2021-05-04"]}
       }
 
       assert {:ok, query} = Query.parse_and_build(site, :internal, params)
@@ -1048,10 +1046,8 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                        order_by: nil,
                        timezone: ^site.timezone,
                        include: %{
-                         comparisons: %{
-                           mode: "custom",
-                           date_range: ^@date_range_30d
-                         },
+                         compare: {:date_range, ~D[2021-04-05], ~D[2021-05-04]},
+                         compare_match_day_of_week: false,
                          imports_meta: false,
                          imports: false,
                          time_labels: false,
@@ -1063,37 +1059,18 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                      } = query
     end
 
-    test "mode=custom without date_range is invalid", %{site: site} do
+    test "invalid compare", %{site: site} do
       params = %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
-        "include" => %{"comparisons" => %{"mode" => "custom"}}
+        "include" => %{"compare" => "2024-01-01"}
       }
 
       assert {:error, error} = Query.parse_and_build(site, :internal, params)
 
       assert error ==
-               "#/include/comparisons: Expected exactly one of the schemata to match, but none of them did."
-    end
-
-    test "mode=previous_period with date_range is invalid", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "include" => %{
-          "comparisons" => %{
-            "mode" => "previous_period",
-            "date_range" => ["2024-01-01", "2024-01-31"]
-          }
-        }
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
-
-      assert error ==
-               "#/include/comparisons: Expected exactly one of the schemata to match, but none of them did."
+               "#/include/compare: Expected exactly one of the schemata to match, but none of them did."
     end
   end
 

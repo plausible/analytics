@@ -95,7 +95,7 @@ defmodule Plausible.Workers.SendEmailReport do
           "site_id" => site.domain,
           "metrics" => ["pageviews", "visitors", "bounce_rate"],
           "date_range" => date_range,
-          "include" => %{"comparisons" => %{"mode" => "previous_period"}},
+          "include" => %{"compare" => "previous_period"},
           "pagination" => %{"limit" => 5}
         }
       )

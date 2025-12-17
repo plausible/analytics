@@ -68,47 +68,21 @@
           "default": false,
           "description": "If set and using `day`, `month` or `year` date_ranges, the query will be trimmed to the current date"
         },
-        "comparisons": {
+        "compare": {
           "$comment": "only :internal",
-          "type": "object",
           "oneOf": [
-            {
-              "properties": {
-                "mode": {
-                  "type": "string",
-                  "enum": ["previous_period", "year_over_year"]
-                },
-                "match_day_of_week": {
-                  "type": "boolean",
-                  "default": false,
-                  "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
-                }
-              },
-              "required": ["mode"],
-              "additionalProperties": false
-            },
-            {
-              "properties": {
-                "mode": {
-                  "const": "custom"
-                },
-                "match_day_of_week": {
-                  "type": "boolean",
-                  "default": false,
-                  "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
-                },
-                "date_range": {
-                  "oneOf": [
-                    { "$ref": "#/definitions/date_time_range" },
-                    { "$ref": "#/definitions/date_range" }
-                  ],
-                  "description": "If custom period. A list of two ISO8601 dates or timestamps to compare against."
-                }
-              },
-              "required": ["mode", "date_range"],
-              "additionalProperties": false
-            }
-          ]
+            { "$ref": "#/definitions/date_range" },
+            { "$ref": "#/definitions/comparison_mode" },
+            false
+          ],
+          "default": false,
+          "description": "If set, executes the same query but over a comparison date range"
+        },
+        "compare_match_day_of_week": {
+          "$comment": "only :internal",
+          "type": "boolean",
+          "default": false,
+          "description": "With the `compare` option, if set and using time:day dimensions, day-of-week of comparison query is matched"
         }
       }
     },
@@ -229,6 +203,18 @@
           "type": "string",
           "pattern": "^\\d+mo$",
           "description": "Last n months relative to this month"
+        }
+      ]
+    },
+    "comparison_mode": {
+      "oneOf": [
+        {
+          "const": "previous_period",
+          "description": "Comparison date range shortcut - shift back the original query date range by its length"
+        },
+        {
+          "const": "year_over_year",
+          "description": "Comparison date range shortcut - shift back the original query date range by a year"
         }
       ]
     },

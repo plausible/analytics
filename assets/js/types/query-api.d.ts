@@ -157,6 +157,7 @@ export type OrderByEntry = [
   Metric | SimpleFilterDimensions | CustomPropertyFilterDimensions | TimeDimensions,
   "asc" | "desc"
 ];
+export type ComparisonMode = "previous_period" | "year_over_year";
 
 export interface QueryApiSchema {
   /**
@@ -197,25 +198,14 @@ export interface QueryApiSchema {
      * If set and using `day`, `month` or `year` date_ranges, the query will be trimmed to the current date
      */
     trim_relative_date_range?: boolean;
-    comparisons?:
-      | {
-          mode: "previous_period" | "year_over_year";
-          /**
-           * If set and using time:day dimensions, day-of-week of comparison query is matched
-           */
-          match_day_of_week?: boolean;
-        }
-      | {
-          mode: "custom";
-          /**
-           * If set and using time:day dimensions, day-of-week of comparison query is matched
-           */
-          match_day_of_week?: boolean;
-          /**
-           * If custom period. A list of two ISO8601 dates or timestamps to compare against.
-           */
-          date_range: DateTimeRange | DateRange;
-        };
+    /**
+     * If set, executes the same query but over a comparison date range
+     */
+    compare?: DateRange | ComparisonMode | never;
+    /**
+     * With the `compare` option, if set and using time:day dimensions, day-of-week of comparison query is matched
+     */
+    compare_match_day_of_week?: boolean;
   };
   pagination?: {
     /**

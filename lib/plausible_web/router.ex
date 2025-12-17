@@ -331,12 +331,6 @@ defmodule PlausibleWeb.Router do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
-
-    if Mix.env() in [:test, :ce_test] do
-      scope assigns: %{schema_type: :internal} do
-        post "/query-internal-test", ExternalQueryApiController, :query
-      end
-    end
   end
 
   scope "/api/docs", PlausibleWeb.Api do

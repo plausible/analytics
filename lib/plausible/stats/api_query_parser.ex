@@ -3,15 +3,16 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Metrics, DateTimeRange, JSONSchema}
+  alias Plausible.Stats.{Filters, Metrics, JSONSchema}
 
-  @default_include %{
+  @default_include %Plausible.Stats.QueryInclude{
     imports: false,
     imports_meta: false,
     time_labels: false,
     total_rows: false,
     trim_relative_date_range: false,
-    comparisons: nil,
+    compare: nil,
+    compare_match_day_of_week: false,
     legacy_time_on_page_cutoff: nil
   }
 
@@ -42,21 +43,6 @@ defmodule Plausible.Stats.ApiQueryParser do
          pagination: pagination,
          include: include
        })}
-    end
-  end
-
-  def parse_date_range_pair(site, [from, to]) when is_binary(from) and is_binary(to) do
-    with {:ok, date_range} <- date_range_from_date_strings(site, from, to) do
-      {:ok, date_range |> DateTimeRange.to_timezone("Etc/UTC")}
-    end
-  end
-
-  def parse_date_range_pair(_site, unknown), do: {:error, "Invalid date_range '#{i(unknown)}'."}
-
-  defp date_range_from_date_strings(site, from, to) do
-    with {:ok, from_date} <- Date.from_iso8601(from),
-         {:ok, to_date} <- Date.from_iso8601(to) do
-      {:ok, DateTimeRange.new!(from_date, to_date, site.timezone)}
     end
   end
 
@@ -275,35 +261,42 @@ defmodule Plausible.Stats.ApiQueryParser do
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
   def parse_include(include) when is_map(include) do
-    with {:ok, include} <- atomize_include_keys(include),
-         {:ok, include} <- parse_comparison_date_range(include) do
-      {:ok, Map.merge(@default_include, include)}
+    parsed_include_params_or_error =
+      include
+      |> Enum.reduce_while({:ok, []}, fn {key, value}, {:ok, acc} ->
+        case parse_include_entry(key, value) do
+          {:ok, parsed_tuple} -> {:cont, {:ok, acc ++ [parsed_tuple]}}
+          {:error, msg} -> {:halt, {:error, msg}}
+        end
+      end)
+
+    with {:ok, parsed_include_params} <- parsed_include_params_or_error do
+      {:ok, struct!(@default_include, parsed_include_params)}
     end
   end
 
   def parse_include(nil), do: {:ok, @default_include}
   def parse_include(include), do: {:error, "Invalid include '#{i(include)}'."}
 
-  defp atomize_include_keys(map) do
-    expected_keys =
-      @default_include
-      |> Map.keys()
-      |> Enum.map(&Atom.to_string/1)
+  @allowed_include_keys Enum.map(Map.keys(@default_include), &Atom.to_string/1)
 
-    if Map.keys(map) |> Enum.all?(&(&1 in expected_keys)) do
-      {:ok, atomize_keys(map)}
-    else
-      {:error, "Invalid include '#{i(map)}'."}
+  defp parse_include_entry("compare", value) do
+    with {:ok, parsed_compare} <- parse_compare(value) do
+      {:ok, {:compare, parsed_compare}}
     end
   end
 
-  defp parse_comparison_date_range(%{comparisons: %{date_range: date_range}} = include) do
-    with {:ok, parsed_date_range} <- parse_input_date_range(date_range) do
-      {:ok, put_in(include, [:comparisons, :date_range], parsed_date_range)}
-    end
+  defp parse_include_entry(key, value) when key in @allowed_include_keys do
+    {:ok, {String.to_existing_atom(key), value}}
   end
 
-  defp parse_comparison_date_range(include), do: {:ok, include}
+  defp parse_include_entry(key, _value), do: {:error, "Invalid include key'#{i(key)}'."}
+
+  defp parse_compare(false), do: {:ok, nil}
+  defp parse_compare("previous_period"), do: {:ok, :previous_period}
+  defp parse_compare("year_over_year"), do: {:ok, :year_over_year}
+  defp parse_compare([from_date, to_date]), do: parse_date_strings(from_date, to_date)
+  defp parse_compare(compare), do: {:error, "Invalid include.compare '#{i(compare)}'."}
 
   defp parse_pagination(pagination) when is_map(pagination) do
     {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
