@@ -5,14 +5,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
   alias Plausible.Stats.{Query, DateTimeRange, Filters}
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
-  @date_range_realtime %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
-  }
-  @date_range_30m %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
-  }
   @date_range_day %DateTimeRange{
     first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
@@ -1315,35 +1307,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                          include: ^@default_include,
                          pagination: %{limit: 10_000, offset: 0}
                        } = query
-      end
-    end
-
-    for {shortcut, expected_date_range} <- [
-          {"30m", @date_range_30m},
-          {"realtime", @date_range_realtime}
-        ] do
-      test "'#{shortcut}' shortcut is available only in the internal API schema", %{site: site} do
-        params = %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors", "events"],
-          "date_range" => unquote(shortcut)
-        }
-
-        assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-        assert_matches %Query{
-                         metrics: [:visitors, :events],
-                         utc_time_range: ^unquote(Macro.escape(expected_date_range)),
-                         filters: [],
-                         dimensions: [],
-                         order_by: nil,
-                         timezone: ^site.timezone,
-                         include: ^@default_include,
-                         pagination: %{limit: 10_000, offset: 0}
-                       } = query
-
-        assert {:error, error} = Query.parse_and_build(site, :public, params)
-        assert error == "#/date_range: Invalid date range \"#{unquote(shortcut)}\""
       end
     end
 
