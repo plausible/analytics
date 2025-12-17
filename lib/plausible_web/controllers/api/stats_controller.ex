@@ -1616,24 +1616,25 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp validate_required_filters_plug(conn, _opts) do
-    if conn.assigns.shared_link && conn.assigns.shared_link.segment_id do
-      segment_id = conn.assigns.shared_link.segment_id
+  defp validate_required_filters_plug(
+         %Plug.Conn{assigns: %{shared_link: %Plausible.Site.SharedLink{segment_id: segment_id}}} =
+           conn,
+         _opts
+       )
+       when is_integer(segment_id) do
+    case ensure_expected_segment_filter_present(conn.params, segment_id) do
+      :ok ->
+        conn
 
-      case ensure_expected_segment_filter_present(conn.params, segment_id) do
-        :ok ->
-          conn
-
-        :error ->
-          bad_request(
-            conn,
-            "The first filter must be for the segment with id #{segment_id}"
-          )
-      end
-    else
-      conn
+      :error ->
+        bad_request(
+          conn,
+          "The first filter must be for the segment with id #{segment_id}"
+        )
     end
   end
+
+  defp validate_required_filters_plug(conn, _opts), do: conn
 
   defp ensure_expected_segment_filter_present(
          %{"filters" => filters} = _params,
