@@ -1,9 +1,7 @@
-defmodule PlausibleWeb.TrackerScriptCache do
+defmodule Plausible.Site.TrackerScriptCache do
   @moduledoc """
-  Cache for tracker script.
-
-  On self-hosted instances, we cache the entire tracker script.
-  On EE instances, we cache valid tracker script ids to avoid database lookups.
+  Caches the full tracker script.
+  Must be refreshed whenever the TrackerScriptConfiguration associated with the script changes.
   """
   alias Plausible.Site.TrackerScriptConfiguration
   alias PlausibleWeb.Tracker
@@ -20,16 +18,10 @@ defmodule PlausibleWeb.TrackerScriptCache do
   @impl true
   def child_id(), do: :cache_tracker_script
 
-  on_ee do
-    @doc "Caches that the config exists"
-    def cache_content(%TrackerScriptConfiguration{} = _tracker_script_configuration), do: true
-  else
-    @doc "Caches the full tracker script"
-    def cache_content(
-          %TrackerScriptConfiguration{site: %{domain: _domain}} = tracker_script_configuration
-        ),
-        do: Tracker.build_script(tracker_script_configuration)
-  end
+  def cache_content(
+        %TrackerScriptConfiguration{site: %{domain: _domain}} = tracker_script_configuration
+      ),
+      do: Tracker.build_script(tracker_script_configuration)
 
   @impl true
   def count_all() do

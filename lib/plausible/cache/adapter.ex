@@ -64,6 +64,10 @@ defmodule Plausible.Cache.Adapter do
       nil
   end
 
+  def ets(cache_name) do
+    ConCache.ets(cache_name)
+  end
+
   @spec get(atom(), any(), (-> any())) :: any()
   def get(cache_name, key, fallback_fn) do
     full_cache_name = get_name(cache_name, key)

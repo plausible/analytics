@@ -23,13 +23,13 @@ defmodule PlausibleWeb.Tracker do
       # 2. If it is, generate the script on the fly
       #
       # Note that EE is relying on CDN caching the script
-      if PlausibleWeb.TrackerScriptCache.get(id, cache_opts) do
+      if Plausible.Site.TrackerScriptIdCache.get(id, cache_opts) do
         get_tracker_script_configuration_by_id(id)
         |> build_script()
       end
     else
       # On self-hosted, we have a pre-warmed cache for the script
-      PlausibleWeb.TrackerScriptCache.get(id, cache_opts)
+      Plausible.Site.TrackerScriptCache.get(id, cache_opts)
     end
   end
 
@@ -68,11 +68,18 @@ defmodule PlausibleWeb.Tracker do
 
   def build_script(nil), do: nil
 
-  defp broadcast_script_upsert(tracker_script_configuration) do
-    PlausibleWeb.TrackerScriptCache.broadcast_put(
-      tracker_script_configuration.id,
-      PlausibleWeb.TrackerScriptCache.cache_content(tracker_script_configuration)
-    )
+  on_ee do
+    defp broadcast_script_insert(tracker_script_configuration),
+      do: Plausible.Site.TrackerScriptIdCache.broadcast_put(tracker_script_configuration.id, true)
+  end
+
+  on_ce do
+    defp broadcast_script_upsert(tracker_script_configuration),
+      do:
+        Plausible.Site.TrackerScriptCache.put(
+          tracker_script_configuration.id,
+          Plausible.Site.TrackerScriptCache.cache_content(tracker_script_configuration)
+        )
   end
 
   def update_script_configuration(site, config_update, changeset_type) do
@@ -148,7 +155,12 @@ defmodule PlausibleWeb.Tracker do
                maybe_reload_tracker_script_configuration(created_config) do
           sync_goals(site, %{}, reloaded_config)
 
-          :ok = broadcast_script_upsert(reloaded_config)
+          on_ee do
+            :ok = broadcast_script_insert(reloaded_config)
+          else
+            :ok = broadcast_script_upsert(reloaded_config)
+          end
+
           {:ok, reloaded_config}
         end
       end)

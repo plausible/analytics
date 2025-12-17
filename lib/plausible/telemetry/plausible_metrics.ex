@@ -55,7 +55,12 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         ),
         distribution(
           metric_prefix ++ [:cache_warmer, :tracker_script, :refresh, :all],
-          event_name: PlausibleWeb.TrackerScriptCache.telemetry_event_refresh(:all),
+          event_name:
+            on_ee do
+              Plausible.Site.TrackerScriptIdCache.telemetry_event_refresh(:all)
+            else
+              Plausible.Site.TrackerScriptCache.telemetry_event_refresh(:all)
+            end,
           reporter_options: [
             buckets: [500, 1000, 2000, 5000, 10_000]
           ],
@@ -64,7 +69,12 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         ),
         distribution(
           metric_prefix ++ [:cache_warmer, :tracker_script, :refresh, :updated_recently],
-          event_name: PlausibleWeb.TrackerScriptCache.telemetry_event_refresh(:updated_recently),
+          event_name:
+            on_ee do
+              Plausible.Site.TrackerScriptIdCache.telemetry_event_refresh(:updated_recently)
+            else
+              Plausible.Site.TrackerScriptCache.telemetry_event_refresh(:updated_recently)
+            end,
           reporter_options: [
             buckets: [500, 1000, 2000, 5000, 10_000]
           ],
