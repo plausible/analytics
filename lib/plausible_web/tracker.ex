@@ -74,12 +74,14 @@ defmodule PlausibleWeb.Tracker do
   end
 
   on_ce do
-    defp broadcast_script_upsert(tracker_script_configuration),
-      do:
-        Plausible.Site.TrackerScriptCache.put(
-          tracker_script_configuration.id,
-          Plausible.Site.TrackerScriptCache.cache_content(tracker_script_configuration)
-        )
+    defp broadcast_script_upsert(tracker_script_configuration) do
+      case Plausible.Site.TrackerScriptCache.put(
+             tracker_script_configuration.id,
+             Plausible.Site.TrackerScriptCache.cache_content(tracker_script_configuration)
+           ) do
+        script when is_binary(script) -> :ok
+      end
+    end
   end
 
   def update_script_configuration(site, config_update, changeset_type) do
