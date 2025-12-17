@@ -136,7 +136,8 @@ defmodule Plausible.Stats.DashboardQueryParser do
     end
   end
 
-  defp decode_clauses(clauses, "segment") do
+  @dimensions_with_integer_clauses ["segment", "visit:city"]
+  defp decode_clauses(clauses, dimension) when dimension in @dimensions_with_integer_clauses do
     Enum.reduce_while(clauses, {:ok, []}, fn clause, {:ok, acc} ->
       case Integer.parse(clause) do
         {int, ""} -> {:cont, {:ok, acc ++ [int]}}
