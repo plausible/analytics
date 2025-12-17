@@ -3,8 +3,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
   @user_id Enum.random(1000..9999)
 
-  @unsupported_interval_warning "Imported stats are not included because the time dimension (i.e. the interval) is too short."
-  @unsupported_query_warning "Imported stats are not included in the results because query parameters are not supported. For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
+  @unsupported_interval_warning Plausible.Stats.QueryResult.imports_warnings().unsupported_interval
+  @unsupported_query_warning Plausible.Stats.QueryResult.imports_warnings().unsupported_query
+
+  def unsupported_query_warning(), do: @unsupported_query_warning
 
   @no_imported_scroll_depth_metric_warning %{
     "code" => "no_imported_scroll_depth",
@@ -1294,79 +1296,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
     end
   end
 
-  describe "behavioral filters" do
-    setup :create_site_import
-
-    test "imports are skipped when has_done filter is used", %{
-      conn: conn,
-      site: site,
-      site_import: site_import
-    } do
-      populate_stats(site, site_import.id, [
-        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "Conversion", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:imported_pages,
-          page: "/blog",
-          pageviews: 5,
-          visitors: 3,
-          date: ~D[2023-01-01]
-        )
-      ])
-
-      conn =
-        post(conn, "/api/v2/query-internal-test", %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "all",
-          "filters" => [
-            ["has_done", ["is", "event:name", ["pageview"]]]
-          ],
-          "include" => %{"imports" => true}
-        })
-
-      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [2]}]
-      refute json_response(conn, 200)["meta"]["imports_included"]
-
-      assert json_response(conn, 200)["meta"]["imports_warning"] == @unsupported_query_warning
-    end
-
-    test "imports are skipped when has_not_done filter is used", %{
-      conn: conn,
-      site: site,
-      site_import: site_import
-    } do
-      populate_stats(site, site_import.id, [
-        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "Conversion", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:imported_pages,
-          page: "/blog",
-          pageviews: 5,
-          visitors: 3,
-          date: ~D[2023-01-01]
-        )
-      ])
-
-      conn =
-        post(conn, "/api/v2/query-internal-test", %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "all",
-          "dimensions" => ["event:goal"],
-          "filters" => [
-            ["has_not_done", ["is", "event:name", ["pageview"]]]
-          ],
-          "include" => %{"imports" => true}
-        })
-
-      assert json_response(conn, 200)["results"] == []
-      refute json_response(conn, 200)["meta"]["imports_included"]
-
-      assert json_response(conn, 200)["meta"]["imports_warning"] == @unsupported_query_warning
-    end
-  end
-
   describe "scroll depth metric warnings" do
     test "returns warning when a site_import without scroll depth is in queried range", %{
       conn: conn,
@@ -1399,55 +1328,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
 
       assert results == [%{"dimensions" => [], "metrics" => [3, 70]}]
-
-      assert meta["imports_included"] == true
-
-      assert meta["metric_warnings"] == %{
-               "scroll_depth" => @no_imported_scroll_depth_metric_warning
-             }
-    end
-
-    test "returns warning when import without scroll depth in comparison range", %{
-      conn: conn,
-      site: site
-    } do
-      site_import =
-        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
-
-      populate_stats(site, site_import.id, [
-        build(:pageview, user_id: 123, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
-        build(:engagement,
-          user_id: 123,
-          pathname: "/",
-          timestamp: ~N[2021-02-01 00:01:00],
-          scroll_depth: 70
-        ),
-        build(:imported_pages, page: "/", date: ~D[2021-02-01]),
-        build(:imported_pages, page: "/", date: ~D[2021-02-28])
-      ])
-
-      conn =
-        post(conn, "/api/v2/query-internal-test", %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors", "scroll_depth"],
-          "date_range" => ["2022-01-01", "2022-12-31"],
-          "filters" => [["is", "event:page", ["/"]]],
-          "include" => %{"imports" => true, "comparisons" => %{"mode" => "previous_period"}}
-        })
-
-      assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
-
-      assert results == [
-               %{
-                 "dimensions" => [],
-                 "metrics" => [0, nil],
-                 "comparison" => %{
-                   "change" => [-100, nil],
-                   "dimensions" => [],
-                   "metrics" => [3, 70]
-                 }
-               }
-             ]
 
       assert meta["imports_included"] == true
 

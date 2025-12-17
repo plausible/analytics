@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> preload_goals_and_revenue(site)
       |> put_consolidated_site_ids(site)
       |> put_order_by(params)
-      |> put_include(site, params)
+      |> put_include(params)
       |> QueryBuilder.put_comparison_utc_time_range()
       |> Query.put_imported_opts(site)
       |> QueryBuilder.set_time_on_page_data(site)
@@ -233,12 +233,13 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
   end
 
-  defp put_include(query, site, params) do
+  defp put_include(query, params) do
     include = parse_include(params["include"])
 
     query
     |> struct!(include: include)
-    |> Query.set_include(:comparisons, parse_comparison_params(site, params))
+    |> Query.set_include(:compare, parse_include_compare(params))
+    |> Query.set_include(:compare_match_day_of_week, params["match_day_of_week"] == "true")
     |> Query.set_include(:imports, params["with_imported"] == "true")
   end
 
@@ -325,34 +326,20 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
   end
 
-  def parse_comparison_params(_site, %{"period" => period}) when period in ~w(realtime all),
+  defp parse_include_compare(%{"period" => period}) when period in ~w(realtime all),
     do: nil
 
-  def parse_comparison_params(_site, %{"comparison" => mode} = params)
-      when mode in ["previous_period", "year_over_year"] do
-    %{
-      mode: mode,
-      match_day_of_week: params["match_day_of_week"] == "true"
-    }
+  defp parse_include_compare(%{"comparison" => "previous_period"}), do: :previous_period
+  defp parse_include_compare(%{"comparison" => "year_over_year"}), do: :year_over_year
+
+  # Stats API v1
+  defp parse_include_compare(%{"compare" => "previous_period"}), do: :previous_period
+
+  defp parse_include_compare(%{"comparison" => "custom"} = params) do
+    from_date = Date.from_iso8601!(params["compare_from"])
+    to_date = Date.from_iso8601!(params["compare_to"])
+    {:date_range, from_date, to_date}
   end
 
-  def parse_comparison_params(site, %{"comparison" => "custom"} = params) do
-    {:ok, date_range} =
-      ApiQueryParser.parse_date_range_pair(site, [
-        params["compare_from"],
-        params["compare_to"]
-      ])
-
-    %{
-      mode: "custom",
-      date_range: date_range,
-      match_day_of_week: params["match_day_of_week"] == "true"
-    }
-  end
-
-  def parse_comparison_params(_site, %{"compare" => "previous_period"}) do
-    %{mode: "previous_period"}
-  end
-
-  def parse_comparison_params(_site, _options), do: nil
+  defp parse_include_compare(_options), do: nil
 end

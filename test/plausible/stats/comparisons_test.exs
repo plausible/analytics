@@ -435,7 +435,7 @@ defmodule Plausible.Stats.ComparisonsTest do
             "site_id" => site.domain,
             "metrics" => ["pageviews"],
             "date_range" => ["2024-01-01", "2024-02-01"],
-            "include" => %{"comparisons" => %{"mode" => "previous_period"}}
+            "include" => %{"compare" => "previous_period"}
           },
           params
         )
