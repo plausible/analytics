@@ -113,7 +113,7 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
   end
 
   describe "filters" do
-    test "serializes multiple filters" do
+    test "serializes multiple is filters" do
       serialized =
         serialize(%ParsedQueryParams{
           filters: [
@@ -125,6 +125,19 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
         })
 
       assert serialized == "f=is,exit_page,/:dashboard&f=is,source,Bing&f=is,props:theme,system"
+    end
+
+    test "serializes filters with integer clauses" do
+      serialized =
+        serialize(%ParsedQueryParams{
+          filters: [
+            [:is, "segment", [123, 456, 789]],
+            [:is, "visit:city", [2_950_159]]
+          ],
+          include: @default_include
+        })
+
+      assert serialized == "f=is,segment,123,456,789&f=is,city,2950159"
     end
 
     test "serializes empty filters" do

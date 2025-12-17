@@ -51,7 +51,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
   defp get_serialized_fields({:filters, [_ | _] = filters}) do
     filters
     |> Enum.map(fn [operator, dimension, clauses] ->
-      clauses = Enum.map_join(clauses, ",", &uri_encode_permissive/1)
+      clauses = Enum.map_join(clauses, ",", &custom_uri_encode/1)
       dimension = String.split(dimension, ":", parts: 2) |> List.last()
       {"f", "#{operator},#{dimension},#{clauses}"}
     end)
@@ -109,8 +109,11 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
   @do_not_url_encode_map Enum.into(@do_not_url_encode, %{}, fn char ->
                            {URI.encode_www_form(char), char}
                          end)
+  defp custom_uri_encode(input) when is_integer(input) do
+    to_string(input)
+  end
 
-  defp uri_encode_permissive(input) do
+  defp custom_uri_encode(input) do
     input
     |> URI.encode_www_form()
     |> String.replace(Map.keys(@do_not_url_encode_map), &@do_not_url_encode_map[&1])
