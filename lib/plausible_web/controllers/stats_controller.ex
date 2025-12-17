@@ -406,7 +406,7 @@ defmodule PlausibleWeb.StatsController do
       not Teams.locked?(shared_link.site.team) ->
         current_user = conn.assigns[:current_user]
         site_role = get_fallback_site_role(conn)
-        shared_link = Plausible.Repo.preload(shared_link, site: [:owners], segment: [])
+        shared_link = Plausible.Repo.preload(shared_link, :segment, site: [:owners])
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
         flags = get_flags(current_user, shared_link.site)
