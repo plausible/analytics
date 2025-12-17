@@ -102,9 +102,11 @@ defmodule Plausible.Cache.Adapter do
     |> Enum.group_by(fn {key, _} -> {key, get_name(cache_name, key)} end)
     |> Enum.each(fn {{key, full_cache_name}, items} ->
       ets = ConCache.ets(full_cache_name)
+
       if :ets.info(ets, :type) in [:bag, :duplicate_bag] do
         :ets.delete(ets, key)
       end
+
       true = :ets.insert(ets, items)
     end)
 

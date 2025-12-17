@@ -124,7 +124,6 @@ defmodule Plausible.Shield.HostnameRuleCacheTest do
     assert HostnameRuleCache.size(test) == 1
   end
 
-
   test "get_from_source", %{test: test} do
     {:ok, _} = start_test_cache(test)
 

@@ -44,7 +44,7 @@ defmodule Plausible.Cache.AdapterTest do
 
       {:ok, _} =
         Supervisor.start_link(
-          Adapter.child_specs(name, name, [ets_options: [:bag]]),
+          Adapter.child_specs(name, name, ets_options: [:bag]),
           strategy: :one_for_one,
           name: :"cache_supervisor_#{test}"
         )
