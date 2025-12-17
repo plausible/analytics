@@ -20,7 +20,7 @@ function EntryPagesModal() {
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
-    title: 'Entry Pages',
+    title: 'Entry pages',
     dimension: 'entry_page',
     endpoint: url.apiPath(site, '/entry-pages'),
     dimensionLabel: 'Entry page',
@@ -67,7 +67,7 @@ function EntryPagesModal() {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',
-          width: 'w-36'
+          width: 'w-32'
         })
       ]
     }
@@ -75,8 +75,8 @@ function EntryPagesModal() {
     return [
       metrics.createVisitors({ renderLabel: (_query) => 'Visitors' }),
       metrics.createVisits({
-        renderLabel: (_query) => 'Total Entrances',
-        width: 'w-36'
+        renderLabel: (_query) => 'Total entrances',
+        width: 'w-32'
       }),
       metrics.createBounceRate(),
       metrics.createVisitDuration()

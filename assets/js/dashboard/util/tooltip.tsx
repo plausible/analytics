@@ -26,16 +26,14 @@ export function Tooltip({
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
     null
   )
-  const [arrowElement, setArrowElement] = useState<HTMLDivElement | null>(null)
 
   const { styles, attributes } = usePopper(referenceElement, popperElement, {
     placement: 'top',
     modifiers: [
-      { name: 'arrow', options: { element: arrowElement } },
       {
         name: 'offset',
         options: {
-          offset: [0, 4]
+          offset: [0, 6]
         }
       },
       ...(boundary
@@ -67,8 +65,6 @@ export function Tooltip({
           popperStyle={styles.popper}
           popperAttributes={attributes.popper}
           setPopperElement={setPopperElement}
-          setArrowElement={setArrowElement}
-          arrowStyle={styles.arrow}
         >
           {info}
         </TooltipMessage>
@@ -82,16 +78,12 @@ function TooltipMessage({
   popperStyle,
   popperAttributes,
   setPopperElement,
-  setArrowElement,
-  arrowStyle,
   children
 }: {
   containerRef?: RefObject<HTMLElement>
   popperStyle: CSSProperties
-  arrowStyle: CSSProperties
   popperAttributes?: Record<string, string>
   setPopperElement: (element: HTMLDivElement) => void
-  setArrowElement: (element: HTMLDivElement) => void
   children: ReactNode
 }) {
   const messageElement = (
@@ -99,15 +91,10 @@ function TooltipMessage({
       ref={setPopperElement}
       style={popperStyle}
       {...popperAttributes}
-      className="z-50 p-2 rounded-sm text-sm text-gray-100 font-bold bg-gray-800 dark:bg-gray-700"
+      className="z-[999] px-2 py-1 rounded-sm text-sm text-gray-100 font-medium bg-gray-800 dark:bg-gray-700"
       role="tooltip"
     >
       {children}
-      <div
-        ref={setArrowElement}
-        style={arrowStyle}
-        className="tooltip-arrow"
-      ></div>
     </div>
   )
   if (containerRef) {
