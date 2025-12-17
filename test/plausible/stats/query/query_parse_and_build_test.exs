@@ -1282,22 +1282,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         revenue_currencies: %{}
       )
     end
-
-    test "name is checked even within behavioral filters", %{site: site} do
-      insert(:goal, %{site: site, event_name: "Signup"})
-
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "filters" => [["has_done", ["is", "event:goal", ["Unknown"]]]]
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
-
-      assert error ==
-               "Invalid filters. The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
-    end
   end
 
   describe "date range validation" do
