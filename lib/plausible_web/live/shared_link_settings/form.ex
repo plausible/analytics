@@ -58,7 +58,6 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
       >
         <PlausibleWeb.Components.Generic.toggle_field
           id="limit-view"
-          id_suffix=""
           js_active_var="limitViewEnabled"
           label="Limit to segment"
           help_text="Restrict this link to a segment of the data."
@@ -106,7 +105,6 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
       >
         <PlausibleWeb.Components.Generic.toggle_field
           id="password-protect"
-          id_suffix=""
           js_active_var="passwordProtectEnabled"
           label="Password protect"
           help_text="Keep this password safe. You won't be able to see it again."
@@ -137,7 +135,6 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
       >
         <PlausibleWeb.Components.Generic.toggle_field
           id="limit-view"
-          id_suffix=""
           js_active_var="limitViewEnabled"
           label="Limit to segment"
           help_text="Restrict this link to a segment of the data."
