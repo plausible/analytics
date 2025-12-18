@@ -33,12 +33,11 @@ const TabButtonText = ({
 }) => (
   <span
     className={classNames(
-      '-mb-px pb-4 truncate text-left text-xs uppercase transition-colors duration-150',
+      'truncate text-left text-xs uppercase transition-colors duration-150',
       {
         'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-semibold cursor-pointer':
           !active,
-        'border-b-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]':
-          active
+        'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]': active
       }
     )}
   >
@@ -57,12 +56,18 @@ export const TabButton = ({
   onClick: () => void
   active: boolean
 }) => (
-  <button
-    className={classNames('flex rounded-sm', className)}
-    onClick={onClick}
+  <div
+    className={classNames('-mb-px pb-4', {
+      'border-b-2 border-gray-900 dark:border-gray-100': active
+    })}
   >
-    <TabButtonText active={active}>{children}</TabButtonText>
-  </button>
+    <button
+      className={classNames('flex rounded-sm', className)}
+      onClick={onClick}
+    >
+      <TabButtonText active={active}>{children}</TabButtonText>
+    </button>
+  </div>
 )
 
 export const DropdownTabButton = ({
@@ -84,16 +89,22 @@ export const DropdownTabButton = ({
       {({ close: closeDropdown }) => (
         <>
           <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
-          <Popover.Button
-            className="inline-flex justify-between rounded-xs"
-            ref={dropdownButtonRef}
+          <div
+            className={classNames('-mb-px pb-4', {
+              'border-b-2 border-gray-900 dark:border-gray-100': active
+            })}
           >
-            <TabButtonText active={active}>{children}</TabButtonText>
+            <Popover.Button
+              className="inline-flex justify-between rounded-xs"
+              ref={dropdownButtonRef}
+            >
+              <TabButtonText active={active}>{children}</TabButtonText>
 
-            <div className="ml-1 pb-4" aria-hidden="true">
-              <ChevronDownIcon className="size-4" />
-            </div>
-          </Popover.Button>
+              <div className="ml-1" aria-hidden="true">
+                <ChevronDownIcon className="size-4" />
+              </div>
+            </Popover.Button>
+          </div>
 
           <Transition
             as="div"
@@ -167,9 +178,7 @@ const Items = ({ options, searchable, closeDropdown }: ItemsProps) => {
         </div>
       )}
       <div
-        className={
-          'max-h-[224px] overflow-y-scroll flex flex-col gap-y-0.5 p-1'
-        }
+        className={'max-h-[224px] overflow-y-auto flex flex-col gap-y-0.5 p-1'}
       >
         {showableData.map(({ selected, label, onClick }, index) => {
           return (

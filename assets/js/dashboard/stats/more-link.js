@@ -28,7 +28,19 @@ export default function MoreLink({ linkProps, list, onClick, loading }) {
     }
   }, [])
 
-  if (!list || list.length === 0 || !linkProps || loading) {
+  const baseClassName =
+    'flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150'
+  const icon = detailsIcon()
+
+  if (loading) {
+    return (
+      <Tooltip info="View details" containerRef={portalRef}>
+        <div className={baseClassName}>{icon}</div>
+      </Tooltip>
+    )
+  }
+
+  if (!list || list.length === 0 || !linkProps) {
     return null
   }
 
@@ -36,10 +48,10 @@ export default function MoreLink({ linkProps, list, onClick, loading }) {
     <Tooltip info="View details" containerRef={portalRef}>
       <AppNavigationLink
         {...linkProps}
-        className="flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
+        className={baseClassName}
         onClick={onClick}
       >
-        {detailsIcon()}
+        {icon}
       </AppNavigationLink>
     </Tooltip>
   )
