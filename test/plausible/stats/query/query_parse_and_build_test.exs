@@ -115,7 +115,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
+      assert {:ok, query} = Query.parse_and_build(site, :public, params)
 
       assert_matches %Query{
                        metrics: [
@@ -641,7 +641,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           "filters" => [[unquote(operator), []]]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :internal, params)
+        assert {:error, error} = Query.parse_and_build(site, :public, params)
         assert error == "#/filters/0: Invalid filter [\"#{unquote(operator)}\", []]"
       end
     end
@@ -1931,7 +1931,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
+      assert {:error, error} = Query.parse_and_build(site, :public, params)
 
       assert error ==
                "Metric `scroll_depth` can only be queried with event:page filters or dimensions."
@@ -1945,7 +1945,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["not", ["is", "event:page", ["/"]]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
+      assert {:error, error} = Query.parse_and_build(site, :public, params)
 
       assert error ==
                "Metric `scroll_depth` can only be queried with event:page filters or dimensions."
@@ -1959,7 +1959,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:page", ["/"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
+      assert {:ok, query} = Query.parse_and_build(site, :public, params)
 
       assert_matches %Query{
                        metrics: [:scroll_depth],
@@ -1981,7 +1981,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:page"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
+      assert {:ok, query} = Query.parse_and_build(site, :public, params)
 
       assert_matches %Query{
                        metrics: [:scroll_depth],
@@ -2119,7 +2119,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
+      assert {:error, error} = Query.parse_and_build(site, :public, params)
 
       assert error ==
                "Metric `time_on_page` can only be queried with event:page filters or dimensions."
