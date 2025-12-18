@@ -56,6 +56,65 @@ defmodule Plausible.Stats.QueryBuilderTest do
   end
 
   describe "filter validation" do
+    for operation <- [
+          :is,
+          :is_not,
+          :matches_wildcard,
+          :matches_wildcard_not,
+          :matches,
+          :matches_not,
+          :contains,
+          :contains_not
+        ] do
+      test "valid simple #{operation} filter passes validation", %{site: site} do
+        params = %ParsedQueryParams{
+          metrics: [:visitors],
+          input_date_range: :all,
+          filters: [[unquote(operation), "event:name", ["foo"]]]
+        }
+
+        assert {:ok, query} = QueryBuilder.build(site, params)
+
+        assert_matches %Query{filters: [[^unquote(operation), "event:name", ["foo"]]]} = query
+      end
+
+      test "valid complex nested #{operation} filter passes validation", %{site: site} do
+        params = %ParsedQueryParams{
+          metrics: [:visitors],
+          input_date_range: :all,
+          filters: [
+            [
+              :not,
+              [
+                :and,
+                [
+                  [unquote(operation), "event:name", ["foo"]],
+                  [unquote(operation), "event:name", ["bar"]]
+                ]
+              ]
+            ]
+          ]
+        }
+
+        assert {:ok, query} = QueryBuilder.build(site, params)
+
+        assert_matches %Query{
+                         filters: [
+                           [
+                             :not,
+                             [
+                               :and,
+                               [
+                                 [unquote(operation), "event:name", ["foo"]],
+                                 [unquote(operation), "event:name", ["bar"]]
+                               ]
+                             ]
+                           ]
+                         ]
+                       } = query
+      end
+    end
+
     test "event goal name is checked within behavioral filters", %{site: site} do
       insert(:goal, %{site: site, event_name: "Signup"})
 

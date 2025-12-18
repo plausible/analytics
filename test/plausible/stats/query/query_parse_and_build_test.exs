@@ -163,8 +163,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
     for operation <- [
           :is,
           :is_not,
-          :matches_wildcard,
-          :matches_wildcard_not,
           :matches,
           :matches_not,
           :contains,
@@ -180,7 +178,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:ok, query} = Query.parse_and_build(site, :internal, params)
+        assert {:ok, query} = Query.parse_and_build(site, :public, params)
 
         assert_matches %Query{
                          metrics: [:visitors],
@@ -206,7 +204,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :internal, params)
+        assert {:error, error} = Query.parse_and_build(site, :public, params)
 
         assert error ==
                  "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:name\", \"foo\"]"
