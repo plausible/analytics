@@ -16,7 +16,7 @@ export const TabWrapper = ({
 }) => (
   <div
     className={classNames(
-      'flex items-baseline gap-x-3 text-xs font-medium text-gray-500 dark:text-gray-400',
+      'flex items-baseline gap-x-3.5 text-xs font-medium text-gray-500 dark:text-gray-400',
       className
     )}
   >
@@ -32,14 +32,11 @@ const TabButtonText = ({
   active: boolean
 }) => (
   <span
-    className={classNames(
-      'truncate text-left text-xs uppercase transition-colors duration-150',
-      {
-        'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-semibold cursor-pointer':
-          !active,
-        'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]': active
-      }
-    )}
+    className={classNames('truncate text-left text-xs uppercase', {
+      'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200 font-semibold cursor-pointer':
+        !active,
+      'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]': active
+    })}
   >
     {children}
   </span>
@@ -62,7 +59,7 @@ export const TabButton = ({
     })}
   >
     <button
-      className={classNames('flex rounded-sm', className)}
+      className={classNames('group/tab flex rounded-sm', className)}
       onClick={onClick}
     >
       <TabButtonText active={active}>{children}</TabButtonText>
@@ -95,13 +92,19 @@ export const DropdownTabButton = ({
             })}
           >
             <Popover.Button
-              className="inline-flex justify-between rounded-xs"
+              className="group/tab inline-flex justify-between rounded-xs"
               ref={dropdownButtonRef}
             >
               <TabButtonText active={active}>{children}</TabButtonText>
 
-              <div className="ml-1" aria-hidden="true">
-                <ChevronDownIcon className="size-4" />
+              <div className="ml-0.5 -mr-1" aria-hidden="true">
+                <ChevronDownIcon
+                  className={classNames('size-4', {
+                    'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200':
+                      !active,
+                    'text-gray-900 dark:text-gray-100': active
+                  })}
+                />
               </div>
             </Popover.Button>
           </div>
