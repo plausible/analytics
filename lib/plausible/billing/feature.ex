@@ -254,22 +254,3 @@ defmodule Plausible.Billing.Feature.Teams do
     end
   end
 end
-
-defmodule Plausible.Billing.Feature.GoalsWithCustomProps do
-  @moduledoc "This feature is a hybrid state consisting of two separate features and is not manageable on its own"
-  use Plausible.Billing.Feature,
-    name: :goals_with_custom_props,
-    display_name: "Goals With Custom Properties"
-
-  @impl true
-  def check_availability(team_or_nil) do
-    allowed_features = Plausible.Teams.Billing.allowed_features_for(team_or_nil)
-
-    if Plausible.Billing.Feature.Goals in allowed_features and
-         Plausible.Billing.Feature.Props in allowed_features do
-      :ok
-    else
-      {:error, :upgrade_required}
-    end
-  end
-end

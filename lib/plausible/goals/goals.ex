@@ -402,9 +402,11 @@ defmodule Plausible.Goals do
   end
 
   defp custom_props_goals_access_check(site, changeset) do
+    # leaky, even though Goals and Props are separate features,
+    # in case of goals equipped with custom props, we need to check this
     if map_size(Changeset.get_field(changeset, :custom_props)) > 0 do
       site = Plausible.Repo.preload(site, :team)
-      Plausible.Billing.Feature.GoalsWithCustomProps.check_availability(site.team)
+      Plausible.Billing.Feature.Props.check_availability(site.team)
     else
       :ok
     end
