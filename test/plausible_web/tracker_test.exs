@@ -4,7 +4,6 @@ defmodule PlausibleWeb.TrackerTest do
 
   alias Plausible.Site.TrackerScriptConfiguration
   alias PlausibleWeb.Tracker
-  alias PlausibleWeb.TrackerScriptCache
 
   @example_config %{
     installation_type: :manual,
@@ -183,14 +182,36 @@ defmodule PlausibleWeb.TrackerTest do
     )
   end
 
-  defp start_test_cache(cache_name) do
-    opts = [cache_name: cache_name, force?: true]
+  on_ee do
+    defp start_test_cache(cache_name) do
+      opts = [cache_name: cache_name, force?: true]
 
-    %{start: {m, f, a}} = TrackerScriptCache.child_spec(cache_name: cache_name)
-    {:ok, _} = apply(m, f, a)
-    TrackerScriptCache.refresh_all(opts)
+      %{start: {m, f, a}} =
+        Plausible.Site.TrackerScriptIdCache.child_spec(
+          cache_name: cache_name,
+          ets_options: [read_concurrency: true]
+        )
 
-    opts
+      {:ok, _} = apply(m, f, a)
+      Plausible.Site.TrackerScriptIdCache.refresh_all(opts)
+
+      opts
+    end
+  else
+    defp start_test_cache(cache_name) do
+      opts = [cache_name: cache_name, force?: true]
+
+      %{start: {m, f, a}} =
+        Plausible.Site.TrackerScriptCache.child_spec(
+          cache_name: cache_name,
+          ets_options: [read_concurrency: true]
+        )
+
+      {:ok, _} = apply(m, f, a)
+      Plausible.Site.TrackerScriptCache.refresh_all(opts)
+
+      opts
+    end
   end
 
   defp attach_query_counter() do
