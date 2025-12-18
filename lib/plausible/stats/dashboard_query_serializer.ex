@@ -6,18 +6,18 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
 
   alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser, QueryInclude}
 
-  def serialize(%ParsedQueryParams{} = params) do
+  def serialize(%ParsedQueryParams{} = params, segments) do
     params
     |> Map.to_list()
-    |> Enum.flat_map(&get_serialized_fields/1)
+    |> Enum.flat_map(fn pair -> get_serialized_fields(pair, segments) end)
     |> Enum.sort_by(&elem(&1, 0))
     |> Enum.map_join("&", fn {key, value} -> "#{key}=#{value}" end)
   end
 
-  defp get_serialized_fields({_, nil}), do: []
-  defp get_serialized_fields({_, []}), do: []
+  defp get_serialized_fields({_, nil}, _segments), do: []
+  defp get_serialized_fields({_, []}, _segments), do: []
 
-  defp get_serialized_fields({:input_date_range, {:date_range, from_date, to_date}}) do
+  defp get_serialized_fields({:input_date_range, {:date_range, from_date, to_date}}, _segments) do
     [
       {"period", "custom"},
       {"from", Date.to_iso8601(from_date)},
@@ -25,7 +25,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
     ]
   end
 
-  defp get_serialized_fields({:input_date_range, input_date_range}) do
+  defp get_serialized_fields({:input_date_range, input_date_range}, _segments) do
     period =
       case input_date_range do
         :realtime -> "realtime"
@@ -44,29 +44,22 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
     [{"period", period}]
   end
 
-  defp get_serialized_fields({:relative_date, date}) do
+  defp get_serialized_fields({:relative_date, date}, _segments) do
     [{"date", Date.to_iso8601(date)}]
   end
 
-  defp get_serialized_fields({:filters, [_ | _] = filters}) do
-    filters
-    |> Enum.map(fn [operator, dimension, clauses] ->
-      clauses = Enum.map_join(clauses, ",", &custom_uri_encode/1)
-      dimension = String.split(dimension, ":", parts: 2) |> List.last()
-      {"f", "#{operator},#{dimension},#{clauses}"}
-    end)
+  defp get_serialized_fields({:filters, [_ | _] = filters}, segments) do
+    serialize_filters(filters) ++ serialize_labels(filters, segments)
   end
 
-  defp get_serialized_fields({:include, %QueryInclude{} = include}) do
+  defp get_serialized_fields({:include, %QueryInclude{} = include}, _segments) do
     [:imports, :compare, :compare_match_day_of_week]
     |> Enum.flat_map(fn include_key ->
       get_serialized_fields_from_include(include_key, include)
     end)
   end
 
-  defp get_serialized_fields(_) do
-    []
-  end
+  defp get_serialized_fields(_, _), do: []
 
   defp get_serialized_fields_from_include(:imports, %QueryInclude{} = include) do
     if include.imports == DashboardQueryParser.default_include().imports do
@@ -100,6 +93,52 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
     else
       [{"match_day_of_week", to_string(include.compare_match_day_of_week)}]
     end
+  end
+
+  defp serialize_filters(filters) do
+    filters
+    |> Enum.map(fn [operator, dimension, clauses] ->
+      clauses = Enum.map_join(clauses, ",", &custom_uri_encode/1)
+      dimension = String.split(dimension, ":", parts: 2) |> List.last()
+      {"f", "#{operator},#{dimension},#{clauses}"}
+    end)
+  end
+
+  # This is needed by the React dashboard during the migration phase.
+  # In Elixir, we can do cheap location/segment lookups but React needs
+  # URL labels to be able translate filters into a human-readable form.
+  # E.g. `f=is,city,2950159&l=2950159,Berlin`.
+  defp serialize_labels(filters, segments) do
+    Enum.flat_map(filters, fn filter -> labels_for(filter, segments) end)
+  end
+
+  defp labels_for([_operator, dimension, clauses], segments) do
+    name_lookup_fn =
+      case dimension do
+        "visit:country" ->
+          &Location.get_country/1
+
+        "visit:region" ->
+          &Location.get_subdivision/1
+
+        "visit:city" ->
+          &Location.get_city/1
+
+        "segment" ->
+          fn segment_id ->
+            Enum.find(segments, &(&1.id == segment_id))
+          end
+
+        _ ->
+          fn _ -> nil end
+      end
+
+    Enum.reduce(clauses, [], fn code, acc ->
+      case name_lookup_fn.(code) do
+        %{name: name} -> acc ++ [{"l", "#{code},#{name}"}]
+        nil -> acc
+      end
+    end)
   end
 
   # These characters are not URL encoded to have more readable URLs.
