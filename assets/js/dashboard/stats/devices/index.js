@@ -191,7 +191,7 @@ function OperatingSystems({ afterFetchData }) {
       metrics.createVisitors({ meta: { plot: true } }),
       !hasConversionGoalFilter(query) &&
         metrics.createPercentage({
-          meta: { showOnHover: true, hiddenOnMobile: true }
+          meta: { showOnHover: true }
         }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
