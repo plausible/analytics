@@ -1,14 +1,17 @@
 import React, { useEffect, useCallback } from 'react'
 import FadeIn from '../../fade-in'
 import Bar from '../bar'
-import MoreLink from '../more-link'
 import { numberShortFormatter } from '../../util/number-formatter'
 import RocketIcon from '../modals/rocket-icon'
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
-import { referrersGoogleRoute } from '../../router'
 import { useQueryContext } from '../../query-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
+import { TabButton, TabWrapper } from '../../components/tabs'
+import { useMoreLinkData } from '../../hooks/use-more-link-data'
+import MoreLink from '../more-link'
 
 interface SearchTerm {
   name: string
@@ -74,6 +77,7 @@ function ConfigureSearchTermsCTA({
 export function SearchTerms() {
   const site = useSiteContext()
   const { query } = useQueryContext()
+  const { listData, linkProps, listLoading } = useMoreLinkData()
 
   const [loading, setLoading] = React.useState(true)
   const [errorPayload, setErrorPayload] = React.useState<null | ErrorPayload>(
@@ -143,15 +147,6 @@ export function SearchTerms() {
                 </span>
               </div>
             ))}
-          <MoreLink
-            list={searchTerms}
-            linkProps={{
-              path: referrersGoogleRoute.path,
-              search: (search: Record<string, unknown>) => search
-            }}
-            className="w-full mt-3"
-            onClick={undefined}
-          />
         </React.Fragment>
       )
     }
@@ -186,8 +181,23 @@ export function SearchTerms() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
+    <ReportLayout>
+      <ReportHeader>
+        <div className="flex gap-x-3">
+          <TabWrapper>
+            <TabButton active={true} onClick={() => {}}>
+              Search terms
+            </TabButton>
+          </TabWrapper>
+        </div>
+        <MoreLink
+          list={listData}
+          linkProps={linkProps}
+          loading={listLoading}
+          className=""
+          onClick={undefined}
+        />
+      </ReportHeader>
       <div className="relative grow">
         {loading && (
           <div className="absolute inset-0 flex justify-center items-center">
@@ -204,6 +214,6 @@ export function SearchTerms() {
           </LazyLoader>
         </FadeIn>
       </div>
-    </div>
+    </ReportLayout>
   )
 }

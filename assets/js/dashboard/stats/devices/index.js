@@ -12,6 +12,9 @@ import * as url from '../../util/url'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
+import { TabButton, TabWrapper } from '../../components/tabs'
 import {
   browsersRoute,
   browserVersionsRoute,
@@ -19,7 +22,8 @@ import {
   operatingSystemVersionsRoute,
   screenSizesRoute
 } from '../../router'
-import { TabButton, TabWrapper } from '../../components/tabs'
+import { useMoreLinkData } from '../../hooks/use-more-link-data'
+import MoreLink from '../more-link'
 
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
@@ -55,7 +59,7 @@ export function browserIconFor(browser) {
   )
 }
 
-function Browsers({ afterFetchData }) {
+function Browsers({ afterFetchData, onListUpdate }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   function fetchData() {
@@ -94,11 +98,12 @@ function Browsers({ afterFetchData }) {
         path: browsersRoute.path,
         search: (search) => search
       }}
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function BrowserVersions({ afterFetchData }) {
+function BrowserVersions({ afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -140,6 +145,7 @@ function BrowserVersions({ afterFetchData }) {
         path: browserVersionsRoute.path,
         search: (search) => search
       }}
+      onListUpdate={onListUpdate}
     />
   )
 }
@@ -172,7 +178,7 @@ export function osIconFor(os) {
   )
 }
 
-function OperatingSystems({ afterFetchData }) {
+function OperatingSystems({ afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -213,11 +219,12 @@ function OperatingSystems({ afterFetchData }) {
         path: operatingSystemsRoute.path,
         search: (search) => search
       }}
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function OperatingSystemVersions({ afterFetchData }) {
+function OperatingSystemVersions({ afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
 
@@ -260,11 +267,12 @@ function OperatingSystemVersions({ afterFetchData }) {
         path: operatingSystemVersionsRoute.path,
         search: (search) => search
       }}
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function ScreenSizes({ afterFetchData }) {
+function ScreenSizes({ afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
 
@@ -297,13 +305,14 @@ function ScreenSizes({ afterFetchData }) {
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
-      keyLabel="Screen size"
+      keyLabel="Device"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
       detailsLinkProps={{
         path: screenSizesRoute.path,
         search: (search) => search
       }}
+      onListUpdate={onListUpdate}
     />
   )
 }
@@ -392,6 +401,52 @@ export function screenSizeIconFor(screenSize) {
         <line x1="12" y1="17" x2="12" y2="21" />
       </svg>
     )
+  } else if (screenSize === 'Ultra-wide') {
+    svg = (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="-mt-px feather"
+      >
+        <rect x="1" y="4" width="22" height="12" rx="2" ry="2" />
+        <line x1="6" y1="20" x2="18" y2="20" />
+        <line x1="12" y1="16" x2="12" y2="20" />
+      </svg>
+    )
+  } else if (screenSize === '(not set)') {
+    svg = (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        className="-mt-px feather"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <circle cx="12" cy="17.25" r="1.25" />
+        <path
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          d="M9.244 8.369c.422-1.608 1.733-2.44 3.201-2.364 1.45.075 2.799.872 2.737 2.722-.089 2.63-2.884 2.273-3.197 4.773h.011"
+        />
+      </svg>
+    )
   }
 
   return <span className="mr-1.5">{svg}</span>
@@ -406,10 +461,13 @@ export default function Devices() {
   const [mode, setMode] = useState(storedTab || 'browser')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const { onListUpdate, listData, linkProps, listLoading, reset } =
+    useMoreLinkData()
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
     setMode(mode)
+    reset()
   }
 
   function afterFetchData(apiResponse) {
@@ -418,53 +476,87 @@ export default function Devices() {
   }
 
   useEffect(() => setLoading(true), [query, mode])
+  useEffect(() => {
+    reset()
+  }, [query, mode, reset])
 
   function renderContent() {
     switch (mode) {
       case 'browser':
         if (isFilteringOnFixedValue(query, 'browser')) {
-          return <BrowserVersions afterFetchData={afterFetchData} />
+          return (
+            <BrowserVersions
+              afterFetchData={afterFetchData}
+              onListUpdate={onListUpdate}
+            />
+          )
         }
-        return <Browsers afterFetchData={afterFetchData} />
+        return (
+          <Browsers
+            afterFetchData={afterFetchData}
+            onListUpdate={onListUpdate}
+          />
+        )
       case 'os':
         if (isFilteringOnFixedValue(query, 'os')) {
-          return <OperatingSystemVersions afterFetchData={afterFetchData} />
+          return (
+            <OperatingSystemVersions
+              afterFetchData={afterFetchData}
+              onListUpdate={onListUpdate}
+            />
+          )
         }
-        return <OperatingSystems afterFetchData={afterFetchData} />
+        return (
+          <OperatingSystems
+            afterFetchData={afterFetchData}
+            onListUpdate={onListUpdate}
+          />
+        )
       case 'size':
       default:
-        return <ScreenSizes afterFetchData={afterFetchData} />
+        return (
+          <ScreenSizes
+            afterFetchData={afterFetchData}
+            onListUpdate={onListUpdate}
+          />
+        )
     }
   }
 
   return (
-    <div className="group/report overflow-x-hidden">
-      <div className="flex justify-between w-full">
-        <div className="flex gap-x-1">
-          <h3 className="font-bold dark:text-gray-100">Devices</h3>
+    <ReportLayout className="overflow-x-hidden">
+      <ReportHeader>
+        <div className="flex gap-x-3">
+          <TabWrapper>
+            {[
+              { label: 'Browsers', value: 'browser' },
+              { label: 'Operating systems', value: 'os' },
+              { label: 'Devices', value: 'size' }
+            ].map(({ label, value }) => (
+              <TabButton
+                key={value}
+                active={mode === value}
+                onClick={() => switchTab(value)}
+              >
+                {label}
+              </TabButton>
+            ))}
+          </TabWrapper>
           <ImportedQueryUnsupportedWarning
             loading={loading}
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <TabWrapper>
-          {[
-            { label: 'Browser', value: 'browser' },
-            { label: 'OS', value: 'os' },
-            { label: 'Size', value: 'size' }
-          ].map(({ label, value }) => (
-            <TabButton
-              key={value}
-              active={mode === value}
-              onClick={() => switchTab(value)}
-            >
-              {label}
-            </TabButton>
-          ))}
-        </TabWrapper>
-      </div>
+        <MoreLink
+          list={listData}
+          linkProps={linkProps}
+          loading={listLoading}
+          className=""
+          onClick={undefined}
+        />
+      </ReportHeader>
       {renderContent()}
-    </div>
+    </ReportLayout>
   )
 }
 

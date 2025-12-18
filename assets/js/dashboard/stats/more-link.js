@@ -1,11 +1,11 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
+import { Tooltip } from '../util/tooltip'
 
 function detailsIcon() {
   return (
     <svg
-      className="feather mr-1"
-      style={{ marginTop: '-2px' }}
+      className="feather"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
@@ -19,20 +19,34 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({ linkProps, list, className, onClick }) {
-  if (list.length > 0) {
-    return (
-      <div className={`w-full text-center ${className ? className : ''}`}>
-        <AppNavigationLink
-          {...linkProps}
-          className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 tracking-wide"
-          onClick={onClick}
-        >
-          {detailsIcon()}
-          DETAILS
-        </AppNavigationLink>
-      </div>
-    )
+export default function MoreLink({
+  linkProps,
+  list,
+  className,
+  onClick,
+  loading
+}) {
+  const portalRef = useRef(null)
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      portalRef.current = document.body
+    }
+  }, [])
+
+  if (!list || list.length === 0 || !linkProps || loading) {
+    return null
   }
-  return null
+
+  return (
+    <Tooltip info="View details" containerRef={portalRef}>
+      <AppNavigationLink
+        {...linkProps}
+        className="flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
+        onClick={onClick}
+      >
+        {detailsIcon()}
+      </AppNavigationLink>
+    </Tooltip>
+  )
 }

@@ -170,7 +170,7 @@ export const SiteSwitcher = () => {
           <Popover.Button
             ref={buttonRef}
             className={classNames(
-              'flex items-center rounded h-9 leading-5 font-bold dark:text-gray-100',
+              'flex items-center rounded h-9 text-sm leading-5 font-semibold dark:text-gray-100',
               'hover:bg-gray-100 dark:hover:bg-gray-800'
             )}
             title={currentSite.domain}
@@ -188,7 +188,7 @@ export const SiteSwitcher = () => {
                 ? 'All sites'
                 : currentSite.domain}
             </span>
-            <ChevronDownIcon className="hidden lg:block h-5 w-5 ml-2 dark:text-gray-100" />
+            <ChevronDownIcon className="hidden lg:block size-4 ml-2 dark:text-gray-100" />
           </Popover.Button>
           <Transition
             as="div"

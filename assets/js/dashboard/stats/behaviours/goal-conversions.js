@@ -41,7 +41,7 @@ export function specialTitleWhenGoalFilter(query, defaultTitle) {
   return getSpecialGoal(query)?.title || defaultTitle
 }
 
-function SpecialPropBreakdown({ prop, afterFetchData }) {
+function SpecialPropBreakdown({ prop, afterFetchData, onListUpdate }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
 
@@ -95,11 +95,16 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
       getExternalLinkUrl={getExternalLinkUrlFactory()}
       color="bg-red-50"
       colMinWidth={90}
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-export default function GoalConversions({ afterFetchData, onGoalFilterClick }) {
+export default function GoalConversions({
+  afterFetchData,
+  onGoalFilterClick,
+  onListUpdate
+}) {
   const { query } = useQueryContext()
 
   const specialGoal = getSpecialGoal(query)
@@ -108,6 +113,7 @@ export default function GoalConversions({ afterFetchData, onGoalFilterClick }) {
       <SpecialPropBreakdown
         prop={specialGoal.prop}
         afterFetchData={afterFetchData}
+        onListUpdate={onListUpdate}
       />
     )
   } else {
@@ -115,6 +121,7 @@ export default function GoalConversions({ afterFetchData, onGoalFilterClick }) {
       <Conversions
         onGoalFilterClick={onGoalFilterClick}
         afterFetchData={afterFetchData}
+        onListUpdate={onListUpdate}
       />
     )
   }

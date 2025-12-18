@@ -12,8 +12,6 @@ import { useQueryContext } from '../../query-context'
 import worldJson from 'visionscarto-world-atlas/world/110m.json'
 import { UIMode, useTheme } from '../../theme-context'
 import { apiPath } from '../../util/url'
-import MoreLink from '../more-link'
-import { countriesRoute } from '../../router'
 import { MIN_HEIGHT } from '../reports/list'
 import { MapTooltip } from './map-tooltip'
 import { GeolocationNotice } from './geolocation-notice'
@@ -31,10 +29,15 @@ type WorldJsonCountryData = { properties: { name: string; a3: string } }
 
 const WorldMap = ({
   onCountrySelect,
-  afterFetchData
+  afterFetchData,
+  onDataUpdate
 }: {
   onCountrySelect: () => void
   afterFetchData: (response: unknown) => void
+  onDataUpdate?: (
+    data: { results: CountryData[] } | null,
+    loading: boolean
+  ) => void
 }) => {
   const navigate = useAppNavigate()
   const { mode } = useTheme()
@@ -78,7 +81,10 @@ const WorldMap = ({
     if (data) {
       afterFetchData(data)
     }
-  }, [afterFetchData, data])
+    if (onDataUpdate) {
+      onDataUpdate(data ?? null, isFetching)
+    }
+  }, [afterFetchData, data, isFetching, onDataUpdate])
 
   const { maxValue, dataByCountryCode } = useMemo(() => {
     const dataByCountryCode: Map<string, CountryData> = new Map()
@@ -148,10 +154,12 @@ const WorldMap = ({
     : undefined
 
   return (
-    <div className="flex flex-col relative" style={{ minHeight: MIN_HEIGHT }}>
-      <div className="mt-4" />
+    <div
+      className="flex flex-col justify-center items-center relative"
+      style={{ minHeight: MIN_HEIGHT }}
+    >
       <div
-        className="relative mx-auto w-full"
+        className="relative mt-4 mx-auto w-full"
         style={{ height: height, maxWidth: width }}
       >
         <svg
@@ -179,23 +187,14 @@ const WorldMap = ({
             </div>
           ))}
       </div>
-      <MoreLink
-        list={data?.results ?? []}
-        linkProps={{
-          path: countriesRoute.path,
-          search: (search: Record<string, unknown>) => search
-        }}
-        className="mt-3"
-        onClick={undefined}
-      />
       {site.isDbip && <GeolocationNotice />}
     </div>
   )
 }
 
 const colorScales = {
-  [UIMode.dark]: ['#2e3954', '#6366f1'],
-  [UIMode.light]: ['#f5f3ff', '#a78bfa']
+  [UIMode.dark]: ['#1e1b4b', '#6366f1'], // indigo-950, indigo-500
+  [UIMode.light]: ['#f5f7ff', '#818cf8'] // custom color lighter than indigo-50, indigo-400
 }
 
 const sharedCountryClass = classNames('transition-colors')
@@ -203,19 +202,19 @@ const sharedCountryClass = classNames('transition-colors')
 const countryClass = classNames(
   sharedCountryClass,
   'stroke-1',
-  'fill-[#fafafa]',
-  'stroke-[#dae1e7]',
-  'dark:fill-[#323236]',
-  'dark:stroke-[#18181b]'
+  'fill-gray-150',
+  'stroke-white',
+  'dark:fill-gray-750',
+  'dark:stroke-gray-900'
 )
 
 const highlightedCountryClass = classNames(
   sharedCountryClass,
-  'stroke-2',
-  'fill-[#f4f4f5]',
-  'stroke-[#a78bfa]',
-  'dark:fill-[#3f3f46]',
-  'dark:stroke-[#6366f1]'
+  'stroke-[1.5px]',
+  'fill-gray-150',
+  'stroke-indigo-400',
+  'dark:fill-gray-750',
+  'dark:stroke-indigo-500'
 )
 
 /**

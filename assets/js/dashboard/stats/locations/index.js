@@ -15,9 +15,12 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
+import MoreLink from '../more-link'
 
-function Countries({ query, site, onClick, afterFetchData }) {
+function Countries({ query, site, onClick, afterFetchData, onListUpdate }) {
   function fetchData() {
     return api.get(apiPath(site, '/countries'), query, { limit: 9 })
   }
@@ -57,11 +60,12 @@ function Countries({ query, site, onClick, afterFetchData }) {
       }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function Regions({ query, site, onClick, afterFetchData }) {
+function Regions({ query, site, onClick, afterFetchData, onListUpdate }) {
   function fetchData() {
     return api.get(apiPath(site, '/regions'), query, { limit: 9 })
   }
@@ -98,11 +102,12 @@ function Regions({ query, site, onClick, afterFetchData }) {
       detailsLinkProps={{ path: regionsRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function Cities({ query, site, afterFetchData }) {
+function Cities({ query, site, afterFetchData, onListUpdate }) {
   function fetchData() {
     return api.get(apiPath(site, '/cities'), query, { limit: 9 })
   }
@@ -138,14 +143,9 @@ function Cities({ query, site, afterFetchData }) {
       detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
+      onListUpdate={onListUpdate}
     />
   )
-}
-
-const labelFor = {
-  countries: 'Countries',
-  regions: 'Regions',
-  cities: 'Cities'
 }
 
 class Locations extends React.Component {
@@ -154,12 +154,19 @@ class Locations extends React.Component {
     this.onCountryFilter = this.onCountryFilter.bind(this)
     this.onRegionFilter = this.onRegionFilter.bind(this)
     this.afterFetchData = this.afterFetchData.bind(this)
+    this.onListUpdate = this.onListUpdate.bind(this)
+    this.onMapDataUpdate = this.onMapDataUpdate.bind(this)
     this.tabKey = `geoTab__${props.site.domain}`
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'map',
       loading: true,
-      skipImportedReason: null
+      skipImportedReason: null,
+      listData: null,
+      linkProps: null,
+      listLoading: true,
+      mapData: null,
+      mapLoading: true
     }
   }
 
@@ -190,8 +197,23 @@ class Locations extends React.Component {
   setMode(mode) {
     return () => {
       storage.setItem(this.tabKey, mode)
-      this.setState({ mode })
+      this.setState({
+        mode,
+        listData: null,
+        linkProps: null,
+        listLoading: true,
+        mapData: null,
+        mapLoading: true
+      })
     }
+  }
+
+  onListUpdate(list, linkProps, loading) {
+    this.setState({ listData: list, linkProps, listLoading: loading })
+  }
+
+  onMapDataUpdate(data, loading) {
+    this.setState({ mapData: data, mapLoading: loading })
   }
 
   onCountryFilter(mode) {
@@ -220,6 +242,7 @@ class Locations extends React.Component {
             site={this.props.site}
             query={this.props.query}
             afterFetchData={this.afterFetchData}
+            onListUpdate={this.onListUpdate}
           />
         )
       case 'regions':
@@ -229,6 +252,7 @@ class Locations extends React.Component {
             site={this.props.site}
             query={this.props.query}
             afterFetchData={this.afterFetchData}
+            onListUpdate={this.onListUpdate}
           />
         )
       case 'countries':
@@ -238,6 +262,7 @@ class Locations extends React.Component {
             site={this.props.site}
             query={this.props.query}
             afterFetchData={this.afterFetchData}
+            onListUpdate={this.onListUpdate}
           />
         )
       case 'map':
@@ -246,43 +271,72 @@ class Locations extends React.Component {
           <CountriesMap
             onCountrySelect={this.onCountryFilter('map')}
             afterFetchData={this.afterFetchData}
+            onDataUpdate={this.onMapDataUpdate}
           />
         )
     }
   }
 
+  getMoreLink() {
+    if (this.state.mode === 'map') {
+      const data = this.state.mapData?.results ?? []
+      return (
+        <MoreLink
+          list={data}
+          linkProps={{
+            path: countriesRoute.path,
+            search: (search) => search
+          }}
+          loading={this.state.mapLoading}
+          className=""
+          onClick={undefined}
+        />
+      )
+    } else {
+      return (
+        <MoreLink
+          list={this.state.listData}
+          linkProps={this.state.linkProps}
+          loading={this.state.listLoading}
+          className=""
+          onClick={undefined}
+        />
+      )
+    }
+  }
+
   render() {
     return (
-      <div className="group/report overflow-x-hidden">
-        <div className="w-full flex justify-between">
-          <div className="flex gap-x-1">
-            <h3 className="font-bold dark:text-gray-100">
-              {labelFor[this.state.mode] || 'Locations'}
-            </h3>
+      <ReportLayout
+        className={this.state.mode === 'map' ? '' : 'overflow-x-hidden'}
+      >
+        <ReportHeader>
+          <div className="flex gap-x-3">
+            <TabWrapper>
+              {[
+                { label: 'Map', value: 'map' },
+                { label: 'Countries', value: 'countries' },
+                { label: 'Regions', value: 'regions' },
+                { label: 'Cities', value: 'cities' }
+              ].map(({ value, label }) => (
+                <TabButton
+                  key={value}
+                  onClick={this.setMode(value)}
+                  active={this.state.mode === value}
+                >
+                  {label}
+                </TabButton>
+              ))}
+            </TabWrapper>
             <ImportedQueryUnsupportedWarning
               loading={this.state.loading}
               skipImportedReason={this.state.skipImportedReason}
             />
           </div>
-          <TabWrapper>
-            {[
-              { label: 'Map', value: 'map' },
-              { label: 'Countries', value: 'countries' },
-              { label: 'Regions', value: 'regions' },
-              { label: 'Cities', value: 'cities' }
-            ].map(({ value, label }) => (
-              <TabButton
-                key={value}
-                onClick={this.setMode(value)}
-                active={this.state.mode === value}
-              >
-                {label}
-              </TabButton>
-            ))}
-          </TabWrapper>
-        </div>
+          {this.getMoreLink()}
+        </ReportHeader>
         {this.renderContent()}
-      </div>
+      </ReportLayout>
     )
   }
 }

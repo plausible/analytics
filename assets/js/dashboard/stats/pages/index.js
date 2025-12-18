@@ -10,9 +10,13 @@ import { hasConversionGoalFilter } from '../../util/filters'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { entryPagesRoute, exitPagesRoute, topPagesRoute } from '../../router'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
+import { useMoreLinkData } from '../../hooks/use-more-link-data'
+import MoreLink from '../more-link'
 
-function EntryPages({ afterFetchData }) {
+function EntryPages({ afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -56,11 +60,12 @@ function EntryPages({ afterFetchData }) {
       }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function ExitPages({ afterFetchData }) {
+function ExitPages({ afterFetchData, onListUpdate }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   function fetchData() {
@@ -104,11 +109,12 @@ function ExitPages({ afterFetchData }) {
       }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function TopPages({ afterFetchData }) {
+function TopPages({ afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -148,14 +154,9 @@ function TopPages({ afterFetchData }) {
       }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
+      onListUpdate={onListUpdate}
     />
   )
-}
-
-const labelFor = {
-  pages: 'Top pages',
-  'entry-pages': 'Entry pages',
-  'exit-pages': 'Exit pages'
 }
 
 export default function Pages() {
@@ -167,10 +168,13 @@ export default function Pages() {
   const [mode, setMode] = useState(storedTab || 'pages')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const { onListUpdate, listData, linkProps, listLoading, reset } =
+    useMoreLinkData()
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
     setMode(mode)
+    reset()
   }
 
   function afterFetchData(apiResponse) {
@@ -179,50 +183,75 @@ export default function Pages() {
   }
 
   useEffect(() => setLoading(true), [query, mode])
+  useEffect(() => {
+    reset()
+  }, [query, mode, reset])
 
   function renderContent() {
     switch (mode) {
       case 'entry-pages':
-        return <EntryPages afterFetchData={afterFetchData} />
+        return (
+          <EntryPages
+            afterFetchData={afterFetchData}
+            onListUpdate={onListUpdate}
+          />
+        )
       case 'exit-pages':
-        return <ExitPages afterFetchData={afterFetchData} />
+        return (
+          <ExitPages
+            afterFetchData={afterFetchData}
+            onListUpdate={onListUpdate}
+          />
+        )
       case 'pages':
       default:
-        return <TopPages afterFetchData={afterFetchData} />
+        return (
+          <TopPages
+            afterFetchData={afterFetchData}
+            onListUpdate={onListUpdate}
+          />
+        )
     }
   }
 
   return (
-    <div className="group/report overflow-x-hidden">
-      {/* Header Container */}
-      <div className="w-full flex justify-between">
-        <div className="flex gap-x-1">
-          <h3 className="font-bold dark:text-gray-100">
-            {labelFor[mode] || 'Page Visits'}
-          </h3>
+    <ReportLayout className="overflow-x-hidden">
+      <ReportHeader>
+        <div className="flex gap-x-3">
+          <TabWrapper>
+            {[
+              {
+                label: hasConversionGoalFilter(query)
+                  ? 'Conversion pages'
+                  : 'Top pages',
+                value: 'pages'
+              },
+              { label: 'Entry pages', value: 'entry-pages' },
+              { label: 'Exit pages', value: 'exit-pages' }
+            ].map(({ value, label }) => (
+              <TabButton
+                key={value}
+                active={mode === value}
+                onClick={() => switchTab(value)}
+              >
+                {label}
+              </TabButton>
+            ))}
+          </TabWrapper>
           <ImportedQueryUnsupportedWarning
             loading={loading}
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <TabWrapper>
-          {[
-            { label: 'Top pages', value: 'pages' },
-            { label: 'Entry pages', value: 'entry-pages' },
-            { label: 'Exit pages', value: 'exit-pages' }
-          ].map(({ value, label }) => (
-            <TabButton
-              active={mode === value}
-              onClick={() => switchTab(value)}
-              key={value}
-            >
-              {label}
-            </TabButton>
-          ))}
-        </TabWrapper>
-      </div>
-      {/* Main Contents */}
+        <MoreLink
+          list={listData}
+          linkProps={linkProps}
+          loading={listLoading}
+          className=""
+          onClick={undefined}
+        />
+      </ReportHeader>
       {renderContent()}
-    </div>
+    </ReportLayout>
   )
 }

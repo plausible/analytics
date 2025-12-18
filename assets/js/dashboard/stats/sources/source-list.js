@@ -23,7 +23,11 @@ import {
   utmSourcesRoute,
   utmTermsRoute
 } from '../../router'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
 import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
+import { useMoreLinkData } from '../../hooks/use-more-link-data'
+import MoreLink from '../more-link'
 
 const UTM_TAGS = {
   utm_medium: {
@@ -49,7 +53,7 @@ const UTM_TAGS = {
   utm_term: { title: 'UTM terms', label: 'Term', endpoint: '/utm_terms' }
 }
 
-function AllSources({ afterFetchData }) {
+function AllSources({ afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -86,11 +90,12 @@ function AllSources({ afterFetchData }) {
       detailsLinkProps={{ path: sourcesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-blue-50 group-hover/row:bg-blue-100"
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function Channels({ onClick, afterFetchData }) {
+function Channels({ onClick, afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
 
@@ -127,11 +132,12 @@ function Channels({ onClick, afterFetchData }) {
         search: (search) => search
       }}
       color="bg-blue-50 group-hover/row:bg-blue-100"
+      onListUpdate={onListUpdate}
     />
   )
 }
 
-function UTMSources({ tab, afterFetchData }) {
+function UTMSources({ tab, afterFetchData, onListUpdate }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   const utmTag = UTM_TAGS[tab]
@@ -173,17 +179,9 @@ function UTMSources({ tab, afterFetchData }) {
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: route?.path, search: (search) => search }}
       color="bg-blue-50 group-hover/row:bg-blue-100"
+      onListUpdate={onListUpdate}
     />
   )
-}
-
-const labelFor = {
-  channels: 'Top channels',
-  all: 'Top sources'
-}
-
-for (const [key, utm_tag] of Object.entries(UTM_TAGS)) {
-  labelFor[key] = utm_tag.title
 }
 
 export default function SourceList() {
@@ -194,9 +192,14 @@ export default function SourceList() {
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const { onListUpdate, listData, linkProps, listLoading, reset } =
+    useMoreLinkData()
   const previousQuery = usePrevious(query)
 
   useEffect(() => setLoading(true), [query, currentTab])
+  useEffect(() => {
+    reset()
+  }, [query, currentTab, reset])
 
   useEffect(() => {
     const isRemovingFilter = (filterName) => {
@@ -218,6 +221,7 @@ export default function SourceList() {
     return () => {
       storage.setItem(tabKey, tab)
       setCurrentTab(tab)
+      reset()
     }
   }
 
@@ -225,70 +229,87 @@ export default function SourceList() {
     setTab('all')()
   }
 
-  function renderContent() {
-    if (Object.keys(UTM_TAGS).includes(currentTab)) {
-      return <UTMSources tab={currentTab} afterFetchData={afterFetchData} />
-    }
-
-    switch (currentTab) {
-      case 'channels':
-        return (
-          <Channels onClick={onChannelClick} afterFetchData={afterFetchData} />
-        )
-      case 'all':
-      default:
-        return <AllSources afterFetchData={afterFetchData} />
-    }
-  }
-
   function afterFetchData(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
+  function renderContent() {
+    if (Object.keys(UTM_TAGS).includes(currentTab)) {
+      return (
+        <UTMSources
+          tab={currentTab}
+          afterFetchData={afterFetchData}
+          onListUpdate={onListUpdate}
+        />
+      )
+    }
+
+    switch (currentTab) {
+      case 'channels':
+        return (
+          <Channels
+            onClick={onChannelClick}
+            afterFetchData={afterFetchData}
+            onListUpdate={onListUpdate}
+          />
+        )
+      case 'all':
+      default:
+        return (
+          <AllSources
+            afterFetchData={afterFetchData}
+            onListUpdate={onListUpdate}
+          />
+        )
+    }
+  }
+
   return (
-    <div className="group/report overflow-x-hidden">
-      {/* Header Container */}
-      <div className="w-full flex justify-between">
-        <div className="flex gap-x-1">
-          <h3 className="font-bold dark:text-gray-100">
-            {labelFor[currentTab]}
-          </h3>
+    <ReportLayout className="overflow-x-hidden">
+      <ReportHeader>
+        <div className="flex gap-x-3">
+          <TabWrapper>
+            {[
+              { value: 'channels', label: 'Channels' },
+              { value: 'all', label: 'Sources' }
+            ].map(({ value, label }) => (
+              <TabButton
+                key={value}
+                onClick={setTab(value)}
+                active={currentTab === value}
+              >
+                {label}
+              </TabButton>
+            ))}
+            <DropdownTabButton
+              className="md:relative"
+              transitionClassName="md:left-auto md:w-56 md:origin-top-right"
+              active={Object.keys(UTM_TAGS).includes(currentTab)}
+              options={Object.entries(UTM_TAGS).map(([value, { title }]) => ({
+                value,
+                label: title,
+                onClick: setTab(value),
+                selected: currentTab === value
+              }))}
+            >
+              {UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].title : 'Campaigns'}
+            </DropdownTabButton>
+          </TabWrapper>
           <ImportedQueryUnsupportedWarning
             loading={loading}
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <TabWrapper>
-          {[
-            { value: 'channels', label: 'Channels' },
-            { value: 'all', label: 'Sources' }
-          ].map(({ value, label }) => (
-            <TabButton
-              key={value}
-              onClick={setTab(value)}
-              active={currentTab === value}
-            >
-              {label}
-            </TabButton>
-          ))}
-          <DropdownTabButton
-            className="md:relative"
-            transitionClassName="md:left-auto md:w-56 md:origin-top-right"
-            active={Object.keys(UTM_TAGS).includes(currentTab)}
-            options={Object.entries(UTM_TAGS).map(([value, { title }]) => ({
-              value,
-              label: title,
-              onClick: setTab(value),
-              selected: currentTab === value
-            }))}
-          >
-            {UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].title : 'Campaigns'}
-          </DropdownTabButton>
-        </TabWrapper>
-      </div>
-      {/* Main Contents */}
+        <MoreLink
+          list={listData}
+          linkProps={linkProps}
+          loading={listLoading}
+          className=""
+          onClick={undefined}
+        />
+      </ReportHeader>
       {renderContent()}
-    </div>
+    </ReportLayout>
   )
 }
