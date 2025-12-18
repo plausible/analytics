@@ -440,7 +440,6 @@ export default function Behaviours({ importedDataInView }) {
     return query.period === 'realtime'
   }
 
-
   function renderImportedQueryUnsupportedWarning() {
     if (mode === CONVERSIONS) {
       return (

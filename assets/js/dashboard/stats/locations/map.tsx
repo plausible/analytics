@@ -193,7 +193,7 @@ const WorldMap = ({
 }
 
 const colorScales = {
-  [UIMode.dark]: ['#312e81', '#6366f1'], // indigo-900, indigo-500
+  [UIMode.dark]: ['#2a276d', '#6366f1'], // custom color between indigo-900 and indigo-950, indigo-500
   [UIMode.light]: ['#e0e7ff', '#818cf8'] // indigo-100, indigo-400
 }
 

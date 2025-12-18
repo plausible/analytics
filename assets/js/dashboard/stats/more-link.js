@@ -19,13 +19,7 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({
-  linkProps,
-  list,
-  className,
-  onClick,
-  loading
-}) {
+export default function MoreLink({ linkProps, list, onClick, loading }) {
   const portalRef = useRef(null)
 
   useEffect(() => {
