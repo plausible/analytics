@@ -2681,42 +2681,4 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       assert error == "Invalid filter '[\"is\", \"segment\", [\"123\"]]'."
     end
   end
-
-  on_ee do
-    describe "query.consolidated_site_ids" do
-      test "is set to nil when site is regular", %{site: site} do
-        params = %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "all"
-        }
-
-        {:ok, %{consolidated_site_ids: nil}} = Query.parse_and_build(site, :public, params)
-        {:ok, %{consolidated_site_ids: nil}} = Query.parse_and_build(site, :internal, params)
-      end
-
-      test "is set to a list of site_ids when site is consolidated", %{site: site} do
-        new_site(team: site.team)
-        cv = new_consolidated_view(site.team)
-
-        params = %{
-          "site_id" => cv.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "all"
-        }
-
-        assert {:ok, %{consolidated_site_ids: site_ids}} =
-                 Query.parse_and_build(cv, :public, params)
-
-        assert length(site_ids) == 2
-        assert site.id in site_ids
-
-        assert {:ok, %{consolidated_site_ids: site_ids}} =
-                 Query.parse_and_build(cv, :internal, params)
-
-        assert length(site_ids) == 2
-        assert site.id in site_ids
-      end
-    end
-  end
 end

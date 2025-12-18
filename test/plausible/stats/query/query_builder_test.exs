@@ -272,4 +272,30 @@ defmodule Plausible.Stats.QueryBuilderTest do
                      } = query
     end
   end
+
+  on_ee do
+    describe "query.consolidated_site_ids" do
+      test "is set to nil when site is regular", %{site: site} do
+        assert {:ok, %Query{consolidated_site_ids: nil}} =
+                 QueryBuilder.build(site, %ParsedQueryParams{
+                   metrics: [:visitors],
+                   input_date_range: :all
+                 })
+      end
+
+      test "is set to a list of site_ids when site is consolidated", %{site: site} do
+        new_site(team: site.team)
+        cv = new_consolidated_view(site.team)
+
+        assert {:ok, %Query{consolidated_site_ids: consolidated_site_ids}} =
+                 QueryBuilder.build(cv, %ParsedQueryParams{
+                   metrics: [:visitors],
+                   input_date_range: :all
+                 })
+
+        assert length(consolidated_site_ids) == 2
+        assert site.id in consolidated_site_ids
+      end
+    end
+  end
 end
