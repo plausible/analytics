@@ -221,4 +221,55 @@ defmodule Plausible.Stats.QueryBuilderTest do
       end
     end
   end
+
+  describe "exit_rate metric" do
+    test "fails validation without visit:exit_page dimension", %{site: site} do
+      assert {:error, error} =
+               QueryBuilder.build(site, %ParsedQueryParams{
+                 metrics: [:exit_rate],
+                 input_date_range: :all
+               })
+
+      assert error ==
+               "Metric `exit_rate` requires a `\"visit:exit_page\"` dimension. No other dimensions are allowed."
+    end
+
+    test "fails validation with event only filters", %{site: site} do
+      assert {:error, error} =
+               QueryBuilder.build(site, %ParsedQueryParams{
+                 metrics: [:exit_rate],
+                 dimensions: ["visit:exit_page"],
+                 filters: [[:is, "event:page", ["/"]]],
+                 input_date_range: :all
+               })
+
+      assert error == "Metric `exit_rate` cannot be queried when filtering on event dimensions."
+    end
+
+    test "fails validation with event metrics", %{site: site} do
+      assert {:error, error} =
+               QueryBuilder.build(site, %ParsedQueryParams{
+                 metrics: [:exit_rate, :pageviews],
+                 dimensions: ["visit:exit_page"],
+                 input_date_range: :all
+               })
+
+      assert error ==
+               "Event metric(s) `pageviews` cannot be queried along with session dimension(s) `visit:exit_page`"
+    end
+
+    test "passes validation", %{site: site} do
+      assert {:ok, query} =
+               QueryBuilder.build(site, %ParsedQueryParams{
+                 metrics: [:exit_rate],
+                 dimensions: ["visit:exit_page"],
+                 input_date_range: :all
+               })
+
+      assert_matches %Query{
+                       metrics: [:exit_rate],
+                       dimensions: ["visit:exit_page"]
+                     } = query
+    end
+  end
 end
