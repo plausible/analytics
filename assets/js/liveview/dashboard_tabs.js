@@ -18,22 +18,23 @@ export default buildHook({
       const button = e.target.closest('button')
       const tab = button && button.dataset.tab
 
-      if (tab) {
+      if (tab && !button.dataset.active) {
         const label = button.dataset.label
         const storageKey = button.dataset.storageKey
         const activeClasses = button.dataset.activeClasses
         const inactiveClasses = button.dataset.inactiveClasses
-        const title = this.el
-          .closest('[data-tile]')
-          .querySelector('[data-title]')
+        const tile = this.el.closest('[data-tile')
+        const title = tile.querySelector('[data-title]')
 
         title.innerText = label
 
-        this.el.querySelectorAll(`button[data-tab] span`).forEach((s) => {
-          s.className = inactiveClasses
+        this.el.querySelectorAll(`button[data-tab]`).forEach((b) => {
+          b.querySelector('span').className = inactiveClasses
+          b.dataset.active = ''
         })
 
         button.querySelector('span').className = activeClasses
+        button.dataset.active = 'true'
 
         if (storageKey) {
           localStorage.setItem(`${storageKey}__${domain}`, tab)

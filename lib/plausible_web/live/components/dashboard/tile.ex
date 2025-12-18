@@ -47,10 +47,12 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
 
   def tab(assigns) do
     assigns =
-      assign(assigns,
+      assign(
+        assigns,
         active_classes:
           "text-indigo-600 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-600 dark:decoration-indigo-500",
-        inactive_classes: "hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer"
+        inactive_classes: "hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer",
+        data_attrs: if(assigns.value == assigns.active, do: %{"data-active": "true"}, else: %{})
       )
 
     ~H"""
@@ -61,9 +63,10 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
       data-storage-key="pageTab"
       data-active-classes={@active_classes}
       data-inactive-classes={@inactive_classes}
-      phx-click="set-tab"
+      phx-click={if(@value != @active, do: "set-tab")}
       phx-value-tab={@value}
       phx-target={@target}
+      {@data_attrs}
     >
       <span class={if(@value == @active, do: @active_classes, else: @inactive_classes)}>
         {@label}
