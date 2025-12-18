@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.Pageview do
   """
   use PlausibleWeb, :open_api_schema
 
+  alias Schemas.Goal.CustomProps
+
   OpenApiSpex.schema(%{
     description: "Pageview Goal object",
     title: "Goal.Pageview",
@@ -20,7 +22,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.Pageview do
             properties: %{
               id: %Schema{type: :integer, description: "Goal ID", readOnly: true},
               display_name: %Schema{type: :string, description: "Display name", readOnly: true},
-              path: %Schema{type: :string, description: "Page Path"}
+              path: %Schema{type: :string, description: "Page Path"},
+              custom_props: CustomProps.response_schema()
             }
           }
         }

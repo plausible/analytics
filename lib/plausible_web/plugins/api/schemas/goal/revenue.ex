@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.Revenue do
   """
   use PlausibleWeb, :open_api_schema
 
+  alias Schemas.Goal.CustomProps
+
   OpenApiSpex.schema(%{
     description: "Revenue Goal object",
     title: "Goal.Revenue",
@@ -21,7 +23,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.Revenue do
               id: %Schema{type: :integer, description: "Goal ID", readOnly: true},
               display_name: %Schema{type: :string, description: "Display name", readOnly: true},
               event_name: %Schema{type: :string, description: "Event Name"},
-              currency: %Schema{type: :string, description: "Currency"}
+              currency: %Schema{type: :string, description: "Currency"},
+              custom_props: CustomProps.response_schema()
             }
           }
         }

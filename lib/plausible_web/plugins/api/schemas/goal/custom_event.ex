@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CustomEvent do
   """
   use PlausibleWeb, :open_api_schema
 
+  alias Schemas.Goal.CustomProps
+
   OpenApiSpex.schema(%{
     description: "Custom Event Goal object",
     title: "Goal.CustomEvent",
@@ -20,7 +22,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CustomEvent do
             properties: %{
               id: %Schema{type: :integer, description: "Goal ID", readOnly: true},
               display_name: %Schema{type: :string, description: "Display name", readOnly: true},
-              event_name: %Schema{type: :string, description: "Event Name"}
+              event_name: %Schema{type: :string, description: "Event Name"},
+              custom_props: CustomProps.response_schema()
             }
           }
         }
