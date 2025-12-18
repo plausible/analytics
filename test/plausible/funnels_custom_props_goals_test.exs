@@ -6,6 +6,7 @@ defmodule Plausible.FunnelsCustomPropsGoals do
     alias Plausible.Goals
     alias Plausible.Funnels
     alias Plausible.Stats
+    alias Plausible.Stats.{QueryBuilder, ParsedQueryParams}
 
     describe "Plausible.Stats.Funnel - with custom property goals" do
       setup do
@@ -56,7 +57,7 @@ defmodule Plausible.FunnelsCustomPropsGoals do
           build(:event, name: "Purchase", user_id: 300)
         ])
 
-        query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+        query = QueryBuilder.build!(site, %ParsedQueryParams{input_date_range: :all})
 
         {:ok, funnel_data} = Stats.funnel(site, query, funnel.id)
 
@@ -119,7 +120,7 @@ defmodule Plausible.FunnelsCustomPropsGoals do
           )
         ])
 
-        query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+        query = QueryBuilder.build!(site, %ParsedQueryParams{input_date_range: :all})
 
         {:ok, funnel_data} = Stats.funnel(site, query, funnel.id)
 
@@ -199,7 +200,7 @@ defmodule Plausible.FunnelsCustomPropsGoals do
           )
         ])
 
-        query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+        query = QueryBuilder.build!(site, %ParsedQueryParams{input_date_range: :all})
 
         {:ok, funnel_data} = Stats.funnel(site, query, funnel.id)
 
@@ -243,7 +244,7 @@ defmodule Plausible.FunnelsCustomPropsGoals do
           build(:event, name: "Convert", user_id: 200)
         ])
 
-        query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+        query = QueryBuilder.build!(site, %ParsedQueryParams{input_date_range: :all})
 
         {:ok, funnel_data} = Stats.funnel(site, query, funnel.id)
 

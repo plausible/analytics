@@ -46,6 +46,13 @@ defmodule Plausible.Stats.QueryBuilder do
     end
   end
 
+  def build!(site, parsed_query_params, debug_metadata \\ %{}) do
+    case build(site, parsed_query_params, debug_metadata) do
+      {:ok, query} -> query
+      {:error, reason} -> raise "Failed to build query: #{inspect(reason)}"
+    end
+  end
+
   defp resolve_segments_in_filters(%ParsedQueryParams{} = parsed_query_params, site) do
     with {:ok, preloaded_segments} <-
            Segments.Filters.preload_needed_segments(site, parsed_query_params.filters),
