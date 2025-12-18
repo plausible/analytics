@@ -9,6 +9,11 @@ import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { referrersDrilldownRoute } from '../../router'
 import { SourceFavicon } from './source-favicon'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
+import { TabButton, TabWrapper } from '../../components/tabs'
+import { useMoreLinkData } from '../../hooks/use-more-link-data'
+import MoreLink from '../more-link'
 
 const NO_REFERRER = 'Direct / None'
 
@@ -17,6 +22,7 @@ export default function Referrers({ source }) {
   const site = useSiteContext()
   const [skipImportedReason, setSkipImportedReason] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { onListUpdate, listData, linkProps, listLoading } = useMoreLinkData()
 
   useEffect(() => setLoading(true), [query])
 
@@ -68,14 +74,27 @@ export default function Referrers({ source }) {
   }
 
   return (
-    <div className="flex flex-col grow">
-      <div className="flex gap-x-1">
-        <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
-        <ImportedQueryUnsupportedWarning
-          loading={loading}
-          skipImportedReason={skipImportedReason}
+    <ReportLayout className="overflow-x-hidden">
+      <ReportHeader>
+        <div className="flex gap-x-3">
+          <TabWrapper>
+            <TabButton active={true} onClick={() => {}}>
+              Top referrers
+            </TabButton>
+          </TabWrapper>
+          <ImportedQueryUnsupportedWarning
+            loading={loading}
+            skipImportedReason={skipImportedReason}
+          />
+        </div>
+        <MoreLink
+          list={listData}
+          linkProps={linkProps}
+          loading={listLoading}
+          className=""
+          onClick={undefined}
         />
-      </div>
+      </ReportHeader>
       <ListReport
         fetchData={fetchReferrers}
         afterFetchData={afterFetchReferrers}
@@ -90,7 +109,8 @@ export default function Referrers({ source }) {
         getExternalLinkUrl={getExternalLinkUrl}
         renderIcon={renderIcon}
         color="bg-blue-50"
+        onListUpdate={onListUpdate}
       />
-    </div>
+    </ReportLayout>
   )
 }
