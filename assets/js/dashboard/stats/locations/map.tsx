@@ -193,8 +193,8 @@ const WorldMap = ({
 }
 
 const colorScales = {
-  [UIMode.dark]: ['#1e1b4b', '#6366f1'], // indigo-950, indigo-500
-  [UIMode.light]: ['#f5f7ff', '#818cf8'] // custom color lighter than indigo-50, indigo-400
+  [UIMode.dark]: ['#312e81', '#6366f1'], // indigo-900, indigo-500
+  [UIMode.light]: ['#e0e7ff', '#818cf8'] // indigo-100, indigo-400
 }
 
 const sharedCountryClass = classNames('transition-colors')
