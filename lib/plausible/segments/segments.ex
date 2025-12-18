@@ -70,11 +70,11 @@ defmodule Plausible.Segments do
     {:ok, Repo.all(query)}
   end
 
-  def search_by_name(%Plausible.Site{} = site, name) do
+  def search_by_name(%Plausible.Site{} = site, input) do
     type = :site
     fields = [:id, :name]
 
-    name_empty? = is_nil(name) or (is_binary(name) and String.trim(name) == "")
+    input_empty? = is_nil(input) or (is_binary(input) and String.trim(input) == "")
 
     base_query =
       from(segment in Segment,
@@ -84,7 +84,7 @@ defmodule Plausible.Segments do
       )
 
     query =
-      if name_empty? do
+      if input_empty? do
         from([segment] in base_query,
           select: ^fields,
           order_by: [desc: segment.updated_at]
@@ -103,23 +103,23 @@ defmodule Plausible.Segments do
                   WHEN lower(?) ILIKE ? THEN 3                        -- anywhere
                 END AS match_rank",
                 segment.name,
-                ^name,
+                ^input,
                 segment.name,
-                ^name,
+                ^input,
                 segment.name,
-                ^name,
+                ^input,
                 segment.name,
-                ^"%#{name}%"
+                ^"%#{input}%"
               ),
             pos:
               fragment(
                 "position(lower(?) IN lower(?)) AS pos",
-                ^name,
+                ^input,
                 segment.name
               ),
-            len_diff: fragment("abs(length(?) - length(?)) AS len_diff", segment.name, ^name)
+            len_diff: fragment("abs(length(?) - length(?)) AS len_diff", segment.name, ^input)
           },
-          where: fragment("? ilike ?", segment.name, ^"%#{name}%"),
+          where: fragment("? ilike ?", segment.name, ^"%#{input}%"),
           order_by: fragment("match_rank asc, pos asc, len_diff asc, updated_at desc")
         )
       end
