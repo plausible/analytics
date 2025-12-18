@@ -194,7 +194,6 @@ export function SearchTerms() {
           list={listData}
           linkProps={linkProps}
           loading={listLoading}
-          className=""
           onClick={undefined}
         />
       </ReportHeader>
