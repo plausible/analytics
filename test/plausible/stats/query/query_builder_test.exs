@@ -52,4 +52,52 @@ defmodule Plausible.Stats.QueryBuilderTest do
       end
     end
   end
+
+  describe "filters" do
+    for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
+      test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
+        assert {:error, error} =
+                 QueryBuilder.build(site, %ParsedQueryParams{
+                   metrics: [:visitors],
+                   input_date_range: :all,
+                   filters: [
+                     [unquote(operation), "event:page", ["a"], %{case_insensitive: true}]
+                   ]
+                 })
+
+        assert error =~ "Invalid filters."
+        assert error =~ "case_sensitive modifier is not allowed with pattern operators"
+        assert error =~ Atom.to_string(unquote(operation))
+      end
+    end
+
+    test "prohibits case_sensitive modifier with pattern operator in a complex filter tree", %{
+      site: site
+    } do
+      assert {:error, error} =
+               QueryBuilder.build(site, %ParsedQueryParams{
+                 metrics: [:visitors],
+                 input_date_range: :all,
+                 filters: [
+                   [
+                     :or,
+                     [
+                       [
+                         :and,
+                         [
+                           [:is, "visit:city_name", ["London"]],
+                           [:not, [:is, "visit:country_name", ["Canada"]]]
+                         ]
+                       ],
+                       [:matches, "event:page", ["a"], %{case_insensitive: true}]
+                     ]
+                   ]
+                 ]
+               })
+
+      assert error =~ "Invalid filters."
+      assert error =~ "case_sensitive modifier is not allowed with pattern operators"
+      assert error =~ ":matches"
+    end
+  end
 end

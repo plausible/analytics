@@ -729,7 +729,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       end
     end
 
-    for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
+    for operation <- [:matches, :matches_not] do
       test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
         params = %{
           "site_id" => site.domain,
@@ -745,7 +745,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :internal, params)
+        assert {:error, error} = Query.parse_and_build(site, :public, params)
 
         assert error ==
                  "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:hostname\", [\"a.plausible.io\"], %{\"case_sensitive\" => false}]"
