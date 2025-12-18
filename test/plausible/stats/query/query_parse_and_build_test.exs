@@ -2635,12 +2635,12 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
 
       segment_from_dashboard =
         insert(:segment,
-          name: "A segment that contains :internal features",
+          name: "A segment that contains internal features",
           type: :site,
           owner: user,
           site: site,
           segment_data: %{
-            "filters" => [["has_not_done", ["is", "event:goal", ["Signup"]]]]
+            "filters" => [["matches_wildcard", "event:page", ["/blog/**"]]]
           }
         )
 
@@ -2659,7 +2659,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                        metrics: [:visitors, :events],
                        utc_time_range: ^@date_range_day,
                        filters: [
-                         [:has_not_done, [:is, "event:goal", ["Signup"]]]
+                         [:matches_wildcard, "event:page", ["/blog/**"]]
                        ],
                        dimensions: [],
                        order_by: nil,
