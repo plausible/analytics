@@ -50,4 +50,9 @@ defmodule Plausible.Site.SharedLink do
 
   def password_protected?(%__MODULE__{password_hash: hash}) when not is_nil(hash), do: true
   def password_protected?(%__MODULE__{}), do: false
+
+  def limited_to_segment?(%__MODULE__{segment_id: segment_id}) when is_integer(segment_id),
+    do: true
+
+  def limited_to_segment?(%__MODULE__{}), do: false
 end

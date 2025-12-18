@@ -410,7 +410,13 @@ defmodule PlausibleWeb.StatsController do
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
         flags = get_flags(current_user, shared_link.site)
-        limited_to_segment_id = shared_link.segment && shared_link.segment.id
+
+        limited_to_segment_id =
+          if Plausible.Site.SharedLink.limited_to_segment?(shared_link) do
+            shared_link.segment.id
+          else
+            nil
+          end
 
         segments =
           if is_nil(limited_to_segment_id) do
