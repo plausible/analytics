@@ -151,7 +151,7 @@ defmodule Plausible.Application do
             adapter_opts: [
               n_lock_partitions: 1,
               ttl_check_interval: false,
-              read_concurrency: true
+              ets_options: [read_concurrency: true]
             ],
             warmers: [
               refresh_all:
