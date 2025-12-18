@@ -70,54 +70,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
       assert error ==
                "Invalid filters. The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
     end
-  end
 
-  describe "date range" do
-    for {input_date_range, expected_utc_time_range} <- [
-          {:realtime, @date_range_realtime},
-          {:realtime_30m, @date_range_30m}
-        ] do
-      test "builds utc_time_range for #{input_date_range} input_date_range", %{site: site} do
-        assert {:ok, query} =
-                 QueryBuilder.build(site, %ParsedQueryParams{
-                   metrics: [:visitors],
-                   input_date_range: unquote(input_date_range)
-                 })
-
-        assert query.utc_time_range == unquote(Macro.escape(expected_utc_time_range))
-      end
-    end
-
-    test "utc_time_range construction respects relative_date", %{site: site} do
-      relative_date = @now |> DateTime.to_date()
-
-      # Replace the fixed now. Otherwise this test could pass ignoring relative_date
-      Plausible.Stats.Query.Test.fix_now(DateTime.utc_now(:second))
-
-      for {date_range_shortcut, expected_utc_time_range} <- [
-            {:day, @date_range_day},
-            {{:last_n_days, 7}, @date_range_7d},
-            {{:last_n_days, 10}, @date_range_10d},
-            {{:last_n_days, 30}, @date_range_30d},
-            {:month, @date_range_month},
-            {{:last_n_months, 3}, @date_range_3mo},
-            {{:last_n_months, 6}, @date_range_6mo},
-            {{:last_n_months, 12}, @date_range_12mo},
-            {:year, @date_range_year}
-          ] do
-        assert {:ok, query} =
-                 QueryBuilder.build(site, %ParsedQueryParams{
-                   metrics: [:visitors],
-                   relative_date: relative_date,
-                   input_date_range: date_range_shortcut
-                 })
-
-        assert query.utc_time_range == expected_utc_time_range
-      end
-    end
-  end
-
-  describe "filters" do
     for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
       test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
         assert {:error, error} =
@@ -162,6 +115,51 @@ defmodule Plausible.Stats.QueryBuilderTest do
       assert error =~ "Invalid filters."
       assert error =~ "case_sensitive modifier is not allowed with pattern operators"
       assert error =~ ":matches"
+    end
+  end
+
+  describe "date range" do
+    for {input_date_range, expected_utc_time_range} <- [
+          {:realtime, @date_range_realtime},
+          {:realtime_30m, @date_range_30m}
+        ] do
+      test "builds utc_time_range for #{input_date_range} input_date_range", %{site: site} do
+        assert {:ok, query} =
+                 QueryBuilder.build(site, %ParsedQueryParams{
+                   metrics: [:visitors],
+                   input_date_range: unquote(input_date_range)
+                 })
+
+        assert query.utc_time_range == unquote(Macro.escape(expected_utc_time_range))
+      end
+    end
+
+    test "utc_time_range construction respects relative_date", %{site: site} do
+      relative_date = @now |> DateTime.to_date()
+
+      # Replace the fixed now. Otherwise this test could pass ignoring relative_date
+      Plausible.Stats.Query.Test.fix_now(DateTime.utc_now(:second))
+
+      for {date_range_shortcut, expected_utc_time_range} <- [
+            {:day, @date_range_day},
+            {{:last_n_days, 7}, @date_range_7d},
+            {{:last_n_days, 10}, @date_range_10d},
+            {{:last_n_days, 30}, @date_range_30d},
+            {:month, @date_range_month},
+            {{:last_n_months, 3}, @date_range_3mo},
+            {{:last_n_months, 6}, @date_range_6mo},
+            {{:last_n_months, 12}, @date_range_12mo},
+            {:year, @date_range_year}
+          ] do
+        assert {:ok, query} =
+                 QueryBuilder.build(site, %ParsedQueryParams{
+                   metrics: [:visitors],
+                   relative_date: relative_date,
+                   input_date_range: date_range_shortcut
+                 })
+
+        assert query.utc_time_range == expected_utc_time_range
+      end
     end
   end
 end
