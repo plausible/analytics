@@ -126,11 +126,11 @@ export default function TopStats({
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
     const statDisplayNameClass = classNames(
-      'text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-fit border-b',
+      'text-xs text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-fit border-b',
       {
-        'text-indigo-600 dark:text-indigo-500 border-indigo-600 dark:border-indigo-500':
+        'text-indigo-600 dark:text-indigo-500 font-bold tracking-[-.01em] border-indigo-600 dark:border-indigo-500':
           isSelected,
-        'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent':
+        'font-semibold group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent':
           !isSelected
       }
     )

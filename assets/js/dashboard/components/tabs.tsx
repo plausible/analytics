@@ -33,11 +33,11 @@ const TabButtonText = ({
 }) => (
   <span
     className={classNames(
-      '-mb-px pb-4 truncate text-left text-xs font-semibold uppercase transition-colors duration-150',
+      '-mb-px pb-4 truncate text-left text-xs uppercase transition-colors duration-150',
       {
-        'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 cursor-pointer':
+        'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-semibold cursor-pointer':
           !active,
-        'border-b-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100':
+        'border-b-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]':
           active
       }
     )}
