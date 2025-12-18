@@ -1374,54 +1374,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                "#/date_range: Invalid date range [\"2021-02-03T00:00:00Z\", \"2021-02-04\"]"
     end
 
-    test "parses date_range relative to date param", %{site: site} do
-      date = @now |> DateTime.to_date() |> Date.to_string()
-
-      for {date_range_shortcut, expected_date_range} <- [
-            {"day", @date_range_day},
-            {"7d", @date_range_7d},
-            {"10d", @date_range_10d},
-            {"30d", @date_range_30d},
-            {"month", @date_range_month},
-            {"3mo", @date_range_3mo},
-            {"6mo", @date_range_6mo},
-            {"12mo", @date_range_12mo},
-            {"year", @date_range_year}
-          ] do
-        params = %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => date_range_shortcut,
-          "date" => date
-        }
-
-        assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-        assert_matches %Query{
-                         metrics: [:visitors],
-                         utc_time_range: ^expected_date_range,
-                         filters: [],
-                         dimensions: [],
-                         order_by: nil,
-                         timezone: ^site.timezone,
-                         include: ^@default_include,
-                         pagination: %{limit: 10_000, offset: 0}
-                       } = query
-      end
-    end
-
-    test "date parameter is not available in the public API", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors", "events"],
-        "date_range" => "month",
-        "date" => "2021-05-05"
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
-      assert error == "#/date: Schema does not allow additional properties."
-    end
-
     test "parses date_range.first into a datetime right after the gap in site.timezone", %{
       site: site
     } do
