@@ -234,7 +234,10 @@ export default function ListReport<
         <div className="h-full flex flex-col">
           <div style={{ height: ROW_HEIGHT }}>{renderReportHeader()}</div>
 
-          <div style={{ minHeight: DATA_CONTAINER_HEIGHT }}>
+          <div
+            className="group/report"
+            style={{ minHeight: DATA_CONTAINER_HEIGHT }}
+          >
             <FlipMove className="grow">
               {state.list.slice(0, MAX_ITEMS).map(renderRow)}
             </FlipMove>

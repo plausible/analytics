@@ -193,7 +193,7 @@ export default function Pages() {
   }
 
   return (
-    <div className="group/report overflow-x-hidden">
+    <div className="overflow-x-hidden">
       {/* Header Container */}
       <div className="w-full flex justify-between">
         <div className="flex gap-x-1">
