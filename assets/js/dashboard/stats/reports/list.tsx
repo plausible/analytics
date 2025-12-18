@@ -282,7 +282,7 @@ export default function ListReport<
       })
 
     return (
-      <div className="pt-3 w-full text-xs font-semibold text-gray-500 flex items-center dark:text-gray-400">
+      <div className="pt-3 w-full text-xs font-medium text-gray-500 flex items-center dark:text-gray-400">
         <span className="grow truncate">{keyLabel}</span>
         {metricLabels}
       </div>
