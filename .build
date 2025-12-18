@@ -479,6 +479,7 @@ PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Pageview.html
 PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Revenue.html
 PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.html
 PlausibleWeb.Plugins.API.Schemas.Goal.CustomEvent.html
+PlausibleWeb.Plugins.API.Schemas.Goal.CustomProps.html
 PlausibleWeb.Plugins.API.Schemas.Goal.DeleteBulkRequest.html
 PlausibleWeb.Plugins.API.Schemas.Goal.ListResponse.html
 PlausibleWeb.Plugins.API.Schemas.Goal.Pageview.html
@@ -562,8 +563,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-266058DB.js
-dist/sidebar_items-856508DF.js
+dist/search_data-47795997.js
+dist/sidebar_items-B3132B12.js
 index.html
 readme.html
 search.html
