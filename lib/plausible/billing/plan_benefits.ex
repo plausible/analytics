@@ -98,6 +98,7 @@ defmodule Plausible.Billing.PlanBenefits do
       "Sites API",
       "Single Sign-On (SSO)",
       "Managed Proxy",
+      "Scheduled raw event data exports",
       data_retention,
       "Priority support"
     ]
