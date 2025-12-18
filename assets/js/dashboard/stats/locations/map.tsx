@@ -2,7 +2,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
 import * as api from '../../api'
-import { replaceFilterByPrefix, cleanLabels } from '../../util/filters'
+import {
+  replaceFilterByPrefix,
+  cleanLabels,
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { numberShortFormatter } from '../../util/number-formatter'
 import * as topojson from 'topojson-client'
@@ -50,10 +55,15 @@ const WorldMap = ({
     hoveredCountryAlpha3Code: string | null
   }>({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
 
-  const labels =
-    query.period === 'realtime'
-      ? { singular: 'Current visitor', plural: 'Current visitors' }
-      : { singular: 'Visitor', plural: 'Visitors' }
+  const labels = (() => {
+    if (hasConversionGoalFilter(query)) {
+      return { singular: 'Conversion', plural: 'Conversions' }
+    }
+    if (isRealTimeDashboard(query)) {
+      return { singular: 'Current visitor', plural: 'Current visitors' }
+    }
+    return { singular: 'Visitor', plural: 'Visitors' }
+  })()
 
   const { data, refetch, isFetching, isError } = useQuery({
     queryKey: ['countries', 'map', query],
