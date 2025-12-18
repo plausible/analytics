@@ -109,6 +109,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         class="group/report"
         title={@key_labels[@active_tab]}
         connected?={@connected?}
+        height={ReportList.height()}
       >
         <:tabs>
           <Tile.tab
@@ -128,6 +129,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           results={@results}
           meta={@meta}
           metrics={@metrics}
+          skip_imported_reason={@skip_imported_reason}
           external_link_fn={@external_link_fn}
         />
       </Tile.tile>
@@ -153,16 +155,20 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   end
 
   defp load_metrics(socket) do
-    %{results: pages, meta: meta, metrics: metrics} =
-      metrics_for_tab(socket.assigns.active_tab, socket.assigns.site, socket.assigns.query)
+    %{active_tab: active_tab, site: site, query: query} = socket.assigns
 
-    assign(
-      socket,
-      metrics: Enum.map(metrics, &Map.fetch!(@metrics[socket.assigns.active_tab], &1)),
-      results: Enum.take(pages, @max_items),
-      meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(socket.assigns.query)),
-      skip_imported_reason: meta[:imports_skip_reason]
-    )
+    assign_async(socket, [:metrics, :results, :meta, :skip_imported_reason], fn ->
+      %{results: pages, meta: meta, metrics: metrics} =
+        metrics_for_tab(active_tab, site, query)
+
+      {:ok,
+       %{
+         metrics: Enum.map(metrics, &Map.fetch!(@metrics[active_tab], &1)),
+         results: Enum.take(pages, @max_items),
+         meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
+         skip_imported_reason: meta[:imports_skip_reason]
+       }}
+    end)
   end
 
   defp metrics_for_tab("pages", site, query) do

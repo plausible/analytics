@@ -15,63 +15,84 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   @data_container_height (@row_height + @row_gap_height) * (@max_items - 1) + @row_height
   @col_min_width 70
 
-  def report(assigns) do
-    max_value =
-      assigns.results
-      |> Enum.map(& &1.visitors)
-      |> Enum.max()
+  def height, do: @min_height
 
+  def report(assigns) do
     assigns =
       assign(assigns,
-        max_value: max_value,
         max_items: @max_items,
         min_height: @min_height,
         row_height: @row_height,
         row_gap_height: @row_gap_height,
         data_container_height: @data_container_height,
-        col_min_width: @col_min_width,
-        empty?: Enum.empty?(assigns.results)
+        col_min_width: @col_min_width
       )
 
-    ~H"""
-    <.no_data :if={@empty?} min_height={@min_height} />
-    <div :if={not @empty?} class="h-full flex flex-col">
-      <div style={"row-height: #{@row_height}px;"}>
-        <.report_header key_label={@key_label} metrics={@metrics} col_min_width={@col_min_width} />
-      </div>
+    if assigns.results.loading || !assigns.results.ok? do
+      ~H"""
+      """
+    else
+      results = assigns.results.result
+      metrics = assigns.metrics.result
+      meta = assigns.meta.result
+      skip_imported_reason = assigns.skip_imported_reason.result
 
-      <div class="grow" style={"min-height: #{@data_container_height}px;"}>
-        <.report_row
-          :for={item <- @results}
-          link_fn={assigns[:external_link_fn]}
-          item={item}
-          metrics={@metrics}
-          bar_value={item.visitors}
-          bar_max_value={@max_value}
-          site={@site}
-          params={@params}
-          filter_dimension={@filter_dimension}
-          row_height={@row_height}
-          row_gap_height={@row_gap_height}
-          col_min_width={@col_min_width}
-        />
-      </div>
+      max_value =
+        results
+        |> Enum.map(& &1.visitors)
+        |> Enum.max()
 
-      <div class="w-full text-center">
-        <.details_link
-          site={@site}
-          params={@params}
-          path="/pages"
-        />
+      assigns =
+        assign(assigns,
+          max_value: max_value,
+          results: results,
+          metrics: metrics,
+          meta: meta,
+          skip_imported_reason: skip_imported_reason,
+          empty?: Enum.empty?(results)
+        )
+
+      ~H"""
+      <.no_data :if={@empty?} min_height={@min_height} />
+
+      <div :if={not @empty?} class="h-full flex flex-col">
+        <div style={"row-height: #{@row_height}px;"}>
+          <.report_header key_label={@key_label} metrics={@metrics} col_min_width={@col_min_width} />
+        </div>
+
+        <div class="grow" style={"min-height: #{@data_container_height}px;"}>
+          <.report_row
+            :for={item <- @results}
+            link_fn={assigns[:external_link_fn]}
+            item={item}
+            metrics={@metrics}
+            bar_value={item.visitors}
+            bar_max_value={@max_value}
+            site={@site}
+            params={@params}
+            filter_dimension={@filter_dimension}
+            row_height={@row_height}
+            row_gap_height={@row_gap_height}
+            col_min_width={@col_min_width}
+          />
+        </div>
+
+        <div class="w-full text-center">
+          <.details_link
+            site={@site}
+            params={@params}
+            path="/pages"
+          />
+        </div>
       </div>
-    </div>
-    """
+      """
+    end
   end
 
   defp no_data(assigns) do
     ~H"""
     <div
-      class="w-full h-full flex flex-col justify-center"
+      class="w-full h-full flex flex-col justify-center group-has-[.tile-tab.phx-click-loading]:hidden"
       style={"min-height: #{@min_height}px;"}
     >
       <div class="mx-auto font-medium text-gray-500 dark:text-gray-400">

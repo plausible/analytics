@@ -8,9 +8,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   attr :id, :string, required: true
   attr :class, :string, default: ""
   attr :title, :string, required: true
-  # Optimistic rendering requires preventing LV patching of
-  # title and tabs. The update of those is handled by `tab` 
-  # widget hook.
+  attr :height, :integer, required: true
   attr :connected?, :boolean, required: true
 
   slot :tabs
@@ -18,7 +16,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
 
   def tile(assigns) do
     ~H"""
-    <div class={[@class, "overflow-x-hidden"]} data-tile id={@id}>
+    <div class={[@class, "group overflow-x-hidden"]} data-tile id={@id}>
       <div class="w-full flex justify-between h-full">
         <div id={@id <> "-title"} class="flex gap-x-1" phx-update="ignore">
           <h3 data-title class="font-bold dark:text-gray-100">{@title}</h3>
@@ -27,7 +25,6 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         <div
           :if={@tabs != []}
           id={@id <> "-tabs"}
-          phx-update="ignore"
           phx-hook="DashboardTabs"
           class="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
         >
@@ -35,7 +32,18 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         </div>
       </div>
 
-      {render_slot(@inner_block)}
+      <div
+        class="w-full flex-col justify-center group-has-[.tile-tab.phx-click-loading]:flex hidden"
+        style={"min-height: #{@height}px;"}
+      >
+        <div class="mx-auto loading">
+          <div></div>
+        </div>
+      </div>
+
+      <div class="group-has-[.tile-tab.phx-click-loading]:hidden">
+        {render_slot(@inner_block)}
+      </div>
     </div>
     """
   end
@@ -57,7 +65,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
 
     ~H"""
     <button
-      class="rounded-sm truncate text-left transition-colors duration-150"
+      class="tile-tab rounded-sm truncate text-left transition-colors duration-150"
       data-tab={@value}
       data-label={@label}
       data-storage-key="pageTab"
