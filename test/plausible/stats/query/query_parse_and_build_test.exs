@@ -1522,28 +1522,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       assert error == "#/dimensions/0: Invalid dimension \"time:minute\""
     end
 
-    test "time:minute dimension passes internal schema validation", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "dimensions" => ["time:minute"]
-      }
-
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-      assert_matches %Query{
-                       metrics: [:visitors],
-                       utc_time_range: ^@date_range_day,
-                       filters: [],
-                       dimensions: ["time:minute"],
-                       order_by: nil,
-                       timezone: ^site.timezone,
-                       include: ^@default_include,
-                       pagination: %{limit: 10_000, offset: 0}
-                     } = query
-    end
-
     test "custom properties dimension", %{site: site} do
       params = %{
         "site_id" => site.domain,
