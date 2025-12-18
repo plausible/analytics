@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.CustomEvent do
 
   use PlausibleWeb, :open_api_schema
 
+  alias Schemas.Goal.CustomProps
+
   OpenApiSpex.schema(%{
     title: "Goal.CreateRequest.CustomEvent",
     description: "Custom Event Goal creation params",
@@ -20,7 +22,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.CustomEvent do
         type: :object,
         required: [:event_name],
         properties: %{
-          event_name: %Schema{type: :string}
+          event_name: %Schema{type: :string},
+          custom_props: CustomProps.request_schema()
         }
       }
     },
