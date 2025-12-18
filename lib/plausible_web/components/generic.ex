@@ -444,6 +444,18 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:rest, :global)
 
+  @doc """
+   Renders toggle input.
+   Needs `:js_active_var` that controls toggle state.
+   Set this outside this component with `x-data="{ <variable name>: <initial state> }"`.
+
+   ### Examples
+   ```
+    <div x-data="{ showGoals: false }>
+      <.toggle_switch id="show_goals" js_active_var="showGoals" />
+    </div>
+  ```
+  """
   def toggle_switch(assigns) do
     ~H"""
     <button
@@ -477,16 +489,19 @@ defmodule PlausibleWeb.Components.Generic do
   attr :disabled, :boolean, default: false
   attr :label, :string, required: true
   attr :help_text, :string, default: nil
-  attr :help_text_conditional, :boolean, default: false
+  attr :show_help_text_only_when_active?, :boolean, default: false
   attr :mt?, :boolean, default: true
 
   attr(:rest, :global)
 
+  @doc """
+   Renders toggle input with a label. Clicking the label also toggles the toggle.
+   Needs `:js_active_var` that controls toggle state.
+   Set this outside this component with `x-data="{ <variable name>: <initial state> }"`
+   Can be configured to always show a description of the field / help text `:help_text`,
+   or only show the help text when the toggle is activated `:show_help_text_only_when_active?`.
+  """
   def toggle_field(assigns) do
-    help_text_conditional = assigns[:help_text_conditional] || false
-
-    assigns = assign(assigns, help_text_conditional: help_text_conditional)
-
     ~H"""
     <div class={["flex items-start justify-between gap-5 w-full", @mt? && "mt-6"]}>
       <div class="flex-1">
@@ -499,8 +514,8 @@ defmodule PlausibleWeb.Components.Generic do
         <p
           :if={@help_text}
           class="text-gray-500 dark:text-gray-400 text-sm text-pretty"
-          x-show={if @help_text_conditional, do: @js_active_var, else: "true"}
-          x-cloak={@help_text_conditional}
+          x-show={if @show_help_text_only_when_active?, do: @js_active_var, else: "true"}
+          x-cloak={@show_help_text_only_when_active?}
         >
           {@help_text}
         </p>

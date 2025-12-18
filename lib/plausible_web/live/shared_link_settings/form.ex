@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
           js_active_var="passwordProtectEnabled"
           label="Password protect"
           help_text="Keep this password safe. You won't be able to see it again."
-          help_text_conditional={true}
+          show_help_text_only_when_active?={true}
         />
         <div x-show="passwordProtectEnabled" x-cloak>
           <.input
