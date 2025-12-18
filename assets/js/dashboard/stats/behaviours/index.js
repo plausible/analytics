@@ -440,13 +440,6 @@ export default function Behaviours({ importedDataInView }) {
     return query.period === 'realtime'
   }
 
-  function sectionTitle() {
-    if (mode === CONVERSIONS) {
-      return specialTitleWhenGoalFilter(query, sectionTitles[mode])
-    } else {
-      return sectionTitles[mode]
-    }
-  }
 
   function renderImportedQueryUnsupportedWarning() {
     if (mode === CONVERSIONS) {
@@ -488,7 +481,7 @@ export default function Behaviours({ importedDataInView }) {
                 active={mode === CONVERSIONS}
                 onClick={setTabFactory(CONVERSIONS)}
               >
-                Goals
+                {specialTitleWhenGoalFilter(query, 'Goals')}
               </TabButton>
             )}
             {isEnabled(PROPS) &&
