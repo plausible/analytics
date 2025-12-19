@@ -49,18 +49,17 @@ defmodule Plausible.Stats.Query do
 
   def parse_and_build(
         %Plausible.Site{domain: domain} = site,
-        schema_type,
         %{"site_id" => domain} = params,
         debug_metadata \\ %{}
       ) do
     with {:ok, %ParsedQueryParams{} = parsed_query_params} <-
-           ApiQueryParser.parse(schema_type, params) do
+           ApiQueryParser.parse(params) do
       QueryBuilder.build(site, parsed_query_params, debug_metadata)
     end
   end
 
-  def parse_and_build!(site, schema_type, params, debug_metadata \\ %{}) do
-    case parse_and_build(site, schema_type, params, debug_metadata) do
+  def parse_and_build!(site, params, debug_metadata \\ %{}) do
+    case parse_and_build(site, params, debug_metadata) do
       {:ok, query} -> query
       {:error, reason} -> raise "Failed to build query: #{inspect(reason)}"
     end

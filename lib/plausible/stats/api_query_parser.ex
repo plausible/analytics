@@ -22,10 +22,10 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   def default_pagination(), do: @default_pagination
 
-  def parse(schema_type, params) when is_map(params) do
+  def parse(params) when is_map(params) do
     input_date_range = Map.get(params, "date_range")
 
-    with :ok <- JSONSchema.validate(schema_type, params),
+    with :ok <- JSONSchema.validate(params),
          {:ok, input_date_range} <- parse_input_date_range(input_date_range),
          {:ok, metrics} <- parse_metrics(Map.fetch!(params, "metrics")),
          {:ok, filters} <- parse_filters(params["filters"]),

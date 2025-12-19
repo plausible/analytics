@@ -4,7 +4,7 @@ defmodule Plausible.Stats.ApiQueryParserTest do
 
   test "parsing empty map fails" do
     assert {:error, "#: Required properties site_id, metrics, date_range were not present."} =
-             parse(:public, %{})
+             parse(%{})
   end
 
   test "invalid metric passed" do
@@ -14,7 +14,6 @@ defmodule Plausible.Stats.ApiQueryParserTest do
       "date_range" => "all"
     }
 
-    assert {:error, "#/metrics/1: Invalid metric \"event:name\""} =
-             parse(:public, params)
+    assert {:error, "#/metrics/1: Invalid metric \"event:name\""} = parse(params)
   end
 end
