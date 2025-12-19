@@ -96,7 +96,7 @@ defmodule Plausible.Stats.ApiQueryParser do
   def parse_filter_second(_operator, filter), do: parse_filter_dimension(filter)
 
   defp parse_filter_dimension([_operator, filter_dimension | _rest] = filter) do
-    parse_filter_dimension_string(filter_dimension, "Invalid filter '#{i(filter)}")
+    parse_filter_dimension_string(filter_dimension, "Invalid filter '#{i(filter)}'.")
   end
 
   defp parse_filter_dimension(filter), do: {:error, "Invalid filter '#{i(filter)}'."}
@@ -149,7 +149,7 @@ defmodule Plausible.Stats.ApiQueryParser do
     end
   end
 
-  defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'"}
+  defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'."}
 
   defp parse_filter_modifiers(modifiers) when is_map(modifiers) do
     {:ok, [atomize_keys(modifiers)]}
