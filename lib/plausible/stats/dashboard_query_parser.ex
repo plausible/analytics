@@ -5,9 +5,9 @@ defmodule Plausible.Stats.DashboardQueryParser do
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams}
+  alias Plausible.Stats.{ParsedQueryParams, QueryInclude}
 
-  @default_include %{
+  @default_include %QueryInclude{
     imports: true,
     # `include.imports_meta` can be true even when `include.imports`
     # is false. Even if we don't want to include imported data, we
@@ -17,7 +17,8 @@ defmodule Plausible.Stats.DashboardQueryParser do
     time_labels: true,
     total_rows: false,
     trim_relative_date_range: true,
-    comparisons: nil,
+    compare: nil,
+    compare_match_day_of_week: true,
     legacy_time_on_page_cutoff: nil
   }
 
@@ -33,14 +34,19 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
     with {:ok, filters} <- parse_filters(query_string),
          {:ok, relative_date} <- parse_relative_date(params_map) do
-      include_imports? = parse_include_imports(params_map)
+      include =
+        Map.merge(@default_include, %{
+          imports: parse_include_imports(params_map),
+          compare: parse_include_compare(params_map),
+          compare_match_day_of_week: parse_include_compare_match_day_of_week(params_map)
+        })
 
       {:ok,
        ParsedQueryParams.new!(%{
          input_date_range: parse_input_date_range(params_map),
          relative_date: relative_date,
          filters: filters,
-         include: Map.merge(@default_include, %{imports: include_imports?})
+         include: include
        })}
     end
   end
@@ -76,6 +82,20 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
   defp parse_include_imports(%{"with_imported" => "false"}), do: false
   defp parse_include_imports(_), do: true
+
+  defp parse_include_compare(%{"comparison" => "previous_period"}), do: :previous_period
+  defp parse_include_compare(%{"comparison" => "year_over_year"}), do: :year_over_year
+
+  defp parse_include_compare(%{"comparison" => "custom"} = params) do
+    from_date = Date.from_iso8601!(params["compare_from"])
+    to_date = Date.from_iso8601!(params["compare_to"])
+    {:date_range, from_date, to_date}
+  end
+
+  defp parse_include_compare(_options), do: nil
+
+  defp parse_include_compare_match_day_of_week(%{"match_day_of_week" => "false"}), do: false
+  defp parse_include_compare_match_day_of_week(_), do: true
 
   defp parse_filters(query_string) do
     with {:ok, filters} <- decode_filters(query_string) do

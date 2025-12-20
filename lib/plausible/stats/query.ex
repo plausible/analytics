@@ -107,7 +107,7 @@ defmodule Plausible.Stats.Query do
   end
 
   def set_include(query, key, value) do
-    struct!(query, include: Map.put(query.include, key, value))
+    struct!(query, include: struct!(query.include, [{key, value}]))
   end
 
   def add_filter(query, filter) do
@@ -168,7 +168,7 @@ defmodule Plausible.Stats.Query do
     in_range = Plausible.Imported.completed_imports_in_query_range(site, query)
 
     in_comparison_range =
-      if is_map(query.include.comparisons) do
+      if query.include.compare do
         comparison_query = Comparisons.get_comparison_query(query)
         Plausible.Imported.completed_imports_in_query_range(site, comparison_query)
       else

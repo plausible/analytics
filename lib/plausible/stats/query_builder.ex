@@ -109,23 +109,6 @@ defmodule Plausible.Stats.QueryBuilder do
     DateTimeRange.new!(from, to)
   end
 
-  defp build_comparison_datetime_range(
-         %ParsedQueryParams{include: %{comparisons: %{date_range: date_range}}} =
-           parsed_query_params,
-         site
-       ) do
-    comparison_date_range = build_datetime_range(date_range, site, nil, nil)
-
-    new_include =
-      put_in(parsed_query_params.include, [:comparisons, :date_range], comparison_date_range)
-
-    struct(parsed_query_params, include: new_include)
-  end
-
-  defp build_comparison_datetime_range(%ParsedQueryParams{} = parsed_query_params, _site) do
-    parsed_query_params
-  end
-
   defp do_build(parsed_query_params, site, debug_metadata) do
     now = Plausible.Stats.Query.Test.get_fixed_now()
 
@@ -136,8 +119,6 @@ defmodule Plausible.Stats.QueryBuilder do
       filters: filters,
       dimensions: dimensions
     } = parsed_query_params
-
-    parsed_query_params = build_comparison_datetime_range(parsed_query_params, site)
 
     relative_date = relative_date || today_from_now(site, now)
 
@@ -191,10 +172,10 @@ defmodule Plausible.Stats.QueryBuilder do
     )
   end
 
-  def put_comparison_utc_time_range(%Query{include: %{comparisons: nil}} = query), do: query
+  def put_comparison_utc_time_range(%Query{include: %{compare: nil}} = query), do: query
 
-  def put_comparison_utc_time_range(%Query{include: %{comparisons: comparison_opts}} = query) do
-    datetime_range = Comparisons.get_comparison_utc_time_range(query, comparison_opts)
+  def put_comparison_utc_time_range(%Query{} = query) do
+    datetime_range = Comparisons.get_comparison_utc_time_range(query)
     struct!(query, comparison_utc_time_range: datetime_range)
   end
 

@@ -51,14 +51,40 @@ defmodule Plausible.Plugins.API.Goals do
     :ok
   end
 
+  defp convert_to_create_params(%CreateRequest.CustomEvent{
+         goal: %{event_name: event_name, custom_props: custom_props}
+       })
+       when is_map(custom_props) do
+    %{"goal_type" => "event", "event_name" => event_name, "custom_props" => custom_props}
+  end
+
   defp convert_to_create_params(%CreateRequest.CustomEvent{goal: %{event_name: event_name}}) do
     %{"goal_type" => "event", "event_name" => event_name}
+  end
+
+  defp convert_to_create_params(%CreateRequest.Revenue{
+         goal: %{event_name: event_name, currency: currency, custom_props: custom_props}
+       })
+       when is_map(custom_props) do
+    %{
+      "goal_type" => "event",
+      "event_name" => event_name,
+      "currency" => currency,
+      "custom_props" => custom_props
+    }
   end
 
   defp convert_to_create_params(%CreateRequest.Revenue{
          goal: %{event_name: event_name, currency: currency}
        }) do
     %{"goal_type" => "event", "event_name" => event_name, "currency" => currency}
+  end
+
+  defp convert_to_create_params(%CreateRequest.Pageview{
+         goal: %{path: page_path, custom_props: custom_props}
+       })
+       when is_map(custom_props) do
+    %{"goal_type" => "page", "page_path" => page_path, "custom_props" => custom_props}
   end
 
   defp convert_to_create_params(%CreateRequest.Pageview{goal: %{path: page_path}}) do
@@ -72,6 +98,9 @@ defmodule Plausible.Plugins.API.Goals do
       case Plausible.Goals.find_or_create(site, convert_to_create_params(goal)) do
         {:ok, goal} ->
           goal
+
+        {:error, :upgrade_required} ->
+          Repo.rollback(:upgrade_required)
 
         {:error, changeset} ->
           Repo.rollback(changeset)

@@ -8,11 +8,28 @@ defmodule Plausible.Stats.QueryResult do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Query, QueryRunner}
+  alias Plausible.Stats.{Query, QueryRunner}
 
   defstruct results: [],
             meta: %{},
             query: nil
+
+  @imports_warnings %{
+    unsupported_query:
+      "Imported stats are not included in the results because query parameters are not supported. " <>
+        "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats",
+    unsupported_interval:
+      "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+  }
+
+  def imports_warnings(), do: @imports_warnings
+
+  @no_imported_scroll_depth_warning %{
+    code: :no_imported_scroll_depth,
+    warning: "No imports with scroll depth data were found"
+  }
+
+  def no_imported_scroll_depth_warning(), do: @no_imported_scroll_depth_warning
 
   @doc """
   Builds full JSON-serializable query response.
@@ -48,14 +65,6 @@ defmodule Plausible.Stats.QueryResult do
     |> add_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
   end
-
-  @imports_warnings %{
-    unsupported_query:
-      "Imported stats are not included in the results because query parameters are not supported. " <>
-        "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats",
-    unsupported_interval:
-      "Imported stats are not included because the time dimension (i.e. the interval) is too short."
-  }
 
   defp add_imports_meta(meta, %Query{include: include} = query) do
     if include.imports or include.imports_meta do
@@ -98,17 +107,14 @@ defmodule Plausible.Stats.QueryResult do
   end
 
   defp include(query) do
-    case get_in(query.include, [:comparisons, :date_range]) do
-      %DateTimeRange{first: first, last: last} ->
-        query.include
-        |> put_in([:comparisons, :date_range], [
-          to_iso8601(first, query.timezone),
-          to_iso8601(last, query.timezone)
-        ])
+    case query.include.compare do
+      {:date_range, first, last} ->
+        struct!(query.include, compare: [Date.to_iso8601(first), Date.to_iso8601(last)])
 
-      nil ->
+      _ ->
         query.include
     end
+    |> Map.from_struct()
   end
 
   defp metric_warnings(%Query{} = query) do
@@ -145,14 +151,9 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  @no_imported_scroll_depth_metric_warning %{
-    code: :no_imported_scroll_depth,
-    warning: "No imports with scroll depth data were found"
-  }
-
   defp metric_warning(:scroll_depth, %Query{} = query) do
     if query.include_imported and not Enum.any?(query.imports_in_range, & &1.has_scroll_depth) do
-      @no_imported_scroll_depth_metric_warning
+      @no_imported_scroll_depth_warning
     end
   end
 

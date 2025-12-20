@@ -1,5 +1,6 @@
 defmodule Plausible.Stats.ConsolidatedView do
   alias Plausible.{Site, Stats}
+  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryInclude}
   require Logger
 
   @spec overview_24h(Site.t(), NaiveDateTime.t()) :: map()
@@ -41,29 +42,24 @@ defmodule Plausible.Stats.ConsolidatedView do
     from =
       NaiveDateTime.shift(now, hour: -24)
       |> DateTime.from_naive!("Etc/UTC")
-      |> DateTime.to_iso8601()
 
-    to = now |> DateTime.from_naive!("Etc/UTC") |> DateTime.to_iso8601()
+    to = now |> DateTime.from_naive!("Etc/UTC")
 
     c_from =
       NaiveDateTime.shift(now, hour: -48)
       |> DateTime.from_naive!("Etc/UTC")
-      |> DateTime.to_iso8601()
 
     c_to =
       NaiveDateTime.shift(now, hour: -24)
       |> DateTime.from_naive!("Etc/UTC")
-      |> DateTime.to_iso8601()
 
-    stats_query =
-      Stats.Query.parse_and_build!(view, :internal, %{
-        "site_id" => view.domain,
-        "metrics" => ["visitors", "visits", "pageviews", "views_per_visit"],
-        "include" => %{"comparisons" => %{"mode" => "custom", "date_range" => [c_from, c_to]}},
-        "date_range" => [
-          from,
-          to
-        ]
+    {:ok, stats_query} =
+      QueryBuilder.build(view, %ParsedQueryParams{
+        input_date_range: {:datetime_range, from, to},
+        metrics: [:visitors, :visits, :pageviews, :views_per_visit],
+        include: %QueryInclude{
+          compare: {:datetime_range, c_from, c_to}
+        }
       })
 
     %Stats.QueryResult{
