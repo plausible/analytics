@@ -29,10 +29,14 @@ export default buildHook({
         title.innerText = label
 
         this.el.querySelectorAll(`button[data-tab] span`).forEach((s) => {
-          s.dataset.active = 'false'
+          this.js().setAttribute(s, 'data-active', 'false')
         })
 
-        button.querySelector('span').dataset.active = 'true'
+        this.js().setAttribute(
+          button.querySelector('span'),
+          'data-active',
+          'true'
+        )
 
         if (storageKey) {
           localStorage.setItem(`${storageKey}__${domain}`, tab)
