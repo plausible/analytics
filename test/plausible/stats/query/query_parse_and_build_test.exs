@@ -80,6 +80,17 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
   defp goal_names(goals), do: Enum.map(goals, & &1.display_name) |> Enum.sort()
 
   describe "metrics" do
+    test "public API does not recognize exit_rate metric", %{site: site} do
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate"],
+        "date_range" => "all"
+      }
+
+      assert {:error, error} = Query.parse_and_build(site, params)
+      assert error =~ "Invalid metric"
+    end
+
     test "valid metrics passed", %{site: site} do
       params = %{
         "site_id" => site.domain,
@@ -1154,6 +1165,19 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
   end
 
   describe "date range validation" do
+    for shortcut <- ["realtime", "30m"] do
+      test "public API does not recognize #{shortcut} date_range", %{site: site} do
+        params = %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => unquote(shortcut)
+        }
+
+        assert {:error, error} = Query.parse_and_build(site, params)
+        assert error =~ "Invalid date range"
+      end
+    end
+
     for {shortcut, expected_date_range} <- [
           {"day", @date_range_day},
           {"7d", @date_range_7d},

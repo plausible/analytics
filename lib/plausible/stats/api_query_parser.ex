@@ -23,10 +23,8 @@ defmodule Plausible.Stats.ApiQueryParser do
   def default_pagination(), do: @default_pagination
 
   def parse(params) when is_map(params) do
-    input_date_range = Map.get(params, "date_range")
-
     with :ok <- JSONSchema.validate(params),
-         {:ok, input_date_range} <- parse_input_date_range(input_date_range),
+         {:ok, input_date_range} <- parse_input_date_range(params["date_range"]),
          {:ok, metrics} <- parse_metrics(Map.fetch!(params, "metrics")),
          {:ok, filters} <- parse_filters(params["filters"]),
          {:ok, dimensions} <- parse_dimensions(params["dimensions"]),
@@ -159,8 +157,6 @@ defmodule Plausible.Stats.ApiQueryParser do
     {:ok, []}
   end
 
-  defp parse_input_date_range("realtime"), do: {:ok, :realtime}
-  defp parse_input_date_range("30m"), do: {:ok, :realtime_30m}
   defp parse_input_date_range("day"), do: {:ok, :day}
   defp parse_input_date_range("month"), do: {:ok, :month}
   defp parse_input_date_range("year"), do: {:ok, :year}
@@ -280,23 +276,11 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   @allowed_include_keys Enum.map(Map.keys(@default_include), &Atom.to_string/1)
 
-  defp parse_include_entry("compare", value) do
-    with {:ok, parsed_compare} <- parse_compare(value) do
-      {:ok, {:compare, parsed_compare}}
-    end
-  end
-
   defp parse_include_entry(key, value) when key in @allowed_include_keys do
     {:ok, {String.to_existing_atom(key), value}}
   end
 
   defp parse_include_entry(key, _value), do: {:error, "Invalid include key'#{i(key)}'."}
-
-  defp parse_compare(false), do: {:ok, nil}
-  defp parse_compare("previous_period"), do: {:ok, :previous_period}
-  defp parse_compare("year_over_year"), do: {:ok, :year_over_year}
-  defp parse_compare([from_date, to_date]), do: parse_date_strings(from_date, to_date)
-  defp parse_compare(compare), do: {:error, "Invalid include.compare '#{i(compare)}'."}
 
   defp parse_pagination(pagination) when is_map(pagination) do
     {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
@@ -306,12 +290,9 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   defp atomize_keys(map) when is_map(map) do
     Map.new(map, fn {key, value} ->
-      key = String.to_existing_atom(key)
-      {key, atomize_keys(value)}
+      {String.to_existing_atom(key), value}
     end)
   end
-
-  defp atomize_keys(value), do: value
 
   defp parse_filter_dimension_string(dimension, error_message \\ "") do
     case dimension do
