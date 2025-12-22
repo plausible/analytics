@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.QueryBuilderTest do
   use Plausible.DataCase
-  alias Plausible.Stats.{DateTimeRange, ParsedQueryParams, QueryBuilder, Query}
+  alias Plausible.Stats.{DateTimeRange, ParsedQueryParams, QueryBuilder, Query, QueryError}
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
   @date_range_realtime %DateTimeRange{
@@ -124,7 +124,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
         filters: [[:has_done, [:is, "event:goal", ["Unknown"]]]]
       }
 
-      assert {:error, error} = QueryBuilder.build(site, params)
+      assert {:error, %QueryError{message: error}} = QueryBuilder.build(site, params)
 
       assert error ==
                "Invalid filters. The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
@@ -132,7 +132,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
 
     for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
       test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
-        assert {:error, error} =
+        assert {:error, %QueryError{message: error}} =
                  QueryBuilder.build(site, %ParsedQueryParams{
                    metrics: [:visitors],
                    input_date_range: :all,
@@ -150,7 +150,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
     test "prohibits case_sensitive modifier with pattern operator in a complex filter tree", %{
       site: site
     } do
-      assert {:error, error} =
+      assert {:error, %QueryError{message: error}} =
                QueryBuilder.build(site, %ParsedQueryParams{
                  metrics: [:visitors],
                  input_date_range: :all,
@@ -224,7 +224,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
 
   describe "exit_rate metric" do
     test "fails validation without visit:exit_page dimension", %{site: site} do
-      assert {:error, error} =
+      assert {:error, %QueryError{message: error}} =
                QueryBuilder.build(site, %ParsedQueryParams{
                  metrics: [:exit_rate],
                  input_date_range: :all
@@ -235,7 +235,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
     end
 
     test "fails validation with event only filters", %{site: site} do
-      assert {:error, error} =
+      assert {:error, %QueryError{message: error}} =
                QueryBuilder.build(site, %ParsedQueryParams{
                  metrics: [:exit_rate],
                  dimensions: ["visit:exit_page"],
@@ -247,7 +247,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
     end
 
     test "fails validation with event metrics", %{site: site} do
-      assert {:error, error} =
+      assert {:error, %QueryError{message: error}} =
                QueryBuilder.build(site, %ParsedQueryParams{
                  metrics: [:exit_rate, :pageviews],
                  dimensions: ["visit:exit_page"],

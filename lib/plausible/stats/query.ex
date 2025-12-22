@@ -42,7 +42,8 @@ defmodule Plausible.Stats.Query do
     Comparisons,
     ApiQueryParser,
     ParsedQueryParams,
-    QueryBuilder
+    QueryBuilder,
+    QueryError
   }
 
   @type t :: %__MODULE__{}
@@ -60,8 +61,11 @@ defmodule Plausible.Stats.Query do
 
   def parse_and_build!(site, params, debug_metadata \\ %{}) do
     case parse_and_build(site, params, debug_metadata) do
-      {:ok, query} -> query
-      {:error, reason} -> raise "Failed to build query: #{inspect(reason)}"
+      {:ok, query} ->
+        query
+
+      {:error, %QueryError{message: message}} ->
+        raise "Failed to build query: #{inspect(message)}"
     end
   end
 

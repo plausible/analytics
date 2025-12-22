@@ -5,7 +5,7 @@ defmodule Plausible.Segments.Segment do
   use Plausible
   use Ecto.Schema
   import Ecto.Changeset
-  alias Plausible.Stats.{ApiQueryParser, QueryBuilder, ParsedQueryParams}
+  alias Plausible.Stats.{ApiQueryParser, QueryBuilder, ParsedQueryParams, QueryError}
 
   @segment_types [:personal, :site]
 
@@ -126,7 +126,14 @@ defmodule Plausible.Segments.Segment do
          :ok <- maybe_validate_filters_depth(parsed_filters, restricted_depth?) do
       :ok
     else
-      {:error, message} -> {:error, {:invalid_filters, message}}
+      {:error, %QueryError{code: :invalid_filters, message: message}} ->
+        {:error, {:invalid_filters, message}}
+
+      {:error, :deep_filters_not_supported} ->
+        {:error, {:invalid_filters, "Invalid filters. Deep filters are not supported."}}
+
+      {:error, message} ->
+        raise "Segment validation failed unexpectedly: #{inspect(message)}"
     end
   end
 
@@ -138,7 +145,7 @@ defmodule Plausible.Segments.Segment do
     if Enum.all?(filters, &dashboard_compatible_filter?/1) do
       :ok
     else
-      {:error, "Invalid filters. Deep filters are not supported."}
+      {:error, :deep_filters_not_supported}
     end
   end
 

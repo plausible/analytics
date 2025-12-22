@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.TableDeciderTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.{Query, QueryBuilder, ParsedQueryParams}
+  alias Plausible.Stats.{Query, QueryBuilder, ParsedQueryParams, QueryError}
 
   import Plausible.Stats.TableDecider
 
@@ -197,20 +197,32 @@ defmodule Plausible.Stats.TableDeciderTest do
           {[:scroll_depth], ["visit:device"], :ok},
           {[:bounce_rate, :scroll_depth], ["event:name"],
            {:error,
-            "Session metric(s) `bounce_rate` cannot be queried along with event dimension(s) `event:name`"}},
+            %QueryError{
+              code: :invalid_metrics,
+              message:
+                "Session metric(s) `bounce_rate` cannot be queried along with event dimension(s) `event:name`"
+            }}},
           {[:visit_duration], ["event:props:foo"],
            {:error,
-            "Session metric(s) `visit_duration` cannot be queried along with event dimension(s) `event:props:foo`"}},
+            %QueryError{
+              code: :invalid_metrics,
+              message:
+                "Session metric(s) `visit_duration` cannot be queried along with event dimension(s) `event:props:foo`"
+            }}},
           {[:bounce_rate, :scroll_depth], ["visit:exit_page"],
            {:error,
-            "Event metric(s) `scroll_depth` cannot be queried along with session dimension(s) `visit:exit_page`"}},
+            %QueryError{
+              code: :invalid_metrics,
+              message:
+                "Event metric(s) `scroll_depth` cannot be queried along with session dimension(s) `visit:exit_page`"
+            }}},
           {[:bounce_rate, :scroll_depth], ["event:page"], :ok}
         ] do
       test "metrics #{inspect(metrics)} and dimensions #{inspect(dimensions)}" do
         query =
           make_query() |> Query.set(metrics: unquote(metrics), dimensions: unquote(dimensions))
 
-        assert validate_no_metrics_dimensions_conflict(query) == unquote(expected)
+        assert validate_no_metrics_dimensions_conflict(query) == unquote(Macro.escape(expected))
       end
     end
   end
