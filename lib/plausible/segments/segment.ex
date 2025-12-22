@@ -109,6 +109,12 @@ defmodule Plausible.Segments.Segment do
 
   @spec validate_segment_data(Plausible.Site.t(), map(), boolean()) ::
           :ok | {:error, {:invalid_filters, String.t()}}
+  @doc """
+  Checks whether the filters in segment_data are valid by attempting to build
+  a `%Query{}` struct with them. The `metrics` and `input_date_range` values
+  do not matter as long as they don't affect filters being the only field
+  affecting query validity.
+  """
   def validate_segment_data(%Plausible.Site{} = site, %{"filters" => filters}, restricted_depth?) do
     with {:ok, parsed_filters} <- ApiQueryParser.parse_filters(filters),
          {:ok, _} <-
