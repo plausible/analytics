@@ -10,6 +10,8 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   alias Plausible.Stats
   alias Plausible.Stats.Filters
+  alias Plausible.Stats.ParsedQueryParams
+  alias Plausible.Stats.QueryBuilder
 
   @tabs [
     {"pages", "Top Pages"},
@@ -87,7 +89,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       assign(socket,
         site: assigns.site,
         params: assigns.params,
-        query: assigns.query,
         tabs: @tabs,
         key_labels: @key_labels,
         filter_dimensions: @filter_dimensions,
@@ -155,11 +156,11 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   end
 
   defp load_metrics(socket) do
-    %{active_tab: active_tab, site: site, query: query} = socket.assigns
+    %{active_tab: active_tab, site: site, params: params} = socket.assigns
 
     assign_async(socket, [:metrics, :results, :meta, :skip_imported_reason], fn ->
-      %{results: pages, meta: meta, metrics: metrics} =
-        metrics_for_tab(active_tab, site, query)
+      %{results: pages, meta: meta, query: query, metrics: metrics} =
+        metrics_for_tab(active_tab, site, params)
 
       {:ok,
        %{
@@ -171,9 +172,13 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     end)
   end
 
-  defp metrics_for_tab("pages", site, query) do
-    query = struct!(query, dimensions: ["event:page"])
+  defp metrics_for_tab("pages", site, params) do
+    params =
+      params
+      |> ParsedQueryParams.set(dimensions: ["event:page"])
+      |> ParsedQueryParams.set_include(:time_labels, false)
 
+    {:ok, query} = QueryBuilder.build(site, params, %{})
     metrics = breakdown_metrics(query)
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
@@ -182,12 +187,16 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       results
       |> transform_keys(%{page: :name})
 
-    %{results: pages, meta: meta, metrics: metrics}
+    %{query: query, results: pages, meta: meta, metrics: metrics}
   end
 
-  defp metrics_for_tab("entry-pages", site, query) do
-    query = struct!(query, dimensions: ["visit:entry_page"])
+  defp metrics_for_tab("entry-pages", site, params) do
+    params =
+      params
+      |> ParsedQueryParams.set(dimensions: ["visit:entry_page"])
+      |> ParsedQueryParams.set_include(:time_labels, false)
 
+    {:ok, query} = QueryBuilder.build(site, params, %{})
     metrics = breakdown_metrics(query)
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
@@ -196,12 +205,16 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       results
       |> transform_keys(%{entry_page: :name})
 
-    %{results: pages, meta: meta, metrics: metrics}
+    %{query: query, results: pages, meta: meta, metrics: metrics}
   end
 
-  defp metrics_for_tab("exit-pages", site, query) do
-    query = struct!(query, dimensions: ["visit:exit_page"])
+  defp metrics_for_tab("exit-pages", site, params) do
+    params =
+      params
+      |> ParsedQueryParams.set(dimensions: ["visit:exit_page"])
+      |> ParsedQueryParams.set_include(:time_labels, false)
 
+    {:ok, query} = QueryBuilder.build(site, params, %{})
     metrics = breakdown_metrics(query)
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
@@ -210,7 +223,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       results
       |> transform_keys(%{exit_page: :name})
 
-    %{results: pages, meta: meta, metrics: metrics}
+    %{query: query, results: pages, meta: meta, metrics: metrics}
   end
 
   defp breakdown_metrics(query) do

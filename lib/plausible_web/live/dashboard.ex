@@ -7,7 +7,6 @@ defmodule PlausibleWeb.Live.Dashboard do
 
   alias Plausible.Repo
   alias Plausible.Stats.DashboardQueryParser
-  alias Plausible.Stats.QueryBuilder
   alias Plausible.Teams
 
   @default_prefs %{
@@ -51,14 +50,11 @@ defmodule PlausibleWeb.Live.Dashboard do
     uri = URI.parse(url)
     path = uri.path |> String.split("/") |> Enum.drop(2)
     {:ok, params} = DashboardQueryParser.parse(uri.query || "", socket.assigns.user_prefs)
-    params = %{params | include: struct!(params.include, time_labels: false)}
-    {:ok, query} = QueryBuilder.build(socket.assigns.site, params, %{})
 
     socket =
       assign(socket,
         path: path,
-        params: params,
-        query: query
+        params: params
       )
 
     {:noreply, socket}
@@ -75,7 +71,6 @@ defmodule PlausibleWeb.Live.Dashboard do
           user_prefs={@user_prefs}
           connected?={@connected?}
           params={@params}
-          query={@query}
         />
       </.portal_wrapper>
     </div>
