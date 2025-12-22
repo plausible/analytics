@@ -14,7 +14,7 @@ defmodule Plausible.Stats.DashboardQueryParser do
     # might still want to know whether imported data can be toggled
     # on/off on the dashboard.
     imports_meta: true,
-    time_labels: false,
+    time_labels: true,
     total_rows: false,
     trim_relative_date_range: true,
     compare: nil,
@@ -43,8 +43,6 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
       {:ok,
        ParsedQueryParams.new!(%{
-         metrics: [],
-         dimensions: [],
          input_date_range: parse_input_date_range(params_map),
          relative_date: relative_date,
          filters: filters,
