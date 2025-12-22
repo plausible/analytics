@@ -54,7 +54,6 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:max_one_error, :boolean, default: false)
   slot(:help_content)
   slot(:inner_block)
-  slot(:link)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
@@ -91,9 +90,6 @@ defmodule PlausibleWeb.Live.Components.Form do
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
-      <div :if={@link != [] && Enum.empty?(@errors)} class="mt-1">
-        {render_slot(@link)}
-      </div>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -206,9 +202,6 @@ defmodule PlausibleWeb.Live.Components.Form do
         {@rest}
       />
       {render_slot(@inner_block)}
-      <div :if={@link != [] && Enum.empty?(@errors)} class="mt-0.5">
-        {render_slot(@link)}
-      </div>
       <.error :for={msg <- @errors}>
         {msg}
       </.error>

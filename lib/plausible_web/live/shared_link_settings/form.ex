@@ -73,6 +73,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
                 {@shared_link.segment.id, @shared_link.segment.name}
             }
           />
+          <.learn_more />
         </div>
       </div>
 
@@ -147,6 +148,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
             suggest_fun={fn input, _ -> get_segment_suggestions(assigns.site, input) end}
             selected={nil}
           />
+          <.learn_more />
         </div>
       </div>
       <.button type="submit" class="w-full">
@@ -155,6 +157,19 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
     </.form>
     """
   end
+
+  defp learn_more(assigns),
+    do: ~H"""
+    <div class="mt-1">
+      <PlausibleWeb.Components.Generic.unstyled_link
+        href="https://plausible.io/docs/filters-segments#how-to-save-a-segment"
+        new_tab
+        class="text-xs text-indigo-600 dark:text-indigo-400"
+      >
+        Learn about segments
+      </PlausibleWeb.Components.Generic.unstyled_link>
+    </div>
+    """
 
   defp get_segment_suggestions(site, input) do
     {:ok, segments} = Plausible.Segments.search_by_name(site, input)
