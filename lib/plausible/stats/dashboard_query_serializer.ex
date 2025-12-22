@@ -6,7 +6,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
 
   alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser, QueryInclude}
 
-  def serialize(%ParsedQueryParams{} = params, segments) do
+  def serialize(%ParsedQueryParams{} = params, segments \\ []) do
     params
     |> Map.to_list()
     |> Enum.flat_map(fn pair -> get_serialized_fields(pair, segments) end)
