@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
       max_value =
         results
         |> Enum.map(& &1.visitors)
-        |> Enum.max()
+        |> Enum.max(&>=/2, fn -> 0 end)
 
       assigns =
         assign(assigns,
