@@ -77,11 +77,10 @@ defmodule PlausibleWeb.Live.GoalSettings do
             </.styled_link>
           </p>
         </:subtitle>
-        <.live_component :let={modal_unique_id} module={Modal} preload?={false} id="goals-form-modal">
+        <.live_component module={Modal} preload?={false} id="goals-form-modal">
           <.live_component
             module={PlausibleWeb.Live.GoalSettings.Form}
-            id={"goals-form-#{modal_unique_id}"}
-            context_unique_id={modal_unique_id}
+            id={"goals-form"}
             event_name_options={@event_name_options}
             domain={@domain}
             site={@site}

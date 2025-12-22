@@ -45,7 +45,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       socket
       |> assign(
         id: assigns.id,
-        context_unique_id: assigns.context_unique_id,
         form: form,
         event_name_options_count: event_name_options_count,
         event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
@@ -87,7 +86,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       <.custom_event_fields
         :if={@form_type == "custom_events"}
         f={f}
-        suffix={@context_unique_id}
         current_user={@current_user}
         site_team={@site_team}
         site={@site}
@@ -100,14 +98,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         :if={@form_type == "pageviews"}
         f={f}
         goal={@goal}
-        suffix={@context_unique_id}
         site={@site}
       />
       <.scroll_fields
         :if={@form_type == "scroll"}
         f={f}
         goal={@goal}
-        suffix={@context_unique_id}
         site={@site}
       />
 
@@ -163,7 +159,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       <.custom_event_fields
         :if={@form_type == "custom_events"}
         f={f}
-        suffix={@context_unique_id}
         current_user={@current_user}
         site_team={@site_team}
         site={@site}
@@ -174,13 +169,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       <.pageview_fields
         :if={@form_type == "pageviews"}
         f={f}
-        suffix={@context_unique_id}
         site={@site}
       />
       <.scroll_fields
         :if={@form_type == "scroll"}
         f={f}
-        suffix={@context_unique_id}
         site={@site}
       />
 
@@ -193,7 +186,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
-  attr(:suffix, :string)
   attr(:goal, Plausible.Goal, default: nil)
   attr(:rest, :global)
 
@@ -210,12 +202,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </.styled_link>
       </div>
 
-      <.label for={"page_path_input_#{@suffix}"}>
+      <.label for={"page_path_input"}>
         Page path
       </.label>
 
       <.live_component
-        id={"page_path_input_#{@suffix}"}
+        id={"page_path_input"}
         submit_name="goal[page_path]"
         class={[
           "py-2"
@@ -245,7 +237,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
-  attr(:suffix, :string)
   attr(:goal, Plausible.Goal, default: nil)
   attr(:rest, :global)
 
@@ -289,12 +280,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </.styled_link>
       </div>
 
-      <.label for={"scroll_threshold_input_#{@suffix}"}>
+      <.label for={"scroll_threshold_input"}>
         Scroll percentage threshold (1-100)
       </.label>
 
       <.input
-        id={"scroll_threshold_input_#{@suffix}"}
+        id={"scroll_threshold_input"}
         required
         field={@f[:scroll_threshold]}
         type="number"
@@ -305,12 +296,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-on:change="updateDisplayName"
       />
 
-      <.label for={"scroll_page_path_input_#{@suffix}"} class="mt-3">
+      <.label for={"scroll_page_path_input"} class="mt-3">
         Page path
       </.label>
 
       <.live_component
-        id={"scroll_page_path_input_#{@suffix}"}
+        id={"scroll_page_path_input"}
         submit_name="goal[page_path]"
         class={[
           "py-2"
@@ -343,7 +334,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:site, Plausible.Site)
   attr(:current_user, Plausible.Auth.User)
   attr(:site_team, Plausible.Teams.Team)
-  attr(:suffix, :string)
   attr(:existing_goals, :list)
   attr(:goal_options, :list)
   attr(:goal, Plausible.Goal, default: nil)
@@ -365,12 +355,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </div>
 
         <div>
-          <.label for={"event_name_input_#{@suffix}"}>
+          <.label for={"event_name_input"}>
             Event name
           </.label>
 
           <.live_component
-            id={"event_name_input_#{@suffix}"}
+            id={"event_name_input"}
             submit_name="goal[event_name]"
             placeholder="e.g. Signup"
             class={[
@@ -408,7 +398,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             site_team={@site_team}
             has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
             goal={@goal}
-            suffix={@suffix}
           />
         <% else %>
           <div class="h-2"></div>
@@ -441,9 +430,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           Currency
         </label>
       <% end %>
-      <div class="mb-2" x-show="active" id={"revenue-input-#{@suffix}"}>
+      <div class="mb-2" x-show="active" id={"revenue-input"}>
         <.live_component
-          id={"currency_input_#{@suffix}"}
+          id={"currency_input"}
           submit_name={@f[:currency].name}
           module={ComboBox}
           selected={@selected_currency}
@@ -559,7 +548,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       <div class="flex itemx-center mb-3">
         <PlausibleWeb.Components.Generic.toggle_switch
           id="enable-revenue-tracking"
-          id_suffix={@suffix}
           js_active_var="active"
           disabled={not @has_access_to_revenue_goals?}
         />

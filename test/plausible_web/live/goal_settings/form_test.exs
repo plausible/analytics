@@ -65,10 +65,10 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       assert input_names ==
                [
-                 "display-event_name_input_modalseq0",
+                 "display-event_name_input",
                  "goal[event_name]",
                  "goal[display_name]",
-                 "display-currency_input_modalseq0",
+                 "display-currency_input",
                  "goal[currency]"
                ]
     end
@@ -84,7 +84,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
 
       assert input_names == [
-               "display-page_path_input_modalseq0",
+               "display-page_path_input",
                "goal[page_path]",
                "goal[display_name]"
              ]
@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       assert input_names ==
                [
-                 "display-event_name_input_modalseq0",
+                 "display-event_name_input",
                  "goal[event_name]",
                  "goal[display_name]"
                ]
@@ -111,7 +111,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     test "renders error on empty submission", %{conn: conn, site: site} do
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
 
-      lv |> element("#goals-form-modalseq0 form") |> render_submit()
+      lv |> element("#goals-form-modal form") |> render_submit()
       html = render(lv)
       assert html =~ "this field is required and cannot be blank"
     end
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     test "renders error on empty pageview submission", %{conn: conn, site: site} do
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("pageviews")
 
-      lv |> element("#goals-form-modalseq0 form") |> render_submit()
+      lv |> element("#goals-form-modal form") |> render_submit()
       html = render(lv)
       assert html =~ "this field is required and must start with a /"
     end
@@ -131,7 +131,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv = open_modal_with_goal_type(lv, "custom_events")
 
       lv
-      |> element("#goals-form-modalseq0 form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{goal: %{event_name: "SampleCustomEvent"}})
 
       html = render(lv)
@@ -154,7 +154,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
         refute element_exists?(render(lv), @revenue_goal_settings)
 
         lv
-        |> element("#goals-form-modalseq0 form")
+        |> element("#goals-form-modal form")
         |> render_submit(%{goal: %{event_name: "SampleCustomEvent"}})
 
         html = render(lv)
@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert element_exists?(render(lv), @revenue_goal_settings)
 
       lv
-      |> element("#goals-form-modalseq0 form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{
         goal: %{
           event_name: "SampleRevenueGoal",
@@ -192,7 +192,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       refute render(lv) =~ "Visit /page/**"
 
       lv
-      |> element("#goals-form-modalseq0 form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{goal: %{page_path: "/page/**"}})
 
       html = render(lv)
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       refute render(lv) =~ "Visit /page/**"
 
       lv
-      |> element("#goals-form-modalseq0 form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{goal: %{page_path: "/page/**"}})
 
       html = render(lv)
@@ -263,10 +263,10 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
 
       html = render(lv)
-      assert element_exists?(html, "#event_name_input_modalseq0[value=Signup]")
+      assert element_exists?(html, "#event_name_input[value=Signup]")
 
       lv
-      |> element("#goals-form-modalseq0 form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{goal: %{event_name: "Updated", display_name: "UPDATED"}})
 
       _html = render(lv)
@@ -285,11 +285,11 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
 
       html = render(lv)
-      assert element_exists?(html, "#event_name_input_modalseq0[value=Purchase]")
-      assert element_exists?(html, ~s/#currency_input_modalseq0[value="EUR - Euro"]/)
+      assert element_exists?(html, "#event_name_input[value=Purchase]")
+      assert element_exists?(html, ~s/#currency_input[value="EUR - Euro"]/)
 
       lv
-      |> element("#goals-form-modalseq0 form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{goal: %{event_name: "Updated", currency: "USD"}})
 
       _html = render(lv)
@@ -309,10 +309,10 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
 
       html = render(lv)
-      assert element_exists?(html, ~s|#page_path_input_modalseq0[value="/go/to/blog/**"]|)
+      assert element_exists?(html, ~s|#page_path_input[value="/go/to/blog/**"]|)
 
       lv
-      |> element("#goals-form-modalseq0 form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{goal: %{page_path: "/updated", display_name: "Visit /updated"}})
 
       _html = render(lv)
@@ -330,10 +330,10 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
 
       html = render(lv)
-      assert element_exists?(html, ~s|#page_path_input_modalseq0[value="/go/to/blog/**"]|)
+      assert element_exists?(html, ~s|#page_path_input[value="/go/to/blog/**"]|)
 
       lv
-      |> element("#goals-form-modalseq0 form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{goal: %{page_path: "/updated", display_name: g2.display_name}})
 
       html = render(lv)
@@ -349,13 +349,13 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     test "currency combo works", %{conn: conn, site: site} do
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
 
-      type_into_combo(lv, "currency_input_modalseq0", "Polish")
+      type_into_combo(lv, "currency_input", "Polish")
       html = render(lv)
 
       assert element_exists?(html, ~s/a[phx-value-display-value="PLN - Polish Zloty"]/)
       refute element_exists?(html, ~s/a[phx-value-display-value="EUR - Euro"]/)
 
-      type_into_combo(lv, "currency_input_modalseq0", "Euro")
+      type_into_combo(lv, "currency_input", "Euro")
       html = render(lv)
 
       refute element_exists?(html, ~s/a[phx-value-display-value="PLN - Polish Zloty"]/)
@@ -365,7 +365,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     test "pageview combo works", %{conn: conn, site: site} do
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("pageviews")
 
-      html = type_into_combo(lv, "page_path_input_modalseq0", "/hello")
+      html = type_into_combo(lv, "page_path_input", "/hello")
 
       assert html =~ "Create &quot;/hello&quot;"
     end
@@ -378,14 +378,14 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("pageviews")
 
-      type_into_combo(lv, "page_path_input_modalseq0", "/go/to/p")
+      type_into_combo(lv, "page_path_input", "/go/to/p")
 
       html = render(lv)
       assert html =~ "Create &quot;/go/to/p&quot;"
       assert html =~ "/go/to/page/1"
       refute html =~ "/go/home"
 
-      type_into_combo(lv, "page_path_input_modalseq0", "/go/h")
+      type_into_combo(lv, "page_path_input", "/go/h")
       html = render(lv)
       assert html =~ "/go/home"
       refute html =~ "/go/to/page/1"
@@ -401,14 +401,14 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("pageviews")
 
-      type_into_combo(lv, "page_path_input_modalseq0", "/go/to/p")
+      type_into_combo(lv, "page_path_input", "/go/to/p")
 
       html = render(lv)
       assert html =~ "Create &quot;/go/to/p&quot;"
       assert html =~ "/go/to/page/1"
       refute html =~ "/go/home"
 
-      type_into_combo(lv, "page_path_input_modalseq0", "/go/h")
+      type_into_combo(lv, "page_path_input", "/go/h")
       html = render(lv)
       assert html =~ "/go/home"
       refute html =~ "/go/to/page/1"
@@ -427,12 +427,12 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       |> element("button[phx-click='add-manually']")
       |> render_click()
 
-      type_into_combo(lv, "event_name_input_modalseq0", "One")
+      type_into_combo(lv, "event_name_input", "One")
       html = render(lv)
 
-      assert text_of_element(html, "#goals-form-modalseq0") =~ "EventOne"
-      refute text_of_element(html, "#goals-form-modalseq0") =~ "EventTwo"
-      refute text_of_element(html, "#goals-form-modalseq0") =~ "EventThree"
+      assert text_of_element(html, "#goals-form-modal") =~ "EventOne"
+      refute text_of_element(html, "#goals-form-modal") =~ "EventTwo"
+      refute text_of_element(html, "#goals-form-modal") =~ "EventThree"
     end
 
     test "event name combo suggestions are up to date after deletion", %{conn: conn, site: site} do
@@ -456,9 +456,9 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       html = render(lv)
 
-      assert text_of_element(html, "#goals-form-modalseq0") =~ "EventOne"
-      refute text_of_element(html, "#goals-form-modalseq0") =~ "EventTwo"
-      refute text_of_element(html, "#goals-form-modalseq0") =~ "EventThree"
+      assert text_of_element(html, "#goals-form-modal") =~ "EventOne"
+      refute text_of_element(html, "#goals-form-modal") =~ "EventTwo"
+      refute text_of_element(html, "#goals-form-modal") =~ "EventThree"
     end
   end
 
