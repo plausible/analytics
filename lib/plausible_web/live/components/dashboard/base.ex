@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
   use PlausibleWeb, :component
 
   alias Plausible.Stats.DashboardQuerySerializer
+  alias Plausible.Stats.ParsedQueryParams
 
   attr :site, Plausible.Site, required: true
   attr :params, :map, required: true
@@ -49,7 +50,7 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
   slot :inner_block, required: true
 
   def filter_link(assigns) do
-    params = replace_filter(assigns.params, assigns.filter)
+    params = ParsedQueryParams.add_or_replace_filter(assigns.params, assigns.filter)
 
     assigns = assign(assigns, :params, params)
 
@@ -82,17 +83,5 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
       {render_slot(@inner_block)}
     </div>
     """
-  end
-
-  defp replace_filter(params, filter) do
-    [:is, dimension, _values] = filter
-
-    filters =
-      Enum.reject(params.filters, fn
-        {:is, ^dimension, _} -> true
-        _ -> false
-      end)
-
-    %{params | filters: [filter | filters]}
   end
 end
