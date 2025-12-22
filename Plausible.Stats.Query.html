@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-2AC17FC4.js"></script>
+    <script src="dist/sidebar_items-DB940C71.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -187,7 +187,8 @@ Pages
 
       </div>
 
-        <div class="summary-synopsis"><p>Builds query from old-style stats APIv1 params. New code should use <code class="inline">Query.parse_and_build</code>.</p></div>
+        <div class="summary-synopsis"><p>Builds query from old-style stats APIv1 params. New code should use <code class="inline">Query.parse_and_build</code>
+or <code class="inline">QueryBuilder.build</code> with already parsed params.</p></div>
 
     </div>
 
@@ -201,7 +202,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse_and_build/4" data-no-tooltip translate="no">parse_and_build(site, schema_type, params, debug_metadata \\ %{})</a>
+        <a href="#parse_and_build/3" data-no-tooltip translate="no">parse_and_build(site, params, debug_metadata \\ %{})</a>
 
       </div>
 
@@ -209,7 +210,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse_and_build!/4" data-no-tooltip translate="no">parse_and_build!(site, schema_type, params, debug_metadata \\ %{})</a>
+        <a href="#parse_and_build!/3" data-no-tooltip translate="no">parse_and_build!(site, params, debug_metadata \\ %{})</a>
 
       </div>
 
@@ -401,7 +402,8 @@ Pages
 
   <section class="docstring">
 
-<p>Builds query from old-style stats APIv1 params. New code should use <code class="inline">Query.parse_and_build</code>.</p>
+<p>Builds query from old-style stats APIv1 params. New code should use <code class="inline">Query.parse_and_build</code>
+or <code class="inline">QueryBuilder.build</code> with already parsed params.</p>
   </section>
 </section>
 <section class="detail" id="get_skip_imported_reason/1">
@@ -431,15 +433,15 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="parse_and_build/4">
+<section class="detail" id="parse_and_build/3">
 
-    <span id="parse_and_build/3"></span>
+    <span id="parse_and_build/2"></span>
 
   <div class="detail-header">
-    <a href="#parse_and_build/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#parse_and_build/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">parse_and_build(site, schema_type, params, debug_metadata \\ %{})</h1>
+    <h1 class="signature" translate="no">parse_and_build(site, params, debug_metadata \\ %{})</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L50" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -453,17 +455,17 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="parse_and_build!/4">
+<section class="detail" id="parse_and_build!/3">
 
-    <span id="parse_and_build!/3"></span>
+    <span id="parse_and_build!/2"></span>
 
   <div class="detail-header">
-    <a href="#parse_and_build!/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#parse_and_build!/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">parse_and_build!(site, schema_type, params, debug_metadata \\ %{})</h1>
+    <h1 class="signature" translate="no">parse_and_build!(site, params, debug_metadata \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L62" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L61" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
