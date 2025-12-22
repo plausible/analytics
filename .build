@@ -308,6 +308,7 @@ Plausible.Teams.Users.html
 Plausible.Teams.html
 Plausible.Test.Support.HTML.html
 Plausible.Test.Support.HTTPMocker.html
+Plausible.Test.Support.Sandbox.html
 Plausible.TestUtils.html
 Plausible.Themes.html
 Plausible.Times.html
@@ -564,8 +565,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-B031C623.js
-dist/sidebar_items-B7853586.js
+dist/search_data-D0248542.js
+dist/sidebar_items-A408A440.js
 index.html
 readme.html
 search.html
