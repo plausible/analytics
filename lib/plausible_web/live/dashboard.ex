@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   end
 
   def handle_params_internal(_params, url, socket) do
-    uri = URI.new!(url)
+    uri = URI.parse(url)
     path = uri.path |> String.split("/") |> Enum.drop(2)
     {:ok, params} = DashboardQueryParser.parse(uri.query || "", socket.assigns.user_prefs)
     params = %{params | include: struct!(params.include, time_labels: false)}
