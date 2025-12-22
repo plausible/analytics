@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   defp no_data(assigns) do
     ~H"""
     <div
-      class="w-full h-full flex flex-col justify-center group-has-[.tile-tab.phx-click-loading]:hidden"
+      class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]:hidden"
       style={"min-height: #{@min_height}px;"}
     >
       <div class="mx-auto font-medium text-gray-500 dark:text-gray-400">

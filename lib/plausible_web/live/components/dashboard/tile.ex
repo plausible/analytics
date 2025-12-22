@@ -25,15 +25,16 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         <div
           :if={@tabs != []}
           id={@id <> "-tabs"}
+          phx-update="ignore"
           phx-hook="DashboardTabs"
-          class="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
+          class="tile-tabs flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
         >
           {render_slot(@tabs)}
         </div>
       </div>
 
       <div
-        class="w-full flex-col justify-center group-has-[.tile-tab.phx-click-loading]:flex hidden"
+        class="w-full flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]:flex hidden"
         style={"min-height: #{@height}px;"}
       >
         <div class="mx-auto loading">
@@ -41,7 +42,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         </div>
       </div>
 
-      <div class="group-has-[.tile-tab.phx-click-loading]:hidden">
+      <div class="group-has-[.tile-tabs.phx-hook-loading]:hidden">
         {render_slot(@inner_block)}
       </div>
     </div>
@@ -57,26 +58,25 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
     assigns =
       assign(
         assigns,
-        active_classes:
-          "text-indigo-600 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-600 dark:decoration-indigo-500",
-        inactive_classes: "hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer",
-        data_attrs: if(assigns.value == assigns.active, do: %{"data-active": "true"}, else: %{})
+        data_attrs:
+          if(assigns.value == assigns.active,
+            do: %{"data-active": "true"},
+            else: %{"data-active": "false"}
+          )
       )
 
     ~H"""
     <button
-      class="tile-tab rounded-sm truncate text-left transition-colors duration-150"
+      class="rounded-sm truncate text-left transition-colors duration-150"
       data-tab={@value}
       data-label={@label}
       data-storage-key="pageTab"
-      data-active-classes={@active_classes}
-      data-inactive-classes={@inactive_classes}
-      phx-click={if(@value != @active, do: "set-tab")}
-      phx-value-tab={@value}
-      phx-target={@target}
-      {@data_attrs}
+      data-target={@target}
     >
-      <span class={if(@value == @active, do: @active_classes, else: @inactive_classes)}>
+      <span
+        {@data_attrs}
+        class="data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500 data-[active=true]:font-bold data-[active=true]:underline data-[active=true]:decoration-2 data-[active=true]:decoration-indigo-600 data-[active=true]:dark:decoration-indigo-500 data-[active=false]:hover:text-indigo-700 data-[active=false]:dark:hover:text-indigo-400 data-[active=false]:cursor-pointer"
+      >
         {@label}
       </span>
     </button>
