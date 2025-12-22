@@ -40,6 +40,8 @@ defmodule PlausibleWeb.ConnCase do
       Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
+    Plausible.Test.Support.Sandbox.allow_salts_process()
+
     # randomize client ip to avoid accidentally hitting
     # rate limiting during tests
     conn =
