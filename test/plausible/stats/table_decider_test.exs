@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.TableDeciderTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, QueryBuilder, ParsedQueryParams}
 
   import Plausible.Stats.TableDecider
 
@@ -14,12 +14,10 @@ defmodule Plausible.Stats.TableDeciderTest do
     end
 
     test "with nested filter" do
-      assert not events_join_sessions?(
-               make_query_full_filters([["not", ["is", "event:name", []]]])
-             )
+      assert not events_join_sessions?(make_query_full_filters([[:not, [:is, "event:name", []]]]))
 
       assert events_join_sessions?(
-               make_query_full_filters([["not", ["is", "visit:exit_page", []]]])
+               make_query_full_filters([[:not, [:is, "visit:exit_page", []]]])
              )
     end
   end
@@ -218,17 +216,25 @@ defmodule Plausible.Stats.TableDeciderTest do
   end
 
   defp make_query(filter_dimensions \\ [], dimensions \\ []) do
-    Query.from(build(:site, id: :rand.uniform(100_000)), %{
-      "filters" =>
-        Enum.map(filter_dimensions, fn filter_dimension -> ["is", filter_dimension, []] end),
-      "dimensions" => dimensions
+    site = build(:site, id: :rand.uniform(100_000))
+
+    QueryBuilder.build!(site, %ParsedQueryParams{
+      metrics: [:visitors],
+      input_date_range: :all,
+      filters:
+        Enum.map(filter_dimensions, fn filter_dimension -> [:is, filter_dimension, []] end),
+      dimensions: dimensions
     })
   end
 
   defp make_query_full_filters(filters) do
-    Query.from(build(:site, id: :rand.uniform(100_000)), %{
-      "dimensions" => [],
-      "filters" => filters
+    site = build(:site, id: :rand.uniform(100_000))
+
+    QueryBuilder.build!(site, %ParsedQueryParams{
+      metrics: [:visitors],
+      input_date_range: :all,
+      dimensions: [],
+      filters: filters
     })
   end
 end

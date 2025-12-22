@@ -6,6 +6,7 @@ defmodule Plausible.FunnelsTest do
     alias Plausible.Goals
     alias Plausible.Funnels
     alias Plausible.Stats
+    alias Plausible.Stats.{QueryBuilder, ParsedQueryParams}
 
     setup do
       site = new_site()
@@ -200,7 +201,7 @@ defmodule Plausible.FunnelsTest do
           build(:event, name: "Signup", user_id: 666)
         ])
 
-        query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+        query = QueryBuilder.build!(site, %ParsedQueryParams{input_date_range: :all})
 
         funnel_data = Stats.funnel(site, query, funnel_definition)
 
@@ -259,7 +260,7 @@ defmodule Plausible.FunnelsTest do
           build(:event, name: "Signup", user_id: 666)
         ])
 
-        query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+        query = QueryBuilder.build!(site, %ParsedQueryParams{input_date_range: :all})
 
         funnel_data = Stats.funnel(site, query, funnel.id)
 
@@ -309,7 +310,7 @@ defmodule Plausible.FunnelsTest do
             [g1, g2, g3]
           )
 
-        query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+        query = QueryBuilder.build!(site, %ParsedQueryParams{input_date_range: :all})
 
         funnel_data = Stats.funnel(site, query, funnel.id)
 

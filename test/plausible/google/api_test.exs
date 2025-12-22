@@ -3,7 +3,7 @@ defmodule Plausible.Google.APITest do
   use Plausible.Test.Support.HTTPMocker
 
   alias Plausible.Google
-  alias Plausible.Stats.{DateTimeRange, Query}
+  alias Plausible.Stats.{DateTimeRange, QueryBuilder, ParsedQueryParams}
 
   import ExUnit.CaptureLog
   import Mox
@@ -43,7 +43,9 @@ defmodule Plausible.Google.APITest do
       )
 
       query =
-        Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
+        QueryBuilder.build!(site, %ParsedQueryParams{
+          input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
+        })
 
       assert {:error, "google_auth_error"} = Google.API.fetch_stats(site, query, {5, 0}, "")
     end
@@ -61,7 +63,9 @@ defmodule Plausible.Google.APITest do
       )
 
       query =
-        Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
+        QueryBuilder.build!(site, %ParsedQueryParams{
+          input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
+        })
 
       assert {:error, "some_error"} = Google.API.fetch_stats(site, query, {5, 0}, "")
     end
@@ -79,7 +83,9 @@ defmodule Plausible.Google.APITest do
       )
 
       query =
-        Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
+        QueryBuilder.build!(site, %ParsedQueryParams{
+          input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
+        })
 
       log =
         capture_log(fn ->
@@ -105,7 +111,9 @@ defmodule Plausible.Google.APITest do
     )
 
     query =
-      Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
+      QueryBuilder.build!(site, %ParsedQueryParams{
+        input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
+      })
 
     assert {:error, "invalid_grant"} = Google.API.fetch_stats(site, query, 5, "")
   end
@@ -133,7 +141,9 @@ defmodule Plausible.Google.APITest do
       mock_http_with("google_search_console.json")
 
       query =
-        Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
+        QueryBuilder.build!(site, %ParsedQueryParams{
+          input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
+        })
 
       assert {:ok,
               [
@@ -164,11 +174,9 @@ defmodule Plausible.Google.APITest do
       )
 
       query =
-        Plausible.Stats.Query.from(site, %{
-          "period" => "custom",
-          "from" => "2022-01-01",
-          "to" => "2022-01-05",
-          "filters" => "event:page==/page"
+        QueryBuilder.build!(site, %ParsedQueryParams{
+          input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]},
+          filters: [[:is, "event:page", ["/page"]]]
         })
 
       assert {:ok, []} = Google.API.fetch_stats(site, query, {5, 0}, "")
@@ -177,12 +185,12 @@ defmodule Plausible.Google.APITest do
     test "returns :invalid filters when using filters that cannot be used in Search Console", %{
       site: site
     } do
+      insert(:goal, event_name: "Signup", site: site)
+
       query =
-        Plausible.Stats.Query.from(site, %{
-          "period" => "custom",
-          "from" => "2022-01-01",
-          "to" => "2022-01-05",
-          "filters" => "event:goal==Signup"
+        QueryBuilder.build!(site, %ParsedQueryParams{
+          input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]},
+          filters: [[:is, "event:goal", ["Signup"]]]
         })
 
       assert {:error, :unsupported_filters} = Google.API.fetch_stats(site, query, 5, "")

@@ -5,6 +5,7 @@ defmodule Plausible.Segments.Segment do
   use Plausible
   use Ecto.Schema
   import Ecto.Changeset
+  alias Plausible.Stats.{ApiQueryParser, QueryBuilder, ParsedQueryParams}
 
   @segment_types [:personal, :site]
 
@@ -102,77 +103,33 @@ defmodule Plausible.Segments.Segment do
       ),
       do: :ok
 
-  def validate_segment_data_if_exists(%Plausible.Site{} = site, segment_data, restricted_depth?),
-    do: validate_segment_data(site, segment_data, restricted_depth?)
+  def validate_segment_data_if_exists(%Plausible.Site{} = site, segment_data, restricted_depth?) do
+    validate_segment_data(site, segment_data, restricted_depth?)
+  end
 
-  def validate_segment_data(
-        %Plausible.Site{} = site,
-        %{"filters" => filters},
-        restricted_depth?
-      ) do
-    with {:ok, %Plausible.Stats.Query{filters: parsed_filters}} <-
-           build_naive_query_from_segment_data(site, filters),
+  @spec validate_segment_data(Plausible.Site.t(), map(), boolean()) ::
+          :ok | {:error, {:invalid_filters, String.t()}}
+  @doc """
+  Checks whether the filters in segment_data are valid by attempting to build
+  a `%Query{}` struct with them. The `metrics` and `input_date_range` values
+  do not matter as long as they don't affect filters being the only field
+  affecting query validity.
+  """
+  def validate_segment_data(%Plausible.Site{} = site, %{"filters" => filters}, restricted_depth?) do
+    with {:ok, parsed_filters} <- ApiQueryParser.parse_filters(filters),
+         {:ok, _} <-
+           QueryBuilder.build(site, %ParsedQueryParams{
+             metrics: [:visitors],
+             input_date_range: {:last_n_days, 7},
+             filters: parsed_filters
+           }),
          :ok <- maybe_validate_filters_depth(parsed_filters, restricted_depth?) do
       :ok
     else
-      {:error, message} ->
-        reformat_filters_errors(message)
-
-      :error_deep_filters_not_supported ->
-        reformat_filters_errors("Invalid filters. Deep filters are not supported.")
+      {:error, message} -> {:error, {:invalid_filters, message}}
     end
   end
 
-  @doc """
-    This function builds a simple query using the filters from Plausibe.Segment.segment_data
-    to test whether the filters used in the segment stand as legitimate query filters.
-    If they don't, it indicates an error with the filters that must be passed to the client,
-    so they could reconfigure the filters.
-  """
-  def build_naive_query_from_segment_data(%Plausible.Site{} = site, filters),
-    do:
-      Plausible.Stats.Query.parse_and_build(
-        site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "7d",
-          "filters" => filters
-        },
-        %{}
-      )
-
-  @doc """
-    This function handles the error from building the naive query that is used to validate segment filters.
-    If the error is only about filters, it's marked as :invalid_filters error and ultimately forwarded to client.
-    If the error is not only about filters, the client can't do anything about the situation,
-    and the error message is returned as-is.
-
-    ### Examples
-    iex> reformat_filters_errors(~s(#/metrics/0 Invalid metric "Visitors"\\n#/filters/0 Invalid filter "A"))
-    {:error, ~s(#/metrics/0 Invalid metric "Visitors"\\n#/filters/0 Invalid filter "A")}
-
-    iex> reformat_filters_errors(~s(#/filters/0 Invalid filter "A"\\n#/filters/1 Invalid filter "B"))
-    {:error, {:invalid_filters, ~s(#/filters/0 Invalid filter "A"\\n#/filters/1 Invalid filter "B")}}
-
-    iex> reformat_filters_errors("Invalid filters. Dimension `event:goal` can only be filtered at the top level.")
-    {:error, {:invalid_filters, "Invalid filters. Dimension `event:goal` can only be filtered at the top level."}}
-  """
-  def reformat_filters_errors(message) do
-    lines = String.split(message, "\n")
-
-    if Enum.all?(lines, fn line ->
-         String.starts_with?(line, "#/filters/") or String.starts_with?(line, "Invalid filters.")
-       end) do
-      {:error, {:invalid_filters, message}}
-    else
-      {:error, message}
-    end
-  end
-
-  @spec maybe_validate_filters_depth([any()], boolean()) ::
-          :ok | :error_deep_filters_not_supported
   defp maybe_validate_filters_depth(filters, restricted_depth?)
 
   defp maybe_validate_filters_depth(_filters, false), do: :ok
@@ -181,7 +138,7 @@ defmodule Plausible.Segments.Segment do
     if Enum.all?(filters, &dashboard_compatible_filter?/1) do
       :ok
     else
-      :error_deep_filters_not_supported
+      {:error, "Invalid filters. Deep filters are not supported."}
     end
   end
 

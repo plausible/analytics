@@ -21,6 +21,7 @@ defmodule Plausible.Stats.QueryBuilder do
          query = do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
+         :ok <- validate_case_sensitive_filter_modifier(query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_behavioral_filters(query),
@@ -42,6 +43,13 @@ defmodule Plausible.Stats.QueryBuilder do
       end
 
       {:ok, query}
+    end
+  end
+
+  def build!(site, parsed_query_params, debug_metadata \\ %{}) do
+    case build(site, parsed_query_params, debug_metadata) do
+      {:ok, query} -> query
+      {:error, reason} -> raise "Failed to build query: #{inspect(reason)}"
     end
   end
 
@@ -230,6 +238,29 @@ defmodule Plausible.Stats.QueryBuilder do
           {:error,
            "Invalid order_by entry '#{i(invalid_entry)}'. Entry is not a queried metric or dimension."}
       end
+    else
+      :ok
+    end
+  end
+
+  @pattern_filter_operators [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not]
+  defp validate_case_sensitive_filter_modifier(query) do
+    invalid_filter =
+      query.filters
+      |> Filters.all_leaf_filters()
+      |> Enum.find(fn filter ->
+        case filter do
+          [operator, _, _, modifiers] when operator in @pattern_filter_operators ->
+            is_map_key(modifiers, :case_insensitive)
+
+          _ ->
+            false
+        end
+      end)
+
+    if invalid_filter do
+      {:error,
+       "Invalid filters. The case_sensitive modifier is not allowed with pattern operators (#{i(invalid_filter)})"}
     else
       :ok
     end

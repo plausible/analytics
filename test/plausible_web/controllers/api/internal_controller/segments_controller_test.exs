@@ -55,8 +55,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         })
 
       assert json_response(conn, 400) == %{
-               "error" =>
-                 "segment_data #/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"
+               "error" => "segment_data Invalid filter '[\"is\", \"entry_page\", [\"/blog\"]]'."
              }
     end
 
@@ -175,7 +174,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
 
     for {filters, expected_error} <- [
           {[], "segment_data property \"filters\" must be an array with at least one member"},
-          {[["foo", "bar"]], "segment_data #/filters/0: Invalid filter [\"foo\", \"bar\"]"},
+          {[["foo", "bar"]], "segment_data Unknown operator for filter '[\"foo\", \"bar\"]'."},
           {[["not", ["is", "visit:entry_page", ["/campaigns/:campaign_name"]]]],
            "segment_data Invalid filters. Deep filters are not supported."},
           {[

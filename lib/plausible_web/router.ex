@@ -325,8 +325,7 @@ defmodule PlausibleWeb.Router do
     },
     assigns: %{
       api_scope: "stats:read:*",
-      api_context: :site,
-      schema_type: :public
+      api_context: :site
     } do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
@@ -336,7 +335,7 @@ defmodule PlausibleWeb.Router do
   scope "/api/docs", PlausibleWeb.Api do
     get "/query/schema.json", ExternalQueryApiController, :schema
 
-    scope assigns: %{schema_type: :public} do
+    scope [] do
       pipe_through :docs_stats_api
 
       post "/query", ExternalQueryApiController, :query

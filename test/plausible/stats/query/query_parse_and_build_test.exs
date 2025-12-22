@@ -5,14 +5,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
   alias Plausible.Stats.{Query, DateTimeRange, Filters}
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
-  @date_range_realtime %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
-  }
-  @date_range_30m %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
-  }
   @date_range_day %DateTimeRange{
     first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
@@ -88,6 +80,17 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
   defp goal_names(goals), do: Enum.map(goals, & &1.display_name) |> Enum.sort()
 
   describe "metrics" do
+    test "public API does not recognize exit_rate metric", %{site: site} do
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate"],
+        "date_range" => "all"
+      }
+
+      assert {:error, error} = Query.parse_and_build(site, params)
+      assert error =~ "Invalid metric"
+    end
+
     test "valid metrics passed", %{site: site} do
       params = %{
         "site_id" => site.domain,
@@ -95,7 +98,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
@@ -123,7 +126,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [
@@ -152,7 +155,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       }
 
       assert {:error, "#/metrics: Expected items to be unique but they were not."} =
-               Query.parse_and_build(site, :public, params)
+               Query.parse_and_build(site, params)
     end
 
     test "no metrics passed", %{site: site} do
@@ -163,7 +166,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       }
 
       assert {:error, "#/metrics: Expected a minimum of 1 items but got 0."} =
-               Query.parse_and_build(site, :public, params)
+               Query.parse_and_build(site, params)
     end
   end
 
@@ -171,8 +174,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
     for operation <- [
           :is,
           :is_not,
-          :matches_wildcard,
-          :matches_wildcard_not,
           :matches,
           :matches_not,
           :contains,
@@ -188,7 +189,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:ok, query} = Query.parse_and_build(site, :internal, params)
+        assert {:ok, query} = Query.parse_and_build(site, params)
 
         assert_matches %Query{
                          metrics: [:visitors],
@@ -214,7 +215,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :internal, params)
+        assert {:error, error} = Query.parse_and_build(site, params)
 
         assert error ==
                  "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:name\", \"foo\"]"
@@ -232,7 +233,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :public, params)
+        assert {:error, error} = Query.parse_and_build(site, params)
 
         assert error ==
                  "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:name\", [\"foo\"]]"
@@ -263,7 +264,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :public, params)
+        assert {:error, error} = Query.parse_and_build(site, params)
 
         assert error == ~s(#/filters/0: Invalid filter #{inspect(unquote(too_short_filter))})
       end
@@ -289,7 +290,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :public, params)
+        assert {:error, error} = Query.parse_and_build(site, params)
 
         assert error == ~s(#/filters/0: Invalid filter #{inspect(unquote(too_long_filter))})
       end
@@ -305,7 +306,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/filters/0: Invalid filter [\"exists?\", \"event:name\", [\"foo\"]]"
     end
 
@@ -319,7 +320,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -349,7 +350,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
             ]
           }
 
-          assert {:ok, query} = Query.parse_and_build(site, :public, params)
+          assert {:ok, query} = Query.parse_and_build(site, params)
 
           assert_matches %Query{
                            metrics: [:visitors],
@@ -380,7 +381,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:ok, query} = Query.parse_and_build(site, :public, params)
+        assert {:ok, query} = Query.parse_and_build(site, params)
 
         assert_matches %Query{
                          metrics: [:visitors],
@@ -407,7 +408,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error == "#/filters/0: Invalid filter [\"is\", \"event:device\", [\"foo\"]]"
     end
@@ -422,7 +423,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error == "#/filters/0: Invalid filter [\"is\", \"visit:name\", [\"foo\"]]"
     end
@@ -435,7 +436,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => "foobar"
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/filters: Type mismatch. Expected Array but got String."
     end
 
@@ -447,7 +448,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "visit:os_version", [123]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "Invalid filter '[\"is\", \"visit:os_version\", [123]]'."
     end
 
@@ -459,7 +460,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "visit:city", [123, 456]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -483,7 +484,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "visit:city", ["123", "456"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -507,7 +508,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "visit:country", ["USA"]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."
@@ -535,7 +536,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -585,7 +586,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -618,7 +619,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
@@ -634,7 +635,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
@@ -649,7 +650,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           "filters" => [[unquote(operator), []]]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :internal, params)
+        assert {:error, error} = Query.parse_and_build(site, params)
         assert error == "#/filters/0: Invalid filter [\"#{unquote(operator)}\", []]"
       end
     end
@@ -662,7 +663,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:hostname", ["a.plausible.io"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -686,7 +687,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["not", ["is", "event:hostname", ["a.plausible.io"]]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid filters. Dimension `event:hostname` can only be filtered at the top level."
@@ -714,7 +715,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:ok, query} = Query.parse_and_build(site, :public, params)
+        assert {:ok, query} = Query.parse_and_build(site, params)
 
         assert_matches %Query{
                          metrics: [:visitors],
@@ -737,7 +738,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       end
     end
 
-    for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
+    for operation <- [:matches, :matches_not] do
       test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
         params = %{
           "site_id" => site.domain,
@@ -753,7 +754,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           ]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :internal, params)
+        assert {:error, error} = Query.parse_and_build(site, params)
 
         assert error ==
                  "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:hostname\", [\"a.plausible.io\"], %{\"case_sensitive\" => false}]"
@@ -778,7 +779,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["Signup", "Purchase"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -808,7 +809,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["signup", "purchase"], %{"case_sensitive" => false}]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -840,7 +841,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["contains", "event:goal", ["Sign", "pur"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -870,7 +871,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["contains", "event:goal", ["sign", "CONT"], %{"case_sensitive" => false}]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -905,7 +906,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "include" => %{"imports" => true, "time_labels" => true, "total_rows" => true}
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -936,7 +937,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "include" => "foobar"
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/include: Type mismatch. Expected Object but got String."
     end
 
@@ -948,129 +949,8 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "include" => %{"time_labels" => true}
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "Invalid include.time_labels: requires a time dimension."
-    end
-  end
-
-  describe "comparisons" do
-    test "not allowed in public API", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "include" => %{"compare" => "previous_period"}
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
-      assert error == "#/include/compare: Schema does not allow additional properties."
-    end
-
-    test "previous_period", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "include" => %{"compare" => "previous_period"}
-      }
-
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-      assert_matches %Query{
-                       metrics: [:visitors],
-                       utc_time_range: ^@date_range_day,
-                       filters: [],
-                       dimensions: [],
-                       order_by: nil,
-                       timezone: ^site.timezone,
-                       include: %{
-                         compare: :previous_period,
-                         compare_match_day_of_week: false,
-                         imports: false,
-                         imports_meta: false,
-                         time_labels: false,
-                         total_rows: false,
-                         legacy_time_on_page_cutoff: nil,
-                         trim_relative_date_range: false
-                       },
-                       pagination: %{limit: 10_000, offset: 0}
-                     } = query
-    end
-
-    test "year_over_year with match_day_of_week", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "include" => %{"compare" => "year_over_year", "compare_match_day_of_week" => true}
-      }
-
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-      assert_matches %Query{
-                       metrics: [:visitors],
-                       utc_time_range: ^@date_range_day,
-                       filters: [],
-                       dimensions: [],
-                       order_by: nil,
-                       timezone: ^site.timezone,
-                       include: %{
-                         compare: :year_over_year,
-                         compare_match_day_of_week: true,
-                         imports: false,
-                         imports_meta: false,
-                         time_labels: false,
-                         total_rows: false,
-                         legacy_time_on_page_cutoff: nil,
-                         trim_relative_date_range: false
-                       },
-                       pagination: %{limit: 10_000, offset: 0}
-                     } = query
-    end
-
-    test "with custom date range", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "include" => %{"compare" => ["2021-04-05", "2021-05-04"]}
-      }
-
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-      assert_matches %Query{
-                       metrics: [:visitors],
-                       utc_time_range: ^@date_range_day,
-                       filters: [],
-                       dimensions: [],
-                       order_by: nil,
-                       timezone: ^site.timezone,
-                       include: %{
-                         compare: {:date_range, ~D[2021-04-05], ~D[2021-05-04]},
-                         compare_match_day_of_week: false,
-                         imports_meta: false,
-                         imports: false,
-                         time_labels: false,
-                         total_rows: false,
-                         legacy_time_on_page_cutoff: nil,
-                         trim_relative_date_range: false
-                       },
-                       pagination: %{limit: 10_000, offset: 0}
-                     } = query
-    end
-
-    test "invalid compare", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "include" => %{"compare" => "2024-01-01"}
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
-
-      assert error ==
-               "#/include/compare: Expected exactly one of the schemata to match, but none of them did."
     end
   end
 
@@ -1084,7 +964,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "pagination" => %{"limit" => 100, "offset" => 200}
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -1106,7 +986,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "pagination" => %{"limit" => 100_000}
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/pagination/limit: Expected the value to be <= 10000"
     end
 
@@ -1118,7 +998,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "pagination" => %{"offset" => -5}
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/pagination/offset: Expected the value to be >= 0"
     end
   end
@@ -1137,7 +1017,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -1172,7 +1052,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid filters. The goal `Signup` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
@@ -1188,7 +1068,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid filters. The goal `Visit /thank-you` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
@@ -1204,7 +1084,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error == "#/filters/0: Invalid filter [\"is_not\", \"event:goal\", [\"Signup\"]]"
     end
@@ -1225,7 +1105,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid filters. Dimension `event:goal` can only be filtered at the top level."
@@ -1252,7 +1132,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -1282,25 +1162,22 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         revenue_currencies: %{}
       )
     end
-
-    test "name is checked even within behavioral filters", %{site: site} do
-      insert(:goal, %{site: site, event_name: "Signup"})
-
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "filters" => [["has_done", ["is", "event:goal", ["Unknown"]]]]
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
-
-      assert error ==
-               "Invalid filters. The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
-    end
   end
 
   describe "date range validation" do
+    for shortcut <- ["realtime", "30m"] do
+      test "public API does not recognize #{shortcut} date_range", %{site: site} do
+        params = %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => unquote(shortcut)
+        }
+
+        assert {:error, error} = Query.parse_and_build(site, params)
+        assert error =~ "Invalid date range"
+      end
+    end
+
     for {shortcut, expected_date_range} <- [
           {"day", @date_range_day},
           {"7d", @date_range_7d},
@@ -1319,7 +1196,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           "date_range" => unquote(shortcut)
         }
 
-        assert {:ok, query} = Query.parse_and_build(site, :public, params)
+        assert {:ok, query} = Query.parse_and_build(site, params)
 
         assert_matches %Query{
                          metrics: [:visitors, :events],
@@ -1331,35 +1208,6 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                          include: ^@default_include,
                          pagination: %{limit: 10_000, offset: 0}
                        } = query
-      end
-    end
-
-    for {shortcut, expected_date_range} <- [
-          {"30m", @date_range_30m},
-          {"realtime", @date_range_realtime}
-        ] do
-      test "'#{shortcut}' shortcut is available only in the internal API schema", %{site: site} do
-        params = %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors", "events"],
-          "date_range" => unquote(shortcut)
-        }
-
-        assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-        assert_matches %Query{
-                         metrics: [:visitors, :events],
-                         utc_time_range: ^unquote(Macro.escape(expected_date_range)),
-                         filters: [],
-                         dimensions: [],
-                         order_by: nil,
-                         timezone: ^site.timezone,
-                         include: ^@default_include,
-                         pagination: %{limit: 10_000, offset: 0}
-                       } = query
-
-        assert {:error, error} = Query.parse_and_build(site, :public, params)
-        assert error == "#/date_range: Invalid date range \"#{unquote(shortcut)}\""
       end
     end
 
@@ -1373,7 +1221,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
@@ -1396,7 +1244,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
@@ -1417,7 +1265,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => ["2021-05-05", "2021-05-05"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
@@ -1444,7 +1292,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           DateTime.new!(~D[2024-01-02], ~T[23:59:59], "Etc/UTC")
         )
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
@@ -1468,7 +1316,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       expected_utc_time_range =
         DateTimeRange.new!(~U[2024-08-29 14:12:34Z], ~U[2024-08-29 17:12:34Z])
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
@@ -1490,7 +1338,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           "metrics" => ["visitors"]
         }
 
-        assert {:error, error} = Query.parse_and_build(site, :public, params)
+        assert {:error, error} = Query.parse_and_build(site, params)
 
         assert error == "#/date_range: Invalid date range #{inspect(unquote(invalid_value))}"
       end
@@ -1503,7 +1351,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "metrics" => ["visitors"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error == "Invalid date_range \"999999999mo\""
     end
@@ -1517,7 +1365,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "metrics" => ["visitors"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error == "Invalid date_range '[\"2021-02-03T00:00:00\", \"2021-02-03T23:59:59\"]'."
     end
@@ -1529,7 +1377,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "metrics" => ["visitors"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "#/date_range: Invalid date range [\"2021-02-03T00:00:00-25:00\", \"2021-02-03T23:59:59-25:00\"]"
@@ -1542,58 +1390,10 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "metrics" => ["visitors"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "#/date_range: Invalid date range [\"2021-02-03T00:00:00Z\", \"2021-02-04\"]"
-    end
-
-    test "parses date_range relative to date param", %{site: site} do
-      date = @now |> DateTime.to_date() |> Date.to_string()
-
-      for {date_range_shortcut, expected_date_range} <- [
-            {"day", @date_range_day},
-            {"7d", @date_range_7d},
-            {"10d", @date_range_10d},
-            {"30d", @date_range_30d},
-            {"month", @date_range_month},
-            {"3mo", @date_range_3mo},
-            {"6mo", @date_range_6mo},
-            {"12mo", @date_range_12mo},
-            {"year", @date_range_year}
-          ] do
-        params = %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => date_range_shortcut,
-          "date" => date
-        }
-
-        assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-        assert_matches %Query{
-                         metrics: [:visitors],
-                         utc_time_range: ^expected_date_range,
-                         filters: [],
-                         dimensions: [],
-                         order_by: nil,
-                         timezone: ^site.timezone,
-                         include: ^@default_include,
-                         pagination: %{limit: 10_000, offset: 0}
-                       } = query
-      end
-    end
-
-    test "date parameter is not available in the public API", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors", "events"],
-        "date_range" => "month",
-        "date" => "2021-05-05"
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
-      assert error == "#/date: Schema does not allow additional properties."
     end
 
     test "parses date_range.first into a datetime right after the gap in site.timezone", %{
@@ -1610,7 +1410,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       expected_utc_time_range =
         DateTimeRange.new!(~U[2022-09-11 04:00:00Z], ~U[2022-09-12 02:59:59Z])
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -1638,7 +1438,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       expected_utc_time_range =
         DateTimeRange.new!(~U[2023-11-05 05:00:00Z], ~U[2023-11-06 04:59:59Z])
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -1666,7 +1466,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       expected_utc_time_range =
         DateTimeRange.new!(~U[2024-03-23 03:00:00Z], ~U[2024-03-24 02:59:59Z])
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -1693,7 +1493,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           "dimensions" => [prefixed_dimension]
         }
 
-        assert {:ok, query} = Query.parse_and_build(site, :public, params)
+        assert {:ok, query} = Query.parse_and_build(site, params)
 
         assert_matches %Query{
                          metrics: [:visitors],
@@ -1719,7 +1519,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
           "dimensions" => [prefixed_dimension]
         }
 
-        assert {:ok, query} = Query.parse_and_build(site, :public, params)
+        assert {:ok, query} = Query.parse_and_build(site, params)
 
         assert_matches %Query{
                          metrics: [:visitors],
@@ -1742,30 +1542,8 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["time:minute"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/dimensions/0: Invalid dimension \"time:minute\""
-    end
-
-    test "time:minute dimension passes internal schema validation", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "dimensions" => ["time:minute"]
-      }
-
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-      assert_matches %Query{
-                       metrics: [:visitors],
-                       utc_time_range: ^@date_range_day,
-                       filters: [],
-                       dimensions: ["time:minute"],
-                       order_by: nil,
-                       timezone: ^site.timezone,
-                       include: ^@default_include,
-                       pagination: %{limit: 10_000, offset: 0}
-                     } = query
     end
 
     test "custom properties dimension", %{site: site} do
@@ -1776,7 +1554,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:props:foobar"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -1798,7 +1576,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:props:"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/dimensions/0: Invalid dimension \"event:props:\""
     end
 
@@ -1810,7 +1588,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["visitors"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/dimensions/0: Invalid dimension \"visitors\""
     end
 
@@ -1822,7 +1600,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => "foobar"
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/dimensions: Type mismatch. Expected Array but got String."
     end
 
@@ -1834,7 +1612,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:name", "event:name"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/dimensions: Expected items to be unique but they were not."
     end
   end
@@ -1848,7 +1626,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "order_by" => [["events", "desc"], ["visitors", "asc"]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
@@ -1871,7 +1649,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "order_by" => [["event:name", "desc"]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors],
@@ -1893,7 +1671,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "order_by" => [["visssss", "desc"]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "#/order_by/0/0: Invalid value in order_by \"visssss\""
     end
 
@@ -1905,7 +1683,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "order_by" => [["events", "desc"]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid order_by entry '{:events, :desc}'. Entry is not a queried metric or dimension."
@@ -1919,7 +1697,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "order_by" => [["event:name", "desc"]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid order_by entry '{\"event:name\", :desc}'. Entry is not a queried metric or dimension."
@@ -1937,7 +1715,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["not", ["is", "event:props:foobar", ["foo"]]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "The owner of this site does not have access to the custom properties feature."
@@ -1953,7 +1731,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:props:foobar"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "The owner of this site does not have access to the custom properties feature."
@@ -1968,7 +1746,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Metric `conversion_rate` can only be queried with event:goal filters or dimensions."
@@ -1985,7 +1763,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["Signup"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:conversion_rate],
@@ -2018,7 +1796,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:goal"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:conversion_rate],
@@ -2049,7 +1827,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:goal"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:conversion_rate, :group_conversion_rate],
@@ -2074,74 +1852,10 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:goal"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid filters. When `conversion_rate` or `group_conversion_rate` metrics are used, custom property filters can only be used on top level."
-    end
-  end
-
-  describe "exit_rate metric" do
-    test "fails validation without visit:exit_page dimension", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["exit_rate"],
-        "date_range" => "all"
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
-
-      assert error ==
-               "Metric `exit_rate` requires a `\"visit:exit_page\"` dimension. No other dimensions are allowed."
-    end
-
-    test "fails validation with event only filters", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["exit_rate"],
-        "dimensions" => ["visit:exit_page"],
-        "filters" => [["is", "event:page", ["/"]]],
-        "date_range" => "all"
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
-      assert error == "Metric `exit_rate` cannot be queried when filtering on event dimensions."
-    end
-
-    test "fails validation with event metrics", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["exit_rate", "pageviews"],
-        "dimensions" => ["visit:exit_page"],
-        "date_range" => "all"
-      }
-
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
-
-      assert error ==
-               "Event metric(s) `pageviews` cannot be queried along with session dimension(s) `visit:exit_page`"
-    end
-
-    test "passes validation", %{site: site} do
-      params = %{
-        "site_id" => site.domain,
-        "metrics" => ["exit_rate"],
-        "dimensions" => ["visit:exit_page"],
-        "date_range" => "all"
-      }
-
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
-
-      assert_matches %Query{
-                       metrics: [:exit_rate],
-                       utc_time_range: ^@date_range_day,
-                       filters: [],
-                       dimensions: ["visit:exit_page"],
-                       order_by: nil,
-                       timezone: ^site.timezone,
-                       include: ^@default_include,
-                       pagination: %{limit: 10_000, offset: 0}
-                     } = query
     end
   end
 
@@ -2153,7 +1867,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Metric `scroll_depth` can only be queried with event:page filters or dimensions."
@@ -2167,7 +1881,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["not", ["is", "event:page", ["/"]]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Metric `scroll_depth` can only be queried with event:page filters or dimensions."
@@ -2181,7 +1895,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:page", ["/"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:scroll_depth],
@@ -2203,7 +1917,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:page"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :internal, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:scroll_depth],
@@ -2229,7 +1943,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["Signup"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:views_per_visit],
@@ -2256,7 +1970,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:page", ["/"]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "Metric `views_per_visit` cannot be queried with a filter on `event:page`."
     end
 
@@ -2268,7 +1982,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:name"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "Metric `views_per_visit` cannot be queried with `dimensions`."
     end
   end
@@ -2281,7 +1995,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Metric `time_on_page` can only be queried with event:page filters or dimensions."
@@ -2295,7 +2009,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["time", "event:page"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:time_on_page],
@@ -2317,7 +2031,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:page", ["/"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:time_on_page],
@@ -2341,7 +2055,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :internal, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Metric `time_on_page` can only be queried with event:page filters or dimensions."
@@ -2363,7 +2077,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:total_revenue, :average_revenue],
@@ -2398,7 +2112,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "date_range" => "all"
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "The owner of this site does not have access to the revenue metrics feature."
@@ -2423,7 +2137,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["PurchaseUSD", "Signup", "Subscription"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:total_revenue, :average_revenue],
@@ -2458,7 +2172,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["Purchase", "Signup", "Subscription"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:total_revenue, :average_revenue],
@@ -2493,7 +2207,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["Signup"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:total_revenue, :average_revenue],
@@ -2528,7 +2242,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:goal"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:total_revenue, :average_revenue],
@@ -2565,7 +2279,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["Purchase", "Signup", "Subscription"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:total_revenue, :average_revenue],
@@ -2604,7 +2318,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:goal", ["Signup"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:total_revenue, :average_revenue],
@@ -2636,7 +2350,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       "date_range" => "all"
     }
 
-    assert {:error, error} = Query.parse_and_build(site, :public, params)
+    assert {:error, error} = Query.parse_and_build(site, params)
 
     assert error ==
              "#/metrics/0: Invalid metric \"total_revenue\"\n#/metrics/1: Invalid metric \"average_revenue\""
@@ -2651,7 +2365,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["visit:device"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:bounce_rate],
@@ -2673,7 +2387,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:props:foo"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Session metric(s) `bounce_rate` cannot be queried along with event dimension(s) `event:props:foo`"
@@ -2687,7 +2401,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["visit:exit_page"]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Event metric(s) `events` cannot be queried along with session dimension(s) `visit:exit_page`"
@@ -2701,7 +2415,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "dimensions" => ["event:page"]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:bounce_rate],
@@ -2723,7 +2437,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "event:props:foo", ["(none)"]]]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:bounce_rate],
@@ -2760,7 +2474,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error == "Invalid filters. You can only use up to 10 segment filters in a query."
     end
@@ -2786,7 +2500,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "segment", [segment.id]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error == "Invalid filters. Some segments don't exist or aren't accessible."
     end
@@ -2814,7 +2528,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "segment", [segment.id]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "The owner of this site does not have access to the custom properties feature."
@@ -2851,7 +2565,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "segment", [segment.id]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
 
       assert error ==
                "Invalid filters. Dimension `event:goal` can only be filtered at the top level."
@@ -2911,7 +2625,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
@@ -2945,12 +2659,12 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
 
       segment_from_dashboard =
         insert(:segment,
-          name: "A segment that contains :internal features",
+          name: "A segment that contains internal features",
           type: :site,
           owner: user,
           site: site,
           segment_data: %{
-            "filters" => [["has_not_done", ["is", "event:goal", ["Signup"]]]]
+            "filters" => [["matches_wildcard", "event:page", ["/blog/**"]]]
           }
         )
 
@@ -2963,13 +2677,13 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         ]
       }
 
-      assert {:ok, query} = Query.parse_and_build(site, :public, params)
+      assert {:ok, query} = Query.parse_and_build(site, params)
 
       assert_matches %Query{
                        metrics: [:visitors, :events],
                        utc_time_range: ^@date_range_day,
                        filters: [
-                         [:has_not_done, [:is, "event:goal", ["Signup"]]]
+                         [:matches_wildcard, "event:page", ["/blog/**"]]
                        ],
                        dimensions: [],
                        order_by: nil,
@@ -2987,46 +2701,8 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
         "filters" => [["is", "segment", ["123"]]]
       }
 
-      assert {:error, error} = Query.parse_and_build(site, :public, params)
+      assert {:error, error} = Query.parse_and_build(site, params)
       assert error == "Invalid filter '[\"is\", \"segment\", [\"123\"]]'."
-    end
-  end
-
-  on_ee do
-    describe "query.consolidated_site_ids" do
-      test "is set to nil when site is regular", %{site: site} do
-        params = %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "all"
-        }
-
-        {:ok, %{consolidated_site_ids: nil}} = Query.parse_and_build(site, :public, params)
-        {:ok, %{consolidated_site_ids: nil}} = Query.parse_and_build(site, :internal, params)
-      end
-
-      test "is set to a list of site_ids when site is consolidated", %{site: site} do
-        new_site(team: site.team)
-        cv = new_consolidated_view(site.team)
-
-        params = %{
-          "site_id" => cv.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "all"
-        }
-
-        assert {:ok, %{consolidated_site_ids: site_ids}} =
-                 Query.parse_and_build(cv, :public, params)
-
-        assert length(site_ids) == 2
-        assert site.id in site_ids
-
-        assert {:ok, %{consolidated_site_ids: site_ids}} =
-                 Query.parse_and_build(cv, :internal, params)
-
-        assert length(site_ids) == 2
-        assert site.id in site_ids
-      end
     end
   end
 end
