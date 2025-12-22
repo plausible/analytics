@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.TableDeciderTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.{Query, QueryBuilder, ParsedQueryParams, QueryError}
+  alias Plausible.Stats.{Query, QueryBuilder, QueryError}
 
   import Plausible.Stats.TableDecider
 
@@ -230,23 +230,23 @@ defmodule Plausible.Stats.TableDeciderTest do
   defp make_query(filter_dimensions \\ [], dimensions \\ []) do
     site = build(:site, id: :rand.uniform(100_000))
 
-    QueryBuilder.build!(site, %ParsedQueryParams{
+    QueryBuilder.build!(site,
       metrics: [:visitors],
       input_date_range: :all,
       filters:
         Enum.map(filter_dimensions, fn filter_dimension -> [:is, filter_dimension, []] end),
       dimensions: dimensions
-    })
+    )
   end
 
   defp make_query_full_filters(filters) do
     site = build(:site, id: :rand.uniform(100_000))
 
-    QueryBuilder.build!(site, %ParsedQueryParams{
+    QueryBuilder.build!(site,
       metrics: [:visitors],
       input_date_range: :all,
       dimensions: [],
       filters: filters
-    })
+    )
   end
 end

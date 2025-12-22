@@ -2,7 +2,7 @@ defmodule Plausible.Stats.GoalSuggestions do
   @moduledoc false
 
   alias Plausible.{Repo, ClickhouseRepo}
-  alias Plausible.Stats.{Query, QueryBuilder, ParsedQueryParams, QueryInclude}
+  alias Plausible.Stats.{Query, QueryBuilder}
   import Plausible.Stats.Base
   import Ecto.Query
 
@@ -39,11 +39,11 @@ defmodule Plausible.Stats.GoalSuggestions do
     from_date = Date.shift(to_date, month: -6)
 
     query =
-      QueryBuilder.build!(site, %ParsedQueryParams{
+      QueryBuilder.build!(site,
         input_date_range: {:date_range, from_date, to_date},
         metrics: [:pageviews],
-        include: %QueryInclude{imports: true}
-      })
+        include: [imports: true]
+      )
 
     native_q =
       from(e in base_event_query(query),

@@ -9,12 +9,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-02 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
-          include: %QueryInclude{compare: :previous_period}
-        })
+          include: [compare: :previous_period]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -27,12 +27,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-03-01],
-          include: %QueryInclude{compare: :previous_period}
-        })
+          include: [compare: :previous_period]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -45,12 +45,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-02 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
-          include: %QueryInclude{compare: :previous_period, compare_match_day_of_week: true}
-        })
+          include: [compare: :previous_period, compare_match_day_of_week: true]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -64,12 +64,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-02 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
-          include: %QueryInclude{compare: :previous_period}
-        })
+          include: [compare: :previous_period]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -83,12 +83,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
-          include: %QueryInclude{compare: :previous_period}
-        })
+          include: [compare: :previous_period]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -100,12 +100,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
-          include: %QueryInclude{compare: :year_over_year}
-        })
+          include: [compare: :year_over_year]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -119,12 +119,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2020-02-01],
-          include: %QueryInclude{compare: :year_over_year}
-        })
+          include: [compare: :year_over_year]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -138,12 +138,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
-          include: %QueryInclude{compare: :previous_period, compare_match_day_of_week: true}
-        })
+          include: [compare: :previous_period, compare_match_day_of_week: true]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -155,12 +155,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-01-01],
-          include: %QueryInclude{compare: :previous_period, compare_match_day_of_week: true}
-        })
+          include: [compare: :previous_period, compare_match_day_of_week: true]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -172,12 +172,12 @@ defmodule Plausible.Stats.ComparisonsTest do
   describe "year_over_year, exact dates behavior with leap years" do
     test "start of the year matching", %{site: site} do
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: {:last_n_days, 7},
           relative_date: ~D[2021-01-05],
-          include: %QueryInclude{compare: :year_over_year}
-        })
+          include: [compare: :year_over_year]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -188,12 +188,12 @@ defmodule Plausible.Stats.ComparisonsTest do
 
     test "leap day matching", %{site: site} do
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: {:last_n_days, 7},
           relative_date: ~D[2021-03-04],
-          include: %QueryInclude{compare: :year_over_year}
-        })
+          include: [compare: :year_over_year]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -205,12 +205,12 @@ defmodule Plausible.Stats.ComparisonsTest do
 
     test "end of the year matching", %{site: site} do
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: {:last_n_days, 7},
           relative_date: ~D[2021-11-25],
-          include: %QueryInclude{compare: :year_over_year}
-        })
+          include: [compare: :year_over_year]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -225,12 +225,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
-          include: %QueryInclude{compare: :previous_period}
-        })
+          include: [compare: :previous_period]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -242,12 +242,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
-          include: %QueryInclude{compare: :year_over_year}
-        })
+          include: [compare: :year_over_year]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -259,12 +259,12 @@ defmodule Plausible.Stats.ComparisonsTest do
       Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
 
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
-          include: %QueryInclude{compare: :year_over_year, compare_match_day_of_week: true}
-        })
+          include: [compare: :year_over_year, compare_match_day_of_week: true]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -276,12 +276,12 @@ defmodule Plausible.Stats.ComparisonsTest do
   describe "with period set to previous year" do
     test "shifts back a whole year when mode is year_over_year", %{site: site} do
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :year,
           relative_date: ~D[2022-03-02],
-          include: %QueryInclude{compare: :year_over_year}
-        })
+          include: [compare: :year_over_year]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -291,12 +291,12 @@ defmodule Plausible.Stats.ComparisonsTest do
 
     test "shifts back a whole year when mode is previous_period", %{site: site} do
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :year,
           relative_date: ~D[2022-03-02],
-          include: %QueryInclude{compare: :previous_period}
-        })
+          include: [compare: :previous_period]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -308,11 +308,11 @@ defmodule Plausible.Stats.ComparisonsTest do
   describe "with period set to custom" do
     test "shifts back by the same number of days when mode is previous_period", %{site: site} do
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2023-01-01], ~D[2023-01-07]},
-          include: %QueryInclude{compare: :previous_period}
-        })
+          include: [compare: :previous_period]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -322,11 +322,11 @@ defmodule Plausible.Stats.ComparisonsTest do
 
     test "shifts back to last year when mode is year_over_year", %{site: site} do
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2023-01-01], ~D[2023-01-07]},
-          include: %QueryInclude{compare: :year_over_year}
-        })
+          include: [compare: :year_over_year]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 
@@ -338,11 +338,11 @@ defmodule Plausible.Stats.ComparisonsTest do
   describe "with mode set to custom" do
     test "sets first and last dates", %{site: site} do
       query =
-        QueryBuilder.build!(site, %ParsedQueryParams{
+        QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2023-01-01], ~D[2023-01-07]},
-          include: %QueryInclude{compare: {:date_range, ~D[2022-05-25], ~D[2022-05-30]}}
-        })
+          include: [compare: {:date_range, ~D[2022-05-25], ~D[2022-05-30]}]
+        )
 
       comparison_query = Comparisons.get_comparison_query(query)
 

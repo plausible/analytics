@@ -14,10 +14,19 @@ defmodule Plausible.Stats.QueryBuilder do
     Time,
     TableDecider,
     DateTimeRange,
-    QueryError
+    QueryError,
+    QueryInclude
   }
 
-  def build(site, parsed_query_params, debug_metadata \\ %{}) do
+  @doc """
+  Runs various validations and builds a `%Query{}` from already parsed params.
+
+  For convenience, the "parsed params" can also be given as a keyword list, in
+  which case it gets turned in to `ParsedQueryParams` by the function itself.
+  """
+  def build(site, parsed_query_params, debug_metadata \\ %{})
+
+  def build(site, %ParsedQueryParams{} = parsed_query_params, debug_metadata) do
     with {:ok, parsed_query_params} <- resolve_segments_in_filters(parsed_query_params, site),
          query = do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
@@ -47,8 +56,15 @@ defmodule Plausible.Stats.QueryBuilder do
     end
   end
 
-  def build!(site, parsed_query_params, debug_metadata \\ %{}) do
-    case build(site, parsed_query_params, debug_metadata) do
+  def build(site, params, debug_metadata) when is_list(params) do
+    include = struct!(QueryInclude, Keyword.get(params, :include, []))
+    parsed_query_params = struct!(ParsedQueryParams, Keyword.put(params, :include, include))
+
+    build(site, parsed_query_params, debug_metadata)
+  end
+
+  def build!(site, params, debug_metadata \\ %{}) do
+    case build(site, params, debug_metadata) do
       {:ok, query} ->
         query
 

@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   import PlausibleWeb.Live.Components.Form
   alias Plausible.{Goals, Funnels}
-  alias Plausible.Stats.{QueryBuilder, ParsedQueryParams}
+  alias Plausible.Stats.{QueryBuilder}
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     site =
@@ -350,10 +350,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       )
 
     query =
-      QueryBuilder.build!(site, %ParsedQueryParams{
+      QueryBuilder.build!(site,
         metrics: [:pageviews],
         input_date_range: :month
-      })
+      )
 
     {:ok, {definition, query}}
   end
