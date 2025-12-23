@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   end
 
   def mount(_params, %{"domain" => domain, "url" => url}, socket) do
-    # NOTE: implement a dedicated, permissive params fallback. 
+    # NOTE: implement a dedicated, permissive params fallback.
     user_prefs = Map.merge(@default_prefs, get_connect_params(socket)["user_prefs"] || %{})
 
     # As domain is passed via session, the associated site has already passed
