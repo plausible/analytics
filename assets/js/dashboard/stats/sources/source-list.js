@@ -135,14 +135,6 @@ function UTMSources({ tab, afterFetchData }) {
   const site = useSiteContext()
   const utmTag = UTM_TAGS[tab]
 
-  const route = {
-    utm_medium: utmMediumsRoute,
-    utm_source: utmSourcesRoute,
-    utm_campaign: utmCampaignsRoute,
-    utm_content: utmContentsRoute,
-    utm_term: utmTermsRoute
-  }[tab]
-
   function fetchData() {
     return api.get(url.apiPath(site, utmTag.endpoint), query, { limit: 9 })
   }

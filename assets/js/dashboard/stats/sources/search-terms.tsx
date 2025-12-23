@@ -202,7 +202,7 @@ export function SearchTerms() {
           state={moreLinkState}
           linkProps={{
             path: referrersGoogleRoute.path,
-            search: (search: any) => search
+            search: (search: URLSearchParams) => search
           }}
         />
       </ReportHeader>
