@@ -354,6 +354,8 @@ PlausibleWeb.BillingView.html
 PlausibleWeb.Captcha.html
 PlausibleWeb.Components.Billing.PlanBenefits.html
 PlausibleWeb.Components.Dashboard.Base.html
+PlausibleWeb.Components.Dashboard.Metric.html
+PlausibleWeb.Components.Dashboard.ReportList.html
 PlausibleWeb.Components.Dashboard.Tile.html
 PlausibleWeb.Components.FirstDashboardLaunchBanner.html
 PlausibleWeb.Components.FlowProgress.html
@@ -565,8 +567,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-1DD8E423.js
-dist/sidebar_items-1ED997E0.js
+dist/search_data-C14468D6.js
+dist/sidebar_items-C0A8768E.js
 index.html
 readme.html
 search.html
