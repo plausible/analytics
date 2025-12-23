@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, QueryError}
 
   def query(conn, params) do
     site = Repo.preload(conn.assigns.site, :owners)
@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
         results = Plausible.Stats.query(site, query)
         json(conn, results)
 
-      {:error, message} ->
+      {:error, %QueryError{message: message}} ->
         conn
         |> put_status(400)
         |> json(%{error: message})

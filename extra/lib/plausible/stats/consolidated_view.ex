@@ -90,12 +90,12 @@ defmodule Plausible.Stats.ConsolidatedView do
     to_datetime = now |> DateTime.from_naive!("Etc/UTC")
 
     graph_query =
-      QueryBuilder.build!(view, %ParsedQueryParams{
+      QueryBuilder.build!(view,
         metrics: [:visitors],
         input_date_range: {:datetime_range, from_datetime, to_datetime},
         dimensions: ["time:hour"],
         order_by: [{"time:hour", :asc}]
-      })
+      )
 
     %Stats.QueryResult{results: results} = Stats.query(view, graph_query)
 

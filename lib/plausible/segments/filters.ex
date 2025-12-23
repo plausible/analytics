@@ -3,7 +3,7 @@ defmodule Plausible.Segments.Filters do
   This module contains functions that enable resolving segments in filters.
   """
   alias Plausible.Segments
-  alias Plausible.Stats.{Filters, ApiQueryParser}
+  alias Plausible.Stats.{Filters, ApiQueryParser, QueryError}
 
   @max_segment_filters_count 10
 
@@ -15,7 +15,7 @@ defmodule Plausible.Segments.Filters do
     {:ok, [10, 20]}
 
     iex> get_segment_ids([[:and, [[:is, "segment", Enum.to_list(1..6)], [:is, "segment", Enum.to_list(1..6)]]]])
-    {:error, "Invalid filters. You can only use up to 10 segment filters in a query."}
+    {:error, %Plausible.Stats.QueryError{code: :invalid_filters, message: "Invalid filters. You can only use up to 10 segment filters in a query."}}
   """
   def get_segment_ids(filters) do
     ids =
@@ -28,7 +28,11 @@ defmodule Plausible.Segments.Filters do
 
     if length(ids) > @max_segment_filters_count do
       {:error,
-       "Invalid filters. You can only use up to #{@max_segment_filters_count} segment filters in a query."}
+       %QueryError{
+         code: :invalid_filters,
+         message:
+           "Invalid filters. You can only use up to #{@max_segment_filters_count} segment filters in a query."
+       }}
     else
       {:ok, Enum.uniq(ids)}
     end
@@ -56,7 +60,12 @@ defmodule Plausible.Segments.Filters do
             )},
          :ok <-
            if(Enum.any?(segment_ids, fn id -> is_nil(Map.get(segments_by_id, id)) end),
-             do: {:error, "Invalid filters. Some segments don't exist or aren't accessible."},
+             do:
+               {:error,
+                %QueryError{
+                  code: :invalid_filters,
+                  message: "Invalid filters. Some segments don't exist or aren't accessible."
+                }},
              else: :ok
            ) do
       {:ok, segments_by_id}

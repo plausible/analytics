@@ -7,6 +7,7 @@ defmodule Plausible.Stats.JSONSchema do
   """
   use Plausible
   alias Plausible.Stats.JSONSchema.Utils
+  alias Plausible.Stats.QueryError
 
   @json_schema_filepath "priv/json-schemas/query-api-schema.json"
   @external_resource @json_schema_filepath
@@ -28,8 +29,12 @@ defmodule Plausible.Stats.JSONSchema do
 
   def validate(params) do
     case ExJsonSchema.Validator.validate(@query_schema, params) do
-      :ok -> :ok
-      {:error, errors} -> {:error, format_errors(errors, params)}
+      :ok ->
+        :ok
+
+      {:error, errors} ->
+        {:error,
+         %QueryError{code: :failed_schema_validation, message: format_errors(errors, params)}}
     end
   end
 

@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
-  alias Plausible.Stats.{QueryBuilder, ParsedQueryParams}
+  alias Plausible.Stats.QueryBuilder
 
   def update(assigns, socket) do
     socket =
@@ -249,11 +249,11 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
 
   def suggest_page_paths(input, _options, site, page_rules) do
     query =
-      QueryBuilder.build!(site, %ParsedQueryParams{
+      QueryBuilder.build!(site,
         input_date_range: :all,
         metrics: [:pageviews],
         filters: [[:is_not, "event:page", Enum.map(page_rules, & &1.page_path)]]
-      })
+      )
 
     site
     |> Plausible.Stats.filter_suggestions(query, "page", input)

@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo
-  alias Plausible.Stats.{QueryBuilder, ParsedQueryParams, QueryInclude}
+  alias Plausible.Stats.QueryBuilder
 
   def update(assigns, socket) do
     site = Repo.preload(assigns.site, [:team, :owners])
@@ -507,11 +507,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def suggest_page_paths(input, site) do
     query =
-      QueryBuilder.build!(site, %ParsedQueryParams{
+      QueryBuilder.build!(site,
         input_date_range: :all,
         metrics: [:pageviews],
-        include: %QueryInclude{imports: true}
-      })
+        include: [imports: true]
+      )
 
     site
     |> Plausible.Stats.filter_suggestions(query, "page", input)
