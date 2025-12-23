@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Api.StatsController do
   @not_set "(not set)"
 
   plug(:date_validation_plug)
+  plug(:validate_required_filters_plug when action not in [:current_visitors])
 
   @doc """
   Returns a time-series based on given parameters.
@@ -1613,6 +1614,43 @@ defmodule PlausibleWeb.Api.StatsController do
       {:ok, _dates} -> conn
       {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
+  end
+
+  defp validate_required_filters_plug(
+         %Plug.Conn{assigns: %{shared_link: %Plausible.Site.SharedLink{segment_id: segment_id}}} =
+           conn,
+         _opts
+       )
+       when is_integer(segment_id) do
+    case ensure_expected_segment_filter_present(conn.params, segment_id) do
+      :ok ->
+        conn
+
+      :error ->
+        bad_request(
+          conn,
+          "The first filter must be for the segment with id #{segment_id}"
+        )
+    end
+  end
+
+  defp validate_required_filters_plug(conn, _opts), do: conn
+
+  defp ensure_expected_segment_filter_present(
+         %{"filters" => filters} = _params,
+         expected_segment_id
+       ) do
+    case JSON.decode!(filters) do
+      [["is", "segment", [segment_id]] | _other_filters] when segment_id == expected_segment_id ->
+        :ok
+
+      _ ->
+        :error
+    end
+  end
+
+  defp ensure_expected_segment_filter_present(_params, _expected_segment_id) do
+    :error
   end
 
   defp parse_date_params(params) do

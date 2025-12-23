@@ -107,6 +107,61 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
     end
   end
 
+  describe "Filter validation for limited view shared links" do
+    test "returns 400 for limited view shared link if there are no filters", %{conn: conn} do
+      site = new_site()
+
+      segment = insert(:segment, site: site, type: :site, name: "Scandinavia")
+
+      link =
+        insert(:shared_link, site: site, segment: segment)
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?auth=#{link.slug}")
+
+      assert json_response(conn, 400) == %{
+               "error" => "The first filter must be for the segment with id #{segment.id}"
+             }
+    end
+
+    test "returns 400 for limited view shared link if the segment filter is not for the right segment",
+         %{conn: conn} do
+      site = new_site()
+
+      segment = insert(:segment, site: site, type: :site, name: "Scandinavia")
+
+      link =
+        insert(:shared_link, site: site, segment: segment)
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?auth=#{link.slug}&filters=#{JSON.encode!([["is", "segment", [segment.id + 1]]])}"
+        )
+
+      assert json_response(conn, 400) == %{
+               "error" => "The first filter must be for the segment with id #{segment.id}"
+             }
+    end
+
+    test "returns 200 for limited view shared link if the required segment is present, permits other filters to be applied",
+         %{conn: conn} do
+      site = new_site()
+
+      segment = insert(:segment, site: site, type: :site, name: "Scandinavia")
+
+      link =
+        insert(:shared_link, site: site, segment: segment)
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?auth=#{link.slug}&filters=#{JSON.encode!([["is", "segment", [segment.id]], ["is", "event:page", ["/docs"]]])}"
+        )
+
+      assert json_response(conn, 200)
+    end
+  end
+
   describe "API authorization - as logged in user" do
     setup [:create_user, :log_in]
 

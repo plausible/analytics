@@ -415,6 +415,8 @@ defmodule Plausible.Sites do
 
   def create_shared_link(site, name, opts \\ []) do
     password = Keyword.get(opts, :password)
+    segment_id = Keyword.get(opts, :segment_id)
+
     site = Plausible.Repo.preload(site, :team)
     skip_feature_check? = Keyword.get(opts, :skip_feature_check?, false)
 
@@ -423,7 +425,7 @@ defmodule Plausible.Sites do
     else
       %SharedLink{site_id: site.id, slug: Nanoid.generate()}
       |> SharedLink.changeset(
-        %{name: name, password: password},
+        %{name: name, password: password, segment_id: segment_id},
         Keyword.take(opts, [:skip_special_name_check?])
       )
       |> Repo.insert()

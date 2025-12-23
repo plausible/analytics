@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - A visitor percentage breakdown is now shown on all reports, both on the dashboard and in the detailed breakdown
+- Shared links can now be limited to a particular segment of the data
 
 ### Removed
 
