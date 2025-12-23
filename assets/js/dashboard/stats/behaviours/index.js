@@ -18,11 +18,11 @@ import { useUserContext } from '../../user-context'
 import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
 import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
-import { useMoreLinkData } from '../../hooks/use-more-link-data'
 import MoreLink from '../more-link'
 import { Pill } from '../../components/pill'
 import * as api from '../../api'
 import * as url from '../../util/url'
+import { conversionsRoute, customPropsRoute } from '../../router'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -104,8 +104,8 @@ export default function Behaviours({ importedDataInView }) {
     useState(false)
 
   const [skipImportedReason, setSkipImportedReason] = useState(null)
-  const { onListUpdate, listData, linkProps, listLoading, reset } =
-    useMoreLinkData()
+  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
+  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
 
   const onGoalFilterClick = useCallback((e) => {
     const goalName = e.target.innerHTML
@@ -140,8 +140,13 @@ export default function Behaviours({ importedDataInView }) {
 
   useEffect(() => setLoading(true), [query, mode])
   useEffect(() => {
-    reset()
-  }, [query, mode, reset])
+    setMoreLinkClickable(false)
+    if (mode === PROPS && !selectedPropKey) {
+      setMoreLinkVisible(false)
+    } else {
+      setMoreLinkVisible(true)
+    }
+  }, [query, mode, selectedPropKey])
 
   function disableMode(mode) {
     setEnabledModes(
@@ -259,6 +264,11 @@ export default function Behaviours({ importedDataInView }) {
   function afterFetchData(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      setMoreLinkClickable(true)
+    } else {
+      setMoreLinkVisible(false)
+    }
   }
 
   function renderConversions() {
@@ -267,7 +277,6 @@ export default function Behaviours({ importedDataInView }) {
         <GoalConversions
           onGoalFilterClick={onGoalFilterClick}
           afterFetchData={afterFetchData}
-          onListUpdate={onListUpdate}
         />
       )
     } else if (adminAccess) {
@@ -329,7 +338,6 @@ export default function Behaviours({ importedDataInView }) {
         <Properties
           propKey={selectedPropKey}
           afterFetchData={afterFetchData}
-          onListUpdate={onListUpdate}
         />
       )
     } else if (adminAccess) {
@@ -410,6 +418,27 @@ export default function Behaviours({ importedDataInView }) {
       return PROPS
     }
     return FUNNELS
+  }
+
+  function moreLinkProps() {
+    switch (mode) {
+      case CONVERSIONS:
+        return {
+          path: conversionsRoute.path,
+          search: (search) => search
+        }
+      case PROPS:
+        if (!selectedPropKey) {
+          return null
+        }
+        return {
+          path: customPropsRoute.path,
+          params: { propKey: url.maybeEncodeRouteParam(selectedPropKey) },
+          search: (search) => search
+        }
+      default:
+        return null
+    }
   }
 
   function getEnabledModes() {
@@ -548,11 +577,9 @@ export default function Behaviours({ importedDataInView }) {
           {renderImportedQueryUnsupportedWarning()}
         </div>
         <MoreLink
-          list={listData}
-          linkProps={linkProps}
-          loading={listLoading}
-          className=""
-          onClick={undefined}
+          visible={moreLinkVisible}
+          clickable={moreLinkClickable}
+          linkProps={moreLinkProps()}
         />
       </ReportHeader>
       {renderContent()}

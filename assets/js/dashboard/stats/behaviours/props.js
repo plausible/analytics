@@ -8,7 +8,7 @@ import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { customPropsRoute } from '../../router'
 
-export default function Properties({ propKey, afterFetchData, onListUpdate }) {
+export default function Properties({ propKey, afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
 
@@ -54,7 +54,6 @@ export default function Properties({ propKey, afterFetchData, onListUpdate }) {
         }}
         color="bg-red-50 group-hover/row:bg-red-100"
         colMinWidth={90}
-        onListUpdate={onListUpdate}
       />
     )
   }

@@ -13,10 +13,9 @@ import { entryPagesRoute, exitPagesRoute, topPagesRoute } from '../../router'
 import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
-import { useMoreLinkData } from '../../hooks/use-more-link-data'
 import MoreLink from '../more-link'
 
-function EntryPages({ afterFetchData, onListUpdate }) {
+function EntryPages({ afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -60,12 +59,11 @@ function EntryPages({ afterFetchData, onListUpdate }) {
       }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function ExitPages({ afterFetchData, onListUpdate }) {
+function ExitPages({ afterFetchData }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   function fetchData() {
@@ -109,12 +107,11 @@ function ExitPages({ afterFetchData, onListUpdate }) {
       }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function TopPages({ afterFetchData, onListUpdate }) {
+function TopPages({ afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -154,7 +151,6 @@ function TopPages({ afterFetchData, onListUpdate }) {
       }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
@@ -168,24 +164,50 @@ export default function Pages() {
   const [mode, setMode] = useState(storedTab || 'pages')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
-  const { onListUpdate, listData, linkProps, listLoading, reset } =
-    useMoreLinkData()
+  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
+  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
     setMode(mode)
-    reset()
   }
 
   function afterFetchData(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      setMoreLinkClickable(true)
+    } else {
+      setMoreLinkVisible(false)
+    }
   }
 
-  useEffect(() => setLoading(true), [query, mode])
   useEffect(() => {
-    reset()
-  }, [query, mode, reset])
+    setLoading(true)
+    setMoreLinkVisible(true)
+    setMoreLinkClickable(false)
+  }, [query, mode])
+
+  function moreLinkProps() {
+    switch (mode) {
+      case 'entry-pages':
+        return {
+          path: entryPagesRoute.path,
+          search: (search) => search
+        }
+      case 'exit-pages':
+        return {
+          path: exitPagesRoute.path,
+          search: (search) => search
+        }
+      case 'pages':
+      default:
+        return {
+          path: topPagesRoute.path,
+          search: (search) => search
+        }
+    }
+  }
 
   function renderContent() {
     switch (mode) {
@@ -193,14 +215,12 @@ export default function Pages() {
         return (
           <EntryPages
             afterFetchData={afterFetchData}
-            onListUpdate={onListUpdate}
           />
         )
       case 'exit-pages':
         return (
           <ExitPages
             afterFetchData={afterFetchData}
-            onListUpdate={onListUpdate}
           />
         )
       case 'pages':
@@ -208,7 +228,6 @@ export default function Pages() {
         return (
           <TopPages
             afterFetchData={afterFetchData}
-            onListUpdate={onListUpdate}
           />
         )
     }
@@ -244,11 +263,9 @@ export default function Pages() {
           />
         </div>
         <MoreLink
-          list={listData}
-          linkProps={linkProps}
-          loading={listLoading}
-          className=""
-          onClick={undefined}
+          visible={moreLinkVisible}
+          clickable={moreLinkClickable}
+          linkProps={moreLinkProps()}
         />
       </ReportHeader>
       {renderContent()}

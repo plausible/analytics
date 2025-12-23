@@ -12,7 +12,6 @@ import { SourceFavicon } from './source-favicon'
 import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
-import { useMoreLinkData } from '../../hooks/use-more-link-data'
 import MoreLink from '../more-link'
 
 const NO_REFERRER = 'Direct / None'
@@ -22,9 +21,14 @@ export default function Referrers({ source }) {
   const site = useSiteContext()
   const [skipImportedReason, setSkipImportedReason] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { onListUpdate, listData, linkProps, listLoading } = useMoreLinkData()
+  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
+  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
 
-  useEffect(() => setLoading(true), [query])
+  useEffect(() => {
+    setLoading(true)
+    setMoreLinkVisible(true)
+    setMoreLinkClickable(false)
+  }, [query])
 
   function fetchReferrers() {
     return api.get(
@@ -37,6 +41,11 @@ export default function Referrers({ source }) {
   function afterFetchReferrers(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      setMoreLinkClickable(true)
+    } else {
+      setMoreLinkVisible(false)
+    }
   }
 
   function getExternalLinkUrl(referrer) {
@@ -88,11 +97,13 @@ export default function Referrers({ source }) {
           />
         </div>
         <MoreLink
-          list={listData}
-          linkProps={linkProps}
-          loading={listLoading}
-          className=""
-          onClick={undefined}
+          visible={moreLinkVisible}
+          clickable={moreLinkClickable}
+          linkProps={{
+            path: referrersDrilldownRoute.path,
+            params: { referrer: url.maybeEncodeRouteParam(source) },
+            search: (search) => search
+          }}
         />
       </ReportHeader>
       <ListReport
@@ -101,15 +112,9 @@ export default function Referrers({ source }) {
         getFilterInfo={getFilterInfo}
         keyLabel="Referrer"
         metrics={chooseMetrics()}
-        detailsLinkProps={{
-          path: referrersDrilldownRoute.path,
-          params: { referrer: url.maybeEncodeRouteParam(source) },
-          search: (search) => search
-        }}
         getExternalLinkUrl={getExternalLinkUrl}
         renderIcon={renderIcon}
         color="bg-blue-50"
-        onListUpdate={onListUpdate}
       />
     </ReportLayout>
   )

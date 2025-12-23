@@ -10,8 +10,7 @@ import { conversionsRoute } from '../../router'
 
 export default function Conversions({
   afterFetchData,
-  onGoalFilterClick,
-  onListUpdate
+  onGoalFilterClick
 }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
@@ -60,7 +59,6 @@ export default function Conversions({
       }}
       color="bg-red-50 group-hover/row:bg-red-100"
       colMinWidth={90}
-      onListUpdate={onListUpdate}
     />
   )
 }

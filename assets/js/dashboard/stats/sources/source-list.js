@@ -26,7 +26,6 @@ import {
 import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
-import { useMoreLinkData } from '../../hooks/use-more-link-data'
 import MoreLink from '../more-link'
 
 const UTM_TAGS = {
@@ -53,7 +52,7 @@ const UTM_TAGS = {
   utm_term: { title: 'UTM terms', label: 'Term', endpoint: '/utm_terms' }
 }
 
-function AllSources({ afterFetchData, onListUpdate }) {
+function AllSources({ afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -87,15 +86,13 @@ function AllSources({ afterFetchData, onListUpdate }) {
       getFilterInfo={getFilterInfo}
       keyLabel="Source"
       metrics={chooseMetrics()}
-      detailsLinkProps={{ path: sourcesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-blue-50 group-hover/row:bg-blue-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function Channels({ onClick, afterFetchData, onListUpdate }) {
+function Channels({ onClick, afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
 
@@ -127,17 +124,12 @@ function Channels({ onClick, afterFetchData, onListUpdate }) {
       keyLabel="Channel"
       onClick={onClick}
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: channelsRoute.path,
-        search: (search) => search
-      }}
       color="bg-blue-50 group-hover/row:bg-blue-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function UTMSources({ tab, afterFetchData, onListUpdate }) {
+function UTMSources({ tab, afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   const utmTag = UTM_TAGS[tab]
@@ -177,9 +169,7 @@ function UTMSources({ tab, afterFetchData, onListUpdate }) {
       getFilterInfo={getFilterInfo}
       keyLabel={utmTag.label}
       metrics={chooseMetrics()}
-      detailsLinkProps={{ path: route?.path, search: (search) => search }}
       color="bg-blue-50 group-hover/row:bg-blue-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
@@ -192,14 +182,15 @@ export default function SourceList() {
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
-  const { onListUpdate, listData, linkProps, listLoading, reset } =
-    useMoreLinkData()
+  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
+  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
   const previousQuery = usePrevious(query)
 
-  useEffect(() => setLoading(true), [query, currentTab])
   useEffect(() => {
-    reset()
-  }, [query, currentTab, reset])
+    setLoading(true)
+    setMoreLinkVisible(true)
+    setMoreLinkClickable(false)
+  }, [query, currentTab])
 
   useEffect(() => {
     const isRemovingFilter = (filterName) => {
@@ -221,7 +212,6 @@ export default function SourceList() {
     return () => {
       storage.setItem(tabKey, tab)
       setCurrentTab(tab)
-      reset()
     }
   }
 
@@ -232,6 +222,43 @@ export default function SourceList() {
   function afterFetchData(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      setMoreLinkClickable(true)
+    } else {
+      setMoreLinkVisible(false)
+    }
+  }
+
+  function moreLinkProps() {
+    if (Object.keys(UTM_TAGS).includes(currentTab)) {
+      const route = {
+        utm_medium: utmMediumsRoute,
+        utm_source: utmSourcesRoute,
+        utm_campaign: utmCampaignsRoute,
+        utm_content: utmContentsRoute,
+        utm_term: utmTermsRoute
+      }[currentTab]
+      return route
+        ? {
+            path: route.path,
+            search: (search) => search
+          }
+        : null
+    }
+
+    switch (currentTab) {
+      case 'channels':
+        return {
+          path: channelsRoute.path,
+          search: (search) => search
+        }
+      case 'all':
+      default:
+        return {
+          path: sourcesRoute.path,
+          search: (search) => search
+        }
+    }
   }
 
   function renderContent() {
@@ -240,7 +267,6 @@ export default function SourceList() {
         <UTMSources
           tab={currentTab}
           afterFetchData={afterFetchData}
-          onListUpdate={onListUpdate}
         />
       )
     }
@@ -251,7 +277,6 @@ export default function SourceList() {
           <Channels
             onClick={onChannelClick}
             afterFetchData={afterFetchData}
-            onListUpdate={onListUpdate}
           />
         )
       case 'all':
@@ -259,7 +284,6 @@ export default function SourceList() {
         return (
           <AllSources
             afterFetchData={afterFetchData}
-            onListUpdate={onListUpdate}
           />
         )
     }
@@ -302,11 +326,9 @@ export default function SourceList() {
           />
         </div>
         <MoreLink
-          list={listData}
-          linkProps={linkProps}
-          loading={listLoading}
-          className=""
-          onClick={undefined}
+          visible={moreLinkVisible}
+          clickable={moreLinkClickable}
+          linkProps={moreLinkProps()}
         />
       </ReportHeader>
       {renderContent()}

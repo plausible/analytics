@@ -22,7 +22,6 @@ import {
   operatingSystemVersionsRoute,
   screenSizesRoute
 } from '../../router'
-import { useMoreLinkData } from '../../hooks/use-more-link-data'
 import MoreLink from '../more-link'
 
 // Icons copied from https://github.com/alrra/browser-logos
@@ -59,7 +58,7 @@ export function browserIconFor(browser) {
   )
 }
 
-function Browsers({ afterFetchData, onListUpdate }) {
+function Browsers({ afterFetchData }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   function fetchData() {
@@ -94,16 +93,11 @@ function Browsers({ afterFetchData, onListUpdate }) {
       keyLabel="Browser"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
-      detailsLinkProps={{
-        path: browsersRoute.path,
-        search: (search) => search
-      }}
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function BrowserVersions({ afterFetchData, onListUpdate }) {
+function BrowserVersions({ afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -141,11 +135,6 @@ function BrowserVersions({ afterFetchData, onListUpdate }) {
       keyLabel="Browser version"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
-      detailsLinkProps={{
-        path: browserVersionsRoute.path,
-        search: (search) => search
-      }}
-      onListUpdate={onListUpdate}
     />
   )
 }
@@ -178,7 +167,7 @@ export function osIconFor(os) {
   )
 }
 
-function OperatingSystems({ afterFetchData, onListUpdate }) {
+function OperatingSystems({ afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   function fetchData() {
@@ -215,16 +204,11 @@ function OperatingSystems({ afterFetchData, onListUpdate }) {
       renderIcon={renderIcon}
       keyLabel="Operating system"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: operatingSystemsRoute.path,
-        search: (search) => search
-      }}
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function OperatingSystemVersions({ afterFetchData, onListUpdate }) {
+function OperatingSystemVersions({ afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
 
@@ -263,16 +247,11 @@ function OperatingSystemVersions({ afterFetchData, onListUpdate }) {
       getFilterInfo={getFilterInfo}
       keyLabel="Operating System Version"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: operatingSystemVersionsRoute.path,
-        search: (search) => search
-      }}
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function ScreenSizes({ afterFetchData, onListUpdate }) {
+function ScreenSizes({ afterFetchData }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
 
@@ -308,11 +287,6 @@ function ScreenSizes({ afterFetchData, onListUpdate }) {
       keyLabel="Device"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
-      detailsLinkProps={{
-        path: screenSizesRoute.path,
-        search: (search) => search
-      }}
-      onListUpdate={onListUpdate}
     />
   )
 }
@@ -451,24 +425,62 @@ export default function Devices() {
   const [mode, setMode] = useState(storedTab || 'browser')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
-  const { onListUpdate, listData, linkProps, listLoading, reset } =
-    useMoreLinkData()
+  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
+  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
     setMode(mode)
-    reset()
   }
 
   function afterFetchData(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      setMoreLinkClickable(true)
+    } else {
+      setMoreLinkVisible(false)
+    }
   }
 
-  useEffect(() => setLoading(true), [query, mode])
   useEffect(() => {
-    reset()
-  }, [query, mode, reset])
+    setLoading(true)
+    setMoreLinkVisible(true)
+    setMoreLinkClickable(false)
+  }, [query, mode])
+
+  function moreLinkProps() {
+    switch (mode) {
+      case 'browser':
+        if (isFilteringOnFixedValue(query, 'browser')) {
+          return {
+            path: browserVersionsRoute.path,
+            search: (search) => search
+          }
+        }
+        return {
+          path: browsersRoute.path,
+          search: (search) => search
+        }
+      case 'os':
+        if (isFilteringOnFixedValue(query, 'os')) {
+          return {
+            path: operatingSystemVersionsRoute.path,
+            search: (search) => search
+          }
+        }
+        return {
+          path: operatingSystemsRoute.path,
+          search: (search) => search
+        }
+      case 'size':
+      default:
+        return {
+          path: screenSizesRoute.path,
+          search: (search) => search
+        }
+    }
+  }
 
   function renderContent() {
     switch (mode) {
@@ -477,14 +489,12 @@ export default function Devices() {
           return (
             <BrowserVersions
               afterFetchData={afterFetchData}
-              onListUpdate={onListUpdate}
             />
           )
         }
         return (
           <Browsers
             afterFetchData={afterFetchData}
-            onListUpdate={onListUpdate}
           />
         )
       case 'os':
@@ -492,14 +502,12 @@ export default function Devices() {
           return (
             <OperatingSystemVersions
               afterFetchData={afterFetchData}
-              onListUpdate={onListUpdate}
             />
           )
         }
         return (
           <OperatingSystems
             afterFetchData={afterFetchData}
-            onListUpdate={onListUpdate}
           />
         )
       case 'size':
@@ -507,7 +515,6 @@ export default function Devices() {
         return (
           <ScreenSizes
             afterFetchData={afterFetchData}
-            onListUpdate={onListUpdate}
           />
         )
     }
@@ -538,11 +545,9 @@ export default function Devices() {
           />
         </div>
         <MoreLink
-          list={listData}
-          linkProps={linkProps}
-          loading={listLoading}
-          className=""
-          onClick={undefined}
+          visible={moreLinkVisible}
+          clickable={moreLinkClickable}
+          linkProps={moreLinkProps()}
         />
       </ReportHeader>
       {renderContent()}
