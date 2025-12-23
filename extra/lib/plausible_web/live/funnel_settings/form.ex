@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   import PlausibleWeb.Live.Components.Form
   alias Plausible.{Goals, Funnels}
-  alias Plausible.Stats.{QueryBuilder}
+  alias Plausible.Stats.QueryBuilder
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     site =

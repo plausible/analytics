@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo
-  alias Plausible.Stats.{QueryBuilder}
+  alias Plausible.Stats.QueryBuilder
 
   def update(assigns, socket) do
     site = Repo.preload(assigns.site, [:team, :owners])

@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
-  alias Plausible.Stats.{QueryBuilder}
+  alias Plausible.Stats.QueryBuilder
 
   def update(assigns, socket) do
     socket =

@@ -15,8 +15,6 @@ defmodule Plausible.Stats.ParsedQueryParams do
             pagination: nil,
             include: %Plausible.Stats.QueryInclude{}
 
-  @type t() :: %__MODULE__{}
-
   def new!(params) when is_map(params) do
     struct!(__MODULE__, Map.to_list(params))
   end
