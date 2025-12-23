@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
         show_content?={!Plausible.Billing.Feature.Props.opted_out?(@site)}
         site={@site}
         current_user={@current_user}
-        current_team={@current_team}
+        current_team={@site_team}
       >
         <:title>
           Custom properties
