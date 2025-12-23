@@ -372,8 +372,8 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
                    true
                  }
                end,
-               200,
-               20
+               50,
+               50
              )
     end
 
@@ -393,8 +393,8 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
                    true
                  }
                end,
-               200,
-               20
+               50,
+               50
              )
     end
   end
