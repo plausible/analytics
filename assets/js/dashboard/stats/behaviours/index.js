@@ -334,10 +334,7 @@ export default function Behaviours({ importedDataInView }) {
   function renderProps() {
     if (site.hasProps && site.propsAvailable) {
       return (
-        <Properties
-          propKey={selectedPropKey}
-          afterFetchData={afterFetchData}
-        />
+        <Properties propKey={selectedPropKey} afterFetchData={afterFetchData} />
       )
     } else if (adminAccess) {
       let callToAction
@@ -575,10 +572,7 @@ export default function Behaviours({ importedDataInView }) {
           {isRealtime() && <Pill className="-mt-1">last 30min</Pill>}
           {renderImportedQueryUnsupportedWarning()}
         </div>
-        <MoreLink
-          state={moreLinkState}
-          linkProps={moreLinkProps()}
-        />
+        <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
       </ReportHeader>
       {renderContent()}
     </ReportLayout>

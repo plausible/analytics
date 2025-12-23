@@ -485,37 +485,17 @@ export default function Devices() {
     switch (mode) {
       case 'browser':
         if (isFilteringOnFixedValue(query, 'browser')) {
-          return (
-            <BrowserVersions
-              afterFetchData={afterFetchData}
-            />
-          )
+          return <BrowserVersions afterFetchData={afterFetchData} />
         }
-        return (
-          <Browsers
-            afterFetchData={afterFetchData}
-          />
-        )
+        return <Browsers afterFetchData={afterFetchData} />
       case 'os':
         if (isFilteringOnFixedValue(query, 'os')) {
-          return (
-            <OperatingSystemVersions
-              afterFetchData={afterFetchData}
-            />
-          )
+          return <OperatingSystemVersions afterFetchData={afterFetchData} />
         }
-        return (
-          <OperatingSystems
-            afterFetchData={afterFetchData}
-          />
-        )
+        return <OperatingSystems afterFetchData={afterFetchData} />
       case 'size':
       default:
-        return (
-          <ScreenSizes
-            afterFetchData={afterFetchData}
-          />
-        )
+        return <ScreenSizes afterFetchData={afterFetchData} />
     }
   }
 
@@ -543,10 +523,7 @@ export default function Devices() {
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <MoreLink
-          state={moreLinkState}
-          linkProps={moreLinkProps()}
-        />
+        <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
       </ReportHeader>
       {renderContent()}
     </ReportLayout>

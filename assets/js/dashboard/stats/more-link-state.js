@@ -3,4 +3,3 @@ export const MoreLinkState = {
   LOADING: 'loading',
   READY: 'ready'
 }
-

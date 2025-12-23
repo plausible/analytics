@@ -99,10 +99,7 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
   )
 }
 
-export default function GoalConversions({
-  afterFetchData,
-  onGoalFilterClick
-}) {
+export default function GoalConversions({ afterFetchData, onGoalFilterClick }) {
   const { query } = useQueryContext()
 
   const specialGoal = getSpecialGoal(query)

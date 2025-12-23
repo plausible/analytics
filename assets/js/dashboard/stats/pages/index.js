@@ -211,24 +211,12 @@ export default function Pages() {
   function renderContent() {
     switch (mode) {
       case 'entry-pages':
-        return (
-          <EntryPages
-            afterFetchData={afterFetchData}
-          />
-        )
+        return <EntryPages afterFetchData={afterFetchData} />
       case 'exit-pages':
-        return (
-          <ExitPages
-            afterFetchData={afterFetchData}
-          />
-        )
+        return <ExitPages afterFetchData={afterFetchData} />
       case 'pages':
       default:
-        return (
-          <TopPages
-            afterFetchData={afterFetchData}
-          />
-        )
+        return <TopPages afterFetchData={afterFetchData} />
     }
   }
 
@@ -261,10 +249,7 @@ export default function Pages() {
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <MoreLink
-          state={moreLinkState}
-          linkProps={moreLinkProps()}
-        />
+        <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
       </ReportHeader>
       {renderContent()}
     </ReportLayout>

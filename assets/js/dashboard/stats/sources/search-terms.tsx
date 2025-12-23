@@ -78,7 +78,9 @@ function ConfigureSearchTermsCTA({
 export function SearchTerms() {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const [moreLinkState, setMoreLinkState] = React.useState(MoreLinkState.LOADING)
+  const [moreLinkState, setMoreLinkState] = React.useState(
+    MoreLinkState.LOADING
+  )
 
   const [loading, setLoading] = React.useState(true)
   const [errorPayload, setErrorPayload] = React.useState<null | ErrorPayload>(

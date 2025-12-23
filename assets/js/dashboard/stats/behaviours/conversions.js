@@ -8,10 +8,7 @@ import { useSiteContext } from '../../site-context'
 import { useQueryContext } from '../../query-context'
 import { conversionsRoute } from '../../router'
 
-export default function Conversions({
-  afterFetchData,
-  onGoalFilterClick
-}) {
+export default function Conversions({ afterFetchData, onGoalFilterClick }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
 

@@ -254,29 +254,17 @@ export default function SourceList() {
 
   function renderContent() {
     if (Object.keys(UTM_TAGS).includes(currentTab)) {
-      return (
-        <UTMSources
-          tab={currentTab}
-          afterFetchData={afterFetchData}
-        />
-      )
+      return <UTMSources tab={currentTab} afterFetchData={afterFetchData} />
     }
 
     switch (currentTab) {
       case 'channels':
         return (
-          <Channels
-            onClick={onChannelClick}
-            afterFetchData={afterFetchData}
-          />
+          <Channels onClick={onChannelClick} afterFetchData={afterFetchData} />
         )
       case 'all':
       default:
-        return (
-          <AllSources
-            afterFetchData={afterFetchData}
-          />
-        )
+        return <AllSources afterFetchData={afterFetchData} />
     }
   }
 
@@ -316,10 +304,7 @@ export default function SourceList() {
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <MoreLink
-          state={moreLinkState}
-          linkProps={moreLinkProps()}
-        />
+        <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
       </ReportHeader>
       {renderContent()}
     </ReportLayout>
