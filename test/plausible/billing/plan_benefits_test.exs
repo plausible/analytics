@@ -145,6 +145,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Sites API",
                "Single Sign-On (SSO)",
                "Managed Proxy",
+               "Scheduled raw event data exports",
                "5+ years of data retention",
                "Priority support"
              ]
@@ -165,6 +166,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Sites API",
                "Single Sign-On (SSO)",
                "Managed Proxy",
+               "Scheduled raw event data exports",
                "5+ years of data retention",
                "Priority support"
              ]
@@ -184,6 +186,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Sites API",
                "Single Sign-On (SSO)",
                "Managed Proxy",
+               "Scheduled raw event data exports",
                "Priority support"
              ]
     end
