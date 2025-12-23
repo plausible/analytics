@@ -9,6 +9,8 @@ import {
   LinkProps
 } from 'react-router-dom'
 import { parseSearch, stringifySearch } from '../util/url-search-params'
+import { useSegmentsContext } from '../filtering/segments-context'
+import { getSearchToSetSegmentFilter } from '../filtering/segments'
 
 export type AppNavigationTarget = {
   /**
@@ -24,7 +26,7 @@ export type AppNavigationTarget = {
    * - `(s) => s` preserves current search value,
    * - `(s) => ({ ...s, calendar: !s.calendar })` toggles the value for calendar search parameter,
    * - `() => ({ page: 5 })` sets the search to `?page=5`,
-   * - `undefined` empties the search
+   * - `undefined` empties the search, except for the enforced segment
    */
   search?: (search: Record<string, unknown>) => Record<string, unknown>
 }
@@ -44,11 +46,24 @@ const getNavigateToOptions = (
 
 export const useGetNavigateOptions = () => {
   const location = useLocation()
+  const { limitedToSegment } = useSegmentsContext()
+
   const getToOptions = useCallback(
     ({ path, params, search }: AppNavigationTarget) => {
-      return getNavigateToOptions(location.search, { path, params, search })
+      const wrappedSearch: typeof search = (searchRecord) => {
+        const updatedSearchRecord =
+          typeof search === 'function' ? search(searchRecord) : searchRecord
+        return limitedToSegment
+          ? getSearchToSetSegmentFilter(limitedToSegment)(updatedSearchRecord)
+          : updatedSearchRecord
+      }
+      return getNavigateToOptions(location.search, {
+        path,
+        params,
+        search: wrappedSearch
+      })
     },
-    [location.search]
+    [location.search, limitedToSegment]
   )
   return getToOptions
 }

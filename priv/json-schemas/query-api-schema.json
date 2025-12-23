@@ -15,10 +15,6 @@
       "uniqueItems": true,
       "description": "List of metrics to query"
     },
-    "date": {
-      "type": "string",
-      "$comment": "only :internal"
-    },
     "date_range": {
       "oneOf": [
         { "$ref": "#/definitions/date_range_shorthand" },
@@ -67,22 +63,6 @@
           "type": "boolean",
           "default": false,
           "description": "If set and using `day`, `month` or `year` date_ranges, the query will be trimmed to the current date"
-        },
-        "compare": {
-          "$comment": "only :internal",
-          "oneOf": [
-            { "$ref": "#/definitions/date_range" },
-            { "$ref": "#/definitions/comparison_mode" },
-            false
-          ],
-          "default": false,
-          "description": "If set, executes the same query but over a comparison date range"
-        },
-        "compare_match_day_of_week": {
-          "$comment": "only :internal",
-          "type": "boolean",
-          "default": false,
-          "description": "With the `compare` option, if set and using time:day dimensions, day-of-week of comparison query is matched"
         }
       }
     },
@@ -146,14 +126,6 @@
     },
     "date_range_shorthand": {
       "anyOf": [
-        {
-          "const": "30m",
-          "$comment": "only :internal"
-        },
-        {
-          "const": "realtime",
-          "$comment": "only :internal"
-        },
         {
           "const": "all",
           "description": "Since the start of stats in Plausible"
@@ -265,10 +237,6 @@
           "markdownDescription": "Average time spent on a given page in a visit in seconds. Requires: `event:page` filter or dimension."
         },
         {
-          "const": "exit_rate",
-          "$comment": "only :internal"
-        },
-        {
           "const": "total_revenue",
           "markdownDescription": "Total revenue",
           "$comment": "only :ee"
@@ -331,10 +299,6 @@
         {
           "type": "string",
           "enum": ["time", "time:month", "time:week", "time:day", "time:hour"]
-        },
-        {
-          "const": "time:minute",
-          "$comment": "only :internal"
         }
       ]
     },
@@ -373,15 +337,7 @@
       "minItems": 3,
       "maxItems": 3,
       "items": [
-        {
-          "oneOf": [
-            { "$ref": "#/definitions/filter_operation_regex" },
-            {
-              "$ref": "#/definitions/filter_operation_wildcard",
-              "$comment": "only :internal"
-            }
-          ]
-        },
+        { "$ref": "#/definitions/filter_operation_regex" },
         {
           "oneOf": [
             { "$ref": "#/definitions/simple_filter_dimensions" },

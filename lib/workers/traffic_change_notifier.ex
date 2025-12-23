@@ -4,7 +4,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   """
   use Plausible
   use Plausible.Repo
-  alias Plausible.Stats.{Query, Clickhouse}
+  alias Plausible.Stats.{Clickhouse, ParsedQueryParams, QueryBuilder}
   alias Plausible.Site.TrafficChangeNotification
 
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -129,22 +129,20 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     |> put_pages(site)
   end
 
-  @base_query_params %{
-    "metrics" => ["visitors"],
-    "pagination" => %{"limit" => 3},
-    "date_range" => "realtime"
+  @base_query_params %ParsedQueryParams{
+    metrics: [:visitors],
+    pagination: %{limit: 3, offset: 0},
+    input_date_range: :realtime
   }
 
   defp put_sources(stats, site) do
     query =
-      Query.parse_and_build!(
+      QueryBuilder.build!(
         site,
-        :internal,
-        Map.merge(@base_query_params, %{
-          "site_id" => site.domain,
-          "dimensions" => ["visit:source"],
-          "filters" => [["is_not", "visit:source", ["Direct / None"]]]
-        })
+        struct!(@base_query_params,
+          dimensions: ["visit:source"],
+          filters: [[:is_not, "visit:source", ["Direct / None"]]]
+        )
       )
 
     %{results: sources} = Plausible.Stats.query(site, query)
@@ -153,15 +151,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp put_pages(stats, site) do
-    query =
-      Query.parse_and_build!(
-        site,
-        :internal,
-        Map.merge(@base_query_params, %{
-          "site_id" => site.domain,
-          "dimensions" => ["event:page"]
-        })
-      )
+    query = QueryBuilder.build!(site, struct!(@base_query_params, dimensions: ["event:page"]))
 
     %{results: pages} = Plausible.Stats.query(site, query)
 

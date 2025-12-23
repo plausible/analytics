@@ -1330,9 +1330,10 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert response(conn, 200) =~ "Enter password"
     end
 
-    test "logs anonymous user in straight away if the link is not password-protected", %{
-      conn: conn
-    } do
+    test "if the shared link is not protected with a password, passes user immediately to dashboard",
+         %{
+           conn: conn
+         } do
       site = new_site(domain: "test-site.com")
       link = insert(:shared_link, site: site)
 
@@ -1344,7 +1345,34 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
     end
 
-    test "footer and header are shown when accessing public dashboard", %{
+    test "if the shared link is limited to a segment, only that segment is stuffed into data-segments",
+         %{
+           conn: conn
+         } do
+      site = new_site(domain: "test-site.com")
+      emea_site_segment = insert(:segment, name: "EMEA", site: site, type: :site)
+      apac_site_segment = insert(:segment, name: "APAC", site: site, type: :site)
+      link = insert(:shared_link, site: site, segment: emea_site_segment)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
+      assert resp =~ "stats-react-container"
+
+      assert text_of_attr(resp, @react_container, "data-limited-to-segment-id") ==
+               "#{emea_site_segment.id}"
+
+      assert text_of_attr(resp, @react_container, "data-segments") ==
+               emea_site_segment
+               |> Map.take([:id, :name, :type, :inserted_at, :updated_at, :segment_data])
+               |> List.wrap()
+               |> JSON.encode!()
+
+      refute resp =~ apac_site_segment.name
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
+    end
+
+    test "footer and header are shown when accessing shared link dashboard", %{
       conn: conn
     } do
       site = new_site(domain: "test-site.com")

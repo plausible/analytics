@@ -162,8 +162,35 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
              } = parsed
     end
 
-    test "errors when filter decoding fails" do
+    test "parses city filter with multiple clauses" do
+      {:ok, parsed} =
+        parse("?f=is,city,2988507,2950159")
+
+      assert %ParsedQueryParams{
+               filters: [[:is, "visit:city", [2_988_507, 2_950_159]]],
+               include: @default_include
+             } = parsed
+    end
+
+    test "parses a segment filter" do
+      {:ok, parsed} = parse("?f=is,segment,123")
+
+      assert %ParsedQueryParams{
+               filters: [[:is, "segment", [123]]],
+               include: @default_include
+             } = parsed
+    end
+
+    test "errors when filter structure is wrong" do
       assert {:error, :invalid_filters} = parse("?f=is,page,/&f=what")
+    end
+
+    test "errors when city filter cannot be parsed to integer" do
+      assert {:error, :invalid_filters} = parse("?f=is,city,Berlin")
+    end
+
+    test "errors when segment filter cannot be parsed to integer" do
+      assert {:error, :invalid_filters} = parse("?f=is,segment,MySegment")
     end
   end
 end

@@ -120,8 +120,8 @@ class FilterModal extends React.Component {
   selectFiltersAndCloseModal(filters) {
     this.props.navigate({
       path: rootRoute.path,
-      search: (search) => ({
-        ...search,
+      search: (searchRecord) => ({
+        ...searchRecord,
         filters: filters,
         labels: cleanLabels(filters, this.state.labelState)
       }),
@@ -178,7 +178,7 @@ class FilterModal extends React.Component {
 
   render() {
     return (
-      <Modal maxWidth="460px" onClose={this.closeModal}>
+      <Modal maxWidth="460px" allowScroll={true} onClose={this.closeModal}>
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-base md:text-lg font-bold dark:text-gray-100">
             Filter by {formatFilterGroup(this.props.modalType)}

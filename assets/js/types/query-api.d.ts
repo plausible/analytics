@@ -12,13 +12,10 @@ export type Metric =
   | "conversion_rate"
   | "group_conversion_rate"
   | "time_on_page"
-  | "exit_rate"
   | "total_revenue"
   | "average_revenue"
   | "scroll_depth";
 export type DateRangeShorthand =
-  | "30m"
-  | "realtime"
   | "all"
   | "day"
   | "7d"
@@ -71,7 +68,7 @@ export type SimpleFilterDimensions =
   | "visit:exit_page_hostname";
 export type CustomPropertyFilterDimensions = string;
 export type GoalDimension = "event:goal";
-export type TimeDimensions = ("time" | "time:month" | "time:week" | "time:day" | "time:hour") | "time:minute";
+export type TimeDimensions = "time" | "time:month" | "time:week" | "time:day" | "time:hour";
 export type FilterTree = FilterEntry | FilterAndOr | FilterNot | FilterHasDone;
 export type FilterEntry = FilterWithoutGoals | FilterWithIs | FilterWithContains | FilterWithPattern;
 /**
@@ -126,7 +123,7 @@ export type FilterWithContains =
  * @maxItems 3
  */
 export type FilterWithPattern = [
-  FilterOperationRegex | ("matches_wildcard" | "matches_wildcard_not"),
+  FilterOperationRegex,
   SimpleFilterDimensions | CustomPropertyFilterDimensions,
   Clauses
 ];
@@ -157,7 +154,6 @@ export type OrderByEntry = [
   Metric | SimpleFilterDimensions | CustomPropertyFilterDimensions | TimeDimensions,
   "asc" | "desc"
 ];
-export type ComparisonMode = "previous_period" | "year_over_year";
 
 export interface QueryApiSchema {
   /**
@@ -170,7 +166,6 @@ export interface QueryApiSchema {
    * @minItems 1
    */
   metrics: [Metric, ...Metric[]];
-  date?: string;
   /**
    * Date range to query
    */
@@ -198,14 +193,6 @@ export interface QueryApiSchema {
      * If set and using `day`, `month` or `year` date_ranges, the query will be trimmed to the current date
      */
     trim_relative_date_range?: boolean;
-    /**
-     * If set, executes the same query but over a comparison date range
-     */
-    compare?: DateRange | ComparisonMode | never;
-    /**
-     * With the `compare` option, if set and using time:day dimensions, day-of-week of comparison query is matched
-     */
-    compare_match_day_of_week?: boolean;
   };
   pagination?: {
     /**
