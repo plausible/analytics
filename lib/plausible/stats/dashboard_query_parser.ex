@@ -28,9 +28,9 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
   def default_pagination(), do: @default_pagination
 
-  def parse(query_string) when is_binary(query_string) do
+  def parse(query_string, defaults \\ %{}) when is_binary(query_string) do
     query_string = String.trim_leading(query_string, "?")
-    params_map = URI.decode_query(query_string)
+    params_map = Map.merge(defaults, URI.decode_query(query_string))
 
     with {:ok, filters} <- parse_filters(query_string),
          {:ok, relative_date} <- parse_relative_date(params_map) do

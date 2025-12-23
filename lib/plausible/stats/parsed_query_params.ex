@@ -19,6 +19,14 @@ defmodule Plausible.Stats.ParsedQueryParams do
     struct!(__MODULE__, Map.to_list(params))
   end
 
+  def set(params, keywords) do
+    struct!(params, keywords)
+  end
+
+  def set_include(params, key, value) do
+    struct!(params, include: struct!(params.include, [{key, value}]))
+  end
+
   @props_prefix "event:props:"
 
   def add_or_replace_filter(%__MODULE__{filters: filters} = parsed_query_params, new_filter) do

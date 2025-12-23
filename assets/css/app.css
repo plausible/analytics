@@ -115,6 +115,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@custom-variant phx-hook-loading (.phx-hook-loading&, .phx-hook-loading &);
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
