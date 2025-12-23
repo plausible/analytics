@@ -131,9 +131,6 @@ defmodule Plausible.Segments.Segment do
 
       {:error, :deep_filters_not_supported} ->
         {:error, {:invalid_filters, "Invalid filters. Deep filters are not supported."}}
-
-      {:error, message} ->
-        raise "Segment validation failed unexpectedly: #{inspect(message)}"
     end
   end
 
