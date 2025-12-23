@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
       </div>
 
       <div
-        class="w-full flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]:flex hidden"
+        class="w-full flex-col justify-center group-[.phx-navigation-loading]:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden"
         style={"min-height: #{@height}px;"}
       >
         <div class="mx-auto loading">
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         </div>
       </div>
 
-      <div class="group-has-[.tile-tabs.phx-hook-loading]:hidden">
+      <div class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden">
         {render_slot(@inner_block)}
       </div>
     </div>
