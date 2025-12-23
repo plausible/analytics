@@ -7,7 +7,7 @@ defmodule Plausible.Stats.TableDecider do
   import Enum, only: [empty?: 1]
   import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
 
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, QueryError}
 
   def events_join_sessions?(query) do
     query.filters
@@ -43,11 +43,19 @@ defmodule Plausible.Stats.TableDecider do
 
       not empty?(session_only_metrics) and not empty?(event_only_dimensions) ->
         {:error,
-         "Session metric(s) #{i(session_only_metrics)} cannot be queried along with event dimension(s) #{i(event_only_dimensions)}"}
+         %QueryError{
+           code: :invalid_metrics,
+           message:
+             "Session metric(s) #{i(session_only_metrics)} cannot be queried along with event dimension(s) #{i(event_only_dimensions)}"
+         }}
 
       not empty?(event_only_metrics) and not empty?(session_only_dimensions) ->
         {:error,
-         "Event metric(s) #{i(event_only_metrics)} cannot be queried along with session dimension(s) #{i(session_only_dimensions)}"}
+         %QueryError{
+           code: :invalid_metrics,
+           message:
+             "Event metric(s) #{i(event_only_metrics)} cannot be queried along with session dimension(s) #{i(session_only_dimensions)}"
+         }}
 
       true ->
         :ok

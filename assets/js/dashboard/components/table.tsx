@@ -21,7 +21,7 @@ export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   /**
    * Function used to transform the value found at item[key] for the cell. Superseded by renderItem if present. @example 1120 => "1.1k"
    */
-  renderValue?: (item: T) => ReactNode
+  renderValue?: (item: T, isRowHovered?: boolean) => ReactNode
   /** Function used to create richer cells */
   renderItem?: (item: T) => ReactNode
 }
@@ -38,7 +38,7 @@ export const TableHeaderCell = ({
   return (
     <th
       className={classNames(
-        'p-2 text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wide',
+        'p-2 text-xs font-semibold text-gray-500 dark:text-gray-400',
         className
       )}
       align={align}
@@ -58,7 +58,13 @@ export const TableCell = ({
   align?: 'left' | 'right'
 }) => {
   return (
-    <td className={classNames('p-2 font-medium', className)} align={align}>
+    <td
+      className={classNames(
+        'p-2 font-medium first:rounded-s-sm last:rounded-e-sm',
+        className
+      )}
+      align={align}
+    >
       {children}
     </td>
   )
@@ -68,15 +74,42 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
   rowIndex,
   pageIndex,
   item,
-  columns
+  columns,
+  tappedRowName,
+  onRowTap
 }: {
   rowIndex: number
   pageIndex?: number
   item: T
   columns: ColumnConfiguraton<T>[]
+  tappedRowName?: string | null
+  onRowTap?: (rowName: string | null) => void
 }) => {
+  const [isHovered, setIsHovered] = React.useState(false)
+
+  const rowName = (item as unknown as { name: string }).name
+  const isTapped = tappedRowName === rowName
+  const isRowActive = isHovered || isTapped
+
+  const handleRowClick = (e: React.MouseEvent) => {
+    if (window.innerWidth < 768 && !(e.target as HTMLElement).closest('a')) {
+      if (onRowTap) {
+        if (isTapped) {
+          onRowTap(null)
+        } else {
+          onRowTap(rowName)
+        }
+      }
+    }
+  }
+
   return (
-    <tr className="text-sm dark:text-gray-200">
+    <tr
+      className="group text-sm dark:text-gray-200 md:cursor-default cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleRowClick}
+    >
       {columns.map(({ key, width, align, renderValue, renderItem }) => (
         <TableCell
           key={`${(pageIndex ?? null) === null ? '' : `page_${pageIndex}_`}row_${rowIndex}_${String(key)}`}
@@ -86,7 +119,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
           {renderItem
             ? renderItem(item)
             : renderValue
-              ? renderValue(item)
+              ? renderValue(item, isRowActive)
               : (item[key] ?? '')}
         </TableCell>
       ))}
@@ -101,6 +134,8 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
   columns: ColumnConfiguraton<T>[]
   data: T[] | { pages: T[][] }
 }) => {
+  const [tappedRowName, setTappedRowName] = React.useState<string | null>(null)
+
   const renderColumnLabel = (column: ColumnConfiguraton<T>) => {
     if (column.metricWarning) {
       return (
@@ -125,13 +160,13 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
   }
 
   return (
-    <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
-      <thead>
-        <tr className="text-xs font-bold text-gray-500 dark:text-gray-400">
+    <table className="border-collapse table-striped table-fixed w-max min-w-full">
+      <thead className="sticky top-0 bg-white dark:bg-gray-900 z-10">
+        <tr className="text-xs font-semibold text-gray-500 dark:text-gray-400">
           {columns.map((column) => (
             <TableHeaderCell
               key={`header_${String(column.key)}`}
-              className={classNames('p-2 tracking-wide', column.width)}
+              className={classNames('p-2', column.width)}
               align={column.align}
             >
               {column.onSort ? (
@@ -156,6 +191,8 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
                 columns={columns}
                 rowIndex={rowIndex}
                 key={rowIndex}
+                tappedRowName={tappedRowName}
+                onRowTap={setTappedRowName}
               />
             ))
           : data.pages.map((page, pageIndex) =>
@@ -166,6 +203,8 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
                   rowIndex={rowIndex}
                   pageIndex={pageIndex}
                   key={`page_${pageIndex}_row_${rowIndex}`}
+                  tappedRowName={tappedRowName}
+                  onRowTap={setTappedRowName}
                 />
               ))
             )}

@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Api.SystemController do
+  use Plausible
   use PlausibleWeb, :controller
   require Logger
 
@@ -25,8 +26,13 @@ defmodule PlausibleWeb.Api.SystemController do
   @critical_caches [
     Plausible.Site.Cache,
     Plausible.Shield.IPRuleCache,
-    PlausibleWeb.TrackerScriptCache
+    on_ee do
+      Plausible.Site.TrackerScriptIdCache
+    else
+      Plausible.Site.TrackerScriptCache
+    end
   ]
+
   def readiness(conn, _params) do
     postgres_health_task =
       Task.async(fn ->

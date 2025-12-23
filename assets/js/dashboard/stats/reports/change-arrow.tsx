@@ -15,23 +15,21 @@ export function ChangeArrow({
   className: string
   hideNumber?: boolean
 }) {
-  const formattedChange = hideNumber
-    ? null
-    : ` ${numberShortFormatter(Math.abs(change))}%`
-
   let icon = null
   const arrowClassName = classNames(
     color(change, metric),
-    'inline-block h-3 w-3 stroke-[1px] stroke-current'
+    'mb-0.5 inline-block size-3 stroke-[1px] stroke-current'
   )
 
   if (change > 0) {
     icon = <ArrowUpRightIcon className={arrowClassName} />
   } else if (change < 0) {
     icon = <ArrowDownRightIcon className={arrowClassName} />
-  } else if (change === 0 && !hideNumber) {
-    icon = <>&#12336;</>
   }
+
+  const formattedChange = hideNumber
+    ? null
+    : `${icon ? ' ' : ''}${numberShortFormatter(Math.abs(change))}%`
 
   return (
     <span className={className} data-testid="change-arrow">

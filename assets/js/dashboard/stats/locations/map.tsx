@@ -106,7 +106,9 @@ const WorldMap = ({
           [country.code]: country.name
         })
         onCountrySelect()
-        navigate({ search: (search) => ({ ...search, filters, labels }) })
+        navigate({
+          search: (searchRecord) => ({ ...searchRecord, filters, labels })
+        })
       }
     },
     [navigate, query, dataByCountryCode, onCountrySelect]
@@ -185,7 +187,7 @@ const WorldMap = ({
           path: countriesRoute.path,
           search: (search: Record<string, unknown>) => search
         }}
-        className={undefined}
+        className="mt-3"
         onClick={undefined}
       />
       {site.isDbip && <GeolocationNotice />}

@@ -14,15 +14,23 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33.3}
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.67},
+               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33.33}
              ]
     end
 
     test "returns bounce_rate and visit_duration when detailed=true", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Desktop"),
-        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 12:10:00], screen_size: "Desktop"),
+        build(:pageview,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 12:00:00],
+          screen_size: "Desktop"
+        ),
+        build(:pageview,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 12:10:00],
+          screen_size: "Desktop"
+        ),
         build(:pageview, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Desktop"),
         build(:pageview, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Laptop")
       ])
@@ -39,14 +47,14 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
                  "visitors" => 2,
                  "bounce_rate" => 50,
                  "visit_duration" => 300,
-                 "percentage" => 66.7
+                 "percentage" => 66.67
                },
                %{
                  "name" => "Laptop",
                  "visitors" => 1,
                  "bounce_rate" => 100,
                  "visit_duration" => 0,
-                 "percentage" => 33.3
+                 "percentage" => 33.33
                }
              ]
     end
@@ -204,8 +212,8 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       conn1 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
       assert json_response(conn1, 200)["results"] == [
-               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33.3}
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.67},
+               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33.33}
              ]
 
       conn2 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&with_imported=true")
@@ -312,8 +320,8 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "Mobile", "visitors" => 1, "percentage" => 33.3}
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.67},
+               %{"name" => "Mobile", "visitors" => 1, "percentage" => 33.33}
              ]
     end
 

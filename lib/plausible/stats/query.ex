@@ -18,7 +18,7 @@ defmodule Plausible.Stats.Query do
             timezone: nil,
             legacy_breakdown: false,
             preloaded_goals: [],
-            include: Plausible.Stats.ParsedQueryParams.default_include(),
+            include: Plausible.Stats.ApiQueryParser.default_include(),
             debug_metadata: %{},
             pagination: nil,
             # Revenue metric specific metadata
@@ -40,34 +40,38 @@ defmodule Plausible.Stats.Query do
     Imported,
     Legacy,
     Comparisons,
-    QueryParser,
+    ApiQueryParser,
     ParsedQueryParams,
-    QueryBuilder
+    QueryBuilder,
+    QueryError
   }
 
   @type t :: %__MODULE__{}
 
   def parse_and_build(
         %Plausible.Site{domain: domain} = site,
-        schema_type,
         %{"site_id" => domain} = params,
         debug_metadata \\ %{}
       ) do
     with {:ok, %ParsedQueryParams{} = parsed_query_params} <-
-           QueryParser.parse(site, schema_type, params) do
-      QueryBuilder.build(site, parsed_query_params, params, debug_metadata)
+           ApiQueryParser.parse(params) do
+      QueryBuilder.build(site, parsed_query_params, debug_metadata)
     end
   end
 
-  def parse_and_build!(site, schema_type, params, debug_metadata \\ %{}) do
-    case parse_and_build(site, schema_type, params, debug_metadata) do
-      {:ok, query} -> query
-      {:error, reason} -> raise "Failed to build query: #{inspect(reason)}"
+  def parse_and_build!(site, params, debug_metadata \\ %{}) do
+    case parse_and_build(site, params, debug_metadata) do
+      {:ok, query} ->
+        query
+
+      {:error, %QueryError{message: message}} ->
+        raise "Failed to build query: #{inspect(message)}"
     end
   end
 
   @doc """
-  Builds query from old-style stats APIv1 params. New code should use `Query.parse_and_build`.
+  Builds query from old-style stats APIv1 params. New code should use `Query.parse_and_build`
+  or `QueryBuilder.build` with already parsed params.
   """
   def from(site, params, debug_metadata \\ %{}, now \\ nil) do
     Legacy.QueryBuilder.from(site, params, debug_metadata, now)
@@ -107,7 +111,7 @@ defmodule Plausible.Stats.Query do
   end
 
   def set_include(query, key, value) do
-    struct!(query, include: Map.put(query.include, key, value))
+    struct!(query, include: struct!(query.include, [{key, value}]))
   end
 
   def add_filter(query, filter) do
@@ -160,7 +164,7 @@ defmodule Plausible.Stats.Query do
   end
 
   defp get_imports_in_range(_site, %__MODULE__{input_date_range: period})
-       when period in ["realtime", "30m"] do
+       when period in [:realtime, :realtime_30m] do
     []
   end
 
@@ -168,7 +172,7 @@ defmodule Plausible.Stats.Query do
     in_range = Plausible.Imported.completed_imports_in_query_range(site, query)
 
     in_comparison_range =
-      if is_map(query.include.comparisons) do
+      if query.include.compare do
         comparison_query = Comparisons.get_comparison_query(query)
         Plausible.Imported.completed_imports_in_query_range(site, comparison_query)
       else

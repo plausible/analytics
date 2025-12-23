@@ -15,7 +15,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 1
 
       - name: Checkout master for comparison
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: master
           path: master-branch
@@ -122,7 +122,7 @@ jobs:
 
       - name: Get changed files
         id: changelog_changed
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891
         with:
           files: |
             tracker/npm_package/CHANGELOG.md

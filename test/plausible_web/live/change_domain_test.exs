@@ -20,6 +20,15 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
           [{192, 168, 1, 2}]
         end)
 
+        # Stub detection by default to prevent async task race conditions
+        # Tests that need specific detection results can override this stub
+        stub_detection_result(%{
+          "v1Detected" => false,
+          "gtmLikely" => false,
+          "wordpressLikely" => false,
+          "wordpressPlugin" => false
+        })
+
         :ok
       end
     end
@@ -73,27 +82,38 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    test "successful form submission updates database", %{conn: conn, site: site} do
-      on_ee do
-        stub_detection_result(%{
-          "v1Detected" => false,
-          "gtmLikely" => false,
-          "wordpressLikely" => false,
-          "wordpressPlugin" => false
-        })
+    for {role, membership_type} <- [
+          {:editor, :site_guest},
+          {:editor, :team_member},
+          {:admin, :team_member},
+          {:owner, :team_member}
+        ] do
+      test "#{Phoenix.Naming.humanize(membership_type)} with role #{role} can submit the form and it changes the record in the database",
+           %{conn: conn, user: user} do
+        site = new_site()
+
+        add_site_guest_or_team_member(site,
+          user: user,
+          role: unquote(role),
+          membership_type: unquote(membership_type)
+        )
+
+        original_domain = site.domain
+        new_domain = "new.#{site.domain}"
+        {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
+
+        lv
+        |> element("form")
+        |> render_submit(%{site: %{domain: new_domain}})
+
+        on_ee do
+          render_async(lv, 500)
+        end
+
+        site = Repo.reload!(site)
+        assert site.domain == new_domain
+        assert site.domain_changed_from == original_domain
       end
-
-      original_domain = site.domain
-      new_domain = "new.#{site.domain}"
-      {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
-
-      lv
-      |> element("form")
-      |> render_submit(%{site: %{domain: new_domain}})
-
-      site = Repo.reload!(site)
-      assert site.domain == new_domain
-      assert site.domain_changed_from == original_domain
     end
 
     test "successful form submission navigates to success page", %{conn: conn, site: site} do

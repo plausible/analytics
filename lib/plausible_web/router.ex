@@ -306,6 +306,7 @@ defmodule PlausibleWeb.Router do
       post "/", SegmentsController, :create
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
+      get "/:segment_id/shared-links", SegmentsController, :get_related_shared_links
     end
   end
 
@@ -325,24 +326,17 @@ defmodule PlausibleWeb.Router do
     },
     assigns: %{
       api_scope: "stats:read:*",
-      api_context: :site,
-      schema_type: :public
+      api_context: :site
     } do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
-
-    if Mix.env() in [:test, :ce_test] do
-      scope assigns: %{schema_type: :internal} do
-        post "/query-internal-test", ExternalQueryApiController, :query
-      end
-    end
   end
 
   scope "/api/docs", PlausibleWeb.Api do
     get "/query/schema.json", ExternalQueryApiController, :schema
 
-    scope assigns: %{schema_type: :public} do
+    scope [] do
       pipe_through :docs_stats_api
 
       post "/query", ExternalQueryApiController, :query
@@ -706,7 +700,10 @@ defmodule PlausibleWeb.Router do
       put "/:domain/settings", SiteController, :update_settings
 
       get "/:domain/export", StatsController, :csv_export
-      get "/:domain/*path", StatsController, :stats
+
+      scope assigns: %{live_socket_disable_push_state: true} do
+        get "/:domain/*path", StatsController, :stats
+      end
     end
   end
 end

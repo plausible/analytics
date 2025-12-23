@@ -29,7 +29,7 @@ defmodule Plausible.Stats.Timeseries do
       |> QueryOptimizer.optimize()
 
     comparison_query =
-      if(query.include.comparisons,
+      if(query.include.compare,
         do: Comparisons.get_comparison_query(query),
         else: nil
       )
@@ -97,7 +97,7 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  defp transform_realtime_labels(results, %Query{input_date_range: "30m"}) do
+  defp transform_realtime_labels(results, %Query{input_date_range: :realtime_30m}) do
     Enum.with_index(results)
     |> Enum.map(fn {entry, index} -> %{entry | date: -30 + index} end)
   end

@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
   use Plausible
 
   alias Plausible.Sites
+  alias PlausibleWeb.Live.Components.ComboBox
 
   def update(assigns, socket) do
     form =
@@ -43,6 +44,39 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
 
       <.input field={f[:name]} label="Name" required="required" autocomplete="off" />
 
+      <div
+        x-data={"{ limitViewEnabled: #{not is_nil(f[:segment_id].value)} }"}
+        x-effect="
+          const input = document.getElementById('submit-segment_id');
+          if (input) {
+            if (!limitViewEnabled) {
+              input.value = '';
+            }
+          }
+        "
+        class="flex flex-col gap-y-2"
+      >
+        <PlausibleWeb.Components.Generic.toggle_field
+          id="limit-view"
+          js_active_var="limitViewEnabled"
+          label="Limit to segment"
+          help_text="Restrict this link to a segment of the data."
+        />
+        <div x-show="limitViewEnabled" x-cloak>
+          <.live_component
+            id="segment_id"
+            submit_name="shared_link[segment_id]"
+            module={ComboBox}
+            suggest_fun={fn input, _ -> get_segment_suggestions(assigns.site, input) end}
+            selected={
+              @shared_link.segment_id &&
+                {@shared_link.segment.id, @shared_link.segment.name}
+            }
+          />
+          <.learn_more />
+        </div>
+      </div>
+
       <.button type="submit" class="w-full">
         Update shared link
       </.button>
@@ -55,18 +89,91 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
     <.form :let={f} for={@form} phx-submit="save-shared-link" phx-target={@myself}>
       <.title>New shared link</.title>
       <.input field={f[:name]} label="Name" required="required" autocomplete="off" />
-      <.input
-        field={f[:password]}
-        label="Password (optional)"
-        help_text="Store the password securely, as it can't be viewed again."
-        type="password"
-        autocomplete="new-password"
-      />
+
+      <div
+        x-data="{ passwordProtectEnabled: false }"
+        x-effect={"
+          const input = document.getElementById('#{f[:password].id}');
+          if (input) {
+            if (passwordProtectEnabled) {
+              setTimeout(() => input.focus(), 50);
+            } else {
+              input.value = '';
+            }
+          }
+        "}
+        class="flex flex-col gap-y-2"
+      >
+        <PlausibleWeb.Components.Generic.toggle_field
+          id="password-protect"
+          js_active_var="passwordProtectEnabled"
+          label="Password protect"
+          help_text="Keep this password safe. You won't be able to see it again."
+          show_help_text_only_when_active?={true}
+        />
+        <div x-show="passwordProtectEnabled" x-cloak>
+          <.input
+            field={f[:password]}
+            type="password"
+            placeholder="Enter password"
+            autocomplete="new-password"
+            mt?={false}
+          />
+        </div>
+      </div>
+
+      <div
+        x-data={"{ limitViewEnabled: #{not is_nil(f[:segment_id].value)} }"}
+        x-effect="
+          const input = document.getElementById('submit-segment_id');
+          if (input) {
+            if (!limitViewEnabled) {
+              input.value = '';
+            }
+          }
+        "
+        class="flex flex-col gap-y-2"
+      >
+        <PlausibleWeb.Components.Generic.toggle_field
+          id="limit-view"
+          js_active_var="limitViewEnabled"
+          label="Limit to segment"
+          help_text="Restrict this link to a segment of the data."
+        />
+        <div x-show="limitViewEnabled" x-cloak>
+          <.live_component
+            id="segment_id"
+            submit_name="shared_link[segment_id]"
+            module={ComboBox}
+            suggest_fun={fn input, _ -> get_segment_suggestions(assigns.site, input) end}
+            selected={nil}
+          />
+          <.learn_more />
+        </div>
+      </div>
       <.button type="submit" class="w-full">
         Create shared link
       </.button>
     </.form>
     """
+  end
+
+  defp learn_more(assigns),
+    do: ~H"""
+    <div class="mt-1">
+      <PlausibleWeb.Components.Generic.unstyled_link
+        href="https://plausible.io/docs/filters-segments#how-to-save-a-segment"
+        new_tab
+        class="text-xs text-indigo-600 dark:text-indigo-400"
+      >
+        Learn about segments
+      </PlausibleWeb.Components.Generic.unstyled_link>
+    </div>
+    """
+
+  defp get_segment_suggestions(site, input) do
+    {:ok, segments} = Plausible.Segments.search_by_name(site, input)
+    Enum.map(segments, &{&1.id, &1.name})
   end
 
   def handle_event(
@@ -75,7 +182,8 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
         %{assigns: %{shared_link: nil}} = socket
       ) do
     case Sites.create_shared_link(socket.assigns.site, shared_link_params["name"],
-           password: shared_link_params["password"]
+           password: shared_link_params["password"],
+           segment_id: shared_link_params["segment_id"]
          ) do
       {:ok, shared_link} ->
         socket = socket.assigns.on_save_shared_link.(shared_link, socket)
@@ -98,7 +206,11 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
         %{"shared_link" => shared_link_params},
         %{assigns: %{shared_link: %Plausible.Site.SharedLink{} = shared_link}} = socket
       ) do
-    changeset = Plausible.Site.SharedLink.changeset(shared_link, shared_link_params)
+    changeset =
+      Plausible.Site.SharedLink.changeset(
+        shared_link,
+        shared_link_params
+      )
 
     case Plausible.Repo.update(changeset) do
       {:ok, updated_shared_link} ->

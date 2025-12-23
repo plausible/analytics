@@ -88,11 +88,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
           |> authenticate(site.domain, token)
           |> get(url)
           |> json_response(200)
-          |> assert_schema("Funnel", spec())
 
-        assert resp.funnel.id == funnel.id
-        assert resp.funnel.name == "Peek & buy"
-        [s1, s2, s3] = resp.funnel.steps
+        schema = assert_schema(resp, "Funnel", spec())
+
+        assert schema.funnel.id == funnel.id
+        assert schema.funnel.name == "Peek & buy"
+        [_, _, _] = schema.funnel.steps
+        [s1, s2, s3] = resp |> Map.fetch!("funnel") |> Map.fetch!("steps")
 
         assert_schema(s1, "Goal.Pageview", spec())
         assert_schema(s2, "Goal.Revenue", spec())

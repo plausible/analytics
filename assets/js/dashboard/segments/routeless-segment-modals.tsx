@@ -5,7 +5,7 @@ import {
   UpdateSegmentModal
 } from './segment-modals'
 import {
-  getSearchToApplySingleSegmentFilter,
+  getSearchToSetSegmentFilter,
   getSegmentNamePlaceholder,
   handleSegmentResponse,
   SavedSegment,
@@ -67,7 +67,9 @@ export const RoutelessSegmentModals = () => {
       updateOne(segment)
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
-        search: getSearchToApplySingleSegmentFilter(segment),
+        search: getSearchToSetSegmentFilter(segment, {
+          omitAllOtherFilters: true
+        }),
         state: {
           expandedSegment: null
         }
@@ -104,7 +106,9 @@ export const RoutelessSegmentModals = () => {
       addOne(segment)
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
-        search: getSearchToApplySingleSegmentFilter(segment),
+        search: getSearchToSetSegmentFilter(segment, {
+          omitAllOtherFilters: true
+        }),
         state: {
           expandedSegment: null
         }

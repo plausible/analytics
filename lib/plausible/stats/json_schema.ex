@@ -7,36 +7,36 @@ defmodule Plausible.Stats.JSONSchema do
   """
   use Plausible
   alias Plausible.Stats.JSONSchema.Utils
+  alias Plausible.Stats.QueryError
 
-  @external_resource "priv/json-schemas/query-api-schema.json"
+  @json_schema_filepath "priv/json-schemas/query-api-schema.json"
+  @external_resource @json_schema_filepath
 
-  @raw_internal_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
-                       |> File.read!()
-                       |> Jason.decode!()
-  @raw_public_schema Utils.traverse(@raw_internal_schema, fn
-                       %{"$comment" => "only :internal"} ->
-                         :remove
+  @raw_schema Application.app_dir(:plausible, @json_schema_filepath)
+              |> File.read!()
+              |> Jason.decode!()
+              |> Utils.traverse(fn
+                %{"$comment" => "only :ee"} = value ->
+                  if(ee?(), do: Map.delete(value, "$comment"), else: :remove)
 
-                       %{"$comment" => "only :ee"} = value ->
-                         if(ee?(), do: Map.delete(value, "$comment"), else: :remove)
+                value ->
+                  value
+              end)
 
-                       value ->
-                         value
-                     end)
-  @internal_query_schema ExJsonSchema.Schema.resolve(@raw_internal_schema)
-  @public_query_schema ExJsonSchema.Schema.resolve(@raw_public_schema)
+  def raw_schema(), do: @raw_schema
 
-  def validate(schema_type, params) do
-    case ExJsonSchema.Validator.validate(schema(schema_type), params) do
-      :ok -> :ok
-      {:error, errors} -> {:error, format_errors(errors, params)}
+  @query_schema ExJsonSchema.Schema.resolve(@raw_schema)
+
+  def validate(params) do
+    case ExJsonSchema.Validator.validate(@query_schema, params) do
+      :ok ->
+        :ok
+
+      {:error, errors} ->
+        {:error,
+         %QueryError{code: :failed_schema_validation, message: format_errors(errors, params)}}
     end
   end
-
-  def raw_public_schema(), do: @raw_public_schema
-
-  defp schema(:public), do: @public_query_schema
-  defp schema(:internal), do: @internal_query_schema
 
   defp format_errors(errors, params) do
     errors

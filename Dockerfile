@@ -1,8 +1,10 @@
 # we can not use the pre-built tar because the distribution is
 # platform specific, it makes sense to build it in the docker
 
+ARG ALPINE_VERSION=3.22.2
+
 #### Builder
-FROM hexpm/elixir:1.18.3-erlang-27.3.1-alpine-3.21.3 AS buildcontainer
+FROM hexpm/elixir:1.19.4-erlang-27.3.4.6-alpine-${ALPINE_VERSION} AS buildcontainer
 
 ARG MIX_ENV=ce
 
@@ -20,7 +22,7 @@ RUN mkdir /app
 WORKDIR /app
 
 # install build dependencies
-RUN apk add --no-cache git "nodejs-current=23.2.0-r1" yarn npm python3 ca-certificates wget gnupg make gcc libc-dev brotli
+RUN apk add --no-cache git "nodejs-current=23.11.1-r0" yarn npm python3 ca-certificates wget gnupg make gcc libc-dev brotli
 
 COPY mix.exs ./
 COPY mix.lock ./
@@ -54,7 +56,7 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.21.3
+FROM alpine:${ALPINE_VERSION}
 LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}
@@ -84,3 +86,4 @@ EXPOSE 8000
 ENV DEFAULT_DATA_DIR=/var/lib/plausible
 VOLUME /var/lib/plausible
 CMD ["run"]
+

@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo
+  alias Plausible.Stats.QueryBuilder
 
   def update(assigns, socket) do
     site = Repo.preload(assigns.site, [:team, :owners])
@@ -30,13 +31,24 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         assigns[:goal_type] || "custom_events"
       end
 
+    event_name_options_count = length(assigns.event_name_options)
+
+    show_autoconfigure_modal? =
+      case form_type do
+        "custom_events" when event_name_options_count > 0 and is_nil(assigns.goal) ->
+          true
+
+        _ ->
+          Map.get(socket.assigns, :show_autoconfigure_modal?, false)
+      end
+
     socket =
       socket
       |> assign(
         id: assigns.id,
         context_unique_id: assigns.context_unique_id,
         form: form,
-        event_name_options_count: length(assigns.event_name_options),
+        event_name_options_count: event_name_options_count,
         event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
         current_user: assigns.current_user,
         site_team: assigns.site_team,
@@ -48,7 +60,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         on_save_goal: assigns.on_save_goal,
         on_autoconfigure: assigns.on_autoconfigure,
         goal: assigns.goal,
-        goal_type: assigns[:goal_type]
+        goal_type: assigns[:goal_type],
+        show_autoconfigure_modal?: show_autoconfigure_modal?
       )
 
     {:ok, socket}
@@ -61,7 +74,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id={@id}>
       {if @goal, do: edit_form(assigns)}
-      {if is_nil(@goal), do: create_form(assigns)}
+      {if is_nil(@goal) && @show_autoconfigure_modal?, do: autoconfigure_modal(assigns)}
+      {if is_nil(@goal) && not @show_autoconfigure_modal?, do: create_form(assigns)}
     </div>
     """
   end
@@ -105,6 +119,41 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     """
   end
 
+  def autoconfigure_modal(assigns) do
+    ~H"""
+    <div data-test-id="autoconfigure-modal">
+      <.title>
+        We detected {@event_name_options_count} custom {if @event_name_options_count == 1,
+          do: "event",
+          else: "events"}.
+      </.title>
+
+      <p class="mt-2 py-2 text-sm text-gray-600 dark:text-gray-400 text-pretty">
+        These events have been sent from your site in the past 6 months but aren't yet configured as goals. Add them instantly or set one up manually.
+      </p>
+
+      <div class="flex justify-end gap-3">
+        <.button
+          theme="secondary"
+          phx-click="add-manually"
+          phx-target={@myself}
+        >
+          Add manually
+        </.button>
+        <.button
+          phx-click="autoconfigure"
+          phx-target={@myself}
+        >
+          <Heroicons.plus class="size-4" />
+          Add {@event_name_options_count} {if @event_name_options_count == 1,
+            do: "event",
+            else: "events"}
+        </.button>
+      </div>
+    </div>
+    """
+  end
+
   def create_form(assigns) do
     ~H"""
     <.form :let={f} for={@form} phx-submit="save-goal" phx-target={@myself}>
@@ -139,20 +188,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       <.button type="submit" class="w-full">
         Add goal
       </.button>
-
-      <button
-        :if={@form_type == "custom_events" && @event_name_options_count > 0}
-        class="mt-4 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
-        phx-click="autoconfigure"
-        phx-target={@myself}
-      >
-        <span :if={@event_name_options_count > 1}>
-          Already sending custom events? We've found {@event_name_options_count} custom events from the last 6 months that are not yet configured as goals. Click here to add them.
-        </span>
-        <span :if={@event_name_options_count == 1}>
-          Already sending custom events? We've found 1 custom event from the last 6 months that is not yet configured as a goal. Click here to add it.
-        </span>
-      </button>
     </.form>
     """
   end
@@ -165,14 +200,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def pageview_fields(assigns) do
     ~H"""
-    <div id="pageviews-form" class="py-2" x-data="{ addCustomProperty: false }" {@rest}>
-      <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
-        Pageview goals allow you to measure how many people visit a specific page or section of your site. Learn more in <.styled_link
+    <div id="pageviews-form" x-data="{ addCustomProperty: false }" class="py-2" {@rest}>
+      <div class="text-sm pb-6 text-gray-600 dark:text-gray-400 text-pretty">
+        Pageview goals allow you to measure how many people visit a specific page or section of your site.
+        <.styled_link
           href="https://plausible.io/docs/pageview-goals"
           new_tab={true}
         >
-          our docs
-        </.styled_link>.
+          Learn more
+        </.styled_link>
       </div>
 
       <.label for={"page_path_input_#{@suffix}"}>
@@ -249,12 +285,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="scroll-form" class="py-2" x-data={@js} {@rest}>
       <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
-        Scroll Depth goals allow you to see how many people scroll beyond your desired scroll depth percentage threshold. Learn more in <.styled_link
+        Scroll Depth goals allow you to see how many people scroll beyond your desired scroll depth percentage threshold.
+        <.styled_link
           href="https://plausible.io/docs/scroll-depth"
           new_tab={true}
         >
-          our docs
-        </.styled_link>.
+          Learn more
+        </.styled_link>
       </div>
 
       <.label for={"scroll_threshold_input_#{@suffix}"}>
@@ -505,20 +542,20 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def handle_event("autoconfigure", _params, socket) do
+    socket = assign(socket, show_autoconfigure_modal?: false)
     {:noreply, socket.assigns.on_autoconfigure.(socket)}
+  end
+
+  def handle_event("add-manually", _params, socket) do
+    {:noreply, assign(socket, show_autoconfigure_modal?: false)}
   end
 
   def suggest_page_paths(input, site) do
     query =
-      Plausible.Stats.Query.parse_and_build!(
-        site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "date_range" => "all",
-          "metrics" => ["pageviews"],
-          "include" => %{"imports" => true}
-        }
+      QueryBuilder.build!(site,
+        input_date_range: :all,
+        metrics: [:pageviews],
+        include: [imports: true]
       )
 
     site

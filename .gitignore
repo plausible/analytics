@@ -97,3 +97,5 @@ plausible-report.xml
 # Docker volumes
 .clickhouse_db_vol*
 plausible_db*
+
+.claude

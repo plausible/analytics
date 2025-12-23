@@ -44,7 +44,7 @@ defmodule Plausible.Shield.IPRuleCache do
       |> where([rule, site], rule.inet == ^address and site.domain == ^domain)
 
     case Plausible.Repo.one(query) do
-      {_, _, rule} -> %IPRule{rule | from_cache?: false}
+      {_, _, rule = %IPRule{}} -> %IPRule{rule | from_cache?: false}
       _any -> nil
     end
   end

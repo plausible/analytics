@@ -8,7 +8,7 @@ config :bcrypt_elixir, :log_rounds, 4
 
 config :plausible, Plausible.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: System.schedulers_online() * 2
+  pool_size: System.schedulers_online()
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
@@ -63,3 +63,5 @@ config :plausible, Plausible.InstallationSupport.Checks.VerifyInstallation,
   ]
 
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
+
+config :plausible, max_goals_per_site: 10

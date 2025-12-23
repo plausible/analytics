@@ -12,6 +12,12 @@
       <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
       <meta name="websocket-url" content={websocket_url()} />
     <% end %>
+    <%= if PlausibleWeb.Live.Dashboard.enabled?(assigns[:site]) do %>
+      <%= if assigns[:live_socket_disable_push_state] do %>
+        <meta name="live-socket-disable-push-state" content="true" />
+      <% end %>
+      <meta name="dashboard-domain" content={@site.domain} />
+    <% end %>
     <meta name="robots" content={@conn.private.robots} />
 
     <PlausibleWeb.Components.Layout.favicon conn={@conn} />

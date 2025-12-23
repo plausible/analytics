@@ -1,7 +1,7 @@
 import { remapToApiFilters } from '../util/filters'
 import {
   formatSegmentIdAsLabelKey,
-  getSearchToApplySingleSegmentFilter,
+  getSearchToSetSegmentFilter,
   getSegmentNamePlaceholder,
   isSegmentIdLabelKey,
   parseApiSegmentData,
@@ -10,7 +10,7 @@ import {
   SegmentType,
   SavedSegment,
   SegmentData,
-  canSeeSegmentDetails
+  canExpandSegment
 } from './segments'
 import { Filter } from '../query'
 import { PlausibleSite } from '../site-context'
@@ -64,9 +64,57 @@ describe(`${parseApiSegmentData.name}`, () => {
   })
 })
 
-describe(`${getSearchToApplySingleSegmentFilter.name}`, () => {
-  test('generated search function applies single segment correctly', () => {
-    const searchFunction = getSearchToApplySingleSegmentFilter({
+describe(`${getSearchToSetSegmentFilter.name}`, () => {
+  test('generated search function omits other filters segment correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter(
+      {
+        name: 'APAC',
+        id: 500
+      },
+      { omitAllOtherFilters: true }
+    )
+    const existingSearch = {
+      date: '2025-02-10',
+      filters: [
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States' }
+    }
+    expect(searchFunction(existingSearch)).toEqual({
+      date: '2025-02-10',
+      filters: [['is', 'segment', [500]]],
+      labels: { 'segment-500': 'APAC' }
+    })
+  })
+
+  test('generated search function replaces existing segment filter correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter({
+      name: 'APAC',
+      id: 500
+    })
+    const existingSearch = {
+      date: '2025-02-10',
+      filters: [
+        ['is', 'segment', [100]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-100': 'Scandinavia' }
+    }
+    expect(searchFunction(existingSearch)).toEqual({
+      date: '2025-02-10',
+      filters: [
+        ['is', 'segment', [500]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-500': 'APAC' }
+    })
+  })
+
+  test('generated search function sets new segment filter correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter({
       name: 'APAC',
       id: 500
     })
@@ -80,8 +128,12 @@ describe(`${getSearchToApplySingleSegmentFilter.name}`, () => {
     }
     expect(searchFunction(existingSearch)).toEqual({
       date: '2025-02-10',
-      filters: [['is', 'segment', [500]]],
-      labels: { 'segment-500': 'APAC' }
+      filters: [
+        ['is', 'segment', [500]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-500': 'APAC' }
     })
   })
 })
@@ -183,34 +235,91 @@ describe(`${resolveFilters.name}`, () => {
   )
 })
 
-describe(`${canSeeSegmentDetails.name}`, () => {
-  it('should return true if the user is logged in and not a public role', () => {
-    const user: UserContextValue = {
-      loggedIn: true,
-      role: Role.admin,
-      id: 1,
-      team: { identifier: null, hasConsolidatedView: false }
+describe(`${canExpandSegment.name}`, () => {
+  it.each([[Role.admin], [Role.editor], [Role.owner]])(
+    'allows expanding site segment if the user is logged in and in the role %p',
+    (role) => {
+      const user: UserContextValue = {
+        loggedIn: true,
+        role,
+        id: 1,
+        team: { identifier: null, hasConsolidatedView: false }
+      }
+      expect(
+        canExpandSegment({
+          segment: { id: 1, owner_id: 1, type: SegmentType.site },
+          user
+        })
+      ).toBe(true)
     }
-    expect(canSeeSegmentDetails({ user })).toBe(true)
+  )
+
+  it('allows expanding site segments defined by other users', () => {
+    expect(
+      canExpandSegment({
+        segment: { id: 1, owner_id: 222, type: SegmentType.site },
+        user: {
+          loggedIn: true,
+          role: Role.owner,
+          id: 111,
+          team: { identifier: null, hasConsolidatedView: false }
+        }
+      })
+    ).toBe(true)
   })
 
-  it('should return false if the user is not logged in', () => {
-    const user: UserContextValue = {
-      loggedIn: false,
-      role: Role.editor,
-      id: null,
-      team: { identifier: null, hasConsolidatedView: false }
+  it.each([
+    [Role.viewer],
+    [Role.billing],
+    [Role.editor],
+    [Role.admin],
+    [Role.owner]
+  ])(
+    'allows expanding personal segment if it belongs to the user and the user is in role %p',
+    (role) => {
+      const user: UserContextValue = {
+        loggedIn: true,
+        role,
+        id: 1,
+        team: { identifier: null, hasConsolidatedView: false }
+      }
+      expect(
+        canExpandSegment({
+          segment: { id: 1, owner_id: 1, type: SegmentType.personal },
+          user
+        })
+      ).toBe(true)
     }
-    expect(canSeeSegmentDetails({ user })).toBe(false)
+  )
+
+  it('forbids even site owners from expanding the personal segment of other users', () => {
+    expect(
+      canExpandSegment({
+        segment: { id: 2, owner_id: 222, type: SegmentType.personal },
+        user: {
+          loggedIn: true,
+          role: Role.owner,
+          id: 111,
+          team: { identifier: null, hasConsolidatedView: false }
+        }
+      })
+    ).toBe(false)
   })
 
-  it('should return false if the user has a public role', () => {
-    const user: UserContextValue = {
-      loggedIn: true,
-      role: Role.public,
-      id: 1,
-      team: { identifier: null, hasConsolidatedView: false }
+  it.each([[SegmentType.personal, SegmentType.site]])(
+    'forbids public role from expanding %s segments',
+    (segmentType) => {
+      expect(
+        canExpandSegment({
+          segment: { id: 1, owner_id: 1, type: segmentType },
+          user: {
+            loggedIn: false,
+            role: Role.public,
+            id: null,
+            team: { identifier: null, hasConsolidatedView: false }
+          }
+        })
+      ).toBe(false)
     }
-    expect(canSeeSegmentDetails({ user })).toBe(false)
-  })
+  )
 })

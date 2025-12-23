@@ -1166,8 +1166,18 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       populate_stats(site, site_import.id, [
         build(:imported_pages, page: "/", visitors: 1, pageviews: 1, date: ~D[2021-01-01]),
-        build(:imported_pages, page: "/blog/one", visitors: 2, pageviews: 2, date: ~D[2021-01-01]),
-        build(:imported_pages, page: "/blog/two", visitors: 3, pageviews: 3, date: ~D[2021-01-01]),
+        build(:imported_pages,
+          page: "/blog/one",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/blog/two",
+          visitors: 3,
+          pageviews: 3,
+          date: ~D[2021-01-01]
+        ),
         build(:imported_pages,
           page: "/blog/three",
           visitors: 4,

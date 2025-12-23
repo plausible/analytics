@@ -1,4 +1,4 @@
-defmodule Plausible.CondolidatedView.CacheTestSync do
+defmodule Plausible.CondolidatedView.CacheSyncTest do
   use Plausible.DataCase, async: false
 
   on_ee do
@@ -27,10 +27,10 @@ defmodule Plausible.CondolidatedView.CacheTestSync do
                }
              ] = Sentry.Test.pop_sentry_reports()
     end
-  end
 
-  defp start_test_cache(cache_name) do
-    %{start: {m, f, a}} = Cache.child_spec(cache_name: cache_name)
-    apply(m, f, a)
+    defp start_test_cache(cache_name) do
+      %{start: {m, f, a}} = Cache.child_spec(cache_name: cache_name)
+      apply(m, f, a)
+    end
   end
 end

@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
 
   use PlausibleWeb, :live_component
 
-  alias PlausibleWeb.Live.Components.Modal
+  alias PlausibleWeb.Live.Components.PrimaModal
   alias Plausible.Shields
   alias Plausible.Shield
 
@@ -50,9 +50,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               <.button
                 :if={@ip_rules_count < Shields.maximum_ip_rules()}
                 id="add-ip-rule"
-                x-data
-                x-on:click={Modal.JS.open("ip-rule-form-modal")}
-                class="mt-4"
+                phx-click={Prima.Modal.JS.open("ip-rule-form-modal")}
               >
                 Add IP address
               </.button>
@@ -61,8 +59,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             <.filter_bar :if={@ip_rules_count < Shields.maximum_ip_rules()} filtering_enabled?={false}>
               <.button
                 id="add-ip-rule"
-                x-data
-                x-on:click={Modal.JS.open("ip-rule-form-modal")}
+                phx-click={Prima.Modal.JS.open("ip-rule-form-modal")}
                 mt?={false}
               >
                 Add IP address
@@ -139,50 +136,63 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             </div>
           <% end %>
 
-          <.live_component module={Modal} id="ip-rule-form-modal">
-            <.form
-              :let={f}
-              for={@form}
-              phx-submit="save-ip-rule"
-              phx-target={@myself}
-              class="max-w-md w-full mx-auto"
-            >
-              <.title>Add IP to block list</.title>
-
-              <div class="mt-4">
-                <p
-                  :if={not ip_rule_present?(@ip_rules, @remote_ip)}
-                  class="text-sm text-gray-500 dark:text-gray-400 mb-4"
+          <PrimaModal.modal id="ip-rule-form-modal">
+            <div class="p-5 sm:p-6 max-w-md">
+              <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
+                <button
+                  phx-click={Prima.Modal.JS.close()}
+                  class="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400"
                 >
-                  Your current IP address is: <span class="font-mono"><%= @remote_ip %></span>.
-                  <.styled_link phx-target={@myself} phx-click="prefill-own-ip-rule">
-                    Click here
-                  </.styled_link>
-                  to block your own traffic, or enter a custom address below.
-                </p>
-
-                <.input
-                  autofocus
-                  field={f[:inet]}
-                  label="IP address"
-                  placeholder="e.g. 192.168.127.12"
-                />
+                  <span class="sr-only">Close</span>
+                  <Heroicons.x_mark class="size-6" />
+                </button>
               </div>
+              <div class="flex flex-col gap-y-4 text-center sm:text-left">
+                <PrimaModal.modal_title>
+                  Add IP to block list
+                </PrimaModal.modal_title>
+                <.form
+                  :let={f}
+                  for={@form}
+                  phx-submit="save-ip-rule"
+                  phx-target={@myself}
+                >
+                  <div>
+                    <p
+                      :if={not ip_rule_present?(@ip_rules, @remote_ip)}
+                      class="text-sm text-gray-500 dark:text-gray-400 mb-4"
+                    >
+                      Your current IP address is: <span class="font-mono"><%= @remote_ip %></span>.
+                      <.styled_link phx-target={@myself} phx-click="prefill-own-ip-rule">
+                        Click here
+                      </.styled_link>
+                      to block your own traffic, or enter a custom address below.
+                    </p>
 
-              <.input
-                field={f[:description]}
-                label="Description (optional)"
-                placeholder="e.g. The Office"
-              />
+                    <.input
+                      data-autofocus
+                      field={f[:inet]}
+                      label="IP address"
+                      placeholder="e.g. 192.168.127.12"
+                    />
+                  </div>
 
-              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                Once added, we will start rejecting traffic from this IP within a few minutes.
-              </p>
-              <.button type="submit" class="w-full">
-                Add IP address
-              </.button>
-            </.form>
-          </.live_component>
+                  <.input
+                    field={f[:description]}
+                    label="Description (optional)"
+                    placeholder="e.g. The Office"
+                  />
+
+                  <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                    Once added, we will start rejecting traffic from this IP within a few minutes.
+                  </p>
+                  <.button type="submit" class="w-full">
+                    Add IP address
+                  </.button>
+                </.form>
+              </div>
+            </div>
+          </PrimaModal.modal>
         </.tile>
       </.settings_tiles>
     </div>
@@ -212,7 +222,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
       {:ok, rule} ->
         socket =
           socket
-          |> Modal.close("ip-rule-form-modal")
+          |> Prima.Modal.push_close("ip-rule-form-modal")
           |> assign(
             form: new_form(),
             ip_rules: [rule | socket.assigns.ip_rules],

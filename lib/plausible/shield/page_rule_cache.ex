@@ -44,7 +44,7 @@ defmodule Plausible.Shield.PageRuleCache do
       |> where([..., site], site.domain == ^domain)
 
     case Plausible.Repo.one(query) do
-      {_, _, rule} -> %PageRule{rule | from_cache?: false}
+      {_, _, rule = %PageRule{}} -> %PageRule{rule | from_cache?: false}
       _any -> nil
     end
   end

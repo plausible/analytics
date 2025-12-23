@@ -4,6 +4,7 @@ import { SegmentModal } from './segment-modals'
 import { TestContextProviders } from '../../../test-utils/app-context-providers'
 import {
   SavedSegment,
+  SavedSegmentPublic,
   SavedSegments,
   SegmentData,
   SegmentType
@@ -18,7 +19,7 @@ beforeEach(() => {
 })
 
 describe('Segment details modal - errors', () => {
-  const anySiteSegment: SavedSegment & { segment_data: SegmentData } = {
+  const anySegment: SavedSegment & { segment_data: SegmentData } = {
     id: 1,
     type: SegmentType.site,
     owner_id: 1,
@@ -33,7 +34,7 @@ describe('Segment details modal - errors', () => {
   }
 
   const anyPersonalSegment: SavedSegment & { segment_data: SegmentData } = {
-    ...anySiteSegment,
+    ...anySegment,
     id: 2,
     type: SegmentType.personal
   }
@@ -48,7 +49,7 @@ describe('Segment details modal - errors', () => {
   }[] = [
     {
       case: 'segment is not in list',
-      segments: [anyPersonalSegment, anySiteSegment],
+      segments: [anyPersonalSegment, anySegment],
       segmentId: 202020,
       user: {
         loggedIn: true,
@@ -57,45 +58,6 @@ describe('Segment details modal - errors', () => {
         team: { identifier: null, hasConsolidatedView: false }
       },
       message: `Segment not found with with ID "202020"`,
-      siteOptions: { siteSegmentsAvailable: true }
-    },
-    {
-      case: 'site segment is in list but not listable because site segments are not available',
-      segments: [anyPersonalSegment, anySiteSegment],
-      segmentId: anySiteSegment.id,
-      user: {
-        loggedIn: true,
-        id: 1,
-        role: Role.owner,
-        team: { identifier: null, hasConsolidatedView: false }
-      },
-      message: `Segment not found with with ID "${anySiteSegment.id}"`,
-      siteOptions: { siteSegmentsAvailable: false }
-    },
-    {
-      case: 'personal segment is in list but not listable because it is a public dashboard',
-      segments: [{ ...anyPersonalSegment, owner_id: null, owner_name: null }],
-      segmentId: anyPersonalSegment.id,
-      user: {
-        loggedIn: false,
-        id: null,
-        role: Role.public,
-        team: { identifier: null, hasConsolidatedView: false }
-      },
-      message: `Segment not found with with ID "${anyPersonalSegment.id}"`,
-      siteOptions: { siteSegmentsAvailable: true }
-    },
-    {
-      case: 'segment is in list and listable, but detailed view is not available because user is not logged in',
-      segments: [{ ...anySiteSegment, owner_id: null, owner_name: null }],
-      segmentId: anySiteSegment.id,
-      user: {
-        loggedIn: false,
-        id: null,
-        role: Role.public,
-        team: { identifier: null, hasConsolidatedView: false }
-      },
-      message: 'Not enough permissions to see segment details',
       siteOptions: { siteSegmentsAvailable: true }
     }
   ]
@@ -120,12 +82,125 @@ describe('Segment details modal - errors', () => {
 })
 
 describe('Segment details modal - other cases', () => {
-  it('displays site segment correctly', () => {
-    const anySiteSegment: SavedSegment & { segment_data: SegmentData } = {
+  it.each([
+    [SegmentType.site, 'Site segment'],
+    [SegmentType.personal, 'Personal segment']
+  ])(
+    'displays segment with type %s correctly for logged in user',
+    (segmentType, expectedSegmentTypeText) => {
+      const user: UserContextValue = {
+        loggedIn: true,
+        role: Role.editor,
+        id: 1,
+        team: { identifier: null, hasConsolidatedView: false }
+      }
+      const anySegment: SavedSegment & { segment_data: SegmentData } = {
+        id: 100,
+        type: segmentType,
+        owner_id: user.id,
+        owner_name: 'Jane Smith',
+        name: 'Blog or About',
+        segment_data: {
+          filters: [['is', 'page', ['/blog', '/about']]],
+          labels: {}
+        },
+        inserted_at: '2025-03-13T13:00:00',
+        updated_at: '2025-03-13T16:00:00'
+      }
+
+      render(<SegmentModal id={anySegment.id} />, {
+        wrapper: (props) => (
+          <TestContextProviders
+            user={user}
+            preloaded={{
+              segments: [anySegment]
+            }}
+            siteOptions={{ siteSegmentsAvailable: true }}
+            {...props}
+          />
+        )
+      })
+      expect(screen.getByText(anySegment.name)).toBeVisible()
+      expect(screen.getByText(expectedSegmentTypeText)).toBeVisible()
+
+      expect(screen.getByText('Filters in segment')).toBeVisible()
+      expect(screen.getByTitle('Page is /blog or /about')).toBeVisible()
+
+      expect(
+        screen.getByText(`Last updated at 13 Mar by ${anySegment.owner_name}`)
+      ).toBeVisible()
+      expect(screen.getByText(`Created at 13 Mar`)).toBeVisible()
+
+      expect(screen.getByText('Edit segment')).toBeVisible()
+      expect(screen.getByText('Remove filter')).toBeVisible()
+    }
+  )
+
+  it.each([
+    [SegmentType.site, 'Site segment'],
+    [SegmentType.personal, 'Personal segment']
+  ])(
+    'displays segment with type %s correctly for public role',
+    (segmentType, expectedSegmentTypeText) => {
+      const user: UserContextValue = {
+        loggedIn: false,
+        role: Role.public,
+        id: null,
+        team: { identifier: null, hasConsolidatedView: false }
+      }
+      const anySegment: SavedSegment & { segment_data: SegmentData } = {
+        id: 100,
+        type: segmentType,
+        owner_id: null,
+        owner_name: null,
+        name: 'Blog or About',
+        segment_data: {
+          filters: [['is', 'page', ['/blog', '/about']]],
+          labels: {}
+        },
+        inserted_at: '2025-03-13T13:00:00',
+        updated_at: '2025-03-13T16:00:00'
+      }
+
+      render(<SegmentModal id={anySegment.id} />, {
+        wrapper: (props) => (
+          <TestContextProviders
+            user={user}
+            preloaded={{
+              segments: [anySegment]
+            }}
+            siteOptions={{ siteSegmentsAvailable: true }}
+            {...props}
+          />
+        )
+      })
+      expect(screen.getByText(anySegment.name)).toBeVisible()
+      expect(screen.getByText(expectedSegmentTypeText)).toBeVisible()
+
+      expect(screen.getByText('Filters in segment')).toBeVisible()
+      expect(screen.getByTitle('Page is /blog or /about')).toBeVisible()
+
+      expect(screen.getByText(`Last updated at 13 Mar`)).toBeVisible()
+      expect(screen.queryByText('by ')).toBeNull() // no segment author is shown to public role
+      expect(screen.getByText(`Created at 13 Mar`)).toBeVisible()
+
+      expect(screen.getByText('Remove filter')).toBeVisible()
+      expect(screen.queryByText('Edit segment')).toBeNull()
+    }
+  )
+
+  it('allows elevated roles to expand site segments even if site segments are not available on their plan (to update type to personal segment)', () => {
+    const user: UserContextValue = {
+      loggedIn: true,
+      role: Role.owner,
+      id: 1,
+      team: { identifier: null, hasConsolidatedView: false }
+    }
+    const anySegment: SavedSegmentPublic & { segment_data: SegmentData } = {
       id: 100,
       type: SegmentType.site,
-      owner_id: 100100,
-      owner_name: 'Test User',
+      owner_id: null,
+      owner_name: null,
       name: 'Blog or About',
       segment_data: {
         filters: [['is', 'page', ['/blog', '/about']]],
@@ -135,35 +210,77 @@ describe('Segment details modal - other cases', () => {
       updated_at: '2025-03-13T16:00:00'
     }
 
-    render(<SegmentModal id={anySiteSegment.id} />, {
+    render(<SegmentModal id={anySegment.id} />, {
       wrapper: (props) => (
         <TestContextProviders
-          user={{
-            loggedIn: true,
-            role: Role.editor,
-            id: 1,
-            team: { identifier: null, hasConsolidatedView: false }
-          }}
+          user={user}
           preloaded={{
-            segments: [anySiteSegment]
+            segments: [anySegment]
           }}
-          siteOptions={{ siteSegmentsAvailable: true }}
+          siteOptions={{ siteSegmentsAvailable: false }}
           {...props}
         />
       )
     })
-    expect(screen.getByText(anySiteSegment.name)).toBeVisible()
+    expect(screen.getByText(anySegment.name)).toBeVisible()
     expect(screen.getByText('Site segment')).toBeVisible()
 
     expect(screen.getByText('Filters in segment')).toBeVisible()
     expect(screen.getByTitle('Page is /blog or /about')).toBeVisible()
 
     expect(
-      screen.getByText(`Last updated at 13 Mar by ${anySiteSegment.owner_name}`)
+      screen.getByText(`Last updated at 13 Mar by (Removed User)`)
     ).toBeVisible()
     expect(screen.getByText(`Created at 13 Mar`)).toBeVisible()
 
-    expect(screen.getByText('Edit segment')).toBeVisible()
     expect(screen.getByText('Remove filter')).toBeVisible()
+    expect(screen.getByText('Edit segment')).toBeVisible()
+  })
+
+  it('does not display clear filter button if the dashboard is limited to this segment', () => {
+    const user: UserContextValue = {
+      loggedIn: false,
+      role: Role.public,
+      id: null,
+      team: { identifier: null, hasConsolidatedView: false }
+    }
+    const anySegment: SavedSegmentPublic & { segment_data: SegmentData } = {
+      id: 100,
+      type: SegmentType.site,
+      owner_id: null,
+      owner_name: null,
+      name: 'Blog or About',
+      segment_data: {
+        filters: [['is', 'page', ['/blog', '/about']]],
+        labels: {}
+      },
+      inserted_at: '2025-03-13T13:00:00',
+      updated_at: '2025-03-13T16:00:00'
+    }
+
+    render(<SegmentModal id={anySegment.id} />, {
+      wrapper: (props) => (
+        <TestContextProviders
+          user={user}
+          preloaded={{
+            segments: [anySegment]
+          }}
+          limitedToSegment={anySegment}
+          siteOptions={{ siteSegmentsAvailable: true }}
+          {...props}
+        />
+      )
+    })
+    expect(screen.getByText(anySegment.name)).toBeVisible()
+    expect(screen.getByText('Site segment')).toBeVisible()
+
+    expect(screen.getByText('Filters in segment')).toBeVisible()
+    expect(screen.getByTitle('Page is /blog or /about')).toBeVisible()
+
+    expect(screen.getByText(`Last updated at 13 Mar`)).toBeVisible()
+    expect(screen.getByText(`Created at 13 Mar`)).toBeVisible()
+
+    expect(screen.queryByText('Remove filter')).toBeNull()
+    expect(screen.queryByText('Edit segment')).toBeNull()
   })
 })

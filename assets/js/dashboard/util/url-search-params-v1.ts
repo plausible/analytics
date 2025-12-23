@@ -40,21 +40,22 @@ const LEGACY_URL_PARAMETERS = {
   exit_page: null
 }
 
-function isV1(searchRecord: Record<string, unknown>): boolean {
-  return Object.keys(searchRecord).some(
-    (k) => k === 'props' || LEGACY_URL_PARAMETERS.hasOwnProperty(k)
-  )
+function isV1(searchParams: URLSearchParams): boolean {
+  for (const k of searchParams.keys()) {
+    if (k === 'props' || LEGACY_URL_PARAMETERS.hasOwnProperty(k)) {
+      return true
+    }
+  }
+  return false
 }
 
-function parseSearchRecord(
-  searchRecord: Record<string, unknown>
-): Record<string, unknown> {
-  const searchRecordEntries = Object.entries(searchRecord)
+function parseSearch(searchString: string): Record<string, unknown> {
+  const searchParams = new URLSearchParams(searchString)
   const updatedSearchRecordEntries = []
   const filters: Filter[] = []
   let labels: DashboardQuery['labels'] = {}
 
-  for (const [key, value] of searchRecordEntries) {
+  for (const [key, value] of searchParams.entries()) {
     if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {
       if (typeof value !== 'string') {
         continue
@@ -63,9 +64,10 @@ function parseSearchRecord(
       filters.push(filter)
       const labelsKey: string | null | undefined =
         LEGACY_URL_PARAMETERS[key as keyof typeof LEGACY_URL_PARAMETERS]
-      if (labelsKey && searchRecord[labelsKey]) {
+      const labelsParamValue = labelsKey ? searchParams.get(labelsKey) : null
+      if (labelsParamValue) {
         const clauses = filter[2]
-        const labelsValues = (searchRecord[labelsKey] as string)
+        const labelsValues = labelsParamValue
           .split('|')
           .filter((label) => !!label)
         const newLabels = Object.fromEntries(
@@ -79,8 +81,9 @@ function parseSearchRecord(
     }
   }
 
-  if (typeof searchRecord['props'] === 'string') {
-    filters.push(...(parseLegacyPropsFilter(searchRecord['props']) as Filter[]))
+  const propsParamValue = searchParams.get('props')
+  if (typeof propsParamValue === 'string') {
+    filters.push(...(parseLegacyPropsFilter(propsParamValue) as Filter[]))
   }
   updatedSearchRecordEntries.push(['filters', filters], ['labels', labels])
   return Object.fromEntries(updatedSearchRecordEntries)
@@ -114,5 +117,5 @@ function parseLegacyPropsFilter(rawValue: string) {
 
 export const v1 = {
   isV1,
-  parseSearchRecord
+  parseSearch
 }
