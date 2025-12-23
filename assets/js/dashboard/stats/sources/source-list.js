@@ -27,6 +27,7 @@ import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
 import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 
 const UTM_TAGS = {
   utm_medium: {
@@ -182,14 +183,12 @@ export default function SourceList() {
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
-  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
-  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
+  const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
   const previousQuery = usePrevious(query)
 
   useEffect(() => {
     setLoading(true)
-    setMoreLinkVisible(true)
-    setMoreLinkClickable(false)
+    setMoreLinkState(MoreLinkState.LOADING)
   }, [query, currentTab])
 
   useEffect(() => {
@@ -223,9 +222,9 @@ export default function SourceList() {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
     if (apiResponse.results && apiResponse.results.length > 0) {
-      setMoreLinkClickable(true)
+      setMoreLinkState(MoreLinkState.READY)
     } else {
-      setMoreLinkVisible(false)
+      setMoreLinkState(MoreLinkState.HIDDEN)
     }
   }
 
@@ -326,8 +325,7 @@ export default function SourceList() {
           />
         </div>
         <MoreLink
-          visible={moreLinkVisible}
-          clickable={moreLinkClickable}
+          state={moreLinkState}
           linkProps={moreLinkProps()}
         />
       </ReportHeader>

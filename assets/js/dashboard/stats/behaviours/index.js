@@ -19,6 +19,7 @@ import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
 import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 import { Pill } from '../../components/pill'
 import * as api from '../../api'
 import * as url from '../../util/url'
@@ -104,8 +105,7 @@ export default function Behaviours({ importedDataInView }) {
     useState(false)
 
   const [skipImportedReason, setSkipImportedReason] = useState(null)
-  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
-  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
+  const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
 
   const onGoalFilterClick = useCallback((e) => {
     const goalName = e.target.innerHTML
@@ -140,11 +140,10 @@ export default function Behaviours({ importedDataInView }) {
 
   useEffect(() => setLoading(true), [query, mode])
   useEffect(() => {
-    setMoreLinkClickable(false)
     if (mode === PROPS && !selectedPropKey) {
-      setMoreLinkVisible(false)
+      setMoreLinkState(MoreLinkState.HIDDEN)
     } else {
-      setMoreLinkVisible(true)
+      setMoreLinkState(MoreLinkState.LOADING)
     }
   }, [query, mode, selectedPropKey])
 
@@ -265,9 +264,9 @@ export default function Behaviours({ importedDataInView }) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
     if (apiResponse.results && apiResponse.results.length > 0) {
-      setMoreLinkClickable(true)
+      setMoreLinkState(MoreLinkState.READY)
     } else {
-      setMoreLinkVisible(false)
+      setMoreLinkState(MoreLinkState.HIDDEN)
     }
   }
 
@@ -577,8 +576,7 @@ export default function Behaviours({ importedDataInView }) {
           {renderImportedQueryUnsupportedWarning()}
         </div>
         <MoreLink
-          visible={moreLinkVisible}
-          clickable={moreLinkClickable}
+          state={moreLinkState}
           linkProps={moreLinkProps()}
         />
       </ReportHeader>

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Tooltip } from '../util/tooltip'
+import { MoreLinkState } from './more-link-state'
 
 function detailsIcon() {
   return (
@@ -19,7 +20,7 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({ linkProps, visible, clickable, onClick = undefined }) {
+export default function MoreLink({ linkProps, state, onClick = undefined }) {
   const portalRef = useRef(null)
 
   useEffect(() => {
@@ -32,11 +33,11 @@ export default function MoreLink({ linkProps, visible, clickable, onClick = unde
     'flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150'
   const icon = detailsIcon()
 
-  if (!visible) {
+  if (state === MoreLinkState.HIDDEN) {
     return null
   }
 
-  if (!clickable || !linkProps) {
+  if (state === MoreLinkState.LOADING || !linkProps) {
     return (
       <Tooltip info="View details" containerRef={portalRef}>
         <div className={baseClassName}>{icon}</div>

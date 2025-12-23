@@ -13,6 +13,7 @@ import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
 import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 
 const NO_REFERRER = 'Direct / None'
 
@@ -21,13 +22,11 @@ export default function Referrers({ source }) {
   const site = useSiteContext()
   const [skipImportedReason, setSkipImportedReason] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
-  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
+  const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
 
   useEffect(() => {
     setLoading(true)
-    setMoreLinkVisible(true)
-    setMoreLinkClickable(false)
+    setMoreLinkState(MoreLinkState.LOADING)
   }, [query])
 
   function fetchReferrers() {
@@ -42,9 +41,9 @@ export default function Referrers({ source }) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
     if (apiResponse.results && apiResponse.results.length > 0) {
-      setMoreLinkClickable(true)
+      setMoreLinkState(MoreLinkState.READY)
     } else {
-      setMoreLinkVisible(false)
+      setMoreLinkState(MoreLinkState.HIDDEN)
     }
   }
 
@@ -97,8 +96,7 @@ export default function Referrers({ source }) {
           />
         </div>
         <MoreLink
-          visible={moreLinkVisible}
-          clickable={moreLinkClickable}
+          state={moreLinkState}
           linkProps={{
             path: referrersDrilldownRoute.path,
             params: { referrer: url.maybeEncodeRouteParam(source) },

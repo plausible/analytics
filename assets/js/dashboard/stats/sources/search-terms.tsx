@@ -11,6 +11,7 @@ import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
 import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 import { referrersGoogleRoute } from '../../router'
 
 interface SearchTerm {
@@ -77,8 +78,7 @@ function ConfigureSearchTermsCTA({
 export function SearchTerms() {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const [moreLinkVisible, setMoreLinkVisible] = React.useState(true)
-  const [moreLinkClickable, setMoreLinkClickable] = React.useState(false)
+  const [moreLinkState, setMoreLinkState] = React.useState(MoreLinkState.LOADING)
 
   const [loading, setLoading] = React.useState(true)
   const [errorPayload, setErrorPayload] = React.useState<null | ErrorPayload>(
@@ -100,16 +100,16 @@ export function SearchTerms() {
         setSearchTerms(res.results)
         setErrorPayload(null)
         if (res.results && res.results.length > 0) {
-          setMoreLinkClickable(true)
+          setMoreLinkState(MoreLinkState.READY)
         } else {
-          setMoreLinkVisible(false)
+          setMoreLinkState(MoreLinkState.HIDDEN)
         }
       })
       .catch((error) => {
         setLoading(false)
         setSearchTerms(null)
         setErrorPayload(error.payload)
-        setMoreLinkVisible(false)
+        setMoreLinkState(MoreLinkState.HIDDEN)
       })
   }, [query, site.domain])
 
@@ -117,8 +117,7 @@ export function SearchTerms() {
     if (visible) {
       setLoading(true)
       setSearchTerms([])
-      setMoreLinkVisible(true)
-      setMoreLinkClickable(false)
+      setMoreLinkState(MoreLinkState.LOADING)
       fetchSearchTerms()
     }
   }, [query, fetchSearchTerms, visible])
@@ -200,8 +199,7 @@ export function SearchTerms() {
           </TabWrapper>
         </div>
         <MoreLink
-          visible={moreLinkVisible}
-          clickable={moreLinkClickable}
+          state={moreLinkState}
           linkProps={{
             path: referrersGoogleRoute.path,
             search: (search: any) => search

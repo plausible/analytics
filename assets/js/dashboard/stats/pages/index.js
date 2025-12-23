@@ -14,6 +14,7 @@ import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
 import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 
 function EntryPages({ afterFetchData }) {
   const { query } = useQueryContext()
@@ -164,8 +165,7 @@ export default function Pages() {
   const [mode, setMode] = useState(storedTab || 'pages')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
-  const [moreLinkVisible, setMoreLinkVisible] = useState(true)
-  const [moreLinkClickable, setMoreLinkClickable] = useState(false)
+  const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
@@ -176,16 +176,15 @@ export default function Pages() {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
     if (apiResponse.results && apiResponse.results.length > 0) {
-      setMoreLinkClickable(true)
+      setMoreLinkState(MoreLinkState.READY)
     } else {
-      setMoreLinkVisible(false)
+      setMoreLinkState(MoreLinkState.HIDDEN)
     }
   }
 
   useEffect(() => {
     setLoading(true)
-    setMoreLinkVisible(true)
-    setMoreLinkClickable(false)
+    setMoreLinkState(MoreLinkState.LOADING)
   }, [query, mode])
 
   function moreLinkProps() {
@@ -263,8 +262,7 @@ export default function Pages() {
           />
         </div>
         <MoreLink
-          visible={moreLinkVisible}
-          clickable={moreLinkClickable}
+          state={moreLinkState}
           linkProps={moreLinkProps()}
         />
       </ReportHeader>
