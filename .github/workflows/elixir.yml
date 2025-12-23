@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         mix_env: ["test"]
-        postgres_image: ["postgres:15"]
+        postgres_image: ["postgres:16"]
         mix_test_partition: [1, 2, 3, 4, 5, 6]
 
         include:
