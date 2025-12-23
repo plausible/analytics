@@ -253,7 +253,7 @@ class Locations extends React.Component {
 
   render() {
     return (
-      <div className="group/report overflow-x-hidden">
+      <div className="overflow-x-hidden">
         <div className="w-full flex justify-between">
           <div className="flex gap-x-1">
             <h3 className="font-bold dark:text-gray-100">

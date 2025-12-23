@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Pageview do
 
   use PlausibleWeb, :open_api_schema
 
+  alias Schemas.Goal.CustomProps
+
   OpenApiSpex.schema(%{
     title: "Goal.CreateRequest.Pageview",
     description: "Pageview Goal creation params",
@@ -20,7 +22,8 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Pageview do
         type: :object,
         required: [:path],
         properties: %{
-          path: %Schema{type: :string}
+          path: %Schema{type: :string},
+          custom_props: CustomProps.request_schema()
         }
       }
     },

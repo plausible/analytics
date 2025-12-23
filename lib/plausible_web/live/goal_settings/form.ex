@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo
+  alias Plausible.Stats.QueryBuilder
 
   def update(assigns, socket) do
     site = Repo.preload(assigns.site, [:team, :owners])
@@ -506,15 +507,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def suggest_page_paths(input, site) do
     query =
-      Plausible.Stats.Query.parse_and_build!(
-        site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "date_range" => "all",
-          "metrics" => ["pageviews"],
-          "include" => %{"imports" => true}
-        }
+      QueryBuilder.build!(site,
+        input_date_range: :all,
+        metrics: [:pageviews],
+        include: [imports: true]
       )
 
     site

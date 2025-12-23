@@ -120,9 +120,35 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
               </:thead>
               <:tbody :let={link}>
                 <.td truncate hide_on_mobile>
-                  {link.name}
-                  <Heroicons.lock_closed :if={link.password_hash} class="feather ml-2 mb-0.5" />
-                  <Heroicons.lock_open :if={!link.password_hash} class="feather ml-2 mb-0.5" />
+                  <div class="flex items-center">
+                    {link.name}
+                    <.tooltip
+                      :if={Plausible.Site.SharedLink.password_protected?(link)}
+                      enabled?={true}
+                      centered?={true}
+                    >
+                      <:tooltip_content>
+                        Password protected
+                      </:tooltip_content>
+                      <Heroicons.lock_closed class="feather ml-2 mb-0.5" />
+                    </.tooltip>
+                    <.tooltip
+                      :if={!Plausible.Site.SharedLink.password_protected?(link)}
+                      enabled?={true}
+                      centered?={true}
+                    >
+                      <:tooltip_content>
+                        No password protection
+                      </:tooltip_content>
+                      <Heroicons.lock_open class="feather ml-2 mb-0.5" />
+                    </.tooltip>
+                    <.tooltip :if={link.segment_id} enabled?={true} centered?={true}>
+                      <:tooltip_content>
+                        Limited to segment of data
+                      </:tooltip_content>
+                      <Heroicons.eye_slash class="feather ml-1" />
+                    </.tooltip>
+                  </div>
                 </.td>
                 <.td>
                   <.input_with_clipboard
@@ -159,7 +185,10 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
   end
 
   def handle_event("edit-shared-link", %{"slug" => slug}, socket) do
-    shared_link = Plausible.Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+    shared_link =
+      Plausible.Site.SharedLink
+      |> Plausible.Repo.get_by(slug: slug)
+      |> Plausible.Repo.preload(:segment)
 
     socket =
       socket |> assign(form_shared_link: shared_link) |> Modal.open("shared-links-form-modal")

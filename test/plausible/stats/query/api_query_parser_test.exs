@@ -1,10 +1,15 @@
 defmodule Plausible.Stats.ApiQueryParserTest do
   use Plausible.DataCase
   import Plausible.Stats.ApiQueryParser
+  alias Plausible.Stats.QueryError
 
   test "parsing empty map fails" do
-    assert {:error, "#: Required properties site_id, metrics, date_range were not present."} =
-             parse(:public, %{})
+    assert {:error,
+            %QueryError{
+              code: :failed_schema_validation,
+              message: "#: Required properties site_id, metrics, date_range were not present."
+            }} =
+             parse(%{})
   end
 
   test "invalid metric passed" do
@@ -14,7 +19,11 @@ defmodule Plausible.Stats.ApiQueryParserTest do
       "date_range" => "all"
     }
 
-    assert {:error, "#/metrics/1: Invalid metric \"event:name\""} =
-             parse(:public, params)
+    assert {:error,
+            %QueryError{
+              code: :failed_schema_validation,
+              message: "#/metrics/1: Invalid metric \"event:name\""
+            }} =
+             parse(params)
   end
 end
