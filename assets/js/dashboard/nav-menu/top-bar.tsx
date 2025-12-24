@@ -27,10 +27,10 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <div id="stats-container-top" ref={ref} />
+      <div id="stats-container-top" className="col-span-full" ref={ref} />
       <div
         className={classNames(
-          'relative top-0 py-2 sm:py-3 z-10',
+          'col-span-full relative top-0 py-2 sm:py-3 -my-3 sm:-my-4 z-10',
           !site.embedded &&
             !inView &&
             'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-950'
@@ -47,7 +47,7 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
 
   return (
     <div className="flex items-center w-full">
-      <div className="flex items-center gap-x-4 shrink-0" ref={leftActionsRef}>
+      <div className="flex items-center gap-x-5 shrink-0" ref={leftActionsRef}>
         <SiteSwitcher />
         {showCurrentVisitors && (
           <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />

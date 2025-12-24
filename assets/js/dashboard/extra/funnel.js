@@ -294,7 +294,9 @@ export default function Funnel({ funnelName, tabs }) {
   const header = () => {
     return (
       <div className="flex justify-between w-full">
-        <h4 className="mt-2 text-sm dark:text-gray-100">{funnelName}</h4>
+        <h4 className="mt-2 text-base font-semibold dark:text-gray-100">
+          {funnelName}
+        </h4>
         {tabs}
       </div>
     )
@@ -346,7 +348,7 @@ export default function Funnel({ funnelName, tabs }) {
       return (
         <div className="mb-8">
           {header()}
-          <p className="mt-1 text-gray-500 text-sm">
+          <p className="mt-0.5 text-gray-500 text-sm">
             {funnel.steps.length}-step funnel • {conversionRate}% conversion
             rate
           </p>

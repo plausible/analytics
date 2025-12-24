@@ -10,7 +10,11 @@ import { hasConversionGoalFilter } from '../../util/filters'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { entryPagesRoute, exitPagesRoute, topPagesRoute } from '../../router'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
+import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 
 function EntryPages({ afterFetchData }) {
   const { query } = useQueryContext()
@@ -152,12 +156,6 @@ function TopPages({ afterFetchData }) {
   )
 }
 
-const labelFor = {
-  pages: 'Top pages',
-  'entry-pages': 'Entry pages',
-  'exit-pages': 'Exit pages'
-}
-
 export default function Pages() {
   const { query } = useQueryContext()
   const site = useSiteContext()
@@ -167,6 +165,7 @@ export default function Pages() {
   const [mode, setMode] = useState(storedTab || 'pages')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
@@ -176,9 +175,38 @@ export default function Pages() {
   function afterFetchData(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      setMoreLinkState(MoreLinkState.READY)
+    } else {
+      setMoreLinkState(MoreLinkState.HIDDEN)
+    }
   }
 
-  useEffect(() => setLoading(true), [query, mode])
+  useEffect(() => {
+    setLoading(true)
+    setMoreLinkState(MoreLinkState.LOADING)
+  }, [query, mode])
+
+  function moreLinkProps() {
+    switch (mode) {
+      case 'entry-pages':
+        return {
+          path: entryPagesRoute.path,
+          search: (search) => search
+        }
+      case 'exit-pages':
+        return {
+          path: exitPagesRoute.path,
+          search: (search) => search
+        }
+      case 'pages':
+      default:
+        return {
+          path: topPagesRoute.path,
+          search: (search) => search
+        }
+    }
+  }
 
   function renderContent() {
     switch (mode) {
@@ -193,36 +221,37 @@ export default function Pages() {
   }
 
   return (
-    <div className="overflow-x-hidden">
-      {/* Header Container */}
-      <div className="w-full flex justify-between">
-        <div className="flex gap-x-1">
-          <h3 className="font-bold dark:text-gray-100">
-            {labelFor[mode] || 'Page Visits'}
-          </h3>
+    <ReportLayout className="overflow-x-hidden">
+      <ReportHeader>
+        <div className="flex gap-x-3">
+          <TabWrapper>
+            {[
+              {
+                label: hasConversionGoalFilter(query)
+                  ? 'Conversion pages'
+                  : 'Top pages',
+                value: 'pages'
+              },
+              { label: 'Entry pages', value: 'entry-pages' },
+              { label: 'Exit pages', value: 'exit-pages' }
+            ].map(({ value, label }) => (
+              <TabButton
+                key={value}
+                active={mode === value}
+                onClick={() => switchTab(value)}
+              >
+                {label}
+              </TabButton>
+            ))}
+          </TabWrapper>
           <ImportedQueryUnsupportedWarning
             loading={loading}
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <TabWrapper>
-          {[
-            { label: 'Top pages', value: 'pages' },
-            { label: 'Entry pages', value: 'entry-pages' },
-            { label: 'Exit pages', value: 'exit-pages' }
-          ].map(({ value, label }) => (
-            <TabButton
-              active={mode === value}
-              onClick={() => switchTab(value)}
-              key={value}
-            >
-              {label}
-            </TabButton>
-          ))}
-        </TabWrapper>
-      </div>
-      {/* Main Contents */}
+        <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
+      </ReportHeader>
       {renderContent()}
-    </div>
+    </ReportLayout>
   )
 }

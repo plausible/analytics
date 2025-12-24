@@ -63,7 +63,7 @@ function PagesModal() {
       ].filter((metric) => !!metric)
     }
 
-    if (isRealTimeDashboard(query)) {
+    if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',

@@ -55,8 +55,7 @@ const items = {
       'data-[selected=true]:bg-gray-100',
       'data-[selected=true]:dark:bg-gray-700',
       'data-[selected=true]:text-gray-900',
-      'data-[selected=true]:dark:text-gray-100',
-      'data-[selected=true]:font-semibold'
+      'data-[selected=true]:dark:text-gray-100'
     ),
     hoverLink: classNames(
       'hover:bg-gray-100',

@@ -31,6 +31,10 @@
   *:focus-visible {
     @apply ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900 outline-none;
   }
+
+  :focus:not(:focus-visible) {
+    @apply outline-none;
+  }
 }
 
 @layer components {

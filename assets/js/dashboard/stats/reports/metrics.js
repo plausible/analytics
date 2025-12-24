@@ -77,11 +77,11 @@ export const createVisitors = (props) => {
       const realtimeLabel = props.realtimeLabel || 'Current visitors'
       const goalFilterLabel = props.goalFilterLabel || 'Conversions'
 
-      if (query.period === 'realtime') {
-        return realtimeLabel
-      }
       if (query && hasConversionGoalFilter(query)) {
         return goalFilterLabel
+      }
+      if (query.period === 'realtime') {
+        return realtimeLabel
       }
       return defaultLabel
     }

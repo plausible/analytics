@@ -55,7 +55,7 @@ export default function CurrentVisitors({
         <AppNavigationLink
           search={(prev) => ({ ...prev, period: 'realtime' })}
           className={classNames(
-            'h-9 flex items-center text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300',
+            'h-9 flex items-center text-xs md:text-sm font-medium text-gray-500 dark:text-gray-300',
             className
           )}
         >

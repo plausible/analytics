@@ -32,7 +32,10 @@ export const MapTooltip = ({ name, value, label, x, y }: MapTooltipProps) => (
       top: y
     }}
   >
-    <div className="font-semibold">{name}</div>
-    <strong className="dark:text-indigo-400">{value}</strong> {label}
+    <div className="text-sm font-semibold">{name}</div>
+    <div className="flex items-center gap-x-1 text-sm">
+      <strong className="dark:text-indigo-400">{value}</strong>
+      {label}
+    </div>
   </div>
 )
