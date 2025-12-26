@@ -176,7 +176,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     params =
       params
       |> ParsedQueryParams.set(dimensions: ["event:page"])
-      |> ParsedQueryParams.set_include(:time_labels, false)
 
     {:ok, query} = QueryBuilder.build(site, params, %{})
     metrics = breakdown_metrics(query)
@@ -194,7 +193,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     params =
       params
       |> ParsedQueryParams.set(dimensions: ["visit:entry_page"])
-      |> ParsedQueryParams.set_include(:time_labels, false)
 
     {:ok, query} = QueryBuilder.build(site, params, %{})
     metrics = breakdown_metrics(query)
@@ -212,7 +210,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     params =
       params
       |> ParsedQueryParams.set(dimensions: ["visit:exit_page"])
-      |> ParsedQueryParams.set_include(:time_labels, false)
 
     {:ok, query} = QueryBuilder.build(site, params, %{})
     metrics = breakdown_metrics(query)
