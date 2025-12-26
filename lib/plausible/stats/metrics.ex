@@ -55,4 +55,15 @@ defmodule Plausible.Stats.Metrics do
   def from_string(str) do
     Map.fetch(@metric_mappings, str)
   end
+
+  def dashboard_metric_label(:visitors, %{realtime?: true}), do: "Current visitors"
+  def dashboard_metric_label(:visitors, %{goal_filter?: true}), do: "Conversions"
+
+  def dashboard_metric_label(:visitors, %{dimensions: ["visit:entry_page"]}),
+    do: "Unique entrances"
+
+  def dashboard_metric_label(:visitors, %{dimensions: ["visit:exit_page"]}), do: "Unique exits"
+  def dashboard_metric_label(:visitors, _context), do: "Visitors"
+
+  def dashboard_metric_label(:conversion_rate, _context), do: "CR"
 end

@@ -126,4 +126,99 @@ defmodule Plausible.Stats.QueryTest do
              ]
     end
   end
+
+  describe "include.dashboard_metric_labels" do
+    test "visitors -> Visitors (default)", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:visitors],
+          input_date_range: :all,
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      assert %{visitors: "Visitors"} = meta[:metric_labels]
+    end
+
+    test "visitors -> Current visitors (realtime)", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:visitors],
+          input_date_range: :realtime,
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      assert %{visitors: "Current visitors"} = meta[:metric_labels]
+    end
+
+    test "visitors -> Current visitors (realtime and goal filtered)", %{site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:visitors],
+          input_date_range: :realtime,
+          filters: [[:is, "event:goal", ["Signup"]]],
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      assert %{visitors: "Current visitors"} = meta[:metric_labels]
+    end
+
+    test "visitors -> Conversions (goal filtered)", %{site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:visitors],
+          input_date_range: :all,
+          filters: [[:is, "event:goal", ["Signup"]]],
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      assert %{visitors: "Conversions"} = meta[:metric_labels]
+    end
+
+    test "visitors -> Unique entrances (visit:entry_page dimension)", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:visitors],
+          input_date_range: :all,
+          dimensions: ["visit:entry_page"],
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      assert %{visitors: "Unique entrances"} = meta[:metric_labels]
+    end
+
+    test "visitors -> Unique exits (visit:exit_page dimension)", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:visitors],
+          input_date_range: :all,
+          dimensions: ["visit:exit_page"],
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      assert %{visitors: "Unique exits"} = meta[:metric_labels]
+    end
+
+    test "conversion_rate -> CR (default)", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:conversion_rate],
+          input_date_range: :all,
+          dimensions: ["event:goal"],
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      assert %{conversion_rate: "CR"} = meta[:metric_labels]
+    end
+  end
 end

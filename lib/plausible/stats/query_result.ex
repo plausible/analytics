@@ -8,7 +8,7 @@ defmodule Plausible.Stats.QueryResult do
   """
 
   use Plausible
-  alias Plausible.Stats.{Query, QueryRunner}
+  alias Plausible.Stats.{Query, QueryRunner, QueryInclude}
 
   defstruct results: [],
             meta: %{},
@@ -62,6 +62,7 @@ defmodule Plausible.Stats.QueryResult do
     %{}
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
+    |> add_dashboard_metric_labels(runner.main_query)
     |> add_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
   end
@@ -88,6 +89,33 @@ defmodule Plausible.Stats.QueryResult do
     else
       meta
     end
+  end
+
+  defp add_dashboard_metric_labels(meta, %Query{
+         include: %QueryInclude{dashboard_metric_labels: false}
+       }) do
+    meta
+  end
+
+  defp add_dashboard_metric_labels(meta, query) do
+    context = %{
+      goal_filter?:
+        Plausible.Stats.Filters.filtering_on_dimension?(query, "event:goal",
+          max_depth: 0,
+          behavioral_filters: :ignore
+        ),
+      realtime?: query.input_date_range in [:realtime, :realtime_30m],
+      dimensions: query.dimensions
+    }
+
+    metric_labels =
+      query.metrics
+      |> Enum.map(fn metric ->
+        {metric, Plausible.Stats.Metrics.dashboard_metric_label(metric, context)}
+      end)
+      |> Map.new()
+
+    Map.put(meta, :metric_labels, metric_labels)
   end
 
   defp add_time_labels_meta(meta, query) do
