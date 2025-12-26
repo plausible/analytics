@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   attr :title, :string, required: true
   attr :height, :integer, required: true
   attr :connected?, :boolean, required: true
+  attr :target, :any, required: true
 
   slot :tabs
   slot :inner_block, required: true
@@ -26,6 +27,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
           :if={@tabs != []}
           id={@id <> "-tabs"}
           phx-hook="DashboardTabs"
+          phx-target={@target}
           class="tile-tabs flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
         >
           {render_slot(@tabs)}

@@ -10,10 +10,15 @@ defmodule Plausible.Test.Support.HTML do
     |> Kernel.not()
   end
 
+  def find(%LazyHTML{} = html, selector) do
+    html
+    |> LazyHTML.query(selector)
+  end
+
   def find(html, selector) do
     html
     |> lazy_parse()
-    |> LazyHTML.query(selector)
+    |> find(selector)
   end
 
   def submit_button(html, form) do

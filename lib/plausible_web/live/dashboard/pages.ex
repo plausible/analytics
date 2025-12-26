@@ -9,9 +9,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   alias PlausibleWeb.Components.Dashboard.Tile
 
   alias Plausible.Stats
-  alias Plausible.Stats.Filters
-  alias Plausible.Stats.ParsedQueryParams
-  alias Plausible.Stats.QueryBuilder
+  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryResult}
 
   @tabs [
     {"pages", "Top Pages"},
@@ -25,56 +23,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     "exit-pages" => "Exit page"
   }
 
-  @max_items 9
-  @pagination_params {@max_items, 1}
-
-  @metrics %{
-    "pages" => %{
-      visitors: %{
-        width: "w-24",
-        key: :visitors,
-        label: "Visitors",
-        sortable: true,
-        plot: true
-      },
-      conversion_rate: %{
-        width: "w-24",
-        key: :conversion_rate,
-        label: "CR",
-        sortable: true
-      }
-    },
-    "entry-pages" => %{
-      visitors: %{
-        width: "w-24",
-        key: :visitors,
-        label: "Unique Entrances",
-        sortable: true,
-        plot: true
-      },
-      conversion_rate: %{
-        width: "w-24",
-        key: :conversion_rate,
-        label: "CR",
-        sortable: true
-      }
-    },
-    "exit-pages" => %{
-      visitors: %{
-        width: "w-24",
-        key: :visitors,
-        label: "Unique Exits",
-        sortable: true,
-        plot: true
-      },
-      conversion_rate: %{
-        width: "w-24",
-        key: :conversion_rate,
-        label: "CR",
-        sortable: true
-      }
-    }
-  }
+  @pagination %{limit: 9, offset: 0}
 
   @filter_dimensions %{
     "pages" => "event:page",
@@ -95,7 +44,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         active_tab: active_tab,
         connected?: assigns.connected?
       )
-      |> load_metrics()
+      |> load_stats()
 
     {:ok, socket}
   end
@@ -110,6 +59,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         class="group/report"
         title={@key_labels[@active_tab]}
         connected?={@connected?}
+        target={@myself}
         height={ReportList.height()}
       >
         <:tabs>
@@ -124,13 +74,11 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
         <ReportList.report
           site={@site}
+          data_test_id={"#{@active_tab}-report-list"}
           key_label={@key_labels[@active_tab]}
           filter_dimension={@filter_dimensions[@active_tab]}
           params={@params}
-          results={@results}
-          meta={@meta}
-          metrics={@metrics}
-          skip_imported_reason={@skip_imported_reason}
+          query_result={@query_result}
           external_link_fn={@external_link_fn}
         />
       </Tile.tile>
@@ -143,7 +91,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       socket =
         socket
         |> assign(:active_tab, tab)
-        |> load_metrics()
+        |> load_stats()
 
       {:noreply, socket}
     else
@@ -155,94 +103,34 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     "https://example.com"
   end
 
-  defp load_metrics(socket) do
+  defp load_stats(socket) do
     %{active_tab: active_tab, site: site, params: params} = socket.assigns
 
-    assign_async(socket, [:metrics, :results, :meta, :skip_imported_reason], fn ->
-      %{results: pages, meta: meta, query: query, metrics: metrics} =
-        metrics_for_tab(active_tab, site, params)
+    assign_async(socket, :query_result, fn ->
+      metrics = choose_metrics(params)
+      dimension = @filter_dimensions[active_tab]
 
-      {:ok,
-       %{
-         metrics: Enum.map(metrics, &Map.fetch!(@metrics[active_tab], &1)),
-         results: Enum.take(pages, @max_items),
-         meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
-         skip_imported_reason: meta[:imports_skip_reason]
-       }}
+      params =
+        params
+        |> ParsedQueryParams.set(
+          metrics: metrics,
+          dimensions: [dimension],
+          pagination: @pagination
+        )
+
+      query = QueryBuilder.build!(site, params)
+
+      %QueryResult{} = query_result = Stats.query(site, query)
+
+      {:ok, %{query_result: query_result}}
     end)
   end
 
-  defp metrics_for_tab("pages", site, params) do
-    params =
-      params
-      |> ParsedQueryParams.set(dimensions: ["event:page"])
-
-    {:ok, query} = QueryBuilder.build(site, params, %{})
-    metrics = breakdown_metrics(query)
-
-    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
-
-    pages =
-      results
-      |> transform_keys(%{page: :name})
-
-    %{query: query, results: pages, meta: meta, metrics: metrics}
-  end
-
-  defp metrics_for_tab("entry-pages", site, params) do
-    params =
-      params
-      |> ParsedQueryParams.set(dimensions: ["visit:entry_page"])
-
-    {:ok, query} = QueryBuilder.build(site, params, %{})
-    metrics = breakdown_metrics(query)
-
-    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
-
-    pages =
-      results
-      |> transform_keys(%{entry_page: :name})
-
-    %{query: query, results: pages, meta: meta, metrics: metrics}
-  end
-
-  defp metrics_for_tab("exit-pages", site, params) do
-    params =
-      params
-      |> ParsedQueryParams.set(dimensions: ["visit:exit_page"])
-
-    {:ok, query} = QueryBuilder.build(site, params, %{})
-    metrics = breakdown_metrics(query)
-
-    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
-
-    pages =
-      results
-      |> transform_keys(%{exit_page: :name})
-
-    %{query: query, results: pages, meta: meta, metrics: metrics}
-  end
-
-  defp breakdown_metrics(query) do
-    if toplevel_goal_filter?(query) do
+  defp choose_metrics(%ParsedQueryParams{} = params) do
+    if ParsedQueryParams.conversion_goal_filter?(params) do
       [:visitors, :conversion_rate]
     else
       [:visitors]
     end
-  end
-
-  defp transform_keys(result, keys_to_replace) when is_map(result) do
-    for {key, val} <- result, do: {Map.get(keys_to_replace, key, key), val}, into: %{}
-  end
-
-  defp transform_keys(results, keys_to_replace) when is_list(results) do
-    Enum.map(results, &transform_keys(&1, keys_to_replace))
-  end
-
-  defp toplevel_goal_filter?(query) do
-    Filters.filtering_on_dimension?(query, "event:goal",
-      max_depth: 0,
-      behavioral_filters: :ignore
-    )
   end
 end
