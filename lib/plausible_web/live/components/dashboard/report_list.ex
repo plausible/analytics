@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
             bar_max_value={@max_value}
             site={@site}
             params={@params}
-            filter_dimension={@filter_dimension}
+            dimension={@dimension}
             row_height={@row_height}
             row_gap_height={@row_gap_height}
             col_min_width={@col_min_width}
@@ -173,7 +173,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
                   class="max-w-max w-full flex items-center md:overflow-hidden hover:underline"
                   site={@site}
                   params={@params}
-                  filter={[:is, @filter_dimension, [@item_name]]}
+                  filter={[:is, @dimension, [@item_name]]}
                 >
                   {trim_name(@item_name, @col_min_width)}
                 </Base.filter_link>

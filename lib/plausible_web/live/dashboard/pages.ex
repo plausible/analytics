@@ -12,24 +12,27 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryResult}
 
   @tabs [
-    {"pages", "Top Pages"},
-    {"entry-pages", "Entry Pages"},
-    {"exit-pages", "Exit Pages"}
+    %{
+      tab_key: "pages",
+      report_label: "Top pages",
+      key_label: "Page",
+      dimension: "event:page"
+    },
+    %{
+      tab_key: "entry-pages",
+      report_label: "Entry pages",
+      key_label: "Entry page",
+      dimension: "visit:entry_page"
+    },
+    %{
+      tab_key: "exit-pages",
+      report_label: "Exit pages",
+      key_label: "Exit page",
+      dimension: "visit:exit_page"
+    }
   ]
 
-  @key_labels %{
-    "pages" => "Page",
-    "entry-pages" => "Entry page",
-    "exit-pages" => "Exit page"
-  }
-
   @pagination %{limit: 9, offset: 0}
-
-  @filter_dimensions %{
-    "pages" => "event:page",
-    "entry-pages" => "visit:entry_page",
-    "exit-pages" => "visit:exit_page"
-  }
 
   def update(assigns, socket) do
     active_tab = assigns.user_prefs["pages_tab"] || "pages"
@@ -39,8 +42,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         site: assigns.site,
         params: assigns.params,
         tabs: @tabs,
-        key_labels: @key_labels,
-        filter_dimensions: @filter_dimensions,
         active_tab: active_tab,
         connected?: assigns.connected?
       )
@@ -57,17 +58,17 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       <Tile.tile
         id="breakdown-tile-pages"
         class="group/report"
-        title={@key_labels[@active_tab]}
+        title={get_tab_info(@active_tab, :report_label)}
         connected?={@connected?}
         target={@myself}
         height={ReportList.height()}
       >
         <:tabs>
           <Tile.tab
-            :for={{value, label} <- @tabs}
-            label={label}
-            value={value}
-            active={@active_tab}
+            :for={%{tab_key: tab_key, report_label: report_label} <- @tabs}
+            report_label={report_label}
+            tab_key={tab_key}
+            active_tab={@active_tab}
             target={@myself}
           />
         </:tabs>
@@ -75,8 +76,8 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         <ReportList.report
           site={@site}
           data_test_id={"#{@active_tab}-report-list"}
-          key_label={@key_labels[@active_tab]}
-          filter_dimension={@filter_dimensions[@active_tab]}
+          key_label={get_tab_info(@active_tab, :key_label)}
+          dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
           query_result={@query_result}
           external_link_fn={@external_link_fn}
@@ -108,7 +109,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
     assign_async(socket, :query_result, fn ->
       metrics = choose_metrics(params)
-      dimension = @filter_dimensions[active_tab]
+      dimension = get_tab_info(active_tab, :dimension)
 
       params =
         params
@@ -132,5 +133,11 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     else
       [:visitors]
     end
+  end
+
+  defp get_tab_info(tab_key, field) do
+    @tabs
+    |> Enum.find(&(&1.tab_key == tab_key))
+    |> Map.fetch!(field)
   end
 end

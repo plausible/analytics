@@ -50,9 +50,9 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
     """
   end
 
-  attr :label, :string, required: true
-  attr :value, :string, required: true
-  attr :active, :string, required: true
+  attr :report_label, :string, required: true
+  attr :tab_key, :string, required: true
+  attr :active_tab, :string, required: true
   attr :target, :any, required: true
 
   def tab(assigns) do
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
       assign(
         assigns,
         data_attrs:
-          if(assigns.value == assigns.active,
+          if(assigns.tab_key == assigns.active_tab,
             do: %{"data-active": "true"},
             else: %{"data-active": "false"}
           )
@@ -69,8 +69,8 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
     ~H"""
     <button
       class="rounded-sm truncate text-left transition-colors duration-150"
-      data-tab={@value}
-      data-label={@label}
+      data-tab-key={@tab_key}
+      data-report-label={@report_label}
       data-storage-key="pageTab"
       data-target={@target}
     >
@@ -78,7 +78,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         {@data_attrs}
         class="data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500 data-[active=true]:font-bold data-[active=true]:underline data-[active=true]:decoration-2 data-[active=true]:decoration-indigo-600 data-[active=true]:dark:decoration-indigo-500 data-[active=false]:hover:text-indigo-700 data-[active=false]:dark:hover:text-indigo-400 data-[active=false]:cursor-pointer"
       >
-        {@label}
+        {@report_label}
       </span>
     </button>
     """
