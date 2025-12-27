@@ -231,6 +231,36 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
       expected_include = Map.put(@default_include, :compare_match_day_of_week, false)
       assert %ParsedQueryParams{include: ^expected_include} = parsed
     end
+
+    test "'true' in query string takes precedence over 'false' in user prefs" do
+      {:ok, parsed} =
+        parse("?match_day_of_week=true", build(:site), %{"match_day_of_week" => "false"})
+
+      assert %ParsedQueryParams{include: @default_include} = parsed
+    end
+
+    test "'false' in query string takes precedence over 'true' in user prefs" do
+      {:ok, parsed} =
+        parse("?match_day_of_week=false", build(:site), %{"match_day_of_week" => "true"})
+
+      expected_include = Map.put(@default_include, :compare_match_day_of_week, false)
+      assert %ParsedQueryParams{include: ^expected_include} = parsed
+    end
+
+    test "falls back to user pref when value in query string is invalid" do
+      {:ok, parsed} =
+        parse("?match_day_of_week=foo", build(:site), %{"match_day_of_week" => "false"})
+
+      expected_include = Map.put(@default_include, :compare_match_day_of_week, false)
+      assert %ParsedQueryParams{include: ^expected_include} = parsed
+    end
+
+    test "falls back to 'true' when invalid values in both query string and user prefs" do
+      {:ok, parsed} =
+        parse("?match_day_of_week=foo", build(:site), %{"match_day_of_week" => "bar"})
+
+      assert %ParsedQueryParams{include: @default_include} = parsed
+    end
   end
 
   describe "filters" do

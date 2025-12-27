@@ -64,7 +64,7 @@ defmodule Plausible.Stats.DashboardQueryParser do
         Map.merge(@default_include, %{
           imports: parse_include_imports(params_map),
           compare: parse_include_compare(params_map, user_prefs),
-          compare_match_day_of_week: parse_include_compare_match_day_of_week(params_map)
+          compare_match_day_of_week: parse_match_day_of_week(params_map, user_prefs)
         })
 
       {:ok,
@@ -133,8 +133,10 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
   defp parse_include_compare(_params, _user_prefs), do: nil
 
-  defp parse_include_compare_match_day_of_week(%{"match_day_of_week" => "false"}), do: false
-  defp parse_include_compare_match_day_of_week(_), do: true
+  defp parse_match_day_of_week(%{"match_day_of_week" => "false"}, _user_prefs), do: false
+  defp parse_match_day_of_week(%{"match_day_of_week" => "true"}, _user_prefs), do: true
+  defp parse_match_day_of_week(_params, %{"match_day_of_week" => "false"}), do: false
+  defp parse_match_day_of_week(_params, _user_prefs), do: true
 
   defp parse_filters(query_string) do
     with {:ok, filters} <- decode_filters(query_string) do

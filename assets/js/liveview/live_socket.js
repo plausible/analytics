@@ -81,7 +81,8 @@ if (csrfToken && websocketUrl) {
           user_prefs: {
             pages_tab: localStorage.getItem(`pageTab__${domainName}`),
             period: localStorage.getItem(`period__${domainName}`),
-            comparison: localStorage.getItem(`comparison_mode__${domainName}`)
+            comparison: localStorage.getItem(`comparison_mode__${domainName}`),
+            match_day_of_week: localStorage.getItem(`comparison_match_day_of_week__${domainName}`)
           },
           _csrf_token: token
         }
