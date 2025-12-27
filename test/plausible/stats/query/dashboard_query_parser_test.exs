@@ -154,6 +154,12 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
         expected_include = Map.put(@default_include, :compare, unquote(mode))
         assert_matches %ParsedQueryParams{include: ^expected_include} = parsed
       end
+
+      test "parses #{mode} mode from user prefs" do
+        {:ok, parsed} = parse("", build(:site), %{"comparison" => "#{unquote(mode)}"})
+        expected_include = Map.put(@default_include, :compare, unquote(mode))
+        assert_matches %ParsedQueryParams{include: ^expected_include} = parsed
+      end
     end
 
     test "parses custom date range mode" do
@@ -170,8 +176,41 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
       assert_matches %ParsedQueryParams{include: ^expected_include} = parsed
     end
 
-    test "invalid -> nil" do
-      {:ok, parsed} = parse("?comparison=invalid_mode", build(:site), %{})
+    test "custom comparison in query string takes precedence over user prefs" do
+      {:ok, parsed} =
+        parse(
+          "?comparison=custom&compare_from=2021-01-01&compare_to=2021-04-30",
+          build(:site),
+          %{"comparison" => "year_over_year"}
+        )
+
+      expected_include =
+        Map.put(@default_include, :compare, {:date_range, ~D[2021-01-01], ~D[2021-04-30]})
+
+      assert_matches %ParsedQueryParams{include: ^expected_include} = parsed
+    end
+
+    test "falls back to user preference when query string comparison param is invalid" do
+      {:ok, parsed} =
+        parse("?comparison=invalid_mode", build(:site), %{"comparison" => "previous_period"})
+
+      expected_include =
+        Map.put(@default_include, :compare, :previous_period)
+
+      assert_matches %ParsedQueryParams{include: ^expected_include} = parsed
+    end
+
+    test "comparion=off in query string skips stored comparison mode" do
+      {:ok, parsed} =
+        parse("?comparison=off", build(:site), %{"comparison" => "previous_period"})
+
+      assert %ParsedQueryParams{include: @default_include} = parsed
+    end
+
+    test "falls back to nil when comparison param in both query string and user prefs is invalid" do
+      {:ok, parsed} =
+        parse("?comparison=invalid_mode", build(:site), %{"comparison" => "invalid_mode"})
+
       assert %ParsedQueryParams{include: @default_include} = parsed
     end
   end

@@ -45,6 +45,13 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
   @valid_period_shorthand_keys Map.keys(@valid_period_shorthands)
 
+  @valid_comparison_shorthands %{
+    "previous_period" => :previous_period,
+    "year_over_year" => :year_over_year
+  }
+
+  @valid_comparison_shorthand_keys Map.keys(@valid_comparison_shorthands)
+
   def parse(query_string, site, user_prefs) when is_binary(query_string) do
     query_string = String.trim_leading(query_string, "?")
     params_map = URI.decode_query(query_string)
@@ -56,7 +63,7 @@ defmodule Plausible.Stats.DashboardQueryParser do
       include =
         Map.merge(@default_include, %{
           imports: parse_include_imports(params_map),
-          compare: parse_include_compare(params_map),
+          compare: parse_include_compare(params_map, user_prefs),
           compare_match_day_of_week: parse_include_compare_match_day_of_week(params_map)
         })
 
@@ -106,16 +113,25 @@ defmodule Plausible.Stats.DashboardQueryParser do
   defp parse_include_imports(%{"with_imported" => "false"}), do: false
   defp parse_include_imports(_), do: true
 
-  defp parse_include_compare(%{"comparison" => "previous_period"}), do: :previous_period
-  defp parse_include_compare(%{"comparison" => "year_over_year"}), do: :year_over_year
+  defp parse_include_compare(%{"comparison" => "off"}, _user_prefs), do: nil
 
-  defp parse_include_compare(%{"comparison" => "custom"} = params) do
+  defp parse_include_compare(%{"comparison" => comparison}, _user_prefs)
+       when comparison in @valid_comparison_shorthand_keys do
+    @valid_comparison_shorthands[comparison]
+  end
+
+  defp parse_include_compare(%{"comparison" => "custom"} = params, _user_prefs) do
     from_date = Date.from_iso8601!(params["compare_from"])
     to_date = Date.from_iso8601!(params["compare_to"])
     {:date_range, from_date, to_date}
   end
 
-  defp parse_include_compare(_options), do: nil
+  defp parse_include_compare(_params, %{"comparison" => comparison})
+       when comparison in @valid_comparison_shorthand_keys do
+    @valid_comparison_shorthands[comparison]
+  end
+
+  defp parse_include_compare(_params, _user_prefs), do: nil
 
   defp parse_include_compare_match_day_of_week(%{"match_day_of_week" => "false"}), do: false
   defp parse_include_compare_match_day_of_week(_), do: true

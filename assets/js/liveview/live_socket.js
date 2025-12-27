@@ -80,7 +80,8 @@ if (csrfToken && websocketUrl) {
           // user preferences across the reloads.
           user_prefs: {
             pages_tab: localStorage.getItem(`pageTab__${domainName}`),
-            period: localStorage.getItem(`period__${domainName}`)
+            period: localStorage.getItem(`period__${domainName}`),
+            comparison: localStorage.getItem(`comparison_mode__${domainName}`)
           },
           _csrf_token: token
         }
