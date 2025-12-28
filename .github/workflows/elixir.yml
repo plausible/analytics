@@ -53,7 +53,7 @@ jobs:
             --health-timeout 5s
             --health-retries 5
       clickhouse:
-        image: clickhouse/clickhouse-server:25.11.2.24-alpine
+        image: clickhouse/clickhouse-server:25.11.5.8-alpine
         ports:
           - 8123:8123
         env:
