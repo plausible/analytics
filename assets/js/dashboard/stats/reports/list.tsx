@@ -87,9 +87,7 @@ export interface SharedReportProps<
   afterFetchNextPage?: (response: TResponse) => void
 }
 
-type ListReportProps<
-  TListItem extends Record<string, unknown> & { name: string }
-> = {
+type ListReportProps = {
   /** What each entry in the list represents (for UI only). */
   keyLabel: string
   metrics: Metric[]
@@ -100,12 +98,6 @@ type ListReportProps<
   onClick?: () => void
   /** Color of the comparison bars in light-mode. */
   color?: string
-  /** Callback that receives the list data, linkProps, and loading state whenever it updates. Used to render MoreLink in parent components. */
-  onListUpdate?: (
-    list: TListItem[] | null,
-    linkProps: AppNavigationLinkProps | undefined,
-    loading: boolean
-  ) => void
 }
 
 /**
@@ -128,10 +120,8 @@ export default function ListReport<
   getFilterInfo,
   renderIcon,
   getExternalLinkUrl,
-  fetchData,
-  onListUpdate
-}: Omit<SharedReportProps<TListItem>, 'afterFetchNextPage'> &
-  ListReportProps<TListItem>) {
+  fetchData
+}: Omit<SharedReportProps<TListItem>, 'afterFetchNextPage'> & ListReportProps) {
   const { query } = useQueryContext()
   const [state, setState] = useState<{
     loading: boolean
@@ -147,9 +137,6 @@ export default function ListReport<
   const getData = useCallback(() => {
     if (!isRealtime) {
       setState({ loading: true, list: null, meta: null })
-      if (onListUpdate) {
-        onListUpdate(null, detailsLinkProps, true)
-      }
     }
     fetchData().then((response) => {
       if (afterFetchData) {
@@ -157,12 +144,9 @@ export default function ListReport<
       }
 
       setState({ loading: false, list: response.results, meta: response.meta })
-      if (onListUpdate) {
-        onListUpdate(response.results, detailsLinkProps, false)
-      }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyLabel, query, detailsLinkProps, onListUpdate])
+  }, [keyLabel, query, detailsLinkProps])
 
   const onVisible = () => {
     setVisible(true)
@@ -174,9 +158,6 @@ export default function ListReport<
       // loading state, even in realtime mode, because the metrics list will change. We can
       // only read the new metrics once the new list is loaded.
       setState({ loading: true, list: null, meta: null })
-      if (onListUpdate) {
-        onListUpdate(null, detailsLinkProps, true)
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalFilterApplied])

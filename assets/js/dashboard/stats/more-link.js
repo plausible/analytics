@@ -20,7 +20,7 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({ linkProps, state, onClick = undefined }) {
+export default function MoreLink({ linkProps, state }) {
   const portalRef = useRef(null)
 
   useEffect(() => {
@@ -47,11 +47,7 @@ export default function MoreLink({ linkProps, state, onClick = undefined }) {
 
   return (
     <Tooltip info="View details" containerRef={portalRef}>
-      <AppNavigationLink
-        {...linkProps}
-        className={baseClassName}
-        onClick={onClick}
-      >
+      <AppNavigationLink {...linkProps} className={baseClassName}>
         {icon}
       </AppNavigationLink>
     </Tooltip>

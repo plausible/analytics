@@ -19,8 +19,9 @@ import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
 import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 
-function Countries({ query, site, onClick, afterFetchData, onListUpdate }) {
+function Countries({ query, site, onClick, afterFetchData }) {
   function fetchData() {
     return api.get(apiPath(site, '/countries'), query, { limit: 9 })
   }
@@ -60,12 +61,11 @@ function Countries({ query, site, onClick, afterFetchData, onListUpdate }) {
       }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function Regions({ query, site, onClick, afterFetchData, onListUpdate }) {
+function Regions({ query, site, onClick, afterFetchData }) {
   function fetchData() {
     return api.get(apiPath(site, '/regions'), query, { limit: 9 })
   }
@@ -102,12 +102,11 @@ function Regions({ query, site, onClick, afterFetchData, onListUpdate }) {
       detailsLinkProps={{ path: regionsRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
 
-function Cities({ query, site, afterFetchData, onListUpdate }) {
+function Cities({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(apiPath(site, '/cities'), query, { limit: 9 })
   }
@@ -143,7 +142,6 @@ function Cities({ query, site, afterFetchData, onListUpdate }) {
       detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
-      onListUpdate={onListUpdate}
     />
   )
 }
@@ -154,19 +152,13 @@ class Locations extends React.Component {
     this.onCountryFilter = this.onCountryFilter.bind(this)
     this.onRegionFilter = this.onRegionFilter.bind(this)
     this.afterFetchData = this.afterFetchData.bind(this)
-    this.onListUpdate = this.onListUpdate.bind(this)
-    this.onMapDataUpdate = this.onMapDataUpdate.bind(this)
     this.tabKey = `geoTab__${props.site.domain}`
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'map',
       loading: true,
       skipImportedReason: null,
-      listData: null,
-      linkProps: null,
-      listLoading: true,
-      mapData: null,
-      mapLoading: true
+      moreLinkState: MoreLinkState.LOADING
     }
   }
 
@@ -190,30 +182,15 @@ class Locations extends React.Component {
       this.props.query !== prevProps.query ||
       this.state.mode !== prevState.mode
     ) {
-      this.setState({ loading: true })
+      this.setState({ loading: true, moreLinkState: MoreLinkState.LOADING })
     }
   }
 
   setMode(mode) {
     return () => {
       storage.setItem(this.tabKey, mode)
-      this.setState({
-        mode,
-        listData: null,
-        linkProps: null,
-        listLoading: true,
-        mapData: null,
-        mapLoading: true
-      })
+      this.setState({ mode })
     }
-  }
-
-  onListUpdate(list, linkProps, loading) {
-    this.setState({ listData: list, linkProps, listLoading: loading })
-  }
-
-  onMapDataUpdate(data, loading) {
-    this.setState({ mapData: data, mapLoading: loading })
   }
 
   onCountryFilter(mode) {
@@ -228,8 +205,16 @@ class Locations extends React.Component {
   }
 
   afterFetchData(apiResponse) {
+    let newMoreLinkState
+
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      newMoreLinkState = MoreLinkState.READY
+    } else {
+      newMoreLinkState = MoreLinkState.HIDDEN
+    }
     this.setState({
       loading: false,
+      moreLinkState: newMoreLinkState,
       skipImportedReason: apiResponse.skip_imported_reason
     })
   }
@@ -242,7 +227,6 @@ class Locations extends React.Component {
             site={this.props.site}
             query={this.props.query}
             afterFetchData={this.afterFetchData}
-            onListUpdate={this.onListUpdate}
           />
         )
       case 'regions':
@@ -252,7 +236,6 @@ class Locations extends React.Component {
             site={this.props.site}
             query={this.props.query}
             afterFetchData={this.afterFetchData}
-            onListUpdate={this.onListUpdate}
           />
         )
       case 'countries':
@@ -262,7 +245,6 @@ class Locations extends React.Component {
             site={this.props.site}
             query={this.props.query}
             afterFetchData={this.afterFetchData}
-            onListUpdate={this.onListUpdate}
           />
         )
       case 'map':
@@ -271,38 +253,23 @@ class Locations extends React.Component {
           <CountriesMap
             onCountrySelect={this.onCountryFilter('map')}
             afterFetchData={this.afterFetchData}
-            onDataUpdate={this.onMapDataUpdate}
           />
         )
     }
   }
 
-  getMoreLink() {
-    if (this.state.mode === 'map') {
-      const data = this.state.mapData?.results ?? []
-      return (
-        <MoreLink
-          list={data}
-          linkProps={{
-            path: countriesRoute.path,
-            search: (search) => search
-          }}
-          loading={this.state.mapLoading}
-          className=""
-          onClick={undefined}
-        />
-      )
+  getMoreLinkProps() {
+    let path
+
+    if (this.state.mode === 'regions') {
+      path = regionsRoute.path
+    } else if (this.state.mode === 'cities') {
+      path = citiesRoute.path
     } else {
-      return (
-        <MoreLink
-          list={this.state.listData}
-          linkProps={this.state.linkProps}
-          loading={this.state.listLoading}
-          className=""
-          onClick={undefined}
-        />
-      )
+      path = countriesRoute.path
     }
+
+    return { path: path, search: (search) => search }
   }
 
   render() {
@@ -333,7 +300,10 @@ class Locations extends React.Component {
               skipImportedReason={this.state.skipImportedReason}
             />
           </div>
-          {this.getMoreLink()}
+          <MoreLink
+            linkProps={this.getMoreLinkProps()}
+            state={this.state.moreLinkState}
+          />
         </ReportHeader>
         {this.renderContent()}
       </ReportLayout>
