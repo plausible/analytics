@@ -44,10 +44,4 @@ defmodule Plausible.Stats.ParsedQueryParams do
 
     struct!(parsed_query_params, filters: new_filters)
   end
-
-  def conversion_goal_filter?(%__MODULE__{filters: filters}) do
-    Enum.any?(filters, fn [operator, dimension, _clauses] ->
-      operator in [:is, :contains] and dimension == "event:goal"
-    end)
-  end
 end
