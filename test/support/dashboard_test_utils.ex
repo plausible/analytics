@@ -1,4 +1,6 @@
 defmodule Plausible.DashboardTestUtils do
+  @moduledoc false
+
   import Plausible.Test.Support.HTML
 
   def get_in_report_list(%LazyHTML{} = report_list, opts) do

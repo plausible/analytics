@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     else
       %QueryResult{results: results, meta: meta, query: query} = assigns.query_result.result
 
-      # TODO: Consider a `query.include` flag like `dashboard_style_response` to return
+      # NOTE: Consider a `query.include` flag like `dashboard_style_response` to return
       # metric values per key in a map to make this a bit easier. Currently, we need to
       # fetch metrics by indices. For simplicity, we assume that `:visitors` is always
       # the first metric.
