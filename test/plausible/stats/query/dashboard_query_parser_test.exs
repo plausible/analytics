@@ -200,7 +200,7 @@ defmodule Plausible.Stats.DashboardQueryParserTest do
       assert_matches %ParsedQueryParams{include: ^expected_include} = parsed
     end
 
-    test "comparion=off in query string skips stored comparison mode" do
+    test "comparison=off in query string skips stored comparison mode" do
       {:ok, parsed} =
         parse("?comparison=off", build(:site), %{"comparison" => "previous_period"})
 
