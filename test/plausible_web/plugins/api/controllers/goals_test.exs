@@ -52,8 +52,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       conn: conn
     } do
-      [owner | _] = Plausible.Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
+      subscribe_to_growth_plan(site.team)
 
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
@@ -78,8 +77,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       conn: conn
     } do
-      [owner | _] = Plausible.Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
+      subscribe_to_growth_plan(site.team)
 
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
@@ -110,6 +108,158 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
   end
 
   describe "put /goals - create a single goal" do
+    test "creates a custom event goal with custom props", %{conn: conn, token: token, site: site} do
+      subscribe_to_business_plan(site.team)
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
+
+      payload = %{
+        goal_type: "Goal.CustomEvent",
+        goal: %{event_name: "Signup", custom_props: %{"tier" => "premium", "source" => "landing"}}
+      }
+
+      assert_request_schema(payload, "Goal.CreateRequest.CustomEvent", spec())
+
+      conn =
+        conn
+        |> authenticate(site.domain, token)
+        |> put_req_header("content-type", "application/json")
+        |> put(url, payload)
+
+      resp = json_response(conn, 201)
+
+      schema = assert_schema(resp, "Goal.ListResponse", spec())
+
+      resp
+      |> Map.fetch!("goals")
+      |> List.first()
+      |> assert_schema("Goal.CustomEvent", spec())
+
+      [location] = get_resp_header(conn, "location")
+
+      assert location ==
+               Routes.plugins_api_goals_url(
+                 PlausibleWeb.Endpoint,
+                 :get,
+                 List.first(schema.goals).goal.id
+               )
+
+      [goal] = Plausible.Goals.for_site(site)
+      assert goal.event_name == "Signup"
+      assert goal.custom_props == %{"tier" => "premium", "source" => "landing"}
+
+      first_goal = List.first(resp["goals"])
+      assert first_goal["goal"]["custom_props"] == %{"tier" => "premium", "source" => "landing"}
+    end
+
+    test "fails to create goal with custom prop having invalid value", %{
+      conn: conn,
+      token: token,
+      site: site
+    } do
+      subscribe_to_business_plan(site.team)
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
+
+      payload = %{
+        goal_type: "Goal.CustomEvent",
+        goal: %{event_name: "Signup", custom_props: %{"count" => 5}}
+      }
+
+      resp =
+        conn
+        |> authenticate(site.domain, token)
+        |> put_req_header("content-type", "application/json")
+        |> put(url, payload)
+        |> json_response(422)
+        |> assert_schema("UnprocessableEntityError", spec())
+
+      assert Enum.any?(resp.errors, &(&1.detail == "Invalid string. Got: integer"))
+    end
+
+    test "fails to create goal with more than 3 custom props", %{
+      conn: conn,
+      token: token,
+      site: site
+    } do
+      subscribe_to_business_plan(site.team)
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
+
+      payload = %{
+        goal_type: "Goal.CustomEvent",
+        goal: %{
+          event_name: "Signup",
+          custom_props: %{"a" => "1", "b" => "2", "c" => "3", "d" => "4"}
+        }
+      }
+
+      resp =
+        conn
+        |> authenticate(site.domain, token)
+        |> put_req_header("content-type", "application/json")
+        |> put(url, payload)
+        |> json_response(422)
+        |> assert_schema("UnprocessableEntityError", spec())
+
+      assert Enum.any?(
+               resp.errors,
+               &(&1.detail == "Object property count 4 is greater than maxProperties: 3")
+             )
+    end
+
+    test "fails to create goal with null custom props values", %{
+      conn: conn,
+      token: token,
+      site: site
+    } do
+      subscribe_to_business_plan(site.team)
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
+
+      payload = %{
+        goal_type: "Goal.CustomEvent",
+        goal: %{event_name: "Signup", custom_props: %{"tier" => nil}}
+      }
+
+      resp =
+        conn
+        |> authenticate(site.domain, token)
+        |> put_req_header("content-type", "application/json")
+        |> put(url, payload)
+        |> json_response(422)
+        |> assert_schema("UnprocessableEntityError", spec())
+
+      assert Enum.any?(resp.errors, &(&1.detail == "null value where string expected"))
+    end
+
+    @tag :ee_only
+    test "fails without Props feature when custom props is non-empty", %{
+      conn: conn,
+      token: token,
+      site: site
+    } do
+      site = Plausible.Repo.preload(site, :team)
+      # End trial to ensure team doesn't have access to Props feature
+      site.team
+      |> Ecto.Changeset.change(%{trial_expiry_date: Date.add(Date.utc_today(), -1)})
+      |> Plausible.Repo.update!()
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
+
+      payload = %{
+        goal_type: "Goal.CustomEvent",
+        goal: %{event_name: "Signup", custom_props: %{"tier" => "premium"}}
+      }
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> put(url, payload)
+      |> json_response(402)
+      |> assert_schema("PaymentRequiredError", spec())
+    end
+
     test "validates input according to the schema", %{conn: conn, token: token, site: site} do
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
@@ -547,7 +697,11 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
 
     test "retrieves custom event goal by ID", %{conn: conn, site: site, token: token} do
-      {:ok, goal} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
+      {:ok, goal} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Signup",
+          "custom_props" => %{"tier" => "premium"}
+        })
 
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :get, goal.id)
 
@@ -563,10 +717,39 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert schema.goal.id == goal.id
       assert schema.goal_type == "Goal.CustomEvent"
       assert schema.goal.display_name == "Signup"
+      assert schema.goal.custom_props == %{"tier" => "premium"}
     end
   end
 
   describe "get /goals" do
+    test "returns goals with custom props in response", %{conn: conn, site: site, token: token} do
+      {:ok, _g1} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Signup",
+          "custom_props" => %{"tier" => "premium"}
+        })
+
+      {:ok, _g2} =
+        Plausible.Goals.create(site, %{"page_path" => "/checkout", "custom_props" => %{}})
+
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :index)
+
+      resp =
+        conn
+        |> authenticate(site.domain, token)
+        |> get(url)
+        |> json_response(200)
+        |> assert_schema("Goal.ListResponse", spec())
+
+      [checkout, signup] = resp.goals
+
+      assert signup.goal.event_name == "Signup"
+      assert signup.goal.custom_props == %{"tier" => "premium"}
+
+      assert checkout.goal.path == "/checkout"
+      assert checkout.goal.custom_props == %{}
+    end
+
     test "returns an empty goals list if there's none", %{
       conn: conn,
       token: token,

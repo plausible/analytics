@@ -59,7 +59,7 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp add_comparison_query(%__MODULE__{main_query: query, main_results: main_results} = runner)
-       when is_map(query.include.comparisons) do
+       when not is_nil(query.include.compare) do
     comparison_query =
       query
       |> Comparisons.get_comparison_query()
@@ -181,7 +181,7 @@ defmodule Plausible.Stats.QueryRunner do
   # Special case: If comparison and single time dimension, add 0 rows - otherwise
   # comparisons would not be shown for timeseries with 0 values.
   defp add_empty_timeseries_rows(results_list, %__MODULE__{main_query: query})
-       when is_map(query.include.comparisons) do
+       when not is_nil(query.include.compare) do
     indexed_results = index_by_dimensions(results_list)
 
     empty_timeseries_rows =
@@ -210,7 +210,7 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp add_comparison_results(row, query, comparison_map, time_lookup)
-       when is_map(query.include.comparisons) do
+       when not is_nil(query.include.compare) do
     dimensions = get_comparison_dimensions(row.dimensions, query, time_lookup)
     comparison_metrics = get_comparison_metrics(comparison_map, dimensions, query)
 

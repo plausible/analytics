@@ -74,8 +74,14 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class={@mt? && "mt-4"}>
-      <.label for={@id} class={if @help_text, do: "mb-0.5", else: "mb-1.5"}>{@label}</.label>
+    <div class={@mt? && "mt-6"}>
+      <.label
+        :if={@label != nil and @label != ""}
+        for={@id}
+        class={if @help_text, do: "mb-0.5", else: "mb-1.5"}
+      >
+        {@label}
+      </.label>
 
       <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
         {@help_text}
@@ -138,7 +144,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
         <span
           :if={@help_text || @help_content != []}
-          class="text-gray-500 dark:text-gray-400 mb-2 text-sm"
+          class="text-gray-500 dark:text-gray-400 mb-2 text-sm text-pretty"
         >
           {@help_text}
           {render_slot(@help_content)}
@@ -150,7 +156,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class={@mt? && "mt-4"}>
+    <div class={@mt? && "mt-6"}>
       <.label class="mb-1.5" for={@id}>{@label}</.label>
       <textarea
         id={@id}
@@ -176,7 +182,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :errors, errors)
 
     ~H"""
-    <div class={@mt? && "mt-4"}>
+    <div class={@mt? && "mt-6"}>
       <.label
         :if={@label != nil and @label != ""}
         for={@id}

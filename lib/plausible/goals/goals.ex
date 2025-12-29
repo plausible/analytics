@@ -387,9 +387,24 @@ defmodule Plausible.Goals do
   end
 
   defp maybe_check_feature_access(site, changeset) do
+    with :ok <- revenue_goals_access_check(site, changeset) do
+      custom_props_goals_access_check(site, changeset)
+    end
+  end
+
+  defp revenue_goals_access_check(site, changeset) do
     if Changeset.get_field(changeset, :currency) do
       site = Plausible.Repo.preload(site, :team)
       Plausible.Billing.Feature.RevenueGoals.check_availability(site.team)
+    else
+      :ok
+    end
+  end
+
+  defp custom_props_goals_access_check(site, changeset) do
+    if map_size(Changeset.get_field(changeset, :custom_props)) > 0 do
+      site = Plausible.Repo.preload(site, :team)
+      Plausible.Billing.Feature.Props.check_availability(site.team)
     else
       :ok
     end
