@@ -35,23 +35,11 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     else
       %QueryResult{results: results, meta: meta, query: query} = assigns.query_result.result
 
-      # NOTE: Consider a `query.include` flag like `dashboard_style_response` to return
-      # metric values per key in a map to make this a bit easier. Currently, we need to
-      # fetch metrics by indices. For simplicity, we assume that `:visitors` is always
-      # the first metric.
-      :visitors = List.first(query[:metrics])
-
-      max_value =
-        results
-        |> Enum.map(&List.first(&1.metrics))
-        |> Enum.max(&>=/2, fn -> 0 end)
-
       assigns =
         assign(assigns,
-          max_value: max_value,
           results: results,
-          metrics: query[:metrics],
-          metric_labels: Enum.map(query[:metrics], &Map.get(meta[:metric_labels], &1)),
+          metric_keys: query[:metrics],
+          metric_labels: meta[:metric_labels],
           empty?: Enum.empty?(results)
         )
 
@@ -74,9 +62,8 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
             item={item}
             item_index={item_index}
             item_name={List.first(item.dimensions)}
-            metrics={@metrics}
-            bar_value={List.first(item.metrics)}
-            bar_max_value={@max_value}
+            metrics={Enum.zip(@metric_keys, item.metrics)}
+            bar_max_value={bar_max_value(@results, @metric_keys)}
             site={@site}
             params={@params}
             dimension={@dimension}
@@ -163,7 +150,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
       >
         <div class="grow w-full overflow-hidden" data-test-id={"item-#{@item_index}-name"}>
           <Base.bar
-            width={@bar_value}
+            width={@metrics[:visitors]}
             max_width={@bar_max_value}
             background_class="bg-green-50 group-hover:bg-green-100 dark:bg-gray-500/15 dark:group-hover:bg-gray-500/30"
           >
@@ -183,7 +170,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
           </Base.bar>
         </div>
         <div
-          :for={{_, metric_index} <- Enum.with_index(@metrics)}
+          :for={{{metric_key, metric_value}, metric_index} <- Enum.with_index(@metrics)}
           class="text-right"
           style={"width: #{@col_min_width}px; min-width: #{@col_min_width}px;"}
         >
@@ -191,10 +178,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
             class="font-medium text-sm dark:text-gray-200 text-right"
             data-test-id={"item-#{@item_index}-metric-#{metric_index}"}
           >
-            <Metric.value
-              name={Enum.at(@metrics, metric_index)}
-              value={Enum.at(@item.metrics, metric_index)}
-            />
+            <Metric.value name={metric_key} value={metric_value} />
           </span>
         </div>
       </div>
@@ -226,6 +210,15 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
       DETAILS
     </Base.dashboard_link>
     """
+  end
+
+  @bar_metric :visitors
+  defp bar_max_value(results, metrics) do
+    index = Enum.find_index(metrics, &(&1 == @bar_metric))
+
+    results
+    |> Enum.map(&Enum.at(&1.metrics, index))
+    |> Enum.max(&>=/2, fn -> 0 end)
   end
 
   defp trim_name(name, max_length) do

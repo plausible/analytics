@@ -111,9 +111,8 @@ defmodule Plausible.Stats.QueryResult do
     metric_labels =
       query.metrics
       |> Enum.map(fn metric ->
-        {metric, Plausible.Stats.Metrics.dashboard_metric_label(metric, context)}
+        Plausible.Stats.Metrics.dashboard_metric_label(metric, context)
       end)
-      |> Map.new()
 
     Map.put(meta, :metric_labels, metric_labels)
   end

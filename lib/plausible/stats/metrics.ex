@@ -66,4 +66,6 @@ defmodule Plausible.Stats.Metrics do
   def dashboard_metric_label(:visitors, _context), do: "Visitors"
 
   def dashboard_metric_label(:conversion_rate, _context), do: "CR"
+
+  def dashboard_metric_label(metric, _context), do: "#{metric}"
 end
