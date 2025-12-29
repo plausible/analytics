@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, ReactNode } from 'react'
-import { AppNavigationLinkProps } from '../../navigation/use-app-navigate'
 import FlipMove from 'react-flip-move'
 
 import FadeIn from '../../fade-in'
@@ -92,8 +91,6 @@ type ListReportProps = {
   keyLabel: string
   metrics: Metric[]
   colMinWidth?: number
-  /** Navigation props to be passed to "More" link, if any. */
-  detailsLinkProps?: AppNavigationLinkProps
   /** Function with additional action to be taken when a list entry is clicked. */
   onClick?: () => void
   /** Color of the comparison bars in light-mode. */
@@ -114,7 +111,6 @@ export default function ListReport<
   metrics,
   colMinWidth = COL_MIN_WIDTH,
   afterFetchData,
-  detailsLinkProps,
   onClick,
   color,
   getFilterInfo,
@@ -146,7 +142,7 @@ export default function ListReport<
       setState({ loading: false, list: response.results, meta: response.meta })
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyLabel, query, detailsLinkProps])
+  }, [keyLabel, query])
 
   const onVisible = () => {
     setVisible(true)

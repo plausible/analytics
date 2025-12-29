@@ -6,7 +6,6 @@ import * as url from '../../util/url'
 import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from '../../util/filters'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
-import { customPropsRoute } from '../../router'
 
 export default function Properties({ propKey, afterFetchData }) {
   const { query } = useQueryContext()
@@ -47,11 +46,6 @@ export default function Properties({ propKey, afterFetchData }) {
         getFilterInfo={getFilterInfo}
         keyLabel={propKey}
         metrics={chooseMetrics()}
-        detailsLinkProps={{
-          path: customPropsRoute.path,
-          params: { propKey },
-          search: (search) => search
-        }}
         color="bg-red-50 group-hover/row:bg-red-100"
         colMinWidth={90}
       />

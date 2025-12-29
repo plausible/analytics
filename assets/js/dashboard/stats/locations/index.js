@@ -55,10 +55,6 @@ function Countries({ query, site, onClick, afterFetchData }) {
       onClick={onClick}
       keyLabel="Country"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: countriesRoute.path,
-        search: (search) => search
-      }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
     />
@@ -99,7 +95,6 @@ function Regions({ query, site, onClick, afterFetchData }) {
       onClick={onClick}
       keyLabel="Region"
       metrics={chooseMetrics()}
-      detailsLinkProps={{ path: regionsRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
     />
@@ -139,7 +134,6 @@ function Cities({ query, site, afterFetchData }) {
       getFilterInfo={getFilterInfo}
       keyLabel="City"
       metrics={chooseMetrics()}
-      detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-orange-50 group-hover/row:bg-orange-100"
     />
