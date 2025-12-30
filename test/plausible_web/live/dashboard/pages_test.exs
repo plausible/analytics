@@ -23,17 +23,12 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
 
       assert report_list = get_liveview(conn, site) |> get_report_list(@top_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Visitors"
-
-      assert get_in_report_list(report_list, item_name: 0) =~ "/three"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "3"
-
-      assert get_in_report_list(report_list, item_name: 1) =~ "/two"
-      assert get_in_report_list(report_list, item: 1, metric: 0) =~ "2"
-
-      assert get_in_report_list(report_list, item_name: 2) =~ "/one"
-      assert get_in_report_list(report_list, item: 2, metric: 0) =~ "1"
+      assert report_list_as_table(report_list, 4, 2) == [
+               ["Page", "Visitors"],
+               ["/three", "3"],
+               ["/two", "2"],
+               ["/one", "1"]
+             ]
     end
 
     test "renders current visitors", %{conn: conn, site: site} do
@@ -47,14 +42,11 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                get_liveview(conn, site, "period=realtime")
                |> get_report_list(@top_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Current visitors"
-
-      assert get_in_report_list(report_list, item_name: 0) =~ "/two"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "2"
-
-      assert get_in_report_list(report_list, item_name: 1) =~ "/one"
-      assert get_in_report_list(report_list, item: 1, metric: 0) =~ "1"
+      assert report_list_as_table(report_list, 3, 2) == [
+               ["Page", "Current visitors"],
+               ["/two", "2"],
+               ["/one", "1"]
+             ]
     end
 
     test "renders conversions with conversion rate", %{conn: conn, site: site} do
@@ -70,15 +62,12 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                get_liveview(conn, site, "period=day&f=is,goal,Signup")
                |> get_report_list(@top_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Conversions"
-      assert get_in_report_list(report_list, metric_label: 1) =~ "CR"
+      assert report_list_as_table(report_list, 2, 3) == [
+               ["Page", "Conversions", "CR"],
+               ["/two", "1", "33.33%"]
+             ]
 
-      assert get_in_report_list(report_list, item_name: 0) =~ "/two"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "1"
-      assert get_in_report_list(report_list, item: 0, metric: 1) =~ "33.33%"
-
-      refute get_in_report_list(report_list, item_name: 1)
+      refute get_in_report_list(report_list, 2, 0)
     end
   end
 
@@ -98,17 +87,12 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                |> change_tab("entry-pages")
                |> get_report_list(@entry_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Entry page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Unique entrances"
-
-      assert get_in_report_list(report_list, item_name: 0) =~ "/three"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "3"
-
-      assert get_in_report_list(report_list, item_name: 1) =~ "/two"
-      assert get_in_report_list(report_list, item: 1, metric: 0) =~ "2"
-
-      assert get_in_report_list(report_list, item_name: 2) =~ "/one"
-      assert get_in_report_list(report_list, item: 2, metric: 0) =~ "1"
+      assert report_list_as_table(report_list, 4, 2) == [
+               ["Entry page", "Unique entrances"],
+               ["/three", "3"],
+               ["/two", "2"],
+               ["/one", "1"]
+             ]
     end
 
     test "renders current visitors", %{conn: conn, site: site} do
@@ -123,14 +107,11 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                |> change_tab("entry-pages")
                |> get_report_list(@entry_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Entry page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Current visitors"
-
-      assert get_in_report_list(report_list, item_name: 0) =~ "/two"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "2"
-
-      assert get_in_report_list(report_list, item_name: 1) =~ "/one"
-      assert get_in_report_list(report_list, item: 1, metric: 0) =~ "1"
+      assert report_list_as_table(report_list, 3, 2) == [
+               ["Page", "Current visitors"],
+               ["/two", "2"],
+               ["/one", "1"]
+             ]
     end
 
     test "renders conversions with conversion rate", %{conn: conn, site: site} do
@@ -148,15 +129,12 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                |> change_tab("entry-pages")
                |> get_report_list(@entry_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Entry page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Conversions"
-      assert get_in_report_list(report_list, metric_label: 1) =~ "CR"
+      assert report_list_as_table(report_list, 2, 3) == [
+               ["Entry page", "Conversions", "CR"],
+               ["/two", "1", "33.33%"]
+             ]
 
-      assert get_in_report_list(report_list, item_name: 0) =~ "/two"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "1"
-      assert get_in_report_list(report_list, item: 0, metric: 1) =~ "33.33%"
-
-      refute get_in_report_list(report_list, item_name: 1)
+      refute get_in_report_list(report_list, 2, 0)
     end
   end
 
@@ -176,17 +154,12 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                |> change_tab("exit-pages")
                |> get_report_list(@exit_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Exit page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Unique exits"
-
-      assert get_in_report_list(report_list, item_name: 0) =~ "/three"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "3"
-
-      assert get_in_report_list(report_list, item_name: 1) =~ "/two"
-      assert get_in_report_list(report_list, item: 1, metric: 0) =~ "2"
-
-      assert get_in_report_list(report_list, item_name: 2) =~ "/one"
-      assert get_in_report_list(report_list, item: 2, metric: 0) =~ "1"
+      assert report_list_as_table(report_list, 4, 2) == [
+               ["Exit page", "Unique exits"],
+               ["/three", "3"],
+               ["/two", "2"],
+               ["/one", "1"]
+             ]
     end
 
     test "renders current visitors", %{conn: conn, site: site} do
@@ -201,14 +174,11 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                |> change_tab("exit-pages")
                |> get_report_list(@exit_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Exit page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Current visitors"
-
-      assert get_in_report_list(report_list, item_name: 0) =~ "/two"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "2"
-
-      assert get_in_report_list(report_list, item_name: 1) =~ "/one"
-      assert get_in_report_list(report_list, item: 1, metric: 0) =~ "1"
+      assert report_list_as_table(report_list, 3, 2) == [
+               ["Exit page", "Current visitors"],
+               ["/two", "2"],
+               ["/one", "1"]
+             ]
     end
 
     test "renders conversions with conversion rate", %{conn: conn, site: site} do
@@ -226,15 +196,12 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                |> change_tab("exit-pages")
                |> get_report_list(@exit_pages_report_list)
 
-      assert get_in_report_list(report_list, :key_label) =~ "Exit page"
-      assert get_in_report_list(report_list, metric_label: 0) =~ "Conversions"
-      assert get_in_report_list(report_list, metric_label: 1) =~ "CR"
+      assert report_list_as_table(report_list, 2, 3) == [
+               ["Exit page", "Conversions", "CR"],
+               ["/two", "1", "33.33%"]
+             ]
 
-      assert get_in_report_list(report_list, item_name: 0) =~ "/two"
-      assert get_in_report_list(report_list, item: 0, metric: 0) =~ "1"
-      assert get_in_report_list(report_list, item: 0, metric: 1) =~ "33.33%"
-
-      refute get_in_report_list(report_list, item_name: 1)
+      refute get_in_report_list(report_list, 2, 0)
     end
   end
 

@@ -128,12 +128,12 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   defp report_header(assigns) do
     ~H"""
     <div class="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
-      <span data-test-id="key-label" class="grow truncate">{@key_label}</span>
+      <span data-test-id="report-list-0-0" class="grow truncate">{@key_label}</span>
       <div
         :for={{metric_label, index} <- Enum.with_index(@metric_labels)}
         class="text-right"
         style={"min-width: #{@col_min_width}px;"}
-        data-test-id={"metric-#{index}-label"}
+        data-test-id={"report-list-0-#{1 + index}"}
       >
         {metric_label}
       </div>
@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         class="group flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm transition-colors duration-150"
         style={"margin-top: #{@row_gap_height}px;"}
       >
-        <div class="grow w-full overflow-hidden" data-test-id={"item-#{@item_index}-name"}>
+        <div class="grow w-full overflow-hidden" data-test-id={"report-list-#{1 + @item_index}-0"}>
           <Base.bar
             width={@metrics[:visitors]}
             max_width={@bar_max_value}
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         >
           <span
             class="font-medium text-sm dark:text-gray-200 text-right"
-            data-test-id={"item-#{@item_index}-metric-#{metric_index}"}
+            data-test-id={"report-list-#{1 + @item_index}-#{1 + metric_index}"}
           >
             <Metric.value name={metric_key} value={metric_value} />
           </span>
