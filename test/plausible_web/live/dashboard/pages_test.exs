@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
                |> get_report_list(@entry_pages_report_list)
 
       assert report_list_as_table(report_list, 3, 2) == [
-               ["Page", "Current visitors"],
+               ["Entry page", "Current visitors"],
                ["/two", "2"],
                ["/one", "1"]
              ]
