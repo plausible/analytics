@@ -127,11 +127,8 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     end)
   end
 
-  defp choose_metrics(%ParsedQueryParams{filters: filters}) do
-    if Plausible.Stats.Filters.filtering_on_dimension?(filters, "event:goal",
-         max_depth: 0,
-         behavioral_filters: :ignore
-       ) do
+  defp choose_metrics(%ParsedQueryParams{} = params) do
+    if ParsedQueryParams.conversion_goal_filter?(params) do
       [:visitors, :conversion_rate]
     else
       [:visitors]
