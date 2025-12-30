@@ -3,6 +3,11 @@ defmodule Plausible.DashboardTestUtils do
 
   import Plausible.Test.Support.HTML
 
+  @doc """
+  Takes a LazyHTML rendered ReportList component argument with the number of
+  rows and columns it's supposed to have, and returns a table-like, 2D list
+  with all its data (including headers as the first row).
+  """
   def report_list_as_table(%LazyHTML{} = report_list, rows, columns) do
     for row_index <- 0..(rows - 1) do
       for column_index <- 0..(columns - 1) do
