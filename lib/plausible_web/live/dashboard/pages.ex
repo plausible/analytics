@@ -11,6 +11,8 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   alias Plausible.Stats
   alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryResult}
 
+  import Plausible.Stats.Dashboard.Utils
+
   @tabs [
     %{
       tab_key: "pages",
@@ -51,8 +53,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, :external_link_fn, &external_link/1)
-
     ~H"""
     <div>
       <Tile.tile
@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
           query_result={@query_result}
-          external_link_fn={@external_link_fn}
+          external_link_fn={page_external_link_fn_for(@site)}
         />
       </Tile.tile>
     </div>
@@ -98,10 +98,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     else
       {:noreply, socket}
     end
-  end
-
-  defp external_link(_item) do
-    "https://example.com"
   end
 
   defp load_stats(socket) do
