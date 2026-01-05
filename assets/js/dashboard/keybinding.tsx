@@ -145,7 +145,7 @@ export function KeybindHint({
   return (
     <kbd
       className={classNames(
-        'rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 px-1.5 font-medium text-xs text-gray-400',
+        'hidden md:block rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 px-1.5 font-medium text-xs text-gray-400',
         className
       )}
     >

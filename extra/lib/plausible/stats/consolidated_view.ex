@@ -86,24 +86,15 @@ defmodule Plausible.Stats.ConsolidatedView do
   end
 
   defp query_24h_intervals(view, now) do
+    from_datetime = now |> NaiveDateTime.shift(hour: -24) |> DateTime.from_naive!("Etc/UTC")
+    to_datetime = now |> DateTime.from_naive!("Etc/UTC")
+
     graph_query =
-      Stats.Query.parse_and_build!(
-        view,
-        :internal,
-        %{
-          "site_id" => view.domain,
-          "metrics" => ["visitors"],
-          "date_range" => [
-            NaiveDateTime.shift(now, hour: -24)
-            |> DateTime.from_naive!("Etc/UTC")
-            |> DateTime.to_iso8601(),
-            now
-            |> DateTime.from_naive!("Etc/UTC")
-            |> DateTime.to_iso8601()
-          ],
-          "dimensions" => ["time:hour"],
-          "order_by" => [["time:hour", "asc"]]
-        }
+      QueryBuilder.build!(view,
+        metrics: [:visitors],
+        input_date_range: {:datetime_range, from_datetime, to_datetime},
+        dimensions: ["time:hour"],
+        order_by: [{"time:hour", :asc}]
       )
 
     %Stats.QueryResult{results: results} = Stats.query(view, graph_query)

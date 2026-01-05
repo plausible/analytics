@@ -1,24 +1,26 @@
 import React, { ReactNode, useCallback, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
+  canRemoveFilter,
+  getSearchToRemoveSegmentFilter,
   canExpandSegment,
-  isSegmentFilter,
   SavedSegment,
   SEGMENT_TYPE_LABELS,
   SegmentData,
   SegmentType
 } from '../filtering/segments'
-import { useQueryContext } from '../query-context'
-import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { cleanLabels } from '../util/filters'
+import {
+  AppNavigationLink,
+  useAppNavigate
+} from '../navigation/use-app-navigate'
 import { plainFilterText, styledFilterText } from '../util/filter-text'
 import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-import { MutationStatus } from '@tanstack/react-query'
-import { ApiError } from '../api'
+import { MutationStatus, useQuery } from '@tanstack/react-query'
+import { ApiError, get } from '../api'
 import { ErrorPanel } from '../components/error-panel'
 import { useSegmentsContext } from '../filtering/segments-context'
 import { Role, UserContextValue, useUserContext } from '../user-context'
@@ -42,7 +44,8 @@ const primaryNeutralButtonClassName = 'button !px-3'
 
 const primaryNegativeButtonClassName = classNames(
   'button !px-3.5',
-  'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
+  'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap',
+  'disabled:!bg-red-400 disabled:cursor-not-allowed'
 )
 
 const secondaryButtonClassName = classNames(
@@ -105,7 +108,7 @@ export const CreateSegmentModal = ({
 
   return (
     <SegmentActionModal onClose={onClose}>
-      <FormTitle>Create segment</FormTitle>
+      <FormTitle className="mb-8">Create segment</FormTitle>
       <SegmentNameInput
         value={name}
         onChange={setName}
@@ -143,6 +146,12 @@ export const CreateSegmentModal = ({
   )
 }
 
+function getLinksDeleteNotice(links: string[]) {
+  return links.length === 1
+    ? 'This segment is used in a shared link. To delete it, you also need to delete the shared link.'
+    : `This segment is used in ${links.length} shared links. To delete it, you also need to delete the shared links.`
+}
+
 export const DeleteSegmentModal = ({
   onClose,
   onSave,
@@ -155,22 +164,77 @@ export const DeleteSegmentModal = ({
   onSave: (input: Pick<SavedSegment, 'id'>) => void
   segment: SavedSegment & { segment_data?: SegmentData }
 } & ApiRequestProps) => {
+  const site = useSiteContext()
+  const [confirmed, setConfirmed] = useState(false)
+
+  const linksQuery = useQuery({
+    queryKey: [segment.id],
+    queryFn: async () => {
+      const response: string[] = await get(
+        `/api/${encodeURIComponent(site.domain)}/segments/${segment.id}/shared-links`
+      )
+      return response
+    }
+  })
+
+  const deleteDisabled =
+    status === 'pending' ||
+    linksQuery.status !== 'success' ||
+    (!!linksQuery.data?.length && !confirmed)
+
   return (
     <SegmentActionModal onClose={onClose}>
-      <FormTitle>
+      <FormTitle className="mb-4">
         Delete {SEGMENT_TYPE_LABELS[segment.type].toLowerCase()}
         <span className="break-all">{` "${segment.name}"?`}</span>
       </FormTitle>
-      {!!segment.segment_data && (
-        <FiltersInSegment segment_data={segment.segment_data} />
+      {linksQuery.status === 'pending' && (
+        <div className="loading sm">
+          <div />
+        </div>
       )}
-
+      {linksQuery.status === 'success' && !!linksQuery.data?.length && (
+        <ErrorPanel
+          errorMessage={
+            <span className="break-normal">
+              {getLinksDeleteNotice(linksQuery.data)}
+            </span>
+          }
+        />
+      )}
+      {linksQuery.status === 'error' && (
+        <ErrorPanel
+          errorMessage="Error loading related shared links"
+          onRetry={linksQuery.refetch}
+        />
+      )}
+      {!!segment.segment_data && (
+        <div className="mt-4">
+          <FiltersInSegment segment_data={segment.segment_data} />
+        </div>
+      )}
+      {!!linksQuery.data?.length && (
+        <>
+          <div className="mt-4">
+            <RelatedSharedLinks sharedLinks={linksQuery.data} />
+          </div>
+          <div className="mt-4">
+            <Checkbox
+              id="confirm"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.currentTarget.checked)}
+            >
+              Yes, delete the associated shared links
+            </Checkbox>
+          </div>
+        </>
+      )}
       <ButtonsRow>
         <button
           className={primaryNegativeButtonClassName}
-          disabled={status === 'pending'}
+          disabled={deleteDisabled}
           onClick={
-            status === 'pending'
+            deleteDisabled
               ? () => {}
               : () => {
                   onSave({ id: segment.id })
@@ -198,8 +262,39 @@ export const DeleteSegmentModal = ({
   )
 }
 
-const FormTitle = ({ children }: { children?: ReactNode }) => (
-  <h1 className="text-lg font-medium text-gray-900 dark:text-gray-100 leading-7 mb-8">
+const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
+  return (
+    <>
+      <SecondaryTitle>Shared links</SecondaryTitle>
+      <div className="mt-2">
+        <FilterPillsList
+          className="flex-wrap"
+          direction="horizontal"
+          pills={sharedLinks.map((name) => ({
+            className: 'dark:!shadow-gray-950/60',
+            plainText: name,
+            children: name,
+            interactive: false
+          }))}
+        />
+      </div>
+    </>
+  )
+}
+
+const FormTitle = ({
+  className,
+  children
+}: {
+  className?: string
+  children?: ReactNode
+}) => (
+  <h1
+    className={classNames(
+      'text-lg font-medium text-gray-900 dark:text-gray-100 leading-7',
+      className
+    )}
+  >
     {children}
   </h1>
 )
@@ -412,7 +507,7 @@ export const UpdateSegmentModal = ({
 
   return (
     <SegmentActionModal onClose={onClose}>
-      <FormTitle>Update segment</FormTitle>
+      <FormTitle className="mb-8">Update segment</FormTitle>
       <SegmentNameInput
         value={name}
         onChange={setName}
@@ -453,7 +548,7 @@ export const UpdateSegmentModal = ({
 const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
   return (
     <>
-      <h2 className="font-bold dark:text-gray-100">Filters in segment</h2>
+      <SecondaryTitle>Filters in segment</SecondaryTitle>
       <div className="mt-2">
         <FilterPillsList
           className="flex-wrap"
@@ -467,6 +562,37 @@ const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
         />
       </div>
     </>
+  )
+}
+
+const SecondaryTitle = ({ children }: { children: ReactNode }) => (
+  <h2 className="font-bold dark:text-gray-100">{children}</h2>
+)
+
+/** Keep this component styled the same as checkboxes in PlausibleWeb.Live.Installation.Instructions */
+const Checkbox = ({
+  id,
+  checked,
+  onChange,
+  children
+}: React.DetailedHTMLProps<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  HTMLInputElement
+>) => {
+  return (
+    <label
+      className="text-sm block font-medium dark:text-gray-100 font-normal gap-x-2 flex flex-inline items-center justify-start"
+      htmlFor={id}
+    >
+      <input
+        className="block size-5 rounded-sm dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+      />
+      {children}
+    </label>
   )
 }
 
@@ -495,10 +621,9 @@ const hasSiteSegmentPermission = (user: UserContextValue) => {
 }
 
 export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
-  const site = useSiteContext()
   const user = useUserContext()
-  const { query } = useQueryContext()
-  const { segments } = useSegmentsContext()
+  const { segments, limitedToSegment } = useSegmentsContext()
+  const navigate = useAppNavigate()
 
   const segment = segments.find((s) => String(s.id) === String(id))
 
@@ -511,6 +636,11 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
   }
 
   const data = !error ? segment : null
+
+  const showClearButton = canRemoveFilter(
+    ['is', 'segment', [id]],
+    limitedToSegment
+  )
 
   return (
     <ModalWithRouting maxWidth="460px">
@@ -540,7 +670,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
             />
             <div className="mt-4">
               <ButtonsRow>
-                {canExpandSegment({ segment: data, site, user }) && (
+                {canExpandSegment({ segment: data, user }) && (
                   <AppNavigationLink
                     className={primaryNeutralButtonClassName}
                     path={rootRoute.path}
@@ -557,27 +687,19 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                   </AppNavigationLink>
                 )}
 
-                <AppNavigationLink
-                  className={removeFilterButtonClassname}
-                  path={rootRoute.path}
-                  search={(s) => {
-                    const nonSegmentFilters = query.filters.filter(
-                      (f) => !isSegmentFilter(f)
-                    )
-                    return {
-                      ...s,
-                      filters: nonSegmentFilters,
-                      labels: cleanLabels(
-                        nonSegmentFilters,
-                        query.labels,
-                        'segment',
-                        {}
-                      )
+                {showClearButton && (
+                  <button
+                    className={removeFilterButtonClassname}
+                    onClick={() =>
+                      navigate({
+                        path: rootRoute.path,
+                        search: getSearchToRemoveSegmentFilter()
+                      })
                     }
-                  }}
-                >
-                  Remove filter
-                </AppNavigationLink>
+                  >
+                    Remove filter
+                  </button>
+                )}
               </ButtonsRow>
             </div>
           </>

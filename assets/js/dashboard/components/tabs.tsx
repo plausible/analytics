@@ -1,6 +1,6 @@
 import { Popover, Transition } from '@headlessui/react'
 import classNames from 'classnames'
-import React, { ReactNode, useRef } from 'react'
+import React, { ReactNode, useRef, useEffect } from 'react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { popover, BlurMenuButtonOnEscape } from './popover'
 import { useSearchableItems } from '../hooks/use-searchable-items'
@@ -16,7 +16,7 @@ export const TabWrapper = ({
 }) => (
   <div
     className={classNames(
-      'flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline',
+      'flex items-baseline gap-x-3.5 text-xs font-medium text-gray-500 dark:text-gray-400',
       className
     )}
   >
@@ -32,11 +32,10 @@ const TabButtonText = ({
   active: boolean
 }) => (
   <span
-    className={classNames('truncate text-left transition-colors duration-150', {
-      'hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer':
+    className={classNames('truncate text-left text-xs uppercase', {
+      'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200 font-semibold cursor-pointer':
         !active,
-      'text-indigo-600 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-600 dark:decoration-indigo-500':
-        active
+      'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]': active
     })}
   >
     {children}
@@ -54,9 +53,18 @@ export const TabButton = ({
   onClick: () => void
   active: boolean
 }) => (
-  <button className={classNames('rounded-sm', className)} onClick={onClick}>
-    <TabButtonText active={active}>{children}</TabButtonText>
-  </button>
+  <div
+    className={classNames('-mb-px pb-4', {
+      'border-b-2 border-gray-900 dark:border-gray-100': active
+    })}
+  >
+    <button
+      className={classNames('group/tab flex rounded-sm', className)}
+      onClick={onClick}
+    >
+      <TabButtonText active={active}>{children}</TabButtonText>
+    </button>
+  </div>
 )
 
 export const DropdownTabButton = ({
@@ -78,25 +86,34 @@ export const DropdownTabButton = ({
       {({ close: closeDropdown }) => (
         <>
           <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
-          <Popover.Button
-            className="inline-flex justify-between rounded-xs"
-            ref={dropdownButtonRef}
+          <div
+            className={classNames('-mb-px pb-4', {
+              'border-b-2 border-gray-900 dark:border-gray-100': active
+            })}
           >
-            <TabButtonText active={active}>{children}</TabButtonText>
-
-            <div
-              className="flex self-stretch -mr-1 ml-1 items-center"
-              aria-hidden="true"
+            <Popover.Button
+              className="group/tab inline-flex justify-between rounded-xs"
+              ref={dropdownButtonRef}
             >
-              <ChevronDownIcon className="h-4 w-4" />
-            </div>
-          </Popover.Button>
+              <TabButtonText active={active}>{children}</TabButtonText>
+
+              <div className="ml-0.5 -mr-1" aria-hidden="true">
+                <ChevronDownIcon
+                  className={classNames('size-4', {
+                    'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200':
+                      !active,
+                    'text-gray-900 dark:text-gray-100': active
+                  })}
+                />
+              </div>
+            </Popover.Button>
+          </div>
 
           <Transition
             as="div"
             {...popover.transition.props}
             className={classNames(
-              popover.transition.classNames.fullwidth,
+              popover.transition.classNames.left,
               'mt-2',
               transitionClassName
             )}
@@ -115,15 +132,9 @@ type ItemsProps = {
   closeDropdown: () => void
   options: Array<{ selected: boolean; onClick: () => void; label: string }>
   searchable?: boolean
-  collectionTitle?: string
 }
 
-const Items = ({
-  options,
-  searchable,
-  collectionTitle,
-  closeDropdown
-}: ItemsProps) => {
+const Items = ({ options, searchable, closeDropdown }: ItemsProps) => {
   const {
     filteredData,
     showableData,
@@ -136,7 +147,7 @@ const Items = ({
     countOfMoreToShow
   } = useSearchableItems({
     data: options,
-    maxItemsInitially: searchable ? 5 : options.length,
+    maxItemsInitially: searchable ? 10 : options.length,
     itemMatchesSearchValue: (option, trimmedSearchString) =>
       option.label.toLowerCase().includes(trimmedSearchString.toLowerCase())
   })
@@ -148,24 +159,29 @@ const Items = ({
     popover.items.classNames.hoverLink
   )
 
+  useEffect(() => {
+    if (searchable && showSearch && searchRef.current) {
+      const timeoutId = setTimeout(() => {
+        searchRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [searchable, showSearch, searchRef])
+
   return (
     <>
       {searchable && showSearch && (
-        <div className="flex items-center py-2 px-4">
-          {collectionTitle && (
-            <div className="text-sm font-bold uppercase text-indigo-500 dark:text-indigo-400 mr-4">
-              {collectionTitle}
-            </div>
-          )}
+        <div className="flex items-center p-1">
           <SearchInput
             searchRef={searchRef}
-            placeholderUnfocused="Press / to search"
-            className="ml-auto w-full py-1"
+            className="!max-w-none"
             onSearch={handleSearchInput}
           />
         </div>
       )}
-      <div className={'max-h-[210px] overflow-y-scroll'}>
+      <div
+        className={'max-h-[224px] overflow-y-auto flex flex-col gap-y-0.5 p-1'}
+      >
         {showableData.map(({ selected, label, onClick }, index) => {
           return (
             <button
@@ -177,7 +193,7 @@ const Items = ({
               data-selected={selected}
               className={itemClassName}
             >
-              {label}
+              <span className="line-clamp-1">{label}</span>
             </button>
           )
         })}
@@ -186,7 +202,7 @@ const Items = ({
             onClick={handleShowAll}
             className={classNames(
               itemClassName,
-              'w-full text-left font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
+              'w-full text-left text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
             )}
           >
             {`Show ${countOfMoreToShow} more`}
@@ -197,11 +213,14 @@ const Items = ({
           <button
             className={classNames(
               itemClassName,
-              'w-full text-left font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
+              'w-full text-left !justify-start'
             )}
             onClick={handleClearSearch}
           >
-            No items found. Clear search to show all.
+            No items found.{' '}
+            <span className="ml-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-500">
+              Click to clear search.
+            </span>
           </button>
         )}
       </div>

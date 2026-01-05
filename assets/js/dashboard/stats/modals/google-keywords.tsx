@@ -91,7 +91,7 @@ function GoogleKeywordsModal() {
   return (
     <Modal>
       <BreakdownTable
-        title="Google Search Terms"
+        title="Google search terms"
         displayError={true}
         onSearch={setSearch}
         {...apiState}

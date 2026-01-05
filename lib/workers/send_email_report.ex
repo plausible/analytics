@@ -3,7 +3,7 @@ defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
 
-  alias Plausible.Stats.{Query, QueryResult}
+  alias Plausible.Stats.{QueryResult, QueryBuilder, ParsedQueryParams, QueryInclude}
 
   import Ecto.Query, only: [from: 2]
 
@@ -70,15 +70,16 @@ defmodule Plausible.Workers.SendEmailReport do
   defp report_name(@monthly, first), do: Calendar.strftime(first, "%B")
 
   defp stats(site, date_range) do
-    date_range = [
-      Date.to_iso8601(date_range.first),
-      Date.to_iso8601(date_range.last)
-    ]
+    shared_params = %ParsedQueryParams{
+      metrics: [:visitors],
+      input_date_range: {:date_range, date_range.first, date_range.last},
+      pagination: %{limit: 5, offset: 0}
+    }
 
-    stats = stats_aggregates(site, date_range)
-    pages = pages(site, date_range)
-    sources = sources(site, date_range)
-    goals = goals(site, date_range)
+    stats = stats_aggregates(site, shared_params)
+    pages = pages(site, shared_params)
+    sources = sources(site, shared_params)
+    goals = goals(site, shared_params)
 
     stats
     |> Map.put(:pages, pages)
@@ -86,18 +87,14 @@ defmodule Plausible.Workers.SendEmailReport do
     |> Map.put(:goals, goals)
   end
 
-  defp stats_aggregates(site, date_range) do
+  defp stats_aggregates(site, %ParsedQueryParams{} = shared_params) do
     query =
-      Query.parse_and_build!(
+      QueryBuilder.build!(
         site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["pageviews", "visitors", "bounce_rate"],
-          "date_range" => date_range,
-          "include" => %{"compare" => "previous_period"},
-          "pagination" => %{"limit" => 5}
-        }
+        struct!(shared_params,
+          metrics: [:pageviews, :visitors, :bounce_rate],
+          include: %QueryInclude{compare: :previous_period}
+        )
       )
 
     %QueryResult{
@@ -118,19 +115,8 @@ defmodule Plausible.Workers.SendEmailReport do
     }
   end
 
-  defp pages(site, date_range) do
-    query =
-      Query.parse_and_build!(
-        site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "dimensions" => ["event:page"],
-          "date_range" => date_range,
-          "pagination" => %{"limit" => 5}
-        }
-      )
+  defp pages(site, %ParsedQueryParams{} = shared_params) do
+    query = QueryBuilder.build!(site, struct!(shared_params, dimensions: ["event:page"]))
 
     site
     |> Plausible.Stats.query(query)
@@ -143,19 +129,14 @@ defmodule Plausible.Workers.SendEmailReport do
     end)
   end
 
-  defp sources(site, date_range) do
+  defp sources(site, %ParsedQueryParams{} = shared_params) do
     query =
-      Query.parse_and_build!(
+      QueryBuilder.build!(
         site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "filters" => [["is_not", "visit:source", ["Direct / None"]]],
-          "dimensions" => ["visit:source"],
-          "date_range" => date_range,
-          "pagination" => %{"limit" => 5}
-        }
+        struct!(shared_params,
+          dimensions: ["visit:source"],
+          filters: [[:is_not, "visit:source", ["Direct / None"]]]
+        )
       )
 
     site
@@ -169,19 +150,8 @@ defmodule Plausible.Workers.SendEmailReport do
     end)
   end
 
-  defp goals(site, date_range) do
-    query =
-      Query.parse_and_build!(
-        site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "dimensions" => ["event:goal"],
-          "date_range" => date_range,
-          "pagination" => %{"limit" => 5}
-        }
-      )
+  defp goals(site, %ParsedQueryParams{} = shared_params) do
+    query = QueryBuilder.build!(site, struct!(shared_params, dimensions: ["event:goal"]))
 
     site
     |> Plausible.Stats.query(query)

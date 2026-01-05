@@ -1,7 +1,7 @@
 import { remapToApiFilters } from '../util/filters'
 import {
   formatSegmentIdAsLabelKey,
-  getSearchToApplySingleSegmentFilter,
+  getSearchToSetSegmentFilter,
   getSegmentNamePlaceholder,
   isSegmentIdLabelKey,
   parseApiSegmentData,
@@ -64,9 +64,57 @@ describe(`${parseApiSegmentData.name}`, () => {
   })
 })
 
-describe(`${getSearchToApplySingleSegmentFilter.name}`, () => {
-  test('generated search function applies single segment correctly', () => {
-    const searchFunction = getSearchToApplySingleSegmentFilter({
+describe(`${getSearchToSetSegmentFilter.name}`, () => {
+  test('generated search function omits other filters segment correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter(
+      {
+        name: 'APAC',
+        id: 500
+      },
+      { omitAllOtherFilters: true }
+    )
+    const existingSearch = {
+      date: '2025-02-10',
+      filters: [
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States' }
+    }
+    expect(searchFunction(existingSearch)).toEqual({
+      date: '2025-02-10',
+      filters: [['is', 'segment', [500]]],
+      labels: { 'segment-500': 'APAC' }
+    })
+  })
+
+  test('generated search function replaces existing segment filter correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter({
+      name: 'APAC',
+      id: 500
+    })
+    const existingSearch = {
+      date: '2025-02-10',
+      filters: [
+        ['is', 'segment', [100]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-100': 'Scandinavia' }
+    }
+    expect(searchFunction(existingSearch)).toEqual({
+      date: '2025-02-10',
+      filters: [
+        ['is', 'segment', [500]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-500': 'APAC' }
+    })
+  })
+
+  test('generated search function sets new segment filter correctly', () => {
+    const searchFunction = getSearchToSetSegmentFilter({
       name: 'APAC',
       id: 500
     })
@@ -80,8 +128,12 @@ describe(`${getSearchToApplySingleSegmentFilter.name}`, () => {
     }
     expect(searchFunction(existingSearch)).toEqual({
       date: '2025-02-10',
-      filters: [['is', 'segment', [500]]],
-      labels: { 'segment-500': 'APAC' }
+      filters: [
+        ['is', 'segment', [500]],
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States', 'segment-500': 'APAC' }
     })
   })
 })
@@ -187,7 +239,6 @@ describe(`${canExpandSegment.name}`, () => {
   it.each([[Role.admin], [Role.editor], [Role.owner]])(
     'allows expanding site segment if the user is logged in and in the role %p',
     (role) => {
-      const site = { siteSegmentsAvailable: true }
       const user: UserContextValue = {
         loggedIn: true,
         role,
@@ -197,8 +248,7 @@ describe(`${canExpandSegment.name}`, () => {
       expect(
         canExpandSegment({
           segment: { id: 1, owner_id: 1, type: SegmentType.site },
-          user,
-          site
+          user
         })
       ).toBe(true)
     }
@@ -213,40 +263,9 @@ describe(`${canExpandSegment.name}`, () => {
           role: Role.owner,
           id: 111,
           team: { identifier: null, hasConsolidatedView: false }
-        },
-        site: { siteSegmentsAvailable: true }
+        }
       })
     ).toBe(true)
-  })
-
-  it('forbids expanding site segment if site segments are not available', () => {
-    expect(
-      canExpandSegment({
-        segment: { id: 1, owner_id: 1, type: SegmentType.site },
-        user: {
-          loggedIn: true,
-          role: Role.owner,
-          id: 1,
-          team: { identifier: null, hasConsolidatedView: false }
-        },
-        site: { siteSegmentsAvailable: false }
-      })
-    ).toBe(false)
-  })
-
-  it('forbids public role from expanding site segments', () => {
-    expect(
-      canExpandSegment({
-        segment: { id: 1, owner_id: null, type: SegmentType.site },
-        user: {
-          loggedIn: false,
-          role: Role.public,
-          id: null,
-          team: { identifier: null, hasConsolidatedView: false }
-        },
-        site: { siteSegmentsAvailable: false }
-      })
-    ).toBe(false)
   })
 
   it.each([
@@ -267,14 +286,13 @@ describe(`${canExpandSegment.name}`, () => {
       expect(
         canExpandSegment({
           segment: { id: 1, owner_id: 1, type: SegmentType.personal },
-          user,
-          site: { siteSegmentsAvailable: false }
+          user
         })
       ).toBe(true)
     }
   )
 
-  it('forbids expanding personal segment of other users', () => {
+  it('forbids even site owners from expanding the personal segment of other users', () => {
     expect(
       canExpandSegment({
         segment: { id: 2, owner_id: 222, type: SegmentType.personal },
@@ -283,24 +301,25 @@ describe(`${canExpandSegment.name}`, () => {
           role: Role.owner,
           id: 111,
           team: { identifier: null, hasConsolidatedView: false }
-        },
-        site: { siteSegmentsAvailable: false }
+        }
       })
     ).toBe(false)
   })
 
-  it('forbids public role from expanding personal segments', () => {
-    expect(
-      canExpandSegment({
-        segment: { id: 1, owner_id: 1, type: SegmentType.personal },
-        user: {
-          loggedIn: false,
-          role: Role.public,
-          id: null,
-          team: { identifier: null, hasConsolidatedView: false }
-        },
-        site: { siteSegmentsAvailable: false }
-      })
-    ).toBe(false)
-  })
+  it.each([[SegmentType.personal, SegmentType.site]])(
+    'forbids public role from expanding %s segments',
+    (segmentType) => {
+      expect(
+        canExpandSegment({
+          segment: { id: 1, owner_id: 1, type: segmentType },
+          user: {
+            loggedIn: false,
+            role: Role.public,
+            id: null,
+            team: { identifier: null, hasConsolidatedView: false }
+          }
+        })
+      ).toBe(false)
+    }
+  )
 })

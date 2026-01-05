@@ -41,6 +41,8 @@ defmodule PlausibleWeb.PluginsAPICase do
       Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
+    Plausible.Test.Support.Sandbox.allow_salts_process()
+
     conn = Phoenix.ConnTest.build_conn()
 
     site = Plausible.Teams.Test.new_site()

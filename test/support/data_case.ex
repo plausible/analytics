@@ -37,6 +37,8 @@ defmodule Plausible.DataCase do
       Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
+    Plausible.Test.Support.Sandbox.allow_salts_process()
+
     :ok
   end
 end

@@ -12,14 +12,14 @@ export const SearchInput = ({
   searchRef,
   onSearch,
   className,
-  placeholderFocused = 'Search',
-  placeholderUnfocused = 'Press / to search'
+  placeholderFocusedOrMobile = 'Search',
+  placeholderUnfocusedOnlyDesktop = 'Press / to search'
 }: {
   searchRef: RefObject<HTMLInputElement>
   onSearch: (value: string) => void
   className?: string
-  placeholderFocused?: string
-  placeholderUnfocused?: string
+  placeholderFocusedOrMobile?: string
+  placeholderUnfocusedOnlyDesktop?: string
 }) => {
   const [isFocused, setIsFocused] = useState(false)
 
@@ -59,18 +59,23 @@ export const SearchInput = ({
         shouldIgnoreWhen={[isModifierPressed, () => isFocused]}
         targetRef="document"
       />
-      <input
-        onBlur={() => setIsFocused(false)}
-        onFocus={() => setIsFocused(true)}
-        ref={searchRef}
-        type="text"
-        placeholder={isFocused ? placeholderFocused : placeholderUnfocused}
-        className={classNames(
-          'text-sm dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 max-w-64 w-full dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500',
-          className
-        )}
-        onChange={debouncedOnSearchInputChange}
-      />
+      <div className={classNames('relative max-w-64 w-full', className)}>
+        <input
+          onBlur={() => setIsFocused(false)}
+          onFocus={() => setIsFocused(true)}
+          ref={searchRef}
+          type="text"
+          placeholder=" "
+          className="peer w-full text-sm dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+          onChange={debouncedOnSearchInputChange}
+        />
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-400 peer-[:not(:placeholder-shown)]:hidden md:peer-[:not(:focus)]:hidden">
+          {placeholderFocusedOrMobile}
+        </span>
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-400 peer-[:not(:placeholder-shown)]:hidden hidden md:peer-[:not(:focus)]:block peer-focus:hidden">
+          {placeholderUnfocusedOnlyDesktop}
+        </span>
+      </div>
     </>
   )
 }

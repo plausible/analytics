@@ -2,7 +2,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
 import * as api from '../../api'
-import { replaceFilterByPrefix, cleanLabels } from '../../util/filters'
+import {
+  replaceFilterByPrefix,
+  cleanLabels,
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { numberShortFormatter } from '../../util/number-formatter'
 import * as topojson from 'topojson-client'
@@ -12,8 +17,6 @@ import { useQueryContext } from '../../query-context'
 import worldJson from 'visionscarto-world-atlas/world/110m.json'
 import { UIMode, useTheme } from '../../theme-context'
 import { apiPath } from '../../util/url'
-import MoreLink from '../more-link'
-import { countriesRoute } from '../../router'
 import { MIN_HEIGHT } from '../reports/list'
 import { MapTooltip } from './map-tooltip'
 import { GeolocationNotice } from './geolocation-notice'
@@ -47,10 +50,15 @@ const WorldMap = ({
     hoveredCountryAlpha3Code: string | null
   }>({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
 
-  const labels =
-    query.period === 'realtime'
-      ? { singular: 'Current visitor', plural: 'Current visitors' }
-      : { singular: 'Visitor', plural: 'Visitors' }
+  const labels = (() => {
+    if (hasConversionGoalFilter(query)) {
+      return { singular: 'Conversion', plural: 'Conversions' }
+    }
+    if (isRealTimeDashboard(query)) {
+      return { singular: 'Current visitor', plural: 'Current visitors' }
+    }
+    return { singular: 'Visitor', plural: 'Visitors' }
+  })()
 
   const { data, refetch, isFetching, isError } = useQuery({
     queryKey: ['countries', 'map', query],
@@ -78,7 +86,7 @@ const WorldMap = ({
     if (data) {
       afterFetchData(data)
     }
-  }, [afterFetchData, data])
+  }, [afterFetchData, data, isFetching])
 
   const { maxValue, dataByCountryCode } = useMemo(() => {
     const dataByCountryCode: Map<string, CountryData> = new Map()
@@ -106,7 +114,9 @@ const WorldMap = ({
           [country.code]: country.name
         })
         onCountrySelect()
-        navigate({ search: (search) => ({ ...search, filters, labels }) })
+        navigate({
+          search: (searchRecord) => ({ ...searchRecord, filters, labels })
+        })
       }
     },
     [navigate, query, dataByCountryCode, onCountrySelect]
@@ -148,10 +158,12 @@ const WorldMap = ({
     : undefined
 
   return (
-    <div className="flex flex-col relative" style={{ minHeight: MIN_HEIGHT }}>
-      <div className="mt-4" />
+    <div
+      className="flex flex-col justify-center items-center relative"
+      style={{ minHeight: MIN_HEIGHT }}
+    >
       <div
-        className="relative mx-auto w-full"
+        className="relative mt-4 mx-auto w-full"
         style={{ height: height, maxWidth: width }}
       >
         <svg
@@ -179,23 +191,14 @@ const WorldMap = ({
             </div>
           ))}
       </div>
-      <MoreLink
-        list={data?.results ?? []}
-        linkProps={{
-          path: countriesRoute.path,
-          search: (search: Record<string, unknown>) => search
-        }}
-        className="mt-3"
-        onClick={undefined}
-      />
       {site.isDbip && <GeolocationNotice />}
     </div>
   )
 }
 
 const colorScales = {
-  [UIMode.dark]: ['#2e3954', '#6366f1'],
-  [UIMode.light]: ['#f5f3ff', '#a78bfa']
+  [UIMode.dark]: ['#2a276d', '#6366f1'], // custom color between indigo-900 and indigo-950, indigo-500
+  [UIMode.light]: ['#e0e7ff', '#818cf8'] // indigo-100, indigo-400
 }
 
 const sharedCountryClass = classNames('transition-colors')
@@ -203,19 +206,19 @@ const sharedCountryClass = classNames('transition-colors')
 const countryClass = classNames(
   sharedCountryClass,
   'stroke-1',
-  'fill-[#fafafa]',
-  'stroke-[#dae1e7]',
-  'dark:fill-[#323236]',
-  'dark:stroke-[#18181b]'
+  'fill-gray-150',
+  'stroke-white',
+  'dark:fill-gray-750',
+  'dark:stroke-gray-900'
 )
 
 const highlightedCountryClass = classNames(
   sharedCountryClass,
-  'stroke-2',
-  'fill-[#f4f4f5]',
-  'stroke-[#a78bfa]',
-  'dark:fill-[#3f3f46]',
-  'dark:stroke-[#6366f1]'
+  'stroke-[1.5px]',
+  'fill-gray-150',
+  'stroke-indigo-400',
+  'dark:fill-gray-750',
+  'dark:stroke-indigo-500'
 )
 
 /**

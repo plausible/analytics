@@ -20,9 +20,19 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.FormTest do
       html = render(lv)
 
       assert html =~ "New shared link"
+      assert html =~ "Password protect"
+      assert html =~ "Limit to segment"
+      assert element_exists?(html, ~s|button[role="switch"]#password-protect-|)
+      assert element_exists?(html, ~s|button[role="switch"]#limit-view-|)
       assert element_exists?(html, ~s|input[name="shared_link[name]"]|)
       assert element_exists?(html, ~s|input[name="shared_link[password]"][type="password"]|)
+      assert element_exists?(html, ~s|input[name="shared_link[segment_id]"]|)
       assert element_exists?(html, ~s|button[type="submit"]|)
+
+      assert element_exists?(
+               html,
+               ~s|a[href="https://plausible.io/docs/filters-segments#how-to-save-a-segment"]|
+             )
     end
 
     test "renders error on empty submission", %{conn: conn, session: session} do
@@ -56,6 +66,31 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.FormTest do
       refute shared_link.password_hash
     end
 
+    test "creates a shared link limited to segment", %{conn: conn, site: site, session: session} do
+      segment = insert(:segment, type: :site, site: site, name: "Scandinavia")
+      lv = get_liveview(conn, session)
+
+      lv |> element("button#add-shared-link-button") |> render_click()
+
+      lv
+      |> find_form()
+      |> render_submit(%{shared_link: %{name: "Limited to Scandinavia", segment_id: segment.id}})
+
+      html = render(lv)
+      assert html =~ "Limited to Scandinavia"
+      assert html =~ "Shared link saved"
+
+      shared_link =
+        Plausible.Repo.get_by(Plausible.Site.SharedLink,
+          name: "Limited to Scandinavia",
+          site_id: site.id,
+          segment_id: segment.id
+        )
+
+      assert shared_link
+      refute shared_link.password_hash
+    end
+
     test "creates a shared link with password", %{conn: conn, site: site, session: session} do
       lv = get_liveview(conn, session)
       refute render(lv) =~ "Protected Link"
@@ -77,11 +112,12 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.FormTest do
       assert shared_link.password_hash
     end
 
-    test "renders form fields for editing a shared link", %{
-      conn: conn,
-      site: site,
-      session: session
-    } do
+    test "renders form fields for editing a shared link (not limited to segment, not protected)",
+         %{
+           conn: conn,
+           site: site,
+           session: session
+         } do
       shared_link = insert(:shared_link, site: site, name: "Existing Link")
 
       lv = get_liveview(conn, session)
@@ -94,6 +130,54 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.FormTest do
       assert html =~ "Edit shared link"
       assert element_exists?(html, ~s|input[name="shared_link[name]"]|)
       assert html =~ ~s|value="#{shared_link.name}"|
+      refute html =~ "Password protect"
+      assert html =~ "Limit to segment"
+      refute element_exists?(html, ~s|button#password-protect-[role="switch"]|)
+      refute element_exists?(html, ~s|input[name="shared_link[password]"][type="password"]|)
+      assert element_exists?(html, ~s|input[name="shared_link[segment_id]"][value=""]|)
+
+      assert element_exists?(
+               html,
+               ~s|a[href="https://plausible.io/docs/filters-segments#how-to-save-a-segment"]|
+             )
+    end
+
+    test "renders form fields for editing a shared link (limited to segment, protected)", %{
+      conn: conn,
+      site: site,
+      session: session
+    } do
+      segment = insert(:segment, type: :site, site: site, name: "Scandinavia")
+
+      shared_link =
+        insert(:shared_link,
+          site: site,
+          name: "Existing Link",
+          segment: segment,
+          password: "secret123"
+        )
+
+      lv = get_liveview(conn, session)
+
+      lv
+      |> element(~s/button[phx-click="edit-shared-link"][phx-value-slug="#{shared_link.slug}"]/)
+      |> render_click()
+
+      html = render(lv)
+      assert html =~ "Edit shared link"
+      assert element_exists?(html, ~s|input[name="shared_link[name]"]|)
+      assert html =~ ~s|value="#{shared_link.name}"|
+      refute html =~ "Password protect"
+      assert html =~ "Limit to segment"
+      assert element_exists?(html, ~s|input[name="shared_link[segment_id]"]|)
+      refute element_exists?(html, ~s|input[name="shared_link[password]"][type="password"]|)
+
+      assert element_exists?(
+               html,
+               ~s|input[name="shared_link[segment_id]"][value="#{segment.id}"]|
+             )
+
+      assert html =~ ~s|value="#{segment.name}"|
     end
 
     test "updates a shared link name", %{conn: conn, site: site, session: session} do
