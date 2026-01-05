@@ -127,29 +127,25 @@ defmodule Plausible.Stats.QueryTest do
     end
   end
 
-  describe "include.dashboard_metric_labels" do
+  describe "including metric labels" do
     test "visitors -> Visitors (default)", %{site: site} do
       {:ok, query} =
         QueryBuilder.build(site,
           metrics: [:visitors],
-          input_date_range: :all,
-          include: [dashboard_metric_labels: true]
+          input_date_range: :all
         )
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Visitors"] = meta[:metric_labels]
+      assert {_, ["Visitors"]} = Stats.dashboard_query(site, query)
     end
 
     test "visitors -> Current visitors (realtime)", %{site: site} do
       {:ok, query} =
         QueryBuilder.build(site,
           metrics: [:visitors],
-          input_date_range: :realtime,
-          include: [dashboard_metric_labels: true]
+          input_date_range: :realtime
         )
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Current visitors"] = meta[:metric_labels]
+      assert {_, ["Current visitors"]} = Stats.dashboard_query(site, query)
     end
 
     test "visitors -> Current visitors (realtime and goal filtered)", %{site: site} do
@@ -159,12 +155,10 @@ defmodule Plausible.Stats.QueryTest do
         QueryBuilder.build(site,
           metrics: [:visitors],
           input_date_range: :realtime,
-          filters: [[:is, "event:goal", ["Signup"]]],
-          include: [dashboard_metric_labels: true]
+          filters: [[:is, "event:goal", ["Signup"]]]
         )
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Current visitors"] = meta[:metric_labels]
+      assert {_, ["Current visitors"]} = Stats.dashboard_query(site, query)
     end
 
     test "visitors -> Conversions (goal filtered)", %{site: site} do
@@ -174,12 +168,10 @@ defmodule Plausible.Stats.QueryTest do
         QueryBuilder.build(site,
           metrics: [:visitors],
           input_date_range: :all,
-          filters: [[:is, "event:goal", ["Signup"]]],
-          include: [dashboard_metric_labels: true]
+          filters: [[:is, "event:goal", ["Signup"]]]
         )
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Conversions"] = meta[:metric_labels]
+      assert {_, ["Conversions"]} = Stats.dashboard_query(site, query)
     end
 
     test "visitors -> Unique entrances (visit:entry_page dimension)", %{site: site} do
@@ -187,12 +179,10 @@ defmodule Plausible.Stats.QueryTest do
         QueryBuilder.build(site,
           metrics: [:visitors],
           input_date_range: :all,
-          dimensions: ["visit:entry_page"],
-          include: [dashboard_metric_labels: true]
+          dimensions: ["visit:entry_page"]
         )
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Unique entrances"] = meta[:metric_labels]
+      assert {_, ["Unique entrances"]} = Stats.dashboard_query(site, query)
     end
 
     test "visitors -> Unique exits (visit:exit_page dimension)", %{site: site} do
@@ -200,12 +190,10 @@ defmodule Plausible.Stats.QueryTest do
         QueryBuilder.build(site,
           metrics: [:visitors],
           input_date_range: :all,
-          dimensions: ["visit:exit_page"],
-          include: [dashboard_metric_labels: true]
+          dimensions: ["visit:exit_page"]
         )
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Unique exits"] = meta[:metric_labels]
+      assert {_, ["Unique exits"]} = Stats.dashboard_query(site, query)
     end
 
     test "conversion_rate -> CR (default)", %{site: site} do
@@ -213,12 +201,10 @@ defmodule Plausible.Stats.QueryTest do
         QueryBuilder.build(site,
           metrics: [:conversion_rate],
           input_date_range: :all,
-          dimensions: ["event:goal"],
-          include: [dashboard_metric_labels: true]
+          dimensions: ["event:goal"]
         )
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["CR"] = meta[:metric_labels]
+      assert {_, ["CR"]} = Stats.dashboard_query(site, query)
     end
 
     test "maintains order with multiple metrics", %{site: site} do
@@ -228,12 +214,10 @@ defmodule Plausible.Stats.QueryTest do
         QueryBuilder.build(site,
           metrics: [:conversion_rate, :visitors],
           input_date_range: :all,
-          filters: [[:is, "event:goal", ["Signup"]]],
-          include: [dashboard_metric_labels: true]
+          filters: [[:is, "event:goal", ["Signup"]]]
         )
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["CR", "Conversions"] = meta[:metric_labels]
+      assert {_, ["CR", "Conversions"]} = Stats.dashboard_query(site, query)
     end
   end
 end
