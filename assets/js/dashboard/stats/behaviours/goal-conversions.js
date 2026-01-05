@@ -11,7 +11,6 @@ import {
 } from '../../util/filters'
 import { useSiteContext } from '../../site-context'
 import { useQueryContext } from '../../query-context'
-import { customPropsRoute } from '../../router'
 
 export const SPECIAL_GOALS = {
   404: { title: '404 Pages', prop: 'path' },
@@ -87,11 +86,6 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
       getFilterInfo={getFilterInfo}
       keyLabel={prop}
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: customPropsRoute.path,
-        params: { propKey: url.maybeEncodeRouteParam(prop) },
-        search: (search) => search
-      }}
       getExternalLinkUrl={getExternalLinkUrlFactory()}
       color="bg-red-50"
       colMinWidth={90}

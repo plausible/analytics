@@ -1,6 +1,9 @@
 import React, { useCallback } from 'react'
 import Modal from './modal'
-import { hasConversionGoalFilter } from '../../util/filters'
+import {
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
 import { addFilter, revenueAvailable } from '../../query'
 import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
@@ -60,7 +63,7 @@ function ExitPagesModal() {
       ].filter((metric) => !!metric)
     }
 
-    if (query.period === 'realtime') {
+    if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',

@@ -6,18 +6,18 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   use PlausibleWeb, :component
 
   attr :id, :string, required: true
+  attr :class, :string, default: ""
   attr :title, :string, required: true
-  # Optimistic rendering requires preventing LV patching of
-  # title and tabs. The update of those is handled by `tab` 
-  # widget hook.
+  attr :height, :integer, required: true
   attr :connected?, :boolean, required: true
+  attr :target, :any, required: true
 
   slot :tabs
   slot :inner_block, required: true
 
   def tile(assigns) do
     ~H"""
-    <div data-tile id={@id}>
+    <div class={[@class, "group overflow-x-hidden"]} data-tile id={@id}>
       <div class="w-full flex justify-between h-full">
         <div id={@id <> "-title"} class="flex gap-x-1" phx-update="ignore">
           <h3 data-title class="font-bold dark:text-gray-100">{@title}</h3>
@@ -26,46 +26,59 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         <div
           :if={@tabs != []}
           id={@id <> "-tabs"}
-          phx-update="ignore"
           phx-hook="DashboardTabs"
-          class="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
+          phx-target={@target}
+          class="tile-tabs flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2 items-baseline"
         >
           {render_slot(@tabs)}
         </div>
       </div>
 
-      {render_slot(@inner_block)}
+      <div
+        class="w-full flex-col justify-center group-[.phx-navigation-loading]:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden"
+        style={"min-height: #{@height}px;"}
+      >
+        <div class="mx-auto loading">
+          <div></div>
+        </div>
+      </div>
+
+      <div class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden">
+        {render_slot(@inner_block)}
+      </div>
     </div>
     """
   end
 
-  attr :label, :string, required: true
-  attr :value, :string, required: true
-  attr :active, :string, required: true
+  attr :report_label, :string, required: true
+  attr :tab_key, :string, required: true
+  attr :active_tab, :string, required: true
   attr :target, :any, required: true
 
   def tab(assigns) do
     assigns =
-      assign(assigns,
-        active_classes:
-          "text-indigo-600 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-600 dark:decoration-indigo-500",
-        inactive_classes: "hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer"
+      assign(
+        assigns,
+        data_attrs:
+          if(assigns.tab_key == assigns.active_tab,
+            do: %{"data-active": "true"},
+            else: %{"data-active": "false"}
+          )
       )
 
     ~H"""
     <button
       class="rounded-sm truncate text-left transition-colors duration-150"
-      data-tab={@value}
-      data-label={@label}
+      data-tab-key={@tab_key}
+      data-report-label={@report_label}
       data-storage-key="pageTab"
-      data-active-classes={@active_classes}
-      data-inactive-classes={@inactive_classes}
-      phx-click="set-tab"
-      phx-value-tab={@value}
-      phx-target={@target}
+      data-target={@target}
     >
-      <span class={if(@value == @active, do: @active_classes, else: @inactive_classes)}>
-        {@label}
+      <span
+        {@data_attrs}
+        class="data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500 data-[active=true]:font-bold data-[active=true]:underline data-[active=true]:decoration-2 data-[active=true]:decoration-indigo-600 data-[active=true]:dark:decoration-indigo-500 data-[active=false]:hover:text-indigo-700 data-[active=false]:dark:hover:text-indigo-400 data-[active=false]:cursor-pointer"
+      >
+        {@report_label}
       </span>
     </button>
     """

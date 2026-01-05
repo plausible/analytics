@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback, ReactNode } from 'react'
-import { AppNavigationLinkProps } from '../../navigation/use-app-navigate'
 import FlipMove from 'react-flip-move'
 
 import FadeIn from '../../fade-in'
-import MoreLink from '../more-link'
 import Bar from '../bar'
 import LazyLoader from '../../components/lazy-loader'
 import { trimURL } from '../../util/url'
@@ -17,7 +15,7 @@ import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import { BreakdownResultMeta } from '../../query'
 
 const MAX_ITEMS = 9
-export const MIN_HEIGHT = 380
+export const MIN_HEIGHT = 356
 const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT =
@@ -93,8 +91,6 @@ type ListReportProps = {
   keyLabel: string
   metrics: Metric[]
   colMinWidth?: number
-  /** Navigation props to be passed to "More" link, if any. */
-  detailsLinkProps?: AppNavigationLinkProps
   /** Function with additional action to be taken when a list entry is clicked. */
   onClick?: () => void
   /** Color of the comparison bars in light-mode. */
@@ -115,7 +111,6 @@ export default function ListReport<
   metrics,
   colMinWidth = COL_MIN_WIDTH,
   afterFetchData,
-  detailsLinkProps,
   onClick,
   color,
   getFilterInfo,
@@ -242,15 +237,6 @@ export default function ListReport<
               {state.list.slice(0, MAX_ITEMS).map(renderRow)}
             </FlipMove>
           </div>
-
-          {!!detailsLinkProps && !state.loading && (
-            <MoreLink
-              onClick={undefined}
-              className={'mt-3'}
-              linkProps={detailsLinkProps}
-              list={state.list}
-            />
-          )}
         </div>
       )
     }
@@ -273,7 +259,7 @@ export default function ListReport<
       })
 
     return (
-      <div className="pt-3 w-full text-xs font-semibold text-gray-500 flex items-center dark:text-gray-400">
+      <div className="pt-3 w-full text-xs font-medium text-gray-500 flex items-center dark:text-gray-400">
         <span className="grow truncate">{keyLabel}</span>
         {metricLabels}
       </div>

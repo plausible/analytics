@@ -6,9 +6,25 @@
 
 import { buildHook } from './hook_builder'
 
+function navigateWithLoader(url) {
+  this.portalTargets.map((target) => {
+    this.js().addClass(document.querySelector(target), 'phx-navigation-loading')
+
+    this.pushEvent('handle_dashboard_params', { url: url }, () => {
+      this.js().removeClass(
+        document.querySelector(target),
+        'phx-navigation-loading'
+      )
+    })
+  })
+}
+
 export default buildHook({
   initialize() {
     this.url = window.location.href
+
+    const portals = document.querySelectorAll('[data-phx-portal]')
+    this.portalTargets = Array.from(portals, (p) => p.dataset.phxPortal)
 
     this.addListener('click', document.body, (e) => {
       const type = e.target.dataset.type || null
@@ -26,7 +42,7 @@ export default buildHook({
           })
         )
 
-        this.pushEvent('handle_dashboard_params', { url: this.url })
+        navigateWithLoader.bind(this)(this.url)
 
         e.preventDefault()
       }
@@ -35,9 +51,7 @@ export default buildHook({
     // Browser back and forward navigation triggers that event.
     this.addListener('popstate', window, () => {
       if (this.url !== window.location.href) {
-        this.pushEvent('handle_dashboard_params', {
-          url: window.location.href
-        })
+        navigateWithLoader.bind(this)(window.location.href)
       }
     })
 
@@ -48,9 +62,7 @@ export default buildHook({
         typeof e.detail.search === 'string' &&
         this.url !== window.location.href
       ) {
-        this.pushEvent('handle_dashboard_params', {
-          url: window.location.href
-        })
+        navigateWithLoader.bind(this)(window.location.href)
       }
     })
   }

@@ -31,6 +31,10 @@
   *:focus-visible {
     @apply ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900 outline-none;
   }
+
+  :focus:not(:focus-visible) {
+    @apply outline-none;
+  }
 }
 
 @layer components {
@@ -115,6 +119,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@custom-variant phx-hook-loading (.phx-hook-loading&, .phx-hook-loading &);
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 

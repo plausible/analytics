@@ -166,7 +166,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   return (
     <div
       className={
-        'relative w-full mt-2 bg-white rounded-md shadow dark:bg-gray-900'
+        'col-span-full relative w-full bg-white rounded-md shadow dark:bg-gray-900'
       }
     >
       {(topStatsLoading || graphLoading) && renderLoader()}

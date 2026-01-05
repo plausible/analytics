@@ -28,7 +28,7 @@
   position: fixed;
   inset: 0;
   background: rgb(0 0 0 / 60%);
-  z-index: 99;
+  z-index: 999;
   overflow: auto;
 }
 
