@@ -174,8 +174,7 @@ const Items = ({ options, searchable, closeDropdown }: ItemsProps) => {
         <div className="flex items-center p-1">
           <SearchInput
             searchRef={searchRef}
-            placeholderUnfocused="Press / to search"
-            className="w-full !max-w-none"
+            className="!max-w-none"
             onSearch={handleSearchInput}
           />
         </div>
