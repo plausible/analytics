@@ -155,7 +155,7 @@ export default function GraphTooltip(graphData, metric, query, theme) {
                     className="size-2 mr-2 rounded-full"
                     style={{ backgroundColor: 'rgba(101,116,205)' }}
                   ></div>
-                  <span>{tooltipData.label}</span>
+                  <span className="shrink-0">{tooltipData.label}</span>
                 </span>
                 <span className="font-bold">{tooltipData.formattedValue}</span>
               </div>
@@ -164,7 +164,7 @@ export default function GraphTooltip(graphData, metric, query, theme) {
                 <div className="flex flex-row justify-between items-center text-sm">
                   <span className="flex items-center mr-4">
                     <div className="size-2 mr-2 rounded-full bg-gray-500"></div>
-                    <span>{tooltipData.comparisonLabel}</span>
+                    <span className="shrink-0">{tooltipData.comparisonLabel}</span>
                   </span>
                   <span className="font-bold">
                     {tooltipData.formattedComparisonValue}

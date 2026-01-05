@@ -182,7 +182,7 @@ class LineGraph extends React.Component {
           tooltipEl.style.right = null
           tooltipEl.style.left = clientX + window.pageXOffset + 'px'
         }
-        const yOffset = isTouch ? -80 : 0
+        const yOffset = isTouch ? -100 : 0
         tooltipEl.style.top = clientY + window.pageYOffset + yOffset + 'px'
         tooltipEl.style.opacity = 1
       }
