@@ -22,7 +22,7 @@ export default function chooseMetrics(query, site) {
     ].filter((metric) => !!metric)
   }
 
-  if (isRealTimeDashboard(query)) {
+  if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
     return [
       metrics.createVisitors({
         renderLabel: (_query) => 'Current visitors',

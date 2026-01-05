@@ -70,13 +70,13 @@ export function FeatureSetupNotice({
   }
 
   return (
-    <div className="sm:mx-32 mt-6 mb-3">
-      <div className="py-3">
-        <div className="text-center text-pretty mt-2 text-gray-800 dark:text-gray-200 font-medium">
+    <div className="size-full flex items-center justify-center">
+      <div className="py-3 max-w-2xl">
+        <div className="text-center text-pretty mt-2 text-gray-800 dark:text-gray-200 font-medium text-pretty">
           {title}
         </div>
 
-        <div className="text-center text-pretty mt-4 font-small text-sm text-gray-500 dark:text-gray-200">
+        <div className="text-center text-pretty mt-4 font-small text-sm text-gray-500 dark:text-gray-200 text-pretty">
           {info}
         </div>
 

@@ -88,7 +88,7 @@ export const SearchableSegmentsSection = ({
         )}
       </div>
 
-      <div className="max-h-[210px] overflow-y-scroll">
+      <div className="max-h-[228px] overflow-y-auto">
         {showableData.map((segment) => {
           return (
             <Tooltip
