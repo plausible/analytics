@@ -34,15 +34,10 @@ type WorldJsonCountryData = { properties: { name: string; a3: string } }
 
 const WorldMap = ({
   onCountrySelect,
-  afterFetchData,
-  onDataUpdate
+  afterFetchData
 }: {
   onCountrySelect: () => void
   afterFetchData: (response: unknown) => void
-  onDataUpdate?: (
-    data: { results: CountryData[] } | null,
-    loading: boolean
-  ) => void
 }) => {
   const navigate = useAppNavigate()
   const { mode } = useTheme()
@@ -91,10 +86,7 @@ const WorldMap = ({
     if (data) {
       afterFetchData(data)
     }
-    if (onDataUpdate) {
-      onDataUpdate(data ?? null, isFetching)
-    }
-  }, [afterFetchData, data, isFetching, onDataUpdate])
+  }, [afterFetchData, data, isFetching])
 
   const { maxValue, dataByCountryCode } = useMemo(() => {
     const dataByCountryCode: Map<string, CountryData> = new Map()

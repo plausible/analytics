@@ -54,10 +54,6 @@ function EntryPages({ afterFetchData }) {
       getFilterInfo={getFilterInfo}
       keyLabel="Entry page"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: entryPagesRoute.path,
-        search: (search) => search
-      }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
     />
@@ -102,10 +98,6 @@ function ExitPages({ afterFetchData }) {
       getFilterInfo={getFilterInfo}
       keyLabel="Exit page"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: exitPagesRoute.path,
-        search: (search) => search
-      }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
     />
@@ -146,10 +138,6 @@ function TopPages({ afterFetchData }) {
       getFilterInfo={getFilterInfo}
       keyLabel="Page"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: topPagesRoute.path,
-        search: (search) => search
-      }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50 group-hover/row:bg-orange-100"
     />

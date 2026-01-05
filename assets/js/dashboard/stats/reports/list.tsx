@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, ReactNode } from 'react'
-import { AppNavigationLinkProps } from '../../navigation/use-app-navigate'
 import FlipMove from 'react-flip-move'
 
 import FadeIn from '../../fade-in'
@@ -87,25 +86,15 @@ export interface SharedReportProps<
   afterFetchNextPage?: (response: TResponse) => void
 }
 
-type ListReportProps<
-  TListItem extends Record<string, unknown> & { name: string }
-> = {
+type ListReportProps = {
   /** What each entry in the list represents (for UI only). */
   keyLabel: string
   metrics: Metric[]
   colMinWidth?: number
-  /** Navigation props to be passed to "More" link, if any. */
-  detailsLinkProps?: AppNavigationLinkProps
   /** Function with additional action to be taken when a list entry is clicked. */
   onClick?: () => void
   /** Color of the comparison bars in light-mode. */
   color?: string
-  /** Callback that receives the list data, linkProps, and loading state whenever it updates. Used to render MoreLink in parent components. */
-  onListUpdate?: (
-    list: TListItem[] | null,
-    linkProps: AppNavigationLinkProps | undefined,
-    loading: boolean
-  ) => void
 }
 
 /**
@@ -122,16 +111,13 @@ export default function ListReport<
   metrics,
   colMinWidth = COL_MIN_WIDTH,
   afterFetchData,
-  detailsLinkProps,
   onClick,
   color,
   getFilterInfo,
   renderIcon,
   getExternalLinkUrl,
-  fetchData,
-  onListUpdate
-}: Omit<SharedReportProps<TListItem>, 'afterFetchNextPage'> &
-  ListReportProps<TListItem>) {
+  fetchData
+}: Omit<SharedReportProps<TListItem>, 'afterFetchNextPage'> & ListReportProps) {
   const { query } = useQueryContext()
   const [state, setState] = useState<{
     loading: boolean
@@ -147,9 +133,6 @@ export default function ListReport<
   const getData = useCallback(() => {
     if (!isRealtime) {
       setState({ loading: true, list: null, meta: null })
-      if (onListUpdate) {
-        onListUpdate(null, detailsLinkProps, true)
-      }
     }
     fetchData().then((response) => {
       if (afterFetchData) {
@@ -157,12 +140,9 @@ export default function ListReport<
       }
 
       setState({ loading: false, list: response.results, meta: response.meta })
-      if (onListUpdate) {
-        onListUpdate(response.results, detailsLinkProps, false)
-      }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyLabel, query, detailsLinkProps, onListUpdate])
+  }, [keyLabel, query])
 
   const onVisible = () => {
     setVisible(true)
@@ -174,9 +154,6 @@ export default function ListReport<
       // loading state, even in realtime mode, because the metrics list will change. We can
       // only read the new metrics once the new list is loaded.
       setState({ loading: true, list: null, meta: null })
-      if (onListUpdate) {
-        onListUpdate(null, detailsLinkProps, true)
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalFilterApplied])
