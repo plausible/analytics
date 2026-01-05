@@ -28,6 +28,9 @@ class LineGraph extends React.Component {
     super(props)
     this.regenerateChart = this.regenerateChart.bind(this)
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this)
+    this.handleTouchStart = this.handleTouchStart.bind(this)
+    this.handleTouchMove = this.handleTouchMove.bind(this)
+    this.handleTouchEnd = this.handleTouchEnd.bind(this)
   }
 
   getGraphMetric() {
@@ -165,17 +168,43 @@ class LineGraph extends React.Component {
 
   repositionTooltip(e) {
     const tooltipEl = document.getElementById('chartjs-tooltip-main')
-    if (tooltipEl && window.innerWidth >= 768) {
-      if (e.clientX > 0.66 * window.innerWidth) {
-        tooltipEl.style.right =
-          window.innerWidth - e.clientX + window.pageXOffset + 'px'
-        tooltipEl.style.left = null
-      } else {
-        tooltipEl.style.right = null
-        tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
+    if (tooltipEl) {
+      const clientX = e.clientX ?? e.touches?.[0]?.clientX
+      const clientY = e.clientY ?? e.touches?.[0]?.clientY
+
+      if (clientX !== undefined && clientY !== undefined) {
+        if (clientX > 0.66 * window.innerWidth) {
+          tooltipEl.style.right =
+            window.innerWidth - clientX + window.pageXOffset + 'px'
+          tooltipEl.style.left = null
+        } else {
+          tooltipEl.style.right = null
+          tooltipEl.style.left = clientX + window.pageXOffset + 'px'
+        }
+        tooltipEl.style.top = clientY + window.pageYOffset + 'px'
+        tooltipEl.style.opacity = 1
       }
-      tooltipEl.style.top = e.clientY + window.pageYOffset + 'px'
-      tooltipEl.style.opacity = 1
+    }
+  }
+
+  handleTouchStart = (e) => {
+    const tooltipEl = document.getElementById('chartjs-tooltip-main')
+    if (tooltipEl) {
+      tooltipEl.style.display = null
+    }
+    this.repositionTooltip(e)
+  }
+
+  handleTouchMove = (e) => {
+    e.preventDefault()
+    this.repositionTooltip(e)
+  }
+
+  handleTouchEnd = () => {
+    const tooltipEl = document.getElementById('chartjs-tooltip-main')
+    if (tooltipEl) {
+      tooltipEl.style.opacity = 0
+      tooltipEl.style.display = 'none'
     }
   }
 
@@ -184,6 +213,15 @@ class LineGraph extends React.Component {
       this.chart = this.regenerateChart()
     }
     window.addEventListener('mousemove', this.repositionTooltip)
+
+    const canvas = document.getElementById('main-graph-canvas')
+    if (canvas) {
+      canvas.addEventListener('touchstart', this.handleTouchStart)
+      canvas.addEventListener('touchmove', this.handleTouchMove, {
+        passive: false
+      })
+      canvas.addEventListener('touchend', this.handleTouchEnd)
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -226,6 +264,13 @@ class LineGraph extends React.Component {
       tooltip.style.display = 'none'
     }
     window.removeEventListener('mousemove', this.repositionTooltip)
+
+    const canvas = document.getElementById('main-graph-canvas')
+    if (canvas) {
+      canvas.removeEventListener('touchstart', this.handleTouchStart)
+      canvas.removeEventListener('touchmove', this.handleTouchMove)
+      canvas.removeEventListener('touchend', this.handleTouchEnd)
+    }
   }
 
   /**
