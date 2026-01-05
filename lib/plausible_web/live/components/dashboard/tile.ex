@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   attr :connected?, :boolean, required: true
   attr :target, :any, required: true
 
+  slot :warnings
   slot :tabs
   slot :inner_block, required: true
 
@@ -22,7 +23,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         <div id={@id <> "-title"} class="flex gap-x-1" phx-update="ignore">
           <h3 data-title class="font-bold dark:text-gray-100">{@title}</h3>
         </div>
-
+        {render_slot(@warnings)}
         <div
           :if={@tabs != []}
           id={@id <> "-tabs"}

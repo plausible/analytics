@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         )
 
       ~H"""
-      <.no_data :if={@empty?} min_height={@min_height} />
+      <.no_data :if={@empty?} min_height={@min_height} data_test_id={@data_test_id} />
 
       <div :if={not @empty?} class="h-full flex flex-col" data-test-id={@data_test_id}>
         <div style={"row-height: #{@row_height}px;"}>
@@ -88,6 +88,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   defp no_data(assigns) do
     ~H"""
     <div
+      data-test-id={@data_test_id}
       class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]:hidden"
       style={"min-height: #{@min_height}px;"}
     >

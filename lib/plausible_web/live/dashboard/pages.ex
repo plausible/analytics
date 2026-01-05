@@ -5,8 +5,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   use PlausibleWeb, :live_component
 
-  alias PlausibleWeb.Components.Dashboard.ReportList
-  alias PlausibleWeb.Components.Dashboard.Tile
+  alias PlausibleWeb.Components.Dashboard.{ReportList, Tile, ImportedDataWarnings}
 
   alias Plausible.Stats
   alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryResult}
@@ -63,6 +62,9 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         target={@myself}
         height={ReportList.height()}
       >
+        <:warnings>
+          <ImportedDataWarnings.unsupported_filters query_result={@query_result} />
+        </:warnings>
         <:tabs>
           <Tile.tab
             :for={%{tab_key: tab_key, report_label: report_label} <- @tabs}
