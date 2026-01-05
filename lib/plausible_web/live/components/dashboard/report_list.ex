@@ -8,9 +8,10 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   alias PlausibleWeb.Components.Dashboard.Base
   alias PlausibleWeb.Components.Dashboard.Metric
   alias Plausible.Stats.QueryResult
+  alias Plausible.Stats.Dashboard.Utils
 
   @max_items 9
-  @min_height 380
+  @min_height 356
   @row_height 32
   @row_gap_height 4
   @data_container_height (@row_height + @row_gap_height) * (@max_items - 1) + @row_height
@@ -72,14 +73,6 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
             col_min_width={@col_min_width}
           />
         </div>
-
-        <div class="w-full text-center">
-          <.details_link
-            site={@site}
-            params={@params}
-            path="/pages"
-          />
-        </div>
       </div>
       """
     end
@@ -128,7 +121,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
 
   defp report_header(assigns) do
     ~H"""
-    <div class="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
+    <div class="pt-3 w-full text-xs font-medium tracking-wide text-gray-500 flex items-center dark:text-gray-400">
       <span data-test-id="report-list-0-0" class="grow truncate">{@key_label}</span>
       <div
         :for={{metric_label, index} <- Enum.with_index(@metric_labels)}
@@ -157,14 +150,12 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
           >
             <div class="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
               <span class="w-full md:truncate">
-                <Base.filter_link
+                <Base.dashboard_link
                   class="max-w-max w-full flex items-center md:overflow-hidden hover:underline"
-                  site={@site}
-                  params={@params}
-                  filter={[:is, @dimension, [@item_name]]}
+                  to={Utils.dashboard_route(@site, @params, filter: [:is, @dimension, [@item_name]])}
                 >
                   {trim_name(@item_name, @col_min_width)}
-                </Base.filter_link>
+                </Base.dashboard_link>
               </span>
               <.external_link item={@item} link_fn={assigns[:link_fn]} />
             </div>
@@ -184,32 +175,6 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         </div>
       </div>
     </div>
-    """
-  end
-
-  defp details_link(assigns) do
-    ~H"""
-    <Base.dashboard_link
-      class="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 tracking-wide"
-      site={@site}
-      params={@params}
-      path={@path}
-    >
-      <svg
-        class="feather mr-1"
-        style="margin-top: -2px;"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-      </svg>
-      DETAILS
-    </Base.dashboard_link>
     """
   end
 

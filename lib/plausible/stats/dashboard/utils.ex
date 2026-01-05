@@ -3,6 +3,9 @@ defmodule Plausible.Stats.Dashboard.Utils do
   Shared utilities by different dashboard reports.
   """
 
+  alias Plausible.Site
+  alias Plausible.Stats.{DashboardQuerySerializer, ParsedQueryParams}
+
   def page_external_link_fn_for(site) do
     with true <- Plausible.Sites.regular?(site),
          [domain | _] <- String.split(site.domain, "/"),
@@ -14,6 +17,24 @@ defmodule Plausible.Stats.Dashboard.Utils do
     else
       _ -> nil
     end
+  end
+
+  def dashboard_route(%Site{} = site, %ParsedQueryParams{} = params, opts) do
+    path = Keyword.get(opts, :path, "")
+
+    params =
+      case Keyword.get(opts, :filter) do
+        nil -> params
+        filter -> ParsedQueryParams.add_or_replace_filter(params, filter)
+      end
+
+    query_string =
+      case DashboardQuerySerializer.serialize(params) do
+        "" -> ""
+        query_string -> "?" <> query_string
+      end
+
+    "/" <> site.domain <> path <> query_string
   end
 
   defp idna_encode(domain) do

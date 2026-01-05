@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Components.Dashboard.ImportedDataWarnings do
       <span class="hidden">
         Imported data is excluded due to the applied filters
       </span>
-      <Heroicons.exclamation_circle class="w-6 h-6 dark:text-gray-100" />
+      <Heroicons.exclamation_circle class="mb-1 size-4.5 text-gray-500 dark:text-gray-400" />
     </div>
     """
   end

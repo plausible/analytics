@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     <div>
       <Tile.tile
         id="breakdown-tile-pages"
-        class="group/report"
+        details_route={dashboard_route(@site, @params, path: "/#{@active_tab}")}
         title={get_tab_info(@active_tab, :report_label)}
         connected?={@connected?}
         target={@myself}
