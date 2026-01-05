@@ -13,7 +13,7 @@ defmodule Plausible.Stats.DashboardQueryParser do
     # is false. Even if we don't want to include imported data, we
     # might still want to know whether imported data can be toggled
     # on/off on the dashboard.
-    imports_meta: true,
+    imports_meta: false,
     time_labels: false,
     total_rows: false,
     trim_relative_date_range: true,
