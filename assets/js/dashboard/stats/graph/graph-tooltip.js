@@ -103,9 +103,6 @@ let tooltipRoot
 export default function GraphTooltip(graphData, metric, query, theme) {
   return (context) => {
     const tooltipModel = context.tooltip
-    const offset = document
-      .getElementById('main-graph-canvas')
-      .getBoundingClientRect()
     let tooltipEl = document.getElementById('chartjs-tooltip-main')
 
     if (!tooltipEl) {
