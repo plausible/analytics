@@ -63,17 +63,13 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       input_names = html |> find("#custom-events-form input") |> Enum.map(&name_of/1)
 
-      assert input_names ==
-               [
-                 "display-event_name_input_modalseq0",
-                 "goal[event_name]",
-                 "goal[display_name]",
-                 "display-currency_input_modalseq0",
-                 "goal[currency]"
-               ]
+      assert "goal[event_name]" in input_names
+      assert "goal[display_name]" in input_names
+      assert "goal[custom_props][keys][]" in input_names
+      assert "goal[custom_props][values][]" in input_names
+      assert "display-currency_input_modalseq0" in input_names
     end
 
-    @tag :ee_only
     test "renders form fields for pageview", %{conn: conn, site: site} do
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("pageviews")
 
@@ -83,11 +79,11 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
 
-      assert input_names == [
-               "display-page_path_input_modalseq0",
-               "goal[page_path]",
-               "goal[display_name]"
-             ]
+      assert "display-page_path_input_modalseq0" in input_names
+      assert "goal[page_path]" in input_names
+      assert "goal[display_name]" in input_names
+      assert "goal[custom_props][keys][]" in input_names
+      assert "goal[custom_props][values][]" in input_names
     end
 
     @tag :ce_build_only
@@ -100,12 +96,11 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       input_names = html |> find("#custom-events-form input") |> Enum.map(&name_of/1)
 
-      assert input_names ==
-               [
-                 "display-event_name_input_modalseq0",
-                 "goal[event_name]",
-                 "goal[display_name]"
-               ]
+      assert "goal[event_name]" in input_names
+      assert "goal[display_name]" in input_names
+      assert "goal[custom_props][keys][]" in input_names
+      assert "goal[custom_props][values][]" in input_names
+      refute "display-currency_input_modalseq0" in input_names
     end
 
     test "renders error on empty submission", %{conn: conn, site: site} do
@@ -339,6 +334,59 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       html = render(lv)
 
       assert html =~ "has already been taken"
+    end
+
+    test "hides 'Add custom property' toggle when editing goal with custom props", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, goal} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt", "color" => "Blue"}
+        })
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      html = render(lv)
+
+      refute html =~ "Add custom property"
+      assert html =~ "Custom properties"
+    end
+
+    test "shows 'Add custom property' toggle when editing goal without custom props", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, goal} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      html = render(lv)
+
+      assert html =~ "Add custom property"
+      refute html =~ "Custom properties"
+    end
+
+    test "property pairs section is visible when editing goal with custom props", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, goal} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt"}
+        })
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      html = render(lv)
+
+      assert html =~ "Custom properties"
+      assert element_exists?(html, ~s/[data-test-id="custom-property-pairs"]/)
     end
   end
 
