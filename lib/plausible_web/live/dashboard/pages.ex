@@ -9,78 +9,30 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   alias PlausibleWeb.Components.Dashboard.Tile
 
   alias Plausible.Stats
-  alias Plausible.Stats.Filters
-  alias Plausible.Stats.ParsedQueryParams
-  alias Plausible.Stats.QueryBuilder
+  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryResult}
 
   @tabs [
-    {"pages", "Top Pages"},
-    {"entry-pages", "Entry Pages"},
-    {"exit-pages", "Exit Pages"}
+    %{
+      tab_key: "pages",
+      report_label: "Top pages",
+      key_label: "Page",
+      dimension: "event:page"
+    },
+    %{
+      tab_key: "entry-pages",
+      report_label: "Entry pages",
+      key_label: "Entry page",
+      dimension: "visit:entry_page"
+    },
+    %{
+      tab_key: "exit-pages",
+      report_label: "Exit pages",
+      key_label: "Exit page",
+      dimension: "visit:exit_page"
+    }
   ]
 
-  @key_labels %{
-    "pages" => "Page",
-    "entry-pages" => "Entry page",
-    "exit-pages" => "Exit page"
-  }
-
-  @max_items 9
-  @pagination_params {@max_items, 1}
-
-  @metrics %{
-    "pages" => %{
-      visitors: %{
-        width: "w-24",
-        key: :visitors,
-        label: "Visitors",
-        sortable: true,
-        plot: true
-      },
-      conversion_rate: %{
-        width: "w-24",
-        key: :conversion_rate,
-        label: "CR",
-        sortable: true
-      }
-    },
-    "entry-pages" => %{
-      visitors: %{
-        width: "w-24",
-        key: :visitors,
-        label: "Unique Entrances",
-        sortable: true,
-        plot: true
-      },
-      conversion_rate: %{
-        width: "w-24",
-        key: :conversion_rate,
-        label: "CR",
-        sortable: true
-      }
-    },
-    "exit-pages" => %{
-      visitors: %{
-        width: "w-24",
-        key: :visitors,
-        label: "Unique Exits",
-        sortable: true,
-        plot: true
-      },
-      conversion_rate: %{
-        width: "w-24",
-        key: :conversion_rate,
-        label: "CR",
-        sortable: true
-      }
-    }
-  }
-
-  @filter_dimensions %{
-    "pages" => "event:page",
-    "entry-pages" => "visit:entry_page",
-    "exit-pages" => "visit:exit_page"
-  }
+  @pagination %{limit: 9, offset: 0}
 
   def update(assigns, socket) do
     active_tab = assigns.user_prefs["pages_tab"] || "pages"
@@ -90,12 +42,10 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
         site: assigns.site,
         params: assigns.params,
         tabs: @tabs,
-        key_labels: @key_labels,
-        filter_dimensions: @filter_dimensions,
         active_tab: active_tab,
         connected?: assigns.connected?
       )
-      |> load_metrics()
+      |> load_stats()
 
     {:ok, socket}
   end
@@ -108,29 +58,28 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       <Tile.tile
         id="breakdown-tile-pages"
         class="group/report"
-        title={@key_labels[@active_tab]}
+        title={get_tab_info(@active_tab, :report_label)}
         connected?={@connected?}
+        target={@myself}
         height={ReportList.height()}
       >
         <:tabs>
           <Tile.tab
-            :for={{value, label} <- @tabs}
-            label={label}
-            value={value}
-            active={@active_tab}
+            :for={%{tab_key: tab_key, report_label: report_label} <- @tabs}
+            report_label={report_label}
+            tab_key={tab_key}
+            active_tab={@active_tab}
             target={@myself}
           />
         </:tabs>
 
         <ReportList.report
           site={@site}
-          key_label={@key_labels[@active_tab]}
-          filter_dimension={@filter_dimensions[@active_tab]}
+          data_test_id={"#{@active_tab}-report-list"}
+          key_label={get_tab_info(@active_tab, :key_label)}
+          dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
-          results={@results}
-          meta={@meta}
-          metrics={@metrics}
-          skip_imported_reason={@skip_imported_reason}
+          query_result={@query_result}
           external_link_fn={@external_link_fn}
         />
       </Tile.tile>
@@ -143,7 +92,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
       socket =
         socket
         |> assign(:active_tab, tab)
-        |> load_metrics()
+        |> load_stats()
 
       {:noreply, socket}
     else
@@ -155,97 +104,40 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     "https://example.com"
   end
 
-  defp load_metrics(socket) do
+  defp load_stats(socket) do
     %{active_tab: active_tab, site: site, params: params} = socket.assigns
 
-    assign_async(socket, [:metrics, :results, :meta, :skip_imported_reason], fn ->
-      %{results: pages, meta: meta, query: query, metrics: metrics} =
-        metrics_for_tab(active_tab, site, params)
+    assign_async(socket, :query_result, fn ->
+      metrics = choose_metrics(params)
+      dimension = get_tab_info(active_tab, :dimension)
 
-      {:ok,
-       %{
-         metrics: Enum.map(metrics, &Map.fetch!(@metrics[active_tab], &1)),
-         results: Enum.take(pages, @max_items),
-         meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
-         skip_imported_reason: meta[:imports_skip_reason]
-       }}
+      params =
+        params
+        |> ParsedQueryParams.set(
+          metrics: metrics,
+          dimensions: [dimension],
+          pagination: @pagination
+        )
+
+      query = QueryBuilder.build!(site, params)
+
+      %QueryResult{} = query_result = Stats.query(site, query)
+
+      {:ok, %{query_result: query_result}}
     end)
   end
 
-  defp metrics_for_tab("pages", site, params) do
-    params =
-      params
-      |> ParsedQueryParams.set(dimensions: ["event:page"])
-      |> ParsedQueryParams.set_include(:time_labels, false)
-
-    {:ok, query} = QueryBuilder.build(site, params, %{})
-    metrics = breakdown_metrics(query)
-
-    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
-
-    pages =
-      results
-      |> transform_keys(%{page: :name})
-
-    %{query: query, results: pages, meta: meta, metrics: metrics}
-  end
-
-  defp metrics_for_tab("entry-pages", site, params) do
-    params =
-      params
-      |> ParsedQueryParams.set(dimensions: ["visit:entry_page"])
-      |> ParsedQueryParams.set_include(:time_labels, false)
-
-    {:ok, query} = QueryBuilder.build(site, params, %{})
-    metrics = breakdown_metrics(query)
-
-    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
-
-    pages =
-      results
-      |> transform_keys(%{entry_page: :name})
-
-    %{query: query, results: pages, meta: meta, metrics: metrics}
-  end
-
-  defp metrics_for_tab("exit-pages", site, params) do
-    params =
-      params
-      |> ParsedQueryParams.set(dimensions: ["visit:exit_page"])
-      |> ParsedQueryParams.set_include(:time_labels, false)
-
-    {:ok, query} = QueryBuilder.build(site, params, %{})
-    metrics = breakdown_metrics(query)
-
-    %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, @pagination_params)
-
-    pages =
-      results
-      |> transform_keys(%{exit_page: :name})
-
-    %{query: query, results: pages, meta: meta, metrics: metrics}
-  end
-
-  defp breakdown_metrics(query) do
-    if toplevel_goal_filter?(query) do
+  defp choose_metrics(%ParsedQueryParams{} = params) do
+    if ParsedQueryParams.conversion_goal_filter?(params) do
       [:visitors, :conversion_rate]
     else
       [:visitors]
     end
   end
 
-  defp transform_keys(result, keys_to_replace) when is_map(result) do
-    for {key, val} <- result, do: {Map.get(keys_to_replace, key, key), val}, into: %{}
-  end
-
-  defp transform_keys(results, keys_to_replace) when is_list(results) do
-    Enum.map(results, &transform_keys(&1, keys_to_replace))
-  end
-
-  defp toplevel_goal_filter?(query) do
-    Filters.filtering_on_dimension?(query, "event:goal",
-      max_depth: 0,
-      behavioral_filters: :ignore
-    )
+  defp get_tab_info(tab_key, field) do
+    @tabs
+    |> Enum.find(&(&1.tab_key == tab_key))
+    |> Map.fetch!(field)
   end
 end

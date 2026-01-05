@@ -44,4 +44,11 @@ defmodule Plausible.Stats.ParsedQueryParams do
 
     struct!(parsed_query_params, filters: new_filters)
   end
+
+  def conversion_goal_filter?(%__MODULE__{filters: filters}) do
+    Plausible.Stats.Filters.filtering_on_dimension?(filters, "event:goal",
+      max_depth: 0,
+      behavioral_filters: :ignore
+    )
+  end
 end

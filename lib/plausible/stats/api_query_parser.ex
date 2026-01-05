@@ -13,7 +13,8 @@ defmodule Plausible.Stats.ApiQueryParser do
     trim_relative_date_range: false,
     compare: nil,
     compare_match_day_of_week: false,
-    legacy_time_on_page_cutoff: nil
+    legacy_time_on_page_cutoff: nil,
+    dashboard_metric_labels: false
   }
 
   def default_include(), do: @default_include
