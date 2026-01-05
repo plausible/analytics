@@ -22,6 +22,9 @@ export const SearchInput = ({
   placeholderUnfocused?: string
 }) => {
   const [isFocused, setIsFocused] = useState(false)
+  const isMobile =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(max-width: 768px)').matches
 
   const onSearchInputChange: ChangeEventHandler<HTMLInputElement> = useCallback(
     (event) => {
@@ -64,7 +67,9 @@ export const SearchInput = ({
         onFocus={() => setIsFocused(true)}
         ref={searchRef}
         type="text"
-        placeholder={isFocused ? placeholderFocused : placeholderUnfocused}
+        placeholder={
+          isFocused || isMobile ? placeholderFocused : placeholderUnfocused
+        }
         className={classNames(
           'text-sm dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 max-w-64 w-full dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500',
           className
