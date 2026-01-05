@@ -16,7 +16,8 @@ defmodule Plausible.Stats.Aggregate do
       |> Query.set(metrics: metrics, remove_unavailable_revenue_metrics: true)
       |> QueryOptimizer.optimize()
 
-    %QueryResult{results: [entry], meta: meta} = QueryRunner.run(site, query)
+    %QueryResult{results: [entry], meta: meta} =
+      site |> QueryRunner.run(query) |> QueryResult.from()
 
     results =
       query.metrics

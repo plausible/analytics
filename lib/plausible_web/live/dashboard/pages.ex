@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   alias PlausibleWeb.Components.Dashboard.Tile
 
   alias Plausible.Stats
-  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryResult}
+  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder}
 
   @tabs [
     %{
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           key_label={get_tab_info(@active_tab, :key_label)}
           dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
-          query_result={@query_result}
+          data={@data}
           external_link_fn={@external_link_fn}
         />
       </Tile.tile>
@@ -107,7 +107,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   defp load_stats(socket) do
     %{active_tab: active_tab, site: site, params: params} = socket.assigns
 
-    assign_async(socket, :query_result, fn ->
+    assign_async(socket, :data, fn ->
       metrics = choose_metrics(params)
       dimension = get_tab_info(active_tab, :dimension)
 
@@ -121,9 +121,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
       query = QueryBuilder.build!(site, params)
 
-      %QueryResult{} = query_result = Stats.query(site, query)
-
-      {:ok, %{query_result: query_result}}
+      {:ok, %{data: Stats.dashboard_query(site, query)}}
     end)
   end
 

@@ -19,8 +19,7 @@ defmodule Plausible.Stats.DashboardQueryParser do
     trim_relative_date_range: true,
     compare: nil,
     compare_match_day_of_week: true,
-    legacy_time_on_page_cutoff: nil,
-    dashboard_metric_labels: true
+    legacy_time_on_page_cutoff: nil
   }
 
   def default_include(), do: @default_include

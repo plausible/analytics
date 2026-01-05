@@ -24,30 +24,35 @@ defmodule PlausibleWeb.Components.Dashboard.ReportListTest do
   end
 
   test "renders empty when loading", %{assigns: assigns} do
-    assigns = Keyword.put(assigns, :query_result, AsyncResult.loading())
+    assigns = Keyword.put(assigns, :data, AsyncResult.loading())
     assert render_component(&ReportList.report/1, assigns) == ""
   end
 
   test "renders empty when result not ok", %{assigns: assigns} do
     assigns =
-      Keyword.put(assigns, :query_result, AsyncResult.failed(AsyncResult.loading(), :some_error))
+      Keyword.put(assigns, :data, AsyncResult.failed(AsyncResult.loading(), :some_error))
 
     assert render_component(&ReportList.report/1, assigns) == ""
   end
 
   test "item bar width depends on visitors metric", %{assigns: assigns} do
-    successful_async_result =
-      AsyncResult.ok(%QueryResult{
+    successful_query_result =
+      %QueryResult{
         results: [
           %{metrics: [100, 60.0], dimensions: ["/a"]},
           %{metrics: [70, 40.0], dimensions: ["/b"]},
           %{metrics: [30, 20.0], dimensions: ["/c"]}
         ],
-        meta: Jason.OrderedObject.new(metric_labels: ["Conversions", "CR"]),
+        meta: Jason.OrderedObject.new([]),
         query: Jason.OrderedObject.new(metrics: [:visitors, :conversion_rate])
-      })
+      }
 
-    assigns = Keyword.put(assigns, :query_result, successful_async_result)
+    assigns =
+      Keyword.put(
+        assigns,
+        :data,
+        AsyncResult.ok({successful_query_result, ["Conversions", "CR"]})
+      )
 
     html = render_component(&ReportList.report/1, assigns)
 

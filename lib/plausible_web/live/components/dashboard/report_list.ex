@@ -29,17 +29,17 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         col_min_width: @col_min_width
       )
 
-    if assigns.query_result.loading || !assigns.query_result.ok? do
+    if assigns.data.loading || !assigns.data.ok? do
       ~H"""
       """
     else
-      %QueryResult{results: results, meta: meta, query: query} = assigns.query_result.result
+      {%QueryResult{results: results, query: query}, metric_labels} = assigns.data.result
 
       assigns =
         assign(assigns,
           results: results,
           metric_keys: query[:metrics],
-          metric_labels: meta[:metric_labels],
+          metric_labels: metric_labels,
           empty?: Enum.empty?(results)
         )
 

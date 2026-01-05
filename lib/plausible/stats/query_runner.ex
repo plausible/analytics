@@ -16,7 +16,6 @@ defmodule Plausible.Stats.QueryRunner do
     Comparisons,
     Compare,
     QueryOptimizer,
-    QueryResult,
     Metrics,
     SQL,
     Util,
@@ -41,7 +40,6 @@ defmodule Plausible.Stats.QueryRunner do
     |> add_comparison_query()
     |> execute_comparison_query()
     |> build_results_list()
-    |> QueryResult.from()
   end
 
   defp execute_main_query(%__MODULE__{main_query: query, site: site} = runner) do

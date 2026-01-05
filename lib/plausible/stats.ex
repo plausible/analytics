@@ -8,11 +8,33 @@ defmodule Plausible.Stats do
     Timeseries,
     CurrentVisitors,
     FilterSuggestions,
-    QueryRunner
+    QueryRunner,
+    QueryResult
   }
 
   def query(site, query) do
-    QueryRunner.run(site, query)
+    site |> QueryRunner.run(query) |> QueryResult.from()
+  end
+
+  def dashboard_query(site, query) do
+    {site |> QueryRunner.run(query) |> QueryResult.from(), get_dashboard_metric_labels(query)}
+  end
+
+  defp get_dashboard_metric_labels(query) do
+    context = %{
+      goal_filter?:
+        Plausible.Stats.Filters.filtering_on_dimension?(query, "event:goal",
+          max_depth: 0,
+          behavioral_filters: :ignore
+        ),
+      realtime?: query.input_date_range in [:realtime, :realtime_30m],
+      dimensions: query.dimensions
+    }
+
+    query.metrics
+    |> Enum.map(fn metric ->
+      Plausible.Stats.Metrics.dashboard_metric_label(metric, context)
+    end)
   end
 
   def breakdown(site, query, metrics, pagination) do

@@ -36,7 +36,8 @@ defmodule Plausible.Stats.Breakdown do
         remove_unavailable_revenue_metrics: true
       )
 
-    %QueryResult{results: results, meta: meta} = QueryRunner.run(site, query_with_metrics)
+    %QueryResult{results: results, meta: meta} =
+      site |> QueryRunner.run(query_with_metrics) |> QueryResult.from()
 
     %{
       results: build_breakdown_result(results, query_with_metrics, metrics),
