@@ -56,7 +56,9 @@ export const BreakdownTable = <TListItem extends { name: string }>({
               searchRef={searchRef}
               onSearch={onSearch}
               className={
-                displayError && status === 'error' ? '[&_input]:pointer-events-none' : ''
+                displayError && status === 'error'
+                  ? '[&_input]:pointer-events-none'
+                  : ''
               }
             />
           )}
