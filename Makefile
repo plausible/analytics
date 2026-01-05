@@ -44,7 +44,7 @@ postgres-client: ## Connect to postgres
 	docker exec -it plausible_db psql -U postgres -d plausible_dev
 
 postgres-prod: ## Start a container with the same version of postgres as the one in prod
-	docker run $(PG_FLAGS) --volume=plausible_db_prod:/var/lib/postgresql/data postgres:15
+	docker run $(PG_FLAGS) --volume=plausible_db_prod:/var/lib/postgresql/data postgres:18
 
 postgres-stop: ## Stop and remove the postgres container
 	docker stop plausible_db && docker rm plausible_db

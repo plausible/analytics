@@ -572,7 +572,9 @@ export default function Behaviours({ importedDataInView }) {
           {isRealtime() && <Pill className="-mt-1">last 30min</Pill>}
           {renderImportedQueryUnsupportedWarning()}
         </div>
-        <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
+        {mode !== FUNNELS && (
+          <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
+        )}
       </ReportHeader>
       {renderContent()}
     </ReportLayout>

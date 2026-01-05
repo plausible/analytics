@@ -243,6 +243,19 @@ defmodule Plausible.GoalsTest do
       })
   end
 
+  test "create/2 succeeds to create two pageview goals with different displayn names and custom props each" do
+    site = new_site()
+
+    {:ok, _} = Goals.create(site, %{"page_path" => "/index", "display_name" => "Index"})
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "page_path" => "/index",
+        "display_name" => "Index 2",
+        "custom_props" => %{"foo" => "bar"}
+      })
+  end
+
   test "create/2 fails to create the same currency goal twice" do
     site = new_site()
     {:ok, _} = Goals.create(site, %{"event_name" => "foo bar", "currency" => "EUR"})
