@@ -14,12 +14,13 @@ defmodule Plausible.Stats.DashboardQueryParser do
     # might still want to know whether imported data can be toggled
     # on/off on the dashboard.
     imports_meta: true,
-    time_labels: true,
+    time_labels: false,
     total_rows: false,
     trim_relative_date_range: true,
     compare: nil,
     compare_match_day_of_week: true,
-    legacy_time_on_page_cutoff: nil
+    legacy_time_on_page_cutoff: nil,
+    dashboard_metric_labels: true
   }
 
   def default_include(), do: @default_include
@@ -28,22 +29,47 @@ defmodule Plausible.Stats.DashboardQueryParser do
 
   def default_pagination(), do: @default_pagination
 
-  def parse(query_string, defaults \\ %{}) when is_binary(query_string) do
+  @valid_period_shorthands %{
+    "realtime" => :realtime,
+    "day" => :day,
+    "month" => :month,
+    "year" => :year,
+    "all" => :all,
+    "7d" => {:last_n_days, 7},
+    "28d" => {:last_n_days, 28},
+    "30d" => {:last_n_days, 30},
+    "91d" => {:last_n_days, 91},
+    "6mo" => {:last_n_months, 6},
+    "12mo" => {:last_n_months, 12}
+  }
+
+  @valid_period_shorthand_keys Map.keys(@valid_period_shorthands)
+
+  @valid_comparison_shorthands %{
+    "previous_period" => :previous_period,
+    "year_over_year" => :year_over_year
+  }
+
+  @valid_comparison_shorthand_keys Map.keys(@valid_comparison_shorthands)
+
+  def parse(query_string, site, user_prefs) when is_binary(query_string) do
     query_string = String.trim_leading(query_string, "?")
-    params_map = Map.merge(defaults, URI.decode_query(query_string))
+    params_map = URI.decode_query(query_string)
 
     with {:ok, filters} <- parse_filters(query_string),
          {:ok, relative_date} <- parse_relative_date(params_map) do
+      input_date_range = parse_input_date_range(params_map, site, user_prefs)
+
       include =
         Map.merge(@default_include, %{
           imports: parse_include_imports(params_map),
-          compare: parse_include_compare(params_map),
-          compare_match_day_of_week: parse_include_compare_match_day_of_week(params_map)
+          compare: parse_include_compare(params_map, user_prefs),
+          compare_match_day_of_week: parse_match_day_of_week(params_map, user_prefs)
         })
 
       {:ok,
        ParsedQueryParams.new!(%{
-         input_date_range: parse_input_date_range(params_map),
+         input_date_range: input_date_range,
          relative_date: relative_date,
          filters: filters,
          include: include
@@ -51,25 +77,29 @@ defmodule Plausible.Stats.DashboardQueryParser do
     end
   end
 
-  defp parse_input_date_range(%{"period" => "realtime"}), do: :realtime
-  defp parse_input_date_range(%{"period" => "day"}), do: :day
-  defp parse_input_date_range(%{"period" => "month"}), do: :month
-  defp parse_input_date_range(%{"period" => "year"}), do: :year
-  defp parse_input_date_range(%{"period" => "all"}), do: :all
-  defp parse_input_date_range(%{"period" => "7d"}), do: {:last_n_days, 7}
-  defp parse_input_date_range(%{"period" => "28d"}), do: {:last_n_days, 28}
-  defp parse_input_date_range(%{"period" => "30d"}), do: {:last_n_days, 30}
-  defp parse_input_date_range(%{"period" => "91d"}), do: {:last_n_days, 91}
-  defp parse_input_date_range(%{"period" => "6mo"}), do: {:last_n_months, 6}
-  defp parse_input_date_range(%{"period" => "12mo"}), do: {:last_n_months, 12}
+  defp parse_input_date_range(%{"period" => period}, _site, _user_prefs)
+       when period in @valid_period_shorthand_keys do
+    @valid_period_shorthands[period]
+  end
 
-  defp parse_input_date_range(%{"period" => "custom", "from" => from, "to" => to}) do
+  defp parse_input_date_range(
+         %{"period" => "custom", "from" => from, "to" => to},
+         _site,
+         _user_prefs
+       ) do
     from_date = Date.from_iso8601!(String.trim(from))
     to_date = Date.from_iso8601!(String.trim(to))
     {:date_range, from_date, to_date}
   end
 
-  defp parse_input_date_range(_), do: nil
+  defp parse_input_date_range(_params, _site, %{"period" => period})
+       when period in @valid_period_shorthand_keys do
+    @valid_period_shorthands[period]
+  end
+
+  defp parse_input_date_range(_params, site, _user_prefs) do
+    if recently_created?(site), do: :day, else: {:last_n_days, 28}
+  end
 
   defp parse_relative_date(%{"date" => date}) do
     case Date.from_iso8601(date) do
@@ -83,19 +113,30 @@ defmodule Plausible.Stats.DashboardQueryParser do
   defp parse_include_imports(%{"with_imported" => "false"}), do: false
   defp parse_include_imports(_), do: true
 
-  defp parse_include_compare(%{"comparison" => "previous_period"}), do: :previous_period
-  defp parse_include_compare(%{"comparison" => "year_over_year"}), do: :year_over_year
+  defp parse_include_compare(%{"comparison" => "off"}, _user_prefs), do: nil
 
-  defp parse_include_compare(%{"comparison" => "custom"} = params) do
+  defp parse_include_compare(%{"comparison" => comparison}, _user_prefs)
+       when comparison in @valid_comparison_shorthand_keys do
+    @valid_comparison_shorthands[comparison]
+  end
+
+  defp parse_include_compare(%{"comparison" => "custom"} = params, _user_prefs) do
     from_date = Date.from_iso8601!(params["compare_from"])
     to_date = Date.from_iso8601!(params["compare_to"])
     {:date_range, from_date, to_date}
   end
 
-  defp parse_include_compare(_options), do: nil
+  defp parse_include_compare(_params, %{"comparison" => comparison})
+       when comparison in @valid_comparison_shorthand_keys do
+    @valid_comparison_shorthands[comparison]
+  end
 
-  defp parse_include_compare_match_day_of_week(%{"match_day_of_week" => "false"}), do: false
-  defp parse_include_compare_match_day_of_week(_), do: true
+  defp parse_include_compare(_params, _user_prefs), do: nil
+
+  defp parse_match_day_of_week(%{"match_day_of_week" => "false"}, _user_prefs), do: false
+  defp parse_match_day_of_week(%{"match_day_of_week" => "true"}, _user_prefs), do: true
+  defp parse_match_day_of_week(_params, %{"match_day_of_week" => "false"}), do: false
+  defp parse_match_day_of_week(_params, _user_prefs), do: true
 
   defp parse_filters(query_string) do
     with {:ok, filters} <- decode_filters(query_string) do
@@ -154,5 +195,10 @@ defmodule Plausible.Stats.DashboardQueryParser do
   @event_dimensions ["name", "page", "goal", "hostname"]
   defp event_dimension?(dimension) do
     dimension in @event_dimensions or String.starts_with?(dimension, @event_props_prefix)
+  end
+
+  defp recently_created?(site) do
+    stats_start_date = NaiveDateTime.to_date(site.native_stats_start_at)
+    Date.diff(stats_start_date, Date.utc_today()) >= -1
   end
 end

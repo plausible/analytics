@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Live.FunnelSettingsTest do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase, async: false
   @moduletag :ee_only
 
   on_ee do

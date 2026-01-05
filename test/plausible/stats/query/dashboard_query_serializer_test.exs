@@ -6,25 +6,25 @@ defmodule Plausible.Stats.DashboardQuerySerializerTest do
   @default_include default_include()
 
   describe "parse -> serialize is a reversible transformation" do
-    for query_string <- ["", "date=2021-07-07&f=is,browser,Chrome,Firefox&period=day"] do
+    for query_string <- ["period=month", "date=2021-07-07&f=is,browser,Chrome,Firefox&period=day"] do
       test "with query string being '#{query_string}'" do
-        {:ok, parsed} = parse(unquote(query_string))
+        {:ok, parsed} = parse(unquote(query_string), build(:site), %{})
         assert serialize(parsed) == unquote(query_string)
       end
     end
 
     test "but alphabetical ordering by key is enforced" do
-      {:ok, parsed} = parse("period=day&date=2021-07-07")
+      {:ok, parsed} = parse("period=day&date=2021-07-07", build(:site), %{})
       assert serialize(parsed) == "date=2021-07-07&period=day"
     end
 
     test "but redundant values get removed" do
-      {:ok, parsed} = parse("with_imported=true")
-      assert serialize(parsed) == ""
+      {:ok, parsed} = parse("period=all&with_imported=true", build(:site), %{})
+      assert serialize(parsed) == "period=all"
     end
 
     test "but leading ? gets removed" do
-      {:ok, parsed} = parse("?period=day")
+      {:ok, parsed} = parse("?period=day", build(:site), %{})
       assert serialize(parsed) == "period=day"
     end
   end

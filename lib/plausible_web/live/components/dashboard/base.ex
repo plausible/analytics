@@ -77,6 +77,7 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
     <div class="w-full h-full relative" style={@style}>
       <div
         class={"absolute top-0 left-0 h-full rounded-sm transition-colors duration-150 #{@background_class || ""}"}
+        data-test-id="bar-indicator"
         style={"width: #{@width_percent}%"}
       >
       </div>

@@ -114,9 +114,9 @@ defmodule Plausible.Stats.Filters do
     |> Enum.map(fn {[_operator, dimension | _rest], _depth} -> dimension end)
   end
 
-  def filtering_on_dimension?(query, dimension, opts \\ []) do
+  def filtering_on_dimension?(query_or_filters, dimension, opts \\ []) do
     filters =
-      case query do
+      case query_or_filters do
         %Query{filters: filters} -> filters
         %{filters: filters} -> filters
         filters when is_list(filters) -> filters

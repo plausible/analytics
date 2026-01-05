@@ -16,19 +16,19 @@ export default buildHook({
 
     this.addListener('click', this.el, (e) => {
       const button = e.target.closest('button')
-      const tab = button && button.dataset.tab
+      const tabKey = button && button.dataset.tabKey
       const span = button && button.querySelector('span')
 
       if (span && span.dataset.active === 'false') {
-        const label = button.dataset.label
+        const reportLabel = button.dataset.reportLabel
         const storageKey = button.dataset.storageKey
         const target = button.dataset.target
         const tile = this.el.closest('[data-tile]')
         const title = tile.querySelector('[data-title]')
 
-        title.innerText = label
+        title.innerText = reportLabel
 
-        this.el.querySelectorAll(`button[data-tab] span`).forEach((s) => {
+        this.el.querySelectorAll(`button[data-tab-key] span`).forEach((s) => {
           this.js().setAttribute(s, 'data-active', 'false')
         })
 
@@ -39,10 +39,10 @@ export default buildHook({
         )
 
         if (storageKey) {
-          localStorage.setItem(`${storageKey}__${domain}`, tab)
+          localStorage.setItem(`${storageKey}__${domain}`, tabKey)
         }
 
-        this.pushEventTo(target, 'set-tab', { tab: tab })
+        this.pushEventTo(target, 'set-tab', { tab: tabKey })
       }
     })
   }

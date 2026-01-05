@@ -9,10 +9,6 @@ defmodule PlausibleWeb.Live.Dashboard do
   alias Plausible.Stats.DashboardQueryParser
   alias Plausible.Teams
 
-  @default_prefs %{
-    "period" => "28d"
-  }
-
   @spec enabled?(Plausible.Site.t() | nil) :: boolean()
   def enabled?(nil), do: false
 
@@ -21,8 +17,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   end
 
   def mount(_params, %{"domain" => domain, "url" => url}, socket) do
-    # NOTE: implement a dedicated, permissive params fallback.
-    user_prefs = Map.merge(@default_prefs, get_connect_params(socket)["user_prefs"] || %{})
+    user_prefs = get_connect_params(socket)["user_prefs"] || %{}
 
     # As domain is passed via session, the associated site has already passed
     # validation logic on plug level.
@@ -49,7 +44,13 @@ defmodule PlausibleWeb.Live.Dashboard do
   def handle_params_internal(_params, url, socket) do
     uri = URI.parse(url)
     path = uri.path |> String.split("/") |> Enum.drop(2)
-    {:ok, params} = DashboardQueryParser.parse(uri.query || "", socket.assigns.user_prefs)
+
+    {:ok, params} =
+      DashboardQueryParser.parse(
+        uri.query || "",
+        socket.assigns.site,
+        socket.assigns.user_prefs
+      )
 
     socket =
       assign(socket,

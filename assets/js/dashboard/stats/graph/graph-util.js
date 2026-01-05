@@ -31,45 +31,39 @@ const buildComparisonDataset = function (comparisonPlot) {
   return [
     {
       data: plottable(comparisonPlot),
-      borderColor: 'rgba(60,70,110,0.2)',
-      pointBackgroundColor: 'rgba(60,70,110,0.2)',
-      pointHoverBackgroundColor: 'rgba(60, 70, 110)',
+      borderColor: 'rgb(199, 210, 254)',
+      pointBackgroundColor: 'rgb(199, 210, 254)',
+      pointHoverBackgroundColor: 'rgb(199, 210, 254)',
       yAxisID: 'yComparison'
     }
   ]
 }
-
 const buildDashedDataset = function (plot, presentIndex) {
   if (!presentIndex) return []
-
   const dashedPart = plot.slice(presentIndex - 1, presentIndex + 1)
   const dashedPlot = new Array(presentIndex - 1).concat(dashedPart)
-
   return [
     {
       data: plottable(dashedPlot),
       borderDash: [3, 3],
-      borderColor: 'rgba(101,116,205)',
-      pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+      borderColor: 'rgb(99, 102, 241)',
+      pointHoverBackgroundColor: 'rgb(99, 102, 241)',
       yAxisID: 'y'
     }
   ]
 }
-
 const buildMainPlotDataset = function (plot, presentIndex) {
   const data = presentIndex ? plot.slice(0, presentIndex) : plot
-
   return [
     {
       data: plottable(data),
-      borderColor: 'rgba(101,116,205)',
-      pointBackgroundColor: 'rgba(101,116,205)',
-      pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+      borderColor: 'rgb(99, 102, 241)',
+      pointBackgroundColor: 'rgb(99, 102, 241)',
+      pointHoverBackgroundColor: 'rgb(99, 102, 241)',
       yAxisID: 'y'
     }
   ]
 }
-
 export const buildDataSet = (
   plot,
   comparisonPlot,
@@ -79,10 +73,10 @@ export const buildDataSet = (
 ) => {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300)
   var prev_gradient = ctx.createLinearGradient(0, 0, 0, 300)
-  gradient.addColorStop(0, 'rgba(101,116,205, 0.2)')
-  gradient.addColorStop(1, 'rgba(101,116,205, 0)')
-  prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.075)')
-  prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)')
+  gradient.addColorStop(0, 'rgba(79, 70, 229, 0.15)')
+  gradient.addColorStop(1, 'rgba(79, 70, 229, 0)')
+  prev_gradient.addColorStop(0, 'rgba(79, 70, 229, 0.05)')
+  prev_gradient.addColorStop(1, 'rgba(79, 70, 229, 0)')
 
   const defaultOptions = {
     label,
