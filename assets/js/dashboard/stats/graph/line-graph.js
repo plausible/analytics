@@ -169,6 +169,7 @@ class LineGraph extends React.Component {
   repositionTooltip(e) {
     const tooltipEl = document.getElementById('chartjs-tooltip-main')
     if (tooltipEl) {
+      const isTouch = e.touches !== undefined
       const clientX = e.clientX ?? e.touches?.[0]?.clientX
       const clientY = e.clientY ?? e.touches?.[0]?.clientY
 
@@ -181,7 +182,8 @@ class LineGraph extends React.Component {
           tooltipEl.style.right = null
           tooltipEl.style.left = clientX + window.pageXOffset + 'px'
         }
-        tooltipEl.style.top = clientY + window.pageYOffset + 'px'
+        const yOffset = isTouch ? -80 : 0
+        tooltipEl.style.top = clientY + window.pageYOffset + yOffset + 'px'
         tooltipEl.style.opacity = 1
       }
     }
