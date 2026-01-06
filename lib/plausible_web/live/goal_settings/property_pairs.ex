@@ -11,13 +11,12 @@ defmodule PlausibleWeb.Live.GoalSettings.PropertyPairs do
       socket
       |> assign(assigns)
       |> assign_new(:max_slots, fn -> Plausible.Goal.max_custom_props_per_goal() end)
-      |> assign_new(:slots, fn
-        %{goal: goal} ->
-          if Plausible.Goal.has_custom_props?(goal) do
-            to_list_with_ids(goal.custom_props)
-          else
-            to_list_with_ids(empty_row())
-          end
+      |> assign_new(:slots, fn assigns ->
+        if Plausible.Goal.has_custom_props?(assigns[:goal]) do
+          to_list_with_ids(assigns.goal.custom_props)
+        else
+          to_list_with_ids(empty_row())
+        end
       end)
 
     {:ok, socket}
