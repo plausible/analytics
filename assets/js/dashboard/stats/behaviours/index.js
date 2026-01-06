@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import * as storage from '../../util/storage'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
-import GoalConversions, {
-  specialTitleWhenGoalFilter,
-  SPECIAL_GOALS
-} from './goal-conversions'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
 import {
@@ -30,6 +26,9 @@ import {
   ModesContextProvider,
   useModesContext
 } from './modes-context'
+import { SpecialGoalPropBreakdown } from './special-goal-prop-breakdown'
+import Conversions from './conversions'
+import { getSpecialGoal, isPageViewGoal, isSpecialGoal } from '../../util/goals'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -110,6 +109,7 @@ function getDefaultSelectedFunnel({ site }) {
 
 function Behaviours({ importedDataInView, setMode, mode }) {
   const { query } = useQueryContext()
+  const specialGoal = getSpecialGoal(query)
   const site = useSiteContext()
   const user = useUserContext()
   const { enabledModes, disableMode } = useModesContext()
@@ -136,12 +136,12 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   const onGoalFilterClick = useCallback(
     (e) => {
       const goalName = e.target.innerHTML
-      const isSpecialGoal = Object.keys(SPECIAL_GOALS).includes(goalName)
-      const isPageviewGoal = goalName.startsWith('Visit ')
+      const isSpecial = isSpecialGoal(goalName)
+      const isPageview = isPageViewGoal(goalName)
 
       if (
-        !isSpecialGoal &&
-        !isPageviewGoal &&
+        !isSpecial &&
+        !isPageview &&
         enabledModes.includes(Mode.PROPS) &&
         site.hasProps
       ) {
@@ -253,12 +253,21 @@ function Behaviours({ importedDataInView, setMode, mode }) {
 
   function renderConversions() {
     if (site.hasGoals) {
-      return (
-        <GoalConversions
-          onGoalFilterClick={onGoalFilterClick}
-          afterFetchData={afterFetchData}
-        />
-      )
+      if (specialGoal) {
+        return (
+          <SpecialGoalPropBreakdown
+            prop={specialGoal.prop}
+            afterFetchData={afterFetchData}
+          />
+        )
+      } else {
+        return (
+          <Conversions
+            onGoalFilterClick={onGoalFilterClick}
+            afterFetchData={afterFetchData}
+          />
+        )
+      }
     } else if (adminAccess) {
       return (
         <FeatureSetupNotice
@@ -437,14 +446,22 @@ function Behaviours({ importedDataInView, setMode, mode }) {
       <ReportHeader>
         <div className="flex gap-x-2">
           <TabWrapper>
-            {isEnabled(Mode.CONVERSIONS) && (
-              <TabButton
-                active={mode === Mode.CONVERSIONS}
-                onClick={setTabFactory(Mode.CONVERSIONS)}
-              >
-                {specialTitleWhenGoalFilter(query, 'Goals')}
-              </TabButton>
-            )}
+            {isEnabled(Mode.CONVERSIONS) &&
+              (specialGoal ? (
+                <TabButton
+                  active={mode === Mode.CONVERSIONS}
+                  onClick={setTabFactory(Mode.CONVERSIONS)}
+                >
+                  {specialGoal.title}
+                </TabButton>
+              ) : (
+                <TabButton
+                  active={mode === Mode.CONVERSIONS}
+                  onClick={setTabFactory(Mode.CONVERSIONS)}
+                >
+                  Goals
+                </TabButton>
+              ))}
             {isEnabled(Mode.PROPS) &&
             !!propertyKeys.length &&
             site.propsAvailable ? (
