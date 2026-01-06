@@ -21,7 +21,7 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
       filter: ['is', 'goal', [listItem.name]]
     }
   }
-  
+
   function chooseMetrics() {
     return [
       metrics.createVisitors({

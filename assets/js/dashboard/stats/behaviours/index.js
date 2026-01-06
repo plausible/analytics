@@ -109,7 +109,8 @@ function getDefaultSelectedFunnel({ site }) {
 
 function Behaviours({ importedDataInView, setMode, mode }) {
   const { query } = useQueryContext()
-  const specialGoal = getSpecialGoal(query)
+  const goalFilter = getGoalFilter(query)
+  const specialGoal = goalFilter ? getSpecialGoal(goalFilter) : null
   const site = useSiteContext()
   const user = useUserContext()
   const { enabledModes, disableMode } = useModesContext()
@@ -382,13 +383,18 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   }
 
   function getMoreLinkProps() {
-    console.log({ mode, selectedPropKey })
     switch (mode) {
       case Mode.CONVERSIONS:
-        return {
-          path: conversionsRoute.path,
-          search: (search) => search
-        }
+        return specialGoal
+          ? {
+              path: customPropsRoute.path,
+              params: { propKey: url.maybeEncodeRouteParam(specialGoal.prop) },
+              search: (search) => search
+            }
+          : {
+              path: conversionsRoute.path,
+              search: (search) => search
+            }
       case Mode.PROPS:
         if (!selectedPropKey) {
           return null
