@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
             <.th hide_on_mobile>Type</.th>
           </:thead>
           <:tbody :let={goal}>
-            <.td max_width="max-w-64" height="h-16">
+            <.td max_width="max-w-52 sm:max-w-64" height="h-16">
               <%= if not @revenue_goals_enabled? && goal.currency do %>
                 <div class="truncate">{goal}</div>
                 <.tooltip>
@@ -86,7 +86,20 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                     <:tooltip_content>
                       Belongs to funnel
                     </:tooltip_content>
-                    <Heroicons.funnel class="size-3.5 stroke-2 flex-shrink-0" />
+                    <Heroicons.funnel class="size-3.5 mt-px stroke-2 flex-shrink-0" />
+                  </.tooltip>
+                  <.tooltip :if={goal.custom_props && map_size(goal.custom_props) > 0} centered?={true}>
+                    <:tooltip_content>
+                      <div class="text-xs">
+                        <div :for={{key, value} <- Enum.to_list(goal.custom_props)}>
+                          {key} is {value}
+                        </div>
+                      </div>
+                    </:tooltip_content>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3.5 mt-px flex-shrink-0">
+                      <circle fill="currentColor" cx="7.25" cy="7.25" r="1.25"/>
+                      <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 3h5.172a2 2 0 0 1 1.414.586l5.536 5.536a3 3 0 0 1 0 4.243l-2.757 2.757a3 3 0 0 1-4.243 0l-5.536-5.536A2 2 0 0 1 3 9.172V4a1 1 0 0 1 1-1Z"/>
+                    </svg>
                   </.tooltip>
                 </div>
                 <div class="truncate">
