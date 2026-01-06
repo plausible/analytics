@@ -48,58 +48,91 @@ export const sectionTitles = {
   [FUNNELS]: 'Funnels'
 }
 
-export default function Behaviours({ importedDataInView }) {
+function singleGoalFilterApplied(query) {
+  const goalFilter = getGoalFilter(query)
+  if (goalFilter) {
+    const [operation, _filterKey, clauses] = goalFilter
+    return operation === FILTER_OPERATIONS.is && clauses.length === 1
+  } else {
+    return false
+  }
+}
+
+const STORAGE_KEYS = {
+  getForTab: ({ site }) =>
+    storage.getDomainScopedStorageKey('behavioursTab', site.domain),
+  getForFunnel: ({ site }) =>
+    storage.getDomainScopedStorageKey('behavioursTabFunnel', site.domain),
+  getForPropKey: ({ site }) =>
+    storage.getDomainScopedStorageKey('prop_key', site.domain),
+  getForPropKeyForGoal: ({ goalName, site }) => {
+    return storage.getDomainScopedStorageKey(
+      `${goalName}__prop_key)`,
+      site.domain
+    )
+  }
+}
+
+function getPropKeyFromStorage({ site, query }) {
+  if (singleGoalFilterApplied(query)) {
+    const [_operation, _dimension, [goalName]] = getGoalFilter(query)
+    const storedForGoal = storage.getItem(
+      STORAGE_KEYS.getForPropKeyForGoal({ goalName, site })
+    )
+    if (storedForGoal) {
+      return storedForGoal
+    }
+  }
+
+  return storage.getItem(STORAGE_KEYS.getForPropKey({ site }))
+}
+
+function storePropKey({ site, propKey, query }) {
+  if (singleGoalFilterApplied(query)) {
+    const [_operation, _dimension, [goalName]] = getGoalFilter(query)
+    storage.setItem(
+      STORAGE_KEYS.getForPropKeyForGoal({ goalName, site }),
+      propKey
+    )
+  } else {
+    storage.setItem(STORAGE_KEYS.getForPropKey({ site }), propKey)
+  }
+}
+
+function getDefaultSelectedFunnel({ site }) {
+  const stored = storage.getItem(STORAGE_KEYS.getForFunnel({ site }))
+  const storedExists = stored && site.funnels.some((f) => f.name === stored)
+
+  if (storedExists) {
+    return stored
+  } else if (site.funnels.length > 0) {
+    const firstAvailable = site.funnels[0].name
+    storage.setItem(STORAGE_KEYS.getForFunnel({ site }), firstAvailable)
+    return firstAvailable
+  }
+}
+
+export function Behaviours({
+  importedDataInView,
+  enabledModes,
+  disableMode,
+  defaultMode
+}) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   const user = useUserContext()
   const adminAccess = ['owner', 'admin', 'editor', 'super_admin'].includes(
     user.role
   )
-  const tabKey = storage.getDomainScopedStorageKey('behavioursTab', site.domain)
-  const funnelKey = storage.getDomainScopedStorageKey(
-    'behavioursTabFunnel',
-    site.domain
-  )
-  const propKeyStorageName = `prop_key__${site.domain}`
-  const propKeyStorageNameForGoal = () => {
-    const [_operation, _filterKey, [goal]] = getGoalFilter(query)
-    return `${goal}__prop_key__${site.domain}`
-  }
-  const [enabledModes, setEnabledModes] = useState(getEnabledModes())
-  const [mode, setMode] = useState(defaultMode())
+  const [mode, setMode] = useState(defaultMode)
   const [loading, setLoading] = useState(true)
 
-  const [selectedFunnel, setSelectedFunnel] = useState(defaultSelectedFunnel())
-  const [propertyKeys, setPropertyKeys] = useState([])
-  // Initialize selectedPropKey from storage immediately to show dropdown on page refresh
-  const [selectedPropKey, setSelectedPropKey] = useState(() => {
-    // Inline storage logic to avoid dependency on functions defined later
-    const goalFilter = getGoalFilter(query)
-    let stored = null
-
-    if (goalFilter) {
-      const [operation, _filterKey, clauses] = goalFilter
-      if (operation === FILTER_OPERATIONS.is && clauses.length === 1) {
-        const [goal] = clauses
-        const goalStorageKey = `${goal}__prop_key__${site.domain}`
-        stored = storage.getItem(goalStorageKey)
-      }
-    }
-
-    if (!stored) {
-      stored = storage.getItem(propKeyStorageName)
-    }
-
-    return stored || null
-  })
-
-  // Optimistically add selectedPropKey to propertyKeys on mount so dropdown shows immediately
-  useEffect(() => {
-    if (selectedPropKey && propertyKeys.length === 0) {
-      setPropertyKeys([selectedPropKey])
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const [selectedFunnel, setSelectedFunnel] = useState(
+    getDefaultSelectedFunnel({ site })
+  )
+  const initialSelectedPropKey = getPropKeyFromStorage({ site, query }) || null
+  const [selectedPropKey, setSelectedPropKey] = useState(initialSelectedPropKey)
+  const [propertyKeys, setPropertyKeys] = useState([selectedPropKey])
 
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] =
     useState(false)
@@ -107,22 +140,24 @@ export default function Behaviours({ importedDataInView }) {
   const [skipImportedReason, setSkipImportedReason] = useState(null)
   const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
 
-  const onGoalFilterClick = useCallback((e) => {
-    const goalName = e.target.innerHTML
-    const isSpecialGoal = Object.keys(SPECIAL_GOALS).includes(goalName)
-    const isPageviewGoal = goalName.startsWith('Visit ')
+  const onGoalFilterClick = useCallback(
+    (e) => {
+      const goalName = e.target.innerHTML
+      const isSpecialGoal = Object.keys(SPECIAL_GOALS).includes(goalName)
+      const isPageviewGoal = goalName.startsWith('Visit ')
 
-    if (
-      !isSpecialGoal &&
-      !isPageviewGoal &&
-      enabledModes.includes(PROPS) &&
-      site.hasProps
-    ) {
-      setShowingPropsForGoalFilter(true)
-      setMode(PROPS)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+      if (
+        !isSpecialGoal &&
+        !isPageviewGoal &&
+        enabledModes.includes(PROPS) &&
+        site.hasProps
+      ) {
+        setShowingPropsForGoalFilter(true)
+        setMode(PROPS)
+      }
+    },
+    [enabledModes, site.hasProps]
+  )
 
   useEffect(() => {
     const justRemovedGoalFilter = !hasConversionGoalFilter(query)
@@ -133,11 +168,6 @@ export default function Behaviours({ importedDataInView }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasConversionGoalFilter(query)])
 
-  useEffect(() => {
-    setMode(defaultMode())
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabledModes])
-
   useEffect(() => setLoading(true), [query, mode])
   useEffect(() => {
     if (mode === PROPS && !selectedPropKey) {
@@ -147,18 +177,10 @@ export default function Behaviours({ importedDataInView }) {
     }
   }, [query, mode, selectedPropKey])
 
-  function disableMode(mode) {
-    setEnabledModes(
-      enabledModes.filter((m) => {
-        return m !== mode
-      })
-    )
-  }
-
   function setFunnelFactory(selectedFunnelName) {
     return () => {
-      storage.setItem(tabKey, FUNNELS)
-      storage.setItem(funnelKey, selectedFunnelName)
+      storage.setItem(STORAGE_KEYS.getForTab({ site }), FUNNELS)
+      storage.setItem(STORAGE_KEYS.getForFunnel({ site }), selectedFunnelName)
       setMode(FUNNELS)
       setSelectedFunnel(selectedFunnelName)
     }
@@ -166,35 +188,11 @@ export default function Behaviours({ importedDataInView }) {
 
   function setPropKeyFactory(selectedPropKeyName) {
     return () => {
-      storage.setItem(tabKey, PROPS)
-      const storageName = singleGoalFilterApplied()
-        ? propKeyStorageNameForGoal()
-        : propKeyStorageName
-      storage.setItem(storageName, selectedPropKeyName)
+      storage.setItem(STORAGE_KEYS.getForTab({ site }), PROPS)
+      storePropKey({ site, propKey: selectedPropKeyName, query })
       setMode(PROPS)
       setSelectedPropKey(selectedPropKeyName)
     }
-  }
-
-  function singleGoalFilterApplied() {
-    const goalFilter = getGoalFilter(query)
-    if (goalFilter) {
-      const [operation, _filterKey, clauses] = goalFilter
-      return operation === FILTER_OPERATIONS.is && clauses.length === 1
-    } else {
-      return false
-    }
-  }
-
-  function getPropKeyFromStorage() {
-    if (singleGoalFilterApplied()) {
-      const storedForGoal = storage.getItem(propKeyStorageNameForGoal())
-      if (storedForGoal) {
-        return storedForGoal
-      }
-    }
-
-    return storage.getItem(propKeyStorageName)
   }
 
   useEffect(() => {
@@ -209,7 +207,7 @@ export default function Behaviours({ importedDataInView }) {
           const propKeyValues = propKeys.map((entry) => entry.value)
           setPropertyKeys(propKeyValues)
           if (propKeyValues.length > 0) {
-            const stored = getPropKeyFromStorage()
+            const stored = getPropKeyFromStorage({ site, query })
             const storedExists = stored && propKeyValues.includes(stored)
 
             if (storedExists) {
@@ -217,10 +215,7 @@ export default function Behaviours({ importedDataInView }) {
             } else {
               const firstAvailable = propKeyValues[0]
               setSelectedPropKey(firstAvailable)
-              const storageName = singleGoalFilterApplied()
-                ? propKeyStorageNameForGoal()
-                : propKeyStorageName
-              storage.setItem(storageName, firstAvailable)
+              storePropKey({ site, propKey: firstAvailable, query })
             }
           } else {
             setSelectedPropKey(null)
@@ -236,26 +231,11 @@ export default function Behaviours({ importedDataInView }) {
       setPropertyKeys([])
       setSelectedPropKey(null)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, enabledModes, site.hasProps, site.propsAvailable])
-
-  function defaultSelectedFunnel() {
-    const stored = storage.getItem(funnelKey)
-    const storedExists = stored && site.funnels.some((f) => f.name === stored)
-
-    if (storedExists) {
-      return stored
-    } else if (site.funnels.length > 0) {
-      const firstAvailable = site.funnels[0].name
-
-      storage.setItem(funnelKey, firstAvailable)
-      return firstAvailable
-    }
-  }
+  }, [site, query, enabledModes])
 
   function setTabFactory(tab) {
     return () => {
-      storage.setItem(tabKey, tab)
+      storage.setItem(STORAGE_KEYS.getForTab({ site }), tab)
       setMode(tab)
     }
   }
@@ -290,7 +270,7 @@ export default function Behaviours({ importedDataInView }) {
             action: 'Set up goals',
             link: `/${encodeURIComponent(site.domain)}/settings/goals`
           }}
-          onHideAction={onHideAction(CONVERSIONS)}
+          onHideAction={() => disableMode(CONVERSIONS)}
         />
       )
     } else {
@@ -323,7 +303,7 @@ export default function Behaviours({ importedDataInView }) {
             'Funnels allow you to analyze the user flow through your website, uncover possible issues, optimize your site and increase the conversion rate.'
           }
           callToAction={callToAction}
-          onHideAction={onHideAction(FUNNELS)}
+          onHideAction={() => disableMode(FUNNELS)}
         />
       )
     } else {
@@ -356,7 +336,7 @@ export default function Behaviours({ importedDataInView }) {
             "You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don't track automatically."
           }
           callToAction={callToAction}
-          onHideAction={onHideAction(PROPS)}
+          onHideAction={() => disableMode(PROPS)}
         />
       )
     } else {
@@ -380,12 +360,6 @@ export default function Behaviours({ importedDataInView }) {
     )
   }
 
-  function onHideAction(mode) {
-    return () => {
-      disableMode(mode)
-    }
-  }
-
   function renderContent() {
     switch (mode) {
       case CONVERSIONS:
@@ -397,26 +371,7 @@ export default function Behaviours({ importedDataInView }) {
     }
   }
 
-  function defaultMode() {
-    if (enabledModes.length === 0) {
-      return null
-    }
-
-    const storedMode = storage.getItem(tabKey)
-    if (storedMode && enabledModes.includes(storedMode)) {
-      return storedMode
-    }
-
-    if (enabledModes.includes(CONVERSIONS)) {
-      return CONVERSIONS
-    }
-    if (enabledModes.includes(PROPS)) {
-      return PROPS
-    }
-    return FUNNELS
-  }
-
-  function moreLinkProps() {
+  function getMoreLinkProps() {
     switch (mode) {
       case CONVERSIONS:
         return {
@@ -435,26 +390,6 @@ export default function Behaviours({ importedDataInView }) {
       default:
         return null
     }
-  }
-
-  function getEnabledModes() {
-    let enabledModes = []
-
-    for (const feature of Object.keys(sectionTitles)) {
-      const isOptedOut = site[feature + 'OptedOut']
-      const isAvailable = site[feature + 'Available'] !== false
-
-      // If the feature is not supported by the site owner's subscription,
-      // it only makes sense to display the feature tab to the owner itself
-      // as only they can upgrade to make the feature available.
-      const callToActionIsMissing = !isAvailable && user.role !== 'owner'
-
-      if (!isOptedOut && !callToActionIsMissing) {
-        enabledModes.push(feature)
-      }
-    }
-
-    return enabledModes
   }
 
   function isEnabled(mode) {
@@ -573,10 +508,75 @@ export default function Behaviours({ importedDataInView }) {
           {renderImportedQueryUnsupportedWarning()}
         </div>
         {mode !== FUNNELS && (
-          <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
+          <MoreLink state={moreLinkState} linkProps={getMoreLinkProps()} />
         )}
       </ReportHeader>
       {renderContent()}
     </ReportLayout>
+  )
+}
+
+function getEnabledModes({ site, user }) {
+  let enabledModes = []
+
+  for (const feature of Object.keys(sectionTitles)) {
+    const isOptedOut = site[`${feature}OptedOut`]
+    const isAvailable = site[`${feature}Available`] !== false
+
+    // If the feature is not supported by the site owner's subscription,
+    // it only makes sense to display the feature tab to the owner itself
+    // as only they can upgrade to make the feature available.
+    const callToActionIsMissing = !isAvailable && user.role !== 'owner'
+
+    if (!isOptedOut && !callToActionIsMissing) {
+      enabledModes.push(feature)
+    }
+  }
+
+  return enabledModes
+}
+
+function getDefaultMode({ enabledModes, site }) {
+  if (enabledModes.length === 0) {
+    return null
+  }
+
+  const storedMode = storage.getItem(STORAGE_KEYS.getForTab({ site }))
+  if (storedMode && enabledModes.includes(storedMode)) {
+    return storedMode
+  }
+
+  if (enabledModes.includes(CONVERSIONS)) {
+    return CONVERSIONS
+  }
+
+  if (enabledModes.includes(PROPS)) {
+    return PROPS
+  }
+
+  return FUNNELS
+}
+
+export default function BehavioursWrapped({ importedDataInView }) {
+  const site = useSiteContext()
+  const user = useUserContext()
+  const initialEnabledModes = getEnabledModes({ site, user })
+  const [enabledModes, setEnabledModes] = useState(initialEnabledModes)
+  const disableMode = useCallback((mode) => {
+    setEnabledModes((currentlyEnabledModes) =>
+      currentlyEnabledModes.filter((m) => {
+        return m !== mode
+      })
+    )
+  }, [])
+
+  return (
+    <Behaviours
+      importedDataInView={importedDataInView}
+      enabledModes={enabledModes}
+      disableMode={disableMode}
+      defaultMode={getDefaultMode({ enabledModes, site })}
+      setEnabledModes={setEnabledModes}
+    />
   )
 }
