@@ -31,9 +31,9 @@ const buildComparisonDataset = function (comparisonPlot) {
   return [
     {
       data: plottable(comparisonPlot),
-      borderColor: 'rgb(199, 210, 254)',
-      pointBackgroundColor: 'rgb(199, 210, 254)',
-      pointHoverBackgroundColor: 'rgb(199, 210, 254)',
+      borderColor: 'rgba(99, 102, 241, 0.3)',
+      pointBackgroundColor: 'rgba(99, 102, 241, 0.2)',
+      pointHoverBackgroundColor: 'rgba(99, 102, 241, 0.5)',
       yAxisID: 'yComparison'
     }
   ]
