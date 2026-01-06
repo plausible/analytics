@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
       <.no_data :if={@empty?} min_height={@min_height} data_test_id={@data_test_id} />
 
       <div :if={not @empty?} class="h-full flex flex-col" data-test-id={@data_test_id}>
-        <div style={"row-height: #{@row_height}px;"}>
+        <div style={"min-height: #{@row_height}px;"}>
           <.report_header
             key_label={@key_label}
             metric_labels={@metric_labels}
@@ -96,32 +96,36 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     url = if(assigns[:link_fn], do: assigns.link_fn.(assigns.item))
 
     assigns = assign(assigns, :url, url)
-
+    # TODO: the svg looks broken
     ~H"""
-    <.link
+    <a
       :if={@url}
       target="_blank"
       rel="noreferrer"
       href={@url}
-      class="w-4 h-4 invisible group-hover:visible"
+      class="invisible md:group-hover/row:visible"
     >
       <svg
-        class="inline w-full h-full ml-1 -mt-1 text-gray-600 dark:text-gray-400"
-        fill="currentColor"
-        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        class="inline size-3.5 mb-0.5 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
       >
-        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z">
-        </path>
-        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z">
-        </path>
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 12l9-9-.303.303M14 3h7v7"
+        />
       </svg>
-    </.link>
+    </a>
     """
   end
 
   defp report_header(assigns) do
     ~H"""
-    <div class="pt-3 w-full text-xs font-medium tracking-wide text-gray-500 flex items-center dark:text-gray-400">
+    <div class="pt-3 w-full text-xs font-medium text-gray-500 flex items-center dark:text-gray-400">
       <span data-test-id="report-list-0-0" class="grow truncate">{@key_label}</span>
       <div
         :for={{metric_label, index} <- Enum.with_index(@metric_labels)}
@@ -139,24 +143,22 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     ~H"""
     <div style={"min-height: #{@row_height}px;"}>
       <div
-        class="group flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm transition-colors duration-150"
+        class="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm transition-colors duration-150"
         style={"margin-top: #{@row_gap_height}px;"}
       >
         <div class="grow w-full overflow-hidden" data-test-id={"report-list-#{1 + @item_index}-0"}>
           <Base.bar
             width={@metrics[:visitors]}
             max_width={@bar_max_value}
-            background_class="bg-green-50 group-hover:bg-green-100 dark:bg-gray-500/15 dark:group-hover:bg-gray-500/30"
+            background_class="bg-green-50 group-hover/row:bg-green-100 dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30"
           >
-            <div class="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
-              <span class="w-full md:truncate">
-                <Base.dashboard_link
-                  class="max-w-max w-full flex items-center md:overflow-hidden hover:underline"
-                  to={Utils.dashboard_route(@site, @params, filter: [:is, @dimension, [@item_name]])}
-                >
-                  {trim_name(@item_name, @col_min_width)}
-                </Base.dashboard_link>
-              </span>
+            <div class="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
+              <Base.dashboard_link
+                class="max-w-max w-full flex items-center md:overflow-hidden hover:underline"
+                to={Utils.dashboard_route(@site, @params, filter: [:is, @dimension, [@item_name]])}
+              >
+                {trim_name(@item_name, @col_min_width)}
+              </Base.dashboard_link>
               <.external_link item={@item} link_fn={assigns[:link_fn]} />
             </div>
           </Base.bar>
