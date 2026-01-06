@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   defp choose_metrics(%ParsedQueryParams{} = params) do
     if ParsedQueryParams.conversion_goal_filter?(params) do
-      [:visitors, :conversion_rate]
+      [:visitors, :group_conversion_rate]
     else
       [:visitors]
     end
