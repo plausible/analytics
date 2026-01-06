@@ -471,15 +471,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:site, Plausible.Site, required: true)
 
   def custom_property_section(assigns) do
-    has_custom_props? =
-      case assigns[:goal] do
-        %Plausible.Goal{custom_props: custom_props} when map_size(custom_props) > 0 ->
-          true
-
-        _ ->
-          false
-      end
-
+    has_custom_props? = Plausible.Goal.has_custom_props?(assigns[:goal])
     assigns = assign(assigns, :has_custom_props?, has_custom_props?)
 
     ~H"""

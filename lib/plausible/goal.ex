@@ -87,6 +87,14 @@ defmodule Plausible.Goal do
     end
   end
 
+  @spec has_custom_props?(t()) :: boolean()
+  def has_custom_props?(%__MODULE__{custom_props: custom_props})
+      when map_size(custom_props) > 0 do
+    true
+  end
+
+  def has_custom_props?(_), do: false
+
   defp update_leading_slash(changeset) do
     case get_field(changeset, :page_path) do
       "/" <> _ ->

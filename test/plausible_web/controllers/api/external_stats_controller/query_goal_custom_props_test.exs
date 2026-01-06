@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
   use PlausibleWeb.ConnCase
 
-  @user_id Enum.random(1000..9999)
-
   setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
   alias Plausible.Goals
@@ -72,19 +70,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
           name: "Purchase",
           "meta.key": ["variant", "plan"],
           "meta.value": ["A", "free"],
-          user_id: @user_id
+          user_id: 1
         ),
         build(:event,
           name: "Purchase",
           "meta.key": ["variant", "plan"],
           "meta.value": ["B", "premium"],
-          user_id: @user_id + 1
+          user_id: 2
         ),
         build(:event,
           name: "Purchase",
           "meta.key": ["variant"],
           "meta.value": ["A"],
-          user_id: @user_id + 2
+          user_id: 3
         )
       ])
 
@@ -149,19 +147,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
           name: "Purchase A",
           "meta.key": ["variant"],
           "meta.value": ["A"],
-          user_id: @user_id
+          user_id: 1
         ),
         build(:event,
           name: "Purchase A",
           "meta.key": ["variant"],
           "meta.value": ["A"],
-          user_id: @user_id
+          user_id: 1
         ),
         build(:event,
           name: "Purchase B",
           "meta.key": ["variant"],
           "meta.value": ["B"],
-          user_id: @user_id
+          user_id: 1
         )
       ])
 
@@ -187,21 +185,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
         })
 
       populate_stats(site, [
-        build(:pageview, user_id: @user_id),
+        build(:pageview, user_id: 1),
         build(:event,
           name: "Signup",
           "meta.key": ["method"],
           "meta.value": ["email"],
-          user_id: @user_id
+          user_id: 1
         ),
-        build(:pageview, user_id: @user_id + 1),
+        build(:pageview, user_id: 2),
         build(:event,
           name: "Signup",
           "meta.key": ["method"],
           "meta.value": ["google"],
-          user_id: @user_id + 1
+          user_id: 2
         ),
-        build(:pageview, user_id: @user_id + 2)
+        build(:pageview, user_id: 3)
       ])
 
       conn =
@@ -237,13 +235,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
           name: "Purchase",
           "meta.key": ["variant", "plan"],
           "meta.value": ["A", "free"],
-          user_id: @user_id + 1
+          user_id: 2
         ),
         build(:event,
           name: "Purchase",
           "meta.key": ["variant", "plan"],
           "meta.value": ["B", "premium"],
-          user_id: @user_id + 2
+          user_id: 3
         )
       ])
 
@@ -329,21 +327,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
           name: "Button Click",
           "meta.key": ["color"],
           "meta.value": ["red"],
-          user_id: @user_id
+          user_id: 1
         ),
         build(:event,
           name: "Button Click",
           "meta.key": ["color"],
           "meta.value": ["red"],
-          user_id: @user_id
+          user_id: 1
         ),
         build(:event,
           name: "Button Click",
           "meta.key": ["color"],
           "meta.value": ["blue"],
-          user_id: @user_id + 1
+          user_id: 2
         ),
-        build(:event, name: "Button Click", user_id: @user_id + 2)
+        build(:event, name: "Button Click", user_id: 3)
       ])
 
       conn =

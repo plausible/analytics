@@ -200,7 +200,7 @@ defmodule Plausible.Stats.Goals do
   defp goal_condition(:event, goal, _) do
     name_condition = dynamic([e], e.name == ^goal.event_name)
 
-    if map_size(goal.custom_props) > 0 do
+    if Plausible.Goal.has_custom_props?(goal) do
       custom_props_condition = build_custom_props_condition(goal.custom_props)
       dynamic([e], ^name_condition and ^custom_props_condition)
     else
