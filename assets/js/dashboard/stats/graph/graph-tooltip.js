@@ -103,9 +103,6 @@ let tooltipRoot
 export default function GraphTooltip(graphData, metric, query, theme) {
   return (context) => {
     const tooltipModel = context.tooltip
-    const offset = document
-      .getElementById('main-graph-canvas')
-      .getBoundingClientRect()
     let tooltipEl = document.getElementById('chartjs-tooltip-main')
 
     if (!tooltipEl) {
@@ -119,15 +116,7 @@ export default function GraphTooltip(graphData, metric, query, theme) {
     }
 
     const bgClass = theme.mode === UIMode.dark ? 'bg-gray-950' : 'bg-gray-800'
-    tooltipEl.className = `absolute text-sm font-normal py-3 px-4 pointer-events-none rounded-md z-[100] min-w-[180px] ${bgClass}`
-
-    if (tooltipEl && offset && window.innerWidth < 768) {
-      tooltipEl.style.top =
-        offset.y + offset.height + window.scrollY + 15 + 'px'
-      tooltipEl.style.left = offset.x + 'px'
-      tooltipEl.style.right = null
-      tooltipEl.style.opacity = 1
-    }
+    tooltipEl.className = `absolute text-xs md:text-sm font-normal py-1.5 md:py-3 px-3 md:px-4 pointer-events-none rounded-md z-[100] min-w-[180px] ${bgClass}`
 
     if (tooltipModel.opacity === 0) {
       tooltipEl.style.display = 'none'
@@ -166,7 +155,7 @@ export default function GraphTooltip(graphData, metric, query, theme) {
                     className="size-2 mr-2 rounded-full"
                     style={{ backgroundColor: 'rgba(101,116,205)' }}
                   ></div>
-                  <span>{tooltipData.label}</span>
+                  <span className="shrink-0">{tooltipData.label}</span>
                 </span>
                 <span className="font-bold">{tooltipData.formattedValue}</span>
               </div>
@@ -175,7 +164,9 @@ export default function GraphTooltip(graphData, metric, query, theme) {
                 <div className="flex flex-row justify-between items-center text-sm">
                   <span className="flex items-center mr-4">
                     <div className="size-2 mr-2 rounded-full bg-gray-500"></div>
-                    <span>{tooltipData.comparisonLabel}</span>
+                    <span className="shrink-0">
+                      {tooltipData.comparisonLabel}
+                    </span>
                   </span>
                   <span className="font-bold">
                     {tooltipData.formattedComparisonValue}
