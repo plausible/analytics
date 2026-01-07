@@ -69,6 +69,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:suggest_fun, :any, required: true)
   attr(:suggestions_limit, :integer)
   attr(:class, :string, default: "")
+  attr(:input_class, :string, default: "")
+  attr(:dropdown_class, :string, default: "")
   attr(:required, :boolean, default: false)
   attr(:creatable, :boolean, default: false)
   attr(:errors, :list, default: [])
@@ -105,7 +107,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             phx-target={@myself}
             phx-debounce={200}
             value={@display_value}
-            class="text-sm [&.phx-change-loading+svg.spinner]:block border-none py-1.5 px-1.5 w-full inline-block rounded-md focus:outline-hidden focus:ring-0"
+            class={[
+              "text-sm [&.phx-change-loading+svg.spinner]:block border-none py-1.5 px-1.5 w-full inline-block rounded-md focus:outline-hidden focus:ring-0",
+              @input_class
+            ]}
             style="background-color: inherit;"
             required={@required}
           />
@@ -137,6 +142,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           target={@myself}
           creatable={@creatable}
           display_value={@display_value}
+          dropdown_class={@dropdown_class}
         />
       </div>
     </div>
@@ -172,6 +178,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:target, :any)
   attr(:creatable, :boolean, required: true)
   attr(:display_value, :string, required: true)
+  attr(:dropdown_class, :string, default: "")
 
   def combo_dropdown(assigns) do
     ~H"""
@@ -180,7 +187,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       id={"dropdown-#{@ref}"}
       x-show="isOpen"
       x-ref="suggestions"
-      class="text-sm w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1/5 ring-black focus:outline-hidden dark:bg-gray-800"
+      class={[
+        "text-sm w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1/5 ring-black focus:outline-hidden dark:bg-gray-800",
+        @dropdown_class
+      ]}
       style="display: none;"
     >
       <.option
@@ -248,11 +258,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       <a
         x-ref={"dropdown-#{@ref}-option-#{@idx}"}
         x-on:click={not @creatable && "selectionInProgress = true"}
+        x-on:mouseenter={"const isTruncated = $el.scrollWidth > $el.clientWidth; $el.title = isTruncated ? $el.dataset.displayValue : ''"}
         phx-click={select_option(@ref, @submit_value, @display_value)}
         phx-value-submit-value={@submit_value}
         phx-value-display-value={@display_value}
         phx-target={@target}
         class="block truncate py-2 px-3"
+        data-display-value={@display_value}
       >
         <%= if @creatable do %>
           Create "{@display_value}"
@@ -261,9 +273,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         <% end %>
       </a>
     </li>
-    <div :if={@idx == @suggestions_limit} class="text-xs text-gray-500 relative py-2 px-3">
-      Max results reached. Refine your search by typing.
-    </div>
+    <li :if={@idx == @suggestions_limit} class="text-gray-500 relative py-2 px-3">
+      Max results reached, type to refine search.
+    </li>
     """
   end
 

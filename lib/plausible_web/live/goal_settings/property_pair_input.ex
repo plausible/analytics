@@ -24,13 +24,14 @@ defmodule PlausibleWeb.Live.GoalSettings.PropertyPairInput do
 
   def render(assigns) do
     ~H"""
-    <div class="flex items-center gap-3" id={@id}>
+    <div class="[container-type:inline-size] flex items-center gap-3" id={@id}>
       <div class="flex-1">
         <.live_component
           id={"#{@id}_key"}
           submit_name="goal[custom_props][keys][]"
           placeholder="Select property"
           module={ComboBox}
+          dropdown_class="left-0 w-max min-w-full max-w-[100cqw]"
           suggest_fun={fn input, _options -> suggest_property_names(@site, input) end}
           selected={if @initial_prop_key != "", do: @initial_prop_key, else: nil}
           on_selection_made={
@@ -53,6 +54,7 @@ defmodule PlausibleWeb.Live.GoalSettings.PropertyPairInput do
           submit_name="goal[custom_props][values][]"
           placeholder={if @selected_property, do: "Select value", else: "Select property first"}
           module={ComboBox}
+          dropdown_class="right-0 w-max min-w-full max-w-[100cqw]"
           suggest_fun={
             fn input, _options ->
               suggest_property_values(@site, input, @selected_property)

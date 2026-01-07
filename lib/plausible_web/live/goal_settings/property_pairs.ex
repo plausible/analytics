@@ -42,9 +42,11 @@ defmodule PlausibleWeb.Live.GoalSettings.PropertyPairs do
           />
         </div>
 
-        <div class="w-min inline-flex items-center align-middle">
+        <div
+          :if={length(@slots) > 1}
+          class="w-min inline-flex items-center align-middle"
+        >
           <.remove_property_button
-            :if={length(@slots) > 1}
             pair_id={id}
             myself={@myself}
           />
