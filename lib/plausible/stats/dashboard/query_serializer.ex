@@ -1,10 +1,10 @@
-defmodule Plausible.Stats.DashboardQuerySerializer do
+defmodule Plausible.Stats.Dashboard.QuerySerializer do
   @moduledoc """
   Takes a `%ParsedQueryParams{}` struct and turns it into a query
   string.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams, DashboardQueryParser, QueryInclude}
+  alias Plausible.Stats.{ParsedQueryParams, Dashboard, QueryInclude}
 
   def serialize(%ParsedQueryParams{} = params, segments \\ []) do
     params
@@ -62,7 +62,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
   defp get_serialized_fields(_, _), do: []
 
   defp get_serialized_fields_from_include(:imports, %QueryInclude{} = include) do
-    if include.imports == DashboardQueryParser.default_include().imports do
+    if include.imports == Dashboard.QueryParser.default_include().imports do
       []
     else
       [{"with_imported", to_string(include.imports)}]
@@ -88,7 +88,7 @@ defmodule Plausible.Stats.DashboardQuerySerializer do
 
   defp get_serialized_fields_from_include(:compare_match_day_of_week, include) do
     if include.compare_match_day_of_week ==
-         DashboardQueryParser.default_include().compare_match_day_of_week do
+         Dashboard.QueryParser.default_include().compare_match_day_of_week do
       []
     else
       [{"match_day_of_week", to_string(include.compare_match_day_of_week)}]

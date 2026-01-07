@@ -5,11 +5,12 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   use PlausibleWeb, :live_component
 
-  alias PlausibleWeb.Components.Dashboard.ReportList
-  alias PlausibleWeb.Components.Dashboard.Tile
+  alias PlausibleWeb.Components.Dashboard.{ReportList, Tile, ImportedDataWarnings}
 
   alias Plausible.Stats
   alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryResult}
+
+  import Plausible.Stats.Dashboard.Utils
 
   @tabs [
     %{
@@ -51,18 +52,19 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, :external_link_fn, &external_link/1)
-
     ~H"""
     <div>
       <Tile.tile
         id="breakdown-tile-pages"
-        class="group/report"
+        details_route={dashboard_route(@site, @params, path: "/#{@active_tab}")}
         title={get_tab_info(@active_tab, :report_label)}
         connected?={@connected?}
         target={@myself}
         height={ReportList.height()}
       >
+        <:warnings>
+          <ImportedDataWarnings.unsupported_filters query_result={@query_result} />
+        </:warnings>
         <:tabs>
           <Tile.tab
             :for={%{tab_key: tab_key, report_label: report_label} <- @tabs}
@@ -80,7 +82,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
           query_result={@query_result}
-          external_link_fn={@external_link_fn}
+          external_link_fn={page_external_link_fn_for(@site)}
         />
       </Tile.tile>
     </div>
@@ -98,10 +100,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     else
       {:noreply, socket}
     end
-  end
-
-  defp external_link(_item) do
-    "https://example.com"
   end
 
   defp load_stats(socket) do
@@ -129,7 +127,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   defp choose_metrics(%ParsedQueryParams{} = params) do
     if ParsedQueryParams.conversion_goal_filter?(params) do
-      [:visitors, :conversion_rate]
+      [:visitors, :group_conversion_rate]
     else
       [:visitors]
     end

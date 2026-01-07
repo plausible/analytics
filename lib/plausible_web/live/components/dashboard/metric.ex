@@ -7,7 +7,8 @@ defmodule PlausibleWeb.Components.Dashboard.Metric do
 
   @formatters %{
     visitors: :number_short,
-    conversion_rate: :percentage
+    conversion_rate: :percentage,
+    group_conversion_rate: :percentage
   }
 
   attr :name, :atom, required: true

@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   use PlausibleWeb, :live_view
 
   alias Plausible.Repo
-  alias Plausible.Stats.DashboardQueryParser
+  alias Plausible.Stats.Dashboard
   alias Plausible.Teams
 
   @spec enabled?(Plausible.Site.t() | nil) :: boolean()
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.Dashboard do
     path = uri.path |> String.split("/") |> Enum.drop(2)
 
     {:ok, params} =
-      DashboardQueryParser.parse(
+      Dashboard.QueryParser.parse(
         uri.query || "",
         socket.assigns.site,
         socket.assigns.user_prefs

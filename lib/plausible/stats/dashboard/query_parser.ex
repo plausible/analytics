@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.DashboardQueryParser do
+defmodule Plausible.Stats.Dashboard.QueryParser do
   @moduledoc """
   Parses a dashboard query string into `%ParsedQueryParams{}`. Note that
   `metrics` and `dimensions` do not exist at this step yet, and are expected
@@ -13,7 +13,7 @@ defmodule Plausible.Stats.DashboardQueryParser do
     # is false. Even if we don't want to include imported data, we
     # might still want to know whether imported data can be toggled
     # on/off on the dashboard.
-    imports_meta: true,
+    imports_meta: false,
     time_labels: false,
     total_rows: false,
     trim_relative_date_range: true,

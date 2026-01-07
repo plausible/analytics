@@ -9,9 +9,10 @@ import { TopBar } from './nav-menu/top-bar'
 import Behaviours from './stats/behaviours'
 import { useQueryContext } from './query-context'
 import { useSiteContext } from './site-context'
-import { isRealTimeDashboard } from './util/filters'
+import { hasConversionGoalFilter, isRealTimeDashboard } from './util/filters'
 import { useAppNavigate } from './navigation/use-app-navigate'
 import { parseSearch } from './util/url-search-params'
+import { getDomainScopedStorageKey } from './util/storage'
 
 function DashboardStats({
   importedDataInView,
@@ -22,6 +23,7 @@ function DashboardStats({
 }) {
   const navigate = useAppNavigate()
   const site = useSiteContext()
+  const { query } = useQueryContext()
 
   // Handler for navigation events delegated from LiveView dashboard.
   // Necessary to emulate navigation events in LiveView with pushState
@@ -57,6 +59,17 @@ function DashboardStats({
       {site.flags.live_dashboard ? (
         <LiveViewPortal
           id="pages-breakdown-live"
+          tabs={[
+            {
+              label: hasConversionGoalFilter(query)
+                ? 'Conversion pages'
+                : 'Top pages',
+              value: 'pages'
+            },
+            { label: 'Entry pages', value: 'entry-pages' },
+            { label: 'Exit pages', value: 'exit-pages' }
+          ]}
+          storageKey={getDomainScopedStorageKey('pageTab', site.domain)}
           className="w-full h-full border-0 overflow-hidden"
         />
       ) : (

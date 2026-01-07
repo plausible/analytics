@@ -26,7 +26,6 @@ defmodule PlausibleWeb.Live.DashboardTest do
       {lv, _html} = get_liveview(conn, site)
       assert has_element?(lv, "#pages-breakdown-live-container")
       assert has_element?(lv, "#breakdown-tile-pages")
-      assert has_element?(lv, "#breakdown-tile-pages-title")
       assert has_element?(lv, "#breakdown-tile-pages-tabs")
     end
   end

@@ -5,59 +5,22 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
 
   use PlausibleWeb, :component
 
-  alias Plausible.Stats.DashboardQuerySerializer
-  alias Plausible.Stats.ParsedQueryParams
-
-  attr :site, Plausible.Site, required: true
-  attr :params, :map, required: true
-  attr :path, :string, default: ""
+  attr :to, :string, required: true
   attr :class, :string, default: ""
   attr :rest, :global
 
   slot :inner_block, required: true
 
   def dashboard_link(assigns) do
-    query_string = DashboardQuerySerializer.serialize(assigns.params)
-    url = "/" <> assigns.site.domain <> assigns.path
-
-    url =
-      if query_string != "" do
-        url <> "?" <> query_string
-      else
-        url
-      end
-
-    assigns = assign(assigns, :url, url)
-
     ~H"""
     <.link
       data-type="dashboard-link"
-      patch={@url}
+      patch={@to}
       class={@class}
       {@rest}
     >
       {render_slot(@inner_block)}
     </.link>
-    """
-  end
-
-  attr :site, Plausible.Site, required: true
-  attr :params, :map, required: true
-  attr :filter, :list, required: true
-  attr :class, :string, default: ""
-  attr :rest, :global
-
-  slot :inner_block, required: true
-
-  def filter_link(assigns) do
-    params = ParsedQueryParams.add_or_replace_filter(assigns.params, assigns.filter)
-
-    assigns = assign(assigns, :params, params)
-
-    ~H"""
-    <.dashboard_link site={@site} params={@params} class={@class} {@rest}>
-      {render_slot(@inner_block)}
-    </.dashboard_link>
     """
   end
 

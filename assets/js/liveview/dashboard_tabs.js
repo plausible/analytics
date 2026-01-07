@@ -17,26 +17,28 @@ export default buildHook({
     this.addListener('click', this.el, (e) => {
       const button = e.target.closest('button')
       const tabKey = button && button.dataset.tabKey
-      const span = button && button.querySelector('span')
 
-      if (span && span.dataset.active === 'false') {
-        const reportLabel = button.dataset.reportLabel
+      if (button && button.closest('div').dataset.active === 'false') {
         const storageKey = button.dataset.storageKey
         const target = button.dataset.target
-        const tile = this.el.closest('[data-tile]')
-        const title = tile.querySelector('[data-title]')
 
-        title.innerText = reportLabel
-
-        this.el.querySelectorAll(`button[data-tab-key] span`).forEach((s) => {
-          this.js().setAttribute(s, 'data-active', 'false')
+        this.el.querySelectorAll(`button[data-tab-key]`).forEach((b) => {
+          if (b.dataset.tabKey === tabKey) {
+            this.js().setAttribute(b.closest('div'), 'data-active', 'true')
+            this.js().setAttribute(
+              b.querySelector('span'),
+              'data-active',
+              'true'
+            )
+          } else {
+            this.js().setAttribute(b.closest('div'), 'data-active', 'false')
+            this.js().setAttribute(
+              b.querySelector('span'),
+              'data-active',
+              'false'
+            )
+          }
         })
-
-        this.js().setAttribute(
-          button.querySelector('span'),
-          'data-active',
-          'true'
-        )
 
         if (storageKey) {
           localStorage.setItem(`${storageKey}__${domain}`, tabKey)
