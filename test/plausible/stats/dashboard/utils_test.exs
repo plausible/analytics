@@ -3,6 +3,7 @@ defmodule Plausible.Stats.Dashboard.UtilsTest do
   import Plausible.Stats.Dashboard.Utils
 
   describe "page_external_link_fn_for/1" do
+    @tag :ee_only
     test "returns nil for a consolidated site" do
       site = build(:site, consolidated: true)
       assert is_nil(page_external_link_fn_for(site))
