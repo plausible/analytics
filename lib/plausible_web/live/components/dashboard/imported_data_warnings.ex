@@ -2,13 +2,12 @@ defmodule PlausibleWeb.Components.Dashboard.ImportedDataWarnings do
   @moduledoc false
 
   use PlausibleWeb, :component
-  alias Phoenix.LiveView.AsyncResult
   alias Plausible.Stats.QueryResult
 
   def unsupported_filters(assigns) do
     show? =
       case assigns.query_result do
-        %AsyncResult{result: %QueryResult{meta: meta}} ->
+        %QueryResult{meta: meta} ->
           meta[:imports_skip_reason] == :unsupported_query
 
         _ ->
