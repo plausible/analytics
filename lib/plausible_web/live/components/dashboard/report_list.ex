@@ -96,7 +96,6 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     url = if(assigns[:link_fn], do: assigns.link_fn.(assigns.item))
 
     assigns = assign(assigns, :url, url)
-    # TODO: the svg looks broken
     ~H"""
     <a
       :if={@url}

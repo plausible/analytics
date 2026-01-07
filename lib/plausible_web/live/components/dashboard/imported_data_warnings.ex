@@ -17,7 +17,6 @@ defmodule PlausibleWeb.Components.Dashboard.ImportedDataWarnings do
 
     assigns = assign(assigns, :show?, show?)
 
-    # TODO: Implement a tooltip that looks and acts like the React one.
     ~H"""
     <div :if={@show?} data-test-id="unsupported-filters-warning">
       <span class="hidden">
