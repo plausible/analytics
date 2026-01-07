@@ -129,7 +129,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
                       <:tooltip_content>
                         Password protected
                       </:tooltip_content>
-                      <Heroicons.lock_closed class="feather ml-2 mb-0.5" />
+                      <Heroicons.lock_closed class="size-3.5 mt-px ml-2 mb-0.5 stroke-2" />
                     </.tooltip>
                     <.tooltip
                       :if={!Plausible.Site.SharedLink.password_protected?(link)}
@@ -139,13 +139,13 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
                       <:tooltip_content>
                         No password protection
                       </:tooltip_content>
-                      <Heroicons.lock_open class="feather ml-2 mb-0.5" />
+                      <Heroicons.lock_open class="size-3.5 mt-px ml-2 mb-0.5 stroke-2" />
                     </.tooltip>
                     <.tooltip :if={link.segment_id} enabled?={true} centered?={true}>
                       <:tooltip_content>
                         Limited to segment of data
                       </:tooltip_content>
-                      <Heroicons.eye_slash class="feather ml-1" />
+                      <Heroicons.eye_slash class="size-3.5 mt-px ml-1 stroke-2" />
                     </.tooltip>
                   </div>
                 </.td>

@@ -582,12 +582,12 @@ defmodule PlausibleWeb.Components.Generic do
             current_team={@current_team}
             site={@site}
           >
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
               {render_slot(@inner_block)}
             </div>
           </PlausibleWeb.Components.Billing.feature_gate>
         <% else %>
-          <div class="p-6">
+          <div class="p-4 sm:p-6">
             {render_slot(@inner_block)}
           </div>
         <% end %>
@@ -854,7 +854,7 @@ defmodule PlausibleWeb.Components.Generic do
       class={
         [
           @height,
-          "text-sm px-6 py-4 first:pl-0 last:pr-0 whitespace-nowrap",
+          "text-sm px-3 md:px-6 py-3 md:py-4 first:pl-0 last:pr-0 whitespace-nowrap",
           # allow tooltips overflow cells vertically
           "overflow-visible",
           @truncate && "truncate",
