@@ -18,13 +18,13 @@ const MIN_HEIGHT = 356
 type LiveViewPortalProps = {
   id: string
   tabs: { value: string; label: string }[]
-  storedTab: string | null
+  storageKey: string
   className?: string
 }
 
 export const LiveViewPortal = React.memo(
-  function ({ id, tabs, storedTab, className }: LiveViewPortalProps) {
-    const activeTab = storedTab || 'pages'
+  function ({ id, tabs, storageKey, className }: LiveViewPortalProps) {
+    const activeTab = localStorage.getItem(storageKey) || 'pages'
 
     return (
       <div

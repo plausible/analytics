@@ -12,6 +12,7 @@ import { useSiteContext } from './site-context'
 import { hasConversionGoalFilter, isRealTimeDashboard } from './util/filters'
 import { useAppNavigate } from './navigation/use-app-navigate'
 import { parseSearch } from './util/url-search-params'
+import { getDomainScopedStorageKey } from './util/storage'
 
 function DashboardStats({
   importedDataInView,
@@ -68,7 +69,7 @@ function DashboardStats({
             { label: 'Entry pages', value: 'entry-pages' },
             { label: 'Exit pages', value: 'exit-pages' }
           ]}
-          storedTab={localStorage.getItem(`pageTab__${site.domain}`)}
+          storageKey={getDomainScopedStorageKey('pageTab', site.domain)}
           className="w-full h-full border-0 overflow-hidden"
         />
       ) : (
