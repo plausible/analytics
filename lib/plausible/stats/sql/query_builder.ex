@@ -105,19 +105,20 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
   end
 
-  @doc """
-  Joins events to sessions query when needed for filtering by event dimensions.
-
-  When a sessions query needs to filter by event-level dimensions (like event:goal),
-  this function creates a subquery on the events table and joins it to sessions by session_id.
-
-  For goals with custom props, we use the event_goal_join ARRAY JOIN approach to ensure
-  custom properties are properly validated. Without it, sessions would match on 
-  event name alone, ignoring custom prop requirements.
-  """
   def join_events_if_needed(q, query) do
     if TableDecider.sessions_join_events?(query) do
-      events_q = build_events_subquery_for_sessions(query)
+      events_q =
+        from(e in "events_v2",
+          where: ^SQL.WhereBuilder.build(:events, query),
+          select: %{
+            session_id: fragment("DISTINCT ?", e.session_id),
+            _sample_factor: fragment("_sample_factor")
+          }
+        )
+
+      on_ee do
+        events_q = Plausible.Stats.Sampling.add_query_hint(events_q, query)
+      end
 
       from(s in q,
         join: e in subquery(events_q),
@@ -126,65 +127,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     else
       q
     end
-  end
-
-  defp build_events_subquery_for_sessions(query) do
-    if has_goal_with_custom_props_filters?(query) do
-      build_events_subquery_with_goal_join(query)
-    else
-      build_events_subquery_simple(query)
-    end
-  end
-
-  defp build_events_subquery_simple(query) do
-    events_q =
-      from(e in "events_v2",
-        where: ^SQL.WhereBuilder.build(:events, query),
-        select: %{
-          session_id: fragment("DISTINCT ?", e.session_id),
-          _sample_factor: fragment("_sample_factor")
-        }
-      )
-
-    on_ee do
-      events_q = Plausible.Stats.Sampling.add_query_hint(events_q, query)
-    end
-
-    events_q
-  end
-
-  defp build_events_subquery_with_goal_join(query) do
-    goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
-
-    events_q =
-      from(e in "events_v2",
-        where: ^SQL.WhereBuilder.build(:events, query),
-        join: goal in Expression.event_goal_join(goal_join_data),
-        hints: "ARRAY",
-        on: true,
-        select: %{
-          session_id: fragment("DISTINCT ?", e.session_id),
-          _sample_factor: fragment("_sample_factor")
-        }
-      )
-
-    on_ee do
-      events_q = Plausible.Stats.Sampling.add_query_hint(events_q, query)
-    end
-
-    events_q
-  end
-
-  defp has_goal_with_custom_props_filters?(query) do
-    Enum.any?(query.filters, fn
-      [_, "event:goal" | _] ->
-        Enum.any?(query.preloaded_goals.matching_toplevel_filters, fn goal ->
-          Plausible.Goal.has_custom_props?(goal)
-        end)
-
-      _ ->
-        false
-    end)
   end
 
   defp select_event_metrics(query) do
