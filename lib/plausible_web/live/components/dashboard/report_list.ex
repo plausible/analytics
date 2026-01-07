@@ -96,6 +96,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     url = if(assigns[:link_fn], do: assigns.link_fn.(assigns.item))
 
     assigns = assign(assigns, :url, url)
+
     ~H"""
     <a
       :if={@url}

@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
 
       assert report_list_as_table(report_list, 2, 3) == [
                ["Page", "Conversions", "CR"],
-               ["/two", "1", "33.33%"]
+               ["/two", "1", "50.00%"]
              ]
 
       refute get_in_report_list(report_list, 2, 0)
@@ -120,9 +120,10 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
 
       populate_stats(site, [
         build(:pageview, pathname: "/one"),
+        build(:pageview, pathname: "/two"),
+        build(:pageview, pathname: "/two"),
         build(:pageview, user_id: 1, pathname: "/two"),
-        build(:event, user_id: 1, name: "Signup", pathname: "/two"),
-        build(:pageview, pathname: "/two")
+        build(:event, user_id: 1, name: "Signup", pathname: "/two")
       ])
 
       assert report_list =
@@ -199,7 +200,7 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
 
       assert report_list_as_table(report_list, 2, 3) == [
                ["Exit page", "Conversions", "CR"],
-               ["/two", "1", "33.33%"]
+               ["/two", "1", "50.00%"]
              ]
 
       refute get_in_report_list(report_list, 2, 0)
