@@ -258,7 +258,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       <a
         x-ref={"dropdown-#{@ref}-option-#{@idx}"}
         x-on:click={not @creatable && "selectionInProgress = true"}
-        x-on:mouseenter={"const isTruncated = $el.scrollWidth > $el.clientWidth; $el.title = isTruncated ? $el.dataset.displayValue : ''"}
+        x-on:mouseenter="const isTruncated = $el.scrollWidth > $el.clientWidth; $el.title = isTruncated ? $el.dataset.displayValue : ''"
         phx-click={select_option(@ref, @submit_value, @display_value)}
         phx-value-submit-value={@submit_value}
         phx-value-display-value={@display_value}
