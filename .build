@@ -244,8 +244,9 @@ Plausible.Stats.Comparisons.html
 Plausible.Stats.ConsolidatedView.html
 Plausible.Stats.CurrentVisitors.html
 Plausible.Stats.CustomProps.html
-Plausible.Stats.DashboardQueryParser.html
-Plausible.Stats.DashboardQuerySerializer.html
+Plausible.Stats.Dashboard.QueryParser.html
+Plausible.Stats.Dashboard.QuerySerializer.html
+Plausible.Stats.Dashboard.Utils.html
 Plausible.Stats.DateTimeRange.html
 Plausible.Stats.FilterSuggestions.html
 Plausible.Stats.Filters.LegacyStatsAPIFilterParser.html
@@ -567,8 +568,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-D6CF2EA9.js
-dist/sidebar_items-BBA3D9BB.js
+dist/search_data-45B88C13.js
+dist/sidebar_items-6B1E8A49.js
 index.html
 readme.html
 search.html
