@@ -30,52 +30,47 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         col_min_width: @col_min_width
       )
 
-    if assigns.query_result.loading || !assigns.query_result.ok? do
-      ~H"""
-      """
-    else
-      %QueryResult{results: results, meta: meta, query: query} = assigns.query_result.result
+    %QueryResult{results: results, meta: meta, query: query} = assigns.query_result
 
-      assigns =
-        assign(assigns,
-          results: results,
-          metric_keys: query[:metrics],
-          metric_labels: meta[:metric_labels],
-          empty?: Enum.empty?(results)
-        )
+    assigns =
+      assign(assigns,
+        results: results,
+        metric_keys: query[:metrics],
+        metric_labels: meta[:metric_labels],
+        empty?: Enum.empty?(results)
+      )
 
-      ~H"""
-      <.no_data :if={@empty?} min_height={@min_height} data_test_id={@data_test_id} />
+    ~H"""
+    <.no_data :if={@empty?} min_height={@min_height} data_test_id={@data_test_id} />
 
-      <div :if={not @empty?} class="h-full flex flex-col" data-test-id={@data_test_id}>
-        <div style={"min-height: #{@row_height}px;"}>
-          <.report_header
-            key_label={@key_label}
-            metric_labels={@metric_labels}
-            col_min_width={@col_min_width}
-          />
-        </div>
-
-        <div class="grow" style={"min-height: #{@data_container_height}px;"}>
-          <.report_row
-            :for={{item, item_index} <- Enum.with_index(@results)}
-            link_fn={assigns[:external_link_fn]}
-            item={item}
-            item_index={item_index}
-            item_name={List.first(item.dimensions)}
-            metrics={Enum.zip(@metric_keys, item.metrics)}
-            bar_max_value={bar_max_value(@results, @metric_keys)}
-            site={@site}
-            params={@params}
-            dimension={@dimension}
-            row_height={@row_height}
-            row_gap_height={@row_gap_height}
-            col_min_width={@col_min_width}
-          />
-        </div>
+    <div :if={not @empty?} class="h-full flex flex-col" data-test-id={@data_test_id}>
+      <div style={"min-height: #{@row_height}px;"}>
+        <.report_header
+          key_label={@key_label}
+          metric_labels={@metric_labels}
+          col_min_width={@col_min_width}
+        />
       </div>
-      """
-    end
+
+      <div class="grow" style={"min-height: #{@data_container_height}px;"}>
+        <.report_row
+          :for={{item, item_index} <- Enum.with_index(@results)}
+          link_fn={assigns[:external_link_fn]}
+          item={item}
+          item_index={item_index}
+          item_name={List.first(item.dimensions)}
+          metrics={Enum.zip(@metric_keys, item.metrics)}
+          bar_max_value={bar_max_value(@results, @metric_keys)}
+          site={@site}
+          params={@params}
+          dimension={@dimension}
+          row_height={@row_height}
+          row_gap_height={@row_gap_height}
+          col_min_width={@col_min_width}
+        />
+      </div>
+    </div>
+    """
   end
 
   defp no_data(assigns) do

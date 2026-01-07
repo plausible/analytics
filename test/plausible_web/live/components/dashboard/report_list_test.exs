@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Components.Dashboard.ReportListTest do
 
   alias PlausibleWeb.Components.Dashboard.ReportList
   alias Plausible.Stats.{ParsedQueryParams, QueryResult}
-  alias Phoenix.LiveView.AsyncResult
   import Plausible.DashboardTestUtils
 
   @report_list_selector ~s|[data-test-id="pages-report-list"]|
@@ -23,21 +22,9 @@ defmodule PlausibleWeb.Components.Dashboard.ReportListTest do
     {:ok, %{assigns: assigns}}
   end
 
-  test "renders empty when loading", %{assigns: assigns} do
-    assigns = Keyword.put(assigns, :query_result, AsyncResult.loading())
-    assert render_component(&ReportList.report/1, assigns) == ""
-  end
-
-  test "renders empty when result not ok", %{assigns: assigns} do
-    assigns =
-      Keyword.put(assigns, :query_result, AsyncResult.failed(AsyncResult.loading(), :some_error))
-
-    assert render_component(&ReportList.report/1, assigns) == ""
-  end
-
   test "item bar width depends on visitors metric", %{assigns: assigns} do
-    successful_async_result =
-      AsyncResult.ok(%QueryResult{
+    query_result =
+      %QueryResult{
         results: [
           %{metrics: [100, 60.0], dimensions: ["/a"]},
           %{metrics: [70, 40.0], dimensions: ["/b"]},
@@ -45,9 +32,9 @@ defmodule PlausibleWeb.Components.Dashboard.ReportListTest do
         ],
         meta: Jason.OrderedObject.new(metric_labels: ["Conversions", "CR"]),
         query: Jason.OrderedObject.new(metrics: [:visitors, :conversion_rate])
-      })
+      }
 
-    assigns = Keyword.put(assigns, :query_result, successful_async_result)
+    assigns = Keyword.put(assigns, :query_result, query_result)
 
     html = render_component(&ReportList.report/1, assigns)
 
