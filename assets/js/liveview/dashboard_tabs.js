@@ -25,10 +25,18 @@ export default buildHook({
         this.el.querySelectorAll(`button[data-tab-key]`).forEach((b) => {
           if (b.dataset.tabKey === tabKey) {
             this.js().setAttribute(b.closest('div'), 'data-active', 'true')
-            this.js().setAttribute(b.querySelector('span'), 'data-active', 'true')
+            this.js().setAttribute(
+              b.querySelector('span'),
+              'data-active',
+              'true'
+            )
           } else {
             this.js().setAttribute(b.closest('div'), 'data-active', 'false')
-            this.js().setAttribute(b.querySelector('span'), 'data-active', 'false')
+            this.js().setAttribute(
+              b.querySelector('span'),
+              'data-active',
+              'false'
+            )
           }
         })
 
