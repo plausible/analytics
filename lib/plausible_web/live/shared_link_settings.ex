@@ -31,6 +31,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
     {:ok,
      assign(socket,
        site_id: site_id,
+       site_team: socket.assigns.site.team,
        domain: domain,
        form_shared_link: nil
      )}
@@ -46,7 +47,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
         feature_mod={Plausible.Billing.Feature.SharedLinks}
         site={@site}
         current_user={@current_user}
-        current_team={@current_team}
+        current_team={@site_team}
       >
         <:title>
           Shared links
