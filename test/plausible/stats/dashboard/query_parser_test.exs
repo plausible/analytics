@@ -1,6 +1,6 @@
-defmodule Plausible.Stats.DashboardQueryParserTest do
+defmodule Plausible.Stats.Dashboard.QueryParserTest do
   use Plausible.DataCase
-  import Plausible.Stats.DashboardQueryParser
+  import Plausible.Stats.Dashboard.QueryParser
   alias Plausible.Stats.ParsedQueryParams
 
   @default_include default_include()

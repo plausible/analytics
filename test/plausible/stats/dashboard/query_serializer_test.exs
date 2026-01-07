@@ -1,6 +1,6 @@
-defmodule Plausible.Stats.DashboardQuerySerializerTest do
+defmodule Plausible.Stats.Dashboard.QuerySerializerTest do
   use Plausible.DataCase
-  import Plausible.Stats.{DashboardQuerySerializer, DashboardQueryParser}
+  import Plausible.Stats.Dashboard.{QueryParser, QuerySerializer}
   alias Plausible.Stats.ParsedQueryParams
 
   @default_include default_include()

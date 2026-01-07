@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.DashboardQueryParser do
+defmodule Plausible.Stats.Dashboard.QueryParser do
   @moduledoc """
   Parses a dashboard query string into `%ParsedQueryParams{}`. Note that
   `metrics` and `dimensions` do not exist at this step yet, and are expected

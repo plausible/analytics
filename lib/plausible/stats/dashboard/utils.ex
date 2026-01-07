@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Dashboard.Utils do
   """
 
   alias Plausible.Site
-  alias Plausible.Stats.{DashboardQuerySerializer, ParsedQueryParams}
+  alias Plausible.Stats.{Dashboard, ParsedQueryParams}
 
   def page_external_link_fn_for(site) do
     with true <- Plausible.Sites.regular?(site),
@@ -29,7 +29,7 @@ defmodule Plausible.Stats.Dashboard.Utils do
       end
 
     query_string =
-      case DashboardQuerySerializer.serialize(params) do
+      case Dashboard.QuerySerializer.serialize(params) do
         "" -> ""
         query_string -> "?" <> query_string
       end
