@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
           >
             {render_slot(@tabs)}
           </div>
-          <div class="group-has-[.tile-tabs.phx-hook-loading]:hidden">
+          <div class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden">
             {render_slot(@warnings)}
           </div>
         </div>
