@@ -3,8 +3,12 @@ import { useParams } from 'react-router-dom'
 
 import Modal from './modal'
 import { addFilter, revenueAvailable } from '../../query'
-import { specialTitleWhenGoalFilter } from '../behaviours/goal-conversions'
-import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from '../../util/filters'
+import { getSpecialGoal } from '../../util/goals'
+import {
+  EVENT_PROPS_PREFIX,
+  getGoalFilter,
+  hasConversionGoalFilter
+} from '../../util/filters'
 import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
@@ -20,8 +24,11 @@ function PropsModal() {
   /*global BUILD_EXTRA*/
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
+  const goalFilter = getGoalFilter(query)
+  const specialGoal = goalFilter ? getSpecialGoal(goalFilter) : null
+
   const reportInfo = {
-    title: specialTitleWhenGoalFilter(query, 'Custom property breakdown'),
+    title: specialGoal ? specialGoal.title : 'Custom property breakdown',
     dimension: propKey,
     endpoint: url.apiPath(
       site,
