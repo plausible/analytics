@@ -30,7 +30,7 @@ export default function MoreLink({ linkProps, state }) {
   }, [])
 
   const baseClassName =
-    'flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150'
+    'relative flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 before:absolute before:inset-[-8px] before:content-[" "]'
   const icon = detailsIcon()
 
   if (state === MoreLinkState.HIDDEN) {

@@ -59,7 +59,10 @@ export const TabButton = ({
     })}
   >
     <button
-      className={classNames('group/tab relative flex rounded-sm before:absolute before:inset-[-16px_-6px] before:content-[" "]', className)}
+      className={classNames(
+        'group/tab relative flex rounded-sm before:absolute before:inset-[-16px_-6px] before:content-[" "]',
+        className
+      )}
       onClick={onClick}
     >
       <TabButtonText active={active}>{children}</TabButtonText>
