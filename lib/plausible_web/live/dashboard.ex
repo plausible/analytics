@@ -64,16 +64,14 @@ defmodule PlausibleWeb.Live.Dashboard do
   def render(assigns) do
     ~H"""
     <div id="live-dashboard-container" phx-hook="DashboardRoot">
-      <.portal_wrapper id="pages-breakdown-live-container" target="#pages-breakdown-live">
-        <.live_component
-          module={PlausibleWeb.Live.Dashboard.Pages}
-          id="pages-breakdown-component"
-          site={@site}
-          user_prefs={@user_prefs}
-          connected?={@connected?}
-          params={@params}
-        />
-      </.portal_wrapper>
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.Pages}
+        id="pages-breakdown-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+      />
     </div>
     """
   end
