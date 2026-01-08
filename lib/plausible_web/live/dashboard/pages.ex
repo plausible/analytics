@@ -90,8 +90,6 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   end
 
   def handle_event("set-tab", %{"tab" => tab}, socket) do
-    IO.inspect(tab)
-
     if tab != socket.assigns.active_tab do
       socket =
         socket
