@@ -56,26 +56,7 @@ function DashboardStats({
     <>
       <VisitorGraph updateImportedDataInView={updateImportedDataInView} />
       <Sources />
-      {site.flags.live_dashboard ? (
-        <LiveViewPortal
-          id="pages-breakdown-live"
-          tabs={[
-            {
-              label: hasConversionGoalFilter(query)
-                ? 'Conversion pages'
-                : 'Top pages',
-              value: 'pages'
-            },
-            { label: 'Entry pages', value: 'entry-pages' },
-            { label: 'Exit pages', value: 'exit-pages' }
-          ]}
-          storageKey={getDomainScopedStorageKey('pageTab', site.domain)}
-          className="w-full h-full border-0 overflow-hidden"
-        />
-      ) : (
-        <Pages />
-      )}
-
+      <Pages />
       <Locations />
       <Devices />
       <Behaviours importedDataInView={importedDataInView} />

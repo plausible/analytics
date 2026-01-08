@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
       </div>
       <%!-- reportbody --%>
       <div
-        class="w-full flex-col justify-center group-[.phx-navigation-loading]:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden"
+        class={"w-full flex-col justify-center #{if @connected?, do: "group-[.phx-navigation-loading]:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden", else: "flex"}"}
         style={"min-height: #{@height}px;"}
       >
         <div class="mx-auto loading">
