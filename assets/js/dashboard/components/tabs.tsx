@@ -59,7 +59,10 @@ export const TabButton = ({
     })}
   >
     <button
-      className={classNames('group/tab flex rounded-sm', className)}
+      className={classNames(
+        'group/tab relative flex rounded-sm before:absolute before:inset-[-16px_-6px] before:content-[" "]',
+        className
+      )}
       onClick={onClick}
     >
       <TabButtonText active={active}>{children}</TabButtonText>
@@ -92,7 +95,7 @@ export const DropdownTabButton = ({
             })}
           >
             <Popover.Button
-              className="group/tab inline-flex justify-between rounded-xs"
+              className="group/tab relative inline-flex justify-between rounded-xs before:absolute before:inset-[-16px_-6px] before:content-[' ']"
               ref={dropdownButtonRef}
             >
               <TabButtonText active={active}>{children}</TabButtonText>
