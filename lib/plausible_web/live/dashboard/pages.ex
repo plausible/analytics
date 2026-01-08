@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   def render(assigns) do
     ~H"""
-    <div>
+    <div class="group w-full h-full border-0 overflow-hidden">
       <Tile.tile
         id="breakdown-tile-pages"
         details_route={dashboard_route(@site, @params, path: "/#{@active_tab}")}
@@ -90,6 +90,8 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   end
 
   def handle_event("set-tab", %{"tab" => tab}, socket) do
+    IO.inspect(tab)
+
     if tab != socket.assigns.active_tab do
       socket =
         socket
