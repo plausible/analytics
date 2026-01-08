@@ -43,8 +43,8 @@ defmodule PlausibleWeb.Components.Dashboard.ReportListTest do
           %{metrics: [70, 40.0], dimensions: ["/b"]},
           %{metrics: [30, 20.0], dimensions: ["/c"]}
         ],
-        meta: Jason.OrderedObject.new(metric_labels: ["Conversions", "CR"]),
-        query: Jason.OrderedObject.new(metrics: [:visitors, :conversion_rate])
+        meta: %{metric_labels: ["Conversions", "CR"]},
+        query: %{metrics: [:visitors, :conversion_rate]}
       })
 
     assigns = Keyword.put(assigns, :query_result, successful_async_result)

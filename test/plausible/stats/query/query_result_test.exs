@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Query.QueryResultTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer}
+  alias Plausible.Stats.{Query, QueryRunner}
 
   setup do
     user = insert(:user)
@@ -37,61 +37,5 @@ defmodule Plausible.Stats.Query.QueryResultTest do
                      }
                    )
                  end
-  end
-
-  test "serializing query to JSON keeps keys ordered", %{site: site} do
-    query =
-      Query.parse_and_build!(
-        site,
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["pageviews"],
-          "date_range" => ["2024-01-01", "2024-02-01"],
-          "include" => %{"imports" => true}
-        }
-      )
-
-    query = QueryOptimizer.optimize(query)
-
-    query_result_json =
-      %QueryRunner{site: site, results: [], main_query: query}
-      |> QueryResult.from()
-      |> Jason.encode!(pretty: true)
-      |> String.replace(site.domain, "dummy.site")
-
-    assert query_result_json == """
-           {
-             "results": [],
-             "meta": {
-               "imports_included": false,
-               "imports_skip_reason": "no_imported_data"
-             },
-             "query": {
-               "site_id": "dummy.site",
-               "metrics": [
-                 "pageviews"
-               ],
-               "date_range": [
-                 "2024-01-01T00:00:00Z",
-                 "2024-02-01T23:59:59Z"
-               ],
-               "filters": [],
-               "dimensions": [],
-               "order_by": [
-                 [
-                   "pageviews",
-                   "desc"
-                 ]
-               ],
-               "include": {
-                 "imports": true
-               },
-               "pagination": {
-                 "offset": 0,
-                 "limit": 10000
-               }
-             }
-           }\
-           """
   end
 end

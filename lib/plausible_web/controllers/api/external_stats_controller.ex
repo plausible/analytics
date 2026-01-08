@@ -373,7 +373,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   @imported_query_unsupported_warning "Imported stats are not included in the results because query parameters are not supported. For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
 
-  defp maybe_add_warning(payload, %Jason.OrderedObject{} = meta) do
+  defp maybe_add_warning(payload, meta) do
     case meta[:imports_skip_reason] do
       :unsupported_query -> Map.put(payload, :warning, @imported_query_unsupported_warning)
       _ -> payload
