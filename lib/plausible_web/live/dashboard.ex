@@ -16,19 +16,24 @@ defmodule PlausibleWeb.Live.Dashboard do
     FunWithFlags.enabled?(:live_dashboard, for: site)
   end
 
-  def mount(_params, %{"domain" => domain, "url" => url}, socket) do
-    user_prefs = get_connect_params(socket)["user_prefs"] || %{}
-
-    # As domain is passed via session, the associated site has already passed
-    # validation logic on plug level.
+  def mount(%{"domain" => domain} = _params, _session, socket) do
     site =
-      Plausible.Site
-      |> Repo.get_by!(domain: domain)
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain,
+        roles: [
+          :owner,
+          :admin,
+          :editor,
+          :super_admin,
+          :viewer
+        ]
+      )
       |> Repo.preload([
         :owners,
         :completed_imports,
         team: [:owners, subscription: Teams.last_subscription_query()]
       ])
+
+    user_prefs = get_connect_params(socket)["user_prefs"] || %{}
 
     socket =
       socket
@@ -36,12 +41,10 @@ defmodule PlausibleWeb.Live.Dashboard do
       |> assign(:site, site)
       |> assign(:user_prefs, user_prefs)
 
-    {:noreply, socket} = handle_params_internal(%{}, url, socket)
-
     {:ok, socket}
   end
 
-  def handle_params_internal(_params, url, socket) do
+  def handle_params(_params, url, socket) do
     uri = URI.parse(url)
     path = uri.path |> String.split("/") |> Enum.drop(2)
 
@@ -63,46 +66,18 @@ defmodule PlausibleWeb.Live.Dashboard do
 
   def render(assigns) do
     ~H"""
-    <div id="live-dashboard-container" phx-hook="DashboardRoot">
-      <.live_component
-        module={PlausibleWeb.Live.Dashboard.Pages}
-        id="pages-breakdown-component"
-        site={@site}
-        user_prefs={@user_prefs}
-        connected?={@connected?}
-        params={@params}
-      />
+    <div class="container print:max-w-full pt-6">
+      <div id="live-dashboard-container" phx-hook="DashboardRoot">
+        <.live_component
+          module={PlausibleWeb.Live.Dashboard.Pages}
+          id="pages-breakdown-component"
+          site={@site}
+          user_prefs={@user_prefs}
+          connected?={@connected?}
+          params={@params}
+        />
+      </div>
     </div>
     """
-  end
-
-  def handle_event("handle_dashboard_params", %{"url" => url}, socket) do
-    query =
-      url
-      |> URI.parse()
-      |> Map.fetch!(:query)
-
-    params = URI.decode_query(query || "")
-
-    handle_params_internal(params, url, socket)
-  end
-
-  attr :id, :string, required: true
-  attr :target, :string, required: true
-
-  slot :inner_block
-
-  if Mix.env() in [:test, :ce_test] do
-    defp portal_wrapper(assigns) do
-      ~H"""
-      <div id={@id}>{render_slot(@inner_block)}</div>
-      """
-    end
-  else
-    defp portal_wrapper(assigns) do
-      ~H"""
-      <.portal id={@id} target={@target}>{render_slot(@inner_block)}</.portal>
-      """
-    end
   end
 end
