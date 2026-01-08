@@ -12,49 +12,7 @@
   <% end %>
 
   <div class="pt-6"></div>
-  <div
-    id="stats-react-container"
-    style="overflow-anchor: none;"
-    data-domain={@site.domain}
-    data-offset={Plausible.Site.tz_offset(@site)}
-    data-has-goals={to_string(@has_goals)}
-    data-conversions-opted-out={to_string(Plausible.Billing.Feature.Goals.opted_out?(@site))}
-    data-funnels-opted-out={to_string(Plausible.Billing.Feature.Funnels.opted_out?(@site))}
-    data-props-opted-out={to_string(Plausible.Billing.Feature.Props.opted_out?(@site))}
-    data-funnels-available={
-      to_string(Plausible.Billing.Feature.Funnels.check_availability(@site.team) == :ok)
-    }
-    data-props-available={
-      to_string(Plausible.Billing.Feature.Props.check_availability(@site.team) == :ok)
-    }
-    data-site-segments-available={
-      to_string(Plausible.Billing.Feature.SiteSegments.check_availability(@site.team) == :ok)
-    }
-    data-revenue-goals={Jason.encode!(@revenue_goals)}
-    data-funnels={Jason.encode!(@funnels)}
-    data-has-props={to_string(@has_props)}
-    data-logged-in={to_string(!!@conn.assigns[:current_user])}
-    data-stats-begin={@stats_start_date}
-    data-native-stats-begin={@native_stats_start_date}
-    data-shared-link-auth={assigns[:shared_link_auth]}
-    data-embedded={to_string(@conn.assigns[:embedded])}
-    data-background={@conn.assigns[:background]}
-    data-is-dbip={to_string(@is_dbip)}
-    data-current-user-role={@site_role}
-    data-current-user-id={
-      if user = @conn.assigns[:current_user], do: user.id, else: Jason.encode!(nil)
-    }
-    data-flags={Jason.encode!(@flags)}
-    data-segments={Jason.encode!(@segments)}
-    data-valid-intervals-by-period={
-      Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()
-    }
-    data-is-consolidated-view={Jason.encode!(@consolidated_view?)}
-    data-consolidated-view-available={Jason.encode!(@consolidated_view_available?)}
-    data-team-identifier={@team_identifier}
-    data-limited-to-segment-id={Jason.encode!(@limited_to_segment_id)}
-  >
-  </div>
+
   <%= if PlausibleWeb.Live.Dashboard.enabled?(@site) do %>
     {live_render(@conn, PlausibleWeb.Live.Dashboard,
       id: "live-dashboard-lv",
@@ -63,6 +21,50 @@
         "url" => Plug.Conn.request_url(@conn)
       }
     )}
+  <% else %>
+    <div
+      id="stats-react-container"
+      style="overflow-anchor: none;"
+      data-domain={@site.domain}
+      data-offset={Plausible.Site.tz_offset(@site)}
+      data-has-goals={to_string(@has_goals)}
+      data-conversions-opted-out={to_string(Plausible.Billing.Feature.Goals.opted_out?(@site))}
+      data-funnels-opted-out={to_string(Plausible.Billing.Feature.Funnels.opted_out?(@site))}
+      data-props-opted-out={to_string(Plausible.Billing.Feature.Props.opted_out?(@site))}
+      data-funnels-available={
+        to_string(Plausible.Billing.Feature.Funnels.check_availability(@site.team) == :ok)
+      }
+      data-props-available={
+        to_string(Plausible.Billing.Feature.Props.check_availability(@site.team) == :ok)
+      }
+      data-site-segments-available={
+        to_string(Plausible.Billing.Feature.SiteSegments.check_availability(@site.team) == :ok)
+      }
+      data-revenue-goals={Jason.encode!(@revenue_goals)}
+      data-funnels={Jason.encode!(@funnels)}
+      data-has-props={to_string(@has_props)}
+      data-logged-in={to_string(!!@conn.assigns[:current_user])}
+      data-stats-begin={@stats_start_date}
+      data-native-stats-begin={@native_stats_start_date}
+      data-shared-link-auth={assigns[:shared_link_auth]}
+      data-embedded={to_string(@conn.assigns[:embedded])}
+      data-background={@conn.assigns[:background]}
+      data-is-dbip={to_string(@is_dbip)}
+      data-current-user-role={@site_role}
+      data-current-user-id={
+        if user = @conn.assigns[:current_user], do: user.id, else: Jason.encode!(nil)
+      }
+      data-flags={Jason.encode!(@flags)}
+      data-segments={Jason.encode!(@segments)}
+      data-valid-intervals-by-period={
+        Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()
+      }
+      data-is-consolidated-view={Jason.encode!(@consolidated_view?)}
+      data-consolidated-view-available={Jason.encode!(@consolidated_view_available?)}
+      data-team-identifier={@team_identifier}
+      data-limited-to-segment-id={Jason.encode!(@limited_to_segment_id)}
+    >
+    </div>
   <% end %>
   <div id="modal_root"></div>
   <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
