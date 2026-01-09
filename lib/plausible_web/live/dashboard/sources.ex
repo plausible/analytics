@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.Dashboard.Pages do
+defmodule PlausibleWeb.Live.Dashboard.Sources do
   @moduledoc """
   Pages breakdown component.
   """
@@ -14,29 +14,33 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   @tabs [
     %{
-      tab_key: "pages",
-      report_label: "Top pages",
-      key_label: "Page",
-      dimension: "event:page"
+      tab_key: "channels",
+      report_label: "Channels",
+      key_label: "Channel",
+      dimension: "visit:channel"
     },
     %{
-      tab_key: "entry-pages",
-      report_label: "Entry pages",
-      key_label: "Entry page",
-      dimension: "visit:entry_page"
+      tab_key: "sources",
+      report_label: "Sources",
+      key_label: "Source",
+      dimension: "visit:source"
     },
     %{
-      tab_key: "exit-pages",
-      report_label: "Exit pages",
-      key_label: "Exit page",
-      dimension: "visit:exit_page"
+      tab_key: "utm_medium",
+      report_label: "UTM mediums",
+      key_label: "Medium",
+      dimension: "visit:utm_medium"
     }
   ]
 
   @pagination %{limit: 9, offset: 0}
 
   def update(assigns, socket) do
-    active_tab = assigns.user_prefs["pages_tab"] || "pages"
+    active_tab =
+      case assigns.user_prefs["sources_tab"] do
+        tab when tab in ["utm_medium", "sources"] -> tab
+        _ -> "channels"
+      end
 
     socket =
       assign(socket,
@@ -55,7 +59,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
     ~H"""
     <div class="group w-full h-full border-0 overflow-hidden">
       <Tile.tile
-        id="breakdown-tile-pages"
+        id="breakdown-tile-sources"
         details_route={dashboard_route(@site, @params, path: "/#{@active_tab}")}
         title={get_tab_info(@active_tab, :report_label)}
         connected?={@connected?}
@@ -71,7 +75,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
             report_label={report_label}
             tab_key={tab_key}
             active_tab={@active_tab}
-            storage_key="pageTab"
+            storage_key="sourceTab"
             target={@myself}
           />
         </:tabs>
@@ -83,7 +87,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
           query_result={@query_result}
-          external_link_fn={page_external_link_fn_for(@site)}
+          external_link_fn={nil}
         />
       </Tile.tile>
     </div>
@@ -106,22 +110,24 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   defp load_stats(socket) do
     %{active_tab: active_tab, site: site, params: params} = socket.assigns
 
-    metrics = choose_metrics(params)
-    dimension = get_tab_info(active_tab, :dimension)
+    assign_async(socket, :query_result, fn ->
+      metrics = choose_metrics(params)
+      dimension = get_tab_info(active_tab, :dimension)
 
-    params =
-      params
-      |> ParsedQueryParams.set(
-        metrics: metrics,
-        dimensions: [dimension],
-        pagination: @pagination
-      )
+      params =
+        params
+        |> ParsedQueryParams.set(
+          metrics: metrics,
+          dimensions: [dimension],
+          pagination: @pagination
+        )
 
-    query = QueryBuilder.build!(site, params)
+      query = QueryBuilder.build!(site, params)
 
-    %QueryResult{} = query_result = Stats.query(site, query)
+      %QueryResult{} = query_result = Stats.query(site, query)
 
-    assign(socket, :query_result, query_result)
+      {:ok, %{query_result: query_result}}
+    end)
   end
 
   defp choose_metrics(%ParsedQueryParams{} = params) do
