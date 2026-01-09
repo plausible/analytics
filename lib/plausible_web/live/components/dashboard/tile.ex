@@ -63,6 +63,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   attr :report_label, :string, required: true
   attr :tab_key, :string, required: true
   attr :active_tab, :string, required: true
+  attr :storage_key, :string, required: true
   attr :target, :any, required: true
 
   def tab(assigns) do
@@ -85,7 +86,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         class="group/tab flex rounded-sm"
         data-tab-key={@tab_key}
         data-report-label={@report_label}
-        data-storage-key="pageTab"
+        data-storage-key={@storage_key}
         data-target={@target}
       >
         <span

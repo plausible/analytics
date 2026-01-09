@@ -66,17 +66,27 @@ defmodule PlausibleWeb.Live.Dashboard do
 
   def render(assigns) do
     ~H"""
-    <div class="container print:max-w-full pt-6">
-      <div id="live-dashboard-container" phx-hook="DashboardRoot">
-        <.live_component
-          module={PlausibleWeb.Live.Dashboard.Pages}
-          id="pages-breakdown-component"
-          site={@site}
-          user_prefs={@user_prefs}
-          connected?={@connected?}
-          params={@params}
-        />
-      </div>
+    <div
+      id="live-dashboard-container"
+      phx-hook="DashboardRoot"
+      class="container print:max-w-full pt-6 mb-16 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.Sources}
+        id="sources-breakdown-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.Pages}
+        id="pages-breakdown-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+      />
     </div>
     """
   end
