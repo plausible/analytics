@@ -14,7 +14,12 @@ defmodule Plausible.Stats.Goals do
   def preload_needed_goals(site, dimensions, filters) do
     if Enum.member?(dimensions, "event:goal") or
          Filters.filtering_on_dimension?(filters, "event:goal") do
-      goals = Plausible.Goals.for_site(site)
+      site = Plausible.Repo.preload(site, :team)
+      props_available? = Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
+
+      goals =
+        site
+        |> Plausible.Goals.for_site(include_goals_with_custom_props?: props_available?)
 
       %{
         # When grouping by event:goal, later pipeline needs to know which goals match filters exactly.
