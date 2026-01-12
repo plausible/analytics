@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalController.DebugMetadataTest do
   alias Plausible.{IngestRepo, ClickhouseRepo}
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase
 
   describe "Debug metadata" do
     setup [:create_user, :create_api_key, :use_api_key]

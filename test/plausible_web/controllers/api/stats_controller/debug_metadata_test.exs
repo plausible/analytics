@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
   alias Plausible.{IngestRepo, ClickhouseRepo}
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase
 
   describe "Debug metadata for logged in requests" do
     setup [:create_user, :log_in]
