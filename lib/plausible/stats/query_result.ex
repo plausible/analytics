@@ -40,21 +40,20 @@ defmodule Plausible.Stats.QueryResult do
     struct!(
       __MODULE__,
       results: results,
-      meta: meta(runner) |> Enum.sort_by(&elem(&1, 0)) |> Jason.OrderedObject.new(),
-      query:
-        Jason.OrderedObject.new(
-          site_id: site.domain,
-          metrics: query.metrics,
-          date_range: [
-            to_iso8601(query.utc_time_range.first, query.timezone),
-            to_iso8601(query.utc_time_range.last, query.timezone)
-          ],
-          filters: query.filters,
-          dimensions: query.dimensions,
-          order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
-          include: include(query) |> Map.filter(fn {_key, val} -> val end),
-          pagination: query.pagination
-        )
+      meta: meta(runner),
+      query: %{
+        site_id: site.domain,
+        metrics: query.metrics,
+        date_range: [
+          to_iso8601(query.utc_time_range.first, query.timezone),
+          to_iso8601(query.utc_time_range.last, query.timezone)
+        ],
+        filters: query.filters,
+        dimensions: query.dimensions,
+        order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
+        include: include(query) |> Map.filter(fn {_key, val} -> val end),
+        pagination: query.pagination
+      }
     )
   end
 
@@ -212,7 +211,6 @@ end
 
 defimpl Jason.Encoder, for: Plausible.Stats.QueryResult do
   def encode(%Plausible.Stats.QueryResult{results: results, meta: meta, query: query}, opts) do
-    Jason.OrderedObject.new(results: results, meta: meta, query: query)
-    |> Jason.Encoder.encode(opts)
+    Jason.Encoder.encode(%{results: results, meta: meta, query: query}, opts)
   end
 end
