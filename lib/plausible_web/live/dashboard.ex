@@ -71,6 +71,16 @@ defmodule PlausibleWeb.Live.Dashboard do
       phx-hook="DashboardRoot"
       class="container print:max-w-full pt-6 mb-16 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
+      <div class="col-span-full flex items-center justify-end">
+        <.live_component
+          module={PlausibleWeb.Live.Dashboard.DatePicker}
+          id="datepicker-component"
+          site={@site}
+          user_prefs={@user_prefs}
+          connected?={@connected?}
+          params={@params}
+        />
+      </div>
       <.live_component
         module={PlausibleWeb.Live.Dashboard.Sources}
         id="sources-breakdown-component"
