@@ -13,7 +13,9 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
   def render(assigns) do
     revenue_goals_enabled? = Plausible.Billing.Feature.RevenueGoals.enabled?(assigns.site)
-    props_available? = Plausible.Billing.Feature.Props.check_availability(assigns.site.team) == :ok
+
+    props_available? =
+      Plausible.Billing.Feature.Props.check_availability(assigns.site.team) == :ok
 
     assigns =
       assigns
@@ -69,7 +71,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           <:tbody :let={goal}>
             <.td max_width="max-w-52 sm:max-w-64" height="h-16">
               <% has_unavailable_revenue? = not @revenue_goals_enabled? and not is_nil(goal.currency) %>
-              <% has_unavailable_props? = not @props_available? and Plausible.Goal.has_custom_props?(goal) %>
+              <% has_unavailable_props? =
+                not @props_available? and Plausible.Goal.has_custom_props?(goal) %>
               <%= if has_unavailable_revenue? or has_unavailable_props? do %>
                 <div class="truncate">{goal}</div>
                 <.tooltip>
