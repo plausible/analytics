@@ -53,6 +53,35 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
              )
     end
 
+    @tag :ee_only
+    test "lists goals with custom props with feature availability annotation if the plan does not cover them",
+         %{conn: conn, user: user, site: site} do
+      {:ok, goal_with_props} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Signup",
+          "custom_props" => %{"plan" => "premium"}
+        })
+
+      user
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
+      |> Plausible.Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/goals")
+
+      resp = html_response(conn, 200)
+
+      assert Plausible.Goal.has_custom_props?(goal_with_props)
+      assert resp =~ to_string(goal_with_props)
+      assert resp =~ "Upgrade Required"
+      assert resp =~ "Custom Properties on Goals require"
+
+      assert element_exists?(
+               resp,
+               ~s/button[disabled]#edit-goal-#{goal_with_props.id}-disabled/
+             )
+    end
+
     test "lists goals with actions", %{conn: conn, site: site} do
       {:ok, goals} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")
