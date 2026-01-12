@@ -117,7 +117,7 @@ defmodule Plausible.MixProject do
        override: true},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
-      {:prima, "~> 0.2.1"},
+      {:prima, git: "https://github.com/RobertJoonas/prima.git", branch: "dropdown-args"},
       {:plug_cowboy, "~> 2.3"},
       {:polymorphic_embed, "~> 5.0"},
       {:postgrex, "~> 0.21.1"},
