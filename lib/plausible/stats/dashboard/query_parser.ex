@@ -5,6 +5,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   to be filled in by each specific report.
   """
 
+  alias Plausible.Stats.Dashboard
   alias Plausible.Stats.{ParsedQueryParams, QueryInclude}
 
   @default_include %QueryInclude{
@@ -29,21 +30,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   def default_pagination(), do: @default_pagination
 
-  @valid_period_shorthands %{
-    "realtime" => :realtime,
-    "day" => :day,
-    "month" => :month,
-    "year" => :year,
-    "all" => :all,
-    "7d" => {:last_n_days, 7},
-    "28d" => {:last_n_days, 28},
-    "30d" => {:last_n_days, 30},
-    "91d" => {:last_n_days, 91},
-    "6mo" => {:last_n_months, 6},
-    "12mo" => {:last_n_months, 12}
-  }
-
-  @valid_period_shorthand_keys Map.keys(@valid_period_shorthands)
+  @period_shorthands Dashboard.Periods.shorthands()
 
   @valid_comparison_shorthands %{
     "previous_period" => :previous_period,
@@ -78,8 +65,8 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   end
 
   defp parse_input_date_range(%{"period" => period}, _site, _user_prefs)
-       when period in @valid_period_shorthand_keys do
-    @valid_period_shorthands[period]
+       when period in @period_shorthands do
+    Dashboard.Periods.input_date_range_for(period)
   end
 
   defp parse_input_date_range(
@@ -93,8 +80,8 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   end
 
   defp parse_input_date_range(_params, _site, %{"period" => period})
-       when period in @valid_period_shorthand_keys do
-    @valid_period_shorthands[period]
+       when period in @period_shorthands do
+    Dashboard.Periods.input_date_range_for(period)
   end
 
   defp parse_input_date_range(_params, site, _user_prefs) do
