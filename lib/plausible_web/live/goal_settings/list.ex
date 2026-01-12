@@ -13,10 +13,12 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
   def render(assigns) do
     revenue_goals_enabled? = Plausible.Billing.Feature.RevenueGoals.enabled?(assigns.site)
+    props_available? = Plausible.Billing.Feature.Props.check_availability(assigns.site.team) == :ok
 
     assigns =
       assigns
       |> assign(:revenue_goals_enabled?, revenue_goals_enabled?)
+      |> assign(:props_available?, props_available?)
       |> assign(:searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
@@ -66,13 +68,19 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </:thead>
           <:tbody :let={goal}>
             <.td max_width="max-w-52 sm:max-w-64" height="h-16">
-              <%= if not @revenue_goals_enabled? && goal.currency do %>
+              <% has_unavailable_revenue? = not @revenue_goals_enabled? and not is_nil(goal.currency) %>
+              <% has_unavailable_props? = not @props_available? and Plausible.Goal.has_custom_props?(goal) %>
+              <%= if has_unavailable_revenue? or has_unavailable_props? do %>
                 <div class="truncate">{goal}</div>
                 <.tooltip>
                   <:tooltip_content>
                     <p class="text-xs">
-                      Revenue Goals act like regular custom<br />
-                      events without a Business subscription<br />
+                      <%= if has_unavailable_revenue? do %>
+                        Revenue Goals act like regular custom<br />
+                        events without a Business subscription<br />
+                      <% else %>
+                        Custom Properties on Goals require<br /> a Business subscription<br />
+                      <% end %>
                     </p>
                   </:tooltip_content>
                   <span class="w-max flex items-center text-gray-500 italic text-sm">
@@ -127,8 +135,9 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               <.pill :if={goal.currency} color={:indigo}>Revenue Goal ({goal.currency})</.pill>
             </.td>
             <.td actions height="h-16">
+              <% goal_editable? = goal_editable?(goal, @revenue_goals_enabled?, @props_available?) %>
               <.edit_button
-                :if={!goal.currency || (goal.currency && @revenue_goals_enabled?)}
+                :if={goal_editable?}
                 x-data
                 x-on:click={Modal.JS.preopen("goals-form-modal")}
                 phx-click="edit-goal"
@@ -137,7 +146,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 id={"edit-goal-#{goal.id}"}
               />
               <.edit_button
-                :if={goal.currency && !@revenue_goals_enabled?}
+                :if={not goal_editable?}
                 id={"edit-goal-#{goal.id}-disabled"}
                 disabled
                 class="cursor-not-allowed mt-1"
@@ -280,5 +289,11 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       is part of some funnel(s). If you are going to delete it, the associated funnels will be either reduced or deleted completely. Are you sure you want to remove the goal?
       """
     end
+  end
+
+  defp goal_editable?(goal, revenue_goals_enabled?, props_available?) do
+    revenue_ok? = not is_nil(goal.currency) or revenue_goals_enabled?
+    props_ok? = not Plausible.Goal.has_custom_props?(goal) or props_available?
+    revenue_ok? and props_ok?
   end
 end
