@@ -105,24 +105,22 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
   defp load_stats(socket) do
     %{active_tab: active_tab, site: site, params: params} = socket.assigns
 
-    assign_async(socket, :query_result, fn ->
-      metrics = choose_metrics(params)
-      dimension = get_tab_info(active_tab, :dimension)
+    metrics = choose_metrics(params)
+    dimension = get_tab_info(active_tab, :dimension)
 
-      params =
-        params
-        |> ParsedQueryParams.set(
-          metrics: metrics,
-          dimensions: [dimension],
-          pagination: @pagination
-        )
+    params =
+      params
+      |> ParsedQueryParams.set(
+        metrics: metrics,
+        dimensions: [dimension],
+        pagination: @pagination
+      )
 
-      query = QueryBuilder.build!(site, params)
+    query = QueryBuilder.build!(site, params)
 
-      %QueryResult{} = query_result = Stats.query(site, query)
+    %QueryResult{} = query_result = Stats.query(site, query)
 
-      {:ok, %{query_result: query_result}}
-    end)
+    assign(socket, :query_result, query_result)
   end
 
   defp choose_metrics(%ParsedQueryParams{} = params) do

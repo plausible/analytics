@@ -21,17 +21,15 @@ function navigateWithLoader(url) {
 
 export default buildHook({
   initialize() {
-    this.url = window.location.href
-
     const portals = document.querySelectorAll('[data-phx-portal]')
     this.portalTargets = Array.from(portals, (p) => p.dataset.phxPortal)
+    this.url = window.location.href
 
     this.addListener('click', document.body, (e) => {
       const type = e.target.dataset.type || null
 
       if (type === 'dashboard-link') {
-        this.url = e.target.href
-        const uri = new URL(this.url)
+        const uri = new URL(e.target.href)
         // Domain is dropped from URL prefix, because that's what react-dom-router
         // expects.
         const path = '/' + uri.pathname.split('/').slice(2).join('/')
@@ -41,8 +39,6 @@ export default buildHook({
             detail: { path: path, search: uri.search }
           })
         )
-
-        navigateWithLoader.bind(this)(this.url)
 
         e.preventDefault()
       }
