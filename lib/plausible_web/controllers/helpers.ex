@@ -28,7 +28,8 @@ defmodule PlausibleWeb.ControllerHelpers do
       phoenix_action: conn.private.phoenix_action |> to_string(),
       site_id: conn.assigns.site.id,
       site_domain: conn.assigns.site.domain,
-      user_id: get_user_id(conn, conn.assigns)
+      user_id: get_user_id(conn, conn.assigns),
+      team_id: get_team_id(conn, conn.assigns)
     }
   end
 
@@ -40,4 +41,9 @@ defmodule PlausibleWeb.ControllerHelpers do
       _ -> nil
     end
   end
+
+  defp get_team_id(_conn, %{current_team: %Plausible.Teams.Team{id: id}}), do: id
+  defp get_team_id(_conn, %{site_team: %Plausible.Teams.Team{id: id}}), do: id
+  defp get_team_id(_conn, %{api_context: :site, site: %Plausible.Site{team_id: id}}), do: id
+  defp get_team_id(_conn, _assigns), do: nil
 end
