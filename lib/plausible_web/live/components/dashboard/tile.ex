@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         </div>
       </div>
 
-      <div class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden">
+      <div :if={@connected?} class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden">
         {render_slot(@inner_block)}
       </div>
     </div>
