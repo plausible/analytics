@@ -433,23 +433,29 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :no_session_for_engagement
   end
 
-  for {input, expected} <- [{0, true}, {nil, true}, {"invalid", true}, {true, true}, {false, false}] do
+  for {input, expected} <- [
+        {0, true},
+        {nil, true},
+        {"invalid", true},
+        {true, true},
+        {false, false}
+      ] do
     test "parses events interactive value #{inspect(input)} to #{inspect(expected)}" do
-    site = new_site()
+      site = new_site()
 
-    payload = %{
-      name: "ping",
-      url: "http://#{site.domain}",
-      interactive: unquote(input)
-    }
+      payload = %{
+        name: "ping",
+        url: "http://#{site.domain}",
+        interactive: unquote(input)
+      }
 
-    conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request, _conn} = Request.build(conn)
+      conn = build_conn(:post, "/api/events", payload)
+      assert {:ok, request, _conn} = Request.build(conn)
 
-    assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
-    assert event.clickhouse_event.interactive? == unquote(expected)
+      assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
+      assert event.clickhouse_event.interactive? == unquote(expected)
+    end
   end
-end
 
   @tag :ee_only
   test "saves revenue amount" do
