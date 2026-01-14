@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.Dashboard.Periods do
+  @moduledoc false
+
   @all [
     {"realtime", :realtime},
     {"day", :day},
@@ -10,12 +12,12 @@ defmodule Plausible.Stats.Dashboard.Periods do
     {"30d", {:last_n_days, 30}},
     {"91d", {:last_n_days, 91}},
     {"6mo", {:last_n_months, 6}},
-    {"12mo", {:last_n_months, 12}},
+    {"12mo", {:last_n_months, 12}}
   ]
 
   def all(), do: @all
 
-  @shorthands Enum.map(@all, &(elem(&1, 0)))
+  @shorthands Enum.map(@all, &elem(&1, 0))
 
   def shorthands(), do: @shorthands
 
