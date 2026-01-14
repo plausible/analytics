@@ -19,7 +19,7 @@ defmodule Plausible.Stats.Dashboard.Utils do
     end
   end
 
-  def dashboard_route(%Site{} = site, %ParsedQueryParams{} = params, opts) do
+  def dashboard_route(%Site{} = site, %ParsedQueryParams{} = params, opts \\ []) do
     path = Keyword.get(opts, :path, "")
 
     params =

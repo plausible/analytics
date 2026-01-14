@@ -102,6 +102,15 @@ defmodule PlausibleWeb.Live.Dashboard do
         connected?={@connected?}
         params={@params}
       />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.PagesDetails}
+        id="pages-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["pages"]}
+      />
     </div>
     """
   end
