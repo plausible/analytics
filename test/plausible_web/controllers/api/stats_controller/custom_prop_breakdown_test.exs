@@ -1260,25 +1260,25 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
-    for goal_name <- Plausible.Goals.SystemGoals.goals_with_path() do
-      test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
-        insert(:goal, event_name: unquote(goal_name), site: site)
+    for event_name <- Plausible.Event.SystemEvents.events_with_path_prop() do
+      test "returns path breakdown for #{event_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(event_name), site: site)
         site_import = insert(:site_import, site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             "meta.key": ["path"],
             "meta.value": ["/some/path/first.bin"]
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 2,
             events: 5,
             path: "/some/path/first.bin"
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 5,
             events: 10,
             path: "/some/path/second.bin"
@@ -1293,7 +1293,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
         filters =
           Jason.encode!([
-            [:is, "event:goal", [unquote(goal_name)]]
+            [:is, "event:goal", [unquote(event_name)]]
           ])
 
         conn =
@@ -1319,25 +1319,25 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       end
     end
 
-    for goal_name <- Plausible.Goals.SystemGoals.goals_with_url() do
-      test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
-        insert(:goal, event_name: unquote(goal_name), site: site)
+    for event_name <- Plausible.Event.SystemEvents.events_with_url_prop() do
+      test "returns url breakdown for #{event_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(event_name), site: site)
         site_import = insert(:site_import, site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             "meta.key": ["url"],
             "meta.value": ["https://one.com"]
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 2,
             events: 5,
             link_url: "https://one.com"
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 5,
             events: 10,
             link_url: "https://two.com"
@@ -1352,7 +1352,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
         filters =
           Jason.encode!([
-            [:is, "event:goal", [unquote(goal_name)]]
+            [:is, "event:goal", [unquote(event_name)]]
           ])
 
         conn =
@@ -1378,28 +1378,28 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       end
     end
 
-    for goal_name <- ["Outbound Link: Click", "File Download", "Cloaked Link: Click"] do
-      test "returns url breakdown for #{goal_name} goal with a url filter", %{
+    for event_name <- Plausible.Event.SystemEvents.events_with_url_prop() do
+      test "returns url breakdown for #{event_name} goal with a url filter", %{
         conn: conn,
         site: site
       } do
-        insert(:goal, event_name: unquote(goal_name), site: site)
+        insert(:goal, event_name: unquote(event_name), site: site)
         site_import = insert(:site_import, site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             "meta.key": ["url"],
             "meta.value": ["https://one.com"]
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 2,
             events: 5,
             link_url: "https://one.com"
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 5,
             events: 10,
             link_url: "https://two.com"
@@ -1414,7 +1414,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
         filters =
           Jason.encode!([
-            [:is, "event:goal", [unquote(goal_name)]],
+            [:is, "event:goal", [unquote(event_name)]],
             [:is, "event:props:url", ["https://two.com"]]
           ])
 
