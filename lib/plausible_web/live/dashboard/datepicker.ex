@@ -105,7 +105,7 @@ defmodule PlausibleWeb.Live.Dashboard.DatePicker do
                   storage_key: storage_key,
                   patch:
                     Utils.dashboard_route(@site, @params,
-                      update_params: [input_date_range: input_date_range]
+                      update_params: [input_date_range: input_date_range, relative_date: nil]
                     )
                 }
               }
