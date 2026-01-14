@@ -564,7 +564,7 @@ defmodule Plausible.Exports do
           fragment(
             "if(? in ?, ?, '')",
             e.name,
-            ^Plausible.Goals.SystemGoals.goals_with_url(),
+            ^Plausible.Event.SystemEvents.events_with_url_prop(),
             get_by_key(e, :meta, "url")
           ),
           :link_url
@@ -573,7 +573,7 @@ defmodule Plausible.Exports do
           fragment(
             "if(? in ?, ?, '')",
             e.name,
-            ^Plausible.Goals.SystemGoals.goals_with_path(),
+            ^Plausible.Event.SystemEvents.events_with_path_prop(),
             get_by_key(e, :meta, "path")
           ),
           :path
