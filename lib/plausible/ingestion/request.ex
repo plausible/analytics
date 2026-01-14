@@ -182,7 +182,7 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp maybe_set_props_path_to_pathname(props_in_request, changeset) do
-    if Plausible.Goals.SystemGoals.sync_props_path_with_pathname?(
+    if Plausible.Event.SystemEvents.sync_props_path_with_pathname?(
          Changeset.get_field(changeset, :event_name),
          props_in_request
        ) do
@@ -259,12 +259,15 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_interactive(changeset, %{} = request_body) do
-    case request_body["i"] || request_body["interactive"] do
-      interactive? when is_boolean(interactive?) ->
-        Changeset.put_change(changeset, :interactive?, interactive?)
+    can_be_marked_as_non_interactive? =
+      Changeset.get_field(changeset, :event_name) not in Plausible.Event.SystemEvents.events_with_interactive_always_true()
 
-      _ ->
-        changeset
+    if can_be_marked_as_non_interactive? and
+         (request_body["i"] == false or
+            request_body["interactive"] == false) do
+      Changeset.put_change(changeset, :interactive?, false)
+    else
+      changeset
     end
   end
 

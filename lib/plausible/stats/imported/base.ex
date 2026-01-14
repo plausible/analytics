@@ -123,21 +123,26 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   defp do_decide_custom_prop_table(query, property) do
-    has_required_name_filter? =
+    "event:props:" <> prop_key = property
+
+    has_required_event_or_goal_name_filter? =
       query.filters
       |> Enum.flat_map(fn
-        [:is, "event:name", names | _rest] -> names
-        [:is, "event:goal", names | _rest] -> names
+        [:is, "event:name", event_names | _rest] -> event_names
+        [:is, "event:goal", goal_names | _rest] -> goal_names
         _ -> []
       end)
-      |> Enum.any?(&(&1 in Plausible.Goals.SystemGoals.special_goals_for(property)))
+      |> Enum.any?(fn event_or_goal_name ->
+        event_or_goal_name in Plausible.Event.SystemEvents.special_events_for_prop_key(prop_key)
+      end)
 
     has_unsupported_filters? =
       query.filters
       |> dimensions_used_in_filters()
       |> Enum.any?(&(&1 not in [property, "event:name", "event:goal"]))
 
-    if has_required_name_filter? and not has_unsupported_filters? do
+    if has_required_event_or_goal_name_filter? and
+         not has_unsupported_filters? do
       ["imported_custom_events"]
     else
       []
