@@ -38,8 +38,20 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       conn = get(conn, "/api/stats/#{site.domain}/regions?period=day")
 
       assert json_response(conn, 200)["results"] == [
-               %{"code" => "EE-37", "country_flag" => "🇪🇪", "name" => "Harjumaa", "visitors" => 3},
-               %{"code" => "EE-39", "country_flag" => "🇪🇪", "name" => "Hiiumaa", "visitors" => 2}
+               %{
+                 "code" => "EE-37",
+                 "country_flag" => "🇪🇪",
+                 "name" => "Harjumaa",
+                 "visitors" => 3,
+                 "percentage" => 60.0
+               },
+               %{
+                 "code" => "EE-39",
+                 "country_flag" => "🇪🇪",
+                 "name" => "Hiiumaa",
+                 "visitors" => 2,
+                 "percentage" => 40.0
+               }
              ]
     end
 
@@ -48,7 +60,13 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       conn = get(conn, "/api/stats/#{site.domain}/regions?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"code" => "EE-39", "country_flag" => "🇪🇪", "name" => "Hiiumaa", "visitors" => 2}
+               %{
+                 "code" => "EE-39",
+                 "country_flag" => "🇪🇪",
+                 "name" => "Hiiumaa",
+                 "visitors" => 2,
+                 "percentage" => 100.0
+               }
              ]
     end
 

@@ -14,7 +14,7 @@ export default function chooseMetrics(query, site) {
       metrics.createTotalVisitors(),
       metrics.createVisitors({
         renderLabel: (_query) => 'Conversions',
-        width: 'w-28'
+        width: 'w-32 md:w-28'
       }),
       metrics.createConversionRate(),
       showRevenueMetrics && metrics.createTotalRevenue(),
@@ -22,11 +22,11 @@ export default function chooseMetrics(query, site) {
     ].filter((metric) => !!metric)
   }
 
-  if (isRealTimeDashboard(query)) {
+  if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
     return [
       metrics.createVisitors({
         renderLabel: (_query) => 'Current visitors',
-        width: 'w-36'
+        width: 'w-32'
       }),
       metrics.createPercentage()
     ]

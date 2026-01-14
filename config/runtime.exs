@@ -628,7 +628,8 @@ config :plausible, Plausible.ClickhouseRepo,
   transport_opts: ch_transport_opts,
   settings: [
     readonly: 1,
-    join_algorithm: "direct,parallel_hash,hash"
+    join_algorithm: "direct,parallel_hash,hash",
+    cancel_http_readonly_queries_on_client_close: 1
   ]
 
 config :plausible, Plausible.IngestRepo,

@@ -14,7 +14,7 @@ function OperatingSystemsModal() {
   const site = useSiteContext()
 
   const reportInfo = {
-    title: 'Operating Systems',
+    title: 'Operating systems',
     dimension: 'os',
     endpoint: url.apiPath(site, '/operating-systems'),
     dimensionLabel: 'Operating system',

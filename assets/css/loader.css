@@ -5,8 +5,8 @@
 }
 
 .loading.sm {
-  width: 25px;
-  height: 25px;
+  width: 20px;
+  height: 20px;
 }
 
 .loading div {
@@ -25,8 +25,8 @@
 }
 
 .loading.sm div {
-  width: 25px;
-  height: 25px;
+  width: 20px;
+  height: 20px;
 }
 
 @keyframes spin {

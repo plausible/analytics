@@ -1,7 +1,10 @@
 import React, { useCallback } from 'react'
 
 import Modal from './modal'
-import { hasConversionGoalFilter } from '../../util/filters'
+import {
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
 import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
@@ -12,21 +15,21 @@ import { SortDirection } from '../../hooks/use-order-by'
 
 const VIEWS = {
   countries: {
-    title: 'Top Countries',
+    title: 'Top countries',
     dimension: 'country',
     endpoint: '/countries',
     dimensionLabel: 'Country',
     defaultOrder: ['visitors', SortDirection.desc]
   },
   regions: {
-    title: 'Top Regions',
+    title: 'Top regions',
     dimension: 'region',
     endpoint: '/regions',
     dimensionLabel: 'Region',
     defaultOrder: ['visitors', SortDirection.desc]
   },
   cities: {
-    title: 'Top Cities',
+    title: 'Top cities',
     dimension: 'city',
     endpoint: '/cities',
     dimensionLabel: 'City',
@@ -84,11 +87,11 @@ function LocationsModal({ currentView }) {
       ].filter((metric) => !!metric)
     }
 
-    if (query.period === 'realtime') {
+    if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',
-          width: 'w-36'
+          width: 'w-32'
         })
       ]
     }

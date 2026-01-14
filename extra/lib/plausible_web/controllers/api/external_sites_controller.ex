@@ -98,7 +98,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
               display_name: goal.display_name,
               goal_type: Goal.type(goal),
               event_name: goal.event_name,
-              page_path: goal.page_path
+              page_path: goal.page_path,
+              custom_props: goal.custom_props
             }
           end),
         meta: pagination_meta(page.metadata)
@@ -412,6 +413,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         message = Enum.map_join(changeset.errors, ", ", &translate_error/1)
 
         H.bad_request(conn, message)
+
+      {:error, :upgrade_required} ->
+        H.payment_required(
+          conn,
+          "Your current subscription plan does not include Custom Properties"
+        )
 
       e ->
         H.bad_request(conn, "Something went wrong: #{inspect(e)}")

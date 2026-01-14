@@ -13,14 +13,25 @@ defmodule Plausible.Stats.QueryBuilder do
     Filters,
     Time,
     TableDecider,
-    DateTimeRange
+    DateTimeRange,
+    QueryError,
+    QueryInclude
   }
 
-  def build(site, parsed_query_params, debug_metadata \\ %{}) do
+  @doc """
+  Runs various validations and builds a `%Query{}` from already parsed params.
+
+  For convenience, the "parsed params" can also be given as a keyword list, in
+  which case it gets turned in to `ParsedQueryParams` by the function itself.
+  """
+  def build(site, parsed_query_params, debug_metadata \\ %{})
+
+  def build(site, %ParsedQueryParams{} = parsed_query_params, debug_metadata) do
     with {:ok, parsed_query_params} <- resolve_segments_in_filters(parsed_query_params, site),
          query = do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
+         :ok <- validate_case_sensitive_filter_modifier(query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_behavioral_filters(query),
@@ -42,6 +53,23 @@ defmodule Plausible.Stats.QueryBuilder do
       end
 
       {:ok, query}
+    end
+  end
+
+  def build(site, params, debug_metadata) when is_list(params) do
+    include = struct!(QueryInclude, Keyword.get(params, :include, []))
+    parsed_query_params = struct!(ParsedQueryParams, Keyword.put(params, :include, include))
+
+    build(site, parsed_query_params, debug_metadata)
+  end
+
+  def build!(site, params, debug_metadata \\ %{}) do
+    case build(site, params, debug_metadata) do
+      {:ok, query} ->
+        query
+
+      {:error, %QueryError{message: message}} ->
+        raise "Failed to build query: #{inspect(message)}"
     end
   end
 
@@ -109,23 +137,6 @@ defmodule Plausible.Stats.QueryBuilder do
     DateTimeRange.new!(from, to)
   end
 
-  defp build_comparison_datetime_range(
-         %ParsedQueryParams{include: %{comparisons: %{date_range: date_range}}} =
-           parsed_query_params,
-         site
-       ) do
-    comparison_date_range = build_datetime_range(date_range, site, nil, nil)
-
-    new_include =
-      put_in(parsed_query_params.include, [:comparisons, :date_range], comparison_date_range)
-
-    struct(parsed_query_params, include: new_include)
-  end
-
-  defp build_comparison_datetime_range(%ParsedQueryParams{} = parsed_query_params, _site) do
-    parsed_query_params
-  end
-
   defp do_build(parsed_query_params, site, debug_metadata) do
     now = Plausible.Stats.Query.Test.get_fixed_now()
 
@@ -136,8 +147,6 @@ defmodule Plausible.Stats.QueryBuilder do
       filters: filters,
       dimensions: dimensions
     } = parsed_query_params
-
-    parsed_query_params = build_comparison_datetime_range(parsed_query_params, site)
 
     relative_date = relative_date || today_from_now(site, now)
 
@@ -191,10 +200,10 @@ defmodule Plausible.Stats.QueryBuilder do
     )
   end
 
-  def put_comparison_utc_time_range(%Query{include: %{comparisons: nil}} = query), do: query
+  def put_comparison_utc_time_range(%Query{include: %{compare: nil}} = query), do: query
 
-  def put_comparison_utc_time_range(%Query{include: %{comparisons: comparison_opts}} = query) do
-    datetime_range = Comparisons.get_comparison_utc_time_range(query, comparison_opts)
+  def put_comparison_utc_time_range(%Query{} = query) do
+    datetime_range = Comparisons.get_comparison_utc_time_range(query)
     struct!(query, comparison_utc_time_range: datetime_range)
   end
 
@@ -221,7 +230,11 @@ defmodule Plausible.Stats.QueryBuilder do
 
     defp validate_revenue_metrics_access(site, query) do
       if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
-        {:error, "The owner of this site does not have access to the revenue metrics feature."}
+        {:error,
+         %QueryError{
+           code: :feature_access,
+           message: "The owner of this site does not have access to the revenue metrics feature."
+         }}
       else
         :ok
       end
@@ -247,8 +260,39 @@ defmodule Plausible.Stats.QueryBuilder do
 
         _ ->
           {:error,
-           "Invalid order_by entry '#{i(invalid_entry)}'. Entry is not a queried metric or dimension."}
+           %QueryError{
+             code: :invalid_order_by,
+             message:
+               "Invalid order_by entry '#{i(invalid_entry)}'. Entry is not a queried metric or dimension."
+           }}
       end
+    else
+      :ok
+    end
+  end
+
+  @pattern_filter_operators [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not]
+  defp validate_case_sensitive_filter_modifier(query) do
+    invalid_filter =
+      query.filters
+      |> Filters.all_leaf_filters()
+      |> Enum.find(fn filter ->
+        case filter do
+          [operator, _, _, modifiers] when operator in @pattern_filter_operators ->
+            is_map_key(modifiers, :case_insensitive)
+
+          _ ->
+            false
+        end
+      end)
+
+    if invalid_filter do
+      {:error,
+       %QueryError{
+         code: :invalid_filters,
+         message:
+           "Invalid filters. The case_sensitive modifier is not allowed with pattern operators (#{i(invalid_filter)})"
+       }}
     else
       :ok
     end
@@ -263,7 +307,11 @@ defmodule Plausible.Stats.QueryBuilder do
 
     if Enum.count(not_toplevel) > 0 do
       {:error,
-       "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."}
+       %QueryError{
+         code: :invalid_filters,
+         message:
+           "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."
+       }}
     else
       :ok
     end
@@ -280,7 +328,11 @@ defmodule Plausible.Stats.QueryBuilder do
 
     if special_metric? and deep_custom_property? do
       {:error,
-       "Invalid filters. When `conversion_rate` or `group_conversion_rate` metrics are used, custom property filters can only be used on top level."}
+       %QueryError{
+         code: :invalid_filters,
+         message:
+           "Invalid filters. When `conversion_rate` or `group_conversion_rate` metrics are used, custom property filters can only be used on top level."
+       }}
     else
       :ok
     end
@@ -304,12 +356,20 @@ defmodule Plausible.Stats.QueryBuilder do
         behavioral_depth > 1 ->
           {:halt,
            {:error,
-            "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."}}
+            %QueryError{
+              code: :invalid_filters,
+              message:
+                "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
+            }}}
 
         not String.starts_with?(dimension, "event:") ->
           {:halt,
            {:error,
-            "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."}}
+            %QueryError{
+              code: :invalid_filters,
+              message:
+                "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
+            }}}
 
         true ->
           {:cont, :ok}
@@ -343,7 +403,11 @@ defmodule Plausible.Stats.QueryBuilder do
       :ok
     else
       {:error,
-       "Invalid filters. The goal `#{clause}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
+       %QueryError{
+         code: :invalid_filters,
+         message:
+           "Invalid filters. The goal `#{clause}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
+       }}
     end
   end
 
@@ -368,7 +432,11 @@ defmodule Plausible.Stats.QueryBuilder do
     if valid? do
       :ok
     else
-      {:error, "The owner of this site does not have access to the custom properties feature."}
+      {:error,
+       %QueryError{
+         code: :feature_access,
+         message: "The owner of this site does not have access to the custom properties feature."
+       }}
     end
   end
 
@@ -383,7 +451,11 @@ defmodule Plausible.Stats.QueryBuilder do
          Filters.filtering_on_dimension?(query, "event:goal", behavioral_filters: :ignore) do
       :ok
     else
-      {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions."}
+      {:error,
+       %QueryError{
+         code: :invalid_metrics,
+         message: "Metric `#{metric}` can only be queried with event:goal filters or dimensions."
+       }}
     end
   end
 
@@ -394,7 +466,11 @@ defmodule Plausible.Stats.QueryBuilder do
     if page_dimension? or toplevel_page_filter? do
       :ok
     else
-      {:error, "Metric `#{metric}` can only be queried with event:page filters or dimensions."}
+      {:error,
+       %QueryError{
+         code: :invalid_metrics,
+         message: "Metric `#{metric}` can only be queried with event:page filters or dimensions."
+       }}
     end
   end
 
@@ -404,21 +480,37 @@ defmodule Plausible.Stats.QueryBuilder do
         :ok
 
       {["visit:exit_page"], true} ->
-        {:error, "Metric `#{metric}` cannot be queried when filtering on event dimensions."}
+        {:error,
+         %QueryError{
+           code: :invalid_metrics,
+           message: "Metric `#{metric}` cannot be queried when filtering on event dimensions."
+         }}
 
       _ ->
         {:error,
-         "Metric `#{metric}` requires a `\"visit:exit_page\"` dimension. No other dimensions are allowed."}
+         %QueryError{
+           code: :invalid_metrics,
+           message:
+             "Metric `#{metric}` requires a `\"visit:exit_page\"` dimension. No other dimensions are allowed."
+         }}
     end
   end
 
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) ->
-        {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
+        {:error,
+         %QueryError{
+           code: :invalid_metrics,
+           message: "Metric `#{metric}` cannot be queried with a filter on `event:page`."
+         }}
 
       length(query.dimensions) > 0 ->
-        {:error, "Metric `#{metric}` cannot be queried with `dimensions`."}
+        {:error,
+         %QueryError{
+           code: :invalid_metrics,
+           message: "Metric `#{metric}` cannot be queried with `dimensions`."
+         }}
 
       true ->
         :ok
@@ -434,7 +526,12 @@ defmodule Plausible.Stats.QueryBuilder do
         :ok
 
       true ->
-        {:error, "Metric `#{metric}` can only be queried with event:page filters or dimensions."}
+        {:error,
+         %QueryError{
+           code: :invalid_metrics,
+           message:
+             "Metric `#{metric}` can only be queried with event:page filters or dimensions."
+         }}
     end
   end
 
@@ -444,7 +541,11 @@ defmodule Plausible.Stats.QueryBuilder do
     time_dimension? = Enum.any?(query.dimensions, &Time.time_dimension?/1)
 
     if query.include.time_labels and not time_dimension? do
-      {:error, "Invalid include.time_labels: requires a time dimension."}
+      {:error,
+       %QueryError{
+         code: :invalid_include,
+         message: "Invalid include.time_labels: requires a time dimension."
+       }}
     else
       :ok
     end

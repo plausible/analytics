@@ -15,11 +15,10 @@ defmodule Plausible.Stats.Query.QueryResultTest do
     {:ok, site: site}
   end
 
-  test "query!/3 raises on error on site_id mismatch", %{site: site} do
+  test "parse_and_build!/2 raises on error on site_id mismatch", %{site: site} do
     assert_raise FunctionClauseError, fn ->
       Query.parse_and_build!(
         site,
-        :public,
         %{
           "site_id" => "different"
         }
@@ -27,13 +26,12 @@ defmodule Plausible.Stats.Query.QueryResultTest do
     end
   end
 
-  test "query!/3 raises on schema validation error", %{site: site} do
+  test "parse_and_build!/2 raises on schema validation error", %{site: site} do
     assert_raise RuntimeError,
                  ~s/Failed to build query: "#: Required properties metrics, date_range were not present."/,
                  fn ->
                    Query.parse_and_build!(
                      site,
-                     :public,
                      %{
                        "site_id" => site.domain
                      }
@@ -45,7 +43,6 @@ defmodule Plausible.Stats.Query.QueryResultTest do
     query =
       Query.parse_and_build!(
         site,
-        :public,
         %{
           "site_id" => site.domain,
           "metrics" => ["pageviews"],

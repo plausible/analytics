@@ -15,7 +15,11 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
+import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 
 function Countries({ query, site, onClick, afterFetchData }) {
   function fetchData() {
@@ -37,6 +41,8 @@ function Countries({ query, site, onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -49,12 +55,8 @@ function Countries({ query, site, onClick, afterFetchData }) {
       onClick={onClick}
       keyLabel="Country"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: countriesRoute.path,
-        search: (search) => search
-      }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -79,6 +81,8 @@ function Regions({ query, site, onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -91,9 +95,8 @@ function Regions({ query, site, onClick, afterFetchData }) {
       onClick={onClick}
       keyLabel="Region"
       metrics={chooseMetrics()}
-      detailsLinkProps={{ path: regionsRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
 }
@@ -118,6 +121,8 @@ function Cities({ query, site, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
       hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
@@ -129,17 +134,10 @@ function Cities({ query, site, afterFetchData }) {
       getFilterInfo={getFilterInfo}
       keyLabel="City"
       metrics={chooseMetrics()}
-      detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      color="bg-orange-50 group-hover:bg-orange-100"
+      color="bg-orange-50 group-hover/row:bg-orange-100"
     />
   )
-}
-
-const labelFor = {
-  countries: 'Countries',
-  regions: 'Regions',
-  cities: 'Cities'
 }
 
 class Locations extends React.Component {
@@ -153,7 +151,8 @@ class Locations extends React.Component {
     this.state = {
       mode: storedTab || 'map',
       loading: true,
-      skipImportedReason: null
+      skipImportedReason: null,
+      moreLinkState: MoreLinkState.LOADING
     }
   }
 
@@ -177,7 +176,7 @@ class Locations extends React.Component {
       this.props.query !== prevProps.query ||
       this.state.mode !== prevState.mode
     ) {
-      this.setState({ loading: true })
+      this.setState({ loading: true, moreLinkState: MoreLinkState.LOADING })
     }
   }
 
@@ -200,8 +199,16 @@ class Locations extends React.Component {
   }
 
   afterFetchData(apiResponse) {
+    let newMoreLinkState
+
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      newMoreLinkState = MoreLinkState.READY
+    } else {
+      newMoreLinkState = MoreLinkState.HIDDEN
+    }
     this.setState({
       loading: false,
+      moreLinkState: newMoreLinkState,
       skipImportedReason: apiResponse.skip_imported_reason
     })
   }
@@ -245,38 +252,55 @@ class Locations extends React.Component {
     }
   }
 
+  getMoreLinkProps() {
+    let path
+
+    if (this.state.mode === 'regions') {
+      path = regionsRoute.path
+    } else if (this.state.mode === 'cities') {
+      path = citiesRoute.path
+    } else {
+      path = countriesRoute.path
+    }
+
+    return { path: path, search: (search) => search }
+  }
+
   render() {
     return (
-      <div>
-        <div className="w-full flex justify-between">
-          <div className="flex gap-x-1">
-            <h3 className="font-bold dark:text-gray-100">
-              {labelFor[this.state.mode] || 'Locations'}
-            </h3>
+      <ReportLayout
+        className={this.state.mode === 'map' ? '' : 'overflow-x-hidden'}
+      >
+        <ReportHeader>
+          <div className="flex gap-x-3">
+            <TabWrapper>
+              {[
+                { label: 'Map', value: 'map' },
+                { label: 'Countries', value: 'countries' },
+                { label: 'Regions', value: 'regions' },
+                { label: 'Cities', value: 'cities' }
+              ].map(({ value, label }) => (
+                <TabButton
+                  key={value}
+                  onClick={this.setMode(value)}
+                  active={this.state.mode === value}
+                >
+                  {label}
+                </TabButton>
+              ))}
+            </TabWrapper>
             <ImportedQueryUnsupportedWarning
               loading={this.state.loading}
               skipImportedReason={this.state.skipImportedReason}
             />
           </div>
-          <TabWrapper>
-            {[
-              { label: 'Map', value: 'map' },
-              { label: 'Countries', value: 'countries' },
-              { label: 'Regions', value: 'regions' },
-              { label: 'Cities', value: 'cities' }
-            ].map(({ value, label }) => (
-              <TabButton
-                key={value}
-                onClick={this.setMode(value)}
-                active={this.state.mode === value}
-              >
-                {label}
-              </TabButton>
-            ))}
-          </TabWrapper>
-        </div>
+          <MoreLink
+            linkProps={this.getMoreLinkProps()}
+            state={this.state.moreLinkState}
+          />
+        </ReportHeader>
         {this.renderContent()}
-      </div>
+      </ReportLayout>
     )
   }
 }

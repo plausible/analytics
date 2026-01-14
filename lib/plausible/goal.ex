@@ -54,13 +54,7 @@ defmodule Plausible.Goal do
     |> validate_event_name_and_page_path()
     |> validate_page_path_for_scroll_goal()
     |> maybe_put_display_name()
-    |> validate_change(:custom_props, fn :custom_props, custom_props ->
-      if map_size(custom_props) > @max_custom_props_per_goal do
-        [custom_props: "use at most #{@max_custom_props_per_goal} properties per goal"]
-      else
-        []
-      end
-    end)
+    |> validate_change(:custom_props, &validate_custom_props/2)
     |> unique_constraint(:display_name, name: :goals_display_name_unique)
     |> unique_constraint(:event_name, name: :goals_event_config_unique)
     |> unique_constraint([:page_path, :scroll_threshold],
@@ -183,6 +177,35 @@ defmodule Plausible.Goal do
     |> update_change(:display_name, &String.trim/1)
     |> validate_required(:display_name)
   end
+
+  defp validate_custom_props(:custom_props, custom_props) when is_map(custom_props) do
+    cond do
+      map_size(custom_props) > @max_custom_props_per_goal ->
+        [custom_props: "use at most #{@max_custom_props_per_goal} properties per goal"]
+
+      not Enum.all?(custom_props, fn {k, v} ->
+        is_binary(k) and is_binary(v)
+      end) ->
+        [custom_props: "must be a map with string keys and string values"]
+
+      Enum.any?(custom_props, fn {k, _v} ->
+        String.length(k) not in 1..Plausible.Props.max_prop_key_length()
+      end) ->
+        [
+          custom_props: "key length is 1..#{Plausible.Props.max_prop_key_length()} characters"
+        ]
+
+      Enum.any?(custom_props, fn {_k, v} ->
+        String.length(v) not in 1..Plausible.Props.max_prop_value_length()
+      end) ->
+        [
+          custom_props: "value length is 1..#{Plausible.Props.max_prop_value_length()} characters"
+        ]
+
+      true ->
+        []
+    end
+  end
 end
 
 defimpl Jason.Encoder, for: Plausible.Goal do
@@ -191,7 +214,7 @@ defimpl Jason.Encoder, for: Plausible.Goal do
 
     value
     |> Map.put(:goal_type, Plausible.Goal.type(value))
-    |> Map.take([:id, :goal_type, :event_name, :page_path])
+    |> Map.take([:id, :goal_type, :event_name, :page_path, :custom_props])
     |> Map.put(:domain, domain)
     |> Map.put(:display_name, value.display_name)
     |> Jason.Encode.map(opts)

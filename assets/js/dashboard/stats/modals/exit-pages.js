@@ -1,6 +1,9 @@
 import React, { useCallback } from 'react'
 import Modal from './modal'
-import { hasConversionGoalFilter } from '../../util/filters'
+import {
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
 import { addFilter, revenueAvailable } from '../../query'
 import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
@@ -17,7 +20,7 @@ function ExitPagesModal() {
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
-    title: 'Exit Pages',
+    title: 'Exit pages',
     dimension: 'exit_page',
     endpoint: url.apiPath(site, '/exit-pages'),
     dimensionLabel: 'Page url',
@@ -60,11 +63,11 @@ function ExitPagesModal() {
       ].filter((metric) => !!metric)
     }
 
-    if (query.period === 'realtime') {
+    if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
       return [
         metrics.createVisitors({
           renderLabel: (_query) => 'Current visitors',
-          width: 'w-36'
+          width: 'w-32'
         })
       ]
     }
@@ -75,7 +78,8 @@ function ExitPagesModal() {
         sortable: true
       }),
       metrics.createVisits({
-        renderLabel: (_query) => 'Total Exits',
+        renderLabel: (_query) => 'Total exits',
+        width: 'w-32',
         sortable: true
       }),
       metrics.createExitRate()

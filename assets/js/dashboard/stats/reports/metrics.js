@@ -43,7 +43,8 @@ export class Metric {
     this.renderValue = this.renderValue.bind(this)
   }
 
-  renderValue(listItem, meta) {
+  renderValue(listItem, meta, options = {}) {
+    const { detailedView = false, isRowHovered = false } = options
     return (
       <MetricValue
         listItem={listItem}
@@ -51,6 +52,8 @@ export class Metric {
         renderLabel={this.renderLabel}
         meta={meta}
         formatter={this.formatter}
+        detailedView={detailedView}
+        isRowHovered={isRowHovered}
       />
     )
   }
@@ -74,18 +77,18 @@ export const createVisitors = (props) => {
       const realtimeLabel = props.realtimeLabel || 'Current visitors'
       const goalFilterLabel = props.goalFilterLabel || 'Conversions'
 
-      if (query.period === 'realtime') {
-        return realtimeLabel
-      }
       if (query && hasConversionGoalFilter(query)) {
         return goalFilterLabel
+      }
+      if (query.period === 'realtime') {
+        return realtimeLabel
       }
       return defaultLabel
     }
   }
 
   return new Metric({
-    width: 'w-24',
+    width: 'w-36',
     sortable: true,
     ...props,
     key: 'visitors',
@@ -96,7 +99,7 @@ export const createVisitors = (props) => {
 export const createConversionRate = (props) => {
   const renderLabel = (_query) => 'CR'
   return new Metric({
-    width: 'w-24',
+    width: 'w-28 md:w-24',
     ...props,
     key: 'conversion_rate',
     renderLabel,
@@ -116,13 +119,13 @@ export const createPercentage = (props) => {
 }
 
 export const createEvents = (props) => {
-  return new Metric({ width: 'w-24', ...props, key: 'events', sortable: true })
+  return new Metric({ width: 'w-28', ...props, key: 'events', sortable: true })
 }
 
 export const createTotalRevenue = (props) => {
   const renderLabel = (_query) => 'Revenue'
   return new Metric({
-    width: 'w-24',
+    width: 'w-32',
     ...props,
     key: 'total_revenue',
     renderLabel,
@@ -133,7 +136,7 @@ export const createTotalRevenue = (props) => {
 export const createAverageRevenue = (props) => {
   const renderLabel = (_query) => 'Average'
   return new Metric({
-    width: 'w-24',
+    width: 'w-28',
     ...props,
     key: 'average_revenue',
     renderLabel,
@@ -142,9 +145,9 @@ export const createAverageRevenue = (props) => {
 }
 
 export const createTotalVisitors = (props) => {
-  const renderLabel = (_query) => 'Total Visitors'
+  const renderLabel = (_query) => 'Total visitors'
   return new Metric({
-    width: 'w-28',
+    width: 'w-32',
     ...props,
     key: 'total_visitors',
     renderLabel,
@@ -157,9 +160,9 @@ export const createVisits = (props) => {
 }
 
 export const createVisitDuration = (props) => {
-  const renderLabel = (_query) => 'Visit Duration'
+  const renderLabel = (_query) => 'Visit duration'
   return new Metric({
-    width: 'w-36',
+    width: 'w-28 md:w-24',
     ...props,
     key: 'visit_duration',
     renderLabel,
@@ -168,9 +171,9 @@ export const createVisitDuration = (props) => {
 }
 
 export const createBounceRate = (props) => {
-  const renderLabel = (_query) => 'Bounce Rate'
+  const renderLabel = (_query) => 'Bounce rate'
   return new Metric({
-    width: 'w-28',
+    width: 'w-28 md:w-24',
     ...props,
     key: 'bounce_rate',
     renderLabel,
@@ -190,9 +193,9 @@ export const createPageviews = (props) => {
 }
 
 export const createTimeOnPage = (props) => {
-  const renderLabel = (_query) => 'Time on Page'
+  const renderLabel = (_query) => 'Time on page'
   return new Metric({
-    width: 'w-32',
+    width: 'w-28 md:w-24',
     ...props,
     key: 'time_on_page',
     renderLabel,
@@ -201,9 +204,9 @@ export const createTimeOnPage = (props) => {
 }
 
 export const createExitRate = (props) => {
-  const renderLabel = (_query) => 'Exit Rate'
+  const renderLabel = (_query) => 'Exit rate'
   return new Metric({
-    width: 'w-28',
+    width: 'w-28 md:w-24',
     ...props,
     key: 'exit_rate',
     renderLabel,
@@ -212,9 +215,9 @@ export const createExitRate = (props) => {
 }
 
 export const createScrollDepth = (props) => {
-  const renderLabel = (_query) => 'Scroll Depth'
+  const renderLabel = (_query) => 'Scroll depth'
   return new Metric({
-    width: 'w-28',
+    width: 'w-28 md:w-24',
     ...props,
     key: 'scroll_depth',
     renderLabel,

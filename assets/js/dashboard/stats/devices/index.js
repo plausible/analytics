@@ -12,6 +12,9 @@ import * as url from '../../util/url'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
+import { ReportLayout } from '../reports/report-layout'
+import { ReportHeader } from '../reports/report-header'
+import { TabButton, TabWrapper } from '../../components/tabs'
 import {
   browsersRoute,
   browserVersionsRoute,
@@ -19,7 +22,8 @@ import {
   operatingSystemVersionsRoute,
   screenSizesRoute
 } from '../../router'
-import { TabButton, TabWrapper } from '../../components/tabs'
+import MoreLink from '../more-link'
+import { MoreLinkState } from '../more-link-state'
 
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
@@ -76,8 +80,9 @@ function Browsers({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -89,10 +94,6 @@ function Browsers({ afterFetchData }) {
       keyLabel="Browser"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
-      detailsLinkProps={{
-        path: browsersRoute.path,
-        search: (search) => search
-      }}
     />
   )
 }
@@ -121,8 +122,9 @@ function BrowserVersions({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -134,10 +136,6 @@ function BrowserVersions({ afterFetchData }) {
       keyLabel="Browser version"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
-      detailsLinkProps={{
-        path: browserVersionsRoute.path,
-        search: (search) => search
-      }}
     />
   )
 }
@@ -187,9 +185,11 @@ function OperatingSystems({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
       !hasConversionGoalFilter(query) &&
-        metrics.createPercentage({ meta: { hiddenonMobile: true } })
+        metrics.createPercentage({
+          meta: { showOnHover: true }
+        }),
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -205,10 +205,6 @@ function OperatingSystems({ afterFetchData }) {
       renderIcon={renderIcon}
       keyLabel="Operating system"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: operatingSystemsRoute.path,
-        search: (search) => search
-      }}
     />
   )
 }
@@ -238,8 +234,9 @@ function OperatingSystemVersions({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -251,10 +248,6 @@ function OperatingSystemVersions({ afterFetchData }) {
       getFilterInfo={getFilterInfo}
       keyLabel="Operating System Version"
       metrics={chooseMetrics()}
-      detailsLinkProps={{
-        path: operatingSystemVersionsRoute.path,
-        search: (search) => search
-      }}
     />
   )
 }
@@ -281,8 +274,9 @@ function ScreenSizes({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
+      !hasConversionGoalFilter(query) &&
+        metrics.createPercentage({ meta: { showOnHover: true } }),
+      hasConversionGoalFilter(query) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -291,13 +285,9 @@ function ScreenSizes({ afterFetchData }) {
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
-      keyLabel="Screen size"
+      keyLabel="Device"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
-      detailsLinkProps={{
-        path: screenSizesRoute.path,
-        search: (search) => search
-      }}
     />
   )
 }
@@ -386,6 +376,42 @@ export function screenSizeIconFor(screenSize) {
         <line x1="12" y1="17" x2="12" y2="21" />
       </svg>
     )
+  } else if (screenSize === 'Ultra-wide') {
+    svg = (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="-mt-px feather"
+      >
+        <rect x="1" y="4" width="22" height="12" rx="2" ry="2" />
+        <line x1="6" y1="20" x2="18" y2="20" />
+        <line x1="12" y1="16" x2="12" y2="20" />
+      </svg>
+    )
+  } else if (screenSize === '(not set)') {
+    svg = (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="-mt-px feather"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="17.25" r="1.25" />
+        <path d="M9.244 8.369c.422-1.608 1.733-2.44 3.201-2.364 1.45.075 2.799.872 2.737 2.722-.089 2.63-2.884 2.273-3.197 4.773h.011" />
+      </svg>
+    )
   }
 
   return <span className="mr-1.5">{svg}</span>
@@ -400,6 +426,7 @@ export default function Devices() {
   const [mode, setMode] = useState(storedTab || 'browser')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
@@ -409,9 +436,50 @@ export default function Devices() {
   function afterFetchData(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
+    if (apiResponse.results && apiResponse.results.length > 0) {
+      setMoreLinkState(MoreLinkState.READY)
+    } else {
+      setMoreLinkState(MoreLinkState.HIDDEN)
+    }
   }
 
-  useEffect(() => setLoading(true), [query, mode])
+  useEffect(() => {
+    setLoading(true)
+    setMoreLinkState(MoreLinkState.LOADING)
+  }, [query, mode])
+
+  function moreLinkProps() {
+    switch (mode) {
+      case 'browser':
+        if (isFilteringOnFixedValue(query, 'browser')) {
+          return {
+            path: browserVersionsRoute.path,
+            search: (search) => search
+          }
+        }
+        return {
+          path: browsersRoute.path,
+          search: (search) => search
+        }
+      case 'os':
+        if (isFilteringOnFixedValue(query, 'os')) {
+          return {
+            path: operatingSystemVersionsRoute.path,
+            search: (search) => search
+          }
+        }
+        return {
+          path: operatingSystemsRoute.path,
+          search: (search) => search
+        }
+      case 'size':
+      default:
+        return {
+          path: screenSizesRoute.path,
+          search: (search) => search
+        }
+    }
+  }
 
   function renderContent() {
     switch (mode) {
@@ -432,33 +500,33 @@ export default function Devices() {
   }
 
   return (
-    <div>
-      <div className="flex justify-between w-full">
-        <div className="flex gap-x-1">
-          <h3 className="font-bold dark:text-gray-100">Devices</h3>
+    <ReportLayout className="overflow-x-hidden">
+      <ReportHeader>
+        <div className="flex gap-x-3">
+          <TabWrapper>
+            {[
+              { label: 'Browsers', value: 'browser' },
+              { label: 'Operating systems', value: 'os' },
+              { label: 'Devices', value: 'size' }
+            ].map(({ label, value }) => (
+              <TabButton
+                key={value}
+                active={mode === value}
+                onClick={() => switchTab(value)}
+              >
+                {label}
+              </TabButton>
+            ))}
+          </TabWrapper>
           <ImportedQueryUnsupportedWarning
             loading={loading}
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <TabWrapper>
-          {[
-            { label: 'Browser', value: 'browser' },
-            { label: 'OS', value: 'os' },
-            { label: 'Size', value: 'size' }
-          ].map(({ label, value }) => (
-            <TabButton
-              key={value}
-              active={mode === value}
-              onClick={() => switchTab(value)}
-            >
-              {label}
-            </TabButton>
-          ))}
-        </TabWrapper>
-      </div>
+        <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
+      </ReportHeader>
       {renderContent()}
-    </div>
+    </ReportLayout>
   )
 }
 

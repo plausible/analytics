@@ -6,17 +6,23 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Adds team_id to query debug metadata (saved in system.query_log log_comment column)
+- A visitor percentage breakdown is now shown on all reports, both on the dashboard and in the detailed breakdown
+- Shared links can now be limited to a particular segment of the data
+
 ### Removed
 
 ### Changed
 
 - Segment filters are visible to anyone who can view the dashboard with that segment applied, including personal segments on public dashboards
+- Keybind hints are hidden on smaller screens
 
 ### Fixed
 
 - To make internal stats API requests for password-protected shared links, shared link auth cookie must be set in the requests
 - Fixed issue with site guests in Editor role and team members in Editor role not being able to change the domain of site
 - Fixed direct dashboard links that use legacy dashboard filters containing URL encoded special characters (e.g. character `ê` in the legacy filter `?page=%C3%AA`)
+- Fix bug with tracker script config cache that made requests for certain cached scripts give error 500
 
 ## v3.1.0 - 2025-11-13
 

@@ -169,6 +169,62 @@ defmodule Plausible.GoalsTest do
     assert {"use at most 3 properties per goal", _} = changeset.errors[:custom_props]
   end
 
+  test "create/3 fails to create a goal with non-string custom prop values" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "custom_props" => %{"count" => 42}
+      })
+
+    assert {"must be a map with string keys and string values" <> _, _} =
+             changeset.errors[:custom_props]
+  end
+
+  test "create/3 fails to create a goal with null custom prop values" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "custom_props" => %{"product" => nil}
+      })
+
+    assert {"must be a map with string keys and string values", _} =
+             changeset.errors[:custom_props]
+  end
+
+  test "create/3 fails to create custom prop with key over #{Plausible.Props.max_prop_key_length()}" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "custom_props" => %{
+          :binary.copy("a", Plausible.Props.max_prop_key_length() + 1) => "value"
+        }
+      })
+
+    assert {"key length is 1..300 characters", _} =
+             changeset.errors[:custom_props]
+  end
+
+  test "create/3 fails to create custom prop with value over #{Plausible.Props.max_prop_value_length()}" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "event_name" => "Purchase",
+        "custom_props" => %{
+          "key" => :binary.copy("a", Plausible.Props.max_prop_value_length() + 1)
+        }
+      })
+
+    assert {"value length is 1..2000 characters", _} =
+             changeset.errors[:custom_props]
+  end
+
   test "create/2 succeeds to create the same custom event twice with different props and different display names each" do
     site = new_site()
 
@@ -184,6 +240,19 @@ defmodule Plausible.GoalsTest do
         "event_name" => "Purchase",
         "display_name" => "General Purchase 2",
         "custom_props" => %{"variant" => "A", "foo" => "bar"}
+      })
+  end
+
+  test "create/2 succeeds to create two pageview goals with different displayn names and custom props each" do
+    site = new_site()
+
+    {:ok, _} = Goals.create(site, %{"page_path" => "/index", "display_name" => "Index"})
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "page_path" => "/index",
+        "display_name" => "Index 2",
+        "custom_props" => %{"foo" => "bar"}
       })
   end
 

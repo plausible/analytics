@@ -79,7 +79,12 @@ if (csrfToken && websocketUrl) {
           // The prefs are used by dashboard LiveView to persist
           // user preferences across the reloads.
           user_prefs: {
-            pages_tab: localStorage.getItem(`pageTab__${domainName}`)
+            pages_tab: localStorage.getItem(`pageTab__${domainName}`),
+            period: localStorage.getItem(`period__${domainName}`),
+            comparison: localStorage.getItem(`comparison_mode__${domainName}`),
+            match_day_of_week: localStorage.getItem(
+              `comparison_match_day_of_week__${domainName}`
+            )
           },
           _csrf_token: token
         }

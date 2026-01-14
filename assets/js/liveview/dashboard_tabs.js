@@ -16,28 +16,35 @@ export default buildHook({
 
     this.addListener('click', this.el, (e) => {
       const button = e.target.closest('button')
-      const tab = button && button.dataset.tab
+      const tabKey = button && button.dataset.tabKey
 
-      if (tab) {
-        const label = button.dataset.label
+      if (button && button.closest('div').dataset.active === 'false') {
         const storageKey = button.dataset.storageKey
-        const activeClasses = button.dataset.activeClasses
-        const inactiveClasses = button.dataset.inactiveClasses
-        const title = this.el
-          .closest('[data-tile]')
-          .querySelector('[data-title]')
+        const target = button.dataset.target
 
-        title.innerText = label
-
-        this.el.querySelectorAll(`button[data-tab] span`).forEach((s) => {
-          s.className = inactiveClasses
+        this.el.querySelectorAll(`button[data-tab-key]`).forEach((b) => {
+          if (b.dataset.tabKey === tabKey) {
+            this.js().setAttribute(b.closest('div'), 'data-active', 'true')
+            this.js().setAttribute(
+              b.querySelector('span'),
+              'data-active',
+              'true'
+            )
+          } else {
+            this.js().setAttribute(b.closest('div'), 'data-active', 'false')
+            this.js().setAttribute(
+              b.querySelector('span'),
+              'data-active',
+              'false'
+            )
+          }
         })
 
-        button.querySelector('span').className = activeClasses
-
         if (storageKey) {
-          localStorage.setItem(`${storageKey}__${domain}`, tab)
+          localStorage.setItem(`${storageKey}__${domain}`, tabKey)
         }
+
+        this.pushEventTo(target, 'set-tab', { tab: tabKey })
       }
     })
   }

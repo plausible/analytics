@@ -1,11 +1,12 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
+import { Tooltip } from '../util/tooltip'
+import { MoreLinkState } from './more-link-state'
 
 function detailsIcon() {
   return (
     <svg
-      className="feather mr-1"
-      style={{ marginTop: '-2px' }}
+      className="feather"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
@@ -19,20 +20,36 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({ linkProps, list, className, onClick }) {
-  if (list.length > 0) {
+export default function MoreLink({ linkProps, state }) {
+  const portalRef = useRef(null)
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      portalRef.current = document.body
+    }
+  }, [])
+
+  const baseClassName =
+    'relative flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 before:absolute before:inset-[-8px] before:content-[" "]'
+  const icon = detailsIcon()
+
+  if (state === MoreLinkState.HIDDEN) {
+    return null
+  }
+
+  if (state === MoreLinkState.LOADING || !linkProps) {
     return (
-      <div className={`w-full text-center ${className ? className : ''}`}>
-        <AppNavigationLink
-          {...linkProps}
-          className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 tracking-wide"
-          onClick={onClick}
-        >
-          {detailsIcon()}
-          DETAILS
-        </AppNavigationLink>
-      </div>
+      <Tooltip info="View details" containerRef={portalRef}>
+        <div className={baseClassName}>{icon}</div>
+      </Tooltip>
     )
   }
-  return null
+
+  return (
+    <Tooltip info="View details" containerRef={portalRef}>
+      <AppNavigationLink {...linkProps} className={baseClassName}>
+        {icon}
+      </AppNavigationLink>
+    </Tooltip>
+  )
 }

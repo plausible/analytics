@@ -14,7 +14,7 @@ function BrowserVersionsModal() {
   const site = useSiteContext()
 
   const reportInfo = {
-    title: 'Browser Versions',
+    title: 'Browser versions',
     dimension: 'browser_version',
     endpoint: url.apiPath(site, '/browser-versions'),
     dimensionLabel: 'Browser version',

@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   import PlausibleWeb.Live.Components.Form
   alias Plausible.{Goals, Funnels}
+  alias Plausible.Stats.QueryBuilder
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     site =
@@ -64,7 +65,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             phx-target="#funnel-form"
             phx-click-away="cancel-add-funnel"
             onkeydown="return event.key != 'Enter';"
-            class="bg-white dark:bg-gray-900 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
+            class="bg-white dark:bg-gray-900 shadow-2xl rounded-lg px-8 pt-6 pb-8 mb-4 mt-8"
           >
             <.title class="mb-6">
               {if @funnel, do: "Edit", else: "Add"} funnel
@@ -349,14 +350,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       )
 
     query =
-      Plausible.Stats.Query.parse_and_build!(
-        site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "date_range" => "month",
-          "metrics" => ["pageviews"]
-        }
+      QueryBuilder.build!(site,
+        metrics: [:pageviews],
+        input_date_range: :month
       )
 
     {:ok, {definition, query}}

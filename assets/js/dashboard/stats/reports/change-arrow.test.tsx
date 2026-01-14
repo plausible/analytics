@@ -34,7 +34,7 @@ it('renders tilde for no change', () => {
 
   const arrowElement = screen.getByTestId('change-arrow')
 
-  expect(arrowElement).toHaveTextContent('〰 0%')
+  expect(arrowElement).toHaveTextContent('0%')
 })
 
 it('inverts colors for positive bounce_rate change', () => {
