@@ -65,7 +65,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
           <.td>
             <.styled_link
               new_tab={true}
-              href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain, [])}
+              href={Routes.stats_path(PlausibleWeb.Endpoint, :dashboard, site.domain, [])}
             >
               Dashboard
             </.styled_link>

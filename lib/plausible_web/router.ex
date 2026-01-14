@@ -702,7 +702,7 @@ defmodule PlausibleWeb.Router do
       get "/:domain/export", StatsController, :csv_export
 
       scope assigns: %{connect_live_socket: true} do
-        live "/:domain/*path", Live.Dashboard, as: :stats
+        live "/:domain/*path", Live.Dashboard, :dashboard, as: :stats
       end
     end
   end
