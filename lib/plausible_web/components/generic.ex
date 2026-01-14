@@ -488,7 +488,8 @@ defmodule PlausibleWeb.Components.Generic do
         :if={@server_mode?}
         class={[
           "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
-          if(@checked, do: "bg-indigo-600", else: "dark:bg-gray-600 bg-gray-200")
+          if(@checked, do: "bg-indigo-600", else: "dark:bg-gray-600 bg-gray-200"),
+          if(@disabled, do: "opacity-50")
         ]}
       >
         <span
@@ -501,7 +502,10 @@ defmodule PlausibleWeb.Components.Generic do
       </span>
       <span
         :if={!@server_mode?}
-        class="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+        class={[
+          "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+          if(@disabled, do: "opacity-50")
+        ]}
         x-bind:class={"#{@js_active_var} ? 'bg-indigo-600' : 'dark:bg-gray-600 bg-gray-200'"}
       >
         <span
@@ -646,7 +650,7 @@ defmodule PlausibleWeb.Components.Generic do
       "top-0",
       "-translate-y-full",
       "z-[1000]",
-      "sm:max-w-72",
+      "sm:max-w-64",
       "w-max"
     ]
 
@@ -684,7 +688,7 @@ defmodule PlausibleWeb.Components.Generic do
           x-transition:leave-start="opacity-100"
           x-transition:leave-end="opacity-0"
         >
-          <div class="bg-gray-800 text-white rounded-sm px-2.5 py-1.5 text-xs font-medium">
+          <div class="bg-gray-800 text-white rounded-sm px-2.5 py-1.5 text-xs font-medium whitespace-normal">
             {render_slot(@tooltip_content)}
           </div>
         </div>
@@ -1035,6 +1039,7 @@ defmodule PlausibleWeb.Components.Generic do
       "dark:group-hover/button:" <> text.dark_hover,
       "transition-colors",
       "duration-150",
+      "group-disabled/button:opacity-50",
       assigns.icon_class
     ]
 
@@ -1251,7 +1256,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <span
       class={[
-        "inline-flex items-center text-xs font-medium py-1 px-2 rounded-md",
+        "inline-flex items-center text-xs font-medium py-[3px] px-[7px] rounded-md",
         @color_classes,
         @class
       ]}
