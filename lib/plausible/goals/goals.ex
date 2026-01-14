@@ -181,6 +181,13 @@ defmodule Plausible.Goals do
         query
       end
 
+    query =
+      if Keyword.get(opts, :include_goals_with_custom_props?, true) == false do
+        from g in query, where: g.custom_props == ^%{}
+      else
+        query
+      end
+
     if ee?() and opts[:preload_funnels?] == true do
       from(g in query,
         left_join: assoc(g, :funnels),

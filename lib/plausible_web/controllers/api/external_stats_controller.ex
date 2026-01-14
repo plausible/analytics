@@ -336,9 +336,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_filter(site, [_type, "event:goal", goal_filter | _rest]) do
+    site = Plausible.Repo.preload(site, :team)
+    props_available? = Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
+
     configured_goals =
       site
-      |> Plausible.Goals.for_site()
+      |> Plausible.Goals.for_site(include_goals_with_custom_props?: props_available?)
       |> Enum.map(& &1.display_name)
 
     goals_in_filter = List.wrap(goal_filter)
