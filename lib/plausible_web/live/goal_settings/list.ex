@@ -73,57 +73,26 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               <% has_unavailable_revenue? = not @revenue_goals_enabled? and not is_nil(goal.currency) %>
               <% has_unavailable_props? =
                 not @props_available? and Plausible.Goal.has_custom_props?(goal) %>
+              <.goal_name_with_icons goal={goal} />
               <%= if has_unavailable_revenue? or has_unavailable_props? do %>
-                <div class="truncate">{goal}</div>
-                <.tooltip>
+                <.tooltip centered?={true}>
                   <:tooltip_content>
                     <p class="text-xs">
                       <%= if has_unavailable_revenue? do %>
-                        Revenue Goals act like regular custom<br />
-                        events without a Business subscription<br />
+                        Revenue goals appear as regular goals on the dashboard. Upgrade to Business to see revenue data.
                       <% else %>
-                        Custom Properties on Goals require<br /> a Business subscription<br />
+                        Upgrade to Business to show goals with custom properties on the dashboard.
                       <% end %>
                     </p>
                   </:tooltip_content>
-                  <span class="w-max flex items-center text-gray-500 italic text-sm">
-                    <Heroicons.lock_closed solid class="size-4 mr-1" /> Upgrade Required
-                  </span>
+                  <.styled_link
+                    class="w-max flex items-center text-sm"
+                    href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+                  >
+                    <Heroicons.lock_closed class="size-3.5 mr-1 stroke-2" /> Upgrade
+                  </.styled_link>
                 </.tooltip>
               <% else %>
-                <div class="font-medium text-sm flex items-center gap-1.5">
-                  <span class="truncate">{goal}</span>
-                  <.tooltip :if={not Enum.empty?(goal.funnels)} centered?={true}>
-                    <:tooltip_content>
-                      Belongs to funnel
-                    </:tooltip_content>
-                    <Heroicons.funnel class="size-3.5 mt-px stroke-2 flex-shrink-0" />
-                  </.tooltip>
-                  <.tooltip :if={Plausible.Goal.has_custom_props?(goal)} centered?={true}>
-                    <:tooltip_content>
-                      <div class="text-xs">
-                        <div :for={{key, value} <- goal.custom_props}>
-                          {key} is {value}
-                        </div>
-                      </div>
-                    </:tooltip_content>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      class="size-3.5 mt-px flex-shrink-0"
-                    >
-                      <circle fill="currentColor" cx="7.25" cy="7.25" r="1.25" />
-                      <path
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 3h5.172a2 2 0 0 1 1.414.586l5.536 5.536a3 3 0 0 1 0 4.243l-2.757 2.757a3 3 0 0 1-4.243 0l-5.536-5.536A2 2 0 0 1 3 9.172V4a1 1 0 0 1 1-1Z"
-                      />
-                    </svg>
-                  </.tooltip>
-                </div>
                 <div class="truncate">
                   <.goal_description goal={goal} />
                 </div>
@@ -292,6 +261,45 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       is part of some funnel(s). If you are going to delete it, the associated funnels will be either reduced or deleted completely. Are you sure you want to remove the goal?
       """
     end
+  end
+
+  defp goal_name_with_icons(assigns) do
+    ~H"""
+    <div class="font-medium text-sm flex items-center gap-1.5">
+      <span class="truncate">{@goal}</span>
+      <.tooltip :if={not Enum.empty?(@goal.funnels)} centered?={true}>
+        <:tooltip_content>
+          Belongs to funnel
+        </:tooltip_content>
+        <Heroicons.funnel class="size-3.5 mt-px stroke-2 flex-shrink-0" />
+      </.tooltip>
+      <.tooltip :if={Plausible.Goal.has_custom_props?(@goal)} centered?={true}>
+        <:tooltip_content>
+          <div class="-mx-1 flex flex-col gap-1 text-xs">
+            <div :for={{key, value} <- @goal.custom_props} class="truncate">
+              <span class="bg-white/20 px-1 py-0.5 rounded-sm">{key}</span>
+              is <span class="bg-white/20 px-1 py-0.5 rounded-sm">{value}</span>
+            </div>
+          </div>
+        </:tooltip_content>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          class="size-3.5 mt-px flex-shrink-0"
+        >
+          <circle fill="currentColor" cx="7.25" cy="7.25" r="1.25" />
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 3h5.172a2 2 0 0 1 1.414.586l5.536 5.536a3 3 0 0 1 0 4.243l-2.757 2.757a3 3 0 0 1-4.243 0l-5.536-5.536A2 2 0 0 1 3 9.172V4a1 1 0 0 1 1-1Z"
+          />
+        </svg>
+      </.tooltip>
+    </div>
+    """
   end
 
   defp goal_editable?(goal, revenue_goals_enabled?, props_available?) do

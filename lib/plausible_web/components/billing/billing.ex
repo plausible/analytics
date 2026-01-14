@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Components.Billing do
   attr :current_user, Plausible.Auth.User, required: true
   attr :current_team, :any, required: true
   attr :locked?, :boolean, required: true
+  attr :link_class, :string, default: ""
   slot :inner_block, required: true
 
   def feature_gate(assigns) do
@@ -36,7 +37,11 @@ defmodule PlausibleWeb.Components.Billing do
             class="max-w-sm sm:max-w-md mb-2 text-sm text-gray-600 dark:text-gray-100/60 leading-normal text-center"
           >
             To access this feature,
-            <.upgrade_call_to_action current_user={@current_user} current_team={@current_team} />
+            <.upgrade_call_to_action
+              current_user={@current_user}
+              current_team={@current_team}
+              link_class={@link_class}
+            />
           </span>
         </div>
       </div>
@@ -357,6 +362,8 @@ defmodule PlausibleWeb.Components.Billing do
 
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
+  attr :link_class, :string, default: ""
+
   def upgrade_call_to_action(assigns) do
     user = assigns.current_user
     site = assigns[:site]
@@ -389,7 +396,7 @@ defmodule PlausibleWeb.Components.Billing do
       upgrade_assistance_required? ->
         ~H"""
         contact
-        <.styled_link href="mailto:hello@plausible.io" class="font-medium">
+        <.styled_link href="mailto:hello@plausible.io" class={"font-medium " <> @link_class}>
           hello@plausible.io
         </.styled_link>
         to upgrade your subscription.
@@ -398,7 +405,7 @@ defmodule PlausibleWeb.Components.Billing do
       true ->
         ~H"""
         <.styled_link
-          class="inline-block font-medium"
+          class={"inline-block font-medium " <> @link_class}
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
         >
           upgrade your subscription.

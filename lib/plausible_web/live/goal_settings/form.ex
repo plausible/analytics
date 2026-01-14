@@ -526,26 +526,30 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def custom_property_section(assigns) do
     ~H"""
-    <.tooltip enabled?={not @has_access_to_props?}>
-      <:tooltip_content>
-        <div class="text-xs">
-          To get access to this feature
+    <div class="mt-6 mb-2 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
+          {if @use_custom_props, do: "Custom properties", else: "Add custom property"}
+        </span>
+        <.link
+          :if={not @has_access_to_props? and not @use_custom_props}
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          class="inline-block"
+        >
+          <.pill color={:indigo}>
+            Business
+          </.pill>
+        </.link>
+      </div>
+      <.tooltip enabled?={not @has_access_to_props?} centered?={true}>
+        <:tooltip_content>
+          To get access to this feature,
           <PlausibleWeb.Components.Billing.upgrade_call_to_action
             current_user={@current_user}
             current_team={@site_team}
+            link_class="!inline !text-indigo-400 hover:!text-indigo-300"
           />
-        </div>
-      </:tooltip_content>
-      <div class="mt-6 mb-2 flex items-center justify-between">
-        <span class={[
-          "text-sm/6 font-medium",
-          if(@has_access_to_props?,
-            do: "text-gray-900 dark:text-gray-100",
-            else: "text-gray-500 dark:text-gray-400"
-          )
-        ]}>
-          {if @use_custom_props, do: "Custom properties", else: "Add custom property"}
-        </span>
+        </:tooltip_content>
         <.toggle_switch
           id="add-custom-property"
           id_suffix={@suffix}
@@ -554,8 +558,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           phx-target={@myself}
           disabled={not @has_access_to_props?}
         />
-      </div>
-    </.tooltip>
+      </.tooltip>
+    </div>
 
     <.error :for={msg <- Enum.map(@f[:custom_props].errors, &translate_error/1)}>
       {msg}
@@ -709,34 +713,38 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   defp revenue_toggle(assigns) do
     ~H"""
-    <.tooltip enabled?={not @has_access_to_revenue_goals?}>
-      <:tooltip_content>
-        <div class="text-xs">
-          To get access to this feature
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
+          Enable revenue tracking
+        </span>
+        <.link
+          :if={not @has_access_to_revenue_goals?}
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          class="inline-block"
+        >
+          <.pill color={:indigo}>
+            Business
+          </.pill>
+        </.link>
+      </div>
+      <.tooltip enabled?={not @has_access_to_revenue_goals?} centered?={true}>
+        <:tooltip_content>
+          To get access to this feature,
           <PlausibleWeb.Components.Billing.upgrade_call_to_action
             current_user={@current_user}
             current_team={@site_team}
+            link_class="!inline !text-indigo-400 hover:!text-indigo-300"
           />
-        </div>
-      </:tooltip_content>
-      <div class="flex items-center justify-between">
-        <span class={[
-          "text-sm/6 font-medium",
-          if(@has_access_to_revenue_goals?,
-            do: "text-gray-900 dark:text-gray-100",
-            else: "text-gray-500 dark:text-gray-400"
-          )
-        ]}>
-          Enable revenue tracking
-        </span>
+        </:tooltip_content>
         <PlausibleWeb.Components.Generic.toggle_switch
           id="enable-revenue-tracking"
           id_suffix={@suffix}
           js_active_var="active"
           disabled={not @has_access_to_revenue_goals?}
         />
-      </div>
-    </.tooltip>
+      </.tooltip>
+    </div>
     """
   end
 
