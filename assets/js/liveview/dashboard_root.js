@@ -7,7 +7,12 @@
 import { buildHook } from './hook_builder'
 
 const MODAL_ROUTES = {
-  '/pages': '#pages-breakdown-details-modal'
+  '/pages': '#pages-breakdown-details-modal',
+  '/entry-pages': '#entry-pages-breakdown-details-modal',
+  '/exit-pages': '#exit-pages-breakdown-details-modal',
+  '/sources': '#sources-breakdown-details-modal',
+  '/channels': '#channels-breakdown-details-modal',
+  '/utm_medium': '#utm-mediums-breakdown-details-modal'
 }
 
 function routeModal(path) {

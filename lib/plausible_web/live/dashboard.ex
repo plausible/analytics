@@ -111,6 +111,52 @@ defmodule PlausibleWeb.Live.Dashboard do
         params={@params}
         open?={@path == ["pages"]}
       />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.EntryPagesDetails}
+        id="entry-pages-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["entry-pages"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.ExitPagesDetails}
+        id="exit-pages-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["exit-pages"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.SourcesDetails}
+        id="sources-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["sources"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.ChannelsDetails}
+        id="channels-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["channels"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.UtmMediumsDetails}
+        id="utm-mediums-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["utm_medium"]}
+      />
+
     </div>
     """
   end
