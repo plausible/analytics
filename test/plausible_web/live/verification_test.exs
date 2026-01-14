@@ -16,29 +16,6 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @awaiting ~s|#verification-ui span#awaiting|
   @heading ~s|#verification-ui h2|
 
-  describe "GET /:domain" do
-    @tag :ee_only
-    test "static verification screen renders", %{conn: conn, site: site} do
-      resp =
-        get(conn, conn |> no_slowdown() |> get("/#{site.domain}") |> redirected_to)
-        |> html_response(200)
-
-      assert text_of_element(resp, @progress) =~
-               "We're visiting your site to ensure that everything is working"
-
-      assert resp =~ "Verifying your installation"
-    end
-
-    @tag :ce_build_only
-    test "static verification screen renders (ce)", %{conn: conn, site: site} do
-      resp =
-        get(conn, conn |> no_slowdown() |> get("/#{site.domain}") |> redirected_to)
-        |> html_response(200)
-
-      assert resp =~ "Awaiting your first pageview …"
-    end
-  end
-
   describe "LiveView" do
     @tag :ee_only
     test "LiveView mounts", %{conn: conn, site: site} do

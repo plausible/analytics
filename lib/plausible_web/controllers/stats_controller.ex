@@ -283,7 +283,7 @@ defmodule PlausibleWeb.StatsController do
       )
 
     if shared_link do
-      new_link_format = Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug)
+      new_link_format = Routes.stats_path(conn, :dashboard, shared_link.site.domain, auth: slug)
       redirect(conn, to: new_link_format)
     else
       render_error(conn, 404)
