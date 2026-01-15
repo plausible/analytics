@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
           >
             {render_slot(@tabs)}
           </div>
-          <div class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden">
+          <div class="group-has-[.phx-click-loading:not([data-skip-loader])]/dashboard:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden">
             {render_slot(@warnings)}
           </div>
         </div>
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
       </div>
       <%!-- reportbody --%>
       <div
-        class={"w-full flex-col justify-center #{if @connected?, do: "group-[.phx-navigation-loading]:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden", else: "flex"}"}
+        class={"w-full flex-col justify-center #{if @connected?, do: "group-has-[.phx-click-loading:not([data-skip-loader])]/dashboard:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden", else: "flex"}"}
         style={"min-height: #{@height}px;"}
       >
         <div class="mx-auto loading">
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
 
       <div
         :if={@connected?}
-        class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden"
+        class="group-has-[.phx-click-loading:not([data-skip-loader])]/dashboard:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden"
       >
         {render_slot(@inner_block)}
       </div>
@@ -113,8 +113,11 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
 
   defp details_link(assigns) do
     ~H"""
+    <.spinner class="group-has-[.phx-click-loading:not([data-skip-loader])]/dashboard:inline group-has-[.tile-tabs.phx-hook-loading]:inline w-4 h-4 hidden" />
+
     <Base.dashboard_link
-      class="flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
+      data-skip-loader
+      class="group-has-[.phx-click-loading:not([data-skip-loader])]/dashboard:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
       to={@details_route}
     >
       <svg
