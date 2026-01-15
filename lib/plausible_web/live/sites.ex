@@ -131,13 +131,10 @@ defmodule PlausibleWeb.Live.Sites do
           </PrimaDropdown.dropdown_trigger>
 
           <PrimaDropdown.dropdown_menu>
-            <PrimaDropdown.dropdown_item
-              as={&link/1}
-              href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
-            >
+            <PrimaDropdown.dropdown_item as={&new_site_link/1}>
               <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
             </PrimaDropdown.dropdown_item>
-            <PrimaDropdown.dropdown_item phx-click="consolidated-view-cta-restore">
+            <PrimaDropdown.dropdown_item as={&new_consolidated_view_button/1}>
               <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
               Add consolidated view
             </PrimaDropdown.dropdown_item>
@@ -1151,5 +1148,30 @@ defmodule PlausibleWeb.Live.Sites do
       do: no_consolidated_view(no_consolidated_view_reason: :unavailable)
 
     defp load_consolidated_stats(_consolidated_view), do: nil
+  end
+
+  attr :class, :string
+  slot :inner_block, required: true
+
+  defp new_site_link(assigns) do
+    ~H"""
+    <.link
+      class={@class}
+      href={Routes.site_path(PlausibleWeb.Endpoint, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
+    >
+      {render_slot(@inner_block)}
+    </.link>
+    """
+  end
+
+  attr :class, :string
+  slot :inner_block, required: true
+
+  defp new_consolidated_view_button(assigns) do
+    ~H"""
+    <button class={@class} phx-click="consolidated-view-cta-restore">
+      {render_slot(@inner_block)}
+    </button>
+    """
   end
 end

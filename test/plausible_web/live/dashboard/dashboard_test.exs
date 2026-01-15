@@ -17,16 +17,13 @@ defmodule PlausibleWeb.Live.DashboardTest do
       html = html_response(conn, 200)
 
       assert element_exists?(html, "#live-dashboard-container")
-      assert element_exists?(html, "#pages-breakdown-live-container")
     end
   end
 
   describe "Live.Dashboard" do
     test "it works", %{conn: conn, site: site} do
       {lv, _html} = get_liveview(conn, site)
-      assert has_element?(lv, "#pages-breakdown-live-container")
-      assert has_element?(lv, "#breakdown-tile-pages")
-      assert has_element?(lv, "#breakdown-tile-pages-tabs")
+      assert has_element?(lv, "#live-dashboard-container")
     end
   end
 

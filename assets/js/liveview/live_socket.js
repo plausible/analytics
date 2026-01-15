@@ -10,6 +10,7 @@ import { LiveSocket } from 'phoenix_live_view'
 import { Modal, Dropdown } from 'prima'
 import DashboardRoot from './dashboard_root'
 import DashboardTabs from './dashboard_tabs.js'
+import DatePicker from './datepicker'
 import topbar from 'topbar'
 /* eslint-enable import/no-unresolved */
 
@@ -22,7 +23,7 @@ let disablePushStateFlag = document.querySelector(
 )
 let domain = document.querySelector("meta[name='dashboard-domain']")
 if (csrfToken && websocketUrl) {
-  let Hooks = { Modal, Dropdown, DashboardRoot, DashboardTabs }
+  let Hooks = { Modal, Dropdown, DashboardRoot, DashboardTabs, DatePicker }
   Hooks.Metrics = {
     mounted() {
       this.handleEvent('send-metrics', ({ event_name }) => {
@@ -80,6 +81,7 @@ if (csrfToken && websocketUrl) {
           // user preferences across the reloads.
           user_prefs: {
             pages_tab: localStorage.getItem(`pageTab__${domainName}`),
+            sources_tab: localStorage.getItem(`sourceTab__${domainName}`),
             period: localStorage.getItem(`period__${domainName}`),
             comparison: localStorage.getItem(`comparison_mode__${domainName}`),
             match_day_of_week: localStorage.getItem(

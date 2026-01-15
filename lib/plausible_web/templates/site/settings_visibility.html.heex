@@ -19,7 +19,7 @@
         Make stats publicly available on
         <.unstyled_link
           class="text-indigo-500"
-          href={Routes.stats_path(@conn, :stats, @site.domain, [])}
+          href={Routes.stats_path(@conn, :dashboard, @site.domain, [])}
         >
           {PlausibleWeb.StatsView.pretty_stats_url(@site)}
         </.unstyled_link>

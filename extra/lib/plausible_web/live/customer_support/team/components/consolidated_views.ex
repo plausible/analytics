@@ -58,7 +58,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
             <.td>
               <.styled_link
                 new_tab={true}
-                href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, consolidated_view.domain, [])}
+                href={
+                  Routes.stats_path(PlausibleWeb.Endpoint, :dashboard, consolidated_view.domain, [])
+                }
               >
                 Dashboard
               </.styled_link>

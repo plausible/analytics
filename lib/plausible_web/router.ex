@@ -701,8 +701,8 @@ defmodule PlausibleWeb.Router do
 
       get "/:domain/export", StatsController, :csv_export
 
-      scope assigns: %{live_socket_disable_push_state: true} do
-        get "/:domain/*path", StatsController, :stats
+      scope assigns: %{connect_live_socket: true} do
+        live "/:domain/*path", Live.Dashboard, :dashboard, as: :stats
       end
     end
   end

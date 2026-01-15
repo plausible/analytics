@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
       </div>
       <%!-- reportbody --%>
       <div
-        class="w-full flex-col justify-center group-[.phx-navigation-loading]:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden"
+        class={"w-full flex-col justify-center #{if @connected?, do: "group-[.phx-navigation-loading]:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden", else: "flex"}"}
         style={"min-height: #{@height}px;"}
       >
         <div class="mx-auto loading">
@@ -53,7 +53,10 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         </div>
       </div>
 
-      <div class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden">
+      <div
+        :if={@connected?}
+        class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden"
+      >
         {render_slot(@inner_block)}
       </div>
     </div>
@@ -63,6 +66,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   attr :report_label, :string, required: true
   attr :tab_key, :string, required: true
   attr :active_tab, :string, required: true
+  attr :storage_key, :string, required: true
   attr :target, :any, required: true
 
   def tab(assigns) do
@@ -85,7 +89,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
         class="group/tab flex rounded-sm"
         data-tab-key={@tab_key}
         data-report-label={@report_label}
-        data-storage-key="pageTab"
+        data-storage-key={@storage_key}
         data-target={@target}
       >
         <span

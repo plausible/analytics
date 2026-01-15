@@ -28,6 +28,12 @@ defmodule Plausible.Stats.Dashboard.Utils do
         filter -> ParsedQueryParams.add_or_replace_filter(params, filter)
       end
 
+    params =
+      case Keyword.get(opts, :update_params) do
+        nil -> params
+        update_params -> ParsedQueryParams.set(params, update_params)
+      end
+
     query_string =
       case Dashboard.QuerySerializer.serialize(params) do
         "" -> ""
