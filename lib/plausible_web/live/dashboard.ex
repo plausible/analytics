@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.Dashboard do
     <div
       id="live-dashboard-container"
       phx-hook="DashboardRoot"
-      class="container print:max-w-full pt-6 mb-16 grid grid-cols-1 md:grid-cols-2 gap-5"
+      class="group/dashboard container print:max-w-full pt-6 mb-16 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
       <div class="col-span-full flex items-center justify-end">
         <.live_component
@@ -97,6 +97,61 @@ defmodule PlausibleWeb.Live.Dashboard do
         connected?={@connected?}
         params={@params}
       />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.PagesDetails}
+        id="pages-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["pages"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.EntryPagesDetails}
+        id="entry-pages-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["entry-pages"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.ExitPagesDetails}
+        id="exit-pages-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["exit-pages"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.SourcesDetails}
+        id="sources-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["sources"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.ChannelsDetails}
+        id="channels-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["channels"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.UtmMediumsDetails}
+        id="utm-mediums-breakdown-details-component"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@path == ["utm_medium"]}
+      />
+
     </div>
     """
   end

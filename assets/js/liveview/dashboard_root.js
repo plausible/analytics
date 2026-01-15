@@ -6,17 +6,25 @@
 
 import { buildHook } from './hook_builder'
 
-function navigateWithLoader(url) {
-  this.portalTargets.map((target) => {
-    this.js().addClass(document.querySelector(target), 'phx-navigation-loading')
+const MODAL_ROUTES = {
+  '/pages': '#pages-breakdown-details-modal',
+  '/entry-pages': '#entry-pages-breakdown-details-modal',
+  '/exit-pages': '#exit-pages-breakdown-details-modal',
+  '/sources': '#sources-breakdown-details-modal',
+  '/channels': '#channels-breakdown-details-modal',
+  '/utm_medium': '#utm-mediums-breakdown-details-modal'
+}
 
-    this.pushEvent('handle_dashboard_params', { url: url }, () => {
-      this.js().removeClass(
-        document.querySelector(target),
-        'phx-navigation-loading'
-      )
-    })
-  })
+function routeModal(path) {
+  const modalId = MODAL_ROUTES[path]
+
+  if (modalId) {
+    const modal = document.querySelector(modalId)
+
+    if (modal) {
+      modal.dispatchEvent(new Event('prima:modal:open'))
+    }
+  }
 }
 
 export default buildHook({
@@ -26,39 +34,16 @@ export default buildHook({
     this.url = window.location.href
 
     this.addListener('click', document.body, (e) => {
-      const type = e.target.dataset.type || null
+      const link = e.target.closest('[data-phx-link]')
+      const type = link && (link.dataset.type || null)
 
       if (type === 'dashboard-link') {
-        const uri = new URL(e.target.href)
+        const uri = new URL(link.href)
         // Domain is dropped from URL prefix, because that's what react-dom-router
         // expects.
         const path = '/' + uri.pathname.split('/').slice(2).join('/')
-        this.el.dispatchEvent(
-          new CustomEvent('dashboard:live-navigate', {
-            bubbles: true,
-            detail: { path: path, search: uri.search }
-          })
-        )
 
-        e.preventDefault()
-      }
-    })
-
-    // Browser back and forward navigation triggers that event.
-    this.addListener('popstate', window, () => {
-      if (this.url !== window.location.href) {
-        navigateWithLoader.bind(this)(window.location.href)
-      }
-    })
-
-    // Navigation events triggered from liveview are propagated via this
-    // handler.
-    this.addListener('dashboard:live-navigate-back', window, (e) => {
-      if (
-        typeof e.detail.search === 'string' &&
-        this.url !== window.location.href
-      ) {
-        navigateWithLoader.bind(this)(window.location.href)
+        routeModal(path)
       }
     })
   }
