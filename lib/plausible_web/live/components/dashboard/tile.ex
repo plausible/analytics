@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
     <div
       data-tile
       id={@id}
-      class="relative min-h-[430px] w-full p-5 flex flex-col bg-white dark:bg-gray-900 shadow-sm rounded-md md:min-h-initial md:h-27.25rem"
+      class="relative min-h-[430px] w-full p-5 flex flex-col bg-white border border-gray-150 dark:bg-gray-900 dark:border-gray-800 rounded-lg md:min-h-initial md:h-27.25rem"
     >
       <%!-- reportheader --%>
       <div class="w-full flex justify-between border-b border-gray-200 dark:border-gray-750">
@@ -41,24 +41,10 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
             {render_slot(@warnings)}
           </div>
         </div>
-        <.details_link details_route={@details_route} path="/pages" />
+        <.details_link :if={@connected?} details_route={@details_route} path="/pages" />
       </div>
       <%!-- reportbody --%>
-      <div
-        class={"w-full flex-col justify-center #{if @connected?, do: "group-[.phx-navigation-loading]:flex group-has-[.tile-tabs.phx-hook-loading]:flex hidden", else: "flex"}"}
-        style={"min-height: #{@height}px;"}
-      >
-        <div class="mx-auto loading">
-          <div></div>
-        </div>
-      </div>
-
-      <div
-        :if={@connected?}
-        class="group-[.phx-navigation-loading]:hidden group-has-[.tile-tabs.phx-hook-loading]:hidden"
-      >
-        {render_slot(@inner_block)}
-      </div>
+      {render_slot(@inner_block)}
     </div>
     """
   end
@@ -68,6 +54,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
   attr :active_tab, :string, required: true
   attr :storage_key, :string, required: true
   attr :target, :any, required: true
+  attr :connected?, :boolean, default: true
 
   def tab(assigns) do
     assigns =
@@ -83,9 +70,10 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
     ~H"""
     <div
       {@data_attrs}
-      class="-mb-px pb-4 data-[active=true]:border-b-2 data-[active=true]:border-gray-900 data-[active=true]:dark:border-gray-100"
+      class={"-mb-px pb-4 #{if @connected?, do: "data-[active=true]:border-b-2 data-[active=true]:border-gray-900 data-[active=true]:dark:border-gray-100"}"}
     >
       <button
+        :if={@connected?}
         class="group/tab flex rounded-sm"
         data-tab-key={@tab_key}
         data-report-label={@report_label}
@@ -107,6 +95,7 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
           {@report_label}
         </span>
       </button>
+      <div :if={!@connected?} class="h-3.5 mb-1 w-18 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
     </div>
     """
   end

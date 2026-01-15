@@ -77,6 +77,7 @@ defmodule PlausibleWeb.Live.Dashboard.Sources do
             active_tab={@active_tab}
             storage_key="sourceTab"
             target={@myself}
+            connected?={@connected?}
           />
         </:tabs>
 
@@ -87,6 +88,7 @@ defmodule PlausibleWeb.Live.Dashboard.Sources do
           dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
           query_result={@query_result}
+          connected?={@connected?}
           external_link_fn={nil}
         />
       </Tile.tile>

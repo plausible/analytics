@@ -72,14 +72,19 @@ defmodule PlausibleWeb.Live.Dashboard do
       class="container print:max-w-full pt-6 mb-16 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
       <div class="col-span-full flex items-center justify-end">
-        <.live_component
-          module={PlausibleWeb.Live.Dashboard.DatePicker}
-          id="datepicker-component"
-          site={@site}
-          user_prefs={@user_prefs}
-          connected?={@connected?}
-          params={@params}
-        />
+        <div :if={@connected?} class="flex shrink-0">
+          <.live_component
+            module={PlausibleWeb.Live.Dashboard.DatePicker}
+            id="datepicker-component"
+            site={@site}
+            user_prefs={@user_prefs}
+            connected?={@connected?}
+            params={@params}
+          />
+        </div>
+        <div :if={!@connected?} class="h-9 w-36 md:w-48 flex items-center shrink-0">
+          <div class="h-3.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+        </div>
       </div>
       <.live_component
         module={PlausibleWeb.Live.Dashboard.Sources}

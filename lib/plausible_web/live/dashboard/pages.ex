@@ -73,6 +73,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
             active_tab={@active_tab}
             storage_key="pageTab"
             target={@myself}
+            connected?={@connected?}
           />
         </:tabs>
 
@@ -83,6 +84,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
           dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
           query_result={@query_result}
+          connected?={@connected?}
           external_link_fn={page_external_link_fn_for(@site)}
         />
       </Tile.tile>
