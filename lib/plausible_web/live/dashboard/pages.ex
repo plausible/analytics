@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
   def render(assigns) do
     ~H"""
-    <div class="group w-full h-full border-0 overflow-hidden">
+    <div class="group/report w-full h-full border-0 overflow-hidden">
       <Tile.tile
         id="breakdown-tile-pages"
         details_route={dashboard_route(@site, @params, path: "/#{@active_tab}")}

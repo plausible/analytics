@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.Dashboard do
     <div
       id="live-dashboard-container"
       phx-hook="DashboardRoot"
-      class="container print:max-w-full pt-6 mb-16 grid grid-cols-1 md:grid-cols-2 gap-5"
+      class="group/dashboard container print:max-w-full pt-6 mb-16 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
       <div class="col-span-full flex items-center justify-end">
         <div :if={@connected?} class="flex shrink-0">

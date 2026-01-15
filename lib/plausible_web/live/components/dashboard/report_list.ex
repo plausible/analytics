@@ -58,8 +58,8 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
       ~H"""
       <.no_data :if={@empty?} min_height={@min_height} data_test_id={@data_test_id} />
 
-      <div :if={not @empty?} class="h-full flex flex-col" data-test-id={@data_test_id}>
-        <div style={"min-height: #{@row_height}px;"}>
+      <div :if={not @empty?} class="h-full flex flex-col group-has-[.tile-tabs.phx-hook-loading]/report:opacity-60 group-[.phx-navigation-loading]/dashboard:opacity-60" data-test-id={@data_test_id}>
+        <div class="group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse" style={"min-height: #{@row_height}px;"}>
           <.report_header
             key_label={@key_label}
             metric_labels={@metric_labels}
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
           />
         </div>
 
-        <div class="grow" style={"min-height: #{@data_container_height}px;"}>
+        <div class="grow group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse" style={"min-height: #{@data_container_height}px;"}>
           <.report_row
             :for={{item, item_index} <- Enum.with_index(@results)}
             link_fn={assigns[:external_link_fn]}
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     ~H"""
     <div
       data-test-id={@data_test_id}
-      class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]:hidden"
+      class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]/report:hidden"
       style={"min-height: #{@min_height}px;"}
     >
       <div class="mx-auto font-medium text-gray-500 dark:text-gray-400">
