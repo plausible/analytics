@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.ExternalController.DebugMetadataTest do
       }
 
       conn =
-        post(conn, "api/v2/query", query)
+        post(conn, "/api/v2/query", query)
 
       assert json_response(conn, 200)
 
@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Api.ExternalController.DebugMetadataTest do
                          "phoenix_controller" =>
                            "Elixir.PlausibleWeb.Api.ExternalQueryApiController",
                          "request_method" => "POST",
-                         "request_path" => "api/v2/query",
+                         "request_path" => "/api/v2/query",
                          "site_domain" => ^site.domain,
                          "site_id" => ^site.id,
                          "team_id" => ^team_of(user).id,
