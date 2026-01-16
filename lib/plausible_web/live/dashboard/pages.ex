@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Live.Dashboard.Pages do
 
         <ReportList.report
           site={@site}
-          data_test_id={"#{@active_tab}-report-list"}
+          id={"#{@active_tab}-report-list"}
           key_label={get_tab_info(@active_tab, :key_label)}
           dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}

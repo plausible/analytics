@@ -19,9 +19,9 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   def height, do: @min_height
 
   attr :site, Plausible.Site, required: true
+  attr :id, :string, required: true
   attr :params, ParsedQueryParams, required: true
   attr :connected?, :boolean, required: true
-  attr :data_test_id, :string, required: true
   attr :dimension, :string, required: true
   attr :key_label, :string, required: true
   attr :query_result, QueryResult, required: true
@@ -42,13 +42,13 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     if !assigns.connected? do
       ~H"""
       <.skeleton
+        id={"#{@id}-skeleton"}
         min_height={@min_height}
         row_height={@row_height}
         row_gap_height={@row_gap_height}
         data_container_height={@data_container_height}
         col_min_width={@col_min_width}
         max_items={@max_items}
-        data_test_id={@data_test_id}
       />
       """
     else
@@ -63,9 +63,13 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         )
 
       ~H"""
-      <.no_data :if={@empty?} min_height={@min_height} data_test_id={@data_test_id} />
+      <.no_data :if={@empty?} min_height={@min_height} id={"#{@id}-no-data"}/>
 
-      <div :if={not @empty?} class="h-full flex flex-col group-has-[.tile-tabs.phx-hook-loading]/report:opacity-60 group-[.phx-navigation-loading]/dashboard:opacity-60" data-test-id={@data_test_id}>
+      <div
+        :if={not @empty?}
+        id={@id}
+        class="h-full flex flex-col group-has-[.tile-tabs.phx-hook-loading]/report:opacity-60 group-[.phx-navigation-loading]/dashboard:opacity-60"
+      >
         <div class="group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse" style={"min-height: #{@row_height}px;"}>
           <.report_header
             key_label={@key_label}
@@ -105,7 +109,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
 
     ~H"""
     <div
-      data-test-id={@data_test_id}
+      id={@id}
       class="h-full flex flex-col"
       style={"min-height: #{@min_height}px;"}
     >
@@ -143,7 +147,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   defp no_data(assigns) do
     ~H"""
     <div
-      data-test-id={@data_test_id}
+      id={@id}
       class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]/report:hidden"
       style={"min-height: #{@min_height}px;"}
     >
