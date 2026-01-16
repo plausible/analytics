@@ -5,9 +5,8 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
 
   use PlausibleWeb, :component
 
-  alias PlausibleWeb.Components.Dashboard.Base
-  alias PlausibleWeb.Components.Dashboard.Metric
-  alias Plausible.Stats.QueryResult
+  alias PlausibleWeb.Components.Dashboard.{Base, Metric}
+  alias Plausible.Stats.{QueryResult, ParsedQueryParams}
   alias Plausible.Stats.Dashboard.Utils
 
   @max_items 9
@@ -19,7 +18,15 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
 
   def height, do: @min_height
 
+  attr :site, Plausible.Site, required: true
+  attr :params, ParsedQueryParams, required: true
   attr :connected?, :boolean, required: true
+  attr :data_test_id, :string, required: true
+  attr :dimension, :string, required: true
+  attr :key_label, :string, required: true
+  attr :query_result, QueryResult, required: true
+  attr :external_link_fn, :any, default: nil
+
 
   def report(assigns) do
     assigns =
@@ -90,9 +97,11 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   end
 
   defp skeleton(assigns) do
-    bar_widths = [100, 45, 25, 14, 10, 7, 5, 4, 3]
-    number_widths = [9, 8, 7, 8, 9, 7, 9, 7, 8]
-    value_widths = [22, 16, 20, 14, 19, 15, 21, 13, 17]
+    assigns =
+      assigns
+      |> assign(:bar_widths, [100, 45, 25, 14, 10, 7, 5, 4, 3])
+      |> assign(:number_widths, [9, 8, 7, 8, 9, 7, 9, 7, 8])
+      |> assign(:value_widths, [22, 16, 20, 14, 19, 15, 21, 13, 17])
 
     ~H"""
     <div
@@ -108,7 +117,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         </div>
       </div>
       <div
-        :for={{bar_width, number_width, value_width} <- Enum.zip([bar_widths, number_widths, value_widths])}
+        :for={{bar_width, number_width, value_width} <- Enum.zip([@bar_widths, @number_widths, @value_widths])}
         class="flex items-center justify-between w-full"
         style={"margin-top: #{@row_gap_height}px;"}
       >
