@@ -42,6 +42,7 @@ defmodule PlausibleWeb.Api.ExternalController.DebugMetadataTest do
                          "site_domain" => ^site.domain,
                          "site_id" => ^site.id,
                          "team_id" => ^team_of(user).id,
+                         "trace_id" => _,
                          "user_id" => ^user.id
                        }) = decoded
 
