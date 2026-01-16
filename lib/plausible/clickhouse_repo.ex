@@ -72,12 +72,7 @@ defmodule Plausible.ClickhouseRepo do
 
       span_ctx ->
         trace_id = OpenTelemetry.Span.trace_id(span_ctx)
-
-        if is_integer(trace_id) and trace_id > 0 do
-          Integer.to_string(trace_id, 16) |> String.downcase()
-        else
-          nil
-        end
+        Integer.to_string(trace_id, 16) |> String.downcase()
     end
   end
 end
