@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Live.Dashboard.PagesTest do
 
   setup [:create_user, :log_in, :create_site]
 
-  @top_pages_report_list ~s|[data-test-id="pages-report-list"]|
-  @entry_pages_report_list ~s|[data-test-id="entry-pages-report-list"]|
-  @exit_pages_report_list ~s|[data-test-id="exit-pages-report-list"]|
+  @top_pages_report_list "#pages-report-list"
+  @entry_pages_report_list "#entry-pages-report-list"
+  @exit_pages_report_list "#exit-pages-report-list"
   @unsupported_filters_warning ~s|#breakdown-tile-pages [data-test-id="unsupported-filters-warning"]|
 
   describe "Top Pages" do
