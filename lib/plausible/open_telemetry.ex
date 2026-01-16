@@ -8,7 +8,8 @@ defmodule Plausible.OpenTelemetry do
       %Plausible.Site{} = site ->
         Tracer.set_attributes([
           {"plausible.site.id", site.id},
-          {"plausible.site.domain", site.domain}
+          {"plausible.site.domain", site.domain},
+          {"plausible.site.team_id", site.team_id}
         ])
 
       id when is_integer(id) ->
