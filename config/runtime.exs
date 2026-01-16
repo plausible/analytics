@@ -27,7 +27,7 @@ log_level =
   |> String.to_existing_atom()
 
 config :logger, level: log_level
-config :logger, :default_formatter, metadata: [:request_id]
+config :logger, :default_formatter, metadata: [:request_id, :trace_id]
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,

@@ -9,8 +9,6 @@ defmodule Plausible.Stats.Aggregate do
   alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer}
 
   def aggregate(site, query, metrics) do
-    Query.trace(query, metrics)
-
     query =
       query
       |> Query.set(metrics: metrics, remove_unavailable_revenue_metrics: true)
