@@ -27,7 +27,6 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   attr :query_result, QueryResult, required: true
   attr :external_link_fn, :any, default: nil
 
-
   def report(assigns) do
     assigns =
       assign(assigns,
@@ -63,14 +62,17 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         )
 
       ~H"""
-      <.no_data :if={@empty?} min_height={@min_height} id={"#{@id}-no-data"}/>
+      <.no_data :if={@empty?} min_height={@min_height} id={"#{@id}-no-data"} />
 
       <div
         :if={not @empty?}
         id={@id}
         class="h-full flex flex-col group-has-[.tile-tabs.phx-hook-loading]/report:opacity-60 group-[.phx-navigation-loading]/dashboard:opacity-60"
       >
-        <div class="group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse" style={"min-height: #{@row_height}px;"}>
+        <div
+          class="group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse"
+          style={"min-height: #{@row_height}px;"}
+        >
           <.report_header
             key_label={@key_label}
             metric_labels={@metric_labels}
@@ -78,7 +80,10 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
           />
         </div>
 
-        <div class="grow group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse" style={"min-height: #{@data_container_height}px;"}>
+        <div
+          class="grow group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse"
+          style={"min-height: #{@data_container_height}px;"}
+        >
           <.report_row
             :for={{item, item_index} <- Enum.with_index(@results)}
             link_fn={assigns[:external_link_fn]}
@@ -117,11 +122,13 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         class="flex justify-between w-full pt-4"
         style={"height: #{@row_height}px;"}
       >
-        <div class="w-12 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse">
-        </div>
+        <div class="w-12 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
       </div>
       <div
-        :for={{bar_width, number_width, value_width} <- Enum.zip([@bar_widths, @number_widths, @value_widths])}
+        :for={
+          {bar_width, number_width, value_width} <-
+            Enum.zip([@bar_widths, @number_widths, @value_widths])
+        }
         class="flex items-center justify-between w-full"
         style={"margin-top: #{@row_gap_height}px;"}
       >
@@ -129,14 +136,20 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
           class="bg-gray-100/70 dark:bg-gray-800/70 rounded-sm animate-pulse relative"
           style={"height: #{@row_height}px; width: #{bar_width}%;"}
         >
-          <div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse absolute top-1/2 -translate-y-1/2 left-2" style={"width: #{value_width * 4}px;"}>
+          <div
+            class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse absolute top-1/2 -translate-y-1/2 left-2"
+            style={"width: #{value_width * 4}px;"}
+          >
           </div>
         </div>
         <div
           class="flex items-center justify-end"
           style={"height: #{@row_height}px; width: 70px;"}
         >
-          <div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" style={"width: #{number_width * 4}px;"}>
+          <div
+            class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"
+            style={"width: #{number_width * 4}px;"}
+          >
           </div>
         </div>
       </div>

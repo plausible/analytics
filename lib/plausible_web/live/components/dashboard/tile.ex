@@ -95,7 +95,11 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
           {@report_label}
         </span>
       </button>
-      <div :if={!@connected?} class="h-3.5 mb-1 w-18 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+      <div
+        :if={!@connected?}
+        class="h-3.5 mb-1 w-18 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"
+      >
+      </div>
     </div>
     """
   end

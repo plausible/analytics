@@ -88,7 +88,10 @@ defmodule PlausibleWeb.Live.Dashboard.DatePicker do
       <div class="min-w-36 md:relative lg:w-48 z-[99]">
         <PrimaDropdown.dropdown id="datepicker-prima-dropdown">
           <PrimaDropdown.dropdown_trigger as={&trigger_button/1}>
-            <span id="period-label" class="truncate block font-medium group-[.phx-navigation-loading]/dashboard:opacity-50">
+            <span
+              id="period-label"
+              class="truncate block font-medium group-[.phx-navigation-loading]/dashboard:opacity-50"
+            >
               {@selected_label}
             </span>
             <Heroicons.chevron_down mini class="size-4 mt-0.5" />
