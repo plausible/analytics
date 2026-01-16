@@ -21,7 +21,7 @@ install: ## Run the initial setup
 server: ## Start the web server
 	mix phx.server
 
-CH_FLAGS ?= --detach -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 --name plausible_clickhouse
+CH_FLAGS ?= --detach -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 --name plausible_clickhouse --env CLICKHOUSE_SKIP_USER_SETUP=1
 
 clickhouse: ## Start a container with a recent version of clickhouse
 	docker run $(CH_FLAGS) --network host --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse clickhouse/clickhouse-server:latest-alpine
@@ -30,7 +30,7 @@ clickhouse-client: ## Connect to clickhouse
 	docker exec -it plausible_clickhouse clickhouse-client -d plausible_events_db
 
 clickhouse-prod: ## Start a container with the same version of clickhouse as the one in prod
-	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:24.12.2.29-alpine
+	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:25.11.5.8-alpine
 
 clickhouse-stop: ## Stop and remove the clickhouse container
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse

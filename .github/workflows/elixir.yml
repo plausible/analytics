@@ -39,10 +39,11 @@ jobs:
             --health-timeout 5s
             --health-retries 5
       clickhouse:
-        image: clickhouse/clickhouse-server:24.12.2.29-alpine
+        image: clickhouse/clickhouse-server:25.11.5.8-alpine
         ports:
           - 8123:8123
         env:
+          CLICKHOUSE_SKIP_USER_SETUP: 1
           options: >-
             --health-cmd nc -zw3 localhost 8124
             --health-interval 10s
