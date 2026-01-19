@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.Dashboard.Sources do
 
   def render(assigns) do
     ~H"""
-    <div class="group w-full h-full border-0 overflow-hidden">
+    <div class="group/report w-full h-full border-0 overflow-hidden">
       <Tile.tile
         id="breakdown-tile-sources"
         details_route={dashboard_route(@site, @params, path: "/#{@active_tab}")}
@@ -77,16 +77,18 @@ defmodule PlausibleWeb.Live.Dashboard.Sources do
             active_tab={@active_tab}
             storage_key="sourceTab"
             target={@myself}
+            connected?={@connected?}
           />
         </:tabs>
 
         <ReportList.report
           site={@site}
-          data_test_id={"#{@active_tab}-report-list"}
+          id={"#{@active_tab}-report-list"}
           key_label={get_tab_info(@active_tab, :key_label)}
           dimension={get_tab_info(@active_tab, :dimension)}
           params={@params}
           query_result={@query_result}
+          connected?={@connected?}
           external_link_fn={nil}
         />
       </Tile.tile>

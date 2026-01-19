@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Live.Dashboard.DatePicker do
       data-current-index={@current_date_index}
       data-dates={JSON.encode!(@quick_navigation_dates)}
       data-labels={JSON.encode!(@quick_navigation_labels)}
-      class="flex shrink-0"
+      class="group flex shrink-0"
     >
       <div
         :if={@quick_navigation_dates != []}
@@ -88,7 +88,10 @@ defmodule PlausibleWeb.Live.Dashboard.DatePicker do
       <div class="min-w-36 md:relative lg:w-48 z-[99]">
         <PrimaDropdown.dropdown id="datepicker-prima-dropdown">
           <PrimaDropdown.dropdown_trigger as={&trigger_button/1}>
-            <span id="period-label" class="truncate block font-medium">
+            <span
+              id="period-label"
+              class="truncate block font-medium group-[.phx-navigation-loading]/dashboard:opacity-50"
+            >
               {@selected_label}
             </span>
             <Heroicons.chevron_down mini class="size-4 mt-0.5" />

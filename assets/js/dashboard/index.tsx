@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react'
-import { LiveViewPortal } from './components/liveview-portal'
 import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
 import Pages from './stats/pages'
@@ -8,11 +7,9 @@ import Devices from './stats/devices'
 import { TopBar } from './nav-menu/top-bar'
 import Behaviours from './stats/behaviours'
 import { useQueryContext } from './query-context'
-import { useSiteContext } from './site-context'
-import { hasConversionGoalFilter, isRealTimeDashboard } from './util/filters'
+import { isRealTimeDashboard } from './util/filters'
 import { useAppNavigate } from './navigation/use-app-navigate'
 import { parseSearch } from './util/url-search-params'
-import { getDomainScopedStorageKey } from './util/storage'
 
 function DashboardStats({
   importedDataInView,
@@ -22,8 +19,6 @@ function DashboardStats({
   updateImportedDataInView?: (v: boolean) => void
 }) {
   const navigate = useAppNavigate()
-  const site = useSiteContext()
-  const { query } = useQueryContext()
 
   // Handler for navigation events delegated from LiveView dashboard.
   // Necessary to emulate navigation events in LiveView with pushState

@@ -5,9 +5,8 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
 
   use PlausibleWeb, :component
 
-  alias PlausibleWeb.Components.Dashboard.Base
-  alias PlausibleWeb.Components.Dashboard.Metric
-  alias Plausible.Stats.QueryResult
+  alias PlausibleWeb.Components.Dashboard.{Base, Metric}
+  alias Plausible.Stats.{QueryResult, ParsedQueryParams}
   alias Plausible.Stats.Dashboard.Utils
 
   @max_items 9
@@ -18,6 +17,15 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   @col_min_width 70
 
   def height, do: @min_height
+
+  attr :site, Plausible.Site, required: true
+  attr :id, :string, required: true
+  attr :params, ParsedQueryParams, required: true
+  attr :connected?, :boolean, required: true
+  attr :dimension, :string, required: true
+  attr :key_label, :string, required: true
+  attr :query_result, QueryResult, required: true
+  attr :external_link_fn, :any, default: nil
 
   def report(assigns) do
     assigns =
@@ -30,44 +38,120 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         col_min_width: @col_min_width
       )
 
-    %QueryResult{results: results, meta: meta, query: query} = assigns.query_result
+    if !assigns.connected? do
+      ~H"""
+      <.skeleton
+        id={"#{@id}-skeleton"}
+        min_height={@min_height}
+        row_height={@row_height}
+        row_gap_height={@row_gap_height}
+        data_container_height={@data_container_height}
+        col_min_width={@col_min_width}
+        max_items={@max_items}
+      />
+      """
+    else
+      %QueryResult{results: results, meta: meta, query: query} = assigns.query_result
 
+      assigns =
+        assign(assigns,
+          results: results,
+          metric_keys: query[:metrics],
+          metric_labels: meta[:metric_labels],
+          empty?: Enum.empty?(results)
+        )
+
+      ~H"""
+      <.no_data :if={@empty?} min_height={@min_height} id={"#{@id}-no-data"} />
+
+      <div
+        :if={not @empty?}
+        id={@id}
+        class="h-full flex flex-col group-has-[.tile-tabs.phx-hook-loading]/report:opacity-60 group-[.phx-navigation-loading]/dashboard:opacity-60"
+      >
+        <div
+          class="group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse"
+          style={"min-height: #{@row_height}px;"}
+        >
+          <.report_header
+            key_label={@key_label}
+            metric_labels={@metric_labels}
+            col_min_width={@col_min_width}
+          />
+        </div>
+
+        <div
+          class="grow group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse group-[.phx-navigation-loading]/dashboard:animate-pulse"
+          style={"min-height: #{@data_container_height}px;"}
+        >
+          <.report_row
+            :for={{item, item_index} <- Enum.with_index(@results)}
+            link_fn={assigns[:external_link_fn]}
+            item={item}
+            item_index={item_index}
+            item_name={List.first(item.dimensions)}
+            metrics={Enum.zip(@metric_keys, item.metrics)}
+            bar_max_value={bar_max_value(@results, @metric_keys)}
+            site={@site}
+            params={@params}
+            dimension={@dimension}
+            row_height={@row_height}
+            row_gap_height={@row_gap_height}
+            col_min_width={@col_min_width}
+          />
+        </div>
+      </div>
+      """
+    end
+  end
+
+  defp skeleton(assigns) do
     assigns =
-      assign(assigns,
-        results: results,
-        metric_keys: query[:metrics],
-        metric_labels: meta[:metric_labels],
-        empty?: Enum.empty?(results)
-      )
+      assigns
+      |> assign(:bar_widths, [100, 45, 25, 14, 10, 7, 5, 4, 3])
+      |> assign(:number_widths, [9, 8, 7, 8, 9, 7, 9, 7, 8])
+      |> assign(:value_widths, [22, 16, 20, 14, 19, 15, 21, 13, 17])
 
     ~H"""
-    <.no_data :if={@empty?} min_height={@min_height} data_test_id={@data_test_id} />
-
-    <div :if={not @empty?} class="h-full flex flex-col" data-test-id={@data_test_id}>
-      <div style={"min-height: #{@row_height}px;"}>
-        <.report_header
-          key_label={@key_label}
-          metric_labels={@metric_labels}
-          col_min_width={@col_min_width}
-        />
+    <div
+      id={@id}
+      class="h-full flex flex-col"
+      style={"min-height: #{@min_height}px;"}
+    >
+      <div
+        class="flex justify-between w-full pt-4"
+        style={"height: #{@row_height}px;"}
+      >
+        <div class="w-12 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
       </div>
-
-      <div class="grow" style={"min-height: #{@data_container_height}px;"}>
-        <.report_row
-          :for={{item, item_index} <- Enum.with_index(@results)}
-          link_fn={assigns[:external_link_fn]}
-          item={item}
-          item_index={item_index}
-          item_name={List.first(item.dimensions)}
-          metrics={Enum.zip(@metric_keys, item.metrics)}
-          bar_max_value={bar_max_value(@results, @metric_keys)}
-          site={@site}
-          params={@params}
-          dimension={@dimension}
-          row_height={@row_height}
-          row_gap_height={@row_gap_height}
-          col_min_width={@col_min_width}
-        />
+      <div
+        :for={
+          {bar_width, number_width, value_width} <-
+            Enum.zip([@bar_widths, @number_widths, @value_widths])
+        }
+        class="flex items-center justify-between w-full"
+        style={"margin-top: #{@row_gap_height}px;"}
+      >
+        <div
+          class="bg-gray-100/70 dark:bg-gray-800/70 rounded-sm animate-pulse relative"
+          style={"height: #{@row_height}px; width: #{bar_width}%;"}
+        >
+          <div
+            class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse absolute top-1/2 -translate-y-1/2 left-2"
+            style={"width: #{value_width * 4}px;"}
+          >
+          </div>
+        </div>
+        <div
+          class="flex items-center justify-end"
+          style={"height: #{@row_height}px; width: 70px;"}
+        >
+          <div
+            class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"
+            style={"width: #{number_width * 4}px;"}
+          >
+          </div>
+        </div>
       </div>
     </div>
     """
@@ -76,8 +160,8 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
   defp no_data(assigns) do
     ~H"""
     <div
-      data-test-id={@data_test_id}
-      class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]:hidden"
+      id={@id}
+      class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]/report:hidden"
       style={"min-height: #{@min_height}px;"}
     >
       <div class="mx-auto font-medium text-gray-500 dark:text-gray-400">
@@ -149,7 +233,7 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
           >
             <div class="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
               <Base.dashboard_link
-                class="max-w-max w-full flex items-center md:overflow-hidden hover:underline"
+                class="block min-w-0 truncate hover:underline"
                 to={Utils.dashboard_route(@site, @params, filter: [:is, @dimension, [@item_name]])}
               >
                 {trim_name(@item_name, @col_min_width)}

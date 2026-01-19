@@ -55,13 +55,13 @@ export default buildHook({
     this.addListener('click', this.el, (e) => {
       if (this.dates.length) {
         const button = e.target.closest('button')
-  
+
         let updated = false
 
         if (button === this.prevPeriodButton) {
           updated = prevPeriod.bind(this)()
         }
-  
+
         if (button === this.nextPeriodButton) {
           nextPeriod.bind(this)()
           updated = nextPeriod.bind(this)()
@@ -70,7 +70,7 @@ export default buildHook({
         if (updated) {
           this.debouncedPushEvent()
         }
-  
+
         this.periodLabel.innerText = this.labels[this.currentIndex]
         this.prevPeriodButton.dataset.disabled = `${this.currentIndex == 0}`
         this.nextPeriodButton.dataset.disabled = `${this.currentIndex == this.dates.length - 1}`
