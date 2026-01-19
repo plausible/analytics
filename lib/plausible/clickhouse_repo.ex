@@ -46,7 +46,17 @@ defmodule Plausible.ClickhouseRepo do
   @impl true
   def prepare_query(_operation, query, opts) do
     {plausible_query, opts} = Keyword.pop(opts, :query)
-    log_comment = if(plausible_query, do: Jason.encode!(plausible_query.debug_metadata), else: "")
+
+    trace_id = Plausible.OpenTelemetry.current_trace_id()
+
+    log_comment_data =
+      if plausible_query do
+        Map.put(plausible_query.debug_metadata, :trace_id, trace_id)
+      else
+        %{trace_id: trace_id}
+      end
+
+    log_comment = Jason.encode!(log_comment_data)
 
     opts =
       Keyword.update(opts, :settings, [log_comment: log_comment], fn settings ->
