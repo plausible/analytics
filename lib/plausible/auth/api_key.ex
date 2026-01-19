@@ -39,7 +39,8 @@ defmodule Plausible.Auth.ApiKey do
   @required [:user_id, :name]
   @optional [:key, :scopes]
 
-  @hourly_request_limit on_ee(do: 600, else: 1_000_000)
+  @default_hourly_request_limit_per_team on_ee(do: 600, else: 1_000_000)
+  @legacy_api_key_hourly_request_limit_per_user on_ee(do: 600, else: 1_000_000)
 
   schema "api_keys" do
     field :name, :string
@@ -57,7 +58,11 @@ defmodule Plausible.Auth.ApiKey do
     timestamps()
   end
 
-  def hourly_request_limit(), do: @hourly_request_limit
+  def default_hourly_request_limit(), do: @default_hourly_request_limit_per_team
+  def limit_key(team), do: "api_request:team:#{team.identifier}"
+
+  def legacy_hardcoded_request_limit(), do: @legacy_api_key_hourly_request_limit_per_user
+  def legacy_limit_key(user), do: "api_request:legacy_user:#{user.id}"
 
   def changeset(struct, team, attrs) do
     struct
@@ -65,15 +70,9 @@ defmodule Plausible.Auth.ApiKey do
     |> validate_required(@required)
     |> maybe_put_key()
     |> process_key()
-    |> maybe_put_team(team)
+    |> put_team(team)
     |> unique_constraint(:key_hash, error_key: :key)
     |> unique_constraint([:team_id, :user_id], error_key: :team)
-  end
-
-  def update(struct, attrs \\ %{}) do
-    struct
-    |> cast(attrs, [:name, :user_id, :scopes])
-    |> validate_required([:user_id, :name])
   end
 
   def do_hash(key) do
@@ -93,9 +92,7 @@ defmodule Plausible.Auth.ApiKey do
 
   def process_key(changeset), do: changeset
 
-  defp maybe_put_team(changeset, nil), do: changeset
-
-  defp maybe_put_team(changeset, team) do
+  defp put_team(changeset, team) when not is_nil(team) do
     put_assoc(changeset, :team, team)
   end
 

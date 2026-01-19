@@ -239,13 +239,18 @@ defmodule Plausible.Auth do
     end
   end
 
-  @spec find_api_key(String.t(), Keyword.t()) ::
+  @spec find_api_key(String.t()) ::
           {:ok, %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
           | {:error, :invalid_api_key | :missing_site_id}
-  def find_api_key(raw_key, opts \\ []) do
-    {team_scope, id} = Keyword.get(opts, :team_by, {nil, nil})
+  def find_api_key(raw_key) do
+    find_api_key(raw_key, nil, nil)
+  end
 
-    find_api_key(raw_key, team_scope, id)
+  @spec find_api_key_for_team_of_site(String.t(), String.t()) ::
+          {:ok, %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
+          | {:error, :invalid_api_key | :missing_site_id}
+  def find_api_key_for_team_of_site(raw_key, site_domain) do
+    find_api_key(raw_key, :site, site_domain)
   end
 
   defp scope_api_keys_by_team(query, nil) do

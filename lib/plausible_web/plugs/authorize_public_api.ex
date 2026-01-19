@@ -66,9 +66,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   ### Verification dispatched by scope
 
   defp find_api_key(conn, token, :site) do
-    case Auth.find_api_key(token, team_by: {:site, conn.params["site_id"]}) do
+    case Auth.find_api_key_for_team_of_site(token, conn.params["site_id"]) do
       {:ok, %{api_key: api_key, team: nil}} ->
-        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+        {:ok, api_key, Auth.ApiKey.legacy_limit_key(api_key.user),
+         Auth.ApiKey.legacy_hardcoded_request_limit()}
 
       {:ok, %{api_key: api_key, team: team}} ->
         team_role_result = Plausible.Teams.Memberships.team_role(team, api_key.user)
@@ -91,7 +92,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
             :pass
         end
 
-        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_api_request_limit}
+        {:ok, api_key, Auth.ApiKey.limit_key(team), team.hourly_api_request_limit}
 
       {:error, _} = error ->
         error
@@ -101,22 +102,15 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   defp find_api_key(_conn, token, _) do
     case Auth.find_api_key(token) do
       {:ok, %{api_key: api_key, team: nil}} ->
-        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+        {:ok, api_key, Auth.ApiKey.legacy_limit_key(api_key.user),
+         Auth.ApiKey.legacy_hardcoded_request_limit()}
 
       {:ok, %{api_key: api_key, team: team}} ->
-        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_api_request_limit}
+        {:ok, api_key, Auth.ApiKey.limit_key(team), team.hourly_api_request_limit}
 
       {:error, _} = error ->
         error
     end
-  end
-
-  defp limit_key(api_key, nil) do
-    "api_request:#{api_key.id}"
-  end
-
-  defp limit_key(api_key, team_id) do
-    "api_request:#{api_key.id}:#{team_id}"
   end
 
   defp verify_by_scope(conn, api_key, "stats:read:" <> _ = scope) do
