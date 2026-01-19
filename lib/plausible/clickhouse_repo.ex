@@ -47,7 +47,7 @@ defmodule Plausible.ClickhouseRepo do
   def prepare_query(_operation, query, opts) do
     {plausible_query, opts} = Keyword.pop(opts, :query)
 
-    trace_id = get_current_trace_id()
+    trace_id = Plausible.OpenTelemetry.current_trace_id()
 
     log_comment_data =
       if plausible_query do
@@ -64,16 +64,5 @@ defmodule Plausible.ClickhouseRepo do
       end)
 
     {query, opts}
-  end
-
-  defp get_current_trace_id do
-    case OpenTelemetry.Tracer.current_span_ctx() do
-      :undefined ->
-        nil
-
-      span_ctx ->
-        trace_id = OpenTelemetry.Span.trace_id(span_ctx)
-        Integer.to_string(trace_id, 16) |> String.downcase()
-    end
   end
 end

@@ -3,6 +3,19 @@ defmodule Plausible.OpenTelemetry do
 
   require OpenTelemetry.Tracer, as: Tracer
 
+  def current_trace_id do
+    case OpenTelemetry.Tracer.current_span_ctx() do
+      :undefined ->
+        nil
+
+      span_ctx ->
+        span_ctx
+        |> OpenTelemetry.Span.trace_id()
+        |> Integer.to_string(16)
+        |> String.downcase()
+    end
+  end
+
   def add_site_attributes(site) do
     case site do
       %Plausible.Site{} = site ->

@@ -25,17 +25,11 @@ defmodule Plausible.OpenTelemetry.Logger do
 
   @doc false
   def handle_router_dispatch_start(_event, _measurements, _metadata, _config) do
-    case OpenTelemetry.Tracer.current_span_ctx() do
-      :undefined ->
+    case Plausible.OpenTelemetry.current_trace_id() do
+      nil ->
         :ok
 
-      span_ctx ->
-        trace_id_hex =
-          span_ctx
-          |> OpenTelemetry.Span.trace_id()
-          |> Integer.to_string(16)
-          |> String.downcase()
-
+      trace_id_hex ->
         Logger.metadata(trace_id: trace_id_hex)
     end
   end
