@@ -36,7 +36,6 @@ defmodule PlausibleWeb.Live.Dashboard.EntryPagesDetails do
     ~H"""
     <div>
       <.modal
-        class="details-modal"
         id="entry-pages-breakdown-details-modal"
         on_close={JS.patch(@close_url)}
         show={@open?}
