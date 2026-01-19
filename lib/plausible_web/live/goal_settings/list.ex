@@ -319,7 +319,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       revenue_ok? and props_ok?
     end
   else
-    defp goal_editable?(goal, revenue_goals_enabled?, props_available?) do
+    defp goal_editable?(_goal, _revenue_goals_enabled?, _props_available?) do
       always(true)
     end
   end
