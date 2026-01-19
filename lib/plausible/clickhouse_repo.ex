@@ -50,9 +50,10 @@ defmodule Plausible.ClickhouseRepo do
     trace_id = get_current_trace_id()
 
     log_comment_data =
-      case plausible_query do
-        nil -> %{trace_id: trace_id}
-        _ -> Map.put(plausible_query.debug_metadata, :trace_id, trace_id)
+      if plausible_query do
+        Map.put(plausible_query.debug_metadata, :trace_id, trace_id)
+      else
+        %{trace_id: trace_id} 
       end
 
     log_comment = Jason.encode!(log_comment_data)
