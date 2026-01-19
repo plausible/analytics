@@ -363,6 +363,8 @@ defmodule PlausibleWeb.Components.Billing do
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
   attr :link_class, :string, default: ""
+  attr :current_team, :any, required: true
+  attr :current_user, :atom, required: true
 
   def upgrade_call_to_action(assigns) do
     user = assigns.current_user
