@@ -1,4 +1,35 @@
 defmodule Plausible.Auth.ApiKey do
+  @moduledoc """
+  There are two kinds of API keys, legacy API keys and team-scoped API keys.
+
+  Legacy keys have `team` / `team_id` set to `nil`.
+
+  Legacy Stats API keys can be used to
+    - access the stats of sites of any team of the user,
+    - access the stats of sites that they are a guest of,
+    - access data about the sites of the teams that they belong to,
+    - access data about sites that they are a guest of.
+
+  Legacy Sites API keys allow the above and additionally
+    - to provision sites for any team of the user,
+    - to configure sites for any team of the user,
+    - to configure sites that they are a guest of.
+
+  It's not possible to create legacy keys any more through the UI.
+
+  Team-scoped keys have `team` / `team_id` set to a team.
+
+  Team-scoped Stats API keys can be used to
+    - access the stats of sites of that team,
+    - access data about the sites of that team.
+
+  Team-scoped Sites API keys allow the above and additionally
+    - to provision sites for that team,
+    - to configure sites for that team.
+
+  Only team members can use team-scoped keys.
+  """
+
   use Plausible
   use Ecto.Schema
   import Ecto.Changeset
