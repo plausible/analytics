@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
         </div>
       </div>
     </div>
-    <Modal.modal id={@id} on_close={@on_close} show={@show}>
+    <Modal.modal id={@id} class={@class} on_close={@on_close} auto_close={false} show={@show}>
       <Modal.modal_overlay
         transition_enter={{"ease-out duration-300", "opacity-0", "opacity-100"}}
         transition_leave={{"ease-in duration-200", "opacity-100", "opacity-0"}}

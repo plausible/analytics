@@ -108,7 +108,14 @@ if (csrfToken && websocketUrl) {
   if (dashboardContainer) {
     window.addEventListener('phx:page-loading-start', (info) => {
       if (info.detail?.kind === 'patch') {
-        dashboardContainer.classList.add('phx-navigation-loading')
+        const uri = new URL(
+          (info.detail.to.startsWith('http') ? '' : 'https://example.com') +
+            info.detail.to
+        )
+
+        if (uri.pathname.split('/').length == 2) {
+          dashboardContainer.classList.add('phx-navigation-loading')
+        }
       }
     })
     window.addEventListener('phx:page-loading-stop', () => {

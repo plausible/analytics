@@ -56,10 +56,9 @@ defmodule PlausibleWeb.Live.Dashboard do
       )
 
     socket =
-      assign(socket,
-        path: path,
-        params: params
-      )
+      socket
+      |> assign(path: path, params: params)
+      |> maybe_close_modal(socket.assigns[:path] || [])
 
     {:noreply, socket}
   end
@@ -156,8 +155,24 @@ defmodule PlausibleWeb.Live.Dashboard do
         params={@params}
         open?={@path == ["utm_medium"]}
       />
-
     </div>
     """
+  end
+
+  @modals %{
+    ["pages"] => "pages-breakdown-details-modal",
+    ["entry-pages"] => "entry-pages-breakdown-details-modal",
+    ["exit-pages"] => "exit-pages-breakdown-details-modal",
+    ["sources"] => "sources-breakdown-details-modal",
+    ["channels"] => "channels-breakdown-details-modal",
+    ["utm_medium"] => "utm-mediums-breakdown-details-modal"
+  }
+
+  defp maybe_close_modal(socket, old_path) do
+    if length(old_path) == 1 and socket.assigns.path == [] and Map.has_key?(@modals, old_path) do
+      Prima.Modal.push_close(socket, @modals[old_path])
+    else
+      socket
+    end
   end
 end
