@@ -31,10 +31,11 @@ defmodule Plausible.OpenTelemetry.Logger do
 
       span_ctx ->
         trace_id_hex =
-          span_ctx 
+          span_ctx
           |> OpenTelemetry.Span.trace_id()
-          |> Integer.to_string(16) 
+          |> Integer.to_string(16)
           |> String.downcase()
+
         Logger.metadata(trace_id: trace_id_hex)
     end
   end

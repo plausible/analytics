@@ -53,7 +53,7 @@ defmodule Plausible.ClickhouseRepo do
       if plausible_query do
         Map.put(plausible_query.debug_metadata, :trace_id, trace_id)
       else
-        %{trace_id: trace_id} 
+        %{trace_id: trace_id}
       end
 
     log_comment = Jason.encode!(log_comment_data)
