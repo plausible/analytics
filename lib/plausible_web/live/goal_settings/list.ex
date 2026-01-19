@@ -306,19 +306,21 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
     """
   end
 
-  defp goal_editable?(goal, revenue_goals_enabled?, props_available?) do
-    revenue_ok? =
-      on_ee do
+  on_ee do
+    defp goal_editable?(goal, revenue_goals_enabled?, props_available?) do
+      revenue_ok? =
         (Plausible.Goal.Revenue.revenue?(goal) and revenue_goals_enabled?) or
           not Plausible.Goal.Revenue.revenue?(goal)
-      else
-        true
-      end
 
-    props_ok? =
-      (Plausible.Goal.has_custom_props?(goal) and props_available?) or
-        not Plausible.Goal.has_custom_props?(goal)
+      props_ok? =
+        (Plausible.Goal.has_custom_props?(goal) and props_available?) or
+          not Plausible.Goal.has_custom_props?(goal)
 
-    revenue_ok? and props_ok?
+      revenue_ok? and props_ok?
+    end
+  else
+    defp goal_editable?(goal, revenue_goals_enabled?, props_available?) do
+      always(true)
+    end
   end
 end
