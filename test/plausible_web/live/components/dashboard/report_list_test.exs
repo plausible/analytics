@@ -6,13 +6,14 @@ defmodule PlausibleWeb.Components.Dashboard.ReportListTest do
   alias Plausible.Stats.{ParsedQueryParams, QueryResult}
   import Plausible.DashboardTestUtils
 
-  @report_list_selector ~s|[data-test-id="pages-report-list"]|
+  @report_list_selector "#pages-report-list"
   @bar_indicator_selector ~s|[data-test-id="bar-indicator"]|
 
   setup do
     assigns = [
       site: build(:site),
-      data_test_id: "pages-report-list",
+      id: "pages-report-list",
+      connected?: true,
       key_label: "Page",
       dimension: "event:page",
       params: %ParsedQueryParams{},

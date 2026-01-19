@@ -104,6 +104,18 @@ if (csrfToken && websocketUrl) {
   window.addEventListener('phx:page-loading-start', (_info) => topbar.show())
   window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
 
+  const dashboardContainer = document.getElementById('live-dashboard-container')
+  if (dashboardContainer) {
+    window.addEventListener('phx:page-loading-start', (info) => {
+      if (info.detail?.kind === 'patch') {
+        dashboardContainer.classList.add('phx-navigation-loading')
+      }
+    })
+    window.addEventListener('phx:page-loading-stop', () => {
+      dashboardContainer.classList.remove('phx-navigation-loading')
+    })
+  }
+
   liveSocket.connect()
   window.liveSocket = liveSocket
 }

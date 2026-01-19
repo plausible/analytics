@@ -105,6 +105,22 @@
   --default-ring-color: var(--color-indigo-500);
 }
 
+@layer utilities {
+  .animate-pulse {
+    animation: pulse 1.25s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+  }
+
+  [class*='group/report']:has(.tile-tabs.phx-hook-loading)
+    [class*='group-has-[.tile-tabs.phx-hook-loading]/report:animate-pulse'] {
+    animation: pulse 1.25s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+  }
+
+  [class*='group/dashboard'].phx-navigation-loading
+    [class*='group-[.phx-navigation-loading]/dashboard:animate-pulse'] {
+    animation: pulse 1.25s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+  }
+}
+
 @media print {
   canvas {
     width: 100% !important;
