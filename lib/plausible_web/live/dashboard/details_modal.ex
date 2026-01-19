@@ -1,6 +1,6 @@
-defmodule PlausibleWeb.Live.Dashboard.SourcesDetails do
+defmodule PlausibleWeb.Live.Dashboard.DetailsModal do
   @moduledoc """
-  Sources details modal breakdown component.
+  Live component for all brakdown details modals.
   """
 
   use PlausibleWeb, :live_component
@@ -21,6 +21,10 @@ defmodule PlausibleWeb.Live.Dashboard.SourcesDetails do
 
     socket =
       assign(socket,
+        title: assigns.title,
+        key: assigns.key,
+        key_label: assigns.key_label,
+        dimension: assigns.dimension,
         site: assigns.site,
         params: assigns.params,
         open?: assigns.open?,
@@ -36,21 +40,21 @@ defmodule PlausibleWeb.Live.Dashboard.SourcesDetails do
     ~H"""
     <div>
       <.modal
-        id="sources-breakdown-details-modal"
+        id={"#{@key}-breakdown-details-modal"}
         on_close={JS.patch(@close_url)}
         show={@open?}
         ready={@connected?}
       >
         <.modal_title>
-          Sources
+          {@title}
         </.modal_title>
 
         <div class="group w-full h-full border-0 overflow-hidden">
           <ReportList.report
             site={@site}
-            id="sources-detailed-list"
-            key_label="Source"
-            dimension="visit:source"
+            id={"#{@key}-detailed-list"}
+            key_label={@key_label}
+            dimension={@dimension}
             params={@params}
             query_result={@query_result}
             connected?={@connected?}
@@ -63,7 +67,7 @@ defmodule PlausibleWeb.Live.Dashboard.SourcesDetails do
   end
 
   defp load_stats(socket) do
-    %{site: site, params: params} = socket.assigns
+    %{site: site, dimension: dimension, params: params} = socket.assigns
 
     metrics = choose_metrics(params)
 
@@ -71,7 +75,7 @@ defmodule PlausibleWeb.Live.Dashboard.SourcesDetails do
       params
       |> ParsedQueryParams.set(
         metrics: metrics,
-        dimensions: ["visit:source"],
+        dimensions: [dimension],
         pagination: @pagination
       )
 

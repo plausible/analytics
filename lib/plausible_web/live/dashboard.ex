@@ -102,8 +102,12 @@ defmodule PlausibleWeb.Live.Dashboard do
         params={@params}
       />
       <.live_component
-        module={PlausibleWeb.Live.Dashboard.PagesDetails}
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
         id="pages-breakdown-details-component"
+        key="pages"
+        key_label="Page"
+        title="Top Pages"
+        dimension="event:page"
         site={@site}
         user_prefs={@user_prefs}
         connected?={@connected?}
@@ -111,8 +115,12 @@ defmodule PlausibleWeb.Live.Dashboard do
         open?={@path == ["pages"]}
       />
       <.live_component
-        module={PlausibleWeb.Live.Dashboard.EntryPagesDetails}
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
         id="entry-pages-breakdown-details-component"
+        key="entry-pages"
+        key_label="Entry Page"
+        title="Entry Pages"
+        dimension="visit:entry_page"
         site={@site}
         user_prefs={@user_prefs}
         connected?={@connected?}
@@ -120,8 +128,12 @@ defmodule PlausibleWeb.Live.Dashboard do
         open?={@path == ["entry-pages"]}
       />
       <.live_component
-        module={PlausibleWeb.Live.Dashboard.ExitPagesDetails}
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
         id="exit-pages-breakdown-details-component"
+        key="exit-pages"
+        key_label="Exit Page"
+        title="Exit Pages"
+        dimension="visit:exit_page"
         site={@site}
         user_prefs={@user_prefs}
         connected?={@connected?}
@@ -129,8 +141,12 @@ defmodule PlausibleWeb.Live.Dashboard do
         open?={@path == ["exit-pages"]}
       />
       <.live_component
-        module={PlausibleWeb.Live.Dashboard.SourcesDetails}
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
         id="sources-breakdown-details-component"
+        key="sources"
+        key_label="Source"
+        title="Sources"
+        dimension="visit:source"
         site={@site}
         user_prefs={@user_prefs}
         connected?={@connected?}
@@ -138,8 +154,12 @@ defmodule PlausibleWeb.Live.Dashboard do
         open?={@path == ["sources"]}
       />
       <.live_component
-        module={PlausibleWeb.Live.Dashboard.ChannelsDetails}
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
         id="channels-breakdown-details-component"
+        key="channels"
+        key_label="Channel"
+        title="Channels"
+        dimension="visit:channel"
         site={@site}
         user_prefs={@user_prefs}
         connected?={@connected?}
@@ -147,8 +167,12 @@ defmodule PlausibleWeb.Live.Dashboard do
         open?={@path == ["channels"]}
       />
       <.live_component
-        module={PlausibleWeb.Live.Dashboard.UtmMediumsDetails}
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
         id="utm-mediums-breakdown-details-component"
+        key="utm-mediums"
+        key_label="Medium"
+        title="UTM mediums"
+        dimension="visit:utm_medium"
         site={@site}
         user_prefs={@user_prefs}
         connected?={@connected?}
