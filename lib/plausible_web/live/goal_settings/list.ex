@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   Phoenix LiveComponent module that renders a list of goals
   """
   use PlausibleWeb, :live_component
+  use Plausible
   alias PlausibleWeb.Live.Components.Modal
   alias PlausibleWeb.Components.PrimaDropdown
 
@@ -88,6 +89,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                   <.styled_link
                     class="w-max flex items-center text-sm"
                     href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+                    data-test-id="feature-unavailable-cta"
                   >
                     <Heroicons.lock_closed class="size-3.5 mr-1 stroke-2" /> Upgrade
                   </.styled_link>
@@ -112,6 +114,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 :if={goal_editable?}
                 x-data
                 x-on:click={Modal.JS.preopen("goals-form-modal")}
+                data-test-id="edit-goal-button"
                 phx-click="edit-goal"
                 phx-value-goal-id={goal.id}
                 class="mt-1"
@@ -120,6 +123,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               <.edit_button
                 :if={not goal_editable?}
                 id={"edit-goal-#{goal.id}-disabled"}
+                data-test-id="edit-goal-button"
                 disabled
                 class="cursor-not-allowed mt-1"
               />
@@ -303,8 +307,18 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   end
 
   defp goal_editable?(goal, revenue_goals_enabled?, props_available?) do
-    revenue_ok? = not is_nil(goal.currency) or revenue_goals_enabled?
-    props_ok? = not Plausible.Goal.has_custom_props?(goal) or props_available?
+    revenue_ok? =
+      on_ee do
+        (Plausible.Goal.Revenue.revenue?(goal) and revenue_goals_enabled?) or
+          not Plausible.Goal.Revenue.revenue?(goal)
+      else
+        true
+      end
+
+    props_ok? =
+      (Plausible.Goal.has_custom_props?(goal) and props_available?) or
+        not Plausible.Goal.has_custom_props?(goal)
+
     revenue_ok? and props_ok?
   end
 end
