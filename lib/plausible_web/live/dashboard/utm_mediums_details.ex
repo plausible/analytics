@@ -48,11 +48,12 @@ defmodule PlausibleWeb.Live.Dashboard.UtmMediumsDetails do
         <div class="group w-full h-full border-0 overflow-hidden">
           <ReportList.report
             site={@site}
-            data_test_id="utm_mediums-detailed-list"
+            id="utm_mediums-detailed-list"
             key_label="Medium"
             dimension="visit:utm_medium"
             params={@params}
             query_result={@query_result}
+            connected?={@connected?}
             external_link_fn={Utils.page_external_link_fn_for(@site)}
           />
         </div>

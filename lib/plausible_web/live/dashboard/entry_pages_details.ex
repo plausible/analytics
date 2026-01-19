@@ -36,6 +36,7 @@ defmodule PlausibleWeb.Live.Dashboard.EntryPagesDetails do
     ~H"""
     <div>
       <.modal
+        class="details-modal"
         id="entry-pages-breakdown-details-modal"
         on_close={JS.patch(@close_url)}
         show={@open?}
@@ -48,11 +49,12 @@ defmodule PlausibleWeb.Live.Dashboard.EntryPagesDetails do
         <div class="group w-full h-full border-0 overflow-hidden">
           <ReportList.report
             site={@site}
-            data_test_id="entry-pages-detailed-list"
+            id="entry-pages-detailed-list"
             key_label="Entry Page"
             dimension="visit:entry_page"
             params={@params}
             query_result={@query_result}
+            connected?={@connected?}
             external_link_fn={Utils.page_external_link_fn_for(@site)}
           />
         </div>

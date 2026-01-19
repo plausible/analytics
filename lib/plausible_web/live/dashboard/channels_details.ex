@@ -48,11 +48,12 @@ defmodule PlausibleWeb.Live.Dashboard.ChannelsDetails do
         <div class="group w-full h-full border-0 overflow-hidden">
           <ReportList.report
             site={@site}
-            data_test_id="channels-detailed-list"
+            id="channels-detailed-list"
             key_label="Channel"
             dimension="visit:channel"
             params={@params}
             query_result={@query_result}
+            connected?={@connected?}
             external_link_fn={Utils.page_external_link_fn_for(@site)}
           />
         </div>
