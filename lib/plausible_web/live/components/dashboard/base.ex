@@ -114,7 +114,10 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
 
   def modal_title(assigns) do
     ~H"""
-    <Modal.modal_title as={&h2/1} class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+    <Modal.modal_title
+      as={&h2/1}
+      class="text-lg font-semibold text-gray-900 dark:text-gray-100 pt-4 pl-8 pr-8"
+    >
       {render_slot(@inner_block)}
     </Modal.modal_title>
     """

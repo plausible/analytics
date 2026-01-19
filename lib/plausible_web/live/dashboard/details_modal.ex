@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Live.Dashboard.DetailsModal do
           {@title}
         </.modal_title>
 
-        <div class="group w-full h-full border-0 overflow-hidden">
+        <div class="group w-full h-full pl-8 pr-8 pb-4">
           <ReportList.report
             site={@site}
             id={"#{@key}-detailed-list"}
