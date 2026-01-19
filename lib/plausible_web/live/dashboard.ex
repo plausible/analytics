@@ -46,19 +46,29 @@ defmodule PlausibleWeb.Live.Dashboard do
 
   def handle_params(_params, url, socket) do
     uri = URI.parse(url)
+    current_path = socket.assigns[:path] || []
     path = uri.path |> String.split("/") |> Enum.drop(2)
+    uri_query = uri.query || ""
 
-    {:ok, params} =
-      Dashboard.QueryParser.parse(
-        uri.query || "",
-        socket.assigns.site,
-        socket.assigns.user_prefs
-      )
+    socket =
+      if uri_query != socket.assigns[:uri_query] do
+        {:ok, params} =
+          Dashboard.QueryParser.parse(
+            uri_query,
+            socket.assigns.site,
+            socket.assigns.user_prefs
+          )
+
+        assign(socket, params: params, uri_query: uri_query)
+      else
+        socket
+      end
 
     socket =
       socket
-      |> assign(path: path, params: params)
-      |> maybe_close_modal(socket.assigns[:path] || [])
+      |> assign(:path, path)
+      |> assign_new(:initial_path, fn -> path end)
+      |> maybe_close_modal(current_path)
 
     {:noreply, socket}
   end
@@ -112,7 +122,7 @@ defmodule PlausibleWeb.Live.Dashboard do
         user_prefs={@user_prefs}
         connected?={@connected?}
         params={@params}
-        open?={@path == ["pages"]}
+        open?={@initial_path == ["pages"]}
       />
       <.live_component
         module={PlausibleWeb.Live.Dashboard.DetailsModal}
@@ -125,7 +135,7 @@ defmodule PlausibleWeb.Live.Dashboard do
         user_prefs={@user_prefs}
         connected?={@connected?}
         params={@params}
-        open?={@path == ["entry-pages"]}
+        open?={@initial_path == ["entry-pages"]}
       />
       <.live_component
         module={PlausibleWeb.Live.Dashboard.DetailsModal}
@@ -138,7 +148,7 @@ defmodule PlausibleWeb.Live.Dashboard do
         user_prefs={@user_prefs}
         connected?={@connected?}
         params={@params}
-        open?={@path == ["exit-pages"]}
+        open?={@initial_path == ["exit-pages"]}
       />
       <.live_component
         module={PlausibleWeb.Live.Dashboard.DetailsModal}
@@ -151,7 +161,7 @@ defmodule PlausibleWeb.Live.Dashboard do
         user_prefs={@user_prefs}
         connected?={@connected?}
         params={@params}
-        open?={@path == ["sources"]}
+        open?={@initial_path == ["sources"]}
       />
       <.live_component
         module={PlausibleWeb.Live.Dashboard.DetailsModal}
@@ -164,7 +174,7 @@ defmodule PlausibleWeb.Live.Dashboard do
         user_prefs={@user_prefs}
         connected?={@connected?}
         params={@params}
-        open?={@path == ["channels"]}
+        open?={@initial_path == ["channels"]}
       />
       <.live_component
         module={PlausibleWeb.Live.Dashboard.DetailsModal}
@@ -177,7 +187,7 @@ defmodule PlausibleWeb.Live.Dashboard do
         user_prefs={@user_prefs}
         connected?={@connected?}
         params={@params}
-        open?={@path == ["utm_medium"]}
+        open?={@initial_path == ["utm_medium"]}
       />
     </div>
     """
