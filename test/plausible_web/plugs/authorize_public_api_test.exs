@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> authorize(Map.put(api_key, :key, "123"), api_scope: "stats:read:*")
+          |> authorize(api_key, api_scope: "stats:read:*")
 
         assert conn.halted
         assert json_response(conn, 400)["error"] =~ "Missing site ID."
