@@ -89,21 +89,22 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
               <div></div>
             </div>
           </Modal.modal_loader>
-          <Modal.modal_panel
-            :if={@ready}
-            id={@id <> "-panel"}
-            class="relative overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-xl sm:w-full sm:max-w-lg"
-            transition_enter={
-              {"ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
-               "opacity-100 translate-y-0 sm:scale-100"}
-            }
-            transition_leave={
-              {"ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
-               "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
-            }
-          >
-            {render_slot(@inner_block)}
-          </Modal.modal_panel>
+          <div :if={@ready} class="w-full sm:max-w-2xl">
+            <Modal.modal_panel
+              id={@id <> "-panel"}
+              class="relative overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-xl w-full"
+              transition_enter={
+                {"ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
+                 "opacity-100 translate-y-0 sm:scale-100"}
+              }
+              transition_leave={
+                {"ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
+                 "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+              }
+            >
+              {render_slot(@inner_block)}
+            </Modal.modal_panel>
+          </div>
         </div>
       </div>
     </Modal.modal>
