@@ -45,6 +45,27 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     assert json_response(conn, 401)["error"] =~ "Invalid API key."
   end
 
+  for query_string <- ["?foo=bar", "?site_id", "?site_id="] do
+    test "halts with error when requesting site context API without site_id parameter (query string: #{query_string})",
+         %{conn: conn} do
+      # `site_id` param is checked for nil or empty
+      # for `api_context: :site` APIs before the key is verified,
+      # therefore the key here doesn't matter
+      key = "123"
+
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer #{key}")
+        |> get("/#{unquote(query_string)}")
+        |> assign(:api_context, :site)
+        |> assign(:api_scope, "sites:read:*")
+        |> AuthorizePublicAPI.call(nil)
+
+      assert conn.halted
+      assert json_response(conn, 400)["error"] =~ "Missing site ID."
+    end
+  end
+
   @tag :ee_only
   test "401 error has priority over 402 error", %{conn: conn} do
     user = new_user()
@@ -68,12 +89,13 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
   for key_type <- [:legacy_api_key, :team_scope_api_key] do
     describe "#{key_type} ::" do
-      test "halts with error on missing site ID when request made to Stats API", %{conn: conn} do
+      test "halts with error on missing site ID when request made for stats:read:* scope API, even without :site API context set",
+           %{conn: conn} do
         api_key = insert_api_key(unquote(key_type), user: new_user())
 
         conn =
           conn
-          |> authorize(api_key, api_scope: "stats:read:*")
+          |> authorize(Map.put(api_key, :key, "123"), api_scope: "stats:read:*")
 
         assert conn.halted
         assert json_response(conn, 400)["error"] =~ "Missing site ID."

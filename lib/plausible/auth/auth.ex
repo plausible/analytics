@@ -249,7 +249,7 @@ defmodule Plausible.Auth do
   @spec find_api_key_for_team_of_site(String.t(), String.t() | nil) ::
           {:ok, %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
           | {:error, :invalid_api_key | :missing_site_id}
-  def find_api_key_for_team_of_site(_raw_key, nil) do
+  def find_api_key_for_team_of_site(_raw_key, site_domain) when site_domain in [nil, ""] do
     {:error, :missing_site_id}
   end
 
