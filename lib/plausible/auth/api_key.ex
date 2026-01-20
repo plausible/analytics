@@ -67,13 +67,13 @@ defmodule Plausible.Auth.ApiKey do
 
   def legacy_limit_key(user), do: "api_request:legacy_user:#{user.id}"
 
-  def changeset(struct, team, attrs) do
+  def changeset(struct, team, attrs) when not is_nil(team) do
     struct
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> maybe_put_key()
     |> process_key()
-    |> put_team(team)
+    |> put_assoc(:team, team)
     |> unique_constraint(:key_hash, error_key: :key)
     |> unique_constraint([:team_id, :user_id], error_key: :team)
   end
@@ -94,10 +94,6 @@ defmodule Plausible.Auth.ApiKey do
   end
 
   def process_key(changeset), do: changeset
-
-  defp put_team(changeset, team) when not is_nil(team) do
-    put_assoc(changeset, :team, team)
-  end
 
   defp maybe_put_key(changeset) do
     if get_change(changeset, :key) do
