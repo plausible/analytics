@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
 
   use PlausibleWeb, :component
 
+  alias Prima.Modal
+
   attr :to, :string, required: true
   attr :class, :string, default: ""
   attr :rest, :global
@@ -46,6 +48,79 @@ defmodule PlausibleWeb.Components.Dashboard.Base do
       </div>
       {render_slot(@inner_block)}
     </div>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :on_close, JS, default: %JS{}
+  attr :show, :boolean, default: false
+  attr :ready, :boolean, default: true
+  slot :inner_block, required: true
+
+  def modal(assigns) do
+    ~H"""
+    <div
+      :if={@show and not @ready}
+      transition_enter={JS.show(transition: {"ease-out duration-300", "opacity-0", "opacity-100"})}
+      class="fixed inset-0 z-[9999] bg-gray-500/75 dark:bg-gray-800/75"
+    >
+    </div>
+    <div
+      :if={@show and not @ready}
+      class="fixed inset-0 z-[9999] w-screen overflow-y-auto sm:pt-[10vmin]"
+    >
+      <div class="flex min-h-full items-end justify-center p-4 sm:items-start sm:p-0">
+        <div class="mx-auto loading">
+          <div></div>
+        </div>
+      </div>
+    </div>
+    <Modal.modal id={@id} on_close={@on_close} auto_close={false} show={@show}>
+      <Modal.modal_overlay
+        transition_enter={{"ease-out duration-300", "opacity-0", "opacity-100"}}
+        transition_leave={{"ease-in duration-200", "opacity-100", "opacity-0"}}
+        class="fixed inset-0 z-[9999] bg-gray-500/75 dark:bg-gray-800/75"
+      />
+
+      <div class="fixed inset-0 z-[9999] w-screen overflow-y-auto sm:pt-[10vmin]">
+        <div class="flex min-h-full items-end justify-center p-4 sm:items-start sm:p-0">
+          <Modal.modal_loader>
+            <div :if={not @ready} class="mx-auto loading">
+              <div></div>
+            </div>
+          </Modal.modal_loader>
+          <div :if={@ready} class="w-full sm:max-w-2xl">
+            <Modal.modal_panel
+              id={@id <> "-panel"}
+              class="relative overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-xl w-full"
+              transition_enter={
+                {"ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
+                 "opacity-100 translate-y-0 sm:scale-100"}
+              }
+              transition_leave={
+                {"ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
+                 "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+              }
+            >
+              {render_slot(@inner_block)}
+            </Modal.modal_panel>
+          </div>
+        </div>
+      </div>
+    </Modal.modal>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  def modal_title(assigns) do
+    ~H"""
+    <Modal.modal_title
+      as={&h2/1}
+      class="text-lg font-semibold text-gray-900 dark:text-gray-100 pt-4 pl-8 pr-8"
+    >
+      {render_slot(@inner_block)}
+    </Modal.modal_title>
     """
   end
 end

@@ -46,20 +46,29 @@ defmodule PlausibleWeb.Live.Dashboard do
 
   def handle_params(_params, url, socket) do
     uri = URI.parse(url)
+    current_path = socket.assigns[:path] || []
     path = uri.path |> String.split("/") |> Enum.drop(2)
-
-    {:ok, params} =
-      Dashboard.QueryParser.parse(
-        uri.query || "",
-        socket.assigns.site,
-        socket.assigns.user_prefs
-      )
+    uri_query = uri.query || ""
 
     socket =
-      assign(socket,
-        path: path,
-        params: params
-      )
+      if uri_query != socket.assigns[:uri_query] do
+        {:ok, params} =
+          Dashboard.QueryParser.parse(
+            uri_query,
+            socket.assigns.site,
+            socket.assigns.user_prefs
+          )
+
+        assign(socket, params: params, uri_query: uri_query)
+      else
+        socket
+      end
+
+    socket =
+      socket
+      |> assign(:path, path)
+      |> assign_new(:initial_path, fn -> path end)
+      |> maybe_close_modal(current_path)
 
     {:noreply, socket}
   end
@@ -102,7 +111,102 @@ defmodule PlausibleWeb.Live.Dashboard do
         connected?={@connected?}
         params={@params}
       />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
+        id="pages-breakdown-details-component"
+        key="pages"
+        key_label="Page"
+        title="Top Pages"
+        dimension="event:page"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@initial_path == ["pages"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
+        id="entry-pages-breakdown-details-component"
+        key="entry-pages"
+        key_label="Entry Page"
+        title="Entry Pages"
+        dimension="visit:entry_page"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@initial_path == ["entry-pages"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
+        id="exit-pages-breakdown-details-component"
+        key="exit-pages"
+        key_label="Exit Page"
+        title="Exit Pages"
+        dimension="visit:exit_page"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@initial_path == ["exit-pages"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
+        id="sources-breakdown-details-component"
+        key="sources"
+        key_label="Source"
+        title="Sources"
+        dimension="visit:source"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@initial_path == ["sources"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
+        id="channels-breakdown-details-component"
+        key="channels"
+        key_label="Channel"
+        title="Channels"
+        dimension="visit:channel"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@initial_path == ["channels"]}
+      />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.DetailsModal}
+        id="utm-mediums-breakdown-details-component"
+        key="utm-mediums"
+        key_label="Medium"
+        title="UTM mediums"
+        dimension="visit:utm_medium"
+        site={@site}
+        user_prefs={@user_prefs}
+        connected?={@connected?}
+        params={@params}
+        open?={@initial_path == ["utm_medium"]}
+      />
     </div>
     """
+  end
+
+  @modals %{
+    ["pages"] => "pages-breakdown-details-modal",
+    ["entry-pages"] => "entry-pages-breakdown-details-modal",
+    ["exit-pages"] => "exit-pages-breakdown-details-modal",
+    ["sources"] => "sources-breakdown-details-modal",
+    ["channels"] => "channels-breakdown-details-modal",
+    ["utm_medium"] => "utm-mediums-breakdown-details-modal"
+  }
+
+  defp maybe_close_modal(socket, old_path) do
+    if length(old_path) == 1 and socket.assigns.path == [] and Map.has_key?(@modals, old_path) do
+      Prima.Modal.push_close(socket, @modals[old_path])
+    else
+      socket
+    end
   end
 end
