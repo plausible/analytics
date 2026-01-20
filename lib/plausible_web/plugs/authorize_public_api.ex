@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     case Auth.find_api_key_for_team_of_site(token, conn.params["site_id"]) do
       {:ok, %{api_key: api_key, team: nil}} ->
         {:ok, api_key, Auth.ApiKey.legacy_limit_key(api_key.user),
-         Auth.ApiKey.legacy_hardcoded_request_limit()}
+         Auth.ApiKey.legacy_hourly_request_limit()}
 
       {:ok, %{api_key: api_key, team: team}} ->
         team_role_result = Plausible.Teams.Memberships.team_role(team, api_key.user)
@@ -103,7 +103,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     case Auth.find_api_key(token) do
       {:ok, %{api_key: api_key, team: nil}} ->
         {:ok, api_key, Auth.ApiKey.legacy_limit_key(api_key.user),
-         Auth.ApiKey.legacy_hardcoded_request_limit()}
+         Auth.ApiKey.legacy_hourly_request_limit()}
 
       {:ok, %{api_key: api_key, team: team}} ->
         {:ok, api_key, Auth.ApiKey.limit_key(team), team.hourly_api_request_limit}

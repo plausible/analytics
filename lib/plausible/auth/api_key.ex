@@ -40,7 +40,6 @@ defmodule Plausible.Auth.ApiKey do
   @optional [:key, :scopes]
 
   @default_hourly_request_limit_per_team on_ee(do: 600, else: 1_000_000)
-  @legacy_api_key_hourly_request_limit_per_user on_ee(do: 600, else: 1_000_000)
 
   schema "api_keys" do
     field :name, :string
@@ -61,7 +60,11 @@ defmodule Plausible.Auth.ApiKey do
   def default_hourly_request_limit(), do: @default_hourly_request_limit_per_team
   def limit_key(team), do: "api_request:team:#{team.identifier}"
 
-  def legacy_hardcoded_request_limit(), do: @legacy_api_key_hourly_request_limit_per_user
+  def legacy_hourly_request_limit() do
+    Application.fetch_env!(:plausible, __MODULE__)
+    |> Keyword.fetch!(:legacy_per_user_hourly_request_limit)
+  end
+
   def legacy_limit_key(user), do: "api_request:legacy_user:#{user.id}"
 
   def changeset(struct, team, attrs) do

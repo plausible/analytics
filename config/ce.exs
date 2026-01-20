@@ -15,3 +15,5 @@ config :esbuild,
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
+
+config :plausible, Plausible.Auth.ApiKey, legacy_per_user_hourly_request_limit: 1_000_000
