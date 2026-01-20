@@ -371,6 +371,7 @@ defmodule Plausible.Application do
     OpentelemetryEcto.setup([:plausible, :repo])
     OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
     OpentelemetryOban.setup()
+    Plausible.OpenTelemetry.Logger.setup()
   end
 
   defp setup_geolocation do

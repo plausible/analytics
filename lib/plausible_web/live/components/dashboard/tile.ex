@@ -106,8 +106,10 @@ defmodule PlausibleWeb.Components.Dashboard.Tile do
 
   defp details_link(assigns) do
     ~H"""
+    <.spinner class="group-has-[.tile-tabs.phx-hook-loading]/report:inline group-[.phx-navigation-loading]/dashboard:inline w-4 h-4 hidden" />
+
     <Base.dashboard_link
-      class="flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
+      class="group-has-[.tile-tabs.phx-hook-loading]/report:hidden group-[.phx-navigation-loading]/dashboard:hidden flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
       to={@details_route}
     >
       <svg
