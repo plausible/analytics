@@ -63,7 +63,6 @@ export default buildHook({
         }
 
         if (button === this.nextPeriodButton) {
-          nextPeriod.bind(this)()
           updated = nextPeriod.bind(this)()
         }
 
