@@ -71,6 +71,7 @@ defmodule Plausible.Goal do
       message: "cannot co-exist with page_path"
     )
     |> maybe_drop_currency()
+    |> prevent_currency_change()
   end
 
   @spec display_name(t()) :: String.t()
@@ -163,6 +164,14 @@ defmodule Plausible.Goal do
   defp maybe_drop_currency(changeset) do
     if ee?() and get_field(changeset, :page_path) do
       delete_change(changeset, :currency)
+    else
+      changeset
+    end
+  end
+
+  defp prevent_currency_change(changeset) do
+    if (ee?() and changeset.data.id) && Map.has_key?(changeset.changes, :currency) do
+      add_error(changeset, :currency, "cannot change currency of existing goal")
     else
       changeset
     end

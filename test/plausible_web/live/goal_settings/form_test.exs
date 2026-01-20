@@ -273,7 +273,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     end
 
     @tag :ee_only
-    test "updates a revenue goal", %{conn: conn, site: site} do
+    test "updates a revenue goal event_name but not currency", %{conn: conn, site: site} do
       {:ok, [_, _, g]} = setup_goals(site)
       lv = get_liveview(conn, site)
 
@@ -281,20 +281,34 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       html = render(lv)
       assert element_exists?(html, "#event_name_input_modalseq0[value=Purchase]")
-      assert element_exists?(html, ~s/#currency_input_modalseq0[value="EUR - Euro"]/)
 
       lv
       |> element("#goals-form-modalseq0 form")
-      |> render_submit(%{goal: %{event_name: "Updated", currency: "USD"}})
+      |> render_submit(%{goal: %{event_name: "Updated"}})
 
       _html = render(lv)
 
       updated = Plausible.Goals.get(site, g.id)
       assert updated.event_name == "Updated"
       assert updated.display_name == "Purchase"
-      assert updated.currency == :USD
-      assert updated.currency != g.currency
+      assert updated.currency == :EUR
       assert updated.id == g.id
+    end
+
+    @tag :ee_only
+    test "currency field is displayed as disabled text input when editing revenue goal", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, [_, _, revenue_goal]} = setup_goals(site)
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{revenue_goal.id}/) |> render_click()
+
+      html = render(lv)
+
+      assert element_exists?(html, ~s/input[name="goal[currency]"][disabled]/)
+      refute element_exists?(html, ~s/#currency_input_modalseq0/)
     end
 
     test "updates a pageview", %{conn: conn, site: site} do

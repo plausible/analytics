@@ -496,6 +496,14 @@ defmodule Plausible.GoalsTest do
   end
 
   on_ee do
+    test "update/2 prevents changing currency of existing revenue goal" do
+      site = new_site()
+      {:ok, goal} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
+
+      assert {:error, changeset} = Goals.update(goal, %{"currency" => "USD"})
+      assert {"cannot change currency of existing goal", _} = changeset.errors[:currency]
+    end
+
     test "list_revenue_goals/1 lists event_names and currencies for each revenue goal" do
       site = new_site()
 

@@ -600,7 +600,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </label>
       <% end %>
       <div class="mb-2" x-show="active" id={"revenue-input-#{@suffix}"}>
+        <.input :if={not is_nil(@goal)} type="text" field={@f[:currency]} disabled={true} mt?={false} />
         <.live_component
+          :if={is_nil(@goal)}
           id={"currency_input_#{@suffix}"}
           submit_name={@f[:currency].name}
           module={ComboBox}
