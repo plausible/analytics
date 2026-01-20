@@ -62,6 +62,18 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
         )
 
       ~H"""
+      <.skeleton
+        :if={@empty?}
+        id={"#{@id}-skeleton-loading"}
+        min_height={@min_height}
+        row_height={@row_height}
+        row_gap_height={@row_gap_height}
+        data_container_height={@data_container_height}
+        col_min_width={@col_min_width}
+        max_items={@max_items}
+        class="hidden group-has-[.tile-tabs.phx-hook-loading]/report:block group-[.phx-navigation-loading]/dashboard:block"
+      />
+
       <.no_data :if={@empty?} min_height={@min_height} id={"#{@id}-no-data"} />
 
       <div
@@ -111,11 +123,12 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
       |> assign(:bar_widths, [100, 45, 25, 14, 10, 7, 5, 4, 3])
       |> assign(:number_widths, [9, 8, 7, 8, 9, 7, 9, 7, 8])
       |> assign(:value_widths, [22, 16, 20, 14, 19, 15, 21, 13, 17])
+      |> assign(:class, assigns[:class] || "")
 
     ~H"""
     <div
       id={@id}
-      class="h-full flex flex-col"
+      class={["h-full flex flex-col", @class]}
       style={"min-height: #{@min_height}px;"}
     >
       <div
@@ -161,11 +174,11 @@ defmodule PlausibleWeb.Components.Dashboard.ReportList do
     ~H"""
     <div
       id={@id}
-      class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]/report:hidden"
+      class="w-full h-full flex flex-col justify-center group-has-[.tile-tabs.phx-hook-loading]/report:hidden group-[.phx-navigation-loading]/dashboard:hidden"
       style={"min-height: #{@min_height}px;"}
     >
-      <div class="mx-auto font-medium text-gray-500 dark:text-gray-400">
-        No data yet
+      <div class="mx-auto text-sm font-medium text-gray-800 dark:text-gray-200">
+        No data available
       </div>
     </div>
     """
