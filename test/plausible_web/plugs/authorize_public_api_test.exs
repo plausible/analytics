@@ -350,6 +350,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   describe("site context API ::") do
+    @tag :capture_log
     test "legacy API key requests pass validation for sites of all their teams",
          %{
            conn: conn
@@ -375,6 +376,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       end
     end
 
+    @tag :capture_log
     for guest_role <- [:viewer, :editor] do
       test "legacy API key requests pass validation for sites where they are a guest #{guest_role} at",
            %{
@@ -441,6 +443,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       end
     end
 
+    @tag :capture_log
     test "legacy API key request doesn't pass validation for sites where they are not a guest at",
          %{
            conn: conn
@@ -486,6 +489,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       end
     end
 
+    @tag :capture_log
     test "legacy API key requests count towards the rate limit of the team of the site",
          %{
            conn: conn
