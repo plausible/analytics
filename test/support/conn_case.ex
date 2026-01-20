@@ -42,14 +42,14 @@ defmodule PlausibleWeb.ConnCase do
 
     Plausible.Test.Support.Sandbox.allow_salts_process()
 
-    # randomize client ip to avoid accidentally hitting
-    # rate limiting during tests
-    conn =
+    # randomizes client ip to avoid accidentally hitting rate limits during tests
+    build_conn = fn ->
       Phoenix.ConnTest.build_conn()
       |> Map.put(:secret_key_base, secret_key_base())
       |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+    end
 
-    {:ok, conn: conn}
+    {:ok, conn: build_conn.(), build_conn: build_conn}
   end
 
   defp secret_key_base() do

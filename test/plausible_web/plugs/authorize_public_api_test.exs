@@ -6,13 +6,14 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   alias PlausibleWeb.Plugs.AuthorizePublicAPI
   alias Plausible.Repo
 
-  setup %{conn: conn} do
-    conn =
-      conn
+  setup %{build_conn: build_conn} do
+    build_conn = fn ->
+      build_conn.()
       |> put_private(PlausibleWeb.FirstLaunchPlug, :skip)
       |> bypass_through(PlausibleWeb.Router)
+    end
 
-    {:ok, conn: conn}
+    {:ok, conn: build_conn.(), build_conn: build_conn}
   end
 
   test "halts with error when bearer token is missing", %{conn: conn} do
@@ -311,33 +312,35 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       assert conn.assigns.current_user.id == legacy_api_key_user.id
     end
 
-    test "legacy API key requests are rate limited to hardcoded 600 requests per hour _per user_, but their team's team-scoped keys are on an independent rate limit",
+    @legacy_hourly_request_limit Plausible.Auth.ApiKey.legacy_hourly_request_limit()
+    test "legacy API key requests are rate limited to configured #{@legacy_hourly_request_limit} requests per hour _per user_, but their team's team-scoped keys are on an independent rate limit",
          %{
-           conn: conn
+           build_conn: build_conn
          } do
       legacy_api_key_user = new_user()
       _site = new_site(owner: legacy_api_key_user)
       legacy_api_key = insert_api_key(:legacy_api_key, user: legacy_api_key_user)
 
-      for _ <- 1..600 do
-        conn = conn |> authorize(legacy_api_key, api_scope: "sites:read:*")
+      1..@legacy_hourly_request_limit
+      |> Enum.map(fn _ ->
+        conn = build_conn.() |> authorize(legacy_api_key, api_scope: "sites:read:*")
         refute conn.halted
-        conn |> recycle()
-      end
+        assert conn.assigns.current_user.id == legacy_api_key_user.id
+      end)
 
       # the hardcoded limit applies per user, not per api key
-      for api_key <- [legacy_api_key, insert_api_key(:legacy_api_key, user: legacy_api_key_user)] do
-        conn = conn |> authorize(api_key, api_scope: "sites:read:*")
+      [legacy_api_key, insert_api_key(:legacy_api_key, user: legacy_api_key_user)]
+      |> Enum.map(fn api_key ->
+        conn = build_conn.() |> authorize(api_key, api_scope: "sites:read:*")
         assert conn.halted
         assert json_response(conn, 429)["error"] =~ "Too many API requests."
-        conn |> recycle()
-      end
+      end)
 
       # no context API requests made with legacy API keys don't count towards team limits
       team_scope_api_key_user = legacy_api_key_user |> team_of() |> add_member(role: :editor)
 
       conn =
-        conn
+        build_conn.()
         |> authorize(
           insert_api_key(:team_scope_api_key,
             user: team_scope_api_key_user
@@ -361,7 +364,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       site_from_second_team = new_site()
       add_member(site_from_second_team.team, user: legacy_api_key_user, role: :editor)
 
-      for site <- [site_from_first_team, site_from_second_team] do
+      [site_from_first_team, site_from_second_team]
+      |> Enum.map(fn site ->
         conn =
           conn
           |> authorize(legacy_api_key,
@@ -372,12 +376,11 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         refute conn.halted
         assert conn.assigns.current_user.id == legacy_api_key_user.id
-        recycle(conn)
-      end
+      end)
     end
 
-    @tag :capture_log
     for guest_role <- [:viewer, :editor] do
+      @tag :capture_log
       test "legacy API key requests pass validation for sites where they are a guest #{guest_role} at",
            %{
              conn: conn
@@ -492,12 +495,13 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     @tag :capture_log
     test "legacy API key requests count towards the rate limit of the team of the site",
          %{
-           conn: conn
+           build_conn: build_conn
          } do
       user = new_user()
       legacy_api_key = insert_api_key(:legacy_api_key, user: user)
 
-      user_of_other_team = new_user()
+      team_hourly_request_limit = 5
+      user_of_other_team = new_user(team: [hourly_api_request_limit: team_hourly_request_limit])
 
       team_scope_api_key_of_other_team =
         insert_api_key(:team_scope_api_key, user: user_of_other_team)
@@ -506,9 +510,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
       add_guest(site, user: user, role: :viewer)
 
-      for _ <- 1..600 do
+      1..team_hourly_request_limit
+      |> Enum.map(fn _ ->
         conn =
-          conn
+          build_conn.()
           |> authorize(legacy_api_key,
             api_context: :site,
             api_scope: "sites:read:*",
@@ -516,25 +521,25 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
           )
 
         refute conn.halted
-        conn |> recycle()
-      end
+        assert conn.assigns.current_user.id == user.id
+      end)
 
-      for api_key <- [
-            legacy_api_key,
-            team_scope_api_key_of_other_team
-          ] do
+      [
+        legacy_api_key,
+        team_scope_api_key_of_other_team
+      ]
+      |> Enum.map(fn api_key ->
         conn =
-          conn
+          build_conn.()
           |> authorize(api_key,
             api_context: :site,
             api_scope: "sites:read:*",
             site: site
           )
 
-        assert conn.halted
         assert json_response(conn, 429)["error"] =~ "Too many API requests."
-        conn |> recycle()
-      end
+        assert conn.halted
+      end)
     end
   end
 
