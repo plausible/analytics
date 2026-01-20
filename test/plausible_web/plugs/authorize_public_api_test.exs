@@ -6,14 +6,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   alias PlausibleWeb.Plugs.AuthorizePublicAPI
   alias Plausible.Repo
 
-  setup %{build_conn: build_conn} do
-    build_conn = fn ->
-      build_conn.()
-      |> put_private(PlausibleWeb.FirstLaunchPlug, :skip)
-      |> bypass_through(PlausibleWeb.Router)
-    end
-
-    {:ok, conn: build_conn.(), build_conn: build_conn}
+  setup %{conn: conn} do
+    {:ok, conn: prepare_conn_for_auth(conn)}
   end
 
   test "halts with error when bearer token is missing", %{conn: conn} do
@@ -64,10 +58,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
     conn =
       conn
-      |> put_req_header("authorization", "Bearer #{api_key.key}")
-      |> get("/", %{"site_id" => another_site.domain})
-      |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicAPI.call(nil)
+      |> authorize(api_key, site: another_site, api_context: :site, api_scope: "stats:read:*")
 
     assert conn.halted
 
@@ -82,10 +73,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/")
-          |> assign(:api_scope, "stats:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          |> authorize(api_key, api_scope: "stats:read:*")
 
         assert conn.halted
         assert json_response(conn, 400)["error"] =~ "Missing site ID."
@@ -99,10 +87,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/", %{"site_id" => site.domain})
-          |> assign(:api_scope, "stats:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          |> authorize(api_key, api_scope: "stats:read:*", site: site)
 
         assert conn.halted
 
@@ -124,10 +109,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
           conn =
             conn
-            |> put_req_header("authorization", "Bearer #{api_key.key}")
-            |> get("/", %{"site_id" => consolidated_view.domain})
-            |> assign(:api_scope, "sites:provision:*")
-            |> AuthorizePublicAPI.call(nil)
+            |> authorize(api_key, site: consolidated_view, api_scope: "sites:provision:*")
 
           assert conn.halted
 
@@ -143,11 +125,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
         api_key = insert_api_key(unquote(key_type), user: user)
 
         conn =
-          conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/", %{"site_id" => site.domain})
-          |> assign(:api_scope, "stats:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          conn |> authorize(api_key, site: site, api_scope: "stats:read:*")
 
         assert conn.halted
 
@@ -163,10 +141,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/", %{"site_id" => site.domain})
-          |> assign(:api_scope, "stats:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          |> authorize(api_key, site: site, api_scope: "stats:read:*")
 
         assert conn.halted
         assert json_response(conn, 402)["error"] =~ "This Plausible site is locked"
@@ -179,10 +154,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/", %{"site_id" => "invalid.domain"})
-          |> assign(:api_scope, "stats:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          |> authorize(api_key, site: %{domain: "invalid.domain"}, api_scope: "stats:read:*")
 
         assert conn.halted
         assert json_response(conn, 401)["error"] =~ "Invalid API key or site ID."
@@ -197,10 +169,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/", %{"site_id" => site.domain})
-          |> assign(:api_scope, "stats:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          |> authorize(api_key, site: site, api_scope: "stats:read:*")
 
         assert conn.halted
         assert json_response(conn, 401)["error"] =~ "Invalid API key or site ID."
@@ -211,11 +180,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
         api_key = insert_api_key(unquote(key_type), user: user)
 
         conn =
-          conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/")
-          |> assign(:api_scope, "sites:provision:*")
-          |> AuthorizePublicAPI.call(nil)
+          conn |> authorize(api_key, api_scope: "sites:provision:*")
 
         assert conn.halted
         assert json_response(conn, 401)["error"] =~ "Invalid API key."
@@ -229,10 +194,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/")
-          |> assign(:api_scope, "sites:provision:*")
-          |> AuthorizePublicAPI.call(nil)
+          |> authorize(api_key, api_scope: "sites:provision:*")
 
         refute conn.halted
         assert conn.assigns.current_user.id == user.id
@@ -247,10 +209,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/", %{"site_id" => site.domain})
-          |> assign(:api_scope, "stats:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          |> authorize(api_key, site: site, api_scope: "stats:read:*")
 
         refute conn.halted
         assert conn.assigns.current_user.id == user.id
@@ -266,11 +225,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
         api_key = insert_api_key(unquote(key_type), user: user)
 
         conn =
-          conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/", %{"site_id" => site.domain})
-          |> assign(:api_scope, "stats:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          conn |> authorize(api_key, site: site, api_scope: "stats:read:*")
 
         refute conn.halted
         assert conn.assigns.current_user.id == user.id
@@ -283,10 +238,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         conn =
           conn
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/")
-          |> assign(:api_scope, "funnels:read:*")
-          |> AuthorizePublicAPI.call(nil)
+          |> authorize(api_key, api_scope: "funnels:read:*")
 
         refute conn.halted
         assert conn.assigns.current_user.id == user.id
@@ -302,28 +254,24 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       legacy_api_key = insert_api_key(:legacy_api_key, user: legacy_api_key_user)
 
       conn =
-        conn
-        |> put_req_header("authorization", "Bearer #{legacy_api_key.key}")
-        |> get("/")
-        |> assign(:api_scope, "sites:read:*")
-        |> AuthorizePublicAPI.call(nil)
+        conn |> authorize(legacy_api_key, api_scope: "sites:read:*")
 
       refute conn.halted
       assert conn.assigns.current_user.id == legacy_api_key_user.id
     end
 
     @legacy_hourly_request_limit Plausible.Auth.ApiKey.legacy_hourly_request_limit()
-    test "legacy API key requests are rate limited to configured #{@legacy_hourly_request_limit} requests per hour _per user_, but their team's team-scoped keys are on an independent rate limit",
-         %{
-           build_conn: build_conn
-         } do
+    test "legacy API key requests are rate limited to configured #{@legacy_hourly_request_limit} requests per hour _per user_, but their team's team-scoped keys are on an independent rate limit" do
       legacy_api_key_user = new_user()
       _site = new_site(owner: legacy_api_key_user)
       legacy_api_key = insert_api_key(:legacy_api_key, user: legacy_api_key_user)
 
       1..@legacy_hourly_request_limit
       |> Enum.map(fn _ ->
-        conn = build_conn.() |> authorize(legacy_api_key, api_scope: "sites:read:*")
+        conn =
+          get_fresh_conn()
+          |> authorize(legacy_api_key, api_scope: "sites:read:*")
+
         refute conn.halted
         assert conn.assigns.current_user.id == legacy_api_key_user.id
       end)
@@ -331,7 +279,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       # the hardcoded limit applies per user, not per api key
       [legacy_api_key, insert_api_key(:legacy_api_key, user: legacy_api_key_user)]
       |> Enum.map(fn api_key ->
-        conn = build_conn.() |> authorize(api_key, api_scope: "sites:read:*")
+        conn =
+          get_fresh_conn()
+          |> authorize(api_key, api_scope: "sites:read:*")
+
         assert conn.halted
         assert json_response(conn, 429)["error"] =~ "Too many API requests."
       end)
@@ -340,7 +291,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       team_scope_api_key_user = legacy_api_key_user |> team_of() |> add_member(role: :editor)
 
       conn =
-        build_conn.()
+        get_fresh_conn()
         |> authorize(
           insert_api_key(:team_scope_api_key,
             user: team_scope_api_key_user
@@ -413,12 +364,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         capture_log(fn ->
           conn =
-            conn
-            |> put_req_header("authorization", "Bearer #{api_key.key}")
-            |> get("/?site_id=#{site.domain}")
-            |> assign(:api_scope, "sites:read:*")
-            |> assign(:api_context, :site)
-            |> AuthorizePublicAPI.call(nil)
+            conn |> authorize(api_key, site: site, api_context: :site, api_scope: "sites:read:*")
 
           assert conn.halted == unquote(expected_halted)
         end) =~ "API key #{api_key.id} user accessing #{site.domain} as a guest"
@@ -434,12 +380,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
         capture_log(fn ->
           conn =
-            conn
-            |> put_req_header("authorization", "Bearer #{api_key.key}")
-            |> get("/?site_id=#{site.domain}")
-            |> assign(:api_scope, "stats:read:*")
-            |> assign(:api_context, :site)
-            |> AuthorizePublicAPI.call(nil)
+            conn |> authorize(api_key, site: site, api_context: :site, api_scope: "stats:read:*")
 
           assert conn.halted == unquote(expected_halted)
         end) =~ "API key #{api_key.id} user trying to access #{site.domain} as a non-member"
@@ -493,10 +434,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     end
 
     @tag :capture_log
-    test "legacy API key requests count towards the rate limit of the team of the site",
-         %{
-           build_conn: build_conn
-         } do
+    test "legacy API key requests count towards the rate limit of the team of the site" do
       user = new_user()
       legacy_api_key = insert_api_key(:legacy_api_key, user: user)
 
@@ -513,7 +451,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       1..team_hourly_request_limit
       |> Enum.map(fn _ ->
         conn =
-          build_conn.()
+          get_fresh_conn()
           |> authorize(legacy_api_key,
             api_context: :site,
             api_scope: "sites:read:*",
@@ -530,7 +468,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       ]
       |> Enum.map(fn api_key ->
         conn =
-          build_conn.()
+          get_fresh_conn()
           |> authorize(api_key,
             api_context: :site,
             api_scope: "sites:read:*",
@@ -543,6 +481,12 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     end
   end
 
+  defp prepare_conn_for_auth(conn) do
+    conn
+    |> put_private(PlausibleWeb.FirstLaunchPlug, :skip)
+    |> bypass_through(PlausibleWeb.Router)
+  end
+
   defp authorize(conn, api_key, opts) do
     context = opts |> Keyword.get(:api_context)
     scope = opts |> Keyword.fetch!(:api_scope)
@@ -551,20 +495,11 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     conn =
       conn
       |> put_req_header("authorization", "Bearer #{api_key.key}")
-      |> get(
-        if site do
-          "/?site_id=#{site.domain}"
-        else
-          "/"
-        end
-      )
+      |> get("/", if(site, do: %{"site_id" => site.domain}, else: %{}))
       |> assign(:api_scope, scope)
 
-    if context do
-      conn |> assign(:api_context, context) |> AuthorizePublicAPI.call(nil)
-    else
-      conn |> AuthorizePublicAPI.call(nil)
-    end
+    conn = if context, do: assign(conn, :api_context, context), else: conn
+    AuthorizePublicAPI.call(conn, nil)
   end
 
   defp insert_api_key(:legacy_api_key, opts) do
@@ -575,4 +510,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     team = opts |> Keyword.fetch!(:user) |> team_of()
     insert(:api_key, opts |> Keyword.put(:team, team))
   end
+
+  defp get_fresh_conn(),
+    do:
+      build_conn()
+      |> prepare_conn()
+      |> prepare_conn_for_auth()
 end
