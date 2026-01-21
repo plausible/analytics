@@ -49,8 +49,8 @@ defmodule Plausible.Teams.Team do
     field :setup_complete, :boolean, default: false
     field :setup_at, :naive_datetime
 
-    # Field kept in sync with current subscription plan, if any
-    field :hourly_api_request_limit, :integer, default: Auth.ApiKey.hourly_request_limit()
+    # Field synced from current subscription plan, if any. The value of this field is treated as the source of truth when out of sync
+    field :hourly_api_request_limit, :integer, default: Auth.ApiKey.default_hourly_request_limit()
 
     # Field for purely informational purposes in CRM context
     field :notes, :string
