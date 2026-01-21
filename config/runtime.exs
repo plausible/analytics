@@ -936,7 +936,6 @@ end
 if honeycomb_api_key && honeycomb_dataset do
   config :opentelemetry,
     resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
-    sampler: {Plausible.OpenTelemetry.Sampler, %{ratio: otel_sampler_ratio}},
     span_processor: :batch,
     traces_exporter: :otlp
 
