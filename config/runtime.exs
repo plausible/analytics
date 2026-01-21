@@ -224,7 +224,10 @@ config :plausible, :runtime_metadata, runtime_metadata
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
 honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
-otlp_endpoint = get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT")
+
+otlp_endpoint =
+  get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT", "https://api.honeycomb.io:443")
+
 paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
 paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
@@ -941,7 +944,7 @@ if honeycomb_api_key && honeycomb_dataset do
 
   config :opentelemetry_exporter,
     otlp_protocol: :grpc,
-    otlp_endpoint: otlp_endpoint || "https://api.honeycomb.io:443",
+    otlp_endpoint: otlp_endpoint,
     otlp_headers: [
       {"x-honeycomb-team", honeycomb_api_key},
       {"x-honeycomb-dataset", honeycomb_dataset}
