@@ -62,6 +62,8 @@ config :plausible, Plausible.InstallationSupport.Checks.VerifyInstallation,
     plug: {Req.Test, Plausible.InstallationSupport.Checks.VerifyInstallation}
   ]
 
+config :plausible, Plausible.Auth.ApiKey, legacy_per_user_hourly_request_limit: 100
+
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
 
 config :plausible, max_goals_per_site: 10
