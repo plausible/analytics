@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   alias Plausible.Stats.{Dashboard, ParsedQueryParams}
   alias Plausible.Teams
 
-  @realtime_refresh_interval :timer.seconds(3)
+  @realtime_refresh_interval :timer.seconds(30)
 
   @spec enabled?(Plausible.Site.t() | nil) :: boolean()
   def enabled?(nil), do: false
