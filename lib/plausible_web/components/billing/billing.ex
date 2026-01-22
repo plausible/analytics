@@ -370,8 +370,10 @@ defmodule PlausibleWeb.Components.Billing do
         end
       else
         if team do
-          {:ok, team_role} = Plausible.Teams.Memberships.team_role(team, user)
-          team_role
+          case Plausible.Teams.Memberships.team_role(team, user) do
+            {:ok, team_role} -> team_role
+            _ -> nil
+          end
         end
       end
 
