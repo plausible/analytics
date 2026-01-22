@@ -363,18 +363,21 @@ defmodule PlausibleWeb.Components.Billing do
     team = Plausible.Teams.with_subscription(assigns.current_team)
 
     current_role =
-      if site do
-        case Plausible.Teams.Memberships.site_role(site, user) do
-          {:ok, {_, site_role}} -> site_role
-          _ -> nil
-        end
-      else
-        if team do
+      cond do
+        not is_nil(site) ->
+          case Plausible.Teams.Memberships.site_role(site, user) do
+            {:ok, {_, site_role}} -> site_role
+            _ -> nil
+          end
+
+        not is_nil(team) ->
           case Plausible.Teams.Memberships.team_role(team, user) do
             {:ok, team_role} -> team_role
             _ -> nil
           end
-        end
+
+        true ->
+          nil
       end
 
     upgrade_assistance_required? =
