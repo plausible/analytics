@@ -6,9 +6,11 @@ defmodule PlausibleWeb.Live.Dashboard do
   use PlausibleWeb, :live_view
 
   alias Plausible.Repo
-  alias Plausible.Stats.Dashboard
+  alias Plausible.Stats.{Dashboard, ParsedQueryParams}
   alias Plausible.Stats.Dashboard.Utils
   alias Plausible.Teams
+
+  @realtime_refresh_interval :timer.seconds(30)
 
   @spec enabled?(Plausible.Site.t() | nil) :: boolean()
   def enabled?(nil), do: false
@@ -67,10 +69,23 @@ defmodule PlausibleWeb.Live.Dashboard do
 
     socket =
       socket
+      |> assign(last_realtime_update: nil)
       |> assign(:path, path)
       |> assign_new(:initial_path, fn -> path end)
       |> maybe_close_modal(current_path)
+      |> maybe_cancel_existing_realtime_timer()
+      |> maybe_assign_realtime_timer()
 
+    {:noreply, socket}
+  end
+
+  def handle_info(:refresh_realtime_stats, socket) do
+    now = System.monotonic_time(:second)
+
+    new_timer_ref =
+      Process.send_after(self(), :refresh_realtime_stats, @realtime_refresh_interval)
+
+    socket = assign(socket, last_realtime_update: now, realtime_timer_ref: new_timer_ref)
     {:noreply, socket}
   end
 
@@ -99,6 +114,7 @@ defmodule PlausibleWeb.Live.Dashboard do
       <.live_component
         module={PlausibleWeb.Live.Dashboard.Sources}
         id="sources-breakdown-component"
+        last_realtime_update={@last_realtime_update}
         site={@site}
         user_prefs={@user_prefs}
         connected?={@connected?}
@@ -107,6 +123,7 @@ defmodule PlausibleWeb.Live.Dashboard do
       <.live_component
         module={PlausibleWeb.Live.Dashboard.Pages}
         id="pages-breakdown-component"
+        last_realtime_update={@last_realtime_update}
         site={@site}
         user_prefs={@user_prefs}
         connected?={@connected?}
@@ -215,6 +232,33 @@ defmodule PlausibleWeb.Live.Dashboard do
       Prima.Modal.push_close(socket, @modals[old_path])
     else
       socket
+    end
+  end
+
+  defp maybe_cancel_existing_realtime_timer(socket) do
+    case socket.assigns[:realtime_timer_ref] do
+      nil ->
+        socket
+
+      timer_ref ->
+        Process.cancel_timer(timer_ref)
+        assign(socket, realtime_timer_ref: nil)
+    end
+  end
+
+  defp maybe_assign_realtime_timer(socket) do
+    case socket.assigns[:params] do
+      %ParsedQueryParams{input_date_range: :realtime} ->
+        timer_ref =
+          Process.send_after(self(), :refresh_realtime_stats, @realtime_refresh_interval)
+
+        assign(socket,
+          realtime_timer_ref: timer_ref,
+          last_realtime_update: System.monotonic_time(:second)
+        )
+
+      _ ->
+        socket
     end
   end
 end
