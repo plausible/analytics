@@ -97,7 +97,14 @@ defmodule PlausibleWeb.Live.Dashboard do
       class="group/dashboard container print:max-w-full pt-6 mb-16 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
       <div class="col-span-full flex items-center justify-end">
-        <div :if={@connected?} class="flex shrink-0">
+        <div :if={@connected?} class="flex shrink-0 gap-x-4">
+          <.live_component
+            module={PlausibleWeb.Live.Dashboard.Filters}
+            id="filters-component"
+            site={@site}
+            connected?={@connected?}
+            params={@params}
+          />
           <.live_component
             module={PlausibleWeb.Live.Dashboard.DatePicker}
             id="datepicker-component"
@@ -207,8 +214,23 @@ defmodule PlausibleWeb.Live.Dashboard do
         params={@params}
         open?={@initial_path == ["utm_medium"]}
       />
+      <.live_component
+        module={PlausibleWeb.Live.Dashboard.PageFilterModal}
+        id="page-filter-component"
+        site={@site}
+        connected?={@connected?}
+        params={@params}
+        open?={@initial_path == ["page", "filter"]}
+        on_apply={fn params -> send(self(), {:navigate, params, ""}) end}
+      />
     </div>
     """
+  end
+
+  def handle_info({:navigate, params, path}, socket) do
+    new_route = Utils.dashboard_route(socket.assigns.site, params, path: path)
+    socket = push_patch(socket, to: new_route)
+    {:noreply, socket}
   end
 
   def handle_event("close_modal", _params, socket) do
@@ -235,7 +257,8 @@ defmodule PlausibleWeb.Live.Dashboard do
     ["exit-pages"] => "exit-pages-breakdown-details-modal",
     ["sources"] => "sources-breakdown-details-modal",
     ["channels"] => "channels-breakdown-details-modal",
-    ["utm_medium"] => "utm-mediums-breakdown-details-modal"
+    ["utm_medium"] => "utm-mediums-breakdown-details-modal",
+    ["filter", "page"] => "page-filter-modal"
   }
 
   defp maybe_close_modal(socket, old_path) do

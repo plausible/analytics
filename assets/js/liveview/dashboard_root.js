@@ -12,7 +12,8 @@ const MODAL_ROUTES = {
   '/exit-pages': '#exit-pages-breakdown-details-modal',
   '/sources': '#sources-breakdown-details-modal',
   '/channels': '#channels-breakdown-details-modal',
-  '/utm_medium': '#utm-mediums-breakdown-details-modal'
+  '/utm_medium': '#utm-mediums-breakdown-details-modal',
+  '/filter/page': '#page-filter-modal'
 }
 
 function routeModal(uri) {
