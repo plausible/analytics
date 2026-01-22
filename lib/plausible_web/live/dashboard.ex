@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Dashboard do
 
   alias Plausible.Repo
   alias Plausible.Stats.{Dashboard, ParsedQueryParams}
+  alias Plausible.Stats.Dashboard.Utils
   alias Plausible.Teams
 
   @realtime_refresh_interval :timer.seconds(30)
@@ -210,6 +211,13 @@ defmodule PlausibleWeb.Live.Dashboard do
     """
   end
 
+  def handle_event("close_modal", _params, socket) do
+    close_url = Utils.dashboard_route(socket.assigns.site, socket.assigns.params)
+    socket = push_patch(socket, to: close_url)
+
+    {:noreply, socket}
+  end
+
   @modals %{
     ["pages"] => "pages-breakdown-details-modal",
     ["entry-pages"] => "entry-pages-breakdown-details-modal",
@@ -220,7 +228,7 @@ defmodule PlausibleWeb.Live.Dashboard do
   }
 
   defp maybe_close_modal(socket, old_path) do
-    if length(old_path) == 1 and socket.assigns.path == [] and Map.has_key?(@modals, old_path) do
+    if socket.assigns.path == [] and Map.has_key?(@modals, old_path) do
       Prima.Modal.push_close(socket, @modals[old_path])
     else
       socket
