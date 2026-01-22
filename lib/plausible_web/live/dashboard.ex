@@ -80,7 +80,11 @@ defmodule PlausibleWeb.Live.Dashboard do
 
   def handle_info(:refresh_realtime_stats, socket) do
     now = System.monotonic_time(:second)
-    socket = assign(socket, :last_realtime_update, now)
+
+    new_timer_ref =
+      Process.send_after(self(), :refresh_realtime_stats, @realtime_refresh_interval)
+
+    socket = assign(socket, last_realtime_update: now, realtime_timer_ref: new_timer_ref)
     {:noreply, socket}
   end
 
@@ -229,7 +233,7 @@ defmodule PlausibleWeb.Live.Dashboard do
         socket
 
       timer_ref ->
-        :timer.cancel(timer_ref)
+        Process.cancel_timer(timer_ref)
         assign(socket, realtime_timer_ref: nil)
     end
   end
@@ -237,8 +241,8 @@ defmodule PlausibleWeb.Live.Dashboard do
   defp maybe_assign_realtime_timer(socket) do
     case socket.assigns[:params] do
       %ParsedQueryParams{input_date_range: :realtime} ->
-        {:ok, timer_ref} =
-          :timer.send_interval(@realtime_refresh_interval, self(), :refresh_realtime_stats)
+        timer_ref =
+          Process.send_after(self(), :refresh_realtime_stats, @realtime_refresh_interval)
 
         assign(socket,
           realtime_timer_ref: timer_ref,
