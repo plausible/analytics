@@ -224,10 +224,6 @@ config :plausible, :runtime_metadata, runtime_metadata
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
 honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
-
-otlp_endpoint =
-  get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT", "https://api.honeycomb.io:443")
-
 paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
 paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
@@ -238,10 +234,8 @@ help_scout_app_secret = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_SEC
 help_scout_signature_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_SIGNATURE_KEY")
 help_scout_vault_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_VAULT_KEY")
 
-{otel_sampler_ratio, ""} =
-  config_dir
-  |> get_var_from_path_or_env("OTEL_SAMPLER_RATIO", "0.5")
-  |> Float.parse()
+otlp_endpoint =
+  get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT", "https://api.honeycomb.io:443")
 
 geolite2_country_db =
   get_var_from_path_or_env(
