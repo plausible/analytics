@@ -129,7 +129,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain})
     |> assert_error(
       429,
-      "Too many API requests. Your API key is limited to 3 requests per hour."
+      "Too many API requests. The limit is 3 per hour. Please contact us to request more capacity."
     )
   end
 
