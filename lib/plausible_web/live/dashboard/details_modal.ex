@@ -17,8 +17,6 @@ defmodule PlausibleWeb.Live.Dashboard.DetailsModal do
   @pagination %{limit: 50, offset: 0}
 
   def update(assigns, socket) do
-    close_url = Utils.dashboard_route(assigns.site, assigns.params)
-
     socket =
       assign(socket,
         title: assigns.title,
@@ -28,8 +26,7 @@ defmodule PlausibleWeb.Live.Dashboard.DetailsModal do
         site: assigns.site,
         params: assigns.params,
         open?: assigns.open?,
-        connected?: assigns.connected?,
-        close_url: close_url
+        connected?: assigns.connected?
       )
       |> load_stats()
 
@@ -41,7 +38,7 @@ defmodule PlausibleWeb.Live.Dashboard.DetailsModal do
     <div>
       <.modal
         id={"#{@key}-breakdown-details-modal"}
-        on_close={JS.patch(@close_url)}
+        on_close={JS.push("close_modal")}
         show={@open?}
         ready={@connected?}
       >

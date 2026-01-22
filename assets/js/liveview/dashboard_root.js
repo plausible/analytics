@@ -15,7 +15,11 @@ const MODAL_ROUTES = {
   '/utm_medium': '#utm-mediums-breakdown-details-modal'
 }
 
-function routeModal(path) {
+function routeModal(uri) {
+  // Domain is dropped from URL prefix, because that's what react-dom-router
+  // expects.
+  const path = '/' + uri.pathname.split('/').slice(2).join('/')
+
   const modalId = MODAL_ROUTES[path]
 
   if (modalId) {
@@ -33,17 +37,23 @@ export default buildHook({
     this.portalTargets = Array.from(portals, (p) => p.dataset.phxPortal)
     this.url = window.location.href
 
+    this.addListener('phx:navigate', window, (info) => {
+      if (info.detail?.patch && info.detail?.pop) {
+        const uri = new URL(
+          (info.detail.href.startsWith('http') ? '' : 'https://example.com') +
+            info.detail.href
+        )
+        routeModal(uri)
+      }
+    })
+
     this.addListener('click', document.body, (e) => {
       const link = e.target.closest('[data-phx-link]')
       const type = link && (link.dataset.type || null)
 
       if (type === 'dashboard-link') {
         const uri = new URL(link.href)
-        // Domain is dropped from URL prefix, because that's what react-dom-router
-        // expects.
-        const path = '/' + uri.pathname.split('/').slice(2).join('/')
-
-        routeModal(path)
+        routeModal(uri)
       }
     })
   }
