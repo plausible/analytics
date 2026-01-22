@@ -71,7 +71,7 @@ defmodule Plausible.ExportsTest do
     @describetag :tmp_dir
 
     setup do
-      config = Keyword.replace!(Plausible.ClickhouseRepo.config(), :pool_size, 1)
+      config = Plausible.ClickhouseRepo.get_config_without_ch_query_execution_timeout()
       {:ok, ch: start_supervised!({Ch, config})}
     end
 
