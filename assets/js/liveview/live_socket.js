@@ -96,15 +96,19 @@ if (csrfToken && websocketUrl) {
     }
   })
 
-  topbar.config({
-    barColors: { 0: '#303f9f' },
-    shadowColor: 'rgba(0, 0, 0, .3)',
-    barThickness: 4
-  })
-  window.addEventListener('phx:page-loading-start', (_info) => topbar.show())
-  window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
-
   const dashboardContainer = document.getElementById('live-dashboard-container')
+
+  if (!dashboardContainer) {
+    topbar.config({
+      barColors: { 0: '#303f9f' },
+      shadowColor: 'rgba(0, 0, 0, .3)',
+      barThickness: 4
+    })
+
+    window.addEventListener('phx:page-loading-start', (_info) => topbar.show())
+    window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
+  }
+
   if (dashboardContainer) {
     window.addEventListener('phx:page-loading-start', (info) => {
       if (info.detail?.kind === 'patch') {
