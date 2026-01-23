@@ -59,6 +59,28 @@ export default buildHook({
       }
     })
 
+    this.addListener('keyboard-shift-period', window, (e) => {
+      if (this.dates.length) {
+        let updated = false
+
+        if (e.detail.key === 'ArrowLeft') {
+          updated = prevPeriod.bind(this)()
+        }
+
+        if (e.detail.key === 'ArrowRight') {
+          updated = nextPeriod.bind(this)()
+        }
+
+        if (updated) {
+          this.debouncedPushEvent()
+        }
+
+        this.periodLabel.innerText = this.labels[this.currentIndex]
+        this.prevPeriodButton.dataset.disabled = `${this.currentIndex == 0}`
+        this.nextPeriodButton.dataset.disabled = `${this.currentIndex == this.dates.length - 1}`
+      }
+    })
+
     this.addListener('click', this.el, (e) => {
       if (this.dates.length) {
         const button = e.target.closest('button')

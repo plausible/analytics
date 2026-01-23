@@ -32,7 +32,8 @@ function routeModal(uri) {
 }
 
 const KEYBOARD_SHORTCUTS = {
-  changePeriod: ['r', 'd', 'm', 'y', 'a', 'w', 'f', 't', 'n', 's', 'l']
+  changePeriod: ['r', 'd', 'm', 'y', 'a', 'w', 'f', 't', 'n', 's', 'l'],
+  shiftPeriod: ['ArrowLeft', 'ArrowRight']
 }
 
 export default buildHook({
@@ -45,6 +46,12 @@ export default buildHook({
       if (KEYBOARD_SHORTCUTS.changePeriod.includes(e.key)) {
         window.dispatchEvent(
           new CustomEvent('keyboard-change-period', { detail: { key: e.key } })
+        )
+      }
+      
+      if (KEYBOARD_SHORTCUTS.shiftPeriod.includes(e.key)) {
+        window.dispatchEvent(
+          new CustomEvent('keyboard-shift-period', { detail: { key: e.key } })
         )
       }
     })
