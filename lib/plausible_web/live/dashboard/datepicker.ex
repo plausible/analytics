@@ -106,6 +106,7 @@ defmodule PlausibleWeb.Live.Dashboard.DatePicker do
               args={
                 %{
                   storage_key: storage_key,
+                  keyboard_shortcut: Dashboard.Periods.keyboard_shortcut_for(input_date_range),
                   patch:
                     Utils.dashboard_route(@site, @params,
                       update_params: [input_date_range: input_date_range, relative_date: nil]
@@ -143,6 +144,7 @@ defmodule PlausibleWeb.Live.Dashboard.DatePicker do
     ~H"""
     <.dashboard_link
       id={"date-picker-option-#{@args.storage_key}"}
+      data-keyboard-shortcut={@args.keyboard_shortcut}
       class="flex items-center justify-between px-4 py-2.5 text-sm leading-tight whitespace-nowrap rounded-md cursor-pointer hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100 focus-within:bg-gray-100 focus-within:text-gray-900 dark:focus-within:bg-gray-700 dark:focus-within:text-gray-100"
       to={@args.patch}
     >

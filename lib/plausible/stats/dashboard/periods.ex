@@ -50,4 +50,17 @@ defmodule Plausible.Stats.Dashboard.Periods do
   def label_for({:last_n_days, 91}, _date), do: "Last 91 days"
   def label_for({:last_n_months, 6}, _date), do: "Last 6 months"
   def label_for({:last_n_months, 12}, _date), do: "Last 12 months"
+
+  def keyboard_shortcut_for(:realtime), do: "r"
+  def keyboard_shortcut_for(:day), do: "d"
+  def keyboard_shortcut_for(:month), do: "m"
+  def keyboard_shortcut_for(:year), do: "y"
+  def keyboard_shortcut_for(:all), do: "a"
+  def keyboard_shortcut_for({:last_n_days, 7}), do: "w"
+  def keyboard_shortcut_for({:last_n_days, 28}), do: "f"
+  def keyboard_shortcut_for({:last_n_days, 30}), do: "t"
+  def keyboard_shortcut_for({:last_n_days, 91}), do: "n"
+  def keyboard_shortcut_for({:last_n_months, 6}), do: "s"
+  def keyboard_shortcut_for({:last_n_months, 12}), do: "l"
+  def keyboard_shortcut_for(_), do: nil
 end

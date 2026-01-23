@@ -52,6 +52,13 @@ export default buildHook({
       })
     }, 500)
 
+    this.addListener('keyboard-change-period', window, (e) => {
+      const periodLink = this.el.querySelector(`a[data-keyboard-shortcut="${e.detail.key}"]`)
+      if (periodLink) {
+        periodLink.click()
+      }
+    })
+
     this.addListener('click', this.el, (e) => {
       if (this.dates.length) {
         const button = e.target.closest('button')

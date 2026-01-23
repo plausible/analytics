@@ -31,11 +31,23 @@ function routeModal(uri) {
   }
 }
 
+const KEYBOARD_SHORTCUTS = {
+  changePeriod: ['r', 'd', 'm', 'y', 'a', 'w', 'f', 't', 'n', 's', 'l']
+}
+
 export default buildHook({
   initialize() {
     const portals = document.querySelectorAll('[data-phx-portal]')
     this.portalTargets = Array.from(portals, (p) => p.dataset.phxPortal)
     this.url = window.location.href
+
+    this.addListener('keydown', window, (e) => {
+      if (KEYBOARD_SHORTCUTS.changePeriod.includes(e.key)) {
+        window.dispatchEvent(
+          new CustomEvent('keyboard-change-period', { detail: { key: e.key } })
+        )
+      }
+    })
 
     this.addListener('phx:navigate', window, (info) => {
       if (info.detail?.patch && info.detail?.pop) {
