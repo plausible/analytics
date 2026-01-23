@@ -33,7 +33,8 @@ function routeModal(uri) {
 
 const KEYBOARD_SHORTCUTS = {
   changePeriod: ['r', 'd', 'm', 'y', 'a', 'w', 'f', 't', 'n', 's', 'l'],
-  shiftPeriod: ['ArrowLeft', 'ArrowRight']
+  shiftPeriod: ['ArrowLeft', 'ArrowRight'],
+  clearFilters: 'Escape'
 }
 
 export default buildHook({
@@ -53,6 +54,10 @@ export default buildHook({
         window.dispatchEvent(
           new CustomEvent('keyboard-shift-period', { detail: { key: e.key } })
         )
+      }
+
+      if (KEYBOARD_SHORTCUTS.clearFilters === e.key) {
+        this.pushEventTo(this.el, 'clear_filters')
       }
     })
 
