@@ -48,7 +48,7 @@ export default buildHook({
           new CustomEvent('keyboard-change-period', { detail: { key: e.key } })
         )
       }
-      
+
       if (KEYBOARD_SHORTCUTS.shiftPeriod.includes(e.key)) {
         window.dispatchEvent(
           new CustomEvent('keyboard-shift-period', { detail: { key: e.key } })
