@@ -20,6 +20,11 @@ defmodule Plausible.Shields.CountryTest do
       refute changeset.valid?
     end
 
+    test "accepts Unknown (ZZ) country code", %{site: site} do
+      assert {:ok, rule} = add_country_rule(site, %{"country_code" => "ZZ"})
+      assert rule.country_code == "ZZ"
+    end
+
     test "incorrect country format", %{site: site} do
       assert {:error, changeset} = add_country_rule(site, %{"country_code" => "Germany"})
 
@@ -131,6 +136,12 @@ defmodule Plausible.Shields.CountryTest do
       refute rule.from_cache?
       assert country_blocked?(site, "ee")
       refute country_blocked?(site, "xx")
+    end
+
+    test "Unknown country (ZZ) can be blocked", %{site: site} do
+      assert {:ok, rule} = add_country_rule(site, %{"country_code" => "ZZ"})
+      assert rule.country_code == "ZZ"
+      assert country_blocked?(site, "ZZ")
     end
   end
 end
