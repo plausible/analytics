@@ -236,7 +236,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
       |> Enum.map(fn c -> {c.alpha_2, c.flag <> " " <> c.name} end)
       |> Enum.reject(fn {country_code, _} -> country_code in existing_codes end)
 
-    unknown_option ++ country_options
+    country_options ++ unknown_option
   end
 
   defp format_added_at(dt, tz) do
@@ -253,6 +253,6 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
   end
 
   defp unknown() do
-    "🤨 Unknown"
+    "🏴‍☠️ Unknown"
   end
 end
