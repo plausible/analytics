@@ -219,7 +219,11 @@ defmodule PlausibleWeb.Live.Dashboard do
   end
 
   def handle_event("clear_filters", _params, socket) do
-    route = Utils.dashboard_route(socket.assigns.site, socket.assigns.params, update_params: [filters: []])
+    route =
+      Utils.dashboard_route(socket.assigns.site, socket.assigns.params,
+        update_params: [filters: []]
+      )
+
     socket = push_patch(socket, to: route)
 
     {:noreply, socket}
