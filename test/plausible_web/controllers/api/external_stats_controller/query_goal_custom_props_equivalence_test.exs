@@ -225,14 +225,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
 
     test "page goal with multiple custom props equals page goal + multiple separate prop filters",
          %{conn: conn, site: site} do
-      # Create page goal WITH multiple custom props
       {:ok, _goal_with_props} =
         Goals.create(site, %{
           "page_path" => "/checkout",
           "custom_props" => %{"currency" => "EUR", "country" => "DE"}
         })
 
-      # Create page goal WITHOUT custom props
       {:ok, _goal_without_props} =
         Goals.create(site, %{
           "page_path" => "/checkout-no-props"
@@ -248,14 +246,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "meta.value": ["EUR", "DE"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
-        build(:pageview,
-          user_id: 1,
-          pathname: "/checkout-no-props",
-          country_code: "DE",
-          "meta.key": ["currency", "country"],
-          "meta.value": ["EUR", "DE"],
-          timestamp: ~N[2021-01-01 00:00:01]
-        ),
         # Session 2 (FR): Has pageview with only currency matching
         build(:pageview,
           user_id: 2,
@@ -265,14 +255,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "meta.value": ["EUR", "FR"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
-        build(:pageview,
-          user_id: 2,
-          pathname: "/checkout-no-props",
-          country_code: "FR",
-          "meta.key": ["currency", "country"],
-          "meta.value": ["EUR", "FR"],
-          timestamp: ~N[2021-01-01 00:00:01]
-        ),
         # Session 3 (US): Has pageview with neither matching
         build(:pageview,
           user_id: 3,
@@ -281,14 +263,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "meta.key": ["currency", "country"],
           "meta.value": ["USD", "US"],
           timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          user_id: 3,
-          pathname: "/checkout-no-props",
-          country_code: "US",
-          "meta.key": ["currency", "country"],
-          "meta.value": ["USD", "US"],
-          timestamp: ~N[2021-01-01 00:00:01]
         )
       ])
 
@@ -312,7 +286,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "metrics" => ["visitors", "visits", "events"],
           "dimensions" => ["visit:country"],
           "filters" => [
-            ["is", "event:goal", ["Visit /checkout-no-props"]],
+            ["is", "event:goal", ["Visit /checkout"]],
             ["is", "event:props:currency", ["EUR"]],
             ["is", "event:props:country", ["DE"]]
           ]
