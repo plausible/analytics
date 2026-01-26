@@ -70,7 +70,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test]},
-      {:ecto_ch, "~> 0.8.2"},
+      {:ecto_ch, "~> 0.8.4"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
