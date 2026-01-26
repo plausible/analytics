@@ -18,17 +18,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
       conn: conn,
       site: site
     } do
-      # Create page goal WITH custom props
       {:ok, _goal_with_props} =
         Goals.create(site, %{
           "page_path" => "/landing",
           "custom_props" => %{"browser_language" => "FR"}
         })
 
-      # Create page goal WITHOUT custom props
       {:ok, _goal_without_props} =
         Goals.create(site, %{
-          "page_path" => "/landing-no-props"
+          "page_path" => "/landing",
+          "display_name" => "Visit /landing-no-props"
         })
 
       populate_stats(site, [
@@ -41,14 +40,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "meta.value": ["FR"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
-        build(:pageview,
-          user_id: 1,
-          pathname: "/landing-no-props",
-          country_code: "FR",
-          "meta.key": ["browser_language"],
-          "meta.value": ["FR"],
-          timestamp: ~N[2021-01-01 00:00:01]
-        ),
         # Session 2 (US): Has pageview with browser_language=EN
         build(:pageview,
           user_id: 2,
@@ -58,26 +49,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "meta.value": ["EN"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
-        build(:pageview,
-          user_id: 2,
-          pathname: "/landing-no-props",
-          country_code: "US",
-          "meta.key": ["browser_language"],
-          "meta.value": ["EN"],
-          timestamp: ~N[2021-01-01 00:00:01]
-        ),
         # Session 3 (GB): Has pageview with no props
         build(:pageview,
           user_id: 3,
           pathname: "/landing",
           country_code: "GB",
           timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          user_id: 3,
-          pathname: "/landing-no-props",
-          country_code: "GB",
-          timestamp: ~N[2021-01-01 00:00:01]
         )
       ])
 
@@ -118,17 +95,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
       conn: conn,
       site: site
     } do
-      # Create event goal WITH custom props
       {:ok, _goal_with_props} =
         Goals.create(site, %{
           "event_name" => "Signup",
           "custom_props" => %{"plan" => "premium"}
         })
 
-      # Create event goal WITHOUT custom props
       {:ok, _goal_without_props} =
         Goals.create(site, %{
-          "event_name" => "SignupNoProps"
+          "display_name" => "SignupNoProps",
+          "event_name" => "Signup"
         })
 
       populate_stats(site, [
@@ -145,13 +121,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "meta.value": ["premium"],
           timestamp: ~N[2021-01-01 00:00:01]
         ),
-        build(:event,
-          user_id: 1,
-          name: "SignupNoProps",
-          "meta.key": ["plan"],
-          "meta.value": ["premium"],
-          timestamp: ~N[2021-01-01 00:00:02]
-        ),
         # Session 2 (GB): Has event with plan=basic
         build(:pageview,
           user_id: 2,
@@ -165,13 +134,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "meta.value": ["basic"],
           timestamp: ~N[2021-01-01 00:00:01]
         ),
-        build(:event,
-          user_id: 2,
-          name: "SignupNoProps",
-          "meta.key": ["plan"],
-          "meta.value": ["basic"],
-          timestamp: ~N[2021-01-01 00:00:02]
-        ),
         # Session 3 (CA): Has event but no props at all
         build(:pageview,
           user_id: 3,
@@ -182,11 +144,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           user_id: 3,
           name: "Signup",
           timestamp: ~N[2021-01-01 00:00:01]
-        ),
-        build(:event,
-          user_id: 3,
-          name: "SignupNoProps",
-          timestamp: ~N[2021-01-01 00:00:02]
         )
       ])
 
@@ -233,7 +190,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
 
       {:ok, _goal_without_props} =
         Goals.create(site, %{
-          "page_path" => "/checkout-no-props"
+          "page_path" => "/checkout",
+          "display_name" => "Visit /checkout-no-props"
         })
 
       populate_stats(site, [
@@ -286,7 +244,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsEquivalen
           "metrics" => ["visitors", "visits", "events"],
           "dimensions" => ["visit:country"],
           "filters" => [
-            ["is", "event:goal", ["Visit /checkout"]],
+            ["is", "event:goal", ["Visit /checkout-no-props"]],
             ["is", "event:props:currency", ["EUR"]],
             ["is", "event:props:country", ["DE"]]
           ]
