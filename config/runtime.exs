@@ -234,10 +234,8 @@ help_scout_app_secret = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_SEC
 help_scout_signature_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_SIGNATURE_KEY")
 help_scout_vault_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_VAULT_KEY")
 
-{otel_sampler_ratio, ""} =
-  config_dir
-  |> get_var_from_path_or_env("OTEL_SAMPLER_RATIO", "0.5")
-  |> Float.parse()
+otlp_endpoint =
+  get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT", "https://api.honeycomb.io:443")
 
 geolite2_country_db =
   get_var_from_path_or_env(
@@ -624,12 +622,19 @@ ch_transport_opts =
 config :plausible, Plausible.ClickhouseRepo,
   queue_target: 500,
   queue_interval: 2000,
+  timeout: 15_000,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
   settings: [
     readonly: 1,
     join_algorithm: "direct,parallel_hash,hash",
-    cancel_http_readonly_queries_on_client_close: 1
+    # stops queries when :timeout ClickhouseRepo connection :timeout value reached
+    cancel_http_readonly_queries_on_client_close: 1,
+    # stops queries when they will likely take over 20s
+    # NB! when :timeout is overridden to be over 20s,
+    # for it to have meaningful effect,
+    # this must be overridden as well
+    max_execution_time: 20
   ]
 
 config :plausible, Plausible.IngestRepo,
@@ -935,13 +940,12 @@ end
 if honeycomb_api_key && honeycomb_dataset do
   config :opentelemetry,
     resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
-    sampler: {Plausible.OpenTelemetry.Sampler, %{ratio: otel_sampler_ratio}},
     span_processor: :batch,
     traces_exporter: :otlp
 
   config :opentelemetry_exporter,
     otlp_protocol: :grpc,
-    otlp_endpoint: "https://api.honeycomb.io:443",
+    otlp_endpoint: otlp_endpoint,
     otlp_headers: [
       {"x-honeycomb-team", honeycomb_api_key},
       {"x-honeycomb-dataset", honeycomb_dataset}

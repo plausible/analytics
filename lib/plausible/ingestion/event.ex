@@ -344,7 +344,20 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp drop_shield_rule_country(%__MODULE__{} = event, _context), do: event
+  defp drop_shield_rule_country(
+         %__MODULE__{domain: domain} = event,
+         _context
+       )
+       when is_binary(domain) do
+    if Plausible.Shields.country_blocked?(
+         domain,
+         Plausible.Shield.CountryRule.unknown_country_code()
+       ) do
+      drop(event, :site_country_blocklist)
+    else
+      event
+    end
+  end
 
   defp put_props(%__MODULE__{request: %{props: %{} = props}} = event, _context) do
     # defensive: ensuring the keys/values are always in the same order

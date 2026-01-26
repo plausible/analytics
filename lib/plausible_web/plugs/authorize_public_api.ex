@@ -54,6 +54,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     with {:ok, token} <- get_bearer_token(conn),
          {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
          :ok <- check_api_key_rate_limit(limit_key, hourly_limit),
+         :ok <- check_api_key_burst_limit(limit_key),
          {:ok, conn} <- verify_by_scope(conn, api_key, requested_scope) do
       conn
       |> assign(:current_user, api_key.user)
@@ -66,9 +67,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   ### Verification dispatched by scope
 
   defp find_api_key(conn, token, :site) do
-    case Auth.find_api_key(token, team_by: {:site, conn.params["site_id"]}) do
+    case Auth.find_api_key_for_team_of_site(token, conn.params["site_id"]) do
       {:ok, %{api_key: api_key, team: nil}} ->
-        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+        {:ok, api_key, Auth.ApiKey.legacy_limit_key(api_key.user),
+         Auth.ApiKey.legacy_hourly_request_limit()}
 
       {:ok, %{api_key: api_key, team: team}} ->
         team_role_result = Plausible.Teams.Memberships.team_role(team, api_key.user)
@@ -91,7 +93,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
             :pass
         end
 
-        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_api_request_limit}
+        {:ok, api_key, Auth.ApiKey.limit_key(team), team.hourly_api_request_limit}
 
       {:error, _} = error ->
         error
@@ -101,22 +103,15 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   defp find_api_key(_conn, token, _) do
     case Auth.find_api_key(token) do
       {:ok, %{api_key: api_key, team: nil}} ->
-        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+        {:ok, api_key, Auth.ApiKey.legacy_limit_key(api_key.user),
+         Auth.ApiKey.legacy_hourly_request_limit()}
 
       {:ok, %{api_key: api_key, team: team}} ->
-        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_api_request_limit}
+        {:ok, api_key, Auth.ApiKey.limit_key(team), team.hourly_api_request_limit}
 
       {:error, _} = error ->
         error
     end
-  end
-
-  defp limit_key(api_key, nil) do
-    "api_request:#{api_key.id}"
-  end
-
-  defp limit_key(api_key, team_id) do
-    "api_request:#{api_key.id}:#{team_id}"
   end
 
   defp verify_by_scope(conn, api_key, "stats:read:" <> _ = scope) do
@@ -191,8 +186,30 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   defp check_api_key_rate_limit(limit_key, hourly_limit) do
     case RateLimit.check_rate(limit_key, to_timeout(hour: 1), hourly_limit) do
-      {:allow, _} -> :ok
-      {:deny, _} -> {:error, :rate_limit, hourly_limit}
+      {:allow, _} ->
+        :ok
+
+      {:deny, _} ->
+        {:error, :rate_limit,
+         "Too many API requests. The limit is #{hourly_limit} per hour. Please contact us to request more capacity."}
+    end
+  end
+
+  defp check_api_key_burst_limit(limit_key) do
+    burst_period_seconds = Auth.ApiKey.burst_period_seconds()
+    burst_request_limit = Auth.ApiKey.burst_request_limit()
+
+    case RateLimit.check_rate(
+           limit_key,
+           to_timeout(second: burst_period_seconds),
+           burst_request_limit
+         ) do
+      {:allow, _} ->
+        :ok
+
+      {:deny, _} ->
+        {:error, :rate_limit,
+         "Too many API requests in a short period of time. The limit is #{burst_request_limit} per #{burst_period_seconds} seconds. Please throttle your requests."}
     end
   end
 
@@ -325,10 +342,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     )
   end
 
-  defp send_error(conn, _, {:error, :rate_limit, limit}) do
+  defp send_error(conn, _, {:error, :rate_limit, message}) do
     H.too_many_requests(
       conn,
-      "Too many API requests. Your API key is limited to #{limit} requests per hour. Please contact us to request more capacity."
+      message
     )
   end
 

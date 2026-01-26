@@ -1,6 +1,7 @@
 defmodule Plausible.RateLimitTest do
   use ExUnit.Case, async: true
   alias Plausible.RateLimit
+  use Plausible.TestUtils
 
   @table __MODULE__
 
@@ -63,6 +64,24 @@ defmodule Plausible.RateLimitTest do
       assert {:allow, 2} = RateLimit.check_rate(@table, key, scale, limit)
       assert {:allow, 3} = RateLimit.check_rate(@table, key, scale, limit)
       assert {:deny, 3} = RateLimit.check_rate(@table, key, scale, limit)
+    end
+
+    test "denies any concurrent iterations over the limit" do
+      key = key()
+      scale = :timer.seconds(10)
+      limit = 3
+
+      assert eventually(fn ->
+               results =
+                 1..4
+                 |> Enum.map(fn _ ->
+                   Task.async(fn -> RateLimit.check_rate(@table, key, scale, limit) end)
+                 end)
+                 |> Task.await_many()
+                 |> Enum.sort()
+
+               {[{:allow, 1}, {:allow, 2}, {:allow, 3}, {:deny, 3}] == results, results}
+             end)
     end
   end
 end

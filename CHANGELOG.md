@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Adds team_id to query debug metadata (saved in system.query_log log_comment column)
+- Add "Unknown" option to Countries shield, for when the country code is unrecognized
 
 ### Removed
 
