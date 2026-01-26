@@ -23,6 +23,10 @@ defmodule Plausible.MixProject do
           config_providers: [
             {Config.Reader,
              path: {:system, "RELEASE_ROOT", "/import_extra_config.exs"}, imports: []}
+          ],
+          applications: [
+            opentelemetry_exporter: :permanent,
+            opentelemetry: :temporary
           ]
         ]
       ],
