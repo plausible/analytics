@@ -624,12 +624,19 @@ ch_transport_opts =
 config :plausible, Plausible.ClickhouseRepo,
   queue_target: 500,
   queue_interval: 2000,
+  timeout: 15_000,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
   settings: [
     readonly: 1,
     join_algorithm: "direct,parallel_hash,hash",
-    cancel_http_readonly_queries_on_client_close: 1
+    # stops queries when :timeout ClickhouseRepo connection :timeout value reached
+    cancel_http_readonly_queries_on_client_close: 1,
+    # stops queries when they will likely take over 20s
+    # NB! when :timeout is overridden to be over 20s,
+    # for it to have meaningful effect,
+    # this must be overridden as well
+    max_execution_time: 20
   ]
 
 config :plausible, Plausible.IngestRepo,
