@@ -52,19 +52,9 @@ export default buildHook({
       })
     }, 500)
 
-    this.addListener('click', this.el, (e) => {
+    this.handlePeriodShift = (shiftFn) => {
       if (this.dates.length) {
-        const button = e.target.closest('button')
-
-        let updated = false
-
-        if (button === this.prevPeriodButton) {
-          updated = prevPeriod.bind(this)()
-        }
-
-        if (button === this.nextPeriodButton) {
-          updated = nextPeriod.bind(this)()
-        }
+        const updated = shiftFn.bind(this)()
 
         if (updated) {
           this.debouncedPushEvent()
@@ -73,6 +63,37 @@ export default buildHook({
         this.periodLabel.innerText = this.labels[this.currentIndex]
         this.prevPeriodButton.dataset.disabled = `${this.currentIndex == 0}`
         this.nextPeriodButton.dataset.disabled = `${this.currentIndex == this.dates.length - 1}`
+      }
+    }
+
+    this.addListener('keyboard-change-period', window, (e) => {
+      const periodLink = this.el.querySelector(
+        `a[data-keyboard-shortcut="${e.detail.key}"]`
+      )
+      if (periodLink) {
+        periodLink.click()
+      }
+    })
+
+    this.addListener('keyboard-shift-period', window, (e) => {
+      if (e.detail.key === 'ArrowLeft') {
+        this.handlePeriodShift(prevPeriod)
+      }
+
+      if (e.detail.key === 'ArrowRight') {
+        this.handlePeriodShift(nextPeriod)
+      }
+    })
+
+    this.addListener('click', this.el, (e) => {
+      const button = e.target.closest('button')
+
+      if (button === this.prevPeriodButton) {
+        this.handlePeriodShift(prevPeriod)
+      }
+
+      if (button === this.nextPeriodButton) {
+        this.handlePeriodShift(nextPeriod)
       }
     })
   }
