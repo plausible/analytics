@@ -254,6 +254,45 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :site_country_blocklist
   end
 
+  test "drops a request when country is unknown and Unknown (ZZ) is on blocklist" do
+    site = new_site()
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    conn = %{conn | remote_ip: {127, 0, 0, 1}}
+
+    {:ok, _} = Plausible.Shields.add_country_rule(site, %{"country_code" => "ZZ"})
+
+    assert {:ok, request, _conn} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :site_country_blocklist
+  end
+
+  test "allows a request when country is unknown and Unknown (ZZ) is not on blocklist" do
+    site = new_site()
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    conn = %{conn | remote_ip: {127, 0, 0, 1}}
+
+    {:ok, _} = Plausible.Shields.add_country_rule(site, %{"country_code" => "EE"})
+
+    assert {:ok, request, _conn} = Request.build(conn)
+
+    assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
+  end
+
   test "drops a request when page is on blocklist" do
     site = new_site()
 
