@@ -137,13 +137,12 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
       ])
 
       # "plan" appears 3 times, "amount" 1 time, "referrer" 1 time, "button_id" 1 time
-      suggestions = GoalSuggestions.suggest_custom_property_names(site, "")
-      assert "plan" == hd(suggestions)
-      assert length(suggestions) == 4
-      assert "plan" in suggestions
-      assert "amount" in suggestions
-      assert "referrer" in suggestions
-      assert "button_id" in suggestions
+      assert GoalSuggestions.suggest_custom_property_names(site, "") == [
+               "plan",
+               "referrer",
+               "amount",
+               "button_id"
+             ]
     end
 
     test "filters property names by search input", %{site: site} do
@@ -162,12 +161,10 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      suggestions = GoalSuggestions.suggest_custom_property_names(site, "plan")
-      assert length(suggestions) == 2
-      assert "plan_type" in suggestions
-      assert "plan_name" in suggestions
-      refute "amount" in suggestions
-      refute "referrer" in suggestions
+      assert GoalSuggestions.suggest_custom_property_names(site, "plan") == [
+               "plan_name",
+               "plan_type"
+             ]
     end
 
     test "excludes events older than 30 days", %{site: site} do
@@ -186,13 +183,8 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      suggestions = GoalSuggestions.suggest_custom_property_names(site, "")
-      assert "recent_prop" in suggestions
-      refute "old_prop" in suggestions
-
-      suggestions = GoalSuggestions.suggest_custom_property_names(site, "prop")
-      assert "recent_prop" in suggestions
-      refute "old_prop" in suggestions
+      assert GoalSuggestions.suggest_custom_property_names(site, "") == ["recent_prop"]
+      assert GoalSuggestions.suggest_custom_property_names(site, "prop") == ["recent_prop"]
     end
 
     test "returns empty list when no custom properties exist", %{site: site} do
@@ -213,8 +205,7 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      suggestions = GoalSuggestions.suggest_custom_property_names(site, nil)
-      assert "plan" in suggestions
+      assert GoalSuggestions.suggest_custom_property_names(site, nil) == ["plan"]
     end
 
     test "includes allowed_prop_names from site configuration when no event data exists", %{
@@ -411,13 +402,11 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      suggestions = GoalSuggestions.suggest_custom_property_values(site, "plan", "")
-
-      assert hd(suggestions) == "business"
-      assert length(suggestions) == 3
-      assert "business" in suggestions
-      assert "enterprise" in suggestions
-      assert "starter" in suggestions
+      assert GoalSuggestions.suggest_custom_property_values(site, "plan", "") == [
+               "business",
+               "starter",
+               "enterprise"
+             ]
     end
 
     test "filters property values by search input", %{site: site} do
@@ -442,11 +431,10 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      suggestions = GoalSuggestions.suggest_custom_property_values(site, "plan", "business")
-      assert length(suggestions) == 2
-      assert "business_monthly" in suggestions
-      assert "business_yearly" in suggestions
-      refute "starter" in suggestions
+      assert GoalSuggestions.suggest_custom_property_values(site, "plan", "business") == [
+               "business_yearly",
+               "business_monthly"
+             ]
     end
 
     test "excludes events older than 30 days", %{site: site} do
@@ -465,9 +453,9 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      suggestions = GoalSuggestions.suggest_custom_property_values(site, "plan", "")
-      assert "recent_plan" in suggestions
-      refute "old_plan" in suggestions
+      assert GoalSuggestions.suggest_custom_property_values(site, "plan", "") == [
+               "recent_plan"
+             ]
     end
 
     test "handles nil search input", %{site: site} do
@@ -480,8 +468,7 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      suggestions = GoalSuggestions.suggest_custom_property_values(site, "plan", nil)
-      assert "business" in suggestions
+      assert GoalSuggestions.suggest_custom_property_values(site, "plan", nil) == ["business"]
     end
 
     test "orders values by count", %{site: site} do
@@ -512,8 +499,10 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      assert ["business", "starter"] =
-               GoalSuggestions.suggest_custom_property_values(site, "plan", "")
+      assert GoalSuggestions.suggest_custom_property_values(site, "plan", "") == [
+               "business",
+               "starter"
+             ]
     end
   end
 end
