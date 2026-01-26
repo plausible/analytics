@@ -79,16 +79,6 @@ defmodule PlausibleWeb.Live.Dashboard do
     {:noreply, socket}
   end
 
-  def handle_info(:refresh_realtime_stats, socket) do
-    now = System.monotonic_time(:second)
-
-    new_timer_ref =
-      Process.send_after(self(), :refresh_realtime_stats, @realtime_refresh_interval)
-
-    socket = assign(socket, last_realtime_update: now, realtime_timer_ref: new_timer_ref)
-    {:noreply, socket}
-  end
-
   def render(assigns) do
     ~H"""
     <div
@@ -225,6 +215,16 @@ defmodule PlausibleWeb.Live.Dashboard do
       />
     </div>
     """
+  end
+
+  def handle_info(:refresh_realtime_stats, socket) do
+    now = System.monotonic_time(:second)
+
+    new_timer_ref =
+      Process.send_after(self(), :refresh_realtime_stats, @realtime_refresh_interval)
+
+    socket = assign(socket, last_realtime_update: now, realtime_timer_ref: new_timer_ref)
+    {:noreply, socket}
   end
 
   def handle_info({:navigate, params, path}, socket) do
