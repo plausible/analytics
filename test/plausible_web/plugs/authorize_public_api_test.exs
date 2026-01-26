@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       end
 
       test "halts with error when API lacks required scope", %{conn: conn} do
-        user = insert(:user)
+        user = new_user()
         api_key = insert_api_key(unquote(key_type), user: user)
 
         conn =
@@ -208,10 +208,70 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
         assert json_response(conn, 401)["error"] =~ "Invalid API key."
       end
 
+      test "halts with error when over burst request limit" do
+        user = new_user()
+        api_key = insert_api_key(unquote(key_type), user: user, scopes: ["sites:read:*"])
+
+        1..Plausible.Auth.ApiKey.burst_request_limit()
+        |> Enum.map(fn _ ->
+          conn =
+            get_fresh_conn()
+            |> authorize(api_key, api_scope: "sites:read:*")
+
+          refute conn.halted
+          assert conn.assigns.current_user.id == user.id
+        end)
+
+        conn =
+          get_fresh_conn() |> authorize(api_key, api_scope: "sites:read:*")
+
+        assert conn.halted
+
+        assert json_response(conn, 429)["error"] ==
+                 "Too many API requests in a short period of time. The limit is 60 per 10 seconds. Please throttle your requests."
+      end
+
+      test "halts with error when over hourly request limit" do
+        # the lower value is ignored in the test
+        {legacy_hourly_limit, team_hourly_limit} =
+          case unquote(key_type) do
+            :legacy_api_key -> {100, 1}
+            :team_scope_api_key -> {1, 100}
+          end
+
+        patch_env(Plausible.Auth.ApiKey,
+          legacy_per_user_hourly_request_limit: legacy_hourly_limit,
+          # relax burst request limit to check hourly request limit
+          burst_request_limit: 200,
+          burst_period_seconds: 30
+        )
+
+        user = new_user(team: [hourly_api_request_limit: team_hourly_limit])
+        api_key = insert_api_key(unquote(key_type), user: user)
+
+        1..100
+        |> Enum.map(fn _ ->
+          conn =
+            get_fresh_conn()
+            |> authorize(api_key, api_scope: "sites:read:*")
+
+          refute conn.halted
+          assert conn.assigns.current_user.id == user.id
+        end)
+
+        conn =
+          get_fresh_conn() |> authorize(api_key, api_scope: "sites:read:*")
+
+        assert conn.halted
+
+        assert json_response(conn, 429)["error"] ==
+                 "Too many API requests. The limit is 100 per hour. Please contact us to request more capacity."
+      end
+
       test "passes and sets current user when valid API key with required scope provided", %{
         conn: conn
       } do
-        user = insert(:user)
+        user = new_user()
         api_key = insert_api_key(unquote(key_type), user: user, scopes: ["sites:provision:*"])
 
         conn =
@@ -255,7 +315,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       end
 
       test "passes for subscope match", %{conn: conn} do
-        user = insert(:user)
+        user = new_user()
         api_key = insert_api_key(unquote(key_type), user: user, scopes: ["funnels:*"])
 
         conn =
@@ -282,13 +342,19 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       assert conn.assigns.current_user.id == legacy_api_key_user.id
     end
 
-    @legacy_hourly_request_limit Plausible.Auth.ApiKey.legacy_hourly_request_limit()
-    test "legacy API key requests are rate limited to configured #{@legacy_hourly_request_limit} requests per hour _per user_, but their team's team-scoped keys are on an independent rate limit" do
+    test "legacy API key requests are rate limited to configured requests per hour _per user_, but their team's team-scoped keys are on an independent rate limit" do
+      patch_env(Plausible.Auth.ApiKey,
+        legacy_per_user_hourly_request_limit: 100,
+        # relax burst request limit to check hourly request limit
+        burst_request_limit: 200,
+        burst_period_seconds: 30
+      )
+
       legacy_api_key_user = new_user()
       _site = new_site(owner: legacy_api_key_user)
       legacy_api_key = insert_api_key(:legacy_api_key, user: legacy_api_key_user)
 
-      1..@legacy_hourly_request_limit
+      1..Plausible.Auth.ApiKey.legacy_hourly_request_limit()
       |> Enum.map(fn _ ->
         conn =
           get_fresh_conn()
@@ -306,7 +372,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
           |> authorize(api_key, api_scope: "sites:read:*")
 
         assert conn.halted
-        assert json_response(conn, 429)["error"] =~ "Too many API requests."
+
+        assert json_response(conn, 429)["error"] ==
+                 "Too many API requests. The limit is 100 per hour. Please contact us to request more capacity."
       end)
 
       # no context API requests made with legacy API keys don't count towards team limits
