@@ -54,6 +54,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     with {:ok, token} <- get_bearer_token(conn),
          {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
          :ok <- check_api_key_rate_limit(limit_key, hourly_limit),
+         :ok <- check_api_key_burst_limit(limit_key),
          {:ok, conn} <- verify_by_scope(conn, api_key, requested_scope) do
       conn
       |> assign(:current_user, api_key.user)
@@ -185,8 +186,30 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   defp check_api_key_rate_limit(limit_key, hourly_limit) do
     case RateLimit.check_rate(limit_key, to_timeout(hour: 1), hourly_limit) do
-      {:allow, _} -> :ok
-      {:deny, _} -> {:error, :rate_limit, hourly_limit}
+      {:allow, _} ->
+        :ok
+
+      {:deny, _} ->
+        {:error, :rate_limit,
+         "Too many API requests. The limit is #{hourly_limit} per hour. Please contact us to request more capacity."}
+    end
+  end
+
+  defp check_api_key_burst_limit(limit_key) do
+    burst_period_seconds = Auth.ApiKey.burst_period_seconds()
+    burst_request_limit = Auth.ApiKey.burst_request_limit()
+
+    case RateLimit.check_rate(
+           limit_key,
+           to_timeout(second: burst_period_seconds),
+           burst_request_limit
+         ) do
+      {:allow, _} ->
+        :ok
+
+      {:deny, _} ->
+        {:error, :rate_limit,
+         "Too many API requests in a short period of time. The limit is #{burst_request_limit} per #{burst_period_seconds} seconds. Please throttle your requests."}
     end
   end
 
@@ -319,10 +342,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     )
   end
 
-  defp send_error(conn, _, {:error, :rate_limit, limit}) do
+  defp send_error(conn, _, {:error, :rate_limit, message}) do
     H.too_many_requests(
       conn,
-      "Too many API requests. Your API key is limited to #{limit} requests per hour. Please contact us to request more capacity."
+      message
     )
   end
 
