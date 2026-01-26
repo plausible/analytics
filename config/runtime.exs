@@ -234,10 +234,8 @@ help_scout_app_secret = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_SEC
 help_scout_signature_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_SIGNATURE_KEY")
 help_scout_vault_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_VAULT_KEY")
 
-{otel_sampler_ratio, ""} =
-  config_dir
-  |> get_var_from_path_or_env("OTEL_SAMPLER_RATIO", "0.5")
-  |> Float.parse()
+otlp_endpoint =
+  get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT", "https://api.honeycomb.io:443")
 
 geolite2_country_db =
   get_var_from_path_or_env(
@@ -942,13 +940,12 @@ end
 if honeycomb_api_key && honeycomb_dataset do
   config :opentelemetry,
     resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
-    sampler: {Plausible.OpenTelemetry.Sampler, %{ratio: otel_sampler_ratio}},
     span_processor: :batch,
     traces_exporter: :otlp
 
   config :opentelemetry_exporter,
     otlp_protocol: :grpc,
-    otlp_endpoint: "https://api.honeycomb.io:443",
+    otlp_endpoint: otlp_endpoint,
     otlp_headers: [
       {"x-honeycomb-team", honeycomb_api_key},
       {"x-honeycomb-dataset", honeycomb_dataset}
