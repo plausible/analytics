@@ -93,7 +93,6 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                   <.th invisible>Actions</.th>
                 </:thead>
                 <:tbody :let={rule}>
-                  <% country = Location.Country.get_country(rule.country_code) %>
                   <.td>
                     <div class="flex items-center">
                       <span
@@ -101,7 +100,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                         class="mr-4 cursor-help"
                         title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                       >
-                        {country.flag} {country.name}
+                        {format_country(rule.country_code)}
                       </span>
                     </div>
                   </.td>
@@ -222,17 +221,38 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
   end
 
   defp options(country_rules) do
-    Location.Country.all()
-    |> Enum.sort_by(& &1.name)
-    |> Enum.map(fn c -> {c.alpha_2, c.flag <> " " <> c.name} end)
-    |> Enum.reject(fn {country_code, _} ->
-      country_code in Enum.map(country_rules, & &1.country_code)
-    end)
+    existing_codes = Enum.map(country_rules, & &1.country_code)
+
+    unknown_option =
+      if Shield.CountryRule.unknown_country_code() in existing_codes do
+        []
+      else
+        [{Shield.CountryRule.unknown_country_code(), unknown()}]
+      end
+
+    country_options =
+      Location.Country.all()
+      |> Enum.sort_by(& &1.name)
+      |> Enum.map(fn c -> {c.alpha_2, c.flag <> " " <> c.name} end)
+      |> Enum.reject(fn {country_code, _} -> country_code in existing_codes end)
+
+    country_options ++ unknown_option
   end
 
   defp format_added_at(dt, tz) do
     dt
     |> Plausible.Timezones.to_datetime_in_timezone(tz)
     |> Calendar.strftime("%Y-%m-%d %H:%M:%S")
+  end
+
+  defp format_country(country_code) do
+    case Location.Country.get_country(country_code) do
+      %Location.Country{} = country -> "#{country.flag} #{country.name}"
+      nil -> unknown()
+    end
+  end
+
+  defp unknown() do
+    "🏴‍☠️ Unknown"
   end
 end

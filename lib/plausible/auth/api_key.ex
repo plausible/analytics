@@ -1,4 +1,35 @@
 defmodule Plausible.Auth.ApiKey do
+  @moduledoc """
+  There are two kinds of API keys, legacy API keys and team-scoped API keys.
+
+  Legacy keys have `team` / `team_id` set to `nil`.
+
+  Legacy Stats API keys can be used to
+    - access the stats of sites of any team of the user,
+    - access the stats of sites that they are a guest of,
+    - access data about the sites of the teams that they belong to,
+    - access data about sites that they are a guest of.
+
+  Legacy Sites API keys allow the above and additionally
+    - to provision sites for any team of the user,
+    - to configure sites for any team of the user,
+    - to configure sites that they are a guest of.
+
+  It's not possible to create legacy keys any more through the UI.
+
+  Team-scoped keys have `team` / `team_id` set to a team.
+
+  Team-scoped Stats API keys can be used to
+    - access the stats of sites of that team,
+    - access data about the sites of that team.
+
+  Team-scoped Sites API keys allow the above and additionally
+    - to provision sites for that team,
+    - to configure sites for that team.
+
+  Only team members can use team-scoped keys.
+  """
+
   use Plausible
   use Ecto.Schema
   import Ecto.Changeset
@@ -8,7 +39,7 @@ defmodule Plausible.Auth.ApiKey do
   @required [:user_id, :name]
   @optional [:key, :scopes]
 
-  @hourly_request_limit on_ee(do: 600, else: 1_000_000)
+  @default_hourly_request_limit_per_team on_ee(do: 600, else: 1_000_000)
 
   schema "api_keys" do
     field :name, :string
@@ -26,23 +57,37 @@ defmodule Plausible.Auth.ApiKey do
     timestamps()
   end
 
-  def hourly_request_limit(), do: @hourly_request_limit
+  defp config(), do: Application.fetch_env!(:plausible, __MODULE__)
 
-  def changeset(struct, team, attrs) do
+  def default_hourly_request_limit(), do: @default_hourly_request_limit_per_team
+  def limit_key(team), do: "api_request:team:#{team.identifier}"
+
+  def legacy_hourly_request_limit() do
+    config()
+    |> Keyword.fetch!(:legacy_per_user_hourly_request_limit)
+  end
+
+  def legacy_limit_key(user), do: "api_request:legacy_user:#{user.id}"
+
+  def burst_request_limit(),
+    do:
+      config()
+      |> Keyword.fetch!(:burst_request_limit)
+
+  def burst_period_seconds(),
+    do:
+      config()
+      |> Keyword.fetch!(:burst_period_seconds)
+
+  def changeset(struct, team, attrs) when not is_nil(team) do
     struct
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> maybe_put_key()
     |> process_key()
-    |> maybe_put_team(team)
+    |> put_assoc(:team, team)
     |> unique_constraint(:key_hash, error_key: :key)
     |> unique_constraint([:team_id, :user_id], error_key: :team)
-  end
-
-  def update(struct, attrs \\ %{}) do
-    struct
-    |> cast(attrs, [:name, :user_id, :scopes])
-    |> validate_required([:user_id, :name])
   end
 
   def do_hash(key) do
@@ -61,12 +106,6 @@ defmodule Plausible.Auth.ApiKey do
   end
 
   def process_key(changeset), do: changeset
-
-  defp maybe_put_team(changeset, nil), do: changeset
-
-  defp maybe_put_team(changeset, team) do
-    put_assoc(changeset, :team, team)
-  end
 
   defp maybe_put_key(changeset) do
     if get_change(changeset, :key) do

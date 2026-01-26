@@ -65,4 +65,15 @@ defmodule Plausible.ClickhouseRepo do
 
     {query, opts}
   end
+
+  def get_config_without_ch_query_execution_timeout() do
+    {settings, config} = Plausible.ClickhouseRepo.config() |> Keyword.pop!(:settings)
+
+    config
+    |> Keyword.replace!(:pool_size, 1)
+    |> Keyword.put(
+      :settings,
+      settings |> Keyword.put(:max_execution_time, 0)
+    )
+  end
 end

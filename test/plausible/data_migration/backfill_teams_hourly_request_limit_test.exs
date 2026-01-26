@@ -59,9 +59,14 @@ defmodule Plausible.DataMigration.BackfillTeamsHourlyRequestLimitTest do
 
       assert Repo.reload(team1).hourly_api_request_limit == 5000
 
-      assert Repo.reload(team2).hourly_api_request_limit == Auth.ApiKey.hourly_request_limit()
-      assert Repo.reload(team3).hourly_api_request_limit == Auth.ApiKey.hourly_request_limit()
-      assert Repo.reload(team4).hourly_api_request_limit == Auth.ApiKey.hourly_request_limit()
+      assert Repo.reload(team2).hourly_api_request_limit ==
+               Auth.ApiKey.default_hourly_request_limit()
+
+      assert Repo.reload(team3).hourly_api_request_limit ==
+               Auth.ApiKey.default_hourly_request_limit()
+
+      assert Repo.reload(team4).hourly_api_request_limit ==
+               Auth.ApiKey.default_hourly_request_limit()
     end
   end
 end

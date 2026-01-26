@@ -211,7 +211,9 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         res = json_response(conn, 400)
-        assert res["error"] == "Parameter `site_id` is required to create a shared link"
+
+        assert res["error"] ==
+                 "Missing site ID. Please provide the required site_id parameter with your request."
       end
 
       test "returns 404 when site id is non existent", %{conn: conn} do
@@ -398,7 +400,9 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         res = json_response(conn, 400)
-        assert res["error"] == "Parameter `site_id` is required to create a custom property"
+
+        assert res["error"] ==
+                 "Missing site ID. Please provide the required site_id parameter with your request."
       end
 
       test "returns 404 when site id is non existent", %{conn: conn} do
@@ -592,7 +596,9 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         res = json_response(conn, 400)
-        assert res["error"] == "Parameter `site_id` is required to create a goal"
+
+        assert res["error"] ==
+                 "Missing site ID. Please provide the required site_id parameter with your request."
       end
 
       test "returns 404 when site id is non existent", %{conn: conn} do
@@ -1425,7 +1431,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn = get(conn, "/api/v1/sites/custom-props")
 
         assert json_response(conn, 400) == %{
-                 "error" => "Parameter `site_id` is required to list custom properties"
+                 "error" =>
+                   "Missing site ID. Please provide the required site_id parameter with your request."
                }
       end
 
@@ -1609,7 +1616,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn = get(conn, "/api/v1/sites/goals")
 
         assert json_response(conn, 400) == %{
-                 "error" => "Parameter `site_id` is required to list goals"
+                 "error" =>
+                   "Missing site ID. Please provide the required site_id parameter with your request."
                }
       end
 

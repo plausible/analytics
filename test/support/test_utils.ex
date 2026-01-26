@@ -374,4 +374,10 @@ defmodule Plausible.TestUtils do
       }
     end
   end
+
+  def prepare_conn(conn) do
+    conn
+    |> Map.put(:secret_key_base, secret_key_base())
+    |> Plug.Conn.put_req_header("x-forwarded-for", random_ip())
+  end
 end
