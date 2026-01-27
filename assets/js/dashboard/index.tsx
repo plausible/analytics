@@ -16,7 +16,6 @@ function DashboardStats({
   importedDataInView?: boolean
   updateImportedDataInView?: (v: boolean) => void
 }) {
-
   return (
     <>
       <VisitorGraph updateImportedDataInView={updateImportedDataInView} />
