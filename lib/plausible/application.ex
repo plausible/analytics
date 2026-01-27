@@ -367,9 +367,10 @@ defmodule Plausible.Application do
   end
 
   defp setup_opentelemetry() do
-    OpentelemetryPhoenix.setup()
-    OpentelemetryEcto.setup([:plausible, :repo])
-    OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
+    :opentelemetry_cowboy.setup()
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+    OpentelemetryEcto.setup([:plausible, :repo], db_statement: :enabled)
+    OpentelemetryEcto.setup([:plausible, :clickhouse_repo], db_statement: :enabled)
     OpentelemetryOban.setup()
     Plausible.OpenTelemetry.Logger.setup()
   end
