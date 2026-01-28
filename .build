@@ -245,8 +245,6 @@ Plausible.Stats.ConsolidatedView.html
 Plausible.Stats.CurrentVisitors.html
 Plausible.Stats.CustomProps.html
 Plausible.Stats.Dashboard.QueryParser.html
-Plausible.Stats.Dashboard.QuerySerializer.html
-Plausible.Stats.Dashboard.Utils.html
 Plausible.Stats.DateTimeRange.html
 Plausible.Stats.FilterSuggestions.html
 Plausible.Stats.Filters.LegacyStatsAPIFilterParser.html
@@ -354,10 +352,6 @@ PlausibleWeb.BillingController.html
 PlausibleWeb.BillingView.html
 PlausibleWeb.Captcha.html
 PlausibleWeb.Components.Billing.PlanBenefits.html
-PlausibleWeb.Components.Dashboard.Base.html
-PlausibleWeb.Components.Dashboard.Metric.html
-PlausibleWeb.Components.Dashboard.ReportList.html
-PlausibleWeb.Components.Dashboard.Tile.html
 PlausibleWeb.Components.FirstDashboardLaunchBanner.html
 PlausibleWeb.Components.FlowProgress.html
 PlausibleWeb.Components.Generic.html
@@ -423,8 +417,6 @@ PlausibleWeb.Live.CustomerSupport.Site.html
 PlausibleWeb.Live.CustomerSupport.Team.html
 PlausibleWeb.Live.CustomerSupport.User.html
 PlausibleWeb.Live.CustomerSupport.html
-PlausibleWeb.Live.Dashboard.Pages.html
-PlausibleWeb.Live.Dashboard.html
 PlausibleWeb.Live.Flash.html
 PlausibleWeb.Live.FunnelSettings.Form.html
 PlausibleWeb.Live.FunnelSettings.List.html
@@ -568,8 +560,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-5880F8A7.js
-dist/sidebar_items-6ABBE535.js
+dist/search_data-6E5CCD7E.js
+dist/sidebar_items-68CFC031.js
 index.html
 readme.html
 search.html
