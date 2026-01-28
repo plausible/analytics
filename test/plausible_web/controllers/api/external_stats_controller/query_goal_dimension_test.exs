@@ -287,58 +287,79 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           site: site,
           page_path: "/blog**",
           scroll_threshold: threshold,
-          display_name: "Scroll /blog #{threshold}"
+          display_name: "Scroll /blog** #{threshold}"
         )
       end
 
       populate_stats(site, [
+        # visitor 1
         build(:pageview,
-          pathname: "/blog/john-post",
-          "meta.key": ["author"],
-          "meta.value": ["john"]
-        ),
-        build(:pageview,
-          user_id: 12,
-          pathname: "/blog/john-post",
+          pathname: "/blog/december",
           timestamp: ~N[2021-01-01 00:00:00],
           "meta.key": ["author"],
-          "meta.value": ["john"]
+          "meta.value": ["bob"]
+        ),
+        # visitor 2
+        build(:pageview,
+          user_id: 12,
+          pathname: "/blog/december",
+          timestamp: ~N[2021-01-01 00:00:00],
+          "meta.key": ["author"],
+          "meta.value": ["bob"]
         ),
         build(:engagement,
           user_id: 12,
-          pathname: "/blog/john-post",
+          pathname: "/blog/december",
           timestamp: ~N[2021-01-01 00:00:10],
           scroll_depth: 30,
           "meta.key": ["author"],
-          "meta.value": ["john"]
+          "meta.value": ["bob"]
         ),
+        # visitor 3
         build(:pageview,
           user_id: 34,
-          pathname: "/blog/jane-post",
+          pathname: "/blog/january",
           timestamp: ~N[2021-01-01 00:00:00],
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
         build(:engagement,
           user_id: 34,
-          pathname: "/blog/jane-post",
+          pathname: "/blog/january",
           timestamp: ~N[2021-01-01 00:00:10],
           scroll_depth: 50,
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
+        # visitor 4
         build(:pageview,
           user_id: 56,
-          pathname: "/blog/jane-post",
+          pathname: "/blog/january",
           timestamp: ~N[2021-01-01 00:00:00],
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
         build(:engagement,
           user_id: 56,
-          pathname: "/blog/jane-post",
+          pathname: "/blog/january",
           timestamp: ~N[2021-01-01 00:00:10],
           scroll_depth: 75,
+          "meta.key": ["author"],
+          "meta.value": ["jane"]
+        ),
+        # visitor 5
+        build(:pageview,
+          user_id: 89,
+          pathname: "/blog/january",
+          timestamp: ~N[2021-01-01 00:00:00],
+          "meta.key": ["author"],
+          "meta.value": ["jane"]
+        ),
+        build(:engagement,
+          user_id: 89,
+          pathname: "/blog/january",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 49,
           "meta.key": ["author"],
           "meta.value": ["jane"]
         )
@@ -348,15 +369,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "events", "conversion_rate"],
+          "order_by" => [["visitors", "desc"], ["event:props:author", "asc"]],
           "date_range" => "all",
           "dimensions" => ["event:goal", "event:props:author"]
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Scroll /blog 25", "jane"], "metrics" => [2, nil, 50.0]},
-               %{"dimensions" => ["Scroll /blog 50", "jane"], "metrics" => [2, nil, 50.0]},
-               %{"dimensions" => ["Scroll /blog 25", "john"], "metrics" => [1, nil, 25.0]},
-               %{"dimensions" => ["Scroll /blog 75", "jane"], "metrics" => [1, nil, 25.0]}
+               %{"dimensions" => ["Scroll /blog** 25", "jane"], "metrics" => [3, nil, 60.0]},
+               %{"dimensions" => ["Scroll /blog** 50", "jane"], "metrics" => [2, nil, 40.0]},
+               %{"dimensions" => ["Scroll /blog** 25", "bob"], "metrics" => [1, nil, 20.0]},
+               %{"dimensions" => ["Scroll /blog** 75", "jane"], "metrics" => [1, nil, 20.0]}
              ]
     end
 
