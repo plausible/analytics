@@ -59,11 +59,43 @@ defmodule Plausible.ClickhouseRepo do
     log_comment = Jason.encode!(log_comment_data)
 
     opts =
-      Keyword.update(opts, :settings, [log_comment: log_comment], fn settings ->
-        [{:log_comment, log_comment} | settings]
+      opts
+      |> Keyword.update(:settings, [log_comment: log_comment], fn current_settings ->
+        [{:log_comment, log_comment} | current_settings]
       end)
 
+    opts =
+      if plausible_query do
+        opts
+        |> Keyword.update!(:settings, fn current_settings ->
+          Enum.concat(get_extra_connection_settings(log_comment_data), current_settings)
+        end)
+      else
+        opts
+      end
+
     {query, opts}
+  end
+
+  defp get_extra_connection_settings(%{params: params}) do
+    keys =
+      params
+      |> Map.keys()
+      |> Enum.filter(fn k ->
+        case k do
+          "clickhouse_readonly" -> false
+          "clickhouse_" <> _k -> true
+          _ -> false
+        end
+      end)
+
+    Enum.map(keys, fn k ->
+      {String.to_atom(String.trim_leading(k, "clickhouse_")), params[k]}
+    end)
+  end
+
+  defp get_extra_connection_settings(_) do
+    []
   end
 
   def get_config_without_ch_query_execution_timeout() do
