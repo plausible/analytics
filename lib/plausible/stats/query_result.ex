@@ -98,20 +98,10 @@ defmodule Plausible.Stats.QueryResult do
   end
 
   defp add_dashboard_metric_labels(meta, query) do
-    context = %{
-      goal_filter?:
-        Plausible.Stats.Filters.filtering_on_dimension?(query, "event:goal",
-          max_depth: 0,
-          behavioral_filters: :ignore
-        ),
-      realtime?: query.input_date_range in [:realtime, :realtime_30m],
-      dimensions: query.dimensions
-    }
-
     metric_labels =
       query.metrics
       |> Enum.map(fn metric ->
-        Plausible.Stats.Metrics.dashboard_metric_label(metric, context)
+        Plausible.Stats.Metrics.dashboard_metric_label(metric, query)
       end)
 
     Map.put(meta, :metric_labels, metric_labels)

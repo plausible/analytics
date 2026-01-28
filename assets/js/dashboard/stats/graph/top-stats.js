@@ -26,8 +26,7 @@ function topStatNumberLong(metric, value) {
 export default function TopStats({
   data,
   onMetricUpdate,
-  tooltipBoundary,
-  graphableMetrics
+  tooltipBoundary
 }) {
   const { query } = useQueryContext()
   const lastLoadTimestamp = useLastLoadContext()
@@ -37,18 +36,18 @@ export default function TopStats({
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
-    const warning = warningText(stat.graph_metric, site)
+    const warning = warningText(stat.metric, site)
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
     return (
       <div>
         {isComparison && (
           <div className="whitespace-nowrap">
-            {topStatNumberLong(stat.graph_metric, stat.value)} vs.{' '}
-            {topStatNumberLong(stat.graph_metric, stat.comparison_value)}{' '}
+            {topStatNumberLong(stat.metric, stat.value)} vs.{' '}
+            {topStatNumberLong(stat.metric, stat.comparisonValue)}{' '}
             {statName}
             <ChangeArrow
-              metric={stat.graph_metric}
+              metric={stat.metric}
               change={stat.change}
               className="pl-4 text-xs text-gray-100"
             />
@@ -57,7 +56,7 @@ export default function TopStats({
 
         {!isComparison && (
           <div className="whitespace-nowrap">
-            {topStatNumberLong(stat.graph_metric, stat.value)} {statName}
+            {topStatNumberLong(stat.metric, stat.value)} {statName}
           </div>
         )}
 
@@ -96,13 +95,13 @@ export default function TopStats({
   }
 
   function canMetricBeGraphed(stat) {
-    return graphableMetrics.includes(stat.graph_metric)
+    return stat.graphable
   }
 
   function maybeUpdateMetric(stat) {
     if (canMetricBeGraphed(stat)) {
-      storage.setItem(`metric__${site.domain}`, stat.graph_metric)
-      onMetricUpdate(stat.graph_metric)
+      storage.setItem(`metric__${site.domain}`, stat.metric)
+      onMetricUpdate(stat.metric)
     }
   }
 
@@ -121,7 +120,7 @@ export default function TopStats({
   }
 
   function renderStatName(stat) {
-    const isSelected = stat.graph_metric === getStoredMetric()
+    const isSelected = stat.graphable && stat.metric === getStoredMetric()
 
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
@@ -141,7 +140,7 @@ export default function TopStats({
         {statExtraName && (
           <span className="hidden sm:inline-block ml-1">{statExtraName}</span>
         )}
-        {warningText(stat.graph_metric) && (
+        {warningText(stat.metric) && (
           <span className="inline-block ml-1">*</span>
         )}
       </div>
@@ -174,13 +173,13 @@ export default function TopStats({
             <span className="flex items-center justify-between whitespace-nowrap">
               <p
                 className="font-bold text-xl dark:text-gray-100"
-                id={stat.graph_metric}
+                id={stat.metric}
               >
-                {topStatNumberShort(stat.graph_metric, stat.value)}
+                {topStatNumberShort(stat.metric, stat.value)}
               </p>
               {!isComparison && stat.change != null ? (
                 <ChangeArrow
-                  metric={stat.graph_metric}
+                  metric={stat.metric}
                   change={stat.change}
                   className="pl-2 text-xs dark:text-gray-100"
                 />
@@ -196,7 +195,7 @@ export default function TopStats({
           {isComparison ? (
             <div>
               <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
-                {topStatNumberShort(stat.graph_metric, stat.comparison_value)}
+                {topStatNumberShort(stat.metric, stat.comparisonValue)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {formatDateRange(site, data.comparing_from, data.comparing_to)}
@@ -209,7 +208,7 @@ export default function TopStats({
   }
 
   const stats =
-    data && data.top_stats.filter((stat) => stat.value !== null).map(renderStat)
+    data && data.topStats.filter((stat) => stat.value !== null).map(renderStat)
 
   if (stats && query.period === 'realtime') {
     stats.push(blinkingDot())
