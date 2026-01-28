@@ -14,6 +14,10 @@ if config_env() == :ce_test do
   Envy.load(["config/.env.test"])
 end
 
+if config_env() == :e2e_test do
+  Envy.load(["config/.env.e2e_test"])
+end
+
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
 log_format =
