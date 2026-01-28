@@ -143,7 +143,12 @@ defmodule Plausible.ReleaseTest do
       pending_streaks =
         if ce?() do
           # just to make the tests pass in CI
-          String.replace(pending_streaks, "_build/ce_test/lib", "_build/test/lib")
+          String.replace(
+            pending_streaks,
+            "_build/ce_test/lib",
+            "_build/e2e_test/lib",
+            "_build/test/lib"
+          )
         else
           pending_streaks
         end

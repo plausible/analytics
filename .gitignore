@@ -98,4 +98,6 @@ plausible-report.xml
 .clickhouse_db_vol*
 plausible_db*
 
+/screenshots
+
 .claude
