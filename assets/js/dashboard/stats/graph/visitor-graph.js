@@ -13,15 +13,117 @@ import { isComparisonEnabled } from '../../query-time-periods'
 import LineGraphWithRouter from './line-graph'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
+import {
+  hasConversionGoalFilter,
+  hasPageFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
 
-function fetchTopStats(site, query) {
+async function fetchTopStats(site, query) {
   const q = { ...query }
 
-  if (!isComparisonEnabled(q.comparison) && query.period !== 'realtime') {
+  if (!isComparisonEnabled(q.comparison)) {
     q.comparison = 'previous_period'
   }
 
-  return api.get(url.apiPath(site, '/top-stats'), q)
+  let topStatsQuery
+
+  if (isRealTimeDashboard(query) && hasConversionGoalFilter(query)) {
+    topStatsQuery = {
+      ...q,
+      metrics: ['visitors', 'events'],
+      period: 'realtime_30m'
+    }
+  } else if (isRealTimeDashboard(query)) {
+    topStatsQuery = {
+      ...q,
+      metrics: ['visitors', 'pageviews'],
+      period: 'realtime_30m'
+    }
+  } else if (hasConversionGoalFilter(query)) {
+    topStatsQuery = { ...q, metrics: ['visitors', 'events', 'conversion_rate'] }
+  } else if (hasPageFilter(query) && query.with_imported) {
+    // Note: Copied this condition over from the backend, but need to investigate why time_on_page
+    // and bounce_rate cannot be queried with imported data. In any case, we should drop the metrics
+    // on the backend, and simply request them here.
+    topStatsQuery = {
+      ...q,
+      metrics: ['visitors', 'visits', 'pageviews', 'scroll_depth']
+    }
+  } else if (hasPageFilter(query)) {
+    topStatsQuery = {
+      ...q,
+      metrics: [
+        'visitors',
+        'visits',
+        'pageviews',
+        'bounce_rate',
+        'scroll_depth',
+        'time_on_page'
+      ]
+    }
+  } else {
+    topStatsQuery = {
+      ...q,
+      metrics: [
+        'visitors',
+        'visits',
+        'pageviews',
+        'views_per_visit',
+        'bounce_rate',
+        'visit_duration'
+      ]
+    }
+  }
+
+  topStatsQuery.dimensions = []
+  topStatsQuery.include_imports_meta = true
+
+  const topStatsResponse = await api.stats(site, topStatsQuery)
+
+  const currentVisitorsResponse = isRealTimeDashboard(query)
+    ? await api.stats(site, {
+        ...q,
+        metrics: ['visitors'],
+        filters: [],
+        dimensions: []
+      })
+    : null
+
+  return formatTopStatsData(topStatsResponse, currentVisitorsResponse)
+}
+
+function formatTopStatsData(topStatsResponse, currentVisitorsResponse) {
+  const { query, meta, results } = topStatsResponse
+
+  let topStats = []
+
+  if (currentVisitorsResponse) {
+    topStats.push({
+      metric: currentVisitorsResponse.query.metrics[0],
+      value: currentVisitorsResponse.results[0].metrics[0],
+      name: currentVisitorsResponse.meta.metric_labels[0],
+      graphable: false
+    })
+  }
+
+  for (let i = 0; i < query.metrics.length; i++) {
+    let stat = {}
+
+    stat.metric = query.metrics[i]
+    stat.value = results[0].metrics[i]
+    stat.name = meta.metric_labels[i]
+    stat.graphable = true
+    stat.change = results[0].comparison.change[i]
+    stat.comparisonValue = results[0].comparison.metrics[i]
+
+    topStats.push(stat)
+  }
+
+  return {
+    topStats,
+    meta: meta
+  }
 }
 
 function fetchMainGraph(site, query, metric, interval) {
@@ -89,10 +191,14 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   }, [topStatData])
 
   async function fetchTopStatsAndGraphData() {
-    const response = await fetchTopStats(site, query)
+    const formattedTopStatsResponse = await fetchTopStats(site, query)
+    const { topStats, meta } = formattedTopStatsResponse
 
     let metric = getStoredMetric()
-    const availableMetrics = response.graphable_metrics
+
+    const availableMetrics = topStats
+      .filter((stat) => stat.graphable)
+      .map((stat) => stat.metric)
 
     if (!availableMetrics.includes(metric)) {
       metric = availableMetrics[0]
@@ -101,11 +207,11 @@ export default function VisitorGraph({ updateImportedDataInView }) {
 
     const interval = getCurrentInterval(site, query)
 
-    if (response.updateImportedDataInView) {
-      updateImportedDataInView(response.includes_imported)
+    if (typeof updateImportedDataInView === 'function') {
+      updateImportedDataInView(meta.imports_included)
     }
 
-    setTopStatData(response)
+    setTopStatData(formattedTopStatsResponse)
     setTopStatsLoading(false)
 
     fetchGraphData(metric, interval)
@@ -144,9 +250,34 @@ export default function VisitorGraph({ updateImportedDataInView }) {
 
   function importedSwitchVisible() {
     return (
-      !!topStatData?.with_imported_switch &&
-      topStatData?.with_imported_switch.visible
+      topStatData &&
+      !['no_imported_data', 'out_of_range'].includes(
+        topStatData.meta.imports_skip_reason
+      )
     )
+  }
+
+  function importedSwitchDisabled() {
+    return (
+      topStatData &&
+      topStatData.meta.imports_skip_reason === 'unsupported_query'
+    )
+  }
+
+  function importedSwitchTooltip() {
+    if (!topStatData) {
+      return
+    }
+
+    if (importedSwitchDisabled()) {
+      return 'Imported data cannot be included'
+    }
+
+    if (topStatData.meta.imports_included) {
+      return 'Click to exclude imported data'
+    }
+
+    return 'Click to include imported data'
   }
 
   function getImportedIntervalUnsupportedNotice() {
@@ -178,7 +309,6 @@ export default function VisitorGraph({ updateImportedDataInView }) {
           style={{ height: getTopStatsHeight() }}
         >
           <TopStats
-            graphableMetrics={topStatData?.graphable_metrics || []}
             data={topStatData}
             onMetricUpdate={onMetricUpdate}
             tooltipBoundary={topStatsBoundary.current}
@@ -196,8 +326,8 @@ export default function VisitorGraph({ updateImportedDataInView }) {
             {!isRealtime && <StatsExport />}
             {importedSwitchVisible() && (
               <WithImportedSwitch
-                tooltipMessage={topStatData.with_imported_switch.tooltip_msg}
-                disabled={!topStatData.with_imported_switch.togglable}
+                tooltipMessage={importedSwitchTooltip()}
+                disabled={importedSwitchDisabled()}
               />
             )}
             <IntervalPicker onIntervalUpdate={onIntervalUpdate} />

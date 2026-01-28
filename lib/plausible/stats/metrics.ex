@@ -6,6 +6,7 @@ defmodule Plausible.Stats.Metrics do
   """
 
   use Plausible
+  alias Plausible.Stats.{Query, Filters}
 
   @all_metrics [
                  :visitors,
@@ -56,17 +57,83 @@ defmodule Plausible.Stats.Metrics do
     Map.fetch(@metric_mappings, str)
   end
 
-  def dashboard_metric_label(:visitors, %{realtime?: true}), do: "Current visitors"
-  def dashboard_metric_label(:visitors, %{goal_filter?: true}), do: "Conversions"
+  def dashboard_metric_label(metric, %Query{} = query) do
+    goal_filter? =
+      Filters.filtering_on_dimension?(query, "event:goal",
+        max_depth: 0,
+        behavioral_filters: :ignore
+      )
 
-  def dashboard_metric_label(:visitors, %{dimensions: ["visit:entry_page"]}),
-    do: "Unique entrances"
+    dashboard_metric_label(metric, query, goal_filter?)
+  end
 
-  def dashboard_metric_label(:visitors, %{dimensions: ["visit:exit_page"]}), do: "Unique exits"
-  def dashboard_metric_label(:visitors, _context), do: "Visitors"
+  defp dashboard_metric_label(
+         :visitors,
+         %Query{input_date_range: :realtime_30m, dimensions: []},
+         true
+       ) do
+    "Unique conversions (last 30min)"
+  end
 
-  def dashboard_metric_label(:conversion_rate, _context), do: "CR"
-  def dashboard_metric_label(:group_conversion_rate, _context), do: "CR"
+  defp dashboard_metric_label(
+         :visitors,
+         %Query{input_date_range: :realtime_30m, dimensions: []},
+         false
+       ) do
+    "Unique visitors (last 30min)"
+  end
 
-  def dashboard_metric_label(metric, _context), do: "#{metric}"
+  defp dashboard_metric_label(:visitors, %Query{input_date_range: :realtime}, false) do
+    "Current visitors"
+  end
+
+  defp dashboard_metric_label(:visitors, %Query{dimensions: []}, true) do
+    "Unique conversions"
+  end
+
+  defp dashboard_metric_label(:visitors, %Query{dimensions: []}, false) do
+    "Unique visitors"
+  end
+
+  defp dashboard_metric_label(:visits, %Query{dimensions: []}, false) do
+    "Total visits"
+  end
+
+  defp dashboard_metric_label(
+         :pageviews,
+         %Query{input_date_range: :realtime_30m, dimensions: []},
+         false
+       ) do
+    "Pageviews (last 30min)"
+  end
+
+  defp dashboard_metric_label(:pageviews, %Query{dimensions: []}, false) do
+    "Total pageviews"
+  end
+
+  defp dashboard_metric_label(:views_per_visit, %Query{}, false) do
+    "Views per visit"
+  end
+
+  defp dashboard_metric_label(:bounce_rate, %Query{}, false) do
+    "Bounce rate"
+  end
+
+  defp dashboard_metric_label(:visit_duration, %Query{}, false) do
+    "Visit duration"
+  end
+
+  defp dashboard_metric_label(:events, %{input_date_range: :realtime_30m, dimensions: []}, true) do
+    "Total conversions (last 30min)"
+  end
+
+  defp dashboard_metric_label(:events, %{dimensions: []}, true) do
+    "Total conversions"
+  end
+
+  defp dashboard_metric_label(:conversion_rate, %{dimensions: []}, true) do
+    "Conversion rate"
+  end
+
+  defp dashboard_metric_label(metric, _query, _goal_filter?), do: "#{metric}"
 end

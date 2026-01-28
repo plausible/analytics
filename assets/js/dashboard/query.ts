@@ -50,6 +50,9 @@ export type DashboardQuery = {
   resolvedFilters: Filter[]
   labels: FilterClauseLabels
   with_imported: boolean
+  include_imports_meta: boolean | null
+  dimensions: string[] | null
+  metrics: string[] | null
 }
 
 export const queryDefaultValue: DashboardQuery = {
@@ -64,7 +67,10 @@ export const queryDefaultValue: DashboardQuery = {
   filters: [],
   resolvedFilters: [],
   labels: {},
-  with_imported: true
+  with_imported: true,
+  include_imports_meta: null,
+  dimensions: null,
+  metrics: null
 }
 
 export type BreakdownResultMeta = {

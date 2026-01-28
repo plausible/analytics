@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams, QueryInclude}
+  alias Plausible.Stats.{ParsedQueryParams, QueryInclude, ApiQueryParser}
 
   @default_include %QueryInclude{
     imports: true,
@@ -31,6 +31,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   @valid_period_shorthands %{
     "realtime" => :realtime,
+    "realtime_30m" => :realtime_30m,
     "day" => :day,
     "month" => :month,
     "year" => :year,
@@ -52,19 +53,18 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   @valid_comparison_shorthand_keys Map.keys(@valid_comparison_shorthands)
 
-  def parse(query_string, site, user_prefs) when is_binary(query_string) do
-    query_string = String.trim_leading(query_string, "?")
-    params_map = URI.decode_query(query_string)
-
-    with {:ok, filters} <- parse_filters(query_string),
-         {:ok, relative_date} <- parse_relative_date(params_map) do
-      input_date_range = parse_input_date_range(params_map, site, user_prefs)
+  def parse(site, params) do
+    with {:ok, filters} <- parse_filters(params),
+         {:ok, relative_date} <- parse_relative_date(params),
+         {:ok, metrics} <- parse_metrics(params) do
+      input_date_range = parse_input_date_range(params, site)
 
       include =
         Map.merge(@default_include, %{
-          imports: parse_include_imports(params_map),
-          compare: parse_include_compare(params_map, user_prefs),
-          compare_match_day_of_week: parse_match_day_of_week(params_map, user_prefs)
+          imports: parse_include_imports(params),
+          imports_meta: params["include_imports_meta"] == true,
+          compare: parse_include_compare(params),
+          compare_match_day_of_week: parse_match_day_of_week(params)
         })
 
       {:ok,
@@ -72,32 +72,24 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          input_date_range: input_date_range,
          relative_date: relative_date,
          filters: filters,
+         metrics: metrics,
          include: include
        })}
     end
   end
 
-  defp parse_input_date_range(%{"period" => period}, _site, _user_prefs)
+  defp parse_input_date_range(%{"period" => period}, _site)
        when period in @valid_period_shorthand_keys do
     @valid_period_shorthands[period]
   end
 
-  defp parse_input_date_range(
-         %{"period" => "custom", "from" => from, "to" => to},
-         _site,
-         _user_prefs
-       ) do
+  defp parse_input_date_range(%{"period" => "custom", "from" => from, "to" => to}, _site) do
     from_date = Date.from_iso8601!(String.trim(from))
     to_date = Date.from_iso8601!(String.trim(to))
     {:date_range, from_date, to_date}
   end
 
-  defp parse_input_date_range(_params, _site, %{"period" => period})
-       when period in @valid_period_shorthand_keys do
-    @valid_period_shorthands[period]
-  end
-
-  defp parse_input_date_range(_params, site, _user_prefs) do
+  defp parse_input_date_range(_params, site) do
     if recently_created?(site), do: :day, else: {:last_n_days, 28}
   end
 
@@ -110,45 +102,42 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   defp parse_relative_date(_), do: {:ok, nil}
 
-  defp parse_include_imports(%{"with_imported" => "false"}), do: false
+  defp parse_metrics(%{"metrics" => [_ | _] = metrics}) do
+    ApiQueryParser.parse_metrics(metrics)
+  end
+
+  defp parse_metrics(_), do: {:error, :invalid_metrics}
+
+  defp parse_include_imports(%{"with_imported" => false}), do: false
   defp parse_include_imports(_), do: true
 
-  defp parse_include_compare(%{"comparison" => "off"}, _user_prefs), do: nil
+  defp parse_include_compare(%{"comparison" => "off"}), do: nil
 
-  defp parse_include_compare(%{"comparison" => comparison}, _user_prefs)
+  defp parse_include_compare(%{"comparison" => comparison})
        when comparison in @valid_comparison_shorthand_keys do
     @valid_comparison_shorthands[comparison]
   end
 
-  defp parse_include_compare(%{"comparison" => "custom"} = params, _user_prefs) do
+  defp parse_include_compare(%{"comparison" => "custom"} = params) do
     from_date = Date.from_iso8601!(params["compare_from"])
     to_date = Date.from_iso8601!(params["compare_to"])
     {:date_range, from_date, to_date}
   end
 
-  defp parse_include_compare(_params, %{"comparison" => comparison})
-       when comparison in @valid_comparison_shorthand_keys do
-    @valid_comparison_shorthands[comparison]
-  end
+  defp parse_include_compare(_params), do: nil
 
-  defp parse_include_compare(_params, _user_prefs), do: nil
+  defp parse_match_day_of_week(%{"match_day_of_week" => false}), do: false
+  defp parse_match_day_of_week(_params), do: true
 
-  defp parse_match_day_of_week(%{"match_day_of_week" => "false"}, _user_prefs), do: false
-  defp parse_match_day_of_week(%{"match_day_of_week" => "true"}, _user_prefs), do: true
-  defp parse_match_day_of_week(_params, %{"match_day_of_week" => "false"}), do: false
-  defp parse_match_day_of_week(_params, _user_prefs), do: true
-
-  defp parse_filters(query_string) do
-    with {:ok, filters} <- decode_filters(query_string) do
+  defp parse_filters(%{"filters" => filters}) when is_list(filters) do
+    with {:ok, filters} <- decode_filters(filters) do
       Plausible.Stats.ApiQueryParser.parse_filters(filters)
     end
   end
 
-  defp decode_filters(query_string) do
-    query_string
-    |> URI.query_decoder()
-    |> Enum.filter(fn {key, _value} -> key == "f" end)
-    |> Enum.reduce_while({:ok, []}, fn {_, filter_expression}, {:ok, acc} ->
+  defp decode_filters(filters) do
+    filters
+    |> Enum.reduce_while({:ok, []}, fn filter_expression, {:ok, acc} ->
       case decode_filter(filter_expression) do
         {:ok, filter} -> {:cont, {:ok, acc ++ [filter]}}
         {:error, _} -> {:halt, {:error, :invalid_filters}}
@@ -157,7 +146,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   end
 
   defp decode_filter(filter_expression) do
-    with [operator, dimension | clauses] <- String.split(filter_expression, ","),
+    with [operator, dimension, clauses] <- filter_expression,
          dimension = with_prefix(dimension),
          {:ok, clauses} <- decode_clauses(clauses, dimension) do
       {:ok, [operator, dimension, clauses]}

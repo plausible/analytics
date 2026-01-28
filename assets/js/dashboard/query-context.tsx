@@ -110,9 +110,12 @@ export default function QueryContextProvider({
       with_imported: [true, false].includes(with_imported as boolean)
         ? (with_imported as boolean)
         : defaultValues.with_imported,
+      include_imports_meta: null,
       filters,
       resolvedFilters,
-      labels: (labels as FilterClauseLabels) || defaultValues.labels
+      labels: (labels as FilterClauseLabels) || defaultValues.labels,
+      dimensions: null,
+      metrics: null
     }
   }, [
     compare_from,

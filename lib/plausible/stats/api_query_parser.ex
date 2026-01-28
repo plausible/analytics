@@ -45,7 +45,7 @@ defmodule Plausible.Stats.ApiQueryParser do
     end
   end
 
-  defp parse_metrics(metrics) when is_list(metrics) do
+  def parse_metrics(metrics) when is_list(metrics) do
     parse_list(metrics, &parse_metric/1)
   end
 

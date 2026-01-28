@@ -5,7 +5,19 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb.Plugs.ErrorHandler
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider, TimeOnPage}
+
+  alias Plausible.Stats.{
+    Query,
+    Comparisons,
+    Filters,
+    Time,
+    TableDecider,
+    TimeOnPage,
+    Dashboard,
+    ParsedQueryParams,
+    QueryBuilder
+  }
+
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -13,8 +25,21 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
 
-  plug(:date_validation_plug)
+  plug(:date_validation_plug when action not in [:query])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
+
+  def query(conn, params) do
+    site = conn.assigns.site
+
+    with {:ok, %ParsedQueryParams{} = params} <- Dashboard.QueryParser.parse(site, params),
+         params = ParsedQueryParams.set_include(params, :dashboard_metric_labels, true),
+         {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)),
+         results = Plausible.Stats.query(site, query) do
+      json(conn, results)
+    else
+      _ -> bad_request(conn, "query error")
+    end
+  end
 
   @doc """
   Returns a time-series based on given parameters.

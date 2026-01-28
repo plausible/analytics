@@ -1,6 +1,8 @@
 import { DashboardQuery } from './query'
+import { PlausibleSite } from './site-context'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
+import * as url from './util/url'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
@@ -92,6 +94,27 @@ async function handleApiResponse(response: Response) {
 
 function getSharedLinkSearchParams(): Record<string, string> {
   return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
+}
+
+export async function stats(site: PlausibleSite, query: DashboardQuery) {
+  const adjustedQuery = adjustQuery(query)
+
+  const response = await fetch(url.apiPath(site, '/query'), {
+    method: 'POST',
+    signal: abortController.signal,
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify(adjustedQuery)
+  })
+
+  return handleApiResponse(response)
+}
+
+function adjustQuery(query: DashboardQuery) {
+  const { resolvedFilters, labels, ...q } = query
+  return { ...q, date: formatISO(query.date) }
 }
 
 export async function get(

@@ -128,6 +128,10 @@ export function hasConversionGoalFilter(query) {
   })
 }
 
+export function hasPageFilter(query) {
+  return query.resolvedFilters.some(hasDimensionPrefix('page'))
+}
+
 export function isRealTimeDashboard(query) {
   return query?.period === 'realtime'
 }
