@@ -55,8 +55,6 @@ long_random_urls =
     "https://dummy.site#{path}"
   end
 
-FunWithFlags.enable(:live_dashboard)
-
 site =
   new_site(
     domain: "dummy.site",
