@@ -122,7 +122,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      refute element_exists?(doc, "#upgrade-or-change-plan-link")
+      refute element_exists?(doc, "#upgrade-link")
+      refute element_exists?(doc, "#change-plan-link")
     end
 
     test "/billing/choose-plan link does not show up when enterprise subscription is paused", %{
@@ -136,7 +137,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      refute element_exists?(doc, "#upgrade-or-change-plan-link")
+      refute element_exists?(doc, "#upgrade-link")
+      refute element_exists?(doc, "#change-plan-link")
     end
 
     @tag :ee_only
