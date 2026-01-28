@@ -364,18 +364,12 @@ defmodule PlausibleWeb.Components.Billing do
       id="upgrade-link-2"
       href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
       mt?={false}
+      class="plausible-event-name=Upgrade+Button:+Click"
     >
       Upgrade
     </.button_link>
     """
   end
-
-  defp change_plan_or_upgrade_text(nil), do: "Upgrade"
-
-  defp change_plan_or_upgrade_text(%Subscription{status: Subscription.Status.deleted()}),
-    do: "Upgrade"
-
-  defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
   def upgrade_call_to_action(assigns) do
     user = assigns.current_user
