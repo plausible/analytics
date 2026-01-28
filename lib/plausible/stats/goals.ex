@@ -14,7 +14,9 @@ defmodule Plausible.Stats.Goals do
   def preload_needed_goals(site, dimensions, filters) do
     if Enum.member?(dimensions, "event:goal") or
          Filters.filtering_on_dimension?(filters, "event:goal") do
-      goals = Plausible.Goals.for_site(site)
+      site = Plausible.Repo.preload(site, :team)
+      props_available? = Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
+      goals = Plausible.Goals.for_site(site, include_goals_with_custom_props?: props_available?)
 
       %{
         # When grouping by event:goal, later pipeline needs to know which goals match filters exactly.
@@ -200,7 +202,7 @@ defmodule Plausible.Stats.Goals do
   defp goal_condition(:event, goal, _) do
     name_condition = dynamic([e], e.name == ^goal.event_name)
 
-    if map_size(goal.custom_props) > 0 do
+    if Plausible.Goal.has_custom_props?(goal) do
       custom_props_condition = build_custom_props_condition(goal.custom_props)
       dynamic([e], ^name_condition and ^custom_props_condition)
     else
@@ -215,7 +217,14 @@ defmodule Plausible.Stats.Goals do
     scroll_condition =
       dynamic([e], e.scroll_depth <= 100 and e.scroll_depth >= ^goal.scroll_threshold)
 
-    dynamic([e], ^pathname_condition and ^name_condition and ^scroll_condition)
+    base_condition = dynamic([e], ^pathname_condition and ^name_condition and ^scroll_condition)
+
+    if Plausible.Goal.has_custom_props?(goal) do
+      custom_props_condition = build_custom_props_condition(goal.custom_props)
+      dynamic([e], ^base_condition and ^custom_props_condition)
+    else
+      base_condition
+    end
   end
 
   defp goal_condition(:page, goal, true = _imported?) do
@@ -225,8 +234,14 @@ defmodule Plausible.Stats.Goals do
   defp goal_condition(:page, goal, false = _imported?) do
     name_condition = dynamic([e], e.name == "pageview")
     pathname_condition = page_path_condition(goal.page_path, _imported? = false)
+    base_condition = dynamic([e], ^pathname_condition and ^name_condition)
 
-    dynamic([e], ^pathname_condition and ^name_condition)
+    if Plausible.Goal.has_custom_props?(goal) do
+      custom_props_condition = build_custom_props_condition(goal.custom_props)
+      dynamic([e], ^base_condition and ^custom_props_condition)
+    else
+      base_condition
+    end
   end
 
   defp page_path_condition(page_path, imported?) do

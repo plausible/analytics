@@ -148,8 +148,11 @@ defmodule Plausible.Stats.FilterSuggestions do
   end
 
   def filter_suggestions(site, _query, "goal", filter_search) do
+    site = Plausible.Repo.preload(site, :team)
+    props_available? = Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
+
     site
-    |> Plausible.Goals.for_site()
+    |> Plausible.Goals.for_site(include_goals_with_custom_props?: props_available?)
     |> Enum.map(& &1.display_name)
     |> Enum.filter(fn goal ->
       String.contains?(

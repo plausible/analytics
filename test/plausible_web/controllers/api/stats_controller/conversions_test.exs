@@ -462,6 +462,68 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
     end
 
     @tag :ee_only
+    test "excludes goals with custom props when Props feature is unavailable", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      user
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
+      |> Plausible.Repo.update!()
+
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup")
+      ])
+
+      {:ok, _goal_with_props} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt"}
+        })
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Signup",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 100.0
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "includes goals with custom props when Props feature is available", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"]),
+        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"])
+      ])
+
+      {:ok, _goal_with_props} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt"}
+        })
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      results = json_response(conn, 200)["results"]
+
+      assert length(results) == 1
+      assert hd(results)["name"] == "Purchase"
+      assert hd(results)["visitors"] == 2
+    end
+
+    @tag :ee_only
     test "returns revenue metrics as nil for non-revenue goals", %{
       conn: conn,
       site: site
