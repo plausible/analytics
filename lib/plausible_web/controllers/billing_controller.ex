@@ -26,7 +26,6 @@ defmodule PlausibleWeb.BillingController do
         live_module: PlausibleWeb.Live.ChoosePlan,
         hide_header?: true,
         disable_global_notices?: true,
-        skip_plausible_tracking: true,
         connect_live_socket: true
       )
     end
