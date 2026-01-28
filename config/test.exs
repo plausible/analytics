@@ -65,3 +65,7 @@ config :plausible, Plausible.InstallationSupport.Checks.VerifyInstallation,
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
 
 config :plausible, max_goals_per_site: 10
+
+config :phoenix_test,
+  otp_app: :plausible,
+  endpoint: PlausibleWeb.Endpoint

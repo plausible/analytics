@@ -67,6 +67,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "jsdom-testing-mocks": "^1.13.1",
     "json-schema-to-typescript": "^15.0.2",
+    "playwright": "^1.58.0",
     "prettier": "^3.3.3",
     "stylelint": "^16.17.0",
     "stylelint-config-standard": "^36.0.1",
