@@ -72,7 +72,7 @@ defmodule Plausible.Stats.Metrics do
          %Query{input_date_range: :realtime_30m, dimensions: []},
          true
        ) do
-    "Unique conversions (last 30min)"
+    "Unique conversions (last 30 min)"
   end
 
   defp dashboard_metric_label(
@@ -80,7 +80,7 @@ defmodule Plausible.Stats.Metrics do
          %Query{input_date_range: :realtime_30m, dimensions: []},
          false
        ) do
-    "Unique visitors (last 30min)"
+    "Unique visitors (last 30 min)"
   end
 
   defp dashboard_metric_label(:visitors, %Query{input_date_range: :realtime}, false) do
@@ -104,7 +104,7 @@ defmodule Plausible.Stats.Metrics do
          %Query{input_date_range: :realtime_30m, dimensions: []},
          false
        ) do
-    "Pageviews (last 30min)"
+    "Pageviews (last 30 min)"
   end
 
   defp dashboard_metric_label(:pageviews, %Query{dimensions: []}, false) do
@@ -123,8 +123,16 @@ defmodule Plausible.Stats.Metrics do
     "Visit duration"
   end
 
+  defp dashboard_metric_label(:scroll_depth, %Query{}, false) do
+    "Scroll depth"
+  end
+
+  defp dashboard_metric_label(:time_on_page, %Query{}, false) do
+    "Time on page"
+  end
+
   defp dashboard_metric_label(:events, %{input_date_range: :realtime_30m, dimensions: []}, true) do
-    "Total conversions (last 30min)"
+    "Total conversions (last 30 min)"
   end
 
   defp dashboard_metric_label(:events, %{dimensions: []}, true) do

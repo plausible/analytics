@@ -53,11 +53,11 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   @valid_comparison_shorthand_keys Map.keys(@valid_comparison_shorthands)
 
-  def parse(site, params) do
+  def parse(params) do
     with {:ok, filters} <- parse_filters(params),
          {:ok, relative_date} <- parse_relative_date(params),
          {:ok, metrics} <- parse_metrics(params) do
-      input_date_range = parse_input_date_range(params, site)
+      input_date_range = parse_input_date_range(params)
 
       include =
         Map.merge(@default_include, %{
@@ -78,22 +78,18 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
     end
   end
 
-  defp parse_input_date_range(%{"period" => period}, _site)
+  defp parse_input_date_range(%{"period" => period})
        when period in @valid_period_shorthand_keys do
     @valid_period_shorthands[period]
   end
 
-  defp parse_input_date_range(%{"period" => "custom", "from" => from, "to" => to}, _site) do
+  defp parse_input_date_range(%{"period" => "custom", "from" => from, "to" => to}) do
     from_date = Date.from_iso8601!(String.trim(from))
     to_date = Date.from_iso8601!(String.trim(to))
     {:date_range, from_date, to_date}
   end
 
-  defp parse_input_date_range(_params, site) do
-    if recently_created?(site), do: :day, else: {:last_n_days, 28}
-  end
-
-  defp parse_relative_date(%{"date" => date}) do
+  defp parse_relative_date(%{"date" => date}) when is_binary(date) do
     case Date.from_iso8601(date) do
       {:ok, date} -> {:ok, date}
       _ -> {:error, :invalid_date}
@@ -184,10 +180,5 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   @event_dimensions ["name", "page", "goal", "hostname"]
   defp event_dimension?(dimension) do
     dimension in @event_dimensions or String.starts_with?(dimension, @event_props_prefix)
-  end
-
-  defp recently_created?(site) do
-    stats_start_date = NaiveDateTime.to_date(site.native_stats_start_at)
-    Date.diff(stats_start_date, Date.utc_today()) >= -1
   end
 end

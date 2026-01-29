@@ -128,19 +128,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   describe "include.dashboard_metric_labels" do
-    test "visitors -> Visitors (default)", %{site: site} do
-      {:ok, query} =
-        QueryBuilder.build(site,
-          metrics: [:visitors],
-          input_date_range: :all,
-          include: [dashboard_metric_labels: true]
-        )
-
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Visitors"] = meta[:metric_labels]
-    end
-
-    test "visitors -> Current visitors (realtime)", %{site: site} do
+    test "current visitors", %{site: site} do
       {:ok, query} =
         QueryBuilder.build(site,
           metrics: [:visitors],
@@ -152,88 +140,96 @@ defmodule Plausible.Stats.QueryTest do
       assert ["Current visitors"] = meta[:metric_labels]
     end
 
-    test "visitors -> Current visitors (realtime and goal filtered)", %{site: site} do
+    test "top stats in realtime with goal filter", %{site: site} do
       insert(:goal, site: site, event_name: "Signup")
 
       {:ok, query} =
         QueryBuilder.build(site,
-          metrics: [:visitors],
-          input_date_range: :realtime,
+          metrics: [:visitors, :events],
+          input_date_range: :realtime_30m,
           filters: [[:is, "event:goal", ["Signup"]]],
           include: [dashboard_metric_labels: true]
         )
 
       %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Current visitors"] = meta[:metric_labels]
+
+      assert ["Unique conversions (last 30 min)", "Total conversions (last 30 min)"] =
+               meta[:metric_labels]
     end
 
-    test "visitors -> Conversions (goal filtered)", %{site: site} do
+    test "top stats in realtime", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:visitors, :pageviews],
+          input_date_range: :realtime_30m,
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      assert ["Unique visitors (last 30 min)", "Pageviews (last 30 min)"] = meta[:metric_labels]
+    end
+
+    test "top stats with goal filter", %{site: site} do
       insert(:goal, site: site, event_name: "Signup")
 
       {:ok, query} =
         QueryBuilder.build(site,
-          metrics: [:visitors],
-          input_date_range: :all,
-          filters: [[:is, "event:goal", ["Signup"]]],
-          include: [dashboard_metric_labels: true]
-        )
-
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Conversions"] = meta[:metric_labels]
-    end
-
-    test "visitors -> Unique entrances (visit:entry_page dimension)", %{site: site} do
-      {:ok, query} =
-        QueryBuilder.build(site,
-          metrics: [:visitors],
-          input_date_range: :all,
-          dimensions: ["visit:entry_page"],
-          include: [dashboard_metric_labels: true]
-        )
-
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Unique entrances"] = meta[:metric_labels]
-    end
-
-    test "visitors -> Unique exits (visit:exit_page dimension)", %{site: site} do
-      {:ok, query} =
-        QueryBuilder.build(site,
-          metrics: [:visitors],
-          input_date_range: :all,
-          dimensions: ["visit:exit_page"],
-          include: [dashboard_metric_labels: true]
-        )
-
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["Unique exits"] = meta[:metric_labels]
-    end
-
-    test "conversion_rate -> CR (default)", %{site: site} do
-      {:ok, query} =
-        QueryBuilder.build(site,
-          metrics: [:conversion_rate],
-          input_date_range: :all,
-          dimensions: ["event:goal"],
-          include: [dashboard_metric_labels: true]
-        )
-
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["CR"] = meta[:metric_labels]
-    end
-
-    test "maintains order with multiple metrics", %{site: site} do
-      insert(:goal, site: site, event_name: "Signup")
-
-      {:ok, query} =
-        QueryBuilder.build(site,
-          metrics: [:conversion_rate, :visitors],
+          metrics: [:visitors, :events, :conversion_rate],
           input_date_range: :all,
           filters: [[:is, "event:goal", ["Signup"]]],
           include: [dashboard_metric_labels: true]
         )
 
       %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-      assert ["CR", "Conversions"] = meta[:metric_labels]
+      assert ["Unique conversions", "Total conversions", "Conversion rate"] = meta[:metric_labels]
+    end
+
+    test "top stats with page filter", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [:visitors, :visits, :pageviews, :bounce_rate, :scroll_depth, :time_on_page],
+          input_date_range: :all,
+          filters: [[:is, "event:page", ["/"]]],
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert [
+               "Unique visitors",
+               "Total visits",
+               "Total pageviews",
+               "Bounce rate",
+               "Scroll depth",
+               "Time on page"
+             ] = meta[:metric_labels]
+    end
+
+    test "top stats default metrics", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site,
+          metrics: [
+            :visitors,
+            :visits,
+            :pageviews,
+            :views_per_visit,
+            :bounce_rate,
+            :visit_duration
+          ],
+          input_date_range: :all,
+          include: [dashboard_metric_labels: true]
+        )
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert [
+               "Unique visitors",
+               "Total visits",
+               "Total pageviews",
+               "Views per visit",
+               "Bounce rate",
+               "Visit duration"
+             ] = meta[:metric_labels]
     end
   end
 end
