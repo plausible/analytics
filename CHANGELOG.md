@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed countries map countries staying highlighted on Chrome
+
 ## v3.2.0 - 2026-01-16
 
 ### Added
