@@ -120,10 +120,16 @@ function formatTopStatsData(topStatsResponse, currentVisitorsResponse) {
     topStats.push(stat)
   }
 
-  return {
-    topStats,
-    meta: meta
-  }
+  const [from, to] = query.date_range.map((d) => d.split('T')[0])
+
+  const comparingFrom = query.comparison_date_range
+    ? query.comparison_date_range[0].split('T')[0]
+    : null
+  const comparingTo = query.comparison_date_range
+    ? query.comparison_date_range[1].split('T')[0]
+    : null
+
+  return { topStats, meta, from, to, comparingFrom, comparingTo }
 }
 
 function fetchMainGraph(site, query, metric, interval) {

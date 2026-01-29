@@ -28,7 +28,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
 
-  const isComparison = query.comparison && data && data.comparing_from
+  const isComparison = (query.comparison && data && data.comparingFrom !== null) || false
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
@@ -193,7 +193,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
                 {topStatNumberShort(stat.metric, stat.comparisonValue)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {formatDateRange(site, data.comparing_from, data.comparing_to)}
+                {formatDateRange(site, data.comparingFrom, data.comparingTo)}
               </p>
             </div>
           ) : null}
