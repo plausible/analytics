@@ -32,6 +32,12 @@ type CountryData = {
 }
 type WorldJsonCountryData = { properties: { name: string; a3: string } }
 
+const LABELS = {
+  realtime: { singular: 'Conversion', plural: 'Conversions' },
+  conversions: { singular: 'Current visitor', plural: 'Current visitors' },
+  default: { singular: 'Visitor', plural: 'Visitors' }
+} as const
+
 const WorldMap = ({
   onCountrySelect,
   afterFetchData
@@ -50,15 +56,16 @@ const WorldMap = ({
     hoveredCountryAlpha3Code: string | null
   }>({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
 
-  const labels = (() => {
+  const labelType: keyof typeof LABELS = useMemo(() => {
     if (hasConversionGoalFilter(query)) {
-      return { singular: 'Conversion', plural: 'Conversions' }
+      return 'conversions'
     }
     if (isRealTimeDashboard(query)) {
-      return { singular: 'Current visitor', plural: 'Current visitors' }
+      return 'realtime'
     }
-    return { singular: 'Visitor', plural: 'Visitors' }
-  })()
+    return 'default'
+  }, [query])
+  const labels = useMemo(() => LABELS[labelType], [labelType])
 
   const { data, refetch, isFetching, isError } = useQuery({
     queryKey: ['countries', 'map', query],
@@ -86,7 +93,7 @@ const WorldMap = ({
     if (data) {
       afterFetchData(data)
     }
-  }, [afterFetchData, data, isFetching])
+  }, [afterFetchData, data])
 
   const { maxValue, dataByCountryCode } = useMemo(() => {
     const dataByCountryCode: Map<string, CountryData> = new Map()
@@ -282,8 +289,10 @@ function drawInteractiveCountries(
     .on('mouseover', function (event, country) {
       const [x, y] = d3.pointer(event, svg.node()?.parentNode)
       setTooltip({ x, y, hoveredCountryAlpha3Code: country.properties.a3 })
-      // brings country to front
-      this.parentNode?.appendChild(this)
+      // brings country to front if it's already not the last child
+      if (this.nextElementSibling) {
+        this.parentNode?.appendChild(this)
+      }
       d3.select(this).attr('class', highlightedCountryClass)
     })
 
