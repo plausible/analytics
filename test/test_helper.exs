@@ -3,15 +3,18 @@ if not Enum.empty?(Path.wildcard("lib/**/*_test.exs")) do
 end
 
 {:ok, _} = Application.ensure_all_started(:ex_machina)
-Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
 
-Mox.defmock(Plausible.DnsLookup.Mock,
-  for: Plausible.DnsLookupInterface
-)
+if Mix.env() != :e2e_test do
+  Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
 
-Application.ensure_all_started(:double)
+  Mox.defmock(Plausible.DnsLookup.Mock,
+    for: Plausible.DnsLookupInterface
+  )
 
-Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
+  Application.ensure_all_started(:double)
+
+  Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
+end
 
 # warn about minio if it's included in tests but not running
 if :minio in Keyword.fetch!(ExUnit.configuration(), :include) do
@@ -27,10 +30,16 @@ for {app, _, _} <- Application.loaded_applications() do
   end
 end
 
-if Mix.env() == :ce_test do
-  IO.puts("Test mode: Community Edition")
-  ExUnit.configure(exclude: [:ee_only | default_exclude])
-else
-  IO.puts("Test mode: Enterprise Edition")
-  ExUnit.configure(exclude: [:ce_build_only | default_exclude])
+case Mix.env() do
+  :ce_test ->
+    IO.puts("Test mode: Community Edition")
+    ExUnit.configure(exclude: [:ee_only, :e2e | default_exclude])
+
+  :e2e_test ->
+    IO.puts("Test mode: End-to-End Tests")
+    ExUnit.configure(exclude: [:test], include: [:e2e])
+
+  _ ->
+    IO.puts("Test mode: Enterprise Edition")
+    ExUnit.configure(exclude: [:ce_build_only, :e2e | default_exclude])
 end
