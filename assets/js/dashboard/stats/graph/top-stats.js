@@ -3,6 +3,7 @@ import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
+import * as api from '../../api'
 import { formatDateRange } from '../../util/date'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
@@ -12,6 +13,121 @@ import {
   MetricFormatterShort,
   MetricFormatterLong
 } from '../reports/metric-formatter'
+import {
+  hasConversionGoalFilter,
+  hasPageFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
+import { isComparisonEnabled } from '../../query-time-periods'
+
+export async function fetchTopStats(site, query) {
+  const currentVisitorsQuery = constructCurrentVisitorsQuery(query)
+  const topStatsQuery = constructTopStatsQuery(query)
+
+  const currentVisitorsResponse = currentVisitorsQuery
+    ? await api.stats(site, currentVisitorsQuery)
+    : null
+  const topStatsResponse = await api.stats(site, topStatsQuery)
+
+  return formatTopStatsData(topStatsResponse, currentVisitorsResponse)
+}
+
+function constructCurrentVisitorsQuery(query) {
+  if (isRealTimeDashboard(query)) {
+    return { ...query, metrics: ['visitors'], filters: [], dimensions: [] }
+  }
+}
+
+function constructTopStatsQuery(query) {
+  const q = {
+    ...query,
+    dimensions: [],
+    include_imports_meta: true,
+    metrics: chooseMetrics(query)
+  }
+
+  if (!isComparisonEnabled(query.comparison)) {
+    q.comparison = 'previous_period'
+  }
+
+  if (isRealTimeDashboard(query)) {
+    q.period = 'realtime_30m'
+  }
+
+  return q
+}
+
+function chooseMetrics(query) {
+  if (isRealTimeDashboard(query) && hasConversionGoalFilter(query)) {
+    return ['visitors', 'events']
+  } else if (isRealTimeDashboard(query)) {
+    return ['visitors', 'pageviews']
+  } else if (hasConversionGoalFilter(query)) {
+    return ['visitors', 'events', 'conversion_rate']
+  } else if (hasPageFilter(query) && query.with_imported) {
+    // Note: Copied this condition over from the backend, but need to investigate why time_on_page
+    // and bounce_rate cannot be queried with imported data. In any case, we should drop the metrics
+    // on the backend, and simply request them here.
+    return ['visitors', 'visits', 'pageviews', 'scroll_depth']
+  } else if (hasPageFilter(query)) {
+    return [
+      'visitors',
+      'visits',
+      'pageviews',
+      'bounce_rate',
+      'scroll_depth',
+      'time_on_page'
+    ]
+  } else {
+    return [
+      'visitors',
+      'visits',
+      'pageviews',
+      'views_per_visit',
+      'bounce_rate',
+      'visit_duration'
+    ]
+  }
+}
+
+function formatTopStatsData(topStatsResponse, currentVisitorsResponse) {
+  const { query, meta, results } = topStatsResponse
+
+  let topStats = []
+
+  if (currentVisitorsResponse) {
+    topStats.push({
+      metric: currentVisitorsResponse.query.metrics[0],
+      value: currentVisitorsResponse.results[0].metrics[0],
+      name: currentVisitorsResponse.meta.metric_labels[0],
+      graphable: false
+    })
+  }
+
+  for (let i = 0; i < query.metrics.length; i++) {
+    let stat = {}
+
+    stat.metric = query.metrics[i]
+    stat.value = results[0].metrics[i]
+    stat.name = meta.metric_labels[i]
+    stat.graphable = true
+    stat.change = results[0].comparison.change[i]
+    stat.comparisonValue = results[0].comparison.metrics[i]
+
+    topStats.push(stat)
+  }
+
+  const [from, to] = query.date_range.map((d) => d.split('T')[0])
+
+  const comparingFrom = query.comparison_date_range
+    ? query.comparison_date_range[0].split('T')[0]
+    : null
+  const comparingTo = query.comparison_date_range
+    ? query.comparison_date_range[1].split('T')[0]
+    : null
+
+  return { topStats, meta, from, to, comparingFrom, comparingTo }
+}
 
 function topStatNumberShort(metric, value) {
   const formatter = MetricFormatterShort[metric]
@@ -23,12 +139,13 @@ function topStatNumberLong(metric, value) {
   return formatter(value)
 }
 
-export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
+export function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
   const { query } = useQueryContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
 
-  const isComparison = (query.comparison && data && data.comparingFrom !== null) || false
+  const isComparison =
+    (query.comparison && data && data.comparingFrom !== null) || false
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()

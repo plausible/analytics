@@ -2,135 +2,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
-import TopStats from './top-stats'
+import { fetchTopStats, TopStats } from './top-stats'
 import { IntervalPicker, getCurrentInterval } from './interval-picker'
 import StatsExport from './stats-export'
 import WithImportedSwitch from './with-imported-switch'
 import { getSamplingNotice, NoticesIcon } from './notices'
 import FadeIn from '../../fade-in'
 import * as url from '../../util/url'
-import { isComparisonEnabled } from '../../query-time-periods'
 import LineGraphWithRouter from './line-graph'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
-import {
-  hasConversionGoalFilter,
-  hasPageFilter,
-  isRealTimeDashboard
-} from '../../util/filters'
-
-async function fetchTopStats(site, query) {
-  const q = { ...query }
-
-  if (!isComparisonEnabled(q.comparison)) {
-    q.comparison = 'previous_period'
-  }
-
-  let topStatsQuery
-
-  if (isRealTimeDashboard(query) && hasConversionGoalFilter(query)) {
-    topStatsQuery = {
-      ...q,
-      metrics: ['visitors', 'events'],
-      period: 'realtime_30m'
-    }
-  } else if (isRealTimeDashboard(query)) {
-    topStatsQuery = {
-      ...q,
-      metrics: ['visitors', 'pageviews'],
-      period: 'realtime_30m'
-    }
-  } else if (hasConversionGoalFilter(query)) {
-    topStatsQuery = { ...q, metrics: ['visitors', 'events', 'conversion_rate'] }
-  } else if (hasPageFilter(query) && query.with_imported) {
-    // Note: Copied this condition over from the backend, but need to investigate why time_on_page
-    // and bounce_rate cannot be queried with imported data. In any case, we should drop the metrics
-    // on the backend, and simply request them here.
-    topStatsQuery = {
-      ...q,
-      metrics: ['visitors', 'visits', 'pageviews', 'scroll_depth']
-    }
-  } else if (hasPageFilter(query)) {
-    topStatsQuery = {
-      ...q,
-      metrics: [
-        'visitors',
-        'visits',
-        'pageviews',
-        'bounce_rate',
-        'scroll_depth',
-        'time_on_page'
-      ]
-    }
-  } else {
-    topStatsQuery = {
-      ...q,
-      metrics: [
-        'visitors',
-        'visits',
-        'pageviews',
-        'views_per_visit',
-        'bounce_rate',
-        'visit_duration'
-      ]
-    }
-  }
-
-  topStatsQuery.dimensions = []
-  topStatsQuery.include_imports_meta = true
-
-  const topStatsResponse = await api.stats(site, topStatsQuery)
-
-  const currentVisitorsResponse = isRealTimeDashboard(query)
-    ? await api.stats(site, {
-        ...q,
-        metrics: ['visitors'],
-        filters: [],
-        dimensions: []
-      })
-    : null
-
-  return formatTopStatsData(topStatsResponse, currentVisitorsResponse)
-}
-
-function formatTopStatsData(topStatsResponse, currentVisitorsResponse) {
-  const { query, meta, results } = topStatsResponse
-
-  let topStats = []
-
-  if (currentVisitorsResponse) {
-    topStats.push({
-      metric: currentVisitorsResponse.query.metrics[0],
-      value: currentVisitorsResponse.results[0].metrics[0],
-      name: currentVisitorsResponse.meta.metric_labels[0],
-      graphable: false
-    })
-  }
-
-  for (let i = 0; i < query.metrics.length; i++) {
-    let stat = {}
-
-    stat.metric = query.metrics[i]
-    stat.value = results[0].metrics[i]
-    stat.name = meta.metric_labels[i]
-    stat.graphable = true
-    stat.change = results[0].comparison.change[i]
-    stat.comparisonValue = results[0].comparison.metrics[i]
-
-    topStats.push(stat)
-  }
-
-  const [from, to] = query.date_range.map((d) => d.split('T')[0])
-
-  const comparingFrom = query.comparison_date_range
-    ? query.comparison_date_range[0].split('T')[0]
-    : null
-  const comparingTo = query.comparison_date_range
-    ? query.comparison_date_range[1].split('T')[0]
-    : null
-
-  return { topStats, meta, from, to, comparingFrom, comparingTo }
-}
 
 function fetchMainGraph(site, query, metric, interval) {
   const params = { metric, interval }
