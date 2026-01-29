@@ -20,6 +20,7 @@ import { apiPath } from '../../util/url'
 import { MIN_HEIGHT } from '../reports/list'
 import { MapTooltip } from './map-tooltip'
 import { GeolocationNotice } from './geolocation-notice'
+import { DashboardQuery } from '../../query'
 
 const width = 475
 const height = 335
@@ -32,11 +33,15 @@ type CountryData = {
 }
 type WorldJsonCountryData = { properties: { name: string; a3: string } }
 
-const LABELS = {
-  realtime: { singular: 'Conversion', plural: 'Conversions' },
-  conversions: { singular: 'Current visitor', plural: 'Current visitors' },
-  default: { singular: 'Visitor', plural: 'Visitors' }
-} as const
+function getMetricLabel(query: DashboardQuery) {
+  if (hasConversionGoalFilter(query)) {
+    return { singular: 'Conversion', plural: 'Conversions' }
+  }
+  if (isRealTimeDashboard(query)) {
+    return { singular: 'Current visitor', plural: 'Current visitors' }
+  }
+  return { singular: 'Visitor', plural: 'Visitors' }
+}
 
 const WorldMap = ({
   onCountrySelect,
@@ -56,16 +61,7 @@ const WorldMap = ({
     hoveredCountryAlpha3Code: string | null
   }>({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
 
-  const labelType: keyof typeof LABELS = useMemo(() => {
-    if (hasConversionGoalFilter(query)) {
-      return 'conversions'
-    }
-    if (isRealTimeDashboard(query)) {
-      return 'realtime'
-    }
-    return 'default'
-  }, [query])
-  const labels = useMemo(() => LABELS[labelType], [labelType])
+  const metricLabel = useMemo(() => getMetricLabel(query), [query])
 
   const { data, refetch, isFetching, isError } = useQuery({
     queryKey: ['countries', 'map', query],
@@ -93,7 +89,7 @@ const WorldMap = ({
     if (data) {
       afterFetchData(data)
     }
-  }, [afterFetchData, data])
+  }, [afterFetchData, data, isFetching])
 
   const { maxValue, dataByCountryCode } = useMemo(() => {
     const dataByCountryCode: Map<string, CountryData> = new Map()
@@ -134,7 +130,28 @@ const WorldMap = ({
       return
     }
 
-    const svg = drawInteractiveCountries(svgRef.current, setTooltip)
+    const { svg, countriesSelection } = drawInteractiveCountries(svgRef.current)
+    const highlightSelection = drawHighlightedCountryOutline(svgRef.current)
+
+    countriesSelection
+      .on('mouseover', function (event, country) {
+        const [x, y] = d3.pointer(event, svg.node()?.parentNode)
+        setTooltip({ x, y, hoveredCountryAlpha3Code: country.properties.a3 })
+
+        highlightSelection
+          .attr('d', this.getAttribute('d'))
+          .attr('class', hoveredOutlineClass)
+      })
+
+      .on('mousemove', function (event) {
+        const [x, y] = d3.pointer(event, svg.node()?.parentNode)
+        setTooltip((currentState) => ({ ...currentState, x, y }))
+      })
+
+      .on('mouseout', function () {
+        setTooltip({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
+        highlightSelection.attr('d', null).attr('class', initialOutlineClass)
+      })
 
     return () => {
       svg.selectAll('*').remove()
@@ -185,7 +202,9 @@ const WorldMap = ({
             name={hoveredCountryData.name}
             value={numberShortFormatter(hoveredCountryData.visitors)}
             label={
-              labels[hoveredCountryData.visitors === 1 ? 'singular' : 'plural']
+              hoveredCountryData.visitors === 1
+                ? metricLabel.singular
+                : metricLabel.plural
             }
           />
         )}
@@ -208,25 +227,40 @@ const colorScales = {
   [UIMode.light]: ['#e0e7ff', '#818cf8'] // indigo-100, indigo-400
 }
 
-const sharedCountryClass = classNames('transition-colors')
-
-const countryClass = classNames(
-  sharedCountryClass,
-  'stroke-1',
-  'fill-gray-150',
+const countryElementClass = 'country'
+const countrySelector = `path.${countryElementClass}`
+const initialStroke = classNames(
   'stroke-white',
-  'dark:fill-gray-750',
-  'dark:stroke-gray-900'
+  'dark:stroke-gray-900',
+  'stroke-1px'
 )
-
-const highlightedCountryClass = classNames(
-  sharedCountryClass,
+const hoveredStroke = classNames(
   'stroke-[1.5px]',
-  'fill-gray-150',
   'stroke-indigo-400',
-  'dark:fill-gray-750',
   'dark:stroke-indigo-500'
 )
+
+const countryClass = classNames(
+  countryElementClass,
+  initialStroke,
+  'transition-colors',
+  'stroke-1',
+  'fill-gray-150',
+  'dark:fill-gray-750'
+)
+
+const sharedOutlineClass = classNames(
+  'transition-colors',
+  'fill-none',
+  'pointer-events-none'
+)
+
+const initialOutlineClass = classNames(
+  sharedOutlineClass,
+  initialStroke,
+  'opacity-0'
+)
+const hoveredOutlineClass = classNames(sharedOutlineClass, hoveredStroke)
 
 /**
  * Used to color the countries
@@ -246,7 +280,7 @@ function colorInCountriesWithValues(
   const svg = d3.select(element)
 
   return svg
-    .selectAll('path')
+    .selectAll(countrySelector)
     .style('fill', (countryPath) => {
       const country = getCountryByCountryPath(countryPath)
       if (!country?.visitors) {
@@ -263,50 +297,25 @@ function colorInCountriesWithValues(
     })
 }
 
+function drawHighlightedCountryOutline(element: SVGSVGElement) {
+  return d3.select(element).append('path').attr('class', initialOutlineClass)
+}
+
 /** @returns the d3 selected svg element */
-function drawInteractiveCountries(
-  element: SVGSVGElement,
-  setTooltip: React.Dispatch<
-    React.SetStateAction<{
-      x: number
-      y: number
-      hoveredCountryAlpha3Code: string | null
-    }>
-  >
-) {
+function drawInteractiveCountries(element: SVGSVGElement) {
   const path = setupProjetionPath()
   const data = parseWorldTopoJsonToGeoJsonFeatures()
   const svg = d3.select(element)
 
-  svg
-    .selectAll('path')
+  const countriesSelection = svg
+    .selectAll(countrySelector)
     .data(data)
     .enter()
     .append('path')
     .attr('class', countryClass)
     .attr('d', path as never)
 
-    .on('mouseover', function (event, country) {
-      const [x, y] = d3.pointer(event, svg.node()?.parentNode)
-      setTooltip({ x, y, hoveredCountryAlpha3Code: country.properties.a3 })
-      // brings country to front if it's already not the last child
-      if (this.nextElementSibling) {
-        this.parentNode?.appendChild(this)
-      }
-      d3.select(this).attr('class', highlightedCountryClass)
-    })
-
-    .on('mousemove', function (event) {
-      const [x, y] = d3.pointer(event, svg.node()?.parentNode)
-      setTooltip((currentState) => ({ ...currentState, x, y }))
-    })
-
-    .on('mouseout', function () {
-      setTooltip({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
-      d3.select(this).attr('class', countryClass)
-    })
-
-  return svg
+  return { svg, countriesSelection }
 }
 
 function setupProjetionPath() {
