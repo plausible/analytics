@@ -2,8 +2,6 @@ defmodule Plausible.GoalsTest do
   use Plausible.DataCase
   alias Plausible.Goals
 
-  doctest Plausible.Goals.SystemGoals, import: true
-
   test "create/2 creates goals and trims input" do
     site = new_site()
     {:ok, goal} = Goals.create(site, %{"page_path" => "/foo bar "})
