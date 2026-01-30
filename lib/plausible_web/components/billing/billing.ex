@@ -253,7 +253,7 @@ defmodule PlausibleWeb.Components.Billing do
         href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
         class="plausible-event-name=Change+Plan+Button:+Click"
       >
-        Change Plan
+        Change plan
       </.styled_link>
     </div>
     """
