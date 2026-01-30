@@ -50,7 +50,6 @@ export const BreakdownTable = <TListItem extends { name: string }>({
           <h1 className="shrink-0 mb-0.5 text-base md:text-lg font-bold dark:text-gray-100">
             {title}
           </h1>
-          {!isPending && isFetching && <SmallLoadingSpinner />}
           {!!onSearch && (
             <SearchInput
               searchRef={searchRef}
@@ -62,6 +61,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
               }
             />
           )}
+          {!isPending && isFetching && <SmallLoadingSpinner />}
         </div>
         <button
           type="button"

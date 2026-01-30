@@ -18,6 +18,7 @@ defmodule Mix.Tasks.SendPageview do
   @default_event "pageview"
   @default_props "{}"
   @default_queryparams ""
+  @default_interactive true
   @options [
     ip: :string,
     user_agent: :string,
@@ -30,7 +31,8 @@ defmodule Mix.Tasks.SendPageview do
     props: :string,
     revenue_currency: :string,
     revenue_amount: :string,
-    queryparams: :string
+    queryparams: :string,
+    interactive: :string
   ]
 
   def run(opts) do
@@ -92,6 +94,13 @@ defmodule Mix.Tasks.SendPageview do
     hostname = Keyword.get(opts, :hostname, domain)
     queryparams = Keyword.get(opts, :queryparams, @default_queryparams)
 
+    interactive =
+      if Keyword.get(opts, :interactive) == "false" do
+        false
+      else
+        @default_interactive
+      end
+
     revenue =
       if Keyword.get(opts, :revenue_currency) do
         %{
@@ -106,7 +115,8 @@ defmodule Mix.Tasks.SendPageview do
       domain: domain,
       referrer: referrer,
       props: props,
-      revenue: revenue
+      revenue: revenue,
+      interactive: interactive
     }
   end
 

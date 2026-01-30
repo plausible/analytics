@@ -101,8 +101,7 @@ defmodule PlausibleWeb.StatsController do
           consolidated_view?: consolidated_view?,
           consolidated_view_available?: consolidated_view_available?,
           team_identifier: team_identifier,
-          limited_to_segment_id: nil,
-          connect_live_socket: PlausibleWeb.Live.Dashboard.enabled?(site)
+          limited_to_segment_id: nil
         )
 
       !stats_start_date && can_see_stats? ->
@@ -480,7 +479,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user, site),
     do:
-      [:live_dashboard]
+      []
       |> Enum.map(fn flag ->
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)

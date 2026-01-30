@@ -163,7 +163,7 @@ const WorldMap = ({
       style={{ minHeight: MIN_HEIGHT }}
     >
       <div
-        className="relative mt-4 mx-auto w-full"
+        className="relative flex justify-center items-center mt-4 w-full"
         style={{ height: height, maxWidth: width }}
       >
         <svg

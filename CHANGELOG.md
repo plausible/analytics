@@ -6,6 +6,23 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Adds team_id to query debug metadata (saved in system.query_log log_comment column)
+- Add "Unknown" option to Countries shield, for when the country code is unrecognized
+
+### Removed
+
+### Changed
+
+- Keybind hints are hidden on smaller screens
+
+### Fixed
+
+- Fixed issue with all non-interactive events being counted as interactive
+
+## v3.2.0 - 2026-01-16
+
+### Added
+
 - A visitor percentage breakdown is now shown on all reports, both on the dashboard and in the detailed breakdown
 - Shared links can now be limited to a particular segment of the data
 
@@ -14,7 +31,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Segment filters are visible to anyone who can view the dashboard with that segment applied, including personal segments on public dashboards
-- Keybind hints are hidden on smaller screens
 
 ### Fixed
 

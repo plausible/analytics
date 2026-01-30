@@ -3663,6 +3663,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "site_id" => site.domain,
         "date_range" => "all",
         "metrics" => ["pageviews"],
+        "order_by" => [["pageviews", "desc"], ["visit:country_name", "asc"]],
         "filters" => [
           ["is", "visit:country_name", ["Estonia", "United Kingdom"]],
           ["is_not", "visit:region_name", ["Tartumaa"]],

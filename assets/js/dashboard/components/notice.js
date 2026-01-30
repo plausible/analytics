@@ -1,5 +1,5 @@
 import React from 'react'
-import { sectionTitles } from '../stats/behaviours'
+import { MODES } from '../stats/behaviours/modes-context'
 import * as api from '../api'
 import { useSiteContext } from '../site-context'
 
@@ -11,7 +11,7 @@ export function FeatureSetupNotice({
   onHideAction
 }) {
   const site = useSiteContext()
-  const sectionTitle = sectionTitles[feature]
+  const sectionTitle = MODES[feature].title
 
   const requestHideSection = () => {
     if (

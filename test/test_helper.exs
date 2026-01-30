@@ -9,8 +9,6 @@ Mox.defmock(Plausible.DnsLookup.Mock,
   for: Plausible.DnsLookupInterface
 )
 
-FunWithFlags.enable(:live_dashboard)
-
 Application.ensure_all_started(:double)
 
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)

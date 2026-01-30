@@ -3371,25 +3371,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert %{"source" => "Google", "events" => 1} = breakdown_and_first.("visit:source")
     end
 
-    for goal_name <- Plausible.Goals.SystemGoals.goals_with_url() do
-      test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
-        insert(:goal, event_name: unquote(goal_name), site: site)
+    for event_name <- Plausible.Event.SystemEvents.events_with_url_prop() do
+      test "returns url breakdown for #{event_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(event_name), site: site)
         site_import = insert(:site_import, site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             "meta.key": ["url"],
             "meta.value": ["https://one.com"]
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 2,
             events: 5,
             link_url: "https://one.com"
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 5,
             events: 10,
             link_url: "https://two.com"
@@ -3407,7 +3407,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
             "site_id" => site.domain,
             "period" => "day",
             "property" => "event:props:url",
-            "filters" => "event:goal==#{unquote(goal_name)}",
+            "filters" => "event:goal==#{unquote(event_name)}",
             "metrics" => "visitors,events,conversion_rate",
             "with_imported" => "true"
           })
@@ -3431,25 +3431,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       end
     end
 
-    for goal_name <- Plausible.Goals.SystemGoals.goals_with_path() do
-      test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
-        insert(:goal, event_name: unquote(goal_name), site: site)
+    for event_name <- Plausible.Event.SystemEvents.events_with_path_prop() do
+      test "returns path breakdown for #{event_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(event_name), site: site)
         site_import = insert(:site_import, site: site)
 
         populate_stats(site, site_import.id, [
           build(:event,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             "meta.key": ["path"],
             "meta.value": ["/one"]
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 2,
             events: 5,
             path: "/one"
           ),
           build(:imported_custom_events,
-            name: unquote(goal_name),
+            name: unquote(event_name),
             visitors: 5,
             events: 10,
             path: "/two"
@@ -3467,7 +3467,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
             "site_id" => site.domain,
             "period" => "day",
             "property" => "event:props:path",
-            "filters" => "event:goal==#{unquote(goal_name)}",
+            "filters" => "event:goal==#{unquote(event_name)}",
             "metrics" => "visitors,events,conversion_rate",
             "with_imported" => "true"
           })

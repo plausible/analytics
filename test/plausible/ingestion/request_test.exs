@@ -292,7 +292,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.pathname == "/pictures/index.html#foo"
   end
 
-  for event_name <- Plausible.Goals.SystemGoals.goals_with_path() do
+  for event_name <- Plausible.Event.SystemEvents.events_with_path_prop() do
     test "event.props.path is synced from event.pathname for special path-based event '#{event_name}'" do
       payload = %{
         name: unquote(event_name),
@@ -505,20 +505,63 @@ defmodule Plausible.Ingestion.RequestTest do
     assert {:error, _} = exceeding_read_limit
   end
 
-  test "respects interactive parameter" do
-    params = %{
-      name: "pageview",
-      domain: "dummy.site",
-      url: "http://dummy.site/index.html",
-      interactive: false
-    }
+  for event_name <-
+        Plausible.Event.SystemEvents.events_with_interactive_always_true() --
+          Plausible.Event.SystemEvents.events_with_engagement_props() do
+    test "ignores interactive: false parameter for #{event_name}" do
+      params = %{
+        name: unquote(event_name),
+        domain: "dummy.site",
+        url: "http://dummy.site/index.html",
+        interactive: false
+      }
 
-    assert {:ok, request, _conn} =
-             build_conn(:post, "/api/events", params)
-             |> put_req_header("user-agent", "Mozilla")
-             |> Request.build()
+      assert {:ok, request, _conn} =
+               build_conn(:post, "/api/events", params)
+               |> put_req_header("user-agent", "Mozilla")
+               |> Request.build()
 
-    refute request.interactive?
+      assert request.interactive?
+    end
+  end
+
+  for event_name <- Plausible.Event.SystemEvents.events_with_engagement_props() do
+    test "ignores interactive: false parameter for #{event_name}" do
+      params = %{
+        name: unquote(event_name),
+        domain: "dummy.site",
+        url: "http://dummy.site/index.html",
+        sd: 10,
+        e: 100,
+        interactive: false
+      }
+
+      assert {:ok, request, _conn} =
+               build_conn(:post, "/api/events", params)
+               |> put_req_header("user-agent", "Mozilla")
+               |> Request.build()
+
+      assert request.interactive?
+    end
+  end
+
+  for param_key <- [:interactive, :i] do
+    test "allows marking user-defined custom events as non-interactive with payload #{Atom.to_string(param_key)}: false" do
+      params =
+        %{
+          name: "ping",
+          domain: "dummy.site",
+          url: "http://dummy.site/index.html"
+        }
+        |> Map.put(unquote(param_key), false)
+
+      assert {:ok, request, _conn} =
+               build_conn(:post, "/api/events", params)
+               |> put_req_header("user-agent", "Mozilla")
+               |> Request.build()
+
+      refute request.interactive?
+    end
   end
 
   @tag :ee_only

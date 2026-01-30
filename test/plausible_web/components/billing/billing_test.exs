@@ -91,6 +91,24 @@ defmodule PlausibleWeb.Components.BillingTest do
 
       assert text_of_element(html, "#lock-notice") =~ "ask your team owner"
     end
+
+    test "renders upgrade cta linking to the upgrade page when user is not a team member (e.g. super-admin)",
+         %{
+           user: user
+         } do
+      team = user |> subscribe_to_growth_plan() |> team_of()
+      other_user = new_user()
+
+      html =
+        %{
+          current_user: other_user,
+          current_team: team,
+          locked?: true
+        }
+        |> render_feature_gate()
+
+      assert text_of_element(html, "#lock-notice") =~ "upgrade your subscription"
+    end
   end
 
   defp render_feature_gate(assigns) do
