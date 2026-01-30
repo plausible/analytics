@@ -73,6 +73,53 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == [%{"label" => "Signup", "value" => "Signup"}]
     end
 
+    @tag :ee_only
+    test "excludes goals with custom props when Props feature is unavailable", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      user
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
+      |> Plausible.Repo.update!()
+
+      {:ok, _goal_with_props} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt"}
+        })
+
+      {:ok, _goal_without_props} =
+        Plausible.Goals.create(site, %{"event_name" => "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=day&q=")
+
+      assert json_response(conn, 200) == [%{"label" => "Signup", "value" => "Signup"}]
+    end
+
+    @tag :ee_only
+    test "includes goals with custom props when Props feature is available", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, _goal_with_props} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt"}
+        })
+
+      {:ok, _goal_without_props} =
+        Plausible.Goals.create(site, %{"event_name" => "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=day&q=")
+
+      suggestions = json_response(conn, 200)
+      assert length(suggestions) == 2
+      assert %{"label" => "Purchase", "value" => "Purchase"} in suggestions
+      assert %{"label" => "Signup", "value" => "Signup"} in suggestions
+    end
+
     test "returns suggestions for sources", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),

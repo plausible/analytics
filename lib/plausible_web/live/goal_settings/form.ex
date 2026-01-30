@@ -15,6 +15,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     has_access_to_revenue_goals? =
       Plausible.Billing.Feature.RevenueGoals.check_availability(site.team) == :ok
 
+    has_access_to_props? =
+      Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
+
     form =
       (assigns.goal || %Plausible.Goal{})
       |> Plausible.Goal.changeset()
@@ -42,6 +45,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           Map.get(socket.assigns, :show_autoconfigure_modal?, false)
       end
 
+    use_custom_props =
+      if Map.get(socket.assigns, :goal) == assigns.goal do
+        Map.get(socket.assigns, :use_custom_props, Plausible.Goal.has_custom_props?(assigns.goal))
+      else
+        Plausible.Goal.has_custom_props?(assigns.goal)
+      end
+
     socket =
       socket
       |> assign(
@@ -56,12 +66,14 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         form_type: form_type,
         site: site,
         has_access_to_revenue_goals?: has_access_to_revenue_goals?,
+        has_access_to_props?: has_access_to_props?,
         existing_goals: assigns.existing_goals,
         on_save_goal: assigns.on_save_goal,
         on_autoconfigure: assigns.on_autoconfigure,
         goal: assigns.goal,
         goal_type: assigns[:goal_type],
-        show_autoconfigure_modal?: show_autoconfigure_modal?
+        show_autoconfigure_modal?: show_autoconfigure_modal?,
+        use_custom_props: use_custom_props
       )
 
     {:ok, socket}
@@ -96,6 +108,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         existing_goals={@existing_goals}
         goal_options={@event_name_options}
         has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+        has_access_to_props?={@has_access_to_props?}
+        myself={@myself}
+        use_custom_props={@use_custom_props}
       />
       <.pageview_fields
         :if={@form_type == "pageviews"}
@@ -103,6 +118,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         goal={@goal}
         suffix={@context_unique_id}
         site={@site}
+        current_user={@current_user}
+        site_team={@site_team}
+        has_access_to_props?={@has_access_to_props?}
+        myself={@myself}
+        use_custom_props={@use_custom_props}
       />
       <.scroll_fields
         :if={@form_type == "scroll"}
@@ -110,6 +130,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         goal={@goal}
         suffix={@context_unique_id}
         site={@site}
+        current_user={@current_user}
+        site_team={@site_team}
+        has_access_to_props?={@has_access_to_props?}
+        myself={@myself}
+        use_custom_props={@use_custom_props}
       />
 
       <.button type="submit" class="w-full">
@@ -171,18 +196,31 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         existing_goals={@existing_goals}
         goal_options={@event_name_options}
         has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+        has_access_to_props?={@has_access_to_props?}
+        myself={@myself}
+        use_custom_props={@use_custom_props}
       />
       <.pageview_fields
         :if={@form_type == "pageviews"}
         f={f}
         suffix={@context_unique_id}
         site={@site}
+        current_user={@current_user}
+        site_team={@site_team}
+        has_access_to_props?={@has_access_to_props?}
+        myself={@myself}
+        use_custom_props={@use_custom_props}
       />
       <.scroll_fields
         :if={@form_type == "scroll"}
         f={f}
         suffix={@context_unique_id}
         site={@site}
+        current_user={@current_user}
+        site_team={@site_team}
+        has_access_to_props?={@has_access_to_props?}
+        myself={@myself}
+        use_custom_props={@use_custom_props}
       />
 
       <.button type="submit" class="w-full">
@@ -196,11 +234,20 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:site, Plausible.Site)
   attr(:suffix, :string)
   attr(:goal, Plausible.Goal, default: nil)
+  attr(:myself, :any)
+  attr(:current_user, Plausible.Auth.User)
+  attr(:site_team, Plausible.Teams.Team)
+  attr(:has_access_to_props?, :boolean)
+  attr(:use_custom_props, :boolean, default: false)
   attr(:rest, :global)
 
   def pageview_fields(assigns) do
     ~H"""
-    <div id="pageviews-form" class="py-2" {@rest}>
+    <div
+      id="pageviews-form"
+      class="py-2"
+      {@rest}
+    >
       <div class="text-sm pb-6 text-gray-600 dark:text-gray-400 text-pretty">
         Pageview goals allow you to measure how many people visit a specific page or section of your site.
         <.styled_link
@@ -240,6 +287,18 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
       />
+
+      <.custom_property_section
+        f={@f}
+        suffix={@suffix}
+        goal={@goal}
+        myself={@myself}
+        site={@site}
+        current_user={@current_user}
+        site_team={@site_team}
+        has_access_to_props?={@has_access_to_props?}
+        use_custom_props={@use_custom_props}
+      />
     </div>
     """
   end
@@ -248,6 +307,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:site, Plausible.Site)
   attr(:suffix, :string)
   attr(:goal, Plausible.Goal, default: nil)
+  attr(:myself, :any)
+  attr(:current_user, Plausible.Auth.User)
+  attr(:site_team, Plausible.Teams.Team)
+  attr(:has_access_to_props?, :boolean)
+  attr(:use_custom_props, :boolean, default: false)
   attr(:rest, :global)
 
   def scroll_fields(assigns) do
@@ -336,6 +400,18 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
       />
+
+      <.custom_property_section
+        f={@f}
+        suffix={@suffix}
+        goal={@goal}
+        myself={@myself}
+        site={@site}
+        current_user={@current_user}
+        site_team={@site_team}
+        has_access_to_props?={@has_access_to_props?}
+        use_custom_props={@use_custom_props}
+      />
     </div>
     """
   end
@@ -349,12 +425,19 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:goal_options, :list)
   attr(:goal, Plausible.Goal, default: nil)
   attr(:has_access_to_revenue_goals?, :boolean)
+  attr(:has_access_to_props?, :boolean)
+  attr(:myself, :any)
+  attr(:use_custom_props, :boolean, default: false)
 
   attr(:rest, :global)
 
   def custom_event_fields(assigns) do
     ~H"""
-    <div id="custom-events-form" class="py-2" {@rest}>
+    <div
+      id="custom-events-form"
+      class="py-2"
+      {@rest}
+    >
       <div id="event-fields">
         <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
           Custom Events are not tracked by default - you have to configure them on your site to be sent to Plausible. See examples and learn more in <.styled_link
@@ -401,6 +484,18 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           />
         </div>
 
+        <.custom_property_section
+          f={@f}
+          suffix={@suffix}
+          goal={@goal}
+          myself={@myself}
+          site={@site}
+          current_user={@current_user}
+          site_team={@site_team}
+          has_access_to_props?={@has_access_to_props?}
+          use_custom_props={@use_custom_props}
+        />
+
         <%= if ee?() and Plausible.Sites.regular?(@site) and not editing_non_revenue_goal?(assigns) do %>
           <.revenue_goal_settings
             f={@f}
@@ -419,6 +514,68 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     """
   end
 
+  attr(:suffix, :string, required: true)
+  attr(:myself, :any, required: true)
+  attr(:f, Phoenix.HTML.Form, required: true)
+  attr(:goal, Plausible.Goal, default: nil)
+  attr(:site, Plausible.Site, required: true)
+  attr(:current_user, Plausible.Auth.User, required: true)
+  attr(:site_team, Plausible.Teams.Team, required: true)
+  attr(:has_access_to_props?, :boolean, required: true)
+  attr(:use_custom_props, :boolean, default: false)
+
+  def custom_property_section(assigns) do
+    ~H"""
+    <div class="mt-6 mb-2 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
+          {if @use_custom_props, do: "Custom properties", else: "Add custom property"}
+        </span>
+        <.link
+          :if={not @has_access_to_props? and not @use_custom_props}
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          class="inline-block"
+        >
+          <.pill color={:indigo}>
+            Business
+          </.pill>
+        </.link>
+      </div>
+      <.tooltip enabled?={not @has_access_to_props?} centered?={true}>
+        <:tooltip_content>
+          To get access to this feature,
+          <PlausibleWeb.Components.Billing.upgrade_call_to_action
+            current_user={@current_user}
+            current_team={@site_team}
+            link_class="!inline !text-indigo-400 hover:!text-indigo-300"
+          />
+        </:tooltip_content>
+        <.toggle_switch
+          id="add-custom-property"
+          id_suffix={@suffix}
+          checked={@use_custom_props}
+          phx-click="toggle-custom-props"
+          phx-target={@myself}
+          disabled={not @has_access_to_props?}
+        />
+      </.tooltip>
+    </div>
+
+    <.error :for={msg <- Enum.map(@f[:custom_props].errors, &translate_error/1)}>
+      {msg}
+    </.error>
+
+    <div :if={@use_custom_props} class="space-y-3">
+      <.live_component
+        id={"property-pairs-#{@suffix}"}
+        module={PlausibleWeb.Live.GoalSettings.PropertyPairs}
+        site={@site}
+        goal={@goal}
+      />
+    </div>
+    """
+  end
+
   def revenue_goal_settings(assigns) do
     js_data =
       Jason.encode!(%{
@@ -431,7 +588,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div x-data={@js_data} data-test-id="revenue-goal-settings">
       <%= if is_nil(@goal) do %>
-        <div class="mt-6 mb-3">
+        <div class="mt-6 mb-2">
           <.revenue_toggle {assigns} />
         </div>
       <% else %>
@@ -443,7 +600,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </label>
       <% end %>
       <div class="mb-2" x-show="active" id={"revenue-input-#{@suffix}"}>
+        <.input :if={not is_nil(@goal)} type="text" field={@f[:currency]} disabled={true} mt?={false} />
         <.live_component
+          :if={is_nil(@goal)}
           id={"currency_input_#{@suffix}"}
           submit_name={@f[:currency].name}
           module={ComboBox}
@@ -466,7 +625,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def handle_event("save-goal", %{"goal" => goal_params}, %{assigns: %{goal: nil}} = socket) do
-    case Plausible.Goals.create(socket.assigns.site, goal_params) do
+    {:ok, transformed_params} =
+      goal_params
+      |> maybe_clear_custom_props(socket.assigns.use_custom_props)
+      |> transform_property_params()
+
+    case Plausible.Goals.create(socket.assigns.site, transformed_params) do
       {:ok, goal} ->
         socket =
           goal
@@ -485,7 +649,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         %{"goal" => goal_params},
         %{assigns: %{goal: %Plausible.Goal{} = goal}} = socket
       ) do
-    case Plausible.Goals.update(goal, goal_params) do
+    {:ok, transformed_params} =
+      goal_params
+      |> maybe_clear_custom_props(socket.assigns.use_custom_props)
+      |> transform_property_params()
+
+    case Plausible.Goals.update(goal, transformed_params) do
       {:ok, goal} ->
         socket = socket.assigns.on_save_goal.(goal, socket)
 
@@ -494,6 +663,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  def handle_event("toggle-custom-props", _params, socket) do
+    {:noreply, assign(socket, use_custom_props: !socket.assigns.use_custom_props)}
   end
 
   def handle_event("autoconfigure", _params, socket) do
@@ -542,34 +715,38 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   defp revenue_toggle(assigns) do
     ~H"""
-    <.tooltip enabled?={not @has_access_to_revenue_goals?}>
-      <:tooltip_content>
-        <div class="text-xs">
-          To get access to this feature
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
+          Enable revenue tracking
+        </span>
+        <.link
+          :if={not @has_access_to_revenue_goals?}
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          class="inline-block"
+        >
+          <.pill color={:indigo}>
+            Business
+          </.pill>
+        </.link>
+      </div>
+      <.tooltip enabled?={not @has_access_to_revenue_goals?} centered?={true}>
+        <:tooltip_content>
+          To get access to this feature,
           <PlausibleWeb.Components.Billing.upgrade_call_to_action
             current_user={@current_user}
             current_team={@site_team}
-          />.
-        </div>
-      </:tooltip_content>
-      <div class="flex itemx-center mb-3">
+            link_class="!inline !text-indigo-400 hover:!text-indigo-300"
+          />
+        </:tooltip_content>
         <PlausibleWeb.Components.Generic.toggle_switch
           id="enable-revenue-tracking"
           id_suffix={@suffix}
           js_active_var="active"
           disabled={not @has_access_to_revenue_goals?}
         />
-        <span class={[
-          "ml-3 text-sm/6 font-medium",
-          if(@has_access_to_revenue_goals?,
-            do: "text-gray-900 dark:text-gray-100",
-            else: "text-gray-500 dark:text-gray-400"
-          )
-        ]}>
-          Enable revenue tracking
-        </span>
-      </div>
-    </.tooltip>
+      </.tooltip>
+    </div>
     """
   end
 
@@ -581,5 +758,32 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     end
   else
     defp editing_non_revenue_goal?(_assigns), do: false
+  end
+
+  defp maybe_clear_custom_props(goal_params, true = _use_custom_props), do: goal_params
+
+  defp maybe_clear_custom_props(goal_params, false = _use_custom_props) do
+    Map.put(goal_params, "custom_props", %{})
+  end
+
+  defp transform_property_params(
+         %{"custom_props" => %{"keys" => prop_keys, "values" => prop_values}} = goal_params
+       )
+       when is_list(prop_keys) and is_list(prop_values) do
+    transformed =
+      goal_params
+      |> Map.put(
+        "custom_props",
+        prop_keys
+        |> Enum.zip(prop_values)
+        |> Enum.reject(fn {k, v} -> String.trim(k) == "" and String.trim(v) == "" end)
+        |> Enum.into(%{})
+      )
+
+    {:ok, transformed}
+  end
+
+  defp transform_property_params(goal_params) do
+    {:ok, goal_params}
   end
 end
