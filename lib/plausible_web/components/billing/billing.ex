@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Components.Billing do
 
   def monthly_quota_box(assigns) do
     is_upgrade =
-      assigns[:subscription] == nil or
+      is_nil(assigns[:subscription]) or
         assigns[:subscription].status == Subscription.Status.deleted()
 
     assigns = assign(assigns, :is_upgrade, is_upgrade)
