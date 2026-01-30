@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Dogfood do
 
           "pa-invalid-script-id"
 
-        env in ["test", "ce_test"] ->
+        env in ["test", "ce_test", "e2e_test"] ->
           ""
       end
 

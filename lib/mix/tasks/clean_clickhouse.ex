@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.CleanClickhouse do
+  @moduledoc false
+
   use Mix.Task
 
   alias Plausible.IngestRepo
