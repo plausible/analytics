@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed issue with all non-interactive events being counted as interactive
+
 ## v3.2.0 - 2026-01-16
 
 ### Added
