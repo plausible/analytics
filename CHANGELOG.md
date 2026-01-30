@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed issue with all non-interactive events being counted as interactive
+
 ## v3.2.0 - 2026-01-16
 
 ### Added
@@ -36,7 +38,6 @@ All notable changes to this project will be documented in this file.
 - Fixed issue with site guests in Editor role and team members in Editor role not being able to change the domain of site
 - Fixed direct dashboard links that use legacy dashboard filters containing URL encoded special characters (e.g. character `ê` in the legacy filter `?page=%C3%AA`)
 - Fix bug with tracker script config cache that made requests for certain cached scripts give error 500
-- Fix issue with all non-interactive events being counted as interactive
 
 ## v3.1.0 - 2025-11-13
 
