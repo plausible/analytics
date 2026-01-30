@@ -15,6 +15,12 @@
   "license": "MIT",
   "homepage": "https://plausible.io",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./plausible.js",
+      "types": "./plausible.d.ts"
+    }
+  },
   "module": "./plausible.js",
   "types": "./plausible.d.ts"
 }
