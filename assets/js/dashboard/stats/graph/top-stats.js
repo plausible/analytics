@@ -46,7 +46,7 @@ function constructTopStatsQuery(query) {
     metrics: chooseMetrics(query)
   }
 
-  if (!isComparisonEnabled(query.comparison)) {
+  if (!isComparisonEnabled(query.comparison) && !isRealTimeDashboard(query)) {
     q.comparison = 'previous_period'
   }
 
@@ -111,8 +111,8 @@ function formatTopStatsData(topStatsResponse, currentVisitorsResponse) {
     stat.value = results[0].metrics[i]
     stat.name = meta.metric_labels[i]
     stat.graphable = true
-    stat.change = results[0].comparison.change[i]
-    stat.comparisonValue = results[0].comparison.metrics[i]
+    stat.change = results[0].comparison?.change[i]
+    stat.comparisonValue = results[0].comparison?.metrics[i]
 
     topStats.push(stat)
   }
