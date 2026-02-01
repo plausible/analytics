@@ -32,10 +32,8 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns.site
 
     with {:ok, %ParsedQueryParams{} = params} <- Dashboard.QueryParser.parse(params),
-         params = ParsedQueryParams.set_include(params, :dashboard_metric_labels, true),
-         {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)),
-         results = Plausible.Stats.query(site, query) do
-      json(conn, results)
+         {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)) do
+      json(conn, Plausible.Stats.query(site, query))
     else
       _ -> bad_request(conn, "query error")
     end

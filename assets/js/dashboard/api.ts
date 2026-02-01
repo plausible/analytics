@@ -1,5 +1,6 @@
 import { DashboardState } from './dashboard-state'
 import { PlausibleSite } from './site-context'
+import { StatsQuery } from './stats-query'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
 import * as url from './util/url'
@@ -96,28 +97,19 @@ function getSharedLinkSearchParams(): Record<string, string> {
   return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
 }
 
-export async function stats(
-  site: PlausibleSite,
-  dashboardState: DashboardState
-) {
-  const adjustedQuery = adjustQuery(dashboardState)
-
+export async function stats(site: PlausibleSite, statsQuery: StatsQuery) {
   const response = await fetch(url.apiPath(site, '/query'), {
     method: 'POST',
     signal: abortController.signal,
     headers: {
+      ...getHeaders(),
       'Content-Type': 'application/json',
       Accept: 'application/json'
     },
-    body: JSON.stringify(adjustedQuery)
+    body: JSON.stringify(statsQuery)
   })
 
   return handleApiResponse(response)
-}
-
-function adjustQuery(dashboardState: DashboardState) {
-  const { resolvedFilters, labels, ...q } = dashboardState
-  return { ...q, date: formatISO(dashboardState.date) }
 }
 
 export async function get(

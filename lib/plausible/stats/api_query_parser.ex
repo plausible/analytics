@@ -172,12 +172,12 @@ defmodule Plausible.Stats.ApiQueryParser do
     {:ok, []}
   end
 
-  defp parse_input_date_range("day"), do: {:ok, :day}
-  defp parse_input_date_range("month"), do: {:ok, :month}
-  defp parse_input_date_range("year"), do: {:ok, :year}
-  defp parse_input_date_range("all"), do: {:ok, :all}
+  def parse_input_date_range("day"), do: {:ok, :day}
+  def parse_input_date_range("month"), do: {:ok, :month}
+  def parse_input_date_range("year"), do: {:ok, :year}
+  def parse_input_date_range("all"), do: {:ok, :all}
 
-  defp parse_input_date_range(shorthand) when is_binary(shorthand) do
+  def parse_input_date_range(shorthand) when is_binary(shorthand) do
     case Integer.parse(shorthand) do
       {n, "d"} when n > 0 and n <= 5_000 ->
         {:ok, {:last_n_days, n}}
@@ -191,18 +191,18 @@ defmodule Plausible.Stats.ApiQueryParser do
     end
   end
 
-  defp parse_input_date_range([from, to]) when is_binary(from) and is_binary(to) do
+  def parse_input_date_range([from, to]) when is_binary(from) and is_binary(to) do
     case parse_date_strings(from, to) do
       {:ok, dates} -> {:ok, dates}
       {:error, _} -> parse_timestamp_strings(from, to)
     end
   end
 
-  defp parse_input_date_range(unknown) do
+  def parse_input_date_range(unknown) do
     {:error, %QueryError{code: :invalid_date_range, message: "Invalid date_range #{i(unknown)}"}}
   end
 
-  defp parse_date_strings(from, to) do
+  def parse_date_strings(from, to) do
     with {:ok, from_date} <- Date.from_iso8601(from),
          {:ok, to_date} <- Date.from_iso8601(to) do
       {:ok, {:date_range, from_date, to_date}}

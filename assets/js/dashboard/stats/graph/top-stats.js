@@ -19,6 +19,7 @@ import {
   isRealTimeDashboard
 } from '../../util/filters'
 import { isComparisonEnabled } from '../../dashboard-time-periods'
+import { createStatsQuery } from '../../stats-query'
 
 export async function fetchTopStats(site, dashboardState) {
   const currentVisitorsQuery = constructCurrentVisitorsQuery(dashboardState)
@@ -34,35 +35,33 @@ export async function fetchTopStats(site, dashboardState) {
 
 function constructCurrentVisitorsQuery(dashboardState) {
   if (isRealTimeDashboard(dashboardState)) {
-    return {
-      ...dashboardState,
-      metrics: ['visitors'],
-      filters: [],
-      dimensions: []
-    }
+    return createStatsQuery(
+      { ...dashboardState, filters: [] },
+      { metrics: ['visitors'] }
+    )
   }
 }
 
 function constructTopStatsQuery(dashboardState) {
-  const q = {
-    ...dashboardState,
-    dimensions: [],
-    include_imports_meta: true,
-    metrics: chooseMetrics(dashboardState)
+  const reportParams = {
+    metrics: chooseMetrics(dashboardState),
+    include: { imports_meta: true }
   }
+
+  let adjustedDashboardState = { ...dashboardState }
 
   if (
     !isComparisonEnabled(dashboardState.comparison) &&
     !isRealTimeDashboard(dashboardState)
   ) {
-    q.comparison = 'previous_period'
+    adjustedDashboardState.comparison = 'previous_period'
   }
 
   if (isRealTimeDashboard(dashboardState)) {
-    q.period = 'realtime_30m'
+    adjustedDashboardState.period = 'realtime_30m'
   }
 
-  return q
+  return createStatsQuery(adjustedDashboardState, reportParams)
 }
 
 function chooseMetrics(dashboardState) {

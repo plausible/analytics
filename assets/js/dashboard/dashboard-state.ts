@@ -50,9 +50,6 @@ export type DashboardState = {
   resolvedFilters: Filter[]
   labels: FilterClauseLabels
   with_imported: boolean
-  include_imports_meta: boolean | null
-  dimensions: string[] | null
-  metrics: string[] | null
 }
 
 export const dashboardStateDefaultValue: DashboardState = {
@@ -67,10 +64,7 @@ export const dashboardStateDefaultValue: DashboardState = {
   filters: [],
   resolvedFilters: [],
   labels: {},
-  with_imported: true,
-  include_imports_meta: null,
-  dimensions: null,
-  metrics: null
+  with_imported: true
 }
 
 export type BreakdownResultMeta = {
