@@ -2,14 +2,15 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../../util/filters'
-import { revenueAvailable } from '../../../query'
+import { revenueAvailable } from '../../../dashboard-state'
 import * as metrics from '../../reports/metrics'
 
-export default function chooseMetrics(query, site) {
+export default function chooseMetrics(dashboardState, site) {
   /*global BUILD_EXTRA*/
-  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
+  const showRevenueMetrics =
+    BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
-  if (hasConversionGoalFilter(query)) {
+  if (hasConversionGoalFilter(dashboardState)) {
     return [
       metrics.createTotalVisitors(),
       metrics.createVisitors({
@@ -22,7 +23,10 @@ export default function chooseMetrics(query, site) {
     ].filter((metric) => !!metric)
   }
 
-  if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
+  if (
+    isRealTimeDashboard(dashboardState) &&
+    !hasConversionGoalFilter(dashboardState)
+  ) {
     return [
       metrics.createVisitors({
         renderLabel: (_query) => 'Current visitors',

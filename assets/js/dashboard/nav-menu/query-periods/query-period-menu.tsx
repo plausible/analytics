@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react'
 import classNames from 'classnames'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import {
   isModifierPressed,
@@ -16,11 +16,11 @@ import {
   getCompareLinkItem,
   getDatePeriodGroups,
   LinkItem,
-  QueryPeriod,
+  DashboardPeriod,
   getCurrentPeriodDisplayName,
   getSearchToApplyCustomDates,
   isComparisonForbidden
-} from '../../query-time-periods'
+} from '../../dashboard-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { Popover, Transition } from '@headlessui/react'
@@ -84,7 +84,7 @@ export const QueryPeriodMenu = ({
   calendarButtonRef
 }: PopoverMenuProps) => {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const toggleCalendar = () => {
     if (typeof calendarButtonRef.current?.click === 'function') {
@@ -97,7 +97,7 @@ export const QueryPeriodMenu = ({
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
         <span className={popover.toggleButton.classNames.truncatedText}>
-          {getCurrentPeriodDisplayName({ query, site })}
+          {getCurrentPeriodDisplayName({ dashboardState, site })}
         </span>
         <DateMenuChevron />
       </Popover.Button>
@@ -117,12 +117,12 @@ const QueryPeriodMenuInner = ({
   toggleCalendar: () => void
 }) => {
   const site = useSiteContext()
-  const { query, expandedSegment } = useQueryContext()
+  const { dashboardState, expandedSegment } = useDashboardStateContext()
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({
       site,
-      query,
+      dashboardState,
       onEvent: closeDropdown
     })
     return getDatePeriodGroups({
@@ -133,19 +133,20 @@ const QueryPeriodMenuInner = ({
           ['Custom Range', 'C'],
           {
             search: (s) => s,
-            isActive: ({ query }) => query.period === QueryPeriod.custom,
+            isActive: ({ dashboardState }) =>
+              dashboardState.period === DashboardPeriod.custom,
             onEvent: toggleCalendar
           }
         ]
       ],
       extraGroups: isComparisonForbidden({
-        period: query.period,
+        period: dashboardState.period,
         segmentIsExpanded: !!expandedSegment
       })
         ? []
         : [[compareLink]]
     })
-  }, [site, query, closeDropdown, toggleCalendar, expandedSegment])
+  }, [site, dashboardState, closeDropdown, toggleCalendar, expandedSegment])
 
   return (
     <>
@@ -173,7 +174,7 @@ const QueryPeriodMenuInner = ({
                     return (
                       <AppNavigationLink
                         key={label}
-                        data-selected={isActive({ site, query })}
+                        data-selected={isActive({ site, dashboardState })}
                         className={linkClassName}
                         search={search}
                         onClick={onEvent && ((e) => onEvent(e))}
@@ -201,7 +202,7 @@ export const MainCalendar = ({
   calendarButtonRef
 }: PopoverMenuProps) => {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const navigate = useAppNavigate()
 
   return (
@@ -224,8 +225,8 @@ export const MainCalendar = ({
           minDate={site.statsBegin}
           maxDate={formatISO(nowForSite(site))}
           defaultDates={
-            query.from && query.to
-              ? [formatISO(query.from), formatISO(query.to)]
+            dashboardState.from && dashboardState.to
+              ? [formatISO(dashboardState.from), formatISO(dashboardState.to)]
               : undefined
           }
         />

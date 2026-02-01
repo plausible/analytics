@@ -11,7 +11,7 @@ import {
   hasConversionGoalFilter
 } from '../../util/filters'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { SourceFavicon } from './source-favicon'
 import {
@@ -54,10 +54,10 @@ const UTM_TAGS = {
 }
 
 function AllSources({ afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   function fetchData() {
-    return api.get(url.apiPath(site, '/sources'), query, { limit: 9 })
+    return api.get(url.apiPath(site, '/sources'), dashboardState, { limit: 9 })
   }
 
   function getFilterInfo(listItem) {
@@ -74,9 +74,9 @@ function AllSources({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -94,11 +94,11 @@ function AllSources({ afterFetchData }) {
 }
 
 function Channels({ onClick, afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
   function fetchData() {
-    return api.get(url.apiPath(site, '/channels'), query, { limit: 9 })
+    return api.get(url.apiPath(site, '/channels'), dashboardState, { limit: 9 })
   }
 
   function getFilterInfo(listItem) {
@@ -111,9 +111,9 @@ function Channels({ onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -131,12 +131,14 @@ function Channels({ onClick, afterFetchData }) {
 }
 
 function UTMSources({ tab, afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   const utmTag = UTM_TAGS[tab]
 
   function fetchData() {
-    return api.get(url.apiPath(site, utmTag.endpoint), query, { limit: 9 })
+    return api.get(url.apiPath(site, utmTag.endpoint), dashboardState, {
+      limit: 9
+    })
   }
 
   function getFilterInfo(listItem) {
@@ -149,9 +151,9 @@ function UTMSources({ tab, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -169,19 +171,19 @@ function UTMSources({ tab, afterFetchData }) {
 
 export default function SourceList() {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const tabKey = 'sourceTab__' + site.domain
   const storedTab = storage.getItem(tabKey)
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
   const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
-  const previousQuery = usePrevious(query)
+  const previousQuery = usePrevious(dashboardState)
 
   useEffect(() => {
     setLoading(true)
     setMoreLinkState(MoreLinkState.LOADING)
-  }, [query, currentTab])
+  }, [dashboardState, currentTab])
 
   useEffect(() => {
     const isRemovingFilter = (filterName) => {
@@ -189,7 +191,7 @@ export default function SourceList() {
 
       return (
         getFiltersByKeyPrefix(previousQuery, filterName).length > 0 &&
-        getFiltersByKeyPrefix(query, filterName).length == 0
+        getFiltersByKeyPrefix(dashboardState, filterName).length == 0
       )
     }
 
@@ -197,7 +199,7 @@ export default function SourceList() {
       setTab('channels')()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, currentTab])
+  }, [dashboardState, currentTab])
 
   function setTab(tab) {
     return () => {

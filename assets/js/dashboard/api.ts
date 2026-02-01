@@ -1,4 +1,4 @@
-import { DashboardQuery } from './query'
+import { DashboardState } from './dashboard-state'
 import { PlausibleSite } from './site-context'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
@@ -35,38 +35,38 @@ export function cancelAll() {
 }
 
 export function queryToSearchParams(
-  query: DashboardQuery,
+  dashboardState: DashboardState,
   extraQuery: unknown[] = []
 ): string {
   const queryObj: Record<string, string> = {}
-  if (query.period) {
-    queryObj.period = query.period
+  if (dashboardState.period) {
+    queryObj.period = dashboardState.period
   }
-  if (query.date) {
-    queryObj.date = formatISO(query.date)
+  if (dashboardState.date) {
+    queryObj.date = formatISO(dashboardState.date)
   }
-  if (query.from) {
-    queryObj.from = formatISO(query.from)
+  if (dashboardState.from) {
+    queryObj.from = formatISO(dashboardState.from)
   }
-  if (query.to) {
-    queryObj.to = formatISO(query.to)
+  if (dashboardState.to) {
+    queryObj.to = formatISO(dashboardState.to)
   }
-  if (query.filters) {
-    queryObj.filters = serializeApiFilters(query.filters)
+  if (dashboardState.filters) {
+    queryObj.filters = serializeApiFilters(dashboardState.filters)
   }
-  if (query.with_imported) {
-    queryObj.with_imported = String(query.with_imported)
+  if (dashboardState.with_imported) {
+    queryObj.with_imported = String(dashboardState.with_imported)
   }
 
-  if (query.comparison) {
-    queryObj.comparison = query.comparison
-    queryObj.compare_from = query.compare_from
-      ? formatISO(query.compare_from)
+  if (dashboardState.comparison) {
+    queryObj.comparison = dashboardState.comparison
+    queryObj.compare_from = dashboardState.compare_from
+      ? formatISO(dashboardState.compare_from)
       : undefined
-    queryObj.compare_to = query.compare_to
-      ? formatISO(query.compare_to)
+    queryObj.compare_to = dashboardState.compare_to
+      ? formatISO(dashboardState.compare_to)
       : undefined
-    queryObj.match_day_of_week = String(query.match_day_of_week)
+    queryObj.match_day_of_week = String(dashboardState.match_day_of_week)
   }
 
   const sharedLinkParams = getSharedLinkSearchParams()
@@ -96,8 +96,11 @@ function getSharedLinkSearchParams(): Record<string, string> {
   return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
 }
 
-export async function stats(site: PlausibleSite, query: DashboardQuery) {
-  const adjustedQuery = adjustQuery(query)
+export async function stats(
+  site: PlausibleSite,
+  dashboardState: DashboardState
+) {
+  const adjustedQuery = adjustQuery(dashboardState)
 
   const response = await fetch(url.apiPath(site, '/query'), {
     method: 'POST',
@@ -112,18 +115,18 @@ export async function stats(site: PlausibleSite, query: DashboardQuery) {
   return handleApiResponse(response)
 }
 
-function adjustQuery(query: DashboardQuery) {
-  const { resolvedFilters, labels, ...q } = query
-  return { ...q, date: formatISO(query.date) }
+function adjustQuery(dashboardState: DashboardState) {
+  const { resolvedFilters, labels, ...q } = dashboardState
+  return { ...q, date: formatISO(dashboardState.date) }
 }
 
 export async function get(
   url: string,
-  query?: DashboardQuery,
+  dashboardState?: DashboardState,
   ...extraQueryParams: unknown[]
 ) {
-  const queryString = query
-    ? queryToSearchParams(query, [...extraQueryParams])
+  const queryString = dashboardState
+    ? queryToSearchParams(dashboardState, [...extraQueryParams])
     : serializeUrlParams(getSharedLinkSearchParams())
 
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {

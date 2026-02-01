@@ -78,7 +78,7 @@ test.each([
   [{ period: 'month' }, 'Month to Date'],
   [{ period: 'year' }, 'Year to Date']
 ])(
-  'the query period from search %p is respected and stored',
+  'the dashboardState period from search %p is respected and stored',
   async (searchRecord, buttonText) => {
     const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
 
@@ -104,7 +104,7 @@ test.each([
   ],
   [{ period: 'realtime' }, 'Realtime']
 ])(
-  'the query period from search %p is respected but not stored',
+  'the dashboardState period from search %p is respected but not stored',
   async (searchRecord, buttonText) => {
     const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
 
@@ -126,7 +126,7 @@ test.each([
   ['all', '7d', 'Last 7 days'],
   ['30d', 'month', 'Month to Date']
 ])(
-  'if the stored period is %p but query period is %p, query is respected and the stored period is overwritten',
+  'if the stored period is %p but dashboardState period is %p, dashboardState is respected and the stored period is overwritten',
   async (storedPeriod, queryPeriod, buttonText) => {
     localStorage.setItem(periodStorageKey, storedPeriod)
     const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch({ period: queryPeriod })}`
@@ -149,7 +149,7 @@ test.each([
   }
 )
 
-test('going back resets the stored query period to previous value', async () => {
+test('going back resets the stored dashboardState period to previous value', async () => {
   const BrowserBackButton = () => {
     const navigate = useNavigate()
     return (

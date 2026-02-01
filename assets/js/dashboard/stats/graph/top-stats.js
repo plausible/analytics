@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import * as api from '../../api'
 import { formatDateRange } from '../../util/date'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
 import { ChangeArrow } from '../reports/change-arrow'
@@ -18,11 +18,11 @@ import {
   hasPageFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { isComparisonEnabled } from '../../query-time-periods'
+import { isComparisonEnabled } from '../../dashboard-time-periods'
 
-export async function fetchTopStats(site, query) {
-  const currentVisitorsQuery = constructCurrentVisitorsQuery(query)
-  const topStatsQuery = constructTopStatsQuery(query)
+export async function fetchTopStats(site, dashboardState) {
+  const currentVisitorsQuery = constructCurrentVisitorsQuery(dashboardState)
+  const topStatsQuery = constructTopStatsQuery(dashboardState)
 
   const currentVisitorsResponse = currentVisitorsQuery
     ? await api.stats(site, currentVisitorsQuery)
@@ -32,44 +32,55 @@ export async function fetchTopStats(site, query) {
   return formatTopStatsData(topStatsResponse, currentVisitorsResponse)
 }
 
-function constructCurrentVisitorsQuery(query) {
-  if (isRealTimeDashboard(query)) {
-    return { ...query, metrics: ['visitors'], filters: [], dimensions: [] }
+function constructCurrentVisitorsQuery(dashboardState) {
+  if (isRealTimeDashboard(dashboardState)) {
+    return {
+      ...dashboardState,
+      metrics: ['visitors'],
+      filters: [],
+      dimensions: []
+    }
   }
 }
 
-function constructTopStatsQuery(query) {
+function constructTopStatsQuery(dashboardState) {
   const q = {
-    ...query,
+    ...dashboardState,
     dimensions: [],
     include_imports_meta: true,
-    metrics: chooseMetrics(query)
+    metrics: chooseMetrics(dashboardState)
   }
 
-  if (!isComparisonEnabled(query.comparison) && !isRealTimeDashboard(query)) {
+  if (
+    !isComparisonEnabled(dashboardState.comparison) &&
+    !isRealTimeDashboard(dashboardState)
+  ) {
     q.comparison = 'previous_period'
   }
 
-  if (isRealTimeDashboard(query)) {
+  if (isRealTimeDashboard(dashboardState)) {
     q.period = 'realtime_30m'
   }
 
   return q
 }
 
-function chooseMetrics(query) {
-  if (isRealTimeDashboard(query) && hasConversionGoalFilter(query)) {
+function chooseMetrics(dashboardState) {
+  if (
+    isRealTimeDashboard(dashboardState) &&
+    hasConversionGoalFilter(dashboardState)
+  ) {
     return ['visitors', 'events']
-  } else if (isRealTimeDashboard(query)) {
+  } else if (isRealTimeDashboard(dashboardState)) {
     return ['visitors', 'pageviews']
-  } else if (hasConversionGoalFilter(query)) {
+  } else if (hasConversionGoalFilter(dashboardState)) {
     return ['visitors', 'events', 'conversion_rate']
-  } else if (hasPageFilter(query) && query.with_imported) {
+  } else if (hasPageFilter(dashboardState) && dashboardState.with_imported) {
     // Note: Copied this condition over from the backend, but need to investigate why time_on_page
     // and bounce_rate cannot be queried with imported data. In any case, we should drop the metrics
     // on the backend, and simply request them here.
     return ['visitors', 'visits', 'pageviews', 'scroll_depth']
-  } else if (hasPageFilter(query)) {
+  } else if (hasPageFilter(dashboardState)) {
     return [
       'visitors',
       'visits',
@@ -140,12 +151,12 @@ function topStatNumberLong(metric, value) {
 }
 
 export function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
 
   const isComparison =
-    (query.comparison && data && data.comparingFrom !== null) || false
+    (dashboardState.comparison && data && data.comparingFrom !== null) || false
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
@@ -272,7 +283,7 @@ export function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
     return (
       <Tooltip
         key={stat.name}
-        info={tooltip(stat, query)}
+        info={tooltip(stat, dashboardState)}
         className={className}
         onClick={() => {
           maybeUpdateMetric(stat)
@@ -322,7 +333,7 @@ export function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
   const stats =
     data && data.topStats.filter((stat) => stat.value !== null).map(renderStat)
 
-  if (stats && query.period === 'realtime') {
+  if (stats && dashboardState.period === 'realtime') {
     stats.push(blinkingDot())
   }
 

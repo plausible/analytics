@@ -13,7 +13,7 @@ import { numberShortFormatter } from '../../util/number-formatter'
 import * as topojson from 'topojson-client'
 import { useQuery } from '@tanstack/react-query'
 import { useSiteContext } from '../../site-context'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import worldJson from 'visionscarto-world-atlas/world/110m.json'
 import { UIMode, useTheme } from '../../theme-context'
 import { apiPath } from '../../util/url'
@@ -42,7 +42,7 @@ const WorldMap = ({
   const navigate = useAppNavigate()
   const { mode } = useTheme()
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [tooltip, setTooltip] = useState<{
     x: number
@@ -51,22 +51,22 @@ const WorldMap = ({
   }>({ x: 0, y: 0, hoveredCountryAlpha3Code: null })
 
   const labels = (() => {
-    if (hasConversionGoalFilter(query)) {
+    if (hasConversionGoalFilter(dashboardState)) {
       return { singular: 'Conversion', plural: 'Conversions' }
     }
-    if (isRealTimeDashboard(query)) {
+    if (isRealTimeDashboard(dashboardState)) {
       return { singular: 'Current visitor', plural: 'Current visitors' }
     }
     return { singular: 'Visitor', plural: 'Visitors' }
   })()
 
   const { data, refetch, isFetching, isError } = useQuery({
-    queryKey: ['countries', 'map', query],
+    queryKey: ['countries', 'map', dashboardState],
     placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<{
       results: CountryData[]
     }> => {
-      return await api.get(apiPath(site, '/countries'), query, {
+      return await api.get(apiPath(site, '/countries'), dashboardState, {
         limit: 300
       })
     }
@@ -74,13 +74,13 @@ const WorldMap = ({
 
   useEffect(() => {
     const onTickRefetchData = () => {
-      if (query.period === 'realtime') {
+      if (dashboardState.period === 'realtime') {
         refetch()
       }
     }
     document.addEventListener('tick', onTickRefetchData)
     return () => document.removeEventListener('tick', onTickRefetchData)
-  }, [query.period, refetch])
+  }, [dashboardState.period, refetch])
 
   useEffect(() => {
     if (data) {
@@ -105,12 +105,12 @@ const WorldMap = ({
       const country = dataByCountryCode.get(d.properties.a3)
       const clickable = country && country.visitors
       if (clickable) {
-        const filters = replaceFilterByPrefix(query, 'country', [
+        const filters = replaceFilterByPrefix(dashboardState, 'country', [
           'is',
           'country',
           [country.code]
         ])
-        const labels = cleanLabels(filters, query.labels, 'country', {
+        const labels = cleanLabels(filters, dashboardState.labels, 'country', {
           [country.code]: country.name
         })
         onCountrySelect()
@@ -119,7 +119,7 @@ const WorldMap = ({
         })
       }
     },
-    [navigate, query, dataByCountryCode, onCountrySelect]
+    [navigate, dashboardState, dataByCountryCode, onCountrySelect]
   )
 
   useEffect(() => {

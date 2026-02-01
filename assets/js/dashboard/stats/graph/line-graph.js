@@ -1,6 +1,6 @@
 import React from 'react'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import Chart from 'chart.js/auto'
 import GraphTooltip from './graph-tooltip'
 import { buildDataSet, METRIC_LABELS, hasMultipleYears } from './graph-util'
@@ -33,7 +33,10 @@ class LineGraph extends React.Component {
   getGraphMetric() {
     let metric = this.props.graphData.metric
 
-    if (metric == 'visitors' && hasConversionGoalFilter(this.props.query)) {
+    if (
+      metric == 'visitors' &&
+      hasConversionGoalFilter(this.props.dashboardState)
+    ) {
       return 'conversions'
     } else {
       return metric
@@ -41,7 +44,7 @@ class LineGraph extends React.Component {
   }
 
   regenerateChart() {
-    const { graphData, query, theme } = this.props
+    const { graphData, dashboardState, theme } = this.props
     const metric = this.getGraphMetric()
     const graphEl = document.getElementById('main-graph-canvas')
     this.ctx = graphEl.getContext('2d')
@@ -68,7 +71,7 @@ class LineGraph extends React.Component {
             mode: 'index',
             intersect: false,
             position: 'average',
-            external: GraphTooltip(graphData, metric, query, theme)
+            external: GraphTooltip(graphData, metric, dashboardState, theme)
           }
         },
         responsive: true,
@@ -111,42 +114,45 @@ class LineGraph extends React.Component {
 
                 const shouldShowYear = hasMultipleYears(graphData)
 
-                if (graphData.interval === 'hour' && query.period !== 'day') {
+                if (
+                  graphData.interval === 'hour' &&
+                  dashboardState.period !== 'day'
+                ) {
                   const date = dateFormatter({
                     interval: 'day',
                     longForm: false,
-                    period: query.period,
+                    period: dashboardState.period,
                     shouldShowYear
                   })(this.getLabelForValue(val))
 
                   const hour = dateFormatter({
                     interval: graphData.interval,
                     longForm: false,
-                    period: query.period,
+                    period: dashboardState.period,
                     shouldShowYear
                   })(this.getLabelForValue(val))
 
                   // Returns a combination of date and hour. This is because
                   // small intervals like hour may return multiple days
-                  // depending on the query period.
+                  // depending on the dashboardState period.
                   return `${date}, ${hour}`
                 }
 
                 if (
                   graphData.interval === 'minute' &&
-                  query.period !== 'realtime'
+                  dashboardState.period !== 'realtime'
                 ) {
                   return dateFormatter({
                     interval: 'hour',
                     longForm: false,
-                    period: query.period
+                    period: dashboardState.period
                   })(this.getLabelForValue(val))
                 }
 
                 return dateFormatter({
                   interval: graphData.interval,
                   longForm: false,
-                  period: query.period,
+                  period: dashboardState.period,
                   shouldShowYear
                 })(this.getLabelForValue(val))
               },
@@ -273,10 +279,15 @@ class LineGraph extends React.Component {
 }
 
 export default function LineGraphWrapped(props) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const navigate = useAppNavigate()
   const theme = useTheme()
   return (
-    <LineGraph {...props} navigate={navigate} query={query} theme={theme} />
+    <LineGraph
+      {...props}
+      navigate={navigate}
+      dashboardState={dashboardState}
+      theme={theme}
+    />
   )
 }

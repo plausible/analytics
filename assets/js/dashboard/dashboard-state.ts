@@ -9,7 +9,7 @@ import {
 } from './util/date'
 import { FILTER_OPERATIONS, getFiltersByKeyPrefix } from './util/filters'
 import { PlausibleSite } from './site-context'
-import { ComparisonMode, QueryPeriod } from './query-time-periods'
+import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { AppNavigationTarget } from './navigation/use-app-navigate'
 import { Dayjs } from 'dayjs'
 
@@ -31,8 +31,8 @@ export type Filter = [FilterOperator, FilterKey, FilterClause[]]
  * */
 export type FilterClauseLabels = Record<string, string>
 
-export type DashboardQuery = {
-  period: QueryPeriod
+export type DashboardState = {
+  period: DashboardPeriod
   comparison: ComparisonMode | null
   match_day_of_week: boolean
   date: Dayjs | null
@@ -55,8 +55,8 @@ export type DashboardQuery = {
   metrics: string[] | null
 }
 
-export const queryDefaultValue: DashboardQuery = {
-  period: '28d' as QueryPeriod,
+export const dashboardStateDefaultValue: DashboardState = {
+  period: '28d' as DashboardPeriod,
   comparison: null,
   match_day_of_week: true,
   date: null,
@@ -80,10 +80,10 @@ export type BreakdownResultMeta = {
 }
 
 export function addFilter(
-  query: DashboardQuery,
+  dashboardState: DashboardState,
   filter: Filter
-): DashboardQuery {
-  return { ...query, filters: [...query.filters, filter] }
+): DashboardState {
+  return { ...dashboardState, filters: [...dashboardState.filters, filter] }
 }
 
 export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
@@ -96,13 +96,16 @@ export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
   })
 }
 
-// Returns a boolean indicating whether the given query includes a
+// Returns a boolean indicating whether the given dashboardState includes a
 // non-empty goal filterset containing a single, or multiple revenue
 // goals with the same currency. Used to decide whether to render
 // revenue metrics in a dashboard report or not.
-export function revenueAvailable(query: DashboardQuery, site: PlausibleSite) {
+export function revenueAvailable(
+  dashboardState: DashboardState,
+  site: PlausibleSite
+) {
   const revenueGoalsInFilter = site.revenueGoals.filter((revenueGoal) => {
-    const goalFilters: Filter[] = getFiltersByKeyPrefix(query, 'goal')
+    const goalFilters: Filter[] = getFiltersByKeyPrefix(dashboardState, 'goal')
 
     return goalFilters.some(([operation, _key, clauses]) => {
       return (
@@ -141,7 +144,7 @@ export function isDateOnOrAfterStatsStartDate({
 }: {
   site: PlausibleSite
   date: string
-  period: QueryPeriod
+  period: DashboardPeriod
 }) {
   return !isBefore(parseUTCDate(date), parseUTCDate(site.statsBegin), period)
 }
@@ -153,7 +156,7 @@ export function isDateBeforeOrOnCurrentDate({
 }: {
   site: PlausibleSite
   date: string
-  period: QueryPeriod
+  period: DashboardPeriod
 }) {
   const currentDate = nowForSite(site)
   return !isAfter(parseUTCDate(date), currentDate, period)
@@ -161,29 +164,33 @@ export function isDateBeforeOrOnCurrentDate({
 
 export function getDateForShiftedPeriod({
   site,
-  query,
+  dashboardState,
   direction
 }: {
   site: PlausibleSite
   direction: -1 | 1
-  query: DashboardQuery
+  dashboardState: DashboardState
 }) {
   const isWithinRangeByDirection = {
     '-1': isDateOnOrAfterStatsStartDate,
     '1': isDateBeforeOrOnCurrentDate
   }
   const shiftByPeriod = {
-    [QueryPeriod.day]: { shift: shiftDays, amount: 1 },
-    [QueryPeriod.month]: { shift: shiftMonths, amount: 1 },
-    [QueryPeriod.year]: { shift: shiftMonths, amount: 12 }
+    [DashboardPeriod.day]: { shift: shiftDays, amount: 1 },
+    [DashboardPeriod.month]: { shift: shiftMonths, amount: 1 },
+    [DashboardPeriod.year]: { shift: shiftMonths, amount: 12 }
   } as const
 
   const { shift, amount } =
-    shiftByPeriod[query.period as keyof typeof shiftByPeriod] ?? {}
+    shiftByPeriod[dashboardState.period as keyof typeof shiftByPeriod] ?? {}
   if (shift) {
-    const date = shift(query.date, direction * amount)
+    const date = shift(dashboardState.date, direction * amount)
     if (
-      isWithinRangeByDirection[direction]({ site, date, period: query.period })
+      isWithinRangeByDirection[direction]({
+        site,
+        date,
+        period: dashboardState.period
+      })
     ) {
       return date
     }
@@ -196,7 +203,7 @@ function setQueryPeriodAndDate({
   date = null,
   keybindHint = null
 }: {
-  period: QueryPeriod
+  period: DashboardPeriod
   date?: null | string
   keybindHint?: null | string
 }): AppNavigationTarget['search'] {
@@ -213,19 +220,19 @@ function setQueryPeriodAndDate({
 
 export function shiftQueryPeriod({
   site,
-  query,
+  dashboardState,
   direction,
   keybindHint
 }: {
   site: PlausibleSite
-  query: DashboardQuery
+  dashboardState: DashboardState
   direction: -1 | 1
   keybindHint?: null | string
 }): AppNavigationTarget['search'] {
-  const date = getDateForShiftedPeriod({ site, query, direction })
+  const date = getDateForShiftedPeriod({ site, dashboardState, direction })
   if (date !== null) {
     return setQueryPeriodAndDate({
-      period: query.period,
+      period: dashboardState.period,
       date: formatISO(date),
       keybindHint
     })

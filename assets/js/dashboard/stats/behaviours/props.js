@@ -4,17 +4,17 @@ import * as metrics from '../reports/metrics'
 import * as api from '../../api'
 import * as url from '../../util/url'
 import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from '../../util/filters'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 
 export default function Properties({ propKey, afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
   function fetchProps() {
     return api.get(
       url.apiPath(site, `/custom-prop-values/${encodeURIComponent(propKey)}`),
-      query
+      dashboardState
     )
   }
 
@@ -29,8 +29,8 @@ export default function Properties({ propKey, afterFetchData }) {
         renderLabel: (_query) => 'Events',
         meta: { hiddenOnMobile: true }
       }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage(),
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(dashboardState) && metrics.createPercentage(),
       BUILD_EXTRA &&
         metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
       BUILD_EXTRA &&

@@ -2,8 +2,8 @@ import { useEffect } from 'react'
 import {
   clearedComparisonSearch,
   clearedDateSearch,
-  DashboardQuery
-} from './query'
+  DashboardState
+} from './dashboard-state'
 import { PlausibleSite } from './site-context'
 import {
   formatDateRange,
@@ -25,7 +25,7 @@ import {
 import { AppNavigationTarget } from './navigation/use-app-navigate'
 import { getDomainScopedStorageKey, getItem, setItem } from './util/storage'
 
-export enum QueryPeriod {
+export enum DashboardPeriod {
   'realtime' = 'realtime',
   'day' = 'day',
   'month' = 'month',
@@ -66,13 +66,16 @@ export const COMPARISON_MATCH_MODE_LABELS = {
 
 export const DEFAULT_COMPARISON_MODE = ComparisonMode.previous_period
 
-const COMPARISON_DISABLED_PERIODS = [QueryPeriod.realtime, QueryPeriod.all]
+const COMPARISON_DISABLED_PERIODS = [
+  DashboardPeriod.realtime,
+  DashboardPeriod.all
+]
 
 export const isComparisonForbidden = ({
   period,
   segmentIsExpanded
 }: {
-  period: QueryPeriod
+  period: DashboardPeriod
   segmentIsExpanded: boolean
 }) => COMPARISON_DISABLED_PERIODS.includes(period) || segmentIsExpanded
 
@@ -82,19 +85,19 @@ export function getPeriodStorageKey(domain: string): string {
   return getDomainScopedStorageKey('period', domain)
 }
 
-export function isValidPeriod(period: unknown): period is QueryPeriod {
-  return Object.values<unknown>(QueryPeriod).includes(period)
+export function isValidPeriod(period: unknown): period is DashboardPeriod {
+  return Object.values<unknown>(DashboardPeriod).includes(period)
 }
 
 export function getStoredPeriod(
   domain: string,
-  fallbackValue: QueryPeriod | null
+  fallbackValue: DashboardPeriod | null
 ) {
   const item = getItem(getPeriodStorageKey(domain))
   return isValidPeriod(item) ? item : fallbackValue
 }
 
-function storePeriod(domain: string, value: QueryPeriod) {
+function storePeriod(domain: string, value: DashboardPeriod) {
   return setItem(getPeriodStorageKey(domain), value)
 }
 
@@ -167,13 +170,13 @@ export const isComparisonEnabled = function (
 
 export const getSearchToToggleComparison = ({
   site,
-  query
+  dashboardState
 }: {
   site: PlausibleSite
-  query: DashboardQuery
+  dashboardState: DashboardState
 }): Required<AppNavigationTarget>['search'] => {
   return (search) => {
-    if (isComparisonEnabled(query.comparison)) {
+    if (isComparisonEnabled(dashboardState.comparison)) {
       return {
         ...search,
         ...clearedComparisonSearch,
@@ -208,7 +211,7 @@ export const getSearchToApplyCustomDates = ([selectionStart, selectionEnd]: [
     return (search) => ({
       ...search,
       ...clearedDateSearch,
-      period: QueryPeriod.day,
+      period: DashboardPeriod.day,
       date: formatISO(from),
       keybindHint: 'C'
     })
@@ -217,7 +220,7 @@ export const getSearchToApplyCustomDates = ([selectionStart, selectionEnd]: [
   return (search) => ({
     ...search,
     ...clearedDateSearch,
-    period: QueryPeriod.custom,
+    period: DashboardPeriod.custom,
     from: formatISO(from),
     to: formatISO(to),
     keybindHint: 'C'
@@ -248,7 +251,7 @@ export type LinkItem = [
     search: AppNavigationTarget['search']
     isActive: (options: {
       site: PlausibleSite
-      query: DashboardQuery
+      dashboardState: DashboardState
     }) => boolean
     onEvent?: (event: Pick<Event, 'preventDefault' | 'stopPropagation'>) => void
     hidden?: boolean
@@ -279,13 +282,13 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod.day,
+            period: DashboardPeriod.day,
             date: formatISO(nowForSite(site)),
             keybindHint: 'D'
           }),
-          isActive: ({ query }) =>
-            query.period === QueryPeriod.day &&
-            isSameDate(query.date, nowForSite(site)),
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod.day &&
+            isSameDate(dashboardState.date, nowForSite(site)),
           onEvent
         }
       ],
@@ -295,13 +298,13 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod.day,
+            period: DashboardPeriod.day,
             date: formatISO(yesterday(site)),
             keybindHint: 'E'
           }),
-          isActive: ({ query }) =>
-            query.period === QueryPeriod.day &&
-            isSameDate(query.date, yesterday(site)),
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod.day &&
+            isSameDate(dashboardState.date, yesterday(site)),
           onEvent
         }
       ],
@@ -311,10 +314,11 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod.realtime,
+            period: DashboardPeriod.realtime,
             keybindHint: 'R'
           }),
-          isActive: ({ query }) => query.period === QueryPeriod.realtime,
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod.realtime,
           onEvent
         }
       ]
@@ -326,10 +330,11 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod['7d'],
+            period: DashboardPeriod['7d'],
             keybindHint: 'W'
           }),
-          isActive: ({ query }) => query.period === QueryPeriod['7d'],
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod['7d'],
           onEvent
         }
       ],
@@ -339,10 +344,11 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod['28d'],
+            period: DashboardPeriod['28d'],
             keybindHint: 'F'
           }),
-          isActive: ({ query }) => query.period === QueryPeriod['28d'],
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod['28d'],
           onEvent
         }
       ],
@@ -353,10 +359,11 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod['30d'],
+            period: DashboardPeriod['30d'],
             keybindHint: 'T'
           }),
-          isActive: ({ query }) => query.period === QueryPeriod['30d'],
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod['30d'],
           onEvent
         }
       ],
@@ -366,10 +373,11 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod['91d'],
+            period: DashboardPeriod['91d'],
             keybindHint: 'N'
           }),
-          isActive: ({ query }) => query.period === QueryPeriod['91d'],
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod['91d'],
           onEvent
         }
       ]
@@ -381,12 +389,12 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod.month,
+            period: DashboardPeriod.month,
             keybindHint: 'M'
           }),
-          isActive: ({ query }) =>
-            query.period === QueryPeriod.month &&
-            isSameMonth(query.date, nowForSite(site)),
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod.month &&
+            isSameMonth(dashboardState.date, nowForSite(site)),
           onEvent
         }
       ],
@@ -396,13 +404,13 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod.month,
+            period: DashboardPeriod.month,
             date: formatISO(lastMonth(site)),
             keybindHint: 'P'
           }),
-          isActive: ({ query }) =>
-            query.period === QueryPeriod.month &&
-            isSameMonth(query.date, lastMonth(site)),
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod.month &&
+            isSameMonth(dashboardState.date, lastMonth(site)),
           onEvent
         }
       ]
@@ -414,11 +422,12 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod.year,
+            period: DashboardPeriod.year,
             keybindHint: 'Y'
           }),
-          isActive: ({ query }) =>
-            query.period === QueryPeriod.year && isThisYear(site, query.date),
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod.year &&
+            isThisYear(site, dashboardState.date),
           onEvent
         }
       ],
@@ -429,10 +438,11 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod['6mo'],
+            period: DashboardPeriod['6mo'],
             keybindHint: 'S'
           }),
-          isActive: ({ query }) => query.period === QueryPeriod['6mo']
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod['6mo']
         }
       ],
       [
@@ -441,10 +451,11 @@ export const getDatePeriodGroups = ({
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod['12mo'],
+            period: DashboardPeriod['12mo'],
             keybindHint: 'L'
           }),
-          isActive: ({ query }) => query.period === QueryPeriod['12mo'],
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod['12mo'],
           onEvent
         }
       ]
@@ -458,10 +469,11 @@ export const getDatePeriodGroups = ({
         search: (s) => ({
           ...s,
           ...clearedDateSearch,
-          period: QueryPeriod.all,
+          period: DashboardPeriod.all,
           keybindHint: 'A'
         }),
-        isActive: ({ query }) => query.period === QueryPeriod.all,
+        isActive: ({ dashboardState }) =>
+          dashboardState.period === DashboardPeriod.all,
         onEvent
       }
     ]
@@ -473,21 +485,23 @@ export const getDatePeriodGroups = ({
 }
 
 export const getCompareLinkItem = ({
-  query,
+  dashboardState,
   site,
   onEvent
 }: {
-  query: DashboardQuery
+  dashboardState: DashboardState
   site: PlausibleSite
   onEvent: () => void
 }): LinkItem => [
   [
-    isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare',
+    isComparisonEnabled(dashboardState.comparison)
+      ? 'Disable comparison'
+      : 'Compare',
     'X'
   ],
   {
     onEvent,
-    search: getSearchToToggleComparison({ site, query }),
+    search: getSearchToToggleComparison({ site, dashboardState }),
     isActive: () => false
   }
 ]
@@ -506,7 +520,7 @@ export function useSaveTimePreferencesToStorage({
   useEffect(() => {
     if (
       isValidPeriod(period) &&
-      ![QueryPeriod.custom, QueryPeriod.realtime].includes(period)
+      ![DashboardPeriod.custom, DashboardPeriod.realtime].includes(period)
     ) {
       storePeriod(site.domain, period)
     }
@@ -524,7 +538,7 @@ export function getSavedTimePreferencesFromStorage({
 }: {
   site: PlausibleSite
 }): {
-  period: null | QueryPeriod
+  period: null | DashboardPeriod
   comparison: null | ComparisonMode
   match_day_of_week: boolean | null
 } {
@@ -547,18 +561,18 @@ export function getDashboardTimeSettings({
   searchValues: Record<'period' | 'comparison' | 'match_day_of_week', unknown>
   storedValues: ReturnType<typeof getSavedTimePreferencesFromStorage>
   defaultValues: Pick<
-    DashboardQuery,
+    DashboardState,
     'period' | 'comparison' | 'match_day_of_week'
   >
   segmentIsExpanded: boolean
-}): Pick<DashboardQuery, 'period' | 'comparison' | 'match_day_of_week'> {
-  let period: QueryPeriod
+}): Pick<DashboardState, 'period' | 'comparison' | 'match_day_of_week'> {
+  let period: DashboardPeriod
   if (isValidPeriod(searchValues.period)) {
     period = searchValues.period
   } else if (isValidPeriod(storedValues.period)) {
     period = storedValues.period
   } else if (isTodayOrYesterday(site.nativeStatsBegin)) {
-    period = QueryPeriod.day
+    period = DashboardPeriod.day
   } else {
     period = defaultValues.period
   }
@@ -593,70 +607,74 @@ export function getDashboardTimeSettings({
 }
 
 export function getCurrentPeriodDisplayName({
-  query,
+  dashboardState,
   site
 }: {
-  query: DashboardQuery
+  dashboardState: DashboardState
   site: PlausibleSite
 }) {
-  if (query.period === 'day') {
-    if (isToday(site, query.date)) {
+  if (dashboardState.period === 'day') {
+    if (isToday(site, dashboardState.date)) {
       return 'Today'
     }
-    return formatDay(query.date)
+    return formatDay(dashboardState.date)
   }
-  if (query.period === '7d') {
+  if (dashboardState.period === '7d') {
     return 'Last 7 days'
   }
-  if (query.period === '28d') {
+  if (dashboardState.period === '28d') {
     return 'Last 28 days'
   }
-  if (query.period === '30d') {
+  if (dashboardState.period === '30d') {
     return 'Last 30 days'
   }
-  if (query.period === '91d') {
+  if (dashboardState.period === '91d') {
     return 'Last 91 days'
   }
-  if (query.period === 'month') {
-    if (isThisMonth(site, query.date)) {
+  if (dashboardState.period === 'month') {
+    if (isThisMonth(site, dashboardState.date)) {
       return 'Month to Date'
     }
-    return formatMonthYYYY(query.date)
+    return formatMonthYYYY(dashboardState.date)
   }
-  if (query.period === '6mo') {
+  if (dashboardState.period === '6mo') {
     return 'Last 6 months'
   }
-  if (query.period === '12mo') {
+  if (dashboardState.period === '12mo') {
     return 'Last 12 months'
   }
-  if (query.period === 'year') {
-    if (isThisYear(site, query.date)) {
+  if (dashboardState.period === 'year') {
+    if (isThisYear(site, dashboardState.date)) {
       return 'Year to Date'
     }
-    return formatYear(query.date)
+    return formatYear(dashboardState.date)
   }
-  if (query.period === 'all') {
+  if (dashboardState.period === 'all') {
     return 'All time'
   }
-  if (query.period === 'custom') {
-    return formatDateRange(site, query.from, query.to)
+  if (dashboardState.period === 'custom') {
+    return formatDateRange(site, dashboardState.from, dashboardState.to)
   }
   return 'Realtime'
 }
 
 export function getCurrentComparisonPeriodDisplayName({
-  query,
+  dashboardState,
   site
 }: {
-  query: DashboardQuery
+  dashboardState: DashboardState
   site: PlausibleSite
 }) {
-  if (!query.comparison) {
+  if (!dashboardState.comparison) {
     return null
   }
-  return query.comparison === ComparisonMode.custom &&
-    query.compare_from &&
-    query.compare_to
-    ? formatDateRange(site, query.compare_from, query.compare_to)
-    : COMPARISON_MODES[query.comparison]
+  return dashboardState.comparison === ComparisonMode.custom &&
+    dashboardState.compare_from &&
+    dashboardState.compare_to
+    ? formatDateRange(
+        site,
+        dashboardState.compare_from,
+        dashboardState.compare_to
+      )
+    : COMPARISON_MODES[dashboardState.comparison]
 }
