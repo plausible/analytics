@@ -2,12 +2,12 @@ import React, { useState } from 'react'
 import * as api from '../../api'
 import { getCurrentInterval } from './interval-picker'
 import { useSiteContext } from '../../site-context'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { Tooltip } from '../../util/tooltip'
 
 export default function StatsExport() {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const [exporting, setExporting] = useState(false)
 
   function startExport() {
@@ -50,11 +50,11 @@ export default function StatsExport() {
   }
 
   function renderExportLink() {
-    const interval = getCurrentInterval(site, query)
-    const queryParams = api.queryToSearchParams(query, [
+    const interval = getCurrentInterval(site, dashboardState)
+    const params = api.dashboardStateToSearchParams(dashboardState, [
       { interval, comparison: undefined }
     ])
-    const endpoint = `/${encodeURIComponent(site.domain)}/export?${queryParams}`
+    const endpoint = `/${encodeURIComponent(site.domain)}/export?${params}`
 
     return (
       <a

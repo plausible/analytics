@@ -5,7 +5,7 @@ import { numberShortFormatter } from '../../util/number-formatter'
 import RocketIcon from '../modals/rocket-icon'
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
 import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
@@ -77,7 +77,7 @@ function ConfigureSearchTermsCTA({
 
 export function SearchTerms() {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const [moreLinkState, setMoreLinkState] = React.useState(
     MoreLinkState.LOADING
   )
@@ -95,7 +95,7 @@ export function SearchTerms() {
     api
       .get(
         `/api/stats/${encodeURIComponent(site.domain)}/referrers/Google`,
-        query
+        dashboardState
       )
       .then((res) => {
         setLoading(false)
@@ -113,7 +113,7 @@ export function SearchTerms() {
         setErrorPayload(error.payload)
         setMoreLinkState(MoreLinkState.HIDDEN)
       })
-  }, [query, site.domain])
+  }, [dashboardState, site.domain])
 
   useEffect(() => {
     if (visible) {
@@ -122,7 +122,7 @@ export function SearchTerms() {
       setMoreLinkState(MoreLinkState.LOADING)
       fetchSearchTerms()
     }
-  }, [query, fetchSearchTerms, visible])
+  }, [dashboardState, fetchSearchTerms, visible])
 
   const onVisible = () => {
     setVisible(true)

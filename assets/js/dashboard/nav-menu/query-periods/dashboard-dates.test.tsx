@@ -5,18 +5,18 @@ import { TestContextProviders } from '../../../../test-utils/app-context-provide
 import { stringifySearch } from '../../util/url-search-params'
 import { useNavigate } from 'react-router-dom'
 import { getRouterBasepath } from '../../router'
-import { QueryPeriodsPicker } from './query-periods-picker'
+import { DashboardPeriodPicker } from './dashboard-period-picker'
 import { mockAnimationsApi, mockResizeObserver } from 'jsdom-testing-mocks'
 
 mockAnimationsApi()
 mockResizeObserver()
 
-const domain = 'picking-query-dates.test'
+const domain = 'picking-dashboard-dates.test'
 const periodStorageKey = `period__${domain}`
 
 test('if no period is stored, loads with default value of "Last 28 days", all expected options are present', async () => {
   expect(localStorage.getItem(periodStorageKey)).toBe(null)
-  render(<QueryPeriodsPicker />, {
+  render(<DashboardPeriodPicker />, {
     wrapper: (props) => (
       <TestContextProviders siteOptions={{ domain }} {...props} />
     )
@@ -45,7 +45,7 @@ test('if no period is stored, loads with default value of "Last 28 days", all ex
 })
 
 test('user can select a new period and its value is stored', async () => {
-  render(<QueryPeriodsPicker />, {
+  render(<DashboardPeriodPicker />, {
     wrapper: (props) => (
       <TestContextProviders siteOptions={{ domain }} {...props} />
     )
@@ -62,7 +62,7 @@ test('user can select a new period and its value is stored', async () => {
 test('period "all" is respected, and Compare option is not present for it in menu', async () => {
   localStorage.setItem(periodStorageKey, 'all')
 
-  render(<QueryPeriodsPicker />, {
+  render(<DashboardPeriodPicker />, {
     wrapper: (props) => (
       <TestContextProviders siteOptions={{ domain }} {...props} />
     )
@@ -78,11 +78,11 @@ test.each([
   [{ period: 'month' }, 'Month to Date'],
   [{ period: 'year' }, 'Year to Date']
 ])(
-  'the query period from search %p is respected and stored',
+  'the dashboardState period from search %p is respected and stored',
   async (searchRecord, buttonText) => {
     const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
 
-    render(<QueryPeriodsPicker />, {
+    render(<DashboardPeriodPicker />, {
       wrapper: (props) => (
         <TestContextProviders
           siteOptions={{ domain }}
@@ -104,11 +104,11 @@ test.each([
   ],
   [{ period: 'realtime' }, 'Realtime']
 ])(
-  'the query period from search %p is respected but not stored',
+  'the dashboardState period from search %p is respected but not stored',
   async (searchRecord, buttonText) => {
     const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
 
-    render(<QueryPeriodsPicker />, {
+    render(<DashboardPeriodPicker />, {
       wrapper: (props) => (
         <TestContextProviders
           siteOptions={{ domain }}
@@ -126,12 +126,12 @@ test.each([
   ['all', '7d', 'Last 7 days'],
   ['30d', 'month', 'Month to Date']
 ])(
-  'if the stored period is %p but query period is %p, query is respected and the stored period is overwritten',
-  async (storedPeriod, queryPeriod, buttonText) => {
+  'if the stored period is %p but dashboardState period is %p, dashboardState is respected and the stored period is overwritten',
+  async (storedPeriod, dashboardPeriod, buttonText) => {
     localStorage.setItem(periodStorageKey, storedPeriod)
-    const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch({ period: queryPeriod })}`
+    const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch({ period: dashboardPeriod })}`
 
-    render(<QueryPeriodsPicker />, {
+    render(<DashboardPeriodPicker />, {
       wrapper: (props) => (
         <TestContextProviders
           siteOptions={{ domain, shared: false }}
@@ -145,11 +145,11 @@ test.each([
 
     await userEvent.click(screen.getByText(buttonText))
     expect(screen.getByTestId('datemenu')).toBeVisible()
-    expect(localStorage.getItem(periodStorageKey)).toBe(queryPeriod)
+    expect(localStorage.getItem(periodStorageKey)).toBe(dashboardPeriod)
   }
 )
 
-test('going back resets the stored query period to previous value', async () => {
+test('going back resets the stored dashboardState period to previous value', async () => {
   const BrowserBackButton = () => {
     const navigate = useNavigate()
     return (
@@ -158,7 +158,7 @@ test('going back resets the stored query period to previous value', async () => 
   }
   render(
     <>
-      <QueryPeriodsPicker />
+      <DashboardPeriodPicker />
       <BrowserBackButton />
     </>,
     {

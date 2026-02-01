@@ -23,7 +23,7 @@ import ScreenSizesModal from './stats/modals/devices/screen-sizes'
 import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
-import QueryContextProvider from './query-context'
+import DashboardStateContextProvider from './dashboard-state-context'
 import { DashboardKeybinds } from './dashboard-keybinds'
 import LastLoadContextProvider from './last-load-context'
 import { RoutelessModalsContextProvider } from './navigation/routeless-modals-context'
@@ -41,14 +41,14 @@ function DashboardElement() {
   return (
     <QueryClientProvider client={queryClient}>
       <RoutelessModalsContextProvider>
-        <QueryContextProvider>
+        <DashboardStateContextProvider>
           <LastLoadContextProvider>
             <Dashboard />
             {/** render any children of the root route below */}
           </LastLoadContextProvider>
           <Outlet />
           <RoutelessSegmentModals />
-        </QueryContextProvider>
+        </DashboardStateContextProvider>
       </RoutelessModalsContextProvider>
     </QueryClientProvider>
   )
