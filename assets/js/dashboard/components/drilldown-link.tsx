@@ -6,8 +6,8 @@ import {
 import classNames from 'classnames'
 import { cleanLabels, replaceFilterByPrefix } from '../util/filters'
 import { plainFilterText } from '../util/filter-text'
-import { useQueryContext } from '../query-context'
-import { Filter, FilterClauseLabels } from '../query'
+import { useDashboardStateContext } from '../dashboard-state-context'
+import { Filter, FilterClauseLabels } from '../dashboard-state'
 
 export type FilterInfo = {
   prefix: string
@@ -25,19 +25,24 @@ export function DrilldownLink({
   extraClass?: string
   filterInfo: FilterInfo | null
 }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const className = classNames(`${extraClass}`, {
     'hover:underline': !!filterInfo
   })
 
   if (filterInfo) {
     const { prefix, filter, labels } = filterInfo
-    const newFilters = replaceFilterByPrefix(query, prefix, filter)
-    const newLabels = cleanLabels(newFilters, query.labels, filter[1], labels)
+    const newFilters = replaceFilterByPrefix(dashboardState, prefix, filter)
+    const newLabels = cleanLabels(
+      newFilters,
+      dashboardState.labels,
+      filter[1],
+      labels
+    )
 
     return (
       <AppNavigationLink
-        title={`Add filter: ${plainFilterText({ ...query, labels: newLabels }, filter)}`}
+        title={`Add filter: ${plainFilterText({ ...dashboardState, labels: newLabels }, filter)}`}
         className={className}
         path={path}
         onClick={onClick}

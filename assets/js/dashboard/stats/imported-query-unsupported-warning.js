@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import FadeIn from '../fade-in'
-import { useQueryContext } from '../query-context'
+import { useDashboardStateContext } from '../dashboard-state-context'
 import { Tooltip } from '../util/tooltip'
 
 export default function ImportedQueryUnsupportedWarning({
@@ -10,15 +10,15 @@ export default function ImportedQueryUnsupportedWarning({
   altCondition,
   message
 }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const portalRef = useRef(null)
   const tooltipMessage =
     message || 'Imported data is excluded due to applied filters'
   const show =
-    query &&
-    query.with_imported &&
+    dashboardState &&
+    dashboardState.with_imported &&
     skipImportedReason === 'unsupported_query' &&
-    query.period !== 'realtime'
+    dashboardState.period !== 'realtime'
 
   useEffect(() => {
     if (typeof document !== 'undefined') {

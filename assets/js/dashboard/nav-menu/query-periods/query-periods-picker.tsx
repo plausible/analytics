@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import classNames from 'classnames'
-import { useQueryContext } from '../../query-context'
-import { isComparisonEnabled } from '../../query-time-periods'
+import { useDashboardStateContext } from '../../dashboard-state-context'
+import { isComparisonEnabled } from '../../dashboard-time-periods'
 import { MovePeriodArrows } from './move-period-arrows'
 import { MainCalendar, QueryPeriodMenu } from './query-period-menu'
 import {
@@ -11,8 +11,8 @@ import {
 import { Popover } from '@headlessui/react'
 
 export function QueryPeriodsPicker({ className }: { className?: string }) {
-  const { query } = useQueryContext()
-  const isComparing = isComparisonEnabled(query.comparison)
+  const { dashboardState } = useDashboardStateContext()
+  const isComparing = isComparisonEnabled(dashboardState.comparison)
   const mainCalendarButtonRef = useRef<HTMLButtonElement>(null)
   const compareCalendarButtonRef = useRef<HTMLButtonElement>(null)
 

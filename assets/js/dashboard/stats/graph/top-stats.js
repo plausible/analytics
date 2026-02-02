@@ -3,8 +3,9 @@ import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
+import * as api from '../../api'
 import { formatDateRange } from '../../util/date'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
 import { ChangeArrow } from '../reports/change-arrow'
@@ -12,6 +13,131 @@ import {
   MetricFormatterShort,
   MetricFormatterLong
 } from '../reports/metric-formatter'
+import {
+  hasConversionGoalFilter,
+  hasPageFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
+import { isComparisonEnabled } from '../../dashboard-time-periods'
+import { createStatsQuery } from '../../stats-query'
+
+export async function fetchTopStats(site, dashboardState) {
+  const currentVisitorsQuery = constructCurrentVisitorsQuery(dashboardState)
+  const topStatsQuery = constructTopStatsQuery(dashboardState)
+
+  const currentVisitorsResponse = currentVisitorsQuery
+    ? await api.stats(site, currentVisitorsQuery)
+    : null
+  const topStatsResponse = await api.stats(site, topStatsQuery)
+
+  return formatTopStatsData(topStatsResponse, currentVisitorsResponse)
+}
+
+function constructCurrentVisitorsQuery(dashboardState) {
+  if (isRealTimeDashboard(dashboardState)) {
+    return createStatsQuery(
+      { ...dashboardState, filters: [] },
+      { metrics: ['visitors'] }
+    )
+  }
+}
+
+function constructTopStatsQuery(dashboardState) {
+  const reportParams = {
+    metrics: chooseMetrics(dashboardState),
+    include: { imports_meta: true }
+  }
+
+  let adjustedDashboardState = { ...dashboardState }
+
+  if (
+    !isComparisonEnabled(dashboardState.comparison) &&
+    !isRealTimeDashboard(dashboardState)
+  ) {
+    adjustedDashboardState.comparison = 'previous_period'
+  }
+
+  if (isRealTimeDashboard(dashboardState)) {
+    adjustedDashboardState.period = 'realtime_30m'
+  }
+
+  return createStatsQuery(adjustedDashboardState, reportParams)
+}
+
+function chooseMetrics(dashboardState) {
+  if (
+    isRealTimeDashboard(dashboardState) &&
+    hasConversionGoalFilter(dashboardState)
+  ) {
+    return ['visitors', 'events']
+  } else if (isRealTimeDashboard(dashboardState)) {
+    return ['visitors', 'pageviews']
+  } else if (hasConversionGoalFilter(dashboardState)) {
+    return ['visitors', 'events', 'conversion_rate']
+  } else if (hasPageFilter(dashboardState) && dashboardState.with_imported) {
+    // Note: Copied this condition over from the backend, but need to investigate why time_on_page
+    // and bounce_rate cannot be queried with imported data. In any case, we should drop the metrics
+    // on the backend, and simply request them here.
+    return ['visitors', 'visits', 'pageviews', 'scroll_depth']
+  } else if (hasPageFilter(dashboardState)) {
+    return [
+      'visitors',
+      'visits',
+      'pageviews',
+      'bounce_rate',
+      'scroll_depth',
+      'time_on_page'
+    ]
+  } else {
+    return [
+      'visitors',
+      'visits',
+      'pageviews',
+      'views_per_visit',
+      'bounce_rate',
+      'visit_duration'
+    ]
+  }
+}
+
+function formatTopStatsData(topStatsResponse, currentVisitorsResponse) {
+  const { query, meta, results } = topStatsResponse
+
+  let topStats = []
+
+  if (currentVisitorsResponse) {
+    topStats.push({
+      metric: currentVisitorsResponse.query.metrics[0],
+      value: currentVisitorsResponse.results[0].metrics[0],
+      name: currentVisitorsResponse.meta.metric_labels[0],
+      graphable: false
+    })
+  }
+
+  for (let i = 0; i < query.metrics.length; i++) {
+    let stat = {}
+
+    stat.metric = query.metrics[i]
+    stat.value = results[0].metrics[i]
+    stat.name = meta.metric_labels[i]
+    stat.graphable = true
+    stat.change = results[0].comparison?.change[i]
+    stat.comparisonValue = results[0].comparison?.metrics[i]
+
+    topStats.push(stat)
+  }
+
+  const [from, to] = query.date_range.map((d) => d.split('T')[0])
+
+  const comparingFrom = query.comparison_date_range
+    ? query.comparison_date_range[0].split('T')[0]
+    : null
+  const comparingTo = query.comparison_date_range
+    ? query.comparison_date_range[1].split('T')[0]
+    : null
+
+  return { topStats, meta, from, to, comparingFrom, comparingTo }
+}
 
 function topStatNumberShort(metric, value) {
   const formatter = MetricFormatterShort[metric]
@@ -23,32 +149,27 @@ function topStatNumberLong(metric, value) {
   return formatter(value)
 }
 
-export default function TopStats({
-  data,
-  onMetricUpdate,
-  tooltipBoundary,
-  graphableMetrics
-}) {
-  const { query } = useQueryContext()
+export function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
+  const { dashboardState } = useDashboardStateContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
 
-  const isComparison = query.comparison && data && data.comparing_from
+  const isComparison =
+    (dashboardState.comparison && data && data.comparingFrom !== null) || false
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
-    const warning = warningText(stat.graph_metric, site)
+    const warning = warningText(stat.metric, site)
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
     return (
       <div>
         {isComparison && (
           <div className="whitespace-nowrap">
-            {topStatNumberLong(stat.graph_metric, stat.value)} vs.{' '}
-            {topStatNumberLong(stat.graph_metric, stat.comparison_value)}{' '}
-            {statName}
+            {topStatNumberLong(stat.metric, stat.value)} vs.{' '}
+            {topStatNumberLong(stat.metric, stat.comparisonValue)} {statName}
             <ChangeArrow
-              metric={stat.graph_metric}
+              metric={stat.metric}
               change={stat.change}
               className="pl-4 text-xs text-gray-100"
             />
@@ -57,7 +178,7 @@ export default function TopStats({
 
         {!isComparison && (
           <div className="whitespace-nowrap">
-            {topStatNumberLong(stat.graph_metric, stat.value)} {statName}
+            {topStatNumberLong(stat.metric, stat.value)} {statName}
           </div>
         )}
 
@@ -96,13 +217,13 @@ export default function TopStats({
   }
 
   function canMetricBeGraphed(stat) {
-    return graphableMetrics.includes(stat.graph_metric)
+    return stat.graphable
   }
 
   function maybeUpdateMetric(stat) {
     if (canMetricBeGraphed(stat)) {
-      storage.setItem(`metric__${site.domain}`, stat.graph_metric)
-      onMetricUpdate(stat.graph_metric)
+      storage.setItem(`metric__${site.domain}`, stat.metric)
+      onMetricUpdate(stat.metric)
     }
   }
 
@@ -121,7 +242,7 @@ export default function TopStats({
   }
 
   function renderStatName(stat) {
-    const isSelected = stat.graph_metric === getStoredMetric()
+    const isSelected = stat.graphable && stat.metric === getStoredMetric()
 
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
@@ -141,7 +262,7 @@ export default function TopStats({
         {statExtraName && (
           <span className="hidden sm:inline-block ml-1">{statExtraName}</span>
         )}
-        {warningText(stat.graph_metric) && (
+        {warningText(stat.metric) && (
           <span className="inline-block ml-1">*</span>
         )}
       </div>
@@ -161,7 +282,7 @@ export default function TopStats({
     return (
       <Tooltip
         key={stat.name}
-        info={tooltip(stat, query)}
+        info={tooltip(stat, dashboardState)}
         className={className}
         onClick={() => {
           maybeUpdateMetric(stat)
@@ -174,13 +295,13 @@ export default function TopStats({
             <span className="flex items-center justify-between whitespace-nowrap">
               <p
                 className="font-bold text-xl dark:text-gray-100"
-                id={stat.graph_metric}
+                id={stat.metric}
               >
-                {topStatNumberShort(stat.graph_metric, stat.value)}
+                {topStatNumberShort(stat.metric, stat.value)}
               </p>
               {!isComparison && stat.change != null ? (
                 <ChangeArrow
-                  metric={stat.graph_metric}
+                  metric={stat.metric}
                   change={stat.change}
                   className="pl-2 text-xs dark:text-gray-100"
                 />
@@ -196,10 +317,10 @@ export default function TopStats({
           {isComparison ? (
             <div>
               <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
-                {topStatNumberShort(stat.graph_metric, stat.comparison_value)}
+                {topStatNumberShort(stat.metric, stat.comparisonValue)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {formatDateRange(site, data.comparing_from, data.comparing_to)}
+                {formatDateRange(site, data.comparingFrom, data.comparingTo)}
               </p>
             </div>
           ) : null}
@@ -209,9 +330,9 @@ export default function TopStats({
   }
 
   const stats =
-    data && data.top_stats.filter((stat) => stat.value !== null).map(renderStat)
+    data && data.topStats.filter((stat) => stat.value !== null).map(renderStat)
 
-  if (stats && query.period === 'realtime') {
+  if (stats && dashboardState.period === 'realtime') {
     stats.push(blinkingDot())
   }
 

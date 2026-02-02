@@ -3,7 +3,7 @@ import { AppNavigationLink } from '../navigation/use-app-navigate'
 import * as api from '../api'
 import { Tooltip } from '../util/tooltip'
 import { SecondsSinceLastLoad } from '../util/seconds-since-last-load'
-import { useQueryContext } from '../query-context'
+import { useDashboardStateContext } from '../dashboard-state-context'
 import { useSiteContext } from '../site-context'
 import { useLastLoadContext } from '../last-load-context'
 import classNames from 'classnames'
@@ -12,7 +12,7 @@ export default function CurrentVisitors({
   className = '',
   tooltipBoundaryRef
 }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
   const [currentVisitors, setCurrentVisitors] = useState(null)
@@ -33,9 +33,9 @@ export default function CurrentVisitors({
 
   useEffect(() => {
     updateCount()
-  }, [query, updateCount])
+  }, [dashboardState, updateCount])
 
-  if (currentVisitors !== null && query.filters.length === 0) {
+  if (currentVisitors !== null && dashboardState.filters.length === 0) {
     return (
       <Tooltip
         info={

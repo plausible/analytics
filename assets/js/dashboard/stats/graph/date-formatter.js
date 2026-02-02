@@ -92,10 +92,10 @@ const factory = {
  * while other intervals require dates to be displayed.
  * @param {Object} config - Configuration object for determining formatter.
  *
- * @param {string} config.interval - The interval of the query, e.g. `minute`, `hour`
+ * @param {string} config.interval - The interval of the dashboardState, e.g. `minute`, `hour`
  * @param {boolean} config.longForm - Whether the formatted result should be in long or
  * short form.
- * @param {string} config.period - The period of the query, e.g. `12mo`, `day`
+ * @param {string} config.period - The period of the dashboardState, e.g. `12mo`, `day`
  * @param {boolean} config.isPeriodFull - Indicates whether the interval has been cut
  * off by the requested date range or not. If false, the returned formatted date
  * indicates this cut off, e.g. `Partial week of November 8`.

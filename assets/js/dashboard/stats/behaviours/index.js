@@ -9,7 +9,7 @@ import {
   FILTER_OPERATIONS
 } from '../../util/filters'
 import { useSiteContext } from '../../site-context'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useUserContext } from '../../user-context'
 import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
 import { ReportLayout } from '../reports/report-layout'
@@ -43,8 +43,8 @@ function maybeRequire() {
 
 const Funnel = maybeRequire().default
 
-function singleGoalFilterApplied(query) {
-  const goalFilter = getGoalFilter(query)
+function singleGoalFilterApplied(dashboardState) {
+  const goalFilter = getGoalFilter(dashboardState)
   if (goalFilter) {
     const [operation, _filterKey, clauses] = goalFilter
     return operation === FILTER_OPERATIONS.is && clauses.length === 1
@@ -68,9 +68,9 @@ const STORAGE_KEYS = {
   }
 }
 
-function getPropKeyFromStorage({ site, query }) {
-  if (singleGoalFilterApplied(query)) {
-    const [_operation, _dimension, [goalName]] = getGoalFilter(query)
+function getPropKeyFromStorage({ site, dashboardState }) {
+  if (singleGoalFilterApplied(dashboardState)) {
+    const [_operation, _dimension, [goalName]] = getGoalFilter(dashboardState)
     const storedForGoal = storage.getItem(
       STORAGE_KEYS.getForPropKeyForGoal({ goalName, site })
     )
@@ -82,9 +82,9 @@ function getPropKeyFromStorage({ site, query }) {
   return storage.getItem(STORAGE_KEYS.getForPropKey({ site }))
 }
 
-function storePropKey({ site, propKey, query }) {
-  if (singleGoalFilterApplied(query)) {
-    const [_operation, _dimension, [goalName]] = getGoalFilter(query)
+function storePropKey({ site, propKey, dashboardState }) {
+  if (singleGoalFilterApplied(dashboardState)) {
+    const [_operation, _dimension, [goalName]] = getGoalFilter(dashboardState)
     storage.setItem(
       STORAGE_KEYS.getForPropKeyForGoal({ goalName, site }),
       propKey
@@ -108,8 +108,8 @@ function getDefaultSelectedFunnel({ site }) {
 }
 
 function Behaviours({ importedDataInView, setMode, mode }) {
-  const { query } = useQueryContext()
-  const goalFilter = getGoalFilter(query)
+  const { dashboardState } = useDashboardStateContext()
+  const goalFilter = getGoalFilter(dashboardState)
   const specialGoal = goalFilter ? getSpecialGoal(goalFilter) : null
   const site = useSiteContext()
   const user = useUserContext()
@@ -122,7 +122,8 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   const [selectedFunnel, setSelectedFunnel] = useState(
     getDefaultSelectedFunnel({ site })
   )
-  const initialSelectedPropKey = getPropKeyFromStorage({ site, query }) || null
+  const initialSelectedPropKey =
+    getPropKeyFromStorage({ site, dashboardState }) || null
   const [selectedPropKey, setSelectedPropKey] = useState(initialSelectedPropKey)
   const [propertyKeys, setPropertyKeys] = useState(
     selectedPropKey !== null ? [selectedPropKey] : []
@@ -154,7 +155,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   )
 
   useEffect(() => {
-    const justRemovedGoalFilter = !hasConversionGoalFilter(query)
+    const justRemovedGoalFilter = !hasConversionGoalFilter(dashboardState)
     if (
       mode === Mode.PROPS &&
       justRemovedGoalFilter &&
@@ -164,16 +165,16 @@ function Behaviours({ importedDataInView, setMode, mode }) {
       setMode(Mode.CONVERSIONS)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasConversionGoalFilter(query)])
+  }, [hasConversionGoalFilter(dashboardState)])
 
-  useEffect(() => setLoading(true), [query, mode])
+  useEffect(() => setLoading(true), [dashboardState, mode])
   useEffect(() => {
     if (mode === Mode.PROPS && !selectedPropKey) {
       setMoreLinkState(MoreLinkState.HIDDEN)
     } else {
       setMoreLinkState(MoreLinkState.LOADING)
     }
-  }, [query, mode, selectedPropKey])
+  }, [dashboardState, mode, selectedPropKey])
 
   function setFunnelFactory(selectedFunnelName) {
     return () => {
@@ -187,7 +188,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   function setPropKeyFactory(selectedPropKeyName) {
     return () => {
       storage.setItem(STORAGE_KEYS.getForTab({ site }), Mode.PROPS)
-      storePropKey({ site, propKey: selectedPropKeyName, query })
+      storePropKey({ site, propKey: selectedPropKeyName, dashboardState })
       setMode(Mode.PROPS)
       setSelectedPropKey(selectedPropKeyName)
     }
@@ -202,14 +203,14 @@ function Behaviours({ importedDataInView, setMode, mode }) {
       site.propsAvailable
     ) {
       api
-        .get(url.apiPath(site, '/suggestions/prop_key'), query, {
+        .get(url.apiPath(site, '/suggestions/prop_key'), dashboardState, {
           q: ''
         })
         .then((propKeys) => {
           const propKeyValues = propKeys.map((entry) => entry.value)
           setPropertyKeys(propKeyValues)
           if (propKeyValues.length > 0) {
-            const stored = getPropKeyFromStorage({ site, query })
+            const stored = getPropKeyFromStorage({ site, dashboardState })
             const storedExists = stored && propKeyValues.includes(stored)
 
             if (storedExists) {
@@ -217,7 +218,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
             } else {
               const firstAvailable = propKeyValues[0]
               setSelectedPropKey(firstAvailable)
-              storePropKey({ site, propKey: firstAvailable, query })
+              storePropKey({ site, propKey: firstAvailable, dashboardState })
             }
           } else {
             setSelectedPropKey(null)
@@ -233,7 +234,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
       setPropertyKeys([])
       setSelectedPropKey(null)
     }
-  }, [site, query, enabledModes])
+  }, [site, dashboardState, enabledModes])
 
   function setTabFactory(tab) {
     return () => {
@@ -414,7 +415,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   }
 
   function isRealtime() {
-    return query.period === 'realtime'
+    return dashboardState.period === 'realtime'
   }
 
   function renderImportedQueryUnsupportedWarning() {

@@ -5,14 +5,17 @@ import * as url from '../../util/url'
 import * as api from '../../api'
 import { EVENT_PROPS_PREFIX } from '../../util/filters'
 import { useSiteContext } from '../../site-context'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 
 export function SpecialGoalPropBreakdown({ prop, afterFetchData }) {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
 
   function fetchData() {
-    return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
+    return api.get(
+      url.apiPath(site, `/custom-prop-values/${prop}`),
+      dashboardState
+    )
   }
 
   function getExternalLinkUrlFactory() {

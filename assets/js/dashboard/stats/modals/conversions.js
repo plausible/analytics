@@ -5,7 +5,7 @@ import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { useSiteContext } from '../../site-context'
-import { addFilter } from '../../query'
+import { addFilter } from '../../dashboard-state'
 
 /*global BUILD_EXTRA*/
 function ConversionsModal() {
@@ -30,8 +30,8 @@ function ConversionsModal() {
   )
 
   const addSearchFilter = useCallback(
-    (query, searchString) => {
-      return addFilter(query, [
+    (dashboardState, searchString) => {
+      return addFilter(dashboardState, [
         'contains',
         reportInfo.dimension,
         [searchString],

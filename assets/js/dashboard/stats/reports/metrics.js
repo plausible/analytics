@@ -16,7 +16,7 @@ import { hasConversionGoalFilter } from '../../util/filters'
 //   and returns the "rendered" version of it. Can be JSX or a string.
 
 // * `renderLabel` - a function rendering a label for this metric given a
-//   query argument. Returns string.
+//   dashboardState argument. Returns string.
 
 // ### Optional props
 
@@ -72,15 +72,15 @@ export const createVisitors = (props) => {
   if (typeof props.renderLabel === 'function') {
     renderLabel = props.renderLabel
   } else {
-    renderLabel = (query) => {
+    renderLabel = (dashboardState) => {
       const defaultLabel = props.defaultLabel || 'Visitors'
       const realtimeLabel = props.realtimeLabel || 'Current visitors'
       const goalFilterLabel = props.goalFilterLabel || 'Conversions'
 
-      if (query && hasConversionGoalFilter(query)) {
+      if (dashboardState && hasConversionGoalFilter(dashboardState)) {
         return goalFilterLabel
       }
-      if (query.period === 'realtime') {
+      if (dashboardState.period === 'realtime') {
         return realtimeLabel
       }
       return defaultLabel

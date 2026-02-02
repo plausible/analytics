@@ -1,4 +1,4 @@
-import { Filter } from '../query'
+import { Filter } from '../dashboard-state'
 import { FILTER_OPERATIONS } from './filters'
 
 export const isPageViewGoal = (goalName: string) => {
