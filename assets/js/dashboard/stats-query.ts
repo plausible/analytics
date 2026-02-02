@@ -49,7 +49,7 @@ export function createStatsQuery(
       imports_meta: reportParams.include?.imports_meta || false,
       time_labels: reportParams.include?.time_labels || false,
       compare: createIncludeCompare(dashboardState),
-      compare_match_day_of_week: dashboardState.match_day_of_week,
+      compare_match_day_of_week: dashboardState.match_day_of_week
     }
   }
 }
