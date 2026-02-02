@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-B87C8325.js"></script>
+    <script src="dist/sidebar_items-C3AB4E68.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -177,7 +177,17 @@ Pages
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">existing_goals</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal_options</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">has_access_to_revenue_goals?</code> (<code class="inline">:boolean</code>)</li><li>Global attributes are accepted.</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">existing_goals</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal_options</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">has_access_to_revenue_goals?</code> (<code class="inline">:boolean</code>)</li><li><code class="inline">has_access_to_props?</code> (<code class="inline">:boolean</code>)</li><li><code class="inline">myself</code> (<code class="inline">:any</code>)</li><li><code class="inline">use_custom_props</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#custom_property_section/1" data-no-tooltip translate="no">custom_property_section(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">suffix</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">myself</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>) (required)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) (required)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>) (required)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>) (required)</li><li><code class="inline">has_access_to_props?</code> (<code class="inline">:boolean</code>) (required)</li><li><code class="inline">use_custom_props</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li></ul></div>
 
     </div>
 
@@ -205,7 +215,7 @@ Pages
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li>Global attributes are accepted.</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">myself</code> (<code class="inline">:any</code>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">has_access_to_props?</code> (<code class="inline">:boolean</code>)</li><li><code class="inline">use_custom_props</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul></div>
 
     </div>
 
@@ -233,7 +243,7 @@ Pages
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li>Global attributes are accepted.</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">myself</code> (<code class="inline">:any</code>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">has_access_to_props?</code> (<code class="inline">:boolean</code>)</li><li><code class="inline">use_custom_props</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul></div>
 
     </div>
 
@@ -284,7 +294,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">autoconfigure_modal(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L122" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L147" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -304,7 +314,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">create_form(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L157" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L182" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -324,7 +334,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">custom_event_fields(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L355" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L434" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -339,7 +349,33 @@ Pages
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">existing_goals</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal_options</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">has_access_to_revenue_goals?</code> (<code class="inline">:boolean</code>)</li><li>Global attributes are accepted.</li></ul>
+<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">existing_goals</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal_options</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">has_access_to_revenue_goals?</code> (<code class="inline">:boolean</code>)</li><li><code class="inline">has_access_to_props?</code> (<code class="inline">:boolean</code>)</li><li><code class="inline">myself</code> (<code class="inline">:any</code>)</li><li><code class="inline">use_custom_props</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul>
+  </section>
+</section>
+<section class="detail" id="custom_property_section/1">
+
+  <div class="detail-header">
+    <a href="#custom_property_section/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">custom_property_section(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L527" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<h2 id="custom_property_section/1-attributes" class="section-heading">
+  <a href="#custom_property_section/1-attributes" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Attributes</span>
+</h2>
+<ul><li><code class="inline">suffix</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">myself</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>) (required)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) (required)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>) (required)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>) (required)</li><li><code class="inline">has_access_to_props?</code> (<code class="inline">:boolean</code>) (required)</li><li><code class="inline">use_custom_props</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li></ul>
   </section>
 </section>
 <section class="detail" id="edit_form/1">
@@ -350,7 +386,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">edit_form(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L83" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L95" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -370,7 +406,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">handle_event(binary, arg2, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L468" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L627" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -390,7 +426,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">pageview_fields(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L201" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L244" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -405,7 +441,7 @@ Pages
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li>Global attributes are accepted.</li></ul>
+<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">myself</code> (<code class="inline">:any</code>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">has_access_to_props?</code> (<code class="inline">:boolean</code>)</li><li><code class="inline">use_custom_props</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul>
   </section>
 </section>
 <section class="detail" id="render/1">
@@ -416,7 +452,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L73" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L85" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -436,7 +472,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">revenue_goal_settings(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L422" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L579" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -456,7 +492,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">scroll_fields(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L253" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L317" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -471,7 +507,7 @@ Pages
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li>Global attributes are accepted.</li></ul>
+<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">myself</code> (<code class="inline">:any</code>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">has_access_to_props?</code> (<code class="inline">:boolean</code>)</li><li><code class="inline">use_custom_props</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul>
   </section>
 </section>
 <section class="detail" id="suggest_event_names/3">
@@ -482,7 +518,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">suggest_event_names(input, site, existing_goals)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L521" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L694" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -502,7 +538,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">suggest_page_paths(input, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L508" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L681" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
