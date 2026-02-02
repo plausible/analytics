@@ -20,19 +20,14 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          {:ok, filters} <- parse_filters(params),
          {:ok, metrics} <- parse_metrics(params),
          {:ok, include} <- parse_include(params) do
-      params =
-        %{
-          input_date_range: input_date_range,
-          relative_date: relative_date,
-          filters: filters,
-          metrics: metrics,
-          include: include
-        }
-        |> ParsedQueryParams.new!()
-        |> ParsedQueryParams.set_include(:dashboard_metric_labels, true)
-        |> ParsedQueryParams.set_include(:trim_relative_date_range, true)
-
-      {:ok, params}
+      {:ok,
+       ParsedQueryParams.new!(%{
+         input_date_range: input_date_range,
+         relative_date: relative_date,
+         filters: filters,
+         metrics: metrics,
+         include: include
+       })}
     end
   end
 
@@ -64,11 +59,17 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   defp parse_metrics(_), do: {:error, :invalid_metrics}
 
   defp parse_include(params) do
-    {include_compare, include_rest} = Map.split(params["include"], ["compare"])
-
-    with {:ok, compare} = parse_include_compare(include_compare),
-         {:ok, include} = ApiQueryParser.parse_include(include_rest) do
-      {:ok, struct(QueryInclude, Map.to_list(Map.put(include, :compare, compare)))}
+    with {:ok, compare} = parse_include_compare(params["include"]) do
+      {:ok,
+       %QueryInclude{
+         imports: params["include"]["imports"] !== false,
+         imports_meta: params["include"]["imports_meta"] === true,
+         compare: compare,
+         compare_match_day_of_week: params["include"]["compare_match_day_of_week"] !== false,
+         dashboard_metric_labels: true,
+         time_labels: params["include"]["time_labels"] === true,
+         trim_relative_date_range: true
+       }}
     end
   end
 
