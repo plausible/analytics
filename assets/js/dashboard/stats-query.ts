@@ -4,7 +4,7 @@ import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'
 import { remapToApiFilters } from './util/filters'
 
-type InputDateRange = DashboardPeriod | string[]
+type DateRange = DashboardPeriod | string[]
 type IncludeCompare =
   | ComparisonMode.previous_period
   | ComparisonMode.year_over_year
@@ -26,7 +26,7 @@ type ReportParams = {
 }
 
 export type StatsQuery = {
-  input_date_range: InputDateRange
+  date_range: DateRange
   relative_date: string | null
   filters: Filter[]
   dimensions: string[]
@@ -39,7 +39,7 @@ export function createStatsQuery(
   reportParams: ReportParams
 ): StatsQuery {
   return {
-    input_date_range: createInputDateRange(dashboardState),
+    date_range: createDateRange(dashboardState),
     relative_date: dashboardState.date ? formatISO(dashboardState.date) : null,
     dimensions: reportParams.dimensions || [],
     metrics: reportParams.metrics,
@@ -54,7 +54,7 @@ export function createStatsQuery(
   }
 }
 
-function createInputDateRange(dashboardState: DashboardState): InputDateRange {
+function createDateRange(dashboardState: DashboardState): DateRange {
   if (dashboardState.period === DashboardPeriod.custom) {
     return [formatISO(dashboardState.from), formatISO(dashboardState.to)]
   } else {

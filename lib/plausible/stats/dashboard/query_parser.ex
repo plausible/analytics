@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams, QueryInclude, ApiQueryParser}
+  alias Plausible.Stats.{ParsedQueryParams, QueryInclude, ApiQueryParser, QueryError}
 
   @valid_comparison_shorthands %{
     "previous_period" => :previous_period,
@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   @valid_comparison_shorthand_keys Map.keys(@valid_comparison_shorthands)
 
   def parse(params) do
-    with {:ok, input_date_range} = parse_input_date_range(params),
+    with {:ok, input_date_range} <- parse_input_date_range(params),
          {:ok, relative_date} <- parse_relative_date(params),
          {:ok, filters} <- parse_filters(params),
          {:ok, metrics} <- parse_metrics(params),
@@ -31,7 +31,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
     end
   end
 
-  defp parse_input_date_range(%{"input_date_range" => date_range}) do
+  defp parse_input_date_range(%{"date_range" => date_range}) do
     case date_range do
       "realtime" -> {:ok, :realtime}
       "realtime_30m" -> {:ok, :realtime_30m}
@@ -40,13 +40,18 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   end
 
   defp parse_input_date_range(_) do
-    {:error, :invalid_input_date_range}
+    {:error,
+     %QueryError{code: :invalid_date_range, message: "Required 'date_range' parameter missing"}}
   end
 
   defp parse_relative_date(%{"relative_date" => date}) when is_binary(date) do
     case Date.from_iso8601(date) do
-      {:ok, date} -> {:ok, date}
-      _ -> {:error, :invalid_date}
+      {:ok, date} ->
+        {:ok, date}
+
+      _ ->
+        {:error,
+         %QueryError{code: :invalid_relative_date, message: "Failed to convert '#{date}' to date"}}
     end
   end
 
@@ -56,10 +61,16 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
     ApiQueryParser.parse_metrics(metrics)
   end
 
-  defp parse_metrics(_), do: {:error, :invalid_metrics}
+  defp parse_metrics(_),
+    do:
+      {:error,
+       %QueryError{
+         code: :invalid_metrics,
+         message: "Expected at least one valid metric in 'metrics'"
+       }}
 
   defp parse_include(params) do
-    with {:ok, compare} = parse_include_compare(params["include"]) do
+    with {:ok, compare} <- parse_include_compare(params["include"]) do
       {:ok,
        %QueryInclude{
          imports: params["include"]["imports"] !== false,
@@ -73,16 +84,34 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
     end
   end
 
-  defp parse_include_compare(%{"compare" => [from, to]}) when is_binary(from) and is_binary(to) do
-    ApiQueryParser.parse_date_strings(from, to)
-  end
-
   defp parse_include_compare(%{"compare" => compare})
        when compare in @valid_comparison_shorthand_keys do
     {:ok, @valid_comparison_shorthands[compare]}
   end
 
-  defp parse_include_compare(_), do: {:ok, nil}
+  defp parse_include_compare(%{"compare" => [from, to] = compare})
+       when is_binary(from) and is_binary(to) do
+    case ApiQueryParser.parse_date_strings(from, to) do
+      {:ok, compare} ->
+        {:ok, compare}
+
+      {:error, _} ->
+        {:error,
+         %QueryError{
+           code: :invalid_include,
+           message: "Invalid include.compare '#{inspect(compare)}'"
+         }}
+    end
+  end
+
+  defp parse_include_compare(%{"compare" => compare}) when not is_nil(compare) do
+    {:error,
+     %QueryError{code: :invalid_include, message: "Invalid include.compare '#{inspect(compare)}'"}}
+  end
+
+  defp parse_include_compare(_) do
+    {:ok, nil}
+  end
 
   defp parse_filters(%{"filters" => filters}) when is_list(filters) do
     Plausible.Stats.ApiQueryParser.parse_filters(filters)
