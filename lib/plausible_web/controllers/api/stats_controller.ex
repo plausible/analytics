@@ -398,6 +398,8 @@ defmodule PlausibleWeb.Api.StatsController do
     page_filter? =
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 
+    event_only_filter? = has_event_only_filter?(query)
+
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
@@ -407,6 +409,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
         page_filter? ->
           metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
+
+        event_only_filter? ->
+          # views_per_visit cannot be accurately calculated when event-only filters
+          # are applied because it uses session-level pageview counts
+          metrics ++ [:bounce_rate, :visit_duration]
 
         true ->
           metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
@@ -1794,4 +1801,15 @@ defmodule PlausibleWeb.Api.StatsController do
       behavioral_filters: :ignore
     )
   end
+
+  defp has_event_only_filter?(query) do
+    query.filters
+    |> Filters.dimensions_used_in_filters(behavioral_filters: :ignore)
+    |> Enum.any?(&event_only_dimension?/1)
+  end
+
+  defp event_only_dimension?("event:name"), do: true
+  defp event_only_dimension?("event:goal"), do: true
+  defp event_only_dimension?("event:props:" <> _), do: true
+  defp event_only_dimension?(_), do: false
 end

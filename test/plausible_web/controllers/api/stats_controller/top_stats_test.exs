@@ -1275,6 +1275,80 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              end)
     end
 
+    test "does not return the views_per_visit metric when an event:name filter is applied", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup")
+      ])
+
+      filters = Jason.encode!([[:is, "event:name", ["Signup"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      refute Enum.any?(res["top_stats"], fn
+               %{"name" => "Views per visit"} -> true
+               _ -> false
+             end)
+    end
+
+    test "does not return the views_per_visit metric when an event:props filter is applied", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["John"])
+      ])
+
+      filters = Jason.encode!([[:is, "event:props:author", ["John"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      refute Enum.any?(res["top_stats"], fn
+               %{"name" => "Views per visit"} -> true
+               _ -> false
+             end)
+    end
+
+    test "does not return the views_per_visit metric when an event:goal filter is applied", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup")
+      ])
+
+      {:ok, _} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
+
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      refute Enum.any?(res["top_stats"], fn
+               %{"name" => "Views per visit"} -> true
+               _ -> false
+             end)
+    end
+
     test "hostname exact filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/index", hostname: "example.com"),
