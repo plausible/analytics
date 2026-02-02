@@ -438,7 +438,8 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :id, :string, required: true
-  attr :js_active_var, :string, required: true
+  attr :js_active_var, :string, default: nil
+  attr :checked, :boolean, default: nil
   attr :id_suffix, :string, default: ""
   attr :disabled, :boolean, default: false
 
@@ -446,17 +447,30 @@ defmodule PlausibleWeb.Components.Generic do
 
   @doc """
    Renders toggle input.
-   Needs `:js_active_var` that controls toggle state.
-   Set this outside this component with `x-data="{ <variable name>: <initial state> }"`.
 
-   ### Examples
+   Can be used in two modes:
+
+   1. Alpine JS mode: Pass `:js_active_var` to control toggle state via Alpine JS.
+      Set this outside this component with `x-data="{ <variable name>: <initial state> }"`.
+
+   2. Server-side mode: Pass `:checked` boolean and `phx-click` event handler.
+
+   ### Examples - Alpine JS mode
    ```
     <div x-data="{ showGoals: false }>
       <.toggle_switch id="show_goals" js_active_var="showGoals" />
     </div>
-  ```
+   ```
+
+   ### Examples - Server-side mode
+   ```
+    <.toggle_switch id="my_toggle" checked={@my_toggle} phx-click="toggle-my-setting" phx-target={@myself} />
+   ```
   """
   def toggle_switch(assigns) do
+    server_mode? = not is_nil(assigns.checked)
+    assigns = assign(assigns, :server_mode?, server_mode?)
+
     ~H"""
     <button
       id={"#{@id}-#{@id_suffix}"}
@@ -464,13 +478,34 @@ defmodule PlausibleWeb.Components.Generic do
       aria-labelledby={@id}
       role="switch"
       type="button"
-      x-on:click={"#{@js_active_var} = !#{@js_active_var}"}
-      x-bind:aria-checked={@js_active_var}
+      x-on:click={if(!@server_mode? && @js_active_var, do: "#{@js_active_var} = !#{@js_active_var}")}
+      x-bind:aria-checked={if(!@server_mode? && @js_active_var, do: @js_active_var)}
+      aria-checked={if(@server_mode?, do: to_string(@checked))}
       disabled={@disabled}
       {@rest}
     >
       <span
-        class="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+        :if={@server_mode?}
+        class={[
+          "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+          if(@checked, do: "bg-indigo-600", else: "dark:bg-gray-600 bg-gray-200"),
+          if(@disabled, do: "opacity-50")
+        ]}
+      >
+        <span
+          aria-hidden="true"
+          class={[
+            "pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+            if(@checked, do: "dark:bg-white translate-x-5", else: "dark:bg-white translate-x-0")
+          ]}
+        />
+      </span>
+      <span
+        :if={!@server_mode?}
+        class={[
+          "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+          if(@disabled, do: "opacity-50")
+        ]}
         x-bind:class={"#{@js_active_var} ? 'bg-indigo-600' : 'dark:bg-gray-600 bg-gray-200'"}
       >
         <span
@@ -582,12 +617,12 @@ defmodule PlausibleWeb.Components.Generic do
             current_team={@current_team}
             site={@site}
           >
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
               {render_slot(@inner_block)}
             </div>
           </PlausibleWeb.Components.Billing.feature_gate>
         <% else %>
-          <div class="p-6">
+          <div class="p-4 sm:p-6">
             {render_slot(@inner_block)}
           </div>
         <% end %>
@@ -615,7 +650,7 @@ defmodule PlausibleWeb.Components.Generic do
       "top-0",
       "-translate-y-full",
       "z-[1000]",
-      "sm:max-w-72",
+      "sm:max-w-64",
       "w-max"
     ]
 
@@ -653,7 +688,7 @@ defmodule PlausibleWeb.Components.Generic do
           x-transition:leave-start="opacity-100"
           x-transition:leave-end="opacity-0"
         >
-          <div class="bg-gray-800 text-white rounded-sm px-2.5 py-1.5 text-xs font-medium">
+          <div class="bg-gray-800 text-white rounded-sm px-2.5 py-1.5 text-xs font-medium whitespace-normal">
             {render_slot(@tooltip_content)}
           </div>
         </div>
@@ -854,7 +889,7 @@ defmodule PlausibleWeb.Components.Generic do
       class={
         [
           @height,
-          "text-sm px-6 py-4 first:pl-0 last:pr-0 whitespace-nowrap",
+          "text-sm px-3 md:px-6 py-3 md:py-4 first:pl-0 last:pr-0 whitespace-nowrap",
           # allow tooltips overflow cells vertically
           "overflow-visible",
           @truncate && "truncate",
@@ -1004,6 +1039,7 @@ defmodule PlausibleWeb.Components.Generic do
       "dark:group-hover/button:" <> text.dark_hover,
       "transition-colors",
       "duration-150",
+      "group-disabled/button:opacity-50",
       assigns.icon_class
     ]
 
@@ -1220,7 +1256,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <span
       class={[
-        "inline-flex items-center text-xs font-medium py-1 px-2 rounded-md",
+        "inline-flex items-center text-xs font-medium py-[3px] px-[7px] rounded-md",
         @color_classes,
         @class
       ]}

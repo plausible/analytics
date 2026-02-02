@@ -377,6 +377,45 @@ defmodule Plausible.GoalsTest do
         Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
     end
 
+    test "create/2 returns error when site does not have access to custom props on goals" do
+      user = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: user)
+
+      {:error, :upgrade_required} =
+        Goals.create(site, %{"event_name" => "Signup", "custom_props" => %{"plan" => "premium"}})
+    end
+
+    test "for_site/2 with include_goals_with_custom_props?: false excludes goals with custom props" do
+      site = new_site()
+
+      _goal_with_props =
+        insert(:goal, site: site, event_name: "Purchase", custom_props: %{"product" => "Shirt"})
+
+      goal_without_props = insert(:goal, site: site, event_name: "Signup")
+
+      filtered = Goals.for_site(site, include_goals_with_custom_props?: false)
+
+      assert length(filtered) == 1
+      assert hd(filtered).id == goal_without_props.id
+    end
+
+    test "for_site/2 includes all goals by default (include_goals_with_custom_props? defaults to true)" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      {:ok, _goal_with_props} =
+        Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt"}
+        })
+
+      {:ok, _goal_without_props} = Goals.create(site, %{"event_name" => "Signup"})
+
+      all_goals = Goals.for_site(site)
+
+      assert length(all_goals) == 2
+    end
+
     test "create/2 returns error when creating a revenue goal for consolidated view" do
       user = new_user()
       new_site(owner: user)
@@ -455,6 +494,14 @@ defmodule Plausible.GoalsTest do
   end
 
   on_ee do
+    test "update/2 prevents changing currency of existing revenue goal" do
+      site = new_site()
+      {:ok, goal} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
+
+      assert {:error, changeset} = Goals.update(goal, %{"currency" => "USD"})
+      assert {"cannot change currency of existing goal", _} = changeset.errors[:currency]
+    end
+
     test "list_revenue_goals/1 lists event_names and currencies for each revenue goal" do
       site = new_site()
 

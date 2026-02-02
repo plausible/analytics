@@ -63,17 +63,13 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       input_names = html |> find("#custom-events-form input") |> Enum.map(&name_of/1)
 
-      assert input_names ==
-               [
-                 "display-event_name_input_modalseq0",
-                 "goal[event_name]",
-                 "goal[display_name]",
-                 "display-currency_input_modalseq0",
-                 "goal[currency]"
-               ]
+      assert "goal[event_name]" in input_names
+      assert "goal[display_name]" in input_names
+      assert "display-currency_input_modalseq0" in input_names
+
+      assert html =~ "Add custom property"
     end
 
-    @tag :ee_only
     test "renders form fields for pageview", %{conn: conn, site: site} do
       lv = get_liveview(conn, site) |> open_modal_with_goal_type("pageviews")
 
@@ -83,11 +79,11 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
 
-      assert input_names == [
-               "display-page_path_input_modalseq0",
-               "goal[page_path]",
-               "goal[display_name]"
-             ]
+      assert "display-page_path_input_modalseq0" in input_names
+      assert "goal[page_path]" in input_names
+      assert "goal[display_name]" in input_names
+
+      assert html =~ "Add custom property"
     end
 
     @tag :ce_build_only
@@ -100,12 +96,11 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       input_names = html |> find("#custom-events-form input") |> Enum.map(&name_of/1)
 
-      assert input_names ==
-               [
-                 "display-event_name_input_modalseq0",
-                 "goal[event_name]",
-                 "goal[display_name]"
-               ]
+      assert "goal[event_name]" in input_names
+      assert "goal[display_name]" in input_names
+      refute "display-currency_input_modalseq0" in input_names
+
+      assert html =~ "Add custom property"
     end
 
     test "renders error on empty submission", %{conn: conn, site: site} do
@@ -278,7 +273,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     end
 
     @tag :ee_only
-    test "updates a revenue goal", %{conn: conn, site: site} do
+    test "updates a revenue goal event_name but not currency", %{conn: conn, site: site} do
       {:ok, [_, _, g]} = setup_goals(site)
       lv = get_liveview(conn, site)
 
@@ -286,20 +281,34 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       html = render(lv)
       assert element_exists?(html, "#event_name_input_modalseq0[value=Purchase]")
-      assert element_exists?(html, ~s/#currency_input_modalseq0[value="EUR - Euro"]/)
 
       lv
       |> element("#goals-form-modalseq0 form")
-      |> render_submit(%{goal: %{event_name: "Updated", currency: "USD"}})
+      |> render_submit(%{goal: %{event_name: "Updated"}})
 
       _html = render(lv)
 
       updated = Plausible.Goals.get(site, g.id)
       assert updated.event_name == "Updated"
       assert updated.display_name == "Purchase"
-      assert updated.currency == :USD
-      assert updated.currency != g.currency
+      assert updated.currency == :EUR
       assert updated.id == g.id
+    end
+
+    @tag :ee_only
+    test "currency field is displayed as disabled text input when editing revenue goal", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, [_, _, revenue_goal]} = setup_goals(site)
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{revenue_goal.id}/) |> render_click()
+
+      html = render(lv)
+
+      assert element_exists?(html, ~s/input[name="goal[currency]"][disabled]/)
+      refute element_exists?(html, ~s/#currency_input_modalseq0/)
     end
 
     test "updates a pageview", %{conn: conn, site: site} do
@@ -339,6 +348,152 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       html = render(lv)
 
       assert html =~ "has already been taken"
+    end
+
+    test "hides 'Add custom property' toggle when editing goal with custom props", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, goal} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt", "color" => "Blue"}
+        })
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      html = render(lv)
+
+      refute html =~ "Add custom property"
+      assert html =~ "Custom properties"
+    end
+
+    test "shows 'Add custom property' toggle when editing goal without custom props", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, goal} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      html = render(lv)
+
+      assert html =~ "Add custom property"
+      refute html =~ "Custom properties"
+    end
+
+    test "property pairs section is visible when editing goal with custom props", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, goal} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt"}
+        })
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      html = render(lv)
+
+      assert html =~ "Custom properties"
+      assert element_exists?(html, ~s/[data-test-id="custom-property-pairs"]/)
+    end
+
+    test "toggle can be clicked to show/hide custom props section", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
+
+      html = render(lv)
+      assert html =~ "Add custom property"
+      refute element_exists?(html, ~s/[data-test-id="custom-property-pairs"]/)
+
+      lv |> element(~s/button[phx-click="toggle-custom-props"]/) |> render_click()
+      html = render(lv)
+
+      assert html =~ "Custom properties"
+      assert element_exists?(html, ~s/[data-test-id="custom-property-pairs"]/)
+
+      lv |> element(~s/button[phx-click="toggle-custom-props"]/) |> render_click()
+      html = render(lv)
+
+      assert html =~ "Add custom property"
+      refute element_exists?(html, ~s/[data-test-id="custom-property-pairs"]/)
+    end
+
+    test "disabling custom props toggle clears custom props on save", %{conn: conn, site: site} do
+      {:ok, goal} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"product" => "Shirt", "color" => "Blue"}
+        })
+
+      assert Plausible.Goal.has_custom_props?(goal)
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      html = render(lv)
+      assert html =~ "Custom properties"
+
+      lv |> element(~s/button[phx-click="toggle-custom-props"]/) |> render_click()
+      html = render(lv)
+
+      assert html =~ "Add custom property"
+      refute element_exists?(html, ~s/[data-test-id="custom-property-pairs"]/)
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{event_name: "Purchase"}})
+
+      updated_goal = Plausible.Goals.get(site, goal.id)
+      refute Plausible.Goal.has_custom_props?(updated_goal)
+      assert updated_goal.custom_props == %{}
+    end
+
+    @tag :ee_only
+    test "custom props toggle is disabled when Props feature is unavailable", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      user
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
+      |> Plausible.Repo.update!()
+
+      lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
+
+      html = render(lv)
+
+      assert element_exists?(
+               html,
+               ~s/button[role="switch"][disabled]#add-custom-property-modalseq0/
+             )
+
+      assert html =~ "To get access to this feature"
+    end
+
+    @tag :ee_only
+    test "custom props toggle is enabled when user has Business plan", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      subscribe_to_business_plan(user)
+
+      lv = get_liveview(conn, site) |> open_modal_with_goal_type("custom_events")
+
+      html = render(lv)
+
+      refute element_exists?(
+               html,
+               ~s/button[role="switch"][disabled]#add-custom-property-modalseq0/
+             )
+
+      assert element_exists?(html, ~s/button[role="switch"]#add-custom-property-modalseq0/)
     end
   end
 

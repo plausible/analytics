@@ -45,11 +45,39 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       assert g3.currency
       assert resp =~ to_string(g3)
-      assert resp =~ "Upgrade Required"
+      assert text_of_element(resp, ~s/[data-test-id="feature-unavailable-cta"]/) =~ "Upgrade"
 
-      refute element_exists?(
+      assert element_exists?(
                resp,
-               ~s/button[phx-click="edit-goal"][phx-value-goal-id="#{g3.id}"][disabled]#edit-goal-#{g3.id}/
+               ~s/button[data-test-id="edit-goal-button"][disabled]/
+             )
+    end
+
+    @tag :ee_only
+    test "lists goals with custom props with feature availability annotation if the plan does not cover them",
+         %{conn: conn, user: user, site: site} do
+      {:ok, goal_with_props} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Signup",
+          "custom_props" => %{"plan" => "premium"}
+        })
+
+      user
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
+      |> Plausible.Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/goals")
+
+      resp = html_response(conn, 200)
+
+      assert Plausible.Goal.has_custom_props?(goal_with_props)
+      assert resp =~ to_string(goal_with_props)
+      assert text_of_element(resp, ~s/[data-test-id="feature-unavailable-cta"]/) =~ "Upgrade"
+
+      assert element_exists?(
+               resp,
+               ~s/button[data-test-id="edit-goal-button"][disabled]/
              )
     end
 
@@ -66,7 +94,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
         assert element_exists?(
                  resp,
-                 ~s/button[phx-click="edit-goal"][phx-value-goal-id="#{g.id}"]#edit-goal-#{g.id}/
+                 ~s/button[data-test-id="edit-goal-button"][phx-click="edit-goal"][phx-value-goal-id="#{g.id}"]:not([disabled])#edit-goal-#{g.id}/
                )
       end
     end
