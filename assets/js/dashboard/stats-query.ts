@@ -4,7 +4,7 @@ import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'
 import { remapToApiFilters } from './util/filters'
 
-type DateRange = DashboardPeriod | string[]
+type DateRange = DashboardPeriod | [string, string]
 type IncludeCompare =
   | ComparisonMode.previous_period
   | ComparisonMode.year_over_year
@@ -19,8 +19,8 @@ type QueryInclude = {
   compare_match_day_of_week: boolean
 }
 
-type ReportParams = {
-  metrics: [Metric, ...Metric[]]
+export type ReportParams = {
+  metrics: Metric[]
   dimensions?: string[]
   include?: Partial<QueryInclude>
 }

@@ -15,7 +15,8 @@ defmodule PlausibleWeb.Api.StatsController do
     TimeOnPage,
     Dashboard,
     ParsedQueryParams,
-    QueryBuilder
+    QueryBuilder,
+    QueryError
   }
 
   alias PlausibleWeb.Api.Helpers, as: H
@@ -35,7 +36,7 @@ defmodule PlausibleWeb.Api.StatsController do
          {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)) do
       json(conn, Plausible.Stats.query(site, query))
     else
-      _ -> bad_request(conn, "query error")
+      {:error, %QueryError{message: message}} -> bad_request(conn, message)
     end
   end
 

@@ -1,3 +1,4 @@
+import { Metric } from '../types/query-api'
 import { DashboardState } from './dashboard-state'
 import { PlausibleSite } from './site-context'
 import { StatsQuery } from './stats-query'
@@ -7,6 +8,20 @@ import * as url from './util/url'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
+
+export type QueryApiResponse = {
+  query: {
+    metrics: Metric[]
+    date_range: [string, string]
+    comparison_date_range: [string, string]
+  }
+  meta: Record<string, unknown>
+  results: {
+    metrics: Array<number>
+    dimensions: Array<string>
+    comparison: { metrics: Array<number>; change: Array<number> }
+  }[]
+}
 
 export class ApiError extends Error {
   payload: unknown

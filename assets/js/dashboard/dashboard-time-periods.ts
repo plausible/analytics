@@ -27,6 +27,7 @@ import { getDomainScopedStorageKey, getItem, setItem } from './util/storage'
 
 export enum DashboardPeriod {
   'realtime' = 'realtime',
+  'realtime_30m' = 'realtime_30m',
   'day' = 'day',
   'month' = 'month',
   '7d' = '7d',
