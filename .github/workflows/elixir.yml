@@ -113,6 +113,119 @@ jobs:
         env:
           MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
 
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MIX_ENV: e2e_test
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: marocchino/tool-versions-action@v1
+        id: versions
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ steps.versions.outputs.elixir }}
+          otp-version: ${{ steps.versions.outputs.erlang }}
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+            tracker/node_modules
+            priv/tracker/js
+            priv/tracker/installation_support
+            ${{ env.PERSISTENT_CACHE_DIR }}
+          key: e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
+            e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+
+      - name: Check for changes in tracker/**
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            tracker:
+              - 'tracker/**'
+
+      - name: Check if tracker and verifier are built already
+        run: |
+          if [ -f priv/tracker/js/plausible-web.js ] && [ -f priv/tracker/installation_support/verifier.js ]; then
+            echo "HAS_BUILT_TRACKER=true" >> $GITHUB_ENV
+          else
+            echo "HAS_BUILT_TRACKER=false" >> $GITHUB_ENV
+          fi
+
+      - run: npm install --prefix ./tracker
+        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
+
+      - run: npm run deploy --prefix ./tracker
+        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
+
+      - run: mix deps.get --only $MIX_ENV
+      - run: mix compile --warnings-as-errors --all-warnings
+      - run: mix do ecto.create, ecto.migrate
+      - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
+
+      - name: Install E2E dependencies
+        run: npm --prefix ./e2e ci
+
+      - name: Install E2E Playwright system dependencies
+        working-directory: ./e2e
+        run: npx playwright install-deps
+
+      - name: Install E2E Playwright Browsers
+        working-directory: ./e2e
+        run: npx playwright install
+
+      - name: Run E2E Playwright tests
+        run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
+
+      - name: Upload E2E blob report to GitHub Actions Artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-blob-report-${{ matrix.shardIndex }}
+          path: e2e/blob-report
+          retention-days: 1
+
+  merge-sharded-e2e-test-report:
+    if: ${{ !cancelled() }}
+    needs: [e2e]
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 23.2.0
+          cache: 'npm'
+          cache-dependency-path: e2e/package-lock.json
+      - name: Install dependencies
+        run: npm --prefix ./e2e ci
+
+      - name: Download blob reports from GitHub Actions Artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: all-e2e-blob-reports
+          pattern: e2e-blob-report-*
+          merge-multiple: true
+
+      - name: Merge into list report
+        working-directory: ./e2e
+        run: npx playwright merge-reports --reporter list ../all-e2e-blob-reports
+
   static:
     name: Static checks (format, credo, dialyzer)
     env:
@@ -125,6 +238,7 @@ jobs:
 
       - uses: marocchino/tool-versions-action@v1
         id: versions
+
       - uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
