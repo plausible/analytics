@@ -217,7 +217,7 @@ jobs:
         run: npx playwright install
 
       - name: Run E2E Playwright tests
-        run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
+        run: mix cmd npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
 
       - name: Upload E2E blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
