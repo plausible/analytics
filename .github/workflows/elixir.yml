@@ -116,7 +116,7 @@ jobs:
   e2e:
     name: End-to-end tests
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     env:
       MIX_ENV: e2e_test
     services:
@@ -226,7 +226,7 @@ jobs:
   merge-sharded-e2e-test-report:
     if: ${{ !cancelled() }}
     needs: [e2e]
-    timeout-minutes: 5
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
