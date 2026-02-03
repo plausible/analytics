@@ -199,6 +199,7 @@ jobs:
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
       - run: mix do ecto.create, ecto.migrate
+      - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
       - name: Install E2E dependencies
         run: npm --prefix ./e2e ci
