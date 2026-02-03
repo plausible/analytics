@@ -175,7 +175,18 @@ defmodule Plausible.MixProject do
         "clean_postgres",
         "clean_clickhouse",
         "run priv/repo/e2e_seeds.exs",
-        "cmd --shell --cd e2e npm exec playwright test",
+        "cmd npm run --prefix ./e2e test",
+        "clean_postgres",
+        "clean_clickhouse"
+      ],
+      "test.e2e.ui": [
+        "esbuild default",
+        "ecto.create --quiet",
+        "ecto.migrate",
+        "clean_postgres",
+        "clean_clickhouse",
+        "run priv/repo/e2e_seeds.exs",
+        "cmd npm run --prefix ./e2e test:ui",
         "clean_postgres",
         "clean_clickhouse"
       ],
