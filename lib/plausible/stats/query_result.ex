@@ -49,7 +49,6 @@ defmodule Plausible.Stats.QueryResult do
     %{}
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
-    |> add_dashboard_metric_labels(runner.main_query)
     |> add_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
     |> Enum.sort_by(&elem(&1, 0))
@@ -77,22 +76,6 @@ defmodule Plausible.Stats.QueryResult do
     else
       meta
     end
-  end
-
-  defp add_dashboard_metric_labels(meta, %Query{
-         include: %QueryInclude{dashboard_metric_labels: false}
-       }) do
-    meta
-  end
-
-  defp add_dashboard_metric_labels(meta, query) do
-    metric_labels =
-      query.metrics
-      |> Enum.map(fn metric ->
-        Plausible.Stats.Metrics.dashboard_metric_label(metric, query)
-      end)
-
-    Map.put(meta, :metric_labels, metric_labels)
   end
 
   defp add_time_labels_meta(meta, query) do

@@ -77,7 +77,6 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          imports_meta: params["include"]["imports_meta"] === true,
          compare: compare,
          compare_match_day_of_week: params["include"]["compare_match_day_of_week"] !== false,
-         dashboard_metric_labels: true,
          time_labels: params["include"]["time_labels"] === true,
          trim_relative_date_range: true
        }}

@@ -192,6 +192,15 @@ export const createPageviews = (props) => {
   })
 }
 
+export const createViewsPerVisit = (props) => {
+  const renderLabel = (_query) => 'Views per visit'
+  return new Metric({
+    ...props,
+    key: 'views_per_visit',
+    renderLabel
+  })
+}
+
 export const createTimeOnPage = (props) => {
   const renderLabel = (_query) => 'Time on page'
   return new Metric({
