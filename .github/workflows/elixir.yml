@@ -119,6 +119,29 @@ jobs:
     timeout-minutes: 5
     env:
       MIX_ENV: e2e_test
+    services:
+      postgres:
+        image: "postgres:18"
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+      clickhouse:
+        image: clickhouse/clickhouse-server:25.11.5.8-alpine
+        ports:
+          - 8123:8123
+        env:
+          CLICKHOUSE_SKIP_USER_SETUP: 1
+          options: >-
+            --health-cmd nc -zw3 localhost 8124
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
     strategy:
       fail-fast: false
       matrix:
