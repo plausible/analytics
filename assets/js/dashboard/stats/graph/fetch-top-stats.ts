@@ -14,7 +14,7 @@ import {
   isRealTimeDashboard
 } from '../../util/filters'
 
-function topStatsQueries(
+export function topStatsQueries(
   dashboardState: DashboardState,
   metrics: MetricDef[]
 ): [StatsQuery, StatsQuery | null] {
@@ -54,10 +54,10 @@ export async function fetchTopStats(
   return formatTopStatsData(topStatsResponse, currentVisitorsResponse, metrics)
 }
 
-type MetricDef = { key: Metric; label: string }
+export type MetricDef = { key: Metric; label: string }
 
-function chooseMetrics(
-  site: PlausibleSite,
+export function chooseMetrics(
+  site: Pick<PlausibleSite, 'revenueGoals'>,
   dashboardState: DashboardState
 ): MetricDef[] {
   const revenueMetrics: MetricDef[] =
