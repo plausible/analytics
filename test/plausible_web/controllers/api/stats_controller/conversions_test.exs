@@ -529,28 +529,62 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, name: "Signup"),
-        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"])
+        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"]),
+        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Jacket"])
       ])
 
-      {:ok, _goal_with_props} =
+      {:ok, _} =
         Plausible.Goals.create(
           site,
           %{
             "event_name" => "Purchase",
+            "display_name" => "Purchase - Shirt",
             "custom_props" => %{"product" => "Shirt"}
           }
         )
 
-      insert(:goal, %{site: site, event_name: "Signup"})
+      {:ok, _} =
+        Plausible.Goals.create(
+          site,
+          %{
+            "event_name" => "Purchase",
+            "display_name" => "Purchase - Jacket",
+            "custom_props" => %{"product" => "Jacket"}
+          }
+        )
+
+      {:ok, _} =
+        Plausible.Goals.create(
+          site,
+          %{
+            "event_name" => "Purchase",
+            "display_name" => "Purchase - All"
+          }
+        )
 
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
       response = json_response(conn, 200)
       results = response["results"]
 
       assert [
-               %{"conversion_rate" => 50.0, "events" => 1, "name" => "Purchase", "visitors" => 1},
-               %{"conversion_rate" => 50.0, "events" => 1, "name" => "Signup", "visitors" => 1}
+               %{
+                 "conversion_rate" => 100.0,
+                 "events" => 2,
+                 "name" => "Purchase - All",
+                 "visitors" => 2
+               },
+               %{
+                 "conversion_rate" => 50.0,
+                 "events" => 1,
+                 "name" => "Purchase - Shirt",
+                 "visitors" => 1
+               },
+               %{
+                 "conversion_rate" => 50.0,
+                 "events" => 1,
+                 "name" => "Purchase - Jacket",
+                 "visitors" => 1
+               }
              ] =
                results
     end
