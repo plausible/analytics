@@ -2,7 +2,7 @@ import React, { createContext, useMemo, useContext, ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
-import { useSiteContext } from './site-context'
+import { PlausibleSite, useSiteContext } from './site-context'
 import { parseSearch } from './util/url-search-params'
 import dayjs from 'dayjs'
 import { nowForSite, yesterday } from './util/date'
@@ -18,7 +18,12 @@ import {
   dashboardStateDefaultValue,
   postProcessFilters
 } from './dashboard-state'
-import { resolveFilters, SavedSegment, SegmentData } from './filtering/segments'
+import {
+  resolveFilters,
+  SavedSegment,
+  SavedSegments,
+  SegmentData
+} from './filtering/segments'
 import { useDefiniteLocationState } from './navigation/use-definite-location-state'
 import { useClearExpandedSegmentModeOnFilterClear } from './nav-menu/segments/segment-menu'
 import { useSegmentsContext } from './filtering/segments-context'
@@ -36,6 +41,95 @@ const DashboardStateContext = createContext(dashboardStateContextDefaultValue)
 
 export const useDashboardStateContext = () => {
   return useContext(DashboardStateContext)
+}
+
+export function calculateDashboardState({
+  parsedSearch: {
+    compare_from,
+    compare_to,
+    comparison,
+    date,
+    rawFilters,
+    from,
+    labels,
+    match_day_of_week,
+    period,
+    to,
+    with_imported
+  },
+  segmentIsExpanded,
+  segments,
+  site
+}: {
+  parsedSearch: {
+    compare_from?: unknown
+    compare_to?: unknown
+    comparison?: unknown
+    date?: unknown
+    rawFilters?: unknown
+    from?: unknown
+    labels?: unknown
+    match_day_of_week?: unknown
+    period?: unknown
+    to?: unknown
+    with_imported?: unknown
+  }
+  segmentIsExpanded: boolean
+  segments: SavedSegments
+  site: Pick<PlausibleSite, 'domain' | 'nativeStatsBegin'>
+}) {
+  const defaultValues = dashboardStateDefaultValue
+  const storedValues = getSavedTimePreferencesFromStorage({ site })
+  const timeQuery = getDashboardTimeSettings({
+    site,
+    searchValues: { period, comparison, match_day_of_week },
+    storedValues,
+    defaultValues,
+    segmentIsExpanded
+  })
+
+  const filters = Array.isArray(rawFilters)
+    ? postProcessFilters(rawFilters as Filter[])
+    : defaultValues.filters
+
+  const resolvedFilters = resolveFilters(filters, segments)
+
+  return {
+    ...timeQuery,
+    compare_from:
+      typeof compare_from === 'string' && compare_from.length
+        ? dayjs.utc(compare_from)
+        : defaultValues.compare_from,
+    compare_to:
+      typeof compare_to === 'string' && compare_to.length
+        ? dayjs.utc(compare_to)
+        : defaultValues.compare_to,
+    date:
+      typeof date === 'string' && date.length
+        ? dayjs.utc(date)
+        : nowForSite(site),
+    from:
+      typeof from === 'string' && from.length
+        ? dayjs.utc(from)
+        : timeQuery.period === DashboardPeriod.custom
+          ? yesterday(site)
+          : defaultValues.from,
+    to:
+      typeof to === 'string' && to.length
+        ? dayjs.utc(to)
+        : timeQuery.period === DashboardPeriod.custom
+          ? nowForSite(site)
+          : defaultValues.to,
+    with_imported: [true, false].includes(with_imported as boolean)
+      ? (with_imported as boolean)
+      : defaultValues.with_imported,
+    include_imports_meta: null,
+    filters,
+    resolvedFilters,
+    labels: (labels as FilterClauseLabels) || defaultValues.labels,
+    dimensions: null,
+    metrics: null
+  }
 }
 
 export default function DashboardStateContextProvider({
@@ -65,75 +159,43 @@ export default function DashboardStateContextProvider({
     ...otherSearch
   } = useMemo(() => parseSearch(location.search), [location.search])
 
-  const dashboardState = useMemo(() => {
-    const defaultValues = dashboardStateDefaultValue
-    const storedValues = getSavedTimePreferencesFromStorage({ site })
-    const timeQuery = getDashboardTimeSettings({
+  const dashboardState = useMemo(
+    () =>
+      calculateDashboardState({
+        parsedSearch: {
+          compare_from,
+          compare_to,
+          comparison,
+          date,
+          rawFilters,
+          from,
+          labels,
+          match_day_of_week,
+          period,
+          to,
+          with_imported
+        },
+        site,
+        segments: segmentsContext.segments,
+        segmentIsExpanded: !!expandedSegment
+      }),
+    [
+      compare_from,
+      compare_to,
+      comparison,
+      date,
+      rawFilters,
+      from,
+      labels,
+      match_day_of_week,
+      period,
+      to,
+      with_imported,
       site,
-      searchValues: { period, comparison, match_day_of_week },
-      storedValues,
-      defaultValues,
-      segmentIsExpanded: !!expandedSegment
-    })
-
-    const filters = Array.isArray(rawFilters)
-      ? postProcessFilters(rawFilters as Filter[])
-      : defaultValues.filters
-
-    const resolvedFilters = resolveFilters(filters, segmentsContext.segments)
-
-    return {
-      ...timeQuery,
-      compare_from:
-        typeof compare_from === 'string' && compare_from.length
-          ? dayjs.utc(compare_from)
-          : defaultValues.compare_from,
-      compare_to:
-        typeof compare_to === 'string' && compare_to.length
-          ? dayjs.utc(compare_to)
-          : defaultValues.compare_to,
-      date:
-        typeof date === 'string' && date.length
-          ? dayjs.utc(date)
-          : nowForSite(site),
-      from:
-        typeof from === 'string' && from.length
-          ? dayjs.utc(from)
-          : timeQuery.period === DashboardPeriod.custom
-            ? yesterday(site)
-            : defaultValues.from,
-      to:
-        typeof to === 'string' && to.length
-          ? dayjs.utc(to)
-          : timeQuery.period === DashboardPeriod.custom
-            ? nowForSite(site)
-            : defaultValues.to,
-      with_imported: [true, false].includes(with_imported as boolean)
-        ? (with_imported as boolean)
-        : defaultValues.with_imported,
-      include_imports_meta: null,
-      filters,
-      resolvedFilters,
-      labels: (labels as FilterClauseLabels) || defaultValues.labels,
-      dimensions: null,
-      metrics: null
-    }
-  }, [
-    compare_from,
-    compare_to,
-    comparison,
-    date,
-    rawFilters,
-    from,
-    labels,
-    match_day_of_week,
-    period,
-    to,
-    with_imported,
-    site,
-    expandedSegment,
-    segmentsContext.segments
-  ])
+      expandedSegment,
+      segmentsContext.segments
+    ]
+  )
 
   useClearExpandedSegmentModeOnFilterClear({ expandedSegment, dashboardState })
   useSaveTimePreferencesToStorage({

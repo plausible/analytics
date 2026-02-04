@@ -1,8 +1,5 @@
-import {
-  DashboardState,
-  dashboardStateDefaultValue,
-  Filter
-} from '../../dashboard-state'
+import { DashboardState, Filter } from '../../dashboard-state'
+import { calculateDashboardState } from '../../dashboard-state-context'
 import { ComparisonMode, DashboardPeriod } from '../../dashboard-time-periods'
 import { PlausibleSite, siteContextDefaultValue } from '../../site-context'
 import { StatsQuery } from '../../stats-query'
@@ -245,12 +242,17 @@ describe(`${chooseMetrics.name}`, () => {
     ])
   )(
     'for %s dashboard, top stats metrics are as expected',
-    (_, { site, ...inputDashboardState }, expectedMetrics) => {
-      const dashboardState = {
-        ...dashboardStateDefaultValue,
-        resolvedFilters: inputDashboardState.filters,
-        ...inputDashboardState
-      }
+    (_, { site, filters: rawFilters, ...parsedSearch }, expectedMetrics) => {
+      const dashboardState = calculateDashboardState({
+        parsedSearch: { ...parsedSearch, rawFilters },
+        site: {
+          domain: 'example.com',
+          nativeStatsBegin: '2020-01-01',
+          ...site
+        },
+        segments: [],
+        segmentIsExpanded: false
+      })
       expect(
         chooseMetrics({ ...siteContextDefaultValue, ...site }, dashboardState)
       ).toEqual(expectedMetrics)
@@ -261,12 +263,21 @@ describe(`${chooseMetrics.name}`, () => {
 describe(`${topStatsQueries.name}`, () => {
   test.each(cases)(
     'for %s dashboard, queries are as expected',
-    (_, { site: _site, ...inputDashboardState }, metrics, expectedQueries) => {
-      const dashboardState = {
-        ...dashboardStateDefaultValue,
-        resolvedFilters: inputDashboardState.filters,
-        ...inputDashboardState
-      }
+    (
+      _,
+      { site: _site, filters: rawFilters, ...parsedSearch },
+      metrics,
+      expectedQueries
+    ) => {
+      const dashboardState = calculateDashboardState({
+        parsedSearch: { ...parsedSearch, rawFilters },
+        site: {
+          domain: 'example.com',
+          nativeStatsBegin: '2020-01-01'
+        },
+        segments: [],
+        segmentIsExpanded: false
+      })
       const queries = topStatsQueries(dashboardState, metrics)
       expect(queries).toEqual(expectedQueries)
     }

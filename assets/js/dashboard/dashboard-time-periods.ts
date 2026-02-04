@@ -513,7 +513,7 @@ export function useSaveTimePreferencesToStorage({
   comparison,
   match_day_of_week
 }: {
-  site: PlausibleSite
+  site: Pick<PlausibleSite, 'domain'>
   period: unknown
   comparison: unknown
   match_day_of_week: unknown
@@ -537,7 +537,7 @@ export function useSaveTimePreferencesToStorage({
 export function getSavedTimePreferencesFromStorage({
   site
 }: {
-  site: PlausibleSite
+  site: Pick<PlausibleSite, 'domain'>
 }): {
   period: null | DashboardPeriod
   comparison: null | ComparisonMode
@@ -558,7 +558,7 @@ export function getDashboardTimeSettings({
   defaultValues,
   segmentIsExpanded
 }: {
-  site: PlausibleSite
+  site: Pick<PlausibleSite, 'domain' | 'nativeStatsBegin'>
   searchValues: Record<'period' | 'comparison' | 'match_day_of_week', unknown>
   storedValues: ReturnType<typeof getSavedTimePreferencesFromStorage>
   defaultValues: Pick<
@@ -612,7 +612,7 @@ export function getCurrentPeriodDisplayName({
   site
 }: {
   dashboardState: DashboardState
-  site: PlausibleSite
+  site: Pick<PlausibleSite, 'offset'>
 }) {
   if (dashboardState.period === 'day') {
     if (isToday(site, dashboardState.date)) {
