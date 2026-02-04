@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 
 - Fixed issue with all non-interactive events being counted as interactive
 - Fixed incorrect 'Views per visit' calculation when event-only filters (event:name, event:goal, event:props) are applied
+- Fixed countries map countries staying highlighted on Chrome
 
 ## v3.2.0 - 2026-01-16
 
