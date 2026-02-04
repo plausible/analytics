@@ -21,10 +21,16 @@ install: ## Run the initial setup
 server: ## Start the web server
 	mix phx.server
 
-CH_FLAGS ?= --detach -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 --name plausible_clickhouse --env CLICKHOUSE_SKIP_USER_SETUP=1
+CH_FLAGS ?= --detach -p 8123:8123 --ulimit nofile=262144:262144 --name plausible_clickhouse --env CLICKHOUSE_SKIP_USER_SETUP=1
+
+network: ## Create a docker network for clickhouse and haproxy
+	docker network create ch-net || true
 
 clickhouse: ## Start a container with a recent version of clickhouse
-	docker run $(CH_FLAGS) --network host --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse clickhouse/clickhouse-server:latest-alpine
+	docker run $(CH_FLAGS) --network ch-net --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse clickhouse/clickhouse-server:latest-alpine
+
+ch-haproxy: ## Start a container with a recent version of clickhouse
+	docker run --detach -p 8124:8123 --name haproxy --network ch-net --volume=$$PWD/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro haproxy:2.9
 
 clickhouse-client: ## Connect to clickhouse
 	docker exec -it plausible_clickhouse clickhouse-client -d plausible_events_db
