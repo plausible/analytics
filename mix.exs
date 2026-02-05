@@ -168,6 +168,7 @@ defmodule Plausible.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
+      # Run with `MIX_ENV=e2e_test mix test.e2e`
       "test.e2e": [
         "esbuild default",
         "ecto.create --quiet",
@@ -179,6 +180,8 @@ defmodule Plausible.MixProject do
         "clean_postgres",
         "clean_clickhouse"
       ],
+      # Runs tests in interactive mode
+      # Run with `MIX_ENV=e2e_test mix test.e2e.ui`
       "test.e2e.ui": [
         "esbuild default",
         "ecto.create --quiet",
