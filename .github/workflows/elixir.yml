@@ -224,13 +224,10 @@ jobs:
       - name: Install E2E dependencies
         run: npm --prefix ./e2e ci
 
-      - name: Install E2E Playwright system dependencies
-        working-directory: ./e2e
-        run: npx playwright install-deps
-
       - name: Install E2E Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: ./e2e
-        run: npx playwright install
+        run: npx playwright install --with-deps=chromium
 
       - name: Run E2E Playwright tests
         run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
