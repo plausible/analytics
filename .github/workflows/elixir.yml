@@ -240,6 +240,14 @@ jobs:
           path: e2e/blob-report
           retention-days: 1
 
+      - name: Upload E2E screenshots of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-screenshots-${{ matrix.shardIndex }}
+          path: e2e/output
+          retention-days: 1
+
   merge-sharded-e2e-test-report:
     if: ${{ !cancelled() }}
     needs: [e2e]
