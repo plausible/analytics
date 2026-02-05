@@ -8,7 +8,7 @@ test("dashboard renders", async ({ page }) => {
   await expect(page).toHaveTitle(/Plausible/);
 
   await expect(
-    page.getByRole("button", { name: "public.exampleaaa.com" }),
+    page.getByRole("button", { name: "public.example.com" }),
   ).toBeVisible();
 });
 
