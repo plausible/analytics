@@ -524,6 +524,104 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
     end
 
     @tag :ee_only
+    test "returns correct conversion stats for goals with and without custom properties", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"]),
+        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Jacket"])
+      ])
+
+      {:ok, _} =
+        Plausible.Goals.create(
+          site,
+          %{
+            "event_name" => "Purchase",
+            "display_name" => "Purchase - Shirt",
+            "custom_props" => %{"product" => "Shirt"}
+          }
+        )
+
+      {:ok, _} =
+        Plausible.Goals.create(
+          site,
+          %{
+            "event_name" => "Purchase",
+            "display_name" => "Purchase - Jacket",
+            "custom_props" => %{"product" => "Jacket"}
+          }
+        )
+
+      {:ok, _} =
+        Plausible.Goals.create(
+          site,
+          %{
+            "event_name" => "Purchase",
+            "display_name" => "Purchase - All"
+          }
+        )
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+      response = json_response(conn, 200)
+      results = response["results"]
+
+      assert [
+               %{
+                 "conversion_rate" => 100.0,
+                 "events" => 2,
+                 "name" => "Purchase - All",
+                 "visitors" => 2
+               },
+               %{
+                 "conversion_rate" => 50.0,
+                 "events" => 1,
+                 "name" => "Purchase - Shirt",
+                 "visitors" => 1
+               },
+               %{
+                 "conversion_rate" => 50.0,
+                 "events" => 1,
+                 "name" => "Purchase - Jacket",
+                 "visitors" => 1
+               }
+             ] =
+               results
+    end
+
+    @tag :ee_only
+    test "handles mixed goals with and without custom props (2)", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"])
+      ])
+
+      {:ok, _goal_with_props} =
+        Plausible.Goals.create(
+          site,
+          %{
+            "event_name" => "Purchase",
+            "custom_props" => %{"product" => "Shirt"}
+          }
+        )
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+      response = json_response(conn, 200)
+      results = response["results"]
+
+      assert [
+               %{"conversion_rate" => 50.0, "events" => 1, "name" => "Purchase", "visitors" => 1},
+               %{"conversion_rate" => 50.0, "events" => 1, "name" => "Signup", "visitors" => 1}
+             ] =
+               results
+    end
+
+    @tag :ee_only
     test "returns revenue metrics as nil for non-revenue goals", %{
       conn: conn,
       site: site
