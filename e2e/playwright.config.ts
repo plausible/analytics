@@ -76,5 +76,6 @@ export default defineConfig({
      command: 'mix phx.server',
      url: process.env.BASE_URL,
      reuseExistingServer: !process.env.CI,
+     stdout: 'pipe',
   },
 });
