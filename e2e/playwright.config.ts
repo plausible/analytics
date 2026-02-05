@@ -72,7 +72,8 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-     command: 'cd .. && mix phx.server',
+     cwd: '..',
+     command: 'mix phx.server',
      url: process.env.BASE_URL,
      reuseExistingServer: !process.env.CI,
   },
