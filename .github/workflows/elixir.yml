@@ -200,6 +200,7 @@ jobs:
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
       - run: npm install --prefix ./assets
+      - run: mix assets.deploy
       - run: mix do ecto.create, ecto.migrate
       - run: mix download_country_database
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
