@@ -166,6 +166,7 @@ jobs:
           path: |
             deps
             _build
+            assets/node_modules
             tracker/node_modules
             priv/tracker/js
             priv/tracker/installation_support
@@ -174,6 +175,18 @@ jobs:
           restore-keys: |
             e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
             e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+
+      - name: Cache E2E dependencies and Playwright browsers
+        uses: actions/cache@v5
+        id: playwright-cache
+        with:
+          path: |
+            e2e/node_modules
+            ~/.cache/ms-playwright
+            ~/.cache/ms-playwright-github
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
       - name: Check for changes in tracker/**
         uses: dorny/paths-filter@v3
