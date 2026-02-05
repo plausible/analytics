@@ -49,6 +49,15 @@ defmodule Plausible.MixProject do
     ]
   end
 
+  def cli do
+    [
+      preferred_envs: [
+        "test.e2e": :e2e_test,
+        "test.e2e.ui": :e2e_test
+      ]
+    ]
+  end
+
   # Specifies which paths to compile per environment.
   defp elixirc_paths(env) when env in [:test, :e2e_test, :dev],
     do: ["lib", "test/support", "extra/lib"]
