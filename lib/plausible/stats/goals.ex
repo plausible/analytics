@@ -82,10 +82,6 @@ defmodule Plausible.Stats.Goals do
     goals = query.preloaded_goals.matching_toplevel_filters
 
     goals
-    # Sort goals, so that those with custom_props come first
-    # This ensures the first element in custom_props_keys/values arrays is non-empty
-    # preventing ClickHouse Array(Nothing) type inference error
-    |> Enum.sort_by(fn goal -> if goal.custom_props == %{}, do: :last, else: :first end)
     |> Enum.with_index(1)
     |> Enum.reduce(
       %{
