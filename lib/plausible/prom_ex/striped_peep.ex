@@ -7,7 +7,7 @@ defmodule Plausible.PromEx.StripedPeep do
 
   @impl true
   def scrape(name) do
-    Peep.get_all_metrics(name)
+    (Peep.get_all_metrics(name) || [])
     |> Peep.Prometheus.export()
     |> IO.iodata_to_binary()
   end
