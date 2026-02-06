@@ -1451,6 +1451,46 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
     end
   end
 
+  describe "order_by" do
+    test "bounce_rate", %{site: site, conn: conn} do
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-01-01], end_date: ~D[2021-02-28])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, pathname: "/a", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_entry_pages,
+          entry_page: "/a",
+          entrances: 2,
+          bounces: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_entry_pages,
+          entry_page: "/b",
+          entrances: 4,
+          bounces: 1,
+          date: ~D[2021-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["bounce_rate"],
+          "order_by" => [["bounce_rate", "asc"]],
+          "date_range" => "all",
+          "dimensions" => ["visit:entry_page"],
+          "include" => %{"imports" => true}
+        })
+
+      response = json_response(conn, 200)
+
+      assert [
+               %{"dimensions" => ["/b"], "metrics" => [25.0]},
+               %{"dimensions" => ["/a"], "metrics" => [67.0]}
+             ] = response["results"]
+    end
+  end
+
   describe "page scroll goals" do
     setup :create_site_import
 
