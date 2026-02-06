@@ -1523,9 +1523,8 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def current_visitors(conn, _) do
-    # site = conn.assigns[:site]
-    Plausible.ClickhouseRepo.query("SELECT 'direct_test', count(*) FROM numbers(8000000000) WHERE sipHash64(number) % 1000000 = 0")
-    json(conn, %{"finish" => true})
+    site = conn.assigns[:site]
+    json(conn, Stats.current_visitors(site))
   end
 
   defp google_api(), do: Application.fetch_env!(:plausible, :google_api)

@@ -68,7 +68,20 @@ defmodule Plausible.ClickhouseRepo do
       if plausible_query do
         opts
         |> Keyword.update!(:settings, fn current_settings ->
-          Enum.concat(get_extra_connection_settings(log_comment_data), current_settings)
+          current_settings |> Enum.concat(get_extra_connection_settings(log_comment_data))
+        end)
+        |> Keyword.update!(:settings, fn current_settings ->
+          should_use_workload? =
+            Keyword.get(current_settings, :phoenix_controller, nil) in [
+              PlausibleWeb.Api.ExternalStatsController |> to_string(),
+              PlausibleWeb.Api.ExternalQueryApiController |> to_string()
+            ]
+
+          if should_use_workload? do
+            [{:workload, "external_api"} | current_settings]
+          else
+            current_settings
+          end
         end)
       else
         opts
@@ -90,7 +103,7 @@ defmodule Plausible.ClickhouseRepo do
       end)
 
     Enum.map(keys, fn k ->
-      {String.to_atom(String.trim_leading(k, "clickhouse_")), params[k]}
+      {k |> String.trim_leading("clickhouse_") |> String.to_atom(), params[k]}
     end)
   end
 

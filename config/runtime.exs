@@ -638,7 +638,7 @@ config :plausible, Plausible.ClickhouseRepo,
     # NB! when :timeout is overridden to be over 20s,
     # for it to have meaningful effect,
     # this must be overridden as well
-    # max_execution_time: 20
+    max_execution_time: 20
   ]
 
 config :plausible, Plausible.IngestRepo,
@@ -650,7 +650,8 @@ config :plausible, Plausible.IngestRepo,
   max_buffer_size: ch_max_buffer_size,
   pool_size: ingest_pool_size,
   settings: [
-    materialized_views_ignore_errors: 1
+    materialized_views_ignore_errors: 1,
+    workload: "ingestion"
   ],
   table_settings: [
     storage_policy: get_var_from_path_or_env(config_dir, "CLICKHOUSE_DEFAULT_STORAGE_POLICY")
