@@ -72,7 +72,7 @@ defmodule Plausible.ClickhouseRepo do
         end)
         |> Keyword.update!(:settings, fn current_settings ->
           should_use_workload? =
-            Keyword.get(current_settings, :phoenix_controller, nil) in [
+            Map.get(plausible_query.debug_metadata, :phoenix_controller, nil) in [
               PlausibleWeb.Api.ExternalStatsController |> to_string(),
               PlausibleWeb.Api.ExternalQueryApiController |> to_string()
             ]
