@@ -104,19 +104,34 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_metric(:visit_duration, "imported_pages", _query) do
-    wrap_alias([i], %{visit_duration: 0})
+    wrap_alias([i], %{visit_duration: 0, total_visit_duration: 0})
   end
 
   defp select_metric(:visit_duration, "imported_exit_pages", _query) do
-    wrap_alias([i], %{visit_duration: sum(i.visit_duration), __internal_visits: sum(i.exits)})
+    wrap_alias([i], %{
+      visit_duration:
+        fragment("ifNotFinite(round(? / ?), 0)", sum(i.visit_duration), sum(i.exits)),
+      total_visit_duration: sum(i.visit_duration),
+      __internal_visits: sum(i.exits)
+    })
   end
 
   defp select_metric(:visit_duration, "imported_entry_pages", _query) do
-    wrap_alias([i], %{visit_duration: sum(i.visit_duration), __internal_visits: sum(i.entrances)})
+    wrap_alias([i], %{
+      visit_duration:
+        fragment("ifNotFinite(round(? / ?), 0)", sum(i.visit_duration), sum(i.entrances)),
+      total_visit_duration: sum(i.visit_duration),
+      __internal_visits: sum(i.entrances)
+    })
   end
 
   defp select_metric(:visit_duration, _table, _query) do
-    wrap_alias([i], %{visit_duration: sum(i.visit_duration), __internal_visits: sum(i.visits)})
+    wrap_alias([i], %{
+      visit_duration:
+        fragment("ifNotFinite(round(? / ?), 0)", sum(i.visit_duration), sum(i.visits)),
+      total_visit_duration: sum(i.visit_duration),
+      __internal_visits: sum(i.visits)
+    })
   end
 
   defp select_metric(:views_per_visit, "imported_exit_pages", _query) do
@@ -385,7 +400,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
           """,
           s.__internal_visits,
           i.__internal_visits,
-          i.visit_duration,
+          i.total_visit_duration,
           s.visit_duration,
           s.__internal_visits,
           s.__internal_visits,

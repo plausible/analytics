@@ -1489,6 +1489,44 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                %{"dimensions" => ["/a"], "metrics" => [67.0]}
              ] = response["results"]
     end
+
+    test "visit_duration", %{site: site, conn: conn} do
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-01-01], end_date: ~D[2021-02-28])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, pathname: "/a", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_exit_pages,
+          exit_page: "/a",
+          exits: 2,
+          visit_duration: 90,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_exit_pages,
+          exit_page: "/b",
+          exits: 4,
+          visit_duration: 400,
+          date: ~D[2021-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visit_duration"],
+          "order_by" => [["visit_duration", "desc"]],
+          "dimensions" => ["visit:exit_page"],
+          "date_range" => "all",
+          "include" => %{"imports" => true}
+        })
+
+      response = json_response(conn, 200)
+
+      assert [
+               %{"dimensions" => ["/b"], "metrics" => [100.0]},
+               %{"dimensions" => ["/a"], "metrics" => [30.0]}
+             ] = response["results"]
+    end
   end
 
   describe "page scroll goals" do
