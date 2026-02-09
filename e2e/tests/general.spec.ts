@@ -1,30 +1,20 @@
-import { test, expect } from "@playwright/test";
-import type { User } from "./fixtures.ts";
-import { AuthPage, SitePage } from "./fixtures.ts";
+import { expect } from "@playwright/test";
+import type { User } from "./dashboard-fixtures.ts";
+import { test } from "./dashboard-fixtures.ts";
 
-test("dashboard renders", async ({ page, request }) => {
-  const domain = "basic-render.example.com";
-
-  const user: User = {
-    name: "Basic Render User",
-    email: "basic-render@example.com",
-    password: "VeryStrongVerySecret",
-  };
-
-  const authPage = new AuthPage(page);
-  await authPage.register(user);
-  const sitePage = new SitePage(page, request);
-  await sitePage.create(domain);
+test("dashboard renders for anonymous user", async ({
+  page,
+  domain,
+  sitePage,
+  authPage,
+}) => {
   await sitePage.setPublic(domain);
   await sitePage.populateStats(domain, [
-    { name: "pageview", pathname: "/page1", timestamp: { hoursAgo: 48 } },
-    { name: "pageview", pathname: "/page2", timestamp: { hoursAgo: 48 } },
-    { name: "pageview", pathname: "/page3", timestamp: { hoursAgo: 48 } },
-    { name: "pageview", pathname: "/other", timestamp: { hoursAgo: 48 } },
+    { name: "pageview", pathname: "/page", timestamp: { hoursAgo: 48 } },
   ]);
   await authPage.logout();
 
-  await page.goto(`/${domain}`);
+  await page.goto("/" + domain);
 
   await expect(page).toHaveTitle(/Plausible/);
 

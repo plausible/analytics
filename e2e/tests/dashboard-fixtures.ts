@@ -1,5 +1,6 @@
 import type { Page, Request } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { test as base } from "@playwright/test";
 
 type User = {
   name: string;
@@ -136,3 +137,38 @@ export class SitePage {
     expect(response.ok()).toBeTruthy();
   }
 }
+
+export function randomID() {
+  return Math.random().toString(16).slice(2);
+}
+
+type SetupSiteContext = {
+  sitePage: SitePage;
+  authPage: AuthPage;
+  domain: string;
+  user: User;
+};
+
+export const test = base.extend<{ setupSite: SetupSiteContext }>({
+  setupSite: [
+    async ({ page, request }, use) => {
+      const domain = `${randomID()}.example.com`;
+
+      const userID = randomID();
+
+      const user: User = {
+        name: `User ${userID}`,
+        email: `email-${userID}@example.com`,
+        password: "VeryStrongVerySecret",
+      };
+
+      const authPage = new AuthPage(page);
+      await authPage.register(user);
+      const sitePage = new SitePage(page, request);
+      await sitePage.create(domain);
+
+      await use({ sitePage, authPage, domain, user });
+    },
+    { auto: true },
+  ],
+});
