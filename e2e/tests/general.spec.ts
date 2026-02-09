@@ -27,8 +27,17 @@ test("dashboard renders for anonymous viewer", async ({ page, request }) => {
   await expect(page.getByRole("button", { name: domain })).toBeVisible();
 });
 
-test("filter is applied", async ({ page, baseURL }) => {
-  await page.goto("/public.example.com");
+test("filter is applied", async ({ page, request, baseURL }) => {
+  const { authPage, sitePage, domain } = await setupSite(page, request);
+
+  await sitePage.populateStats(domain, [
+    { name: "pageview", pathname: "/page1" },
+    { name: "pageview", pathname: "/page2" },
+    { name: "pageview", pathname: "/page3" },
+    { name: "pageview", pathname: "/other" },
+  ]);
+
+  await page.goto("/" + domain);
 
   await expect(page.getByRole("link", { name: "Page" })).toBeHidden();
 
@@ -38,7 +47,7 @@ test("filter is applied", async ({ page, baseURL }) => {
 
   await page.getByRole("link", { name: "Page" }).click();
 
-  await expect(page).toHaveURL(baseURL + "/public.example.com/filter/page");
+  await expect(page).toHaveURL(baseURL + "/" + domain + "/filter/page");
 
   await expect(
     page.getByRole("heading", { name: "Filter by Page" }),
@@ -96,9 +105,7 @@ test("filter is applied", async ({ page, baseURL }) => {
 
   await page.getByRole("button", { name: "Apply filter" }).click();
 
-  await expect(page).toHaveURL(
-    baseURL + "/public.example.com?f=is,page,/page1",
-  );
+  await expect(page).toHaveURL(baseURL + "/" + domain + "?f=is,page,/page1");
 
   await expect(
     page.getByRole("link", { name: "Page is /page1" }),
@@ -107,56 +114,49 @@ test("filter is applied", async ({ page, baseURL }) => {
 
 test("tab selection user preferences are preserved across reloads", async ({
   page,
+  request,
 }) => {
-  await page.goto("/public.example.com");
+  const { authPage, sitePage, domain } = await setupSite(page, request);
+  await sitePage.populateStats(domain, [{ name: "pageview" }]);
+
+  await page.goto("/" + domain);
 
   await page.getByRole("button", { name: "Entry pages" }).click();
 
-  await page.goto("/public.example.com");
+  await page.goto("/" + domain);
 
-  let currentTab = await page.evaluate(() =>
-    localStorage.getItem("pageTab__public.example.com"),
+  let currentTab = await page.evaluate(
+    (domain) => localStorage.getItem("pageTab__" + domain),
+    domain,
   );
 
   await expect(currentTab).toEqual("entry-pages");
 
   await page.getByRole("button", { name: "Exit pages" }).click();
 
-  await page.goto("/public.example.com");
+  await page.goto("/" + domain);
 
-  currentTab = await page.evaluate(() =>
-    localStorage.getItem("pageTab__public.example.com"),
+  currentTab = await page.evaluate(
+    (domain) => localStorage.getItem("pageTab__" + domain),
+    domain,
   );
 
   await expect(currentTab).toEqual("exit-pages");
 });
 
-test("back navigation closes the modal", async ({ page, baseURL }) => {
-  await page.goto("/public.example.com");
+test("back navigation closes the modal", async ({ page, request, baseURL }) => {
+  const { authPage, sitePage, domain } = await setupSite(page, request);
+  await sitePage.populateStats(domain, [{ name: "pageview" }]);
+
+  await page.goto("/" + domain);
 
   await page.getByRole("button", { name: "Filter" }).click();
 
   await page.getByRole("link", { name: "Page" }).click();
 
-  await expect(page).toHaveURL(baseURL + "/public.example.com/filter/page");
+  await expect(page).toHaveURL(baseURL + "/" + domain + "/filter/page");
 
   await page.goBack();
 
-  await expect(page).toHaveURL(baseURL + "/public.example.com");
-});
-
-test("opens for logged in user", async ({ page }) => {
-  await page.goto("/login");
-
-  await page.getByLabel("Email").fill("user@plausible.test");
-
-  await page.getByLabel("Password").fill("plausible");
-
-  await page.getByRole("button", { name: "Log in" }).click();
-
-  await page.goto("/private.example.com");
-
-  await expect(
-    page.getByRole("button", { name: "private.example.com" }),
-  ).toBeVisible();
+  await expect(page).toHaveURL(baseURL + "/" + domain);
 });
