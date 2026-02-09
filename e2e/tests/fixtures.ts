@@ -12,6 +12,13 @@ export class AuthPage {
 
   async register(user: User) {
     await this.page.goto("/register");
+
+    await expect(this.page.locator(".phx-connected")).toHaveCount(1);
+
+    await expect(
+      this.page.getByRole("button", { name: "Start my free trial" }),
+    ).toBeVisible();
+
     await this.page.getByLabel("Full name").fill(user.name);
     await this.page.getByLabel("Email").fill(user.email);
     await this.page.getByLabel("Password", { exact: true }).fill(user.password);

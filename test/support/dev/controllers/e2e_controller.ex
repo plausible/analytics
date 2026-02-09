@@ -6,10 +6,20 @@ defmodule PlausibleWeb.E2EController do
   def populate_stats(conn, %{"domain" => domain, "events" => events}) do
     site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
 
-    events
-    |> Enum.map(&deserialize/1)
-    |> Enum.map(&Plausible.Factory.build(:event, &1))
-    |> populate(site)
+    events =
+      events
+      |> Enum.map(&deserialize/1)
+      |> Enum.map(&Plausible.Factory.build(:event, &1))
+
+    stats_start_time = Enum.min_by(events, & &1.timestamp).timestamp
+    stats_start_date = NaiveDateTime.to_date(stats_start_time)
+
+    site
+    |> Plausible.Site.set_native_stats_start_at(stats_start_time)
+    |> Plausible.Site.set_stats_start_date(stats_start_date)
+    |> Plausible.Repo.update!()
+
+    populate(events, site)
 
     send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
   end
