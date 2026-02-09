@@ -2,8 +2,6 @@ import { test, expect } from "@playwright/test";
 import type { User } from "./fixtures.ts";
 import { AuthPage, SitePage } from "./fixtures.ts";
 
-const baseUrl = process.env.BASE_URL;
-
 test("dashboard renders", async ({ page, request }) => {
   const domain = "basic-render.example.com";
 
@@ -33,7 +31,7 @@ test("dashboard renders", async ({ page, request }) => {
   await expect(page.getByRole("button", { name: domain })).toBeVisible();
 });
 
-test("filter is applied", async ({ page }) => {
+test("filter is applied", async ({ page, baseURL }) => {
   await page.goto("/public.example.com");
 
   await expect(page.getByRole("link", { name: "Page" })).toBeHidden();
@@ -44,7 +42,7 @@ test("filter is applied", async ({ page }) => {
 
   await page.getByRole("link", { name: "Page" }).click();
 
-  await expect(page).toHaveURL(baseUrl + "/public.example.com/filter/page");
+  await expect(page).toHaveURL(baseURL + "/public.example.com/filter/page");
 
   await expect(
     page.getByRole("heading", { name: "Filter by Page" }),
@@ -103,7 +101,7 @@ test("filter is applied", async ({ page }) => {
   await page.getByRole("button", { name: "Apply filter" }).click();
 
   await expect(page).toHaveURL(
-    baseUrl + "/public.example.com?f=is,page,/page1",
+    baseURL + "/public.example.com?f=is,page,/page1",
   );
 
   await expect(
@@ -137,18 +135,18 @@ test("tab selection user preferences are preserved across reloads", async ({
   await expect(currentTab).toEqual("exit-pages");
 });
 
-test("back navigation closes the modal", async ({ page }) => {
+test("back navigation closes the modal", async ({ page, baseURL }) => {
   await page.goto("/public.example.com");
 
   await page.getByRole("button", { name: "Filter" }).click();
 
   await page.getByRole("link", { name: "Page" }).click();
 
-  await expect(page).toHaveURL(baseUrl + "/public.example.com/filter/page");
+  await expect(page).toHaveURL(baseURL + "/public.example.com/filter/page");
 
   await page.goBack();
 
-  await expect(page).toHaveURL(baseUrl + "/public.example.com");
+  await expect(page).toHaveURL(baseURL + "/public.example.com");
 });
 
 test("opens for logged in user", async ({ page }) => {
