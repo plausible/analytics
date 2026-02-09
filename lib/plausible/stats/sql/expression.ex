@@ -467,8 +467,8 @@ defmodule Plausible.Stats.SQL.Expression do
             ?,
             ?,
             ?,
-            ?,
-            ?
+            arraySlice(?, 2),
+            arraySlice(?, 2)
           )
         )
         """,
@@ -481,8 +481,16 @@ defmodule Plausible.Stats.SQL.Expression do
         type(^unquote(goal_join_data).event_names_by_type, {:array, :string}),
         type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
         type(^unquote(goal_join_data).indices, {:array, :integer}),
-        type(^unquote(goal_join_data).custom_props_keys, {:array, {:array, :string}}),
-        type(^unquote(goal_join_data).custom_props_values, {:array, {:array, :string}})
+        # this is temporary until https://github.com/plausible/ecto_ch/issues/262
+        # is resolved
+        type(
+          ^[["__TRICK_ECTO_CH__"] | unquote(goal_join_data).custom_props_keys],
+          {:array, {:array, :string}}
+        ),
+        type(
+          ^[["__TRICK_ECTO_CH__"] | unquote(goal_join_data).custom_props_values],
+          {:array, {:array, :string}}
+        )
       )
     end
   end

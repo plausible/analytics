@@ -77,7 +77,7 @@ jobs:
 
       - name: Notify team on failure
         if: ${{ failure() }}
-        uses: fjogeleit/http-request-action@v1
+        uses: fjogeleit/http-request-action@v2
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: "POST"

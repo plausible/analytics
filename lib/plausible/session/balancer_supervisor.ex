@@ -2,7 +2,7 @@ defmodule Plausible.Session.BalancerSupervisor do
   @moduledoc "Serialize session processing to avoid explicit locks"
   use Supervisor
 
-  if Mix.env() in [:test, :ce_test] do
+  if Mix.env() in [:test, :ce_test, :e2e_test] do
     def size(),
       do: 10
   else

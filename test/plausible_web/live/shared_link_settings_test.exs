@@ -10,6 +10,22 @@ defmodule PlausibleWeb.Live.SharedLinkSettingsTest do
       {:ok, session: %{"site_id" => site.id, "domain" => site.domain}}
     end
 
+    test "guest editors should be able to access shared link settings", %{
+      site: site,
+      conn: conn,
+      session: session
+    } do
+      insert(:shared_link, site: site, name: "Link 1")
+      guest_user = new_user()
+      add_guest(site, user: guest_user, role: :editor)
+
+      {:ok, conn: conn} = log_in(%{user: guest_user, conn: conn})
+      lv = get_liveview(conn, session)
+      lock_notice = render(lv) |> text_of_element("#lock-notice")
+
+      refute lock_notice =~ "upgrade your subscription"
+    end
+
     test "allows shared link deletion", %{conn: conn, site: site, session: session} do
       link1 = insert(:shared_link, site: site, name: "Link 1")
       link2 = insert(:shared_link, site: site, name: "Link 2")

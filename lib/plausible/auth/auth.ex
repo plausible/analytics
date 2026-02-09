@@ -15,15 +15,23 @@ defmodule Plausible.Auth do
 
   require Logger
 
+  if Mix.env() == :e2e_test do
+    @ip_rate_limit 100_000
+    @user_rate_limit 100_000
+  else
+    @ip_rate_limit 5
+    @user_rate_limit 5
+  end
+
   @rate_limits %{
     login_ip: %{
       prefix: "login:ip",
-      limit: 5,
+      limit: @ip_rate_limit,
       interval: :timer.seconds(60)
     },
     login_user: %{
       prefix: "login:user",
-      limit: 5,
+      limit: @user_rate_limit,
       interval: :timer.seconds(60)
     },
     email_change_user: %{

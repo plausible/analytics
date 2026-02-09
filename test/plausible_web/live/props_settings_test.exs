@@ -39,6 +39,22 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       refute lock_notice =~ "upgrade your subscription"
     end
 
+    @tag :ee_only
+    test "guest editors should be able to access prop settings", %{site: site, conn: conn} do
+      guest_user = new_user()
+      add_guest(site, user: guest_user, role: :editor)
+
+      {:ok, conn: conn} = log_in(%{user: guest_user, conn: conn})
+
+      lock_notice =
+        conn
+        |> get("/#{site.domain}/settings/properties")
+        |> html_response(200)
+        |> text_of_element("#lock-notice")
+
+      refute lock_notice =~ "upgrade your subscription"
+    end
+
     test "lists props for the site and renders links", %{conn: conn, site: site} do
       {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
       conn = get(conn, "/#{site.domain}/settings/properties")
