@@ -51,63 +51,6 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert element_exists?(html, ~s|a[data-test-id="team-settings-link"]|)
     end
 
-    test "renders team invitations", %{user: user, conn: conn} do
-      owner1 = new_user(name: "G.I. Joe")
-      new_site(owner: owner1)
-      team1 = team_of(owner1)
-
-      owner2 = new_user(name: "G.I. Jane")
-      new_site(owner: owner2)
-      team2 = team_of(owner2)
-
-      invitation1 = invite_member(team1, user, inviter: owner1, role: :viewer)
-      invitation2 = invite_member(team2, user, inviter: owner2, role: :editor)
-
-      {:ok, _lv, html} = live(conn, "/sites")
-
-      assert text_of_element(html, "#invitation-#{invitation1.invitation_id}") =~
-               "G.I. Joe has invited you to join the \"My personal sites\" as viewer member."
-
-      assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
-               "G.I. Jane has invited you to join the \"My personal sites\" as editor member."
-
-      assert element_exists?(
-               html,
-               ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}"]|
-             )
-
-      assert element_exists?(
-               html,
-               ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}"]|
-             )
-
-      assert element_exists?(
-               html,
-               ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}"]|
-             )
-
-      assert element_exists?(
-               html,
-               ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}"]|
-             )
-    end
-
-    @tag :ee_only
-    test "renders ownership transfer invitation for a case with no plan", %{
-      conn: conn,
-      user: user
-    } do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-
-      transfer = invite_transfer(site, user, inviter: inviter)
-
-      {:ok, _lv, html} = live(conn, "/sites")
-
-      assert text_of_element(html, "#invitation-modal-#{transfer.transfer_id}") =~
-               "You are unable to accept the ownership of this site because your account does not have a subscription"
-    end
-
     @tag :ee_only
     test "renders upgrade nag when current team has a site and trial expired", %{
       conn: conn,
@@ -125,27 +68,6 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
 
     @tag :ee_only
-    test "renders upgrade nag when there's a pending transfer", %{
-      conn: conn,
-      user: user
-    } do
-      {:ok, personal_team} = Plausible.Teams.get_or_create(user)
-
-      another_user = new_user()
-      site = new_site(owner: another_user)
-
-      personal_team
-      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), -1))
-      |> Repo.update!()
-
-      invite_transfer(site, user, inviter: another_user)
-
-      {:ok, _lv, html} = live(conn, "/sites")
-
-      assert html =~ "Payment required"
-    end
-
-    @tag :ee_only
     test "does not render upgrade nag when there's no current team", %{conn: conn, user: user} do
       team = new_site().team |> Plausible.Teams.complete_setup()
       add_member(team, user: user, role: :owner)
@@ -156,20 +78,7 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
 
     @tag :ee_only
-    test "does not render upgrade nag when current team has no sites and user has no pending transfers",
-         %{conn: conn, user: user} do
-      {:ok, _personal_team} = Plausible.Teams.get_or_create(user)
-
-      team = new_site().team |> Plausible.Teams.complete_setup()
-      add_member(team, user: user, role: :owner)
-
-      {:ok, _lv, html} = live(conn, "/sites")
-
-      refute html =~ "Payment required"
-    end
-
-    @tag :ee_only
-    test "does not render upgrade nag if current team does not have any sites yet and user has no pending transfers",
+    test "does not render upgrade nag if current team does not have any sites yet",
          %{conn: conn, user: user} do
       {:ok, personal_team} = Plausible.Teams.get_or_create(user)
 
@@ -183,44 +92,6 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, _lv, html} = live(conn, "/sites")
 
       refute html =~ "Payment required"
-    end
-
-    @tag :ee_only
-    test "renders ownership transfer invitation for a case with exceeded limits", %{
-      conn: conn,
-      user: user
-    } do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-
-      transfer = invite_transfer(site, user, inviter: inviter)
-
-      # fill site quota
-      subscribe_to_growth_plan(user)
-      for _ <- 1..10, do: new_site(owner: user)
-
-      {:ok, _lv, html} = live(conn, "/sites")
-
-      assert text_of_element(html, "#invitation-modal-#{transfer.transfer_id}") =~
-               "Owning this site would exceed your site limit"
-    end
-
-    @tag :ee_only
-    test "renders ownership transfer invitation for a case with missing features", %{
-      conn: conn,
-      user: user
-    } do
-      inviter = new_user()
-      site = new_site(owner: inviter, allowed_event_props: ["dummy"])
-
-      transfer = invite_transfer(site, user, inviter: inviter)
-
-      subscribe_to_growth_plan(user)
-
-      {:ok, _lv, html} = live(conn, "/sites")
-
-      assert text_of_element(html, "#invitation-modal-#{transfer.transfer_id}") =~
-               "The site uses Custom Properties, which your current subscription does not support"
     end
 
     test "renders 24h visitors correctly", %{conn: conn, user: user} do
