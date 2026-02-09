@@ -15,6 +15,7 @@ defmodule Plausible.Stats.QueryRunner do
   alias Plausible.Stats.{
     Comparisons,
     Compare,
+    Query,
     QueryOptimizer,
     QueryResult,
     Metrics,
@@ -35,6 +36,8 @@ defmodule Plausible.Stats.QueryRunner do
 
   def run(site, query) do
     optimized_query = QueryOptimizer.optimize(query)
+
+    Query.trace(optimized_query, optimized_query.metrics)
 
     %__MODULE__{main_query: optimized_query, site: site}
     |> execute_main_query()

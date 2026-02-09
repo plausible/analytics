@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    if Mix.env() in [:dev, :test] do
+    if Mix.env() in [:dev, :test, :e2e_test] do
       scope "/dev", PlausibleWeb do
         pipe_through :browser
 
@@ -153,7 +153,7 @@ defmodule PlausibleWeb.Router do
   end
 
   # Routes for plug integration testing
-  if Mix.env() in [:test, :ce_test] do
+  if Mix.env() in [:test, :ce_test, :e2e_test] do
     scope "/plug-tests", PlausibleWeb do
       scope [] do
         pipe_through :browser
@@ -700,10 +700,7 @@ defmodule PlausibleWeb.Router do
       put "/:domain/settings", SiteController, :update_settings
 
       get "/:domain/export", StatsController, :csv_export
-
-      scope assigns: %{live_socket_disable_push_state: true} do
-        get "/:domain/*path", StatsController, :stats
-      end
+      get "/:domain/*path", StatsController, :stats
     end
   end
 end

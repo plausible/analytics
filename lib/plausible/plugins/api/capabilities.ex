@@ -14,12 +14,12 @@ defmodule Plausible.Plugins.API.Capabilities do
     features =
       if site do
         site = Plausible.Repo.preload(site, :team)
+        allowed_features = Plausible.Teams.Billing.allowed_features_for(site.team)
 
         Feature.list()
         |> Enum.map(fn mod ->
-          result = mod.check_availability(site.team)
           feature = mod |> Module.split() |> List.last()
-          {feature, result == :ok}
+          {feature, mod in allowed_features}
         end)
       else
         Enum.map(Feature.list_short_names(), &{&1, false})

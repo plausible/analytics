@@ -44,8 +44,7 @@ defmodule Plausible.Workers.ExportAnalytics do
     # it's ok to use start_link to keep connection lifecycle
     # bound to that of the worker
     {:ok, ch} =
-      Plausible.ClickhouseRepo.config()
-      |> Keyword.replace!(:pool_size, 1)
+      Plausible.ClickhouseRepo.get_config_without_ch_query_execution_timeout()
       |> Ch.start_link()
 
     try do

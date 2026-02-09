@@ -32,6 +32,7 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
                          "site_domain" => ^site.domain,
                          "site_id" => ^site.id,
                          "team_id" => ^team_of(user).id,
+                         "trace_id" => _,
                          "user_id" => ^user.id
                        }) = decoded
       end
@@ -90,6 +91,7 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
                            "site_id" => ^site.id,
                            # nil team_id because viewing a public/shared dashboard
                            "team_id" => nil,
+                           "trace_id" => _,
                            # the logged in user ID is included even when viewing a random public dashboard
                            "user_id" => ^user.id
                          }) = decoded

@@ -49,8 +49,17 @@ defmodule Plausible.MixProject do
     ]
   end
 
+  def cli do
+    [
+      preferred_envs: [
+        "test.e2e": :e2e_test,
+        "test.e2e.ui": :e2e_test
+      ]
+    ]
+  end
+
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(env) when env in [:test, :dev],
+  defp elixirc_paths(env) when env in [:test, :e2e_test, :dev],
     do: ["lib", "test/support", "extra/lib"]
 
   defp elixirc_paths(env) when env in [:ce_test, :ce_dev],
@@ -69,20 +78,20 @@ defmodule Plausible.MixProject do
       {:bamboo_smtp, "~> 4.1"},
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
-      {:bypass, "~> 2.1", only: [:dev, :test, :ce_test]},
-      {:ecto_ch, "~> 0.8.2"},
+      {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
+      {:ecto_ch, "~> 0.8.4"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 3.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:double, "~> 0.8.0", only: [:dev, :test, :ce_test, :ce_dev]},
+      {:double, "~> 0.8.0", only: [:dev, :test, :ce_test, :ce_dev, :e2e_test]},
       {:ecto, "~> 3.13.5"},
       {:ecto_sql, "~> 3.13.2"},
       {:envy, "~> 1.1.1"},
       {:eqrcode, "~> 0.2.1"},
-      {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test]},
+      {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test, :e2e_test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:finch, "~> 0.20.0"},
       {:floki, "~> 0.36"},
@@ -94,27 +103,25 @@ defmodule Plausible.MixProject do
       {:hackney, "~> 1.8"},
       {:jason, "~> 1.3"},
       {:location, git: "https://github.com/plausible/location.git"},
-      {:mox, "~> 1.0", only: [:test, :ce_test]},
+      {:mox, "~> 1.0", only: [:test, :ce_test, :e2e_test]},
       {:nanoid, "~> 2.1.0"},
       {:nimble_totp, "~> 1.0"},
       {:oban, "~> 2.20.1"},
       {:observer_cli, "~> 1.7"},
-      {:opentelemetry, "~> 1.1"},
-      {:opentelemetry_api, "~> 1.1"},
-      {:opentelemetry_ecto, "~> 1.1.0"},
-      {:opentelemetry_exporter, "~> 1.6.0"},
-      {:opentelemetry_phoenix, "~> 1.0"},
-      {:opentelemetry_oban, "~> 1.1.1"},
+      {:opentelemetry, "~> 1.7"},
+      {:opentelemetry_api, "~> 1.5"},
+      {:opentelemetry_ecto, "~> 1.2"},
+      {:opentelemetry_exporter, "~> 1.10"},
+      {:opentelemetry_phoenix, "~> 1.1"},
+      {:opentelemetry_oban, "~> 1.1"},
+      {:opentelemetry_cowboy, "~> 0.3"},
       {:phoenix, "~> 1.8.2"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.5"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: [:dev, :ce_dev]},
       {:phoenix_pubsub, "~> 2.0"},
-      {:phoenix_live_view,
-       git: "https://github.com/plausible/phoenix_live_view.git",
-       branch: "disable-push-state-v-1-1-18",
-       override: true},
+      {:phoenix_live_view, "~> 1.1.17"},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
       {:prima, "~> 0.2.1"},
@@ -154,11 +161,11 @@ defmodule Plausible.MixProject do
       {:con_cache,
        git: "https://github.com/aerosol/con_cache", branch: "ensure-dirty-ops-emit-telemetry"},
       {:req, "~> 0.5.16"},
-      {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]},
+      {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:ex_json_schema, "~> 0.11.1"},
       {:odgn_json_pointer, "~> 3.1.0"},
-      {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
-      {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]},
+      {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
+      {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:phoenix_storybook, "~> 0.9"},
       {:libcluster, "~> 3.5"}
     ]
@@ -170,6 +177,28 @@ defmodule Plausible.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
+      "test.e2e": [
+        "esbuild default",
+        "ecto.create --quiet",
+        "ecto.migrate",
+        "clean_postgres",
+        "clean_clickhouse",
+        "run priv/repo/e2e_seeds.exs",
+        "cmd npm run --prefix ./e2e test",
+        "clean_postgres",
+        "clean_clickhouse"
+      ],
+      "test.e2e.ui": [
+        "esbuild default",
+        "ecto.create --quiet",
+        "ecto.migrate",
+        "clean_postgres",
+        "clean_clickhouse",
+        "run priv/repo/e2e_seeds.exs",
+        "cmd npm run --prefix ./e2e test:ui",
+        "clean_postgres",
+        "clean_clickhouse"
+      ],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [

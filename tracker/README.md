@@ -26,7 +26,7 @@ Use `node compile.js --web-snippet` if you need to update web snippet code.
 
 ### Tests
 
-Tests can be run in UI mode via `npm run playwright --ui`. This helps with debugging.
+Tests can be run in UI mode via `npx playwright test --ui`. This helps with debugging.
 
 ### NPM package
 

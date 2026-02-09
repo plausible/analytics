@@ -39,10 +39,11 @@ jobs:
             --health-timeout 5s
             --health-retries 5
       clickhouse:
-        image: clickhouse/clickhouse-server:24.12.2.29-alpine
+        image: clickhouse/clickhouse-server:25.11.5.8-alpine
         ports:
           - 8123:8123
         env:
+          CLICKHOUSE_SKIP_USER_SETUP: 1
           options: >-
             --health-cmd nc -zw3 localhost 8124
             --health-interval 10s
@@ -100,29 +101,158 @@ jobs:
 
       - run: make minio
         if: env.MIX_ENV == 'test'
-      - run: |
-          mix test --include slow --include minio --include migrations --max-failures 1 --warnings-as-errors --partitions 6 | tee test_output.log
-          if grep -E '\.+[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3} \[[^]]+\]' test_output.log | grep -v 'libcluster'; then
-            echo "The tests are producing output, this usually indicates some error"
-            exit 1
-          fi
-        shell: bash
+      - run: mix test --include slow --include minio --include migrations --max-failures 1 --warnings-as-errors --partitions 6
         if: env.MIX_ENV == 'test'
         env:
           MINIO_HOST_FOR_CLICKHOUSE: "172.17.0.1"
           MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
 
 
-      - run: | 
-          mix test --include slow --include migrations --max-failures 1 --warnings-as-errors --partitions 6 | tee test_output.log
-          if grep -E '\.+[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3} \[[^]]+\]' test_output.log | grep -v 'libcluster'; then
-            echo "The tests are producing output, this usually indicates some error"
-              exit 1
-          fi
-        shell: bash
+      - run: mix test --include slow --include migrations --max-failures 1 --warnings-as-errors --partitions 6
         if: env.MIX_ENV == 'ce_test'
         env:
           MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      MIX_ENV: e2e_test
+      BASE_URL: "http://localhost:8000"
+    services:
+      postgres:
+        image: "postgres:18"
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+      clickhouse:
+        image: clickhouse/clickhouse-server:25.11.5.8-alpine
+        ports:
+          - 8123:8123
+        env:
+          CLICKHOUSE_SKIP_USER_SETUP: 1
+          options: >-
+            --health-cmd nc -zw3 localhost 8124
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: marocchino/tool-versions-action@v1
+        id: versions
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ steps.versions.outputs.elixir }}
+          otp-version: ${{ steps.versions.outputs.erlang }}
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+            assets/node_modules
+            tracker/node_modules
+            priv/tracker/js
+            priv/tracker/installation_support
+            ${{ env.PERSISTENT_CACHE_DIR }}
+          key: e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
+            e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+
+      - name: Cache E2E dependencies and Playwright browsers
+        uses: actions/cache@v5
+        id: playwright-cache
+        with:
+          path: |
+            e2e/node_modules
+            ~/.cache/ms-playwright
+            ~/.cache/ms-playwright-github
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Check for changes in tracker/**
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            tracker:
+              - 'tracker/**'
+
+      - run: npm install --prefix ./tracker
+      - run: npm run deploy --prefix ./tracker
+      - run: mix deps.get --only $MIX_ENV
+      - run: mix compile --warnings-as-errors --all-warnings
+      - run: npm install --prefix ./assets
+      - run: mix assets.deploy
+      - run: mix do ecto.create, ecto.migrate
+      - run: mix download_country_database
+      - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
+
+      - name: Setup E2E seeds
+        run: mix run priv/repo/e2e_seeds.exs
+
+      - name: Install E2E dependencies
+        run: npm --prefix ./e2e ci
+
+      - name: Install E2E Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ./e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E Playwright tests
+        run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
+
+      - name: Upload E2E blob report to GitHub Actions Artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-blob-report-${{ matrix.shardIndex }}
+          path: e2e/blob-report
+          retention-days: 1
+
+  merge-sharded-e2e-test-report:
+    if: ${{ !cancelled() }}
+    needs: [e2e]
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 23.2.0
+          cache: 'npm'
+          cache-dependency-path: e2e/package-lock.json
+      - name: Install dependencies
+        run: npm --prefix ./e2e ci
+
+      - name: Download blob reports from GitHub Actions Artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: all-e2e-blob-reports
+          pattern: e2e-blob-report-*
+          merge-multiple: true
+
+      - name: Merge into list report
+        working-directory: ./e2e
+        run: npx playwright merge-reports --reporter list ../all-e2e-blob-reports
 
   static:
     name: Static checks (format, credo, dialyzer)
@@ -136,6 +266,7 @@ jobs:
 
       - uses: marocchino/tool-versions-action@v1
         id: versions
+
       - uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}

@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   Phoenix LiveComponent module that renders a list of goals
   """
   use PlausibleWeb, :live_component
+  use Plausible
   alias PlausibleWeb.Live.Components.Modal
   alias PlausibleWeb.Components.PrimaDropdown
 
@@ -14,9 +15,13 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   def render(assigns) do
     revenue_goals_enabled? = Plausible.Billing.Feature.RevenueGoals.enabled?(assigns.site)
 
+    props_available? =
+      Plausible.Billing.Feature.Props.check_availability(assigns.site.team) == :ok
+
     assigns =
       assigns
       |> assign(:revenue_goals_enabled?, revenue_goals_enabled?)
+      |> assign(:props_available?, props_available?)
       |> assign(:searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
@@ -65,30 +70,31 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
             <.th hide_on_mobile>Type</.th>
           </:thead>
           <:tbody :let={goal}>
-            <.td max_width="max-w-64" height="h-16">
-              <%= if not @revenue_goals_enabled? && goal.currency do %>
-                <div class="truncate">{goal}</div>
-                <.tooltip>
+            <.td max_width="max-w-52 sm:max-w-64" height="h-16">
+              <% has_unavailable_revenue? = not @revenue_goals_enabled? and not is_nil(goal.currency) %>
+              <% has_unavailable_props? =
+                not @props_available? and Plausible.Goal.has_custom_props?(goal) %>
+              <.goal_name_with_icons goal={goal} />
+              <%= if has_unavailable_revenue? or has_unavailable_props? do %>
+                <.tooltip centered?={true}>
                   <:tooltip_content>
                     <p class="text-xs">
-                      Revenue Goals act like regular custom<br />
-                      events without a Business subscription<br />
+                      <%= if has_unavailable_revenue? do %>
+                        Revenue goals appear as regular goals on the dashboard. Upgrade to Business to see revenue data.
+                      <% else %>
+                        Upgrade to Business to show goals with custom properties on the dashboard.
+                      <% end %>
                     </p>
                   </:tooltip_content>
-                  <span class="w-max flex items-center text-gray-500 italic text-sm">
-                    <Heroicons.lock_closed solid class="size-4 mr-1" /> Upgrade Required
-                  </span>
+                  <.styled_link
+                    class="w-max flex items-center text-sm"
+                    href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+                    data-test-id="feature-unavailable-cta"
+                  >
+                    <Heroicons.lock_closed class="size-3.5 mr-1 stroke-2" /> Upgrade
+                  </.styled_link>
                 </.tooltip>
               <% else %>
-                <div class="font-medium text-sm flex items-center gap-1.5">
-                  <span class="truncate">{goal}</span>
-                  <.tooltip :if={not Enum.empty?(goal.funnels)} centered?={true}>
-                    <:tooltip_content>
-                      Belongs to funnel
-                    </:tooltip_content>
-                    <Heroicons.funnel class="size-3.5 stroke-2 flex-shrink-0" />
-                  </.tooltip>
-                </div>
                 <div class="truncate">
                   <.goal_description goal={goal} />
                 </div>
@@ -103,18 +109,21 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               <.pill :if={goal.currency} color={:indigo}>Revenue Goal ({goal.currency})</.pill>
             </.td>
             <.td actions height="h-16">
+              <% goal_editable? = goal_editable?(goal, @revenue_goals_enabled?, @props_available?) %>
               <.edit_button
-                :if={!goal.currency || (goal.currency && @revenue_goals_enabled?)}
+                :if={goal_editable?}
                 x-data
                 x-on:click={Modal.JS.preopen("goals-form-modal")}
+                data-test-id="edit-goal-button"
                 phx-click="edit-goal"
                 phx-value-goal-id={goal.id}
                 class="mt-1"
                 id={"edit-goal-#{goal.id}"}
               />
               <.edit_button
-                :if={goal.currency && !@revenue_goals_enabled?}
+                :if={not goal_editable?}
                 id={"edit-goal-#{goal.id}-disabled"}
+                data-test-id="edit-goal-button"
                 disabled
                 class="cursor-not-allowed mt-1"
               />
@@ -255,6 +264,63 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
       is part of some funnel(s). If you are going to delete it, the associated funnels will be either reduced or deleted completely. Are you sure you want to remove the goal?
       """
+    end
+  end
+
+  defp goal_name_with_icons(assigns) do
+    ~H"""
+    <div class="font-medium text-sm flex items-center gap-1.5">
+      <span class="truncate">{@goal}</span>
+      <.tooltip :if={not Enum.empty?(@goal.funnels)} centered?={true}>
+        <:tooltip_content>
+          Belongs to funnel
+        </:tooltip_content>
+        <Heroicons.funnel class="size-3.5 mt-px stroke-2 flex-shrink-0" />
+      </.tooltip>
+      <.tooltip :if={Plausible.Goal.has_custom_props?(@goal)} centered?={true}>
+        <:tooltip_content>
+          <div class="-mx-1 flex flex-col gap-1 text-xs">
+            <div :for={{key, value} <- @goal.custom_props} class="truncate">
+              <span class="bg-white/20 px-1 py-0.5 rounded-sm">{key}</span>
+              is <span class="bg-white/20 px-1 py-0.5 rounded-sm">{value}</span>
+            </div>
+          </div>
+        </:tooltip_content>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          class="size-3.5 mt-px flex-shrink-0"
+        >
+          <circle fill="currentColor" cx="7.25" cy="7.25" r="1.25" />
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 3h5.172a2 2 0 0 1 1.414.586l5.536 5.536a3 3 0 0 1 0 4.243l-2.757 2.757a3 3 0 0 1-4.243 0l-5.536-5.536A2 2 0 0 1 3 9.172V4a1 1 0 0 1 1-1Z"
+          />
+        </svg>
+      </.tooltip>
+    </div>
+    """
+  end
+
+  on_ee do
+    defp goal_editable?(goal, revenue_goals_enabled?, props_available?) do
+      revenue_ok? =
+        (Plausible.Goal.Revenue.revenue?(goal) and revenue_goals_enabled?) or
+          not Plausible.Goal.Revenue.revenue?(goal)
+
+      props_ok? =
+        (Plausible.Goal.has_custom_props?(goal) and props_available?) or
+          not Plausible.Goal.has_custom_props?(goal)
+
+      revenue_ok? and props_ok?
+    end
+  else
+    defp goal_editable?(_goal, _revenue_goals_enabled?, _props_available?) do
+      always(true)
     end
   end
 end

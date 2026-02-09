@@ -31,7 +31,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     "imported_visitors"
   ]
 
-  @settings if Mix.env() in [:test, :ce_test], do: [mutations_sync: 2], else: []
+  @settings if Mix.env() in [:test, :ce_test, :e2e_test], do: [mutations_sync: 2], else: []
 
   def perform(_job) do
     deleted_sites = get_deleted_sites_with_clickhouse_data()
@@ -59,10 +59,22 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
       |> Plausible.Repo.all()
       |> MapSet.new()
 
-    ch_sites =
-      from(e in "events_v2", group_by: e.site_id, select: e.site_id)
-      |> Plausible.ClickhouseRepo.all(timeout: :infinity)
-      |> MapSet.new()
+    {:ok, ch} =
+      Plausible.ClickhouseRepo.get_config_without_ch_query_execution_timeout()
+      |> Ch.start_link()
+
+    %Ch.Result{columns: ["site_id"], rows: rows} =
+      DBConnection.run(
+        ch,
+        fn conn ->
+          Ch.query!(conn, "FROM events_v2 SELECT site_id GROUP BY site_id", [],
+            timeout: :infinity
+          )
+        end,
+        timeout: :infinity
+      )
+
+    ch_sites = rows |> MapSet.new(fn [site_id] -> site_id end)
 
     MapSet.difference(ch_sites, pg_sites) |> MapSet.to_list()
   end

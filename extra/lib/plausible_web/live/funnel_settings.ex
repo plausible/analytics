@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         show_content?={!Plausible.Billing.Feature.Funnels.opted_out?(@site)}
         site={@site}
         current_user={@current_user}
-        current_team={@current_team}
+        current_team={@site_team}
       >
         <:title>
           Funnels
