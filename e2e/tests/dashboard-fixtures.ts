@@ -1,6 +1,5 @@
 import type { Page, Request } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { test as base } from "@playwright/test";
 
 type User = {
   name: string;
@@ -9,7 +8,10 @@ type User = {
 };
 
 export class AuthPage {
-  constructor(public readonly page: Page) {}
+  constructor(
+    public readonly page: Page,
+    public readonly request: Request,
+  ) {}
 
   async register(user: User) {
     await this.page.goto("/register");
@@ -37,18 +39,19 @@ export class AuthPage {
       this.page.getByRole("heading", { name: "Activate your account" }),
     ).toBeVisible();
 
-    await this.page.goto("/sent-emails");
+    const response = await this.request.get("/sent-emails-api/emails.json");
 
-    await expect(this.page.locator(".email-detail-subject")).toBeVisible();
+    const emailData = await response.json();
 
-    const subject = await this.page
-      .locator(".email-detail-subject")
-      .textContent();
-    const [code, ...rest] = subject.split(" ");
-
-    await expect(rest.join(" ")).toEqual(
-      "is your Plausible email verification code",
+    const emails = emailData.filter(
+      (e) =>
+        e.to[0][0] === user.name &&
+        e.subject.indexOf("is your Plausible email verification code") > -1,
     );
+
+    expect(emails.length).toEqual(1);
+
+    const [code] = emails[0].subject.split(" ");
 
     await this.page.goto("/activate");
 
@@ -149,26 +152,24 @@ type SetupSiteContext = {
   user: User;
 };
 
-export const test = base.extend<{ setupSite: SetupSiteContext }>({
-  setupSite: [
-    async ({ page, request }, use) => {
-      const domain = `${randomID()}.example.com`;
+export async function setupSite(
+  page: Page,
+  request: Request,
+): SetupSiteContext {
+  const domain = `${randomID()}.example.com`;
 
-      const userID = randomID();
+  const userID = randomID();
 
-      const user: User = {
-        name: `User ${userID}`,
-        email: `email-${userID}@example.com`,
-        password: "VeryStrongVerySecret",
-      };
+  const user: User = {
+    name: `User ${userID}`,
+    email: `email-${userID}@example.com`,
+    password: "VeryStrongVerySecret",
+  };
 
-      const authPage = new AuthPage(page);
-      await authPage.register(user);
-      const sitePage = new SitePage(page, request);
-      await sitePage.create(domain);
+  const authPage = new AuthPage(page, request);
+  await authPage.register(user);
+  const sitePage = new SitePage(page, request);
+  await sitePage.create(domain);
 
-      await use({ sitePage, authPage, domain, user });
-    },
-    { auto: true },
-  ],
-});
+  return { sitePage, authPage, domain, user };
+}

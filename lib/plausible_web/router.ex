@@ -106,6 +106,7 @@ defmodule PlausibleWeb.Router do
 
   if Mix.env() in [:dev, :ce_dev, :e2e_test] do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
+    forward "/sent-emails-api", Bamboo.SentEmailApiPlug
   end
 
   scope "/" do

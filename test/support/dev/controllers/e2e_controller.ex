@@ -9,7 +9,7 @@ defmodule PlausibleWeb.E2EController do
     events =
       events
       |> Enum.map(&deserialize/1)
-      |> Enum.map(&Plausible.Factory.build(:event, &1))
+      |> Enum.map(&build/1)
 
     stats_start_time = Enum.min_by(events, & &1.timestamp).timestamp
     stats_start_date = NaiveDateTime.to_date(stats_start_time)
@@ -32,6 +32,19 @@ defmodule PlausibleWeb.E2EController do
       {key, value} ->
         {String.to_existing_atom(key), value}
     end)
+  end
+
+  defp build(attrs) do
+    timestamp = NaiveDateTime.utc_now(:second) |> NaiveDateTime.add(-48, :hour)
+
+    attrs =
+      if attrs[:timestamp] do
+        attrs
+      else
+        Keyword.put(attrs, :timestamp, timestamp)
+      end
+
+    Plausible.Factory.build(:event, attrs)
   end
 
   defp populate(events, site) do

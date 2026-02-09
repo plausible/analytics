@@ -1,17 +1,23 @@
-import { expect } from "@playwright/test";
-import type { User } from "./dashboard-fixtures.ts";
-import { test } from "./dashboard-fixtures.ts";
+import { test, expect } from "@playwright/test";
+import { setupSite } from "./dashboard-fixtures.ts";
 
-test("dashboard renders for anonymous user", async ({
-  page,
-  domain,
-  sitePage,
-  authPage,
-}) => {
+test("dashboard renders for logged in user", async ({ page, request }) => {
+  const { authPage, sitePage, domain } = await setupSite(page, request);
+
+  await sitePage.populateStats(domain, [{ name: "pageview" }]);
+
+  await page.goto("/" + domain);
+
+  await expect(page).toHaveTitle(/Plausible/);
+
+  await expect(page.getByRole("button", { name: domain })).toBeVisible();
+});
+
+test("dashboard renders for anonymous viewer", async ({ page, request }) => {
+  const { authPage, sitePage, domain } = await setupSite(page, request);
+
   await sitePage.setPublic(domain);
-  await sitePage.populateStats(domain, [
-    { name: "pageview", pathname: "/page", timestamp: { hoursAgo: 48 } },
-  ]);
+  await sitePage.populateStats(domain, [{ name: "pageview" }]);
   await authPage.logout();
 
   await page.goto("/" + domain);
