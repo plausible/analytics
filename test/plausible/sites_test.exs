@@ -269,7 +269,7 @@ defmodule Plausible.SitesTest do
     end
   end
 
-  describe "list/3 and list_with_invitations/3" do
+  describe "list/3" do
     test "returns empty when there are no sites" do
       user = new_user()
       _rogue_site = new_site()
@@ -289,28 +289,11 @@ defmodule Plausible.SitesTest do
                total_entries: 0,
                total_pages: 1
              } = Plausible.Teams.Sites.list(user, %{})
-
-      assert %{
-               entries: [],
-               page_size: 24,
-               page_number: 1,
-               total_entries: 0,
-               total_pages: 1
-             } = Sites.list_with_invitations(user, %{})
-
-      assert %{
-               entries: [],
-               page_size: 24,
-               page_number: 1,
-               total_entries: 0,
-               total_pages: 1
-             } = Plausible.Teams.Sites.list_with_invitations(user, %{})
     end
 
-    test "lists guest sites, site invitations and transfers when no current team set" do
+    test "lists guest sites when no current team set (no invitations)" do
       user1 = new_user()
       user2 = new_user()
-      user3 = new_user()
       user4 = new_user()
 
       # owned site on a setup team
@@ -325,32 +308,21 @@ defmodule Plausible.SitesTest do
       site2 = new_site(owner: user2, domain: "guest.example.com")
       add_guest(site2, user: user1, role: :editor)
 
-      # site invitation
-      site3 = new_site(owner: user3, domain: "invitation.example.com")
-      invite_guest(site3, user1, role: :viewer, inviter: user3)
-
-      # transfer
-      site4 = new_site(domain: "transfer.example.com", owner: user3)
-      invite_transfer(site4, user1, inviter: user2)
-
       # other team site access
-      site5 = new_site(domain: "team.example.com", owner: user4)
-      add_member(site5.team, user: user1, role: :editor)
+      site3 = new_site(domain: "team.example.com", owner: user4)
+      add_member(site3.team, user: user1, role: :editor)
 
       assert %{
                entries: [
-                 %{domain: "invitation.example.com"},
-                 %{domain: "transfer.example.com"},
                  %{domain: "guest.example.com"}
                ]
              } =
-               Sites.list_with_invitations(user1, %{})
+               Sites.list(user1, %{})
     end
 
-    test "lists guest sites, site invitations, transfers and team sites when current team set but not setup" do
+    test "lists guest sites and team sites when current team set but not setup (no invitations)" do
       user1 = new_user()
       user2 = new_user()
-      user3 = new_user()
       user4 = new_user()
 
       # owned site on a personal team
@@ -360,36 +332,25 @@ defmodule Plausible.SitesTest do
       site2 = new_site(owner: user2, domain: "guest.example.com")
       add_guest(site2, user: user1, role: :editor)
 
-      # site invitation
-      site3 = new_site(owner: user3, domain: "invitation.example.com")
-      invite_guest(site3, user1, role: :viewer, inviter: user3)
-
-      # transfer
-      site4 = new_site(domain: "transfer.example.com", owner: user3)
-      invite_transfer(site4, user1, inviter: user2)
-
       # other team site access
-      site5 = new_site(domain: "team.example.com", owner: user4)
-      add_member(site5.team, user: user1, role: :editor)
+      site3 = new_site(domain: "team.example.com", owner: user4)
+      add_member(site3.team, user: user1, role: :editor)
 
       # excluded
       new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
 
       assert %{
                entries: [
-                 %{domain: "invitation.example.com"},
-                 %{domain: "transfer.example.com"},
                  %{domain: "guest.example.com"},
                  %{domain: "own.example.com"}
                ]
              } =
-               Sites.list_with_invitations(user1, %{}, team: site1.team)
+               Sites.list(user1, %{}, team: site1.team)
     end
 
-    test "lists team sites and transfers when current team set and setup" do
+    test "lists team sites when current team set and setup (no invitations)" do
       user1 = new_user()
       user2 = new_user()
-      user3 = new_user()
       user4 = new_user()
 
       # owned site on a personal team
@@ -399,37 +360,29 @@ defmodule Plausible.SitesTest do
       site2 = new_site(owner: user2, domain: "guest.example.com")
       add_guest(site2, user: user1, role: :editor)
 
-      # site invitation
-      site3 = new_site(owner: user3, domain: "invitation.example.com")
-      invite_guest(site3, user1, role: :viewer, inviter: user3)
-
-      # transfer
-      site4 = new_site(domain: "transfer.example.com", owner: user3)
-      invite_transfer(site4, user1, inviter: user2)
-
       # other team site access
-      site5 = new_site(domain: "team.example.com", owner: user4)
-      team5 = Plausible.Teams.complete_setup(site5.team)
-      add_member(site5.team, user: user1, role: :admin)
+      site3 = new_site(domain: "team.example.com", owner: user4)
+      team3 = Plausible.Teams.complete_setup(site3.team)
+      add_member(site3.team, user: user1, role: :admin)
 
       # excluded
       new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
 
       assert %{
                entries: [
-                 %{domain: "transfer.example.com"},
                  %{domain: "team.example.com"}
                ]
              } =
-               Sites.list_with_invitations(user1, %{}, team: team5)
+               Sites.list(user1, %{}, team: team3)
     end
 
-    test "shows both pending transfer and pinned site for user without team with guest membership" do
+    test "shows pinned site for user without team with guest membership (no invitation)" do
       owner = new_user()
       pending_owner = new_user()
       site = new_site(owner: owner, domain: "one.example.com")
       add_guest(site, user: pending_owner, role: :editor)
 
+      # transfer no longer shown
       invite_transfer(site, pending_owner, inviter: owner)
 
       {:ok, _} = Sites.toggle_pin(pending_owner, site)
@@ -440,49 +393,42 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{domain: "one.example.com", entry_type: "invitation"},
                  %{domain: "one.example.com", entry_type: "pinned_site"}
                ]
              } =
-               Sites.list_with_invitations(pending_owner, %{})
+               Sites.list(pending_owner, %{})
     end
 
-    test "shows both pending transfer and site for user without team with guest membership" do
+    test "shows site for user without team with guest membership (no invitation)" do
       owner = new_user()
       pending_owner = new_user()
       site = new_site(owner: owner, domain: "one.example.com")
       add_guest(site, user: pending_owner, role: :editor)
 
-      invite_transfer(site, pending_owner, inviter: owner)
-
       assert %{
                entries: [
-                 %{domain: "one.example.com", entry_type: "invitation"},
                  %{domain: "one.example.com", entry_type: "site"}
                ]
              } =
-               Sites.list_with_invitations(pending_owner, %{})
+               Sites.list(pending_owner, %{})
     end
 
-    test "shows both pending transfer and site for user with personal team with guest membership" do
+    test "shows site for user with personal team with guest membership (no invitation)" do
       owner = new_user()
       pending_owner = new_user() |> subscribe_to_growth_plan()
       pending_team = team_of(pending_owner)
       site = new_site(owner: owner, domain: "one.example.com")
       add_guest(site, user: pending_owner, role: :editor)
 
-      invite_transfer(site, pending_owner, inviter: owner)
-
       assert %{
                entries: [
-                 %{domain: "one.example.com", entry_type: "invitation"},
                  %{domain: "one.example.com", entry_type: "site"}
                ]
              } =
-               Sites.list_with_invitations(pending_owner, %{}, team: pending_team)
+               Sites.list(pending_owner, %{}, team: pending_team)
     end
 
-    test "shows only pending transfer for user with setup team with guest membership" do
+    test "does not show site for user with setup team with guest membership (no invitation)" do
       owner = new_user()
       pending_owner = new_user() |> subscribe_to_growth_plan()
 
@@ -494,48 +440,38 @@ defmodule Plausible.SitesTest do
       site = new_site(owner: owner, domain: "one.example.com")
       add_guest(site, user: pending_owner, role: :editor)
 
-      invite_transfer(site, pending_owner, inviter: owner)
-
       assert %{
-               entries: [
-                 %{domain: "one.example.com", entry_type: "invitation"}
-               ]
+               entries: []
              } =
-               Sites.list_with_invitations(pending_owner, %{}, team: pending_team)
+               Sites.list(pending_owner, %{}, team: pending_team)
     end
 
     test "does not show transfer for user with site in their personal team" do
-      owner = new_user()
       pending_owner = new_user() |> subscribe_to_growth_plan()
       pending_team = team_of(pending_owner)
-      site = new_site(owner: pending_owner, domain: "one.example.com")
-
-      invite_transfer(site, pending_owner, inviter: owner)
+      _site = new_site(owner: pending_owner, domain: "one.example.com")
 
       assert %{
                entries: [
                  %{domain: "one.example.com", entry_type: "site"}
                ]
              } =
-               Sites.list_with_invitations(pending_owner, %{}, team: pending_team)
+               Sites.list(pending_owner, %{}, team: pending_team)
     end
 
     test "does not show transfer for user with site in their setup team" do
-      owner = new_user()
       pending_owner = new_user() |> subscribe_to_growth_plan()
       pending_team = team_of(pending_owner)
-      site = new_site(owner: pending_owner, domain: "one.example.com")
+      _site = new_site(owner: pending_owner, domain: "one.example.com")
 
       pending_team = Plausible.Teams.complete_setup(pending_team)
-
-      invite_transfer(site, pending_owner, inviter: owner)
 
       assert %{
                entries: [
                  %{domain: "one.example.com", entry_type: "site"}
                ]
              } =
-               Sites.list_with_invitations(pending_owner, %{}, team: pending_team)
+               Sites.list(pending_owner, %{}, team: pending_team)
     end
 
     test "pinned site doesn't matter with membership revoked (no active invitations)" do
@@ -552,22 +488,18 @@ defmodule Plausible.SitesTest do
       revoke_membership(site2, user1)
 
       assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
-      assert %{entries: [%{domain: "one.example.com"}]} = Sites.list_with_invitations(user1, %{})
+      assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
 
       assert %{entries: [%{domain: "one.example.com"}]} = Plausible.Teams.Sites.list(user1, %{})
 
       assert %{entries: [%{domain: "one.example.com"}]} =
-               Plausible.Teams.Sites.list_with_invitations(user1, %{})
+               Plausible.Teams.Sites.list(user1, %{})
     end
 
-    test "pinned site with active invitation" do
+    test "pinned site (no invitation shown)" do
       user1 = new_user(email: "user1@example.com")
-      user2 = new_user(email: "user2@example.com")
 
       site1 = new_site(domain: "one.example.com", owner: user1)
-      site2 = new_site(domain: "two.example.com")
-
-      invite_guest(site2, user1, role: :editor, inviter: user2)
 
       {:ok, _} = Sites.toggle_pin(user1, site1)
 
@@ -575,19 +507,18 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{domain: "two.example.com", entry_type: "invitation"},
                  %{domain: "one.example.com", entry_type: "pinned_site"}
                ]
              } =
-               Sites.list_with_invitations(user1, %{})
+               Sites.list(user1, %{})
 
       assert %{entries: [%{domain: "one.example.com"}]} = Plausible.Teams.Sites.list(user1, %{})
 
-      assert %{entries: [%{domain: "two.example.com"}, %{domain: "one.example.com"}]} =
-               Plausible.Teams.Sites.list_with_invitations(user1, %{})
+      assert %{entries: [%{domain: "one.example.com"}]} =
+               Plausible.Teams.Sites.list(user1, %{})
     end
 
-    test "pinned site on active invitation" do
+    test "pinned site after invitation revoked (no invitation shown)" do
       user1 = new_user(email: "user1@example.com")
       user2 = new_user(email: "user2@example.com")
 
@@ -597,53 +528,36 @@ defmodule Plausible.SitesTest do
       {:ok, _} = Sites.toggle_pin(user1, site1)
       revoke_membership(site1, user1)
 
-      invite_guest(site1, user1, role: :editor, inviter: user2)
-
       assert %{entries: []} = Sites.list(user1, %{})
-
-      assert %{
-               entries: [
-                 %{domain: "one.example.com", entry_type: "invitation"}
-               ]
-             } =
-               Sites.list_with_invitations(user1, %{})
 
       assert %{entries: []} = Plausible.Teams.Sites.list(user1, %{})
 
-      assert %{entries: [%{domain: "one.example.com", entry_type: "invitation"}]} =
-               Plausible.Teams.Sites.list_with_invitations(user1, %{})
+      assert %{entries: []} =
+               Plausible.Teams.Sites.list(user1, %{})
     end
 
-    test "puts invitations first, pinned sites second, sites last" do
+    test "puts pinned sites first, sites last (no invitations)" do
       user1 = new_user()
       user2 = new_user()
-      user3 = new_user()
 
       site1 = new_site(owner: user1, domain: "one.example.com")
       site2 = new_site(owner: user2, domain: "two.example.com")
-      site3 = new_site(owner: user3, domain: "three.example.com")
+      site3 = new_site(domain: "three.example.com")
       site4 = new_site(domain: "four.example.com")
-      site5 = new_site(owner: user3, domain: "five.example.com")
 
       # excluded
       new_site(owner: user1, domain: "consolidated1.example.com", consolidated: true)
       new_site(owner: user2, domain: "consolidated2.example.com", consolidated: true)
-      new_site(owner: user3, domain: "consolidated3.example.com", consolidated: true)
 
-      invite_guest(site2, user1, role: :editor, inviter: user2)
       add_guest(site3, user: user1, role: :viewer)
       add_guest(site4, user: user1, role: :editor)
-
-      invite_transfer(site5, user1, inviter: user3)
 
       {:ok, _} = Sites.toggle_pin(user1, site3)
       {:ok, _pin_to_ignore} = Sites.toggle_pin(user2, site2)
 
       site1_id = site1.id
-      site2_id = site2.id
       site3_id = site3.id
       site4_id = site4.id
-      site5_id = site5.id
 
       assert %{
                entries: [
@@ -655,16 +569,14 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site5_id, entry_type: "invitation"},
-                 %{id: ^site2_id, entry_type: "invitation"},
                  %{id: ^site3_id, entry_type: "pinned_site"},
                  %{id: ^site4_id, entry_type: "site"},
                  %{id: ^site1_id, entry_type: "site"}
                ]
-             } = Sites.list_with_invitations(user1, %{})
+             } = Sites.list(user1, %{})
     end
 
-    test "pinned sites are ordered according to the time they were pinned at" do
+    test "pinned sites are ordered according to the time they were pinned at (no invitations)" do
       user1 = new_user()
       user2 = new_user()
       user3 = new_user()
@@ -675,6 +587,7 @@ defmodule Plausible.SitesTest do
       site4 = new_site(domain: "four.example.com")
       site5 = new_site(owner: user3, domain: "five.example.com")
 
+      # invitations no longer shown
       invite_guest(site2, user1, role: :editor, inviter: user2)
       add_guest(site3, user: user1, role: :viewer)
       add_guest(site4, user: user1, role: :editor)
@@ -684,10 +597,8 @@ defmodule Plausible.SitesTest do
       {:ok, _} = Sites.toggle_pin(user1, site3)
 
       site1_id = site1.id
-      site2_id = site2.id
       site3_id = site3.id
       site4_id = site4.id
-      site5_id = site5.id
 
       Sites.set_option(user1, site1, :pinned_at, ~N[2023-10-22 12:00:00])
       {:ok, _} = Sites.toggle_pin(user1, site3)
@@ -702,32 +613,21 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site5_id, entry_type: "invitation"},
-                 %{id: ^site2_id, entry_type: "invitation"},
                  %{id: ^site3_id, entry_type: "pinned_site"},
                  %{id: ^site1_id, entry_type: "pinned_site"},
                  %{id: ^site4_id, entry_type: "site"}
                ]
-             } = Sites.list_with_invitations(user1, %{})
+             } = Sites.list(user1, %{})
     end
 
-    test "filters by domain" do
+    test "filters by domain (no invitations)" do
       user1 = new_user()
-      user2 = new_user()
-      user3 = new_user()
 
       site1 = new_site(owner: user1, domain: "first.example.com")
-      site2 = new_site(owner: user2, domain: "first-transfer.example.com")
-      site3 = new_site(owner: user3, domain: "first-invitation.example.com")
-      _site4 = new_site(owner: user1, domain: "another.example.com")
+      _site2 = new_site(owner: user1, domain: "another.example.com")
       new_site(owner: user1, domain: "consolidated.example.com", consolidated: true)
 
-      invite_guest(site3, user1, role: :viewer, inviter: user3)
-      invite_transfer(site2, user1, inviter: user2)
-
       site1_id = site1.id
-      site2_id = site2.id
-      site3_id = site3.id
 
       assert %{
                entries: [
@@ -737,25 +637,17 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site3_id},
-                 %{id: ^site2_id},
                  %{id: ^site1_id}
                ]
-             } = Sites.list_with_invitations(user1, %{}, filter_by_domain: "first")
+             } = Sites.list(user1, %{}, filter_by_domain: "first")
     end
 
-    test "scopes by team when provided" do
+    test "scopes by team when provided (no invitations)" do
       user1 = new_user()
-      user2 = new_user()
-      user3 = new_user()
 
       site1 = new_site(owner: user1, domain: "first.example.com")
-      site2 = new_site(owner: user2, domain: "first-transfer.example.com")
-      site3 = new_site(owner: user3, domain: "first-invitation.example.com")
       site4 = new_site(domain: "zzzsitefromanotherteam.com")
 
-      invite_guest(site3, user1, role: :viewer, inviter: user3)
-      invite_transfer(site2, user1, inviter: user2)
       team4 = Plausible.Teams.complete_setup(site4.team)
       add_member(team4, user: user1, role: :admin)
 
@@ -767,11 +659,9 @@ defmodule Plausible.SitesTest do
 
       assert_matches %{
                        entries: [
-                         %{id: ^site3.id},
-                         %{id: ^site2.id},
                          %{id: ^site1.id}
                        ]
-                     } = Sites.list_with_invitations(user1, %{})
+                     } = Sites.list(user1, %{})
 
       assert_matches %{
                        entries: [
@@ -781,36 +671,26 @@ defmodule Plausible.SitesTest do
 
       assert_matches %{
                        entries: [
-                         %{id: ^site2.id},
                          %{id: ^site4.id}
                        ]
-                     } = Sites.list_with_invitations(user1, %{}, team: team4)
+                     } = Sites.list(user1, %{}, team: team4)
     end
 
-    test "handles pagination correctly" do
+    test "handles pagination correctly (no invitations)" do
       user1 = new_user()
-      user2 = new_user()
-      user3 = new_user()
 
       site1 = new_site(owner: user1, domain: "one.example.com")
-      site2 = new_site(owner: user2, domain: "two.example.com")
       site3 = new_site(domain: "three.example.com")
       site4 = new_site(domain: "four.example.com")
-      site5 = new_site(owner: user3, domain: "five.example.com")
 
-      invite_guest(site2, user1, role: :editor, inviter: user2)
       add_guest(site3, user: user1, role: :viewer)
       add_guest(site4, user: user1, role: :editor)
-
-      invite_transfer(site5, user1, inviter: user3)
 
       {:ok, _} = Sites.toggle_pin(user1, site3)
 
       site1_id = site1.id
-      site2_id = site2.id
       site3_id = site3.id
       site4_id = site4.id
-      site5_id = site5.id
 
       assert %{
                entries: [%{id: ^site3_id}, %{id: ^site4_id}],
@@ -835,32 +715,6 @@ defmodule Plausible.SitesTest do
                total_entries: 3,
                total_pages: 1
              } = Sites.list(user1, %{"page_size" => 3})
-
-      # list_with_invitations
-      #
-      assert %{
-               entries: [%{id: ^site5_id}, %{id: ^site2_id}],
-               page_number: 1,
-               page_size: 2,
-               total_entries: 5,
-               total_pages: 3
-             } = Sites.list_with_invitations(user1, %{"page_size" => 2})
-
-      assert %{
-               entries: [%{id: ^site3_id}, %{id: ^site4_id}],
-               page_number: 2,
-               page_size: 2,
-               total_entries: 5,
-               total_pages: 3
-             } = Sites.list_with_invitations(user1, %{"page_size" => 2, "page" => 2})
-
-      assert %{
-               entries: [%{id: ^site1_id}],
-               page_number: 3,
-               page_size: 2,
-               total_entries: 5,
-               total_pages: 3
-             } = Sites.list_with_invitations(user1, %{"page_size" => 2, "page" => 3})
     end
   end
 
