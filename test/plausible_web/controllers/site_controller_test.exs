@@ -215,21 +215,21 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "filters by domain", %{conn: conn, user: user} do
-      _site1 = new_site(domain: "first.example.com", owner: user)
-      _site2 = new_site(domain: "second.example.com", owner: user)
+      _site1 = new_site(domain: "alpha.example.com", owner: user)
+      _site2 = new_site(domain: "beta.example.com", owner: user)
       _rogue_site = new_site()
 
       inviter = new_user()
 
-      site3 = new_site(owner: inviter, domain: "guest.example.com")
+      site3 = new_site(owner: inviter, domain: "alpha-another.example.com")
       add_guest(site3, user: user, role: :viewer)
 
-      conn = get(conn, "/sites", filter_text: "first")
+      conn = get(conn, "/sites", filter_text: "alpha")
       resp = html_response(conn, 200)
 
-      assert resp =~ "first.example.com"
-      assert resp =~ "guest.example.com"
-      refute resp =~ "second.example.com"
+      assert resp =~ "alpha.example.com"
+      assert resp =~ "alpha-another.example.com"
+      refute resp =~ "beta.example.com"
     end
 
     test "does not show empty state when filter returns empty but there are sites", %{
