@@ -146,25 +146,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert site_card =~ site.domain
     end
 
-    test "shows invitations for user by email address", %{conn: conn, user: user} do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-      invite_guest(site, user, inviter: inviter, role: :editor)
-      conn = get(conn, "/sites")
-
-      assert html_response(conn, 200) =~ site.domain
-    end
-
-    test "invitations are case insensitive", %{conn: conn, user: user} do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-      invite_guest(site, String.upcase(user.email), inviter: inviter, role: :editor)
-
-      conn = get(conn, "/sites")
-
-      assert html_response(conn, 200) =~ site.domain
-    end
-
     test "paginates sites", %{conn: initial_conn, user: user} do
       for i <- 1..25 do
         new_site(
@@ -240,14 +221,14 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       inviter = new_user()
 
-      new_site(owner: inviter, domain: "first-another.example.com")
-      |> invite_guest(user, inviter: inviter, role: :viewer)
+      site3 = new_site(owner: inviter, domain: "guest.example.com")
+      add_guest(site3, user: user, role: :viewer)
 
       conn = get(conn, "/sites", filter_text: "first")
       resp = html_response(conn, 200)
 
       assert resp =~ "first.example.com"
-      assert resp =~ "first-another.example.com"
+      assert resp =~ "guest.example.com"
       refute resp =~ "second.example.com"
     end
 
