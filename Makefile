@@ -1,4 +1,4 @@
-.PHONY: help install server clickhouse clickhouse-prod clickhouse-stop postgres postgres-client postgres-prod postgres-stop
+.PHONY: help install server clickhouse clickhouse-prod clickhouse-stop clickhouse-postgres-remote postgres postgres-client postgres-prod postgres-stop
 
 require = \
 	  $(foreach 1,$1,$(__require))
@@ -24,7 +24,7 @@ server: ## Start the web server
 CH_FLAGS ?= --detach -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 --name plausible_clickhouse --env CLICKHOUSE_SKIP_USER_SETUP=1
 
 clickhouse: ## Start a container with a recent version of clickhouse
-	docker run $(CH_FLAGS) --network host --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse clickhouse/clickhouse-server:latest-alpine
+	docker run $(CH_FLAGS) --network host --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --volume=$$PWD/.clickhouse_config:/etc/clickhouse-server/config.d clickhouse/clickhouse-server:latest-alpine
 
 clickhouse-client: ## Connect to clickhouse
 	docker exec -it plausible_clickhouse clickhouse-client -d plausible_events_db
@@ -34,6 +34,10 @@ clickhouse-prod: ## Start a container with the same version of clickhouse as the
 
 clickhouse-stop: ## Stop and remove the clickhouse container
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse
+
+clickhouse-postgres-remote: ## Create postgres_remote database in ClickHouse for querying PostgreSQL
+	$(eval POSTGRES_IP := $(shell docker inspect plausible_db --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'))
+	@docker exec plausible_clickhouse clickhouse-client --query "DROP DATABASE IF EXISTS postgres_remote; CREATE DATABASE postgres_remote ENGINE = PostgreSQL('$(POSTGRES_IP):5432', 'plausible_dev', 'postgres', 'postgres');"
 
 PG_FLAGS ?= --detach -e POSTGRES_PASSWORD="postgres" -p 5432:5432 --name plausible_db
 
