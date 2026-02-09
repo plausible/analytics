@@ -6,6 +6,8 @@ defmodule Plausible.ClickhouseRepo do
     adapter: Ecto.Adapters.ClickHouse,
     read_only: true
 
+  use Scrivener, page_size: 24
+
   defmacro __using__(_) do
     quote do
       alias Plausible.ClickhouseRepo

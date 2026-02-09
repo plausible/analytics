@@ -1,12 +1,70 @@
 defmodule Plausible.Teams.Sites do
   @moduledoc false
+  @sample_threshold 10_000_000
 
   import Ecto.Query
+  use Plausible.Stats.SQL.Fragments
 
   alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Teams
+
+  def list_with_clickhouse(user, team) do
+    utc_start = ~N[2026-01-01 00:00:00]
+    utc_end = ~N[2026-01-31 23:59:59]
+
+    all_query =
+      if Teams.setup?(team) do
+        from(tm in Teams.Membership,
+          inner_join: t in assoc(tm, :team),
+          inner_join: s in assoc(t, :sites),
+          where: tm.user_id == ^user.id and tm.role != :guest,
+          where: tm.team_id == ^team.id,
+          select: struct(s, [:id, :domain])
+        )
+      else
+        my_team_query =
+          from(tm in Teams.Membership,
+            inner_join: t in assoc(tm, :team),
+            inner_join: s in assoc(t, :sites),
+            where: tm.user_id == ^user.id and tm.role != :guest,
+            where: tm.is_autocreated == true,
+            where: t.setup_complete == false,
+            select: struct(s, [:id, :domain])
+          )
+
+        guest_membership_query =
+          from tm in Teams.Membership,
+            inner_join: gm in assoc(tm, :guest_memberships),
+            inner_join: s in assoc(gm, :site),
+            where: tm.user_id == ^user.id and tm.role == :guest,
+            select: struct(s, [:id, :domain])
+
+        from s in my_team_query,
+          union_all: ^guest_membership_query
+      end
+
+    clickhouse_query =
+      from e in Plausible.ClickhouseEventV2,
+        hints: unsafe_fragment(^"SAMPLE #{@sample_threshold}"),
+        right_join: sites in subquery(all_query, prefix: "postgres_remote"),
+        on: fragment("CAST(?, 'UInt64')", sites.id) == e.site_id,
+        select: %{
+          site_id: sites.id,
+          domain: sites.domain,
+          visitors:
+            selected_as(
+              scale_sample(fragment("uniqIf(?, ? != 0)", e.user_id, e.site_id)),
+              :visitors
+            )
+        },
+        where: e.site_id == 0 or (e.timestamp >= ^utc_start and e.timestamp <= ^utc_end),
+        group_by: [sites.id, sites.domain],
+        order_by: [desc: selected_as(:visitors)]
+
+    sites_by_traffic = Plausible.ClickhouseRepo.paginate(clickhouse_query, %{})
+  end
 
   @type list_opt() :: {:filter_by_domain, String.t()} | {:team, Teams.Team.t() | nil}
 

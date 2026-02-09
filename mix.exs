@@ -87,7 +87,7 @@ defmodule Plausible.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:double, "~> 0.8.0", only: [:dev, :test, :ce_test, :ce_dev, :e2e_test]},
-      {:ecto, "~> 3.13.5"},
+      {:ecto, [path: "/Users/ukutaht/plausible/ecto", override: true]},
       {:ecto_sql, "~> 3.13.2"},
       {:envy, "~> 1.1.1"},
       {:eqrcode, "~> 0.2.1"},
