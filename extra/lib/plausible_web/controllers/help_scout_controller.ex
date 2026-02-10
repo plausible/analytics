@@ -12,7 +12,7 @@ defmodule PlausibleWeb.HelpScoutController do
     assigns = %{conversation_id: conversation_id, customer_id: customer_id, token: token}
 
     with :ok <- HelpScout.validate_signature(conn),
-         {:ok, details} <- HelpScout.get_details_for_customer(customer_id) do
+         {:ok, details} <- HelpScout.get_details_for_customer(customer_id, conversation_id) do
       conn
       |> render("callback.html", Map.merge(assigns, details))
     else

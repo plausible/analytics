@@ -76,9 +76,9 @@ defmodule Plausible.HelpScout do
     end
   end
 
-  @spec get_details_for_customer(String.t()) :: {:ok, map()} | {:error, any()}
-  def get_details_for_customer(customer_id) do
-    with {:ok, emails} <- get_customer_emails(customer_id) do
+  @spec get_details_for_customer(String.t(), String.t()) :: {:ok, map()} | {:error, any()}
+  def get_details_for_customer(customer_id, conversation_id) do
+    with {:ok, emails} <- get_customer_emails(customer_id, conversation_id) do
       get_details_for_emails(emails, customer_id)
     end
   end
@@ -306,10 +306,10 @@ defmodule Plausible.HelpScout do
     )
   end
 
-  defp get_customer_emails(customer_id) do
+  defp get_customer_emails(customer_id, _conversation_id) do
     case fetch_customer_emails(customer_id) do
       {:ok, emails} ->
-        case lookup_mapping(customer_id) do
+        case lookup_customer_mapping(customer_id) do
           {:ok, mapped_emails} ->
             {:ok, mapped_emails}
 
@@ -318,7 +318,7 @@ defmodule Plausible.HelpScout do
         end
 
       {:error, error} when error in [:not_found, :no_emails] ->
-        lookup_mapping(customer_id)
+        lookup_customer_mapping(customer_id)
 
       {:error, _} = error ->
         error
@@ -369,7 +369,7 @@ defmodule Plausible.HelpScout do
 
   # Exposed for testing
   @doc false
-  def lookup_mapping(customer_id) do
+  def lookup_customer_mapping(customer_id) do
     email_row =
       "SELECT email FROM help_scout_mappings WHERE customer_id = $1"
       |> Repo.query!([customer_id])
