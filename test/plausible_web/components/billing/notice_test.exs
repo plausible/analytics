@@ -243,6 +243,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   end
 
   describe "determine_notification_type/8" do
+    @tag :ee_only
     test "returns :dashboard_locked when grace period has expired" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -265,6 +266,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :dashboard_locked
     end
 
+    @tag :ee_only
     test "returns :trial_ended when trial expired and no subscription" do
       user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -5))
       team = team_of(user)
@@ -275,6 +277,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :trial_ended
     end
 
+    @tag :ee_only
     test "returns :traffic_exceeded_sustained when both last cycles exceeded" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -298,6 +301,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :traffic_exceeded_sustained
     end
 
+    @tag :ee_only
     test "returns :traffic_exceeded_last_cycle when only last cycle exceeded" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -321,6 +325,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :traffic_exceeded_last_cycle
     end
 
+    @tag :ee_only
     test "returns :pageview_approaching_limit when at 90% of limit" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -343,6 +348,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :pageview_approaching_limit
     end
 
+    @tag :ee_only
     test "pageview notification takes precedence over site/member limits" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -365,6 +371,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :pageview_approaching_limit
     end
 
+    @tag :ee_only
     test "returns :limits_reached_combined when both site and member limits reached" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -384,6 +391,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :limits_reached_combined
     end
 
+    @tag :ee_only
     test "returns :site_limit_reached when only site limit reached" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -403,6 +411,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :site_limit_reached
     end
 
+    @tag :ee_only
     test "returns :team_member_limit_reached when only member limit reached" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -422,6 +431,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                :team_member_limit_reached
     end
 
+    @tag :ee_only
     test "returns nil when no notification is needed" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
@@ -441,6 +451,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
                nil
     end
 
+    @tag :ee_only
     test "handles :unlimited limits correctly" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
