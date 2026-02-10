@@ -1,5 +1,6 @@
 import type { Page, Request } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { expectLiveViewConnected, randomID } from "./test-utils.ts";
 
 type User = {
   name: string;
@@ -18,7 +19,7 @@ export async function register({
 }) {
   await page.goto("/register");
 
-  await expect(page.locator(".phx-connected")).toHaveCount(1);
+  await expectLiveViewConnected(page);
 
   await expect(
     page.getByRole("button", { name: "Start my free trial" }),
@@ -147,10 +148,6 @@ export async function populateStats({
   });
 
   expect(response.ok()).toBeTruthy();
-}
-
-export function randomID() {
-  return Math.random().toString(16).slice(2);
 }
 
 export async function setupSite({
