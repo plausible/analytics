@@ -276,7 +276,7 @@ defmodule Plausible.HelpScoutTest do
                 }} = HelpScout.get_details_for_customer("500", "1000")
       end
 
-      test "returns details for user via mapped email" do
+      test "returns details for user via customer mapped email" do
         %{email: email} = new_user(trial_expiry_date: Date.utc_today())
         stub_help_scout_requests("different.email.in.hs@example.com")
         HelpScout.set_customer_mapping("500", email)
@@ -284,13 +284,30 @@ defmodule Plausible.HelpScoutTest do
         assert {:ok, %{status_label: "Trial"}} = HelpScout.get_details_for_customer("500", "1000")
       end
 
+      test "returns details for user via conversation mapped email" do
+        %{email: email} = new_user(trial_expiry_date: Date.utc_today())
+        stub_help_scout_requests("different.email.in.hs@example.com")
+        HelpScout.set_conversation_mapping("1000", email)
+
+        assert {:ok, %{status_label: "Trial"}} = HelpScout.get_details_for_customer("500", "1000")
+      end
+
       for excluded_domain <- Plausible.HelpScout.excluded_email_domains() do
-        test "refuses to use customer mapped email when customer email is #{excluded_domain}" do
+        test "refuses to use customer mapped email when customer email is in #{excluded_domain}" do
           %{email: email} = new_user(trial_expiry_date: Date.utc_today())
           stub_help_scout_requests("excluded.email@#{unquote(excluded_domain)}")
           HelpScout.set_customer_mapping("500", email)
 
           assert {:error, :excluded_email} = HelpScout.get_details_for_customer("500", "1000")
+        end
+
+        test "uses conversation mapped email when customer email is  in #{excluded_domain} " do
+          %{email: email} = new_user(trial_expiry_date: Date.utc_today())
+          stub_help_scout_requests("excluded.email@#{unquote(excluded_domain)}")
+          HelpScout.set_conversation_mapping("1000", email)
+
+          assert {:ok, %{status_label: "Trial"}} =
+                   HelpScout.get_details_for_customer("500", "1000")
         end
       end
 
@@ -420,7 +437,7 @@ defmodule Plausible.HelpScoutTest do
     end
 
     describe "get_details_for_emails/4" do
-      test "returns details for user and persists mapping" do
+      test "returns details for user and persists mappings" do
         %{email: email} = user = new_user(trial_expiry_date: Date.utc_today())
 
         team = team_of(user)
@@ -437,15 +454,28 @@ defmodule Plausible.HelpScoutTest do
                 }} = HelpScout.get_details_for_emails([email], "123", "1000", nil)
 
         assert {:ok, [^email]} = HelpScout.lookup_customer_mapping("123")
+        assert {:ok, [^email]} = HelpScout.lookup_conversation_mapping("1000")
       end
 
-      test "updates mapping if one already exists" do
+      test "updates mappings if ones already exist" do
+        user = new_user()
+        %{email: new_email} = new_user()
+
+        HelpScout.set_customer_mapping("123", user.email)
+        HelpScout.set_conversation_mapping("1000", user.email)
+
+        assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123", "1000", nil)
+        assert {:ok, [^new_email]} = HelpScout.lookup_customer_mapping("123")
+        assert {:ok, [^new_email]} = HelpScout.lookup_conversation_mapping("1000")
+      end
+
+      test "handles not passing conversation ID gracefully" do
         user = new_user()
         %{email: new_email} = new_user()
 
         HelpScout.set_customer_mapping("123", user.email)
 
-        assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123", "1000", nil)
+        assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123", nil, nil)
         assert {:ok, [^new_email]} = HelpScout.lookup_customer_mapping("123")
       end
 
