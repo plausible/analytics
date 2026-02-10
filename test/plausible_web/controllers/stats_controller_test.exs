@@ -1627,7 +1627,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         )
 
       expected_redirect =
-        "/share/#{URI.encode_www_form(site.domain)}?auth=#{link.slug}&#{filters}"
+        "/share/#{URI.encode_www_form(site.domain)}/?auth=#{link.slug}&#{filters}"
 
       assert redirected_to(conn, 302) == expected_redirect
 
