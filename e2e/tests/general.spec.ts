@@ -1,10 +1,14 @@
 import { test, expect } from "@playwright/test";
-import { setupSite } from "./dashboard-fixtures.ts";
+import {
+  setupSite,
+  logout,
+  makeSitePublic,
+  populateStats,
+} from "./fixtures.ts";
 
 test("dashboard renders for logged in user", async ({ page, request }) => {
-  const { authPage, sitePage, domain } = await setupSite(page, request);
-
-  await sitePage.populateStats(domain, [{ name: "pageview" }]);
+  const { domain } = await setupSite({ page, request });
+  await populateStats({ request, domain, events: [{ name: "pageview" }] });
 
   await page.goto("/" + domain);
 
@@ -14,11 +18,10 @@ test("dashboard renders for logged in user", async ({ page, request }) => {
 });
 
 test("dashboard renders for anonymous viewer", async ({ page, request }) => {
-  const { authPage, sitePage, domain } = await setupSite(page, request);
-
-  await sitePage.setPublic(domain);
-  await sitePage.populateStats(domain, [{ name: "pageview" }]);
-  await authPage.logout();
+  const { domain } = await setupSite({ page, request });
+  await makeSitePublic({ page, domain });
+  await populateStats({ request, domain, events: [{ name: "pageview" }] });
+  await logout(page);
 
   await page.goto("/" + domain);
 
@@ -28,14 +31,17 @@ test("dashboard renders for anonymous viewer", async ({ page, request }) => {
 });
 
 test("filter is applied", async ({ page, request, baseURL }) => {
-  const { authPage, sitePage, domain } = await setupSite(page, request);
-
-  await sitePage.populateStats(domain, [
-    { name: "pageview", pathname: "/page1" },
-    { name: "pageview", pathname: "/page2" },
-    { name: "pageview", pathname: "/page3" },
-    { name: "pageview", pathname: "/other" },
-  ]);
+  const { domain } = await setupSite({ page, request });
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: "pageview", pathname: "/page1" },
+      { name: "pageview", pathname: "/page2" },
+      { name: "pageview", pathname: "/page3" },
+      { name: "pageview", pathname: "/other" },
+    ],
+  });
 
   await page.goto("/" + domain);
 
@@ -116,8 +122,8 @@ test("tab selection user preferences are preserved across reloads", async ({
   page,
   request,
 }) => {
-  const { authPage, sitePage, domain } = await setupSite(page, request);
-  await sitePage.populateStats(domain, [{ name: "pageview" }]);
+  const { domain } = await setupSite({ page, request });
+  await populateStats({ request, domain, events: [{ name: "pageview" }] });
 
   await page.goto("/" + domain);
 
@@ -145,8 +151,12 @@ test("tab selection user preferences are preserved across reloads", async ({
 });
 
 test("back navigation closes the modal", async ({ page, request, baseURL }) => {
-  const { authPage, sitePage, domain } = await setupSite(page, request);
-  await sitePage.populateStats(domain, [{ name: "pageview" }]);
+  const { domain } = await setupSite({ page, request });
+  await populateStats({
+    request,
+    domain,
+    events: [{ name: "pageview" }],
+  });
 
   await page.goto("/" + domain);
 
