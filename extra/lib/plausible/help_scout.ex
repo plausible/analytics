@@ -20,7 +20,7 @@ defmodule Plausible.HelpScout do
 
   @signature_errors [:missing_signature, :bad_signature]
 
-  @excluded_email_domains ["paddle.com"]
+  @excluded_email_domains ["paddle.com", "plausible.io"]
 
   @type signature_error() :: unquote(Enum.reduce(@signature_errors, &{:|, [], [&1, &2]}))
 
