@@ -8,6 +8,17 @@ type User = {
   password: string;
 };
 
+type EventTimestamp =
+  | { minutesAgo: number }
+  | { hoursAgo: number }
+  | { daysAgo: number };
+
+type Event = {
+  name: string;
+  pathname?: string;
+  timestamp?: EventTimestamp;
+};
+
 export async function register({
   page,
   request,
@@ -130,7 +141,7 @@ export async function populateStats({
 }: {
   request: Request;
   domain: string;
-  events: object[];
+  events: Event[];
 }) {
   const payload = {
     domain: domain,
