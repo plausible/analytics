@@ -469,16 +469,6 @@ defmodule Plausible.HelpScoutTest do
         assert {:ok, [^new_email]} = HelpScout.lookup_conversation_mapping("1000")
       end
 
-      test "handles not passing conversation ID gracefully" do
-        user = new_user()
-        %{email: new_email} = new_user()
-
-        HelpScout.set_customer_mapping("123", user.email)
-
-        assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123", nil, nil)
-        assert {:ok, [^new_email]} = HelpScout.lookup_customer_mapping("123")
-      end
-
       test "picks the match with largest number of owned sites" do
         user1 = new_user()
         new_site(owner: user1)

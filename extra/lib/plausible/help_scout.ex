@@ -83,7 +83,7 @@ defmodule Plausible.HelpScout do
     end
   end
 
-  @spec get_details_for_emails([String.t()], String.t(), String.t() | nil, String.t() | nil) ::
+  @spec get_details_for_emails([String.t()], String.t(), String.t(), String.t() | nil) ::
           {:ok, map()} | {:error, any()}
   def get_details_for_emails(emails, customer_id, conversation_id, team_identifier) do
     with {:ok, user} <- get_user(emails) do
@@ -436,8 +436,6 @@ defmodule Plausible.HelpScout do
 
   # Exposed for testing
   @doc false
-  def set_conversation_mapping(nil, _email), do: :noop
-
   def set_conversation_mapping(conversation_id, email) do
     now = NaiveDateTime.utc_now(:second)
 
