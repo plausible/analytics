@@ -469,7 +469,8 @@ defmodule Plausible.HelpScoutTest do
                   plan_link: "#",
                   plan_label: "None",
                   sites_count: 2
-                }} = HelpScout.get_details_for_emails([user1.email, user2.email], "123", "1000", nil)
+                }} =
+                 HelpScout.get_details_for_emails([user1.email, user2.email], "123", "1000", nil)
 
         user2_email = user2.email
         assert {:ok, [^user2_email]} = HelpScout.lookup_customer_mapping("123")
@@ -477,7 +478,12 @@ defmodule Plausible.HelpScoutTest do
 
       test "does not persist the mapping when there's no match" do
         assert {:error, {:user_not_found, ["does.not.exist@example.com"]}} =
-                 HelpScout.get_details_for_emails(["does.not.exist@example.com"], "123", "1000", nil)
+                 HelpScout.get_details_for_emails(
+                   ["does.not.exist@example.com"],
+                   "123",
+                   "1000",
+                   nil
+                 )
 
         assert {:error, :not_found} = HelpScout.lookup_customer_mapping("123")
       end
