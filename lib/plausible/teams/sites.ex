@@ -57,10 +57,7 @@ defmodule Plausible.Teams.Sites do
       end
 
     all_query =
-      from(u in subquery(all_query),
-        inner_join: s in ^Plausible.Site.regular(),
-        on: u.id == s.id,
-        as: :site,
+      from(s in subquery(all_query),
         left_join: up in Site.UserPreference,
         on: up.site_id == s.id and up.user_id == ^user.id,
         select: %{
@@ -89,8 +86,8 @@ defmodule Plausible.Teams.Sites do
         right_join: sites in subquery(all_query, prefix: "postgres_remote"),
         on: fragment("CAST(?, 'UInt64')", sites.id) == e.site_id,
         select: %{
-          entry_type: selected_as(sites.entry_type, :entry_type),
-          pinned_at: selected_as(sites.pinned_at, :pinned_at),
+          entry_type: sites.entry_type,
+          pinned_at: sites.pinned_at,
           site_id: sites.id,
           domain: sites.domain,
           visitors:
@@ -116,8 +113,8 @@ defmodule Plausible.Teams.Sites do
             ),
         group_by: [sites.id, sites.domain, sites.entry_type, sites.pinned_at, sites.timezone],
         order_by: [
-          asc: selected_as(:entry_type),
-          desc: selected_as(:pinned_at),
+          asc: sites.entry_type,
+          desc: sites.pinned_at,
           desc: selected_as(:visitors)
         ]
       )
