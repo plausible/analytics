@@ -101,15 +101,15 @@ defmodule Plausible.Teams.Sites do
           e.site_id == 0 or
             fragment(
               """
-              ? >= toDateTime(concat(?, ' 00:00:00'), ?)
-              AND ? <= toDateTime(concat(?, ' 23:59:59'), ?)
+              toString(?, ?) >= concat(?, ' 00:00:00')
+              AND toString(?, ?) <= concat(?, ' 23:59:59')
               """,
               e.timestamp,
-              ^relative_start_date,
               sites.timezone,
+              ^relative_start_date,
               e.timestamp,
-              ^relative_end_date,
-              sites.timezone
+              sites.timezone,
+              ^relative_end_date
             ),
         group_by: [sites.id, sites.domain, sites.entry_type, sites.pinned_at, sites.timezone],
         order_by: [
