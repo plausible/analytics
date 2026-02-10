@@ -220,6 +220,76 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
+  @doc """
+  Renders a usage progress bar with color coding based on usage percentage.
+
+  Color scheme:
+  - 0-90%: Green (healthy usage)
+  - 91-99%: Gradient from green through yellow to orange (approaching limit)
+  - 100%: Gradient from green through orange to red (at limit)
+  """
+  attr(:title, :string, required: true)
+  attr(:usage, :integer, required: true)
+  attr(:limit, :any, required: true)
+  attr(:rest, :global)
+
+  def usage_progress_row(assigns) do
+    percentage = calculate_percentage(assigns.usage, assigns.limit)
+
+    assigns =
+      assigns
+      |> assign(:percentage, percentage)
+      |> assign(:color_class, progress_bar_color_from_percentage(percentage, assigns.limit))
+
+    ~H"""
+    <div class="flex flex-col gap-y-2" {@rest}>
+      <div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+        <div
+          class={["h-1.5 rounded-full transition-all duration-300", @color_class]}
+          style={"width: #{@percentage}%"}
+        >
+        </div>
+      </div>
+      <div class="flex justify-between items-center text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span>
+          {@title}
+        </span>
+        <span>
+          {PlausibleWeb.TextHelpers.number_format(@usage)}
+          {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
+          {if @limit == :unlimited, do: "/ Unlimited"}
+        </span>
+      </div>
+    </div>
+    """
+  end
+
+  defp calculate_percentage(_usage, :unlimited), do: 0
+  defp calculate_percentage(_usage, 0), do: 0
+
+  defp calculate_percentage(usage, limit) when is_number(limit) do
+    percentage = usage / limit * 100
+    min(percentage, 100.0) |> Float.round(1)
+  end
+
+  defp progress_bar_color_from_percentage(_percentage, :unlimited),
+    do: "bg-green-500 dark:bg-green-600"
+
+  defp progress_bar_color_from_percentage(_percentage, 0), do: "bg-gray-200 dark:bg-gray-700"
+
+  defp progress_bar_color_from_percentage(percentage, _limit) when is_number(percentage) do
+    cond do
+      percentage >= 100.0 ->
+        "bg-gradient-to-r from-green-500 via-orange-500 via-[80%] to-red-500 dark:from-green-600 dark:via-orange-600 dark:to-red-600"
+
+      percentage >= 91 ->
+        "bg-gradient-to-r from-green-500 via-yellow-500 via-[80%] to-orange-500 dark:from-green-600 dark:via-yellow-600 dark:to-orange-600"
+
+      true ->
+        "bg-green-500 dark:bg-green-600"
+    end
+  end
+
   def monthly_quota_box(assigns) do
     ~H"""
     <div
