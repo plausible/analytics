@@ -20,9 +20,13 @@ defmodule Plausible.HelpScout do
 
   @signature_errors [:missing_signature, :bad_signature]
 
+  @excluded_email_domains ["paddle.com"]
+
   @type signature_error() :: unquote(Enum.reduce(@signature_errors, &{:|, [], [&1, &2]}))
 
   def signature_errors(), do: @signature_errors
+
+  def excluded_email_domains(), do: @excluded_email_domains
 
   @doc """
   Validates signature against secret key configured for the
@@ -303,12 +307,21 @@ defmodule Plausible.HelpScout do
   end
 
   defp get_customer_emails(customer_id) do
-    case lookup_mapping(customer_id) do
-      {:ok, email} ->
-        {:ok, [email]}
+    case fetch_customer_emails(customer_id) do
+      {:ok, emails} ->
+        case lookup_mapping(customer_id) do
+          {:ok, mapped_emails} ->
+            {:ok, mapped_emails}
 
-      {:error, :mapping_not_found} ->
-        fetch_customer_emails(customer_id)
+          {:error, :not_found} ->
+            {:ok, emails}
+        end
+
+      {:error, error} when error in [:not_found, :no_emails] ->
+        lookup_mapping(customer_id)
+
+      {:error, _} = error ->
+        error
     end
   end
 
@@ -323,7 +336,13 @@ defmodule Plausible.HelpScout do
 
     case Req.get(url, opts) do
       {:ok, %{body: %{"_embedded" => %{"emails" => [_ | _] = emails}}}} ->
-        {:ok, Enum.map(emails, & &1["value"])}
+        emails = Enum.map(emails, & &1["value"])
+
+        if Enum.any?(emails, &email_excluded?/1) do
+          {:error, :excluded_email}
+        else
+          {:ok, emails}
+        end
 
       {:ok, %{status: 200}} ->
         {:error, :no_emails}
@@ -351,18 +370,18 @@ defmodule Plausible.HelpScout do
   # Exposed for testing
   @doc false
   def lookup_mapping(customer_id) do
-    email =
+    email_row =
       "SELECT email FROM help_scout_mappings WHERE customer_id = $1"
       |> Repo.query!([customer_id])
       |> Map.get(:rows)
       |> List.first()
 
-    case email do
+    case email_row do
       [email] ->
-        {:ok, email}
+        {:ok, [email]}
 
       _ ->
-        {:error, :mapping_not_found}
+        {:error, :not_found}
     end
   end
 
@@ -378,6 +397,15 @@ defmodule Plausible.HelpScout do
       on_conflict: [set: [email: email, updated_at: now]]
     )
   end
+
+  defp email_excluded?(email) when is_binary(email) do
+    case String.split(email, "@") do
+      [_, domain] -> String.trim(domain) in @excluded_email_domains
+      _ -> false
+    end
+  end
+
+  defp email_excluded?(_), do: false
 
   defp clear_mapping(customer_id) do
     Repo.query!("DELETE FROM help_scout_mappings WHERE customer_id = $1", [customer_id])

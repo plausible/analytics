@@ -276,6 +276,24 @@ defmodule Plausible.HelpScoutTest do
                 }} = HelpScout.get_details_for_customer("500")
       end
 
+      test "returns details for user via mapped email" do
+        %{email: email} = new_user(trial_expiry_date: Date.utc_today())
+        stub_help_scout_requests("different.email.in.hs@example.com")
+        HelpScout.set_mapping("500", email)
+
+        assert {:ok, %{status_label: "Trial"}} = HelpScout.get_details_for_customer("500")
+      end
+
+      for excluded_domain <- Plausible.HelpScout.excluded_email_domains() do
+        test "refuses to use customer mapped email when customer email is #{excluded_domain}" do
+          %{email: email} = new_user(trial_expiry_date: Date.utc_today())
+          stub_help_scout_requests("excluded.email@#{unquote(excluded_domain)}")
+          HelpScout.set_mapping("500", email)
+
+          assert {:error, :excluded_email} = HelpScout.get_details_for_customer("500")
+        end
+      end
+
       test "returns error when no matching user found in database" do
         new_user()
 
@@ -321,7 +339,7 @@ defmodule Plausible.HelpScoutTest do
             })
         end)
 
-        assert {:error, :no_emails} = HelpScout.get_details_for_customer("500")
+        assert {:error, :not_found} = HelpScout.get_details_for_customer("500")
       end
 
       test "uses existing access token when available" do
@@ -418,7 +436,7 @@ defmodule Plausible.HelpScoutTest do
                   sites_count: 0
                 }} = HelpScout.get_details_for_emails([email], "123")
 
-        assert {:ok, ^email} = HelpScout.lookup_mapping("123")
+        assert {:ok, [^email]} = HelpScout.lookup_mapping("123")
       end
 
       test "updates mapping if one already exists" do
@@ -428,7 +446,7 @@ defmodule Plausible.HelpScoutTest do
         HelpScout.set_mapping("123", user.email)
 
         assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123")
-        assert {:ok, ^new_email} = HelpScout.lookup_mapping("123")
+        assert {:ok, [^new_email]} = HelpScout.lookup_mapping("123")
       end
 
       test "picks the match with largest number of owned sites" do
@@ -454,14 +472,14 @@ defmodule Plausible.HelpScoutTest do
                 }} = HelpScout.get_details_for_emails([user1.email, user2.email], "123")
 
         user2_email = user2.email
-        assert {:ok, ^user2_email} = HelpScout.lookup_mapping("123")
+        assert {:ok, [^user2_email]} = HelpScout.lookup_mapping("123")
       end
 
       test "does not persist the mapping when there's no match" do
         assert {:error, {:user_not_found, ["does.not.exist@example.com"]}} =
                  HelpScout.get_details_for_emails(["does.not.exist@example.com"], "123")
 
-        assert {:error, :mapping_not_found} = HelpScout.lookup_mapping("123")
+        assert {:error, :not_found} = HelpScout.lookup_mapping("123")
       end
     end
 
