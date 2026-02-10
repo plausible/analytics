@@ -419,7 +419,7 @@ defmodule Plausible.HelpScoutTest do
       end
     end
 
-    describe "get_details_for_emails/2" do
+    describe "get_details_for_emails/4" do
       test "returns details for user and persists mapping" do
         %{email: email} = user = new_user(trial_expiry_date: Date.utc_today())
 
@@ -434,7 +434,7 @@ defmodule Plausible.HelpScoutTest do
                   plan_link: "#",
                   plan_label: "None",
                   sites_count: 0
-                }} = HelpScout.get_details_for_emails([email], "123")
+                }} = HelpScout.get_details_for_emails([email], "123", "1000", nil)
 
         assert {:ok, [^email]} = HelpScout.lookup_customer_mapping("123")
       end
@@ -445,7 +445,7 @@ defmodule Plausible.HelpScoutTest do
 
         HelpScout.set_customer_mapping("123", user.email)
 
-        assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123")
+        assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123", "1000", nil)
         assert {:ok, [^new_email]} = HelpScout.lookup_customer_mapping("123")
       end
 
@@ -469,7 +469,7 @@ defmodule Plausible.HelpScoutTest do
                   plan_link: "#",
                   plan_label: "None",
                   sites_count: 2
-                }} = HelpScout.get_details_for_emails([user1.email, user2.email], "123")
+                }} = HelpScout.get_details_for_emails([user1.email, user2.email], "123", "1000", nil)
 
         user2_email = user2.email
         assert {:ok, [^user2_email]} = HelpScout.lookup_customer_mapping("123")
@@ -477,7 +477,7 @@ defmodule Plausible.HelpScoutTest do
 
       test "does not persist the mapping when there's no match" do
         assert {:error, {:user_not_found, ["does.not.exist@example.com"]}} =
-                 HelpScout.get_details_for_emails(["does.not.exist@example.com"], "123")
+                 HelpScout.get_details_for_emails(["does.not.exist@example.com"], "123", "1000", nil)
 
         assert {:error, :not_found} = HelpScout.lookup_customer_mapping("123")
       end

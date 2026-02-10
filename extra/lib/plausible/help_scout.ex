@@ -79,15 +79,16 @@ defmodule Plausible.HelpScout do
   @spec get_details_for_customer(String.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def get_details_for_customer(customer_id, conversation_id) do
     with {:ok, emails} <- get_customer_emails(customer_id, conversation_id) do
-      get_details_for_emails(emails, customer_id)
+      get_details_for_emails(emails, customer_id, conversation_id, nil)
     end
   end
 
-  @spec get_details_for_emails([String.t()], String.t(), String.t() | nil) ::
+  @spec get_details_for_emails([String.t()], String.t(), String.t() | nil, String.t() | nil) ::
           {:ok, map()} | {:error, any()}
-  def get_details_for_emails(emails, customer_id, team_identifier \\ nil) do
+  def get_details_for_emails(emails, customer_id, conversation_id, team_identifier) do
     with {:ok, user} <- get_user(emails) do
       set_customer_mapping(customer_id, user.email)
+      set_conversation_mapping(conversation_id, user.email)
 
       teams = Teams.Users.owned_teams(user)
 
@@ -306,22 +307,28 @@ defmodule Plausible.HelpScout do
     )
   end
 
-  defp get_customer_emails(customer_id, _conversation_id) do
-    case fetch_customer_emails(customer_id) do
-      {:ok, emails} ->
-        case lookup_customer_mapping(customer_id) do
-          {:ok, mapped_emails} ->
-            {:ok, mapped_emails}
+  defp get_customer_emails(customer_id, conversation_id) do
+    case lookup_conversation_mapping(conversation_id) do
+      {:ok, mapped_emails} ->
+        {:ok, mapped_emails}
 
-          {:error, :not_found} ->
-            {:ok, emails}
+      {:error, :not_found} ->
+        case fetch_customer_emails(customer_id) do
+          {:ok, emails} ->
+            case lookup_customer_mapping(customer_id) do
+              {:ok, mapped_emails} ->
+                {:ok, mapped_emails}
+
+              {:error, :not_found} ->
+                {:ok, emails}
+            end
+
+          {:error, error} when error in [:not_found, :no_emails] ->
+            lookup_customer_mapping(customer_id)
+
+          {:error, _} = error ->
+            error
         end
-
-      {:error, error} when error in [:not_found, :no_emails] ->
-        lookup_customer_mapping(customer_id)
-
-      {:error, _} = error ->
-        error
     end
   end
 
@@ -387,6 +394,24 @@ defmodule Plausible.HelpScout do
 
   # Exposed for testing
   @doc false
+  def lookup_conversation_mapping(conversation_id) do
+    email_row =
+      "SELECT email FROM help_scout_mappings WHERE conversation_id = $1"
+      |> Repo.query!([conversation_id])
+      |> Map.get(:rows)
+      |> List.first()
+
+    case email_row do
+      [email] ->
+        {:ok, [email]}
+
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
+  # Exposed for testing
+  @doc false
   def set_customer_mapping(customer_id, email) do
     now = NaiveDateTime.utc_now(:second)
 
@@ -394,6 +419,21 @@ defmodule Plausible.HelpScout do
       "help_scout_mappings",
       [[customer_id: customer_id, email: email, inserted_at: now, updated_at: now]],
       conflict_target: :customer_id,
+      on_conflict: [set: [email: email, updated_at: now]]
+    )
+  end
+
+  # Exposed for testing
+  @doc false
+  def set_conversation_mapping(nil, _email), do: :noop
+
+  def set_conversation_mapping(conversation_id, email) do
+    now = NaiveDateTime.utc_now(:second)
+
+    Repo.insert_all(
+      "help_scout_mappings",
+      [[conversation_id: conversation_id, email: email, inserted_at: now, updated_at: now]],
+      conflict_target: :conversation_id,
       on_conflict: [set: [email: email, updated_at: now]]
     )
   end
