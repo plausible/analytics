@@ -86,6 +86,7 @@ defmodule Plausible.Teams.Sites do
         on: fragment("CAST(?, 'UInt64')", sites.id) == e.site_id,
         select: %{
           entry_type: selected_as(sites.entry_type, :entry_type),
+          pinned_at: selected_as(sites.pinned_at, :pinned_at),
           site_id: sites.id,
           domain: sites.domain,
           visitors:
@@ -95,9 +96,10 @@ defmodule Plausible.Teams.Sites do
             )
         },
         where: e.site_id == 0 or (e.timestamp >= ^utc_start and e.timestamp <= ^utc_end),
-        group_by: [sites.id, sites.domain, sites.entry_type],
+        group_by: [sites.id, sites.domain, sites.entry_type, sites.pinned_at],
         order_by: [
           asc: selected_as(:entry_type),
+          desc: selected_as(:pinned_at),
           desc: selected_as(:visitors)
         ]
       )
