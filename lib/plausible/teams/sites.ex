@@ -29,24 +29,26 @@ defmodule Plausible.Teams.Sites do
             inner_join: t in assoc(tm, :team),
             inner_join: s in assoc(t, :sites),
             where: tm.user_id == ^user.id and tm.role != :guest,
-            where: tm.is_autocreated == true,
-            where: t.setup_complete == false,
+            where: tm.is_autocreated,
+            where: not t.setup_complete,
             select: struct(s, [:id, :domain])
           )
 
         guest_membership_query =
-          from tm in Teams.Membership,
+          from(tm in Teams.Membership,
             inner_join: gm in assoc(tm, :guest_memberships),
             inner_join: s in assoc(gm, :site),
             where: tm.user_id == ^user.id and tm.role == :guest,
             select: struct(s, [:id, :domain])
+          )
 
-        from s in my_team_query,
+        from(s in my_team_query,
           union_all: ^guest_membership_query
+        )
       end
 
     clickhouse_query =
-      from e in Plausible.ClickhouseEventV2,
+      from(e in Plausible.ClickhouseEventV2,
         hints: unsafe_fragment(^"SAMPLE #{@sample_threshold}"),
         right_join: sites in subquery(all_query, prefix: "postgres_remote"),
         on: fragment("CAST(?, 'UInt64')", sites.id) == e.site_id,
@@ -62,6 +64,9 @@ defmodule Plausible.Teams.Sites do
         where: e.site_id == 0 or (e.timestamp >= ^utc_start and e.timestamp <= ^utc_end),
         group_by: [sites.id, sites.domain],
         order_by: [desc: selected_as(:visitors)]
+      )
+
+    clickhouse_query |> dbg()
 
     sites_by_traffic = Plausible.ClickhouseRepo.paginate(clickhouse_query, %{})
   end
@@ -91,12 +96,12 @@ defmodule Plausible.Teams.Sites do
             inner_join: s in assoc(t, :sites),
             where: tm.user_id == ^user.id and tm.role != :guest,
             where: tm.is_autocreated == true,
-            where: t.setup_complete == false,
+            where: not t.setup_complete,
             select: %{site_id: s.id, entry_type: "site", role: tm.role}
           )
 
         guest_membership_query =
-          from tm in Teams.Membership,
+          from(tm in Teams.Membership,
             inner_join: gm in assoc(tm, :guest_memberships),
             inner_join: s in assoc(gm, :site),
             where: tm.user_id == ^user.id and tm.role == :guest,
@@ -115,9 +120,11 @@ defmodule Plausible.Teams.Sites do
                   gm.role
                 )
             }
+          )
 
-        from s in my_team_query,
+        from(s in my_team_query,
           union_all: ^guest_membership_query
+        )
       end
 
     from(u in subquery(all_query),
