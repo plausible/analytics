@@ -71,7 +71,7 @@ defmodule PlausibleWeb.HelpScoutController do
 
     case match_conversation(token, conversation_id) do
       :ok ->
-        users = HelpScout.search_users(term, customer_id)
+        users = HelpScout.search_users(term, customer_id, conversation_id)
         render(conn, "search.html", Map.merge(assigns, %{users: users, term: term}))
 
       {:error, error} ->

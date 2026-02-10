@@ -169,9 +169,9 @@ defmodule Plausible.HelpScout do
     end
   end
 
-  @spec search_users(String.t(), String.t()) :: [map()]
-  def search_users(term, customer_id) do
-    clear_mapping(customer_id)
+  @spec search_users(String.t(), String.t(), String.t()) :: [map()]
+  def search_users(term, customer_id, conversation_id) do
+    clear_mappings(customer_id, conversation_id)
 
     search_term = "%#{term}%"
 
@@ -458,8 +458,11 @@ defmodule Plausible.HelpScout do
 
   defp email_excluded?(_), do: false
 
-  defp clear_mapping(customer_id) do
-    Repo.query!("DELETE FROM help_scout_mappings WHERE customer_id = $1", [customer_id])
+  defp clear_mappings(customer_id, conversation_id) do
+    Repo.query!(
+      "DELETE FROM help_scout_mappings WHERE customer_id = $1 or conversation_id = $2",
+      [customer_id, conversation_id]
+    )
   end
 
   defp get_token!() do

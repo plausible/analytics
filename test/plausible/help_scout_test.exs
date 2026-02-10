@@ -519,7 +519,7 @@ defmodule Plausible.HelpScoutTest do
       end
     end
 
-    describe "search_users/2" do
+    describe "search_users/3" do
       test "lists matching users by email or site domain ordered by site counts" do
         user1 = new_user(email: "user1@match.example.com")
 
@@ -533,11 +533,23 @@ defmodule Plausible.HelpScoutTest do
         # excluded
         new_site(domain: "consolidated.example.com", owner: user3, consolidated: true)
 
-        assert HelpScout.search_users("match.example.co", "123") == [
+        assert HelpScout.search_users("match.example.co", "123", "1000") == [
                  %{email: user3.email, sites_count: 2},
                  %{email: user2.email, sites_count: 1},
                  %{email: user1.email, sites_count: 0}
                ]
+      end
+
+      test "clears existing customer and conversation mappings" do
+        new_user(email: "user@match.example.com")
+
+        HelpScout.set_customer_mapping("123", "some@email.com")
+        HelpScout.set_conversation_mapping("1000", "some@email.com")
+
+        assert [_] = HelpScout.search_users("match.example.co", "123", "1000")
+
+        assert {:error, :not_found} = HelpScout.lookup_customer_mapping("123")
+        assert {:error, :not_found} = HelpScout.lookup_conversation_mapping("1000")
       end
     end
 
