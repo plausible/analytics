@@ -285,7 +285,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         penultimate_cycle: %{total: 14000}
       }
 
-      assert Notice.determine_notification_type(team, usage, 10_000, 3, 10, 5, 10, team.subscription) ==
+      assert Notice.determine_notification_type(
+               team,
+               usage,
+               10_000,
+               3,
+               10,
+               5,
+               10,
+               team.subscription
+             ) ==
                :traffic_exceeded_sustained
     end
 
@@ -299,7 +308,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         penultimate_cycle: %{total: 8000}
       }
 
-      assert Notice.determine_notification_type(team, usage, 10_000, 3, 10, 5, 10, team.subscription) ==
+      assert Notice.determine_notification_type(
+               team,
+               usage,
+               10_000,
+               3,
+               10,
+               5,
+               10,
+               team.subscription
+             ) ==
                :traffic_exceeded_last_cycle
     end
 
@@ -312,7 +330,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         last_cycle: %{total: 8000}
       }
 
-      assert Notice.determine_notification_type(team, usage, 10_000, 3, 10, 5, 10, team.subscription) ==
+      assert Notice.determine_notification_type(
+               team,
+               usage,
+               10_000,
+               3,
+               10,
+               5,
+               10,
+               team.subscription
+             ) ==
                :pageview_approaching_limit
     end
 
@@ -325,7 +352,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       }
 
       # At limits for both sites and members, but pageview approaching takes precedence
-      assert Notice.determine_notification_type(team, usage, 10_000, 10, 10, 10, 10, team.subscription) ==
+      assert Notice.determine_notification_type(
+               team,
+               usage,
+               10_000,
+               10,
+               10,
+               10,
+               10,
+               team.subscription
+             ) ==
                :pageview_approaching_limit
     end
 
@@ -335,7 +371,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
       usage = %{current_cycle: %{total: 5000}}
 
-      assert Notice.determine_notification_type(team, usage, 10_000, 10, 10, 10, 10, team.subscription) ==
+      assert Notice.determine_notification_type(
+               team,
+               usage,
+               10_000,
+               10,
+               10,
+               10,
+               10,
+               team.subscription
+             ) ==
                :limits_reached_combined
     end
 
@@ -345,7 +390,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
       usage = %{current_cycle: %{total: 5000}}
 
-      assert Notice.determine_notification_type(team, usage, 10_000, 10, 10, 5, 10, team.subscription) ==
+      assert Notice.determine_notification_type(
+               team,
+               usage,
+               10_000,
+               10,
+               10,
+               5,
+               10,
+               team.subscription
+             ) ==
                :site_limit_reached
     end
 
@@ -355,7 +409,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
       usage = %{current_cycle: %{total: 5000}}
 
-      assert Notice.determine_notification_type(team, usage, 10_000, 5, 10, 10, 10, team.subscription) ==
+      assert Notice.determine_notification_type(
+               team,
+               usage,
+               10_000,
+               5,
+               10,
+               10,
+               10,
+               team.subscription
+             ) ==
                :team_member_limit_reached
     end
 

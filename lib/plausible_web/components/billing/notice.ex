@@ -287,7 +287,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
             Upgrade
           </.button_link>
-          <.button_link href="https://plausible.io/docs/subscription-plans" theme="secondary" mt?={false}>
+          <.button_link
+            href="https://plausible.io/docs/subscription-plans"
+            theme="secondary"
+            mt?={false}
+          >
             Learn more
           </.button_link>
         </div>
@@ -328,7 +332,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   def usage_notification(%{type: :limits_reached_combined} = assigns) do
     ~H"""
-    <.notice title="You've reached your current limits for team members and sites" theme={:gray} show_icon={false}>
+    <.notice
+      title="You've reached your current limits for team members and sites"
+      theme={:gray}
+      show_icon={false}
+    >
       <div class="flex flex-col gap-4 items-start">
         <p>
           Upgrading gives you room to grow.
@@ -352,7 +360,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
             Upgrade
           </.button_link>
-          <.button_link href="https://plausible.io/docs/subscription-plans" theme="secondary" mt?={false}>
+          <.button_link
+            href="https://plausible.io/docs/subscription-plans"
+            theme="secondary"
+            mt?={false}
+          >
             Learn more
           </.button_link>
         </div>
@@ -372,7 +384,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
             Upgrade
           </.button_link>
-          <.button_link href="https://plausible.io/docs/subscription-plans" theme="secondary" mt?={false}>
+          <.button_link
+            href="https://plausible.io/docs/subscription-plans"
+            theme="secondary"
+            mt?={false}
+          >
             Learn more
           </.button_link>
         </div>
@@ -392,7 +408,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
             Upgrade
           </.button_link>
-          <.button_link href="https://plausible.io/docs/subscription-plans" theme="secondary" mt?={false}>
+          <.button_link
+            href="https://plausible.io/docs/subscription-plans"
+            theme="secondary"
+            mt?={false}
+          >
             Learn more
           </.button_link>
         </div>
@@ -461,7 +481,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         :traffic_exceeded_last_cycle
 
       pageview_limit != :unlimited and is_map_key(pageview_usage, :current_cycle) and
-        pageview_usage.current_cycle.total >= pageview_limit * 0.9 ->
+          pageview_usage.current_cycle.total >= pageview_limit * 0.9 ->
         :pageview_approaching_limit
 
       site_usage >= site_limit and site_limit != :unlimited and
