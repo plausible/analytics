@@ -10,12 +10,11 @@ defmodule Plausible.Teams.Sites do
   alias Plausible.Site
   alias Plausible.Teams
 
-  def list_with_clickhouse(user, team, opts \\ []) do
+  def list_with_clickhouse(user, team) do
     # TODO maybe filter by domain
-    date_range = Keyword.get(opts, :date_range, {:last_n_days, 30})
-    now = Keyword.get(opts, :now, DateTime.utc_now())
-
-    {relative_start_date, relative_end_date} = calculate_relative_dates(date_range, now)
+    # TODO export time ranges
+    utc_start = ~N[2026-01-01 00:00:00]
+    utc_end = ~N[2026-01-31 23:59:59]
 
     all_query =
       if Teams.setup?(team) do
@@ -25,7 +24,7 @@ defmodule Plausible.Teams.Sites do
           where: tm.user_id == ^user.id and tm.role != :guest,
           where: tm.team_id == ^team.id,
           where: not s.consolidated,
-          select: struct(s, [:id, :domain, :timezone])
+          select: struct(s, [:id, :domain])
         )
       else
         my_team_query =
@@ -36,7 +35,7 @@ defmodule Plausible.Teams.Sites do
             where: tm.user_id == ^user.id and tm.role != :guest,
             where: tm.is_autocreated,
             where: not t.setup_complete,
-            select: struct(s, [:id, :domain, :timezone])
+            select: struct(s, [:id, :domain])
           )
 
         guest_membership_query =
@@ -45,7 +44,7 @@ defmodule Plausible.Teams.Sites do
             inner_join: s in assoc(gm, :site),
             where: not s.consolidated,
             where: tm.user_id == ^user.id and tm.role == :guest,
-            select: struct(s, [:id, :domain, :timezone])
+            select: struct(s, [:id, :domain])
           )
 
         from(s in my_team_query,
@@ -90,28 +89,14 @@ defmodule Plausible.Teams.Sites do
           pinned_at: selected_as(sites.pinned_at, :pinned_at),
           site_id: sites.id,
           domain: sites.domain,
-          timezone: sites.timezone,
           visitors:
             selected_as(
               scale_sample(fragment("uniqIf(?, ? != 0)", e.user_id, e.site_id)),
               :visitors
             )
         },
-        where:
-          e.site_id == 0 or
-            fragment(
-              """
-              ? >= toDateTime(concat(?, ' 00:00:00'), ?)
-              AND ? <= toDateTime(concat(?, ' 23:59:59'), ?)
-              """,
-              e.timestamp,
-              ^relative_start_date,
-              sites.timezone,
-              e.timestamp,
-              ^relative_end_date,
-              sites.timezone
-            ),
-        group_by: [sites.id, sites.domain, sites.entry_type, sites.pinned_at, sites.timezone],
+        where: e.site_id == 0 or (e.timestamp >= ^utc_start and e.timestamp <= ^utc_end),
+        group_by: [sites.id, sites.domain, sites.entry_type, sites.pinned_at],
         order_by: [
           asc: selected_as(:entry_type),
           desc: selected_as(:pinned_at),
@@ -127,37 +112,6 @@ defmodule Plausible.Teams.Sites do
       Plausible.ClickhouseRepo,
       []
     )
-  end
-
-  # Helper function to calculate date range for ClickHouse queries
-  # Returns {start_date, end_date} as Date structs or date strings
-  defp calculate_relative_dates({:last_n_days, n}, now) do
-    end_date = now |> DateTime.to_date() |> Date.add(-1)
-    start_date = end_date |> Date.add(-(n - 1))
-    {Date.to_string(start_date), Date.to_string(end_date)}
-  end
-
-  defp calculate_relative_dates(:day, now) do
-    date = DateTime.to_date(now)
-    {Date.to_string(date), Date.to_string(date)}
-  end
-
-  defp calculate_relative_dates(:month, now) do
-    date = DateTime.to_date(now)
-    start_date = Date.beginning_of_month(date)
-    end_date = Date.end_of_month(date)
-    {Date.to_string(start_date), Date.to_string(end_date)}
-  end
-
-  defp calculate_relative_dates(:year, now) do
-    date = DateTime.to_date(now)
-    start_date = %{date | month: 1, day: 1}
-    end_date = %{date | month: 12, day: 31}
-    {Date.to_string(start_date), Date.to_string(end_date)}
-  end
-
-  defp calculate_relative_dates({:date_range, from, to}, _now) do
-    {Date.to_string(from), Date.to_string(to)}
   end
 
   @type list_opt() :: {:filter_by_domain, String.t()} | {:team, Teams.Team.t() | nil}
