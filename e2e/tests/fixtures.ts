@@ -54,8 +54,6 @@ export async function register({
 
   const [code] = emails[0].subject.split(" ");
 
-  await page.goto("/activate");
-
   await page.locator("input[name=code]").fill(code);
 
   await page.getByRole("button", { name: "Activate" }).click();
