@@ -87,7 +87,7 @@ defmodule Plausible.HelpScout do
           {:ok, map()} | {:error, any()}
   def get_details_for_emails(emails, customer_id, team_identifier \\ nil) do
     with {:ok, user} <- get_user(emails) do
-      set_mapping(customer_id, user.email)
+      set_customer_mapping(customer_id, user.email)
 
       teams = Teams.Users.owned_teams(user)
 
@@ -387,7 +387,7 @@ defmodule Plausible.HelpScout do
 
   # Exposed for testing
   @doc false
-  def set_mapping(customer_id, email) do
+  def set_customer_mapping(customer_id, email) do
     now = NaiveDateTime.utc_now(:second)
 
     Repo.insert_all(
