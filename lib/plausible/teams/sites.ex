@@ -11,6 +11,8 @@ defmodule Plausible.Teams.Sites do
   alias Plausible.Teams
 
   def list_with_clickhouse(user, team) do
+    # TODO maybe filter by domain
+    # TODO export time ranges
     utc_start = ~N[2026-01-01 00:00:00]
     utc_end = ~N[2026-01-31 23:59:59]
 
@@ -21,6 +23,7 @@ defmodule Plausible.Teams.Sites do
           inner_join: s in assoc(t, :sites),
           where: tm.user_id == ^user.id and tm.role != :guest,
           where: tm.team_id == ^team.id,
+          where: not s.consolidated,
           select: struct(s, [:id, :domain])
         )
       else
@@ -28,6 +31,7 @@ defmodule Plausible.Teams.Sites do
           from(tm in Teams.Membership,
             inner_join: t in assoc(tm, :team),
             inner_join: s in assoc(t, :sites),
+            where: not s.consolidated,
             where: tm.user_id == ^user.id and tm.role != :guest,
             where: tm.is_autocreated,
             where: not t.setup_complete,
@@ -38,6 +42,7 @@ defmodule Plausible.Teams.Sites do
           from(tm in Teams.Membership,
             inner_join: gm in assoc(tm, :guest_memberships),
             inner_join: s in assoc(gm, :site),
+            where: not s.consolidated,
             where: tm.user_id == ^user.id and tm.role == :guest,
             select: struct(s, [:id, :domain])
           )
@@ -47,12 +52,40 @@ defmodule Plausible.Teams.Sites do
         )
       end
 
+    all_query =
+      from(u in subquery(all_query),
+        inner_join: s in ^Plausible.Site.regular(),
+        on: u.id == s.id,
+        as: :site,
+        left_join: up in Site.UserPreference,
+        on: up.site_id == s.id and up.user_id == ^user.id,
+        select: %{
+          s
+          | entry_type:
+              selected_as(
+                fragment(
+                  """
+                      CASE
+                        WHEN ? IS NOT NULL THEN 'pinned_site'
+                        ELSE ?
+                      END
+                  """,
+                  up.pinned_at,
+                  "site"
+                ),
+                :entry_type
+              ),
+            pinned_at: selected_as(up.pinned_at, :pinned_at)
+        }
+      )
+
     clickhouse_query =
       from(e in Plausible.ClickhouseEventV2,
         hints: unsafe_fragment(^"SAMPLE #{@sample_threshold}"),
         right_join: sites in subquery(all_query, prefix: "postgres_remote"),
         on: fragment("CAST(?, 'UInt64')", sites.id) == e.site_id,
         select: %{
+          entry_type: selected_as(sites.entry_type, :entry_type),
           site_id: sites.id,
           domain: sites.domain,
           visitors:
@@ -62,13 +95,21 @@ defmodule Plausible.Teams.Sites do
             )
         },
         where: e.site_id == 0 or (e.timestamp >= ^utc_start and e.timestamp <= ^utc_end),
-        group_by: [sites.id, sites.domain],
-        order_by: [desc: selected_as(:visitors)]
+        group_by: [sites.id, sites.domain, sites.entry_type],
+        order_by: [
+          asc: selected_as(:entry_type),
+          desc: selected_as(:visitors)
+        ]
       )
 
     clickhouse_query |> dbg()
 
-    sites_by_traffic = Plausible.ClickhouseRepo.paginate(clickhouse_query, %{})
+    Paginator.paginate(
+      clickhouse_query,
+      [limit: 24, cursor_fields: [:visitors, :id], sort_direction: :desc],
+      Plausible.ClickhouseRepo,
+      []
+    )
   end
 
   @type list_opt() :: {:filter_by_domain, String.t()} | {:team, Teams.Team.t() | nil}
