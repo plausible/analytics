@@ -1,12 +1,21 @@
 {
   "name": "e2e",
   "scripts": {
+    "lint": "eslint",
+    "check-format": "prettier --check \"**/*.{js,mjs,ts,html,json,md}\"",
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui"
   },
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.0",
-    "@types/node": "^25.1.0"
+    "@types/node": "^25.1.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-playwright": "^2.5.1",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0"
   }
 }
