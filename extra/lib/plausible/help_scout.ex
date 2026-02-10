@@ -308,27 +308,38 @@ defmodule Plausible.HelpScout do
   end
 
   defp get_customer_emails(customer_id, conversation_id) do
+    get_emails_with_conversation_mapping(conversation_id, customer_id)
+  end
+
+  defp get_emails_with_conversation_mapping(conversation_id, customer_id) do
     case lookup_conversation_mapping(conversation_id) do
       {:ok, mapped_emails} ->
         {:ok, mapped_emails}
 
       {:error, :not_found} ->
-        case fetch_customer_emails(customer_id) do
-          {:ok, emails} ->
-            case lookup_customer_mapping(customer_id) do
-              {:ok, mapped_emails} ->
-                {:ok, mapped_emails}
+        get_emails_with_customer_mapping(customer_id)
+    end
+  end
 
-              {:error, :not_found} ->
-                {:ok, emails}
-            end
+  defp get_emails_with_customer_mapping(customer_id) do
+    # We want to explicitly reject customer emails from HS which
+    # are in one of excluded domains. That's why we fetch 
+    # emails from HS first before checking the mapping.
+    case fetch_customer_emails(customer_id) do
+      {:ok, emails} ->
+        case lookup_customer_mapping(customer_id) do
+          {:ok, mapped_emails} ->
+            {:ok, mapped_emails}
 
-          {:error, error} when error in [:not_found, :no_emails] ->
-            lookup_customer_mapping(customer_id)
-
-          {:error, _} = error ->
-            error
+          {:error, :not_found} ->
+            {:ok, emails}
         end
+
+      {:error, error} when error in [:not_found, :no_emails] ->
+        lookup_customer_mapping(customer_id)
+
+      {:error, _} = error ->
+        error
     end
   end
 
