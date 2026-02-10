@@ -265,6 +265,220 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
+  @doc """
+  Renders a usage notification banner based on the notification type.
+
+  This is used on the subscription settings page to show contextual
+  notifications about approaching or exceeded limits.
+  """
+  attr(:type, :atom, required: true)
+  attr(:team, :any, required: true)
+
+  def usage_notification(assigns)
+
+  def usage_notification(%{type: :pageview_approaching_limit} = assigns) do
+    ~H"""
+    <.notice title="You're close to your monthly pageview limit" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4">
+        <p>
+          No action is required. Occasional traffic spikes are normal, and we'll keep tracking your stats as usual. Upgrading now gives you room to grow if higher traffic continues.
+        </p>
+        <div class="flex gap-3 items-center">
+          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+            Upgrade
+          </.button_link>
+          <.button_link href="https://plausible.io/docs/subscription-plans" theme="secondary" mt?={false}>
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :team_member_limit_reached} = assigns) do
+    ~H"""
+    <.notice title="You've reached your current team member limit" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4 items-start">
+        <p>
+          Upgrading lets you add more as your team grows.
+        </p>
+        <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          Upgrade
+        </.button_link>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :site_limit_reached} = assigns) do
+    ~H"""
+    <.notice title="You've reached your current site limit" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4 items-start">
+        <p>
+          Upgrading lets you add more sites as you grow.
+        </p>
+        <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          Upgrade
+        </.button_link>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :limits_reached_combined} = assigns) do
+    ~H"""
+    <.notice title="You've reached your current limits for team members and sites" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4 items-start">
+        <p>
+          Upgrading gives you room to grow.
+        </p>
+        <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          Upgrade
+        </.button_link>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :traffic_exceeded_last_cycle} = assigns) do
+    ~H"""
+    <.notice title="Traffic exceeded plan limit last cycle" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4">
+        <p>
+          No action is required. Occasional traffic spikes are normal, but upgrading now gives you room to grow if higher traffic continues.
+        </p>
+        <div class="flex gap-3 items-center">
+          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+            Upgrade
+          </.button_link>
+          <.button_link href="https://plausible.io/docs/subscription-plans" theme="secondary" mt?={false}>
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :traffic_exceeded_sustained} = assigns) do
+    ~H"""
+    <.notice title="Upgrade required due to sustained higher traffic" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4">
+        <p>
+          To ensure uninterrupted access to your stats, please upgrade to a plan that fits your current usage within the next 7 days.
+        </p>
+        <div class="flex gap-3 items-center">
+          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+            Upgrade
+          </.button_link>
+          <.button_link href="https://plausible.io/docs/subscription-plans" theme="secondary" mt?={false}>
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :dashboard_locked} = assigns) do
+    ~H"""
+    <.notice title="Dashboard access temporarily locked" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4">
+        <p>
+          Your stats are still being tracked, but dashboard access is temporarily locked because your site exceeded your plan's pageview limit for two consecutive billing cycles. Upgrade to restore access.
+        </p>
+        <div class="flex gap-3 items-center">
+          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+            Upgrade
+          </.button_link>
+          <.button_link href="https://plausible.io/docs/subscription-plans" theme="secondary" mt?={false}>
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :trial_ended} = assigns) do
+    ~H"""
+    <.notice title="Your free trial has ended" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4 items-start">
+        <p>
+          Upgrade to a monthly or yearly plan to continue accessing your sites.
+        </p>
+        <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          Choose a plan
+        </.button_link>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(assigns), do: ~H""
+
+  @doc """
+  Determines which notification type should be shown based on current usage and limits.
+
+  Returns an atom representing the notification type, or nil if no notification should be shown.
+
+  Priority order:
+  1. Dashboard locked (grace period expired after 2 cycles exceeded)
+  2. Trial ended (no subscription after trial expires - blocks all access)
+  3. Traffic exceeded for 2 consecutive cycles
+  4. Traffic exceeded for 1 cycle
+  5. Pageview limit approaching (90%+) - takes precedence over site/member limits
+  6. Site and team member limits both reached
+  7. Site limit reached
+  8. Team member limit reached
+  """
+  def determine_notification_type(
+        team,
+        pageview_usage,
+        pageview_limit,
+        site_usage,
+        site_limit,
+        team_member_usage,
+        team_member_limit,
+        subscription
+      ) do
+    cond do
+      Plausible.Teams.GracePeriod.expired?(team) ->
+        :dashboard_locked
+
+      Plausible.Teams.on_trial?(team) == false and is_nil(subscription) ->
+        :trial_ended
+
+      pageview_limit != :unlimited and
+        is_map_key(pageview_usage, :last_cycle) and is_map_key(pageview_usage, :penultimate_cycle) and
+          Plausible.Billing.Quota.exceeds_last_two_usage_cycles?(pageview_usage, pageview_limit) ->
+        :traffic_exceeded_sustained
+
+      is_map_key(pageview_usage, :last_cycle) and
+        pageview_usage.last_cycle.total > pageview_limit and
+          pageview_limit != :unlimited ->
+        :traffic_exceeded_last_cycle
+
+      pageview_limit != :unlimited and is_map_key(pageview_usage, :current_cycle) and
+        pageview_usage.current_cycle.total >= pageview_limit * 0.9 ->
+        :pageview_approaching_limit
+
+      site_usage >= site_limit and site_limit != :unlimited and
+        team_member_usage >= team_member_limit and team_member_limit != :unlimited ->
+        :limits_reached_combined
+
+      site_usage >= site_limit and site_limit != :unlimited ->
+        :site_limit_reached
+
+      team_member_usage >= team_member_limit and team_member_limit != :unlimited ->
+        :team_member_limit_reached
+
+      true ->
+        nil
+    end
+  end
+
   defp subscription_cancelled_notice_body(assigns) do
     ~H"""
     <p>
