@@ -24,7 +24,7 @@ defmodule Plausible.Teams.Sites do
           where: tm.user_id == ^user.id and tm.role != :guest,
           where: tm.team_id == ^team.id,
           where: not s.consolidated,
-          select: struct(s, [:id, :domain, :timezone, :team_id])
+          select: struct(s, [:id, :domain])
         )
       else
         my_team_query =
@@ -35,7 +35,7 @@ defmodule Plausible.Teams.Sites do
             where: tm.user_id == ^user.id and tm.role != :guest,
             where: tm.is_autocreated,
             where: not t.setup_complete,
-            select: struct(s, [:id, :domain, :timezone, :team_id])
+            select: struct(s, [:id, :domain])
           )
 
         guest_membership_query =
@@ -44,7 +44,7 @@ defmodule Plausible.Teams.Sites do
             inner_join: s in assoc(gm, :site),
             where: not s.consolidated,
             where: tm.user_id == ^user.id and tm.role == :guest,
-            select: struct(s, [:id, :domain, :timezone, :team_id])
+            select: struct(s, [:id, :domain])
           )
 
         from(s in my_team_query,
@@ -52,45 +52,15 @@ defmodule Plausible.Teams.Sites do
         )
       end
 
-    timezone_counts_query =
-      from(s in subquery(all_query),
-        group_by: s.timezone,
-        select: %{
-          timezone:
-            fragment(
-              "CASE WHEN ? = 'UTC' THEN 'Etc/UTC' ELSE ? END",
-              s.timezone,
-              s.timezone
-            ),
-          cnt: count(s.id)
-        }
-      )
-
-    majority_timezone_query =
-      from(tz in subquery(timezone_counts_query),
-        select: %{
-          majority_timezone:
-            fragment(
-              "FIRST_VALUE(?) OVER (ORDER BY ? DESC, ? ASC)",
-              tz.timezone,
-              tz.cnt,
-              tz.timezone
-            )
-        },
-        limit: 1
-      )
-
     all_query =
-      from(s in subquery(all_query),
-        as: :site_with_team,
-        inner_join: site in ^Plausible.Site.regular(),
-        on: s.id == site.id,
+      from(u in subquery(all_query),
+        inner_join: s in ^Plausible.Site.regular(),
+        on: u.id == s.id,
         as: :site,
         left_join: up in Site.UserPreference,
         on: up.site_id == s.id and up.user_id == ^user.id,
-        cross_join: tz in subquery(majority_timezone_query),
         select: %{
-          site
+          s
           | entry_type:
               selected_as(
                 fragment(
@@ -105,8 +75,7 @@ defmodule Plausible.Teams.Sites do
                 ),
                 :entry_type
               ),
-            pinned_at: selected_as(up.pinned_at, :pinned_at),
-            majority_timezone: fragment("COALESCE(?, 'Etc/UTC')", tz.majority_timezone)
+            pinned_at: selected_as(up.pinned_at, :pinned_at)
         }
       )
 
@@ -120,7 +89,6 @@ defmodule Plausible.Teams.Sites do
           pinned_at: selected_as(sites.pinned_at, :pinned_at),
           site_id: sites.id,
           domain: sites.domain,
-          majority_timezone: sites.majority_timezone,
           visitors:
             selected_as(
               scale_sample(fragment("uniqIf(?, ? != 0)", e.user_id, e.site_id)),
@@ -128,13 +96,7 @@ defmodule Plausible.Teams.Sites do
             )
         },
         where: e.site_id == 0 or (e.timestamp >= ^utc_start and e.timestamp <= ^utc_end),
-        group_by: [
-          sites.id,
-          sites.domain,
-          sites.entry_type,
-          sites.pinned_at,
-          sites.majority_timezone
-        ],
+        group_by: [sites.id, sites.domain, sites.entry_type, sites.pinned_at],
         order_by: [
           asc: selected_as(:entry_type),
           desc: selected_as(:pinned_at),
