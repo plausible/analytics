@@ -258,8 +258,8 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
       usage = %{
         current_cycle: %{total: 5000},
-        last_cycle: %{total: 15000},
-        penultimate_cycle: %{total: 14000}
+        last_cycle: %{total: 15_000},
+        penultimate_cycle: %{total: 14_000}
       }
 
       assert Notice.determine_notification_type(team, usage, 10_000, 3, 10, 5, 10, nil) ==
@@ -284,8 +284,8 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
       usage = %{
         current_cycle: %{total: 5000},
-        last_cycle: %{total: 15000},
-        penultimate_cycle: %{total: 14000}
+        last_cycle: %{total: 15_000},
+        penultimate_cycle: %{total: 14_000}
       }
 
       assert Notice.determine_notification_type(
@@ -308,7 +308,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
       usage = %{
         current_cycle: %{total: 5000},
-        last_cycle: %{total: 15000},
+        last_cycle: %{total: 15_000},
         penultimate_cycle: %{total: 8000}
       }
 
@@ -456,7 +456,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
 
-      usage = %{current_cycle: %{total: 50000}}
+      usage = %{current_cycle: %{total: 50_000}}
 
       # Should not trigger notifications for unlimited limits
       assert Notice.determine_notification_type(
