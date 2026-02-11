@@ -467,8 +467,8 @@ defmodule Plausible.Stats.SQL.Expression do
             ?,
             ?,
             ?,
-            arraySlice(?, 2),
-            arraySlice(?, 2)
+            ?,
+            ?
           )
         )
         """,
