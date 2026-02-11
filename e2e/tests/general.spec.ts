@@ -131,7 +131,7 @@ test('tab selection user preferences are preserved across reloads', async ({
     domain
   )
 
-  await expect(currentTab).toEqual('entry-pages')
+  expect(currentTab).toEqual('entry-pages')
 
   await page.getByRole('button', { name: 'Exit pages' }).click()
 
@@ -142,7 +142,7 @@ test('tab selection user preferences are preserved across reloads', async ({
     domain
   )
 
-  await expect(currentTab).toEqual('exit-pages')
+  expect(currentTab).toEqual('exit-pages')
 })
 
 test('back navigation closes the modal', async ({ page, request, baseURL }) => {
