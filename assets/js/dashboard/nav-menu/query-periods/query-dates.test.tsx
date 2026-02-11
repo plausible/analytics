@@ -29,8 +29,8 @@ test('if no period is stored, loads with default value of "Last 28 days", all ex
     [
       ['Today', 'D'],
       ['Yesterday', 'E'],
-      ['Last 24h', 'H'],
       ['Realtime', 'R'],
+      ['Last 24 Hours', 'H'],
       ['Last 7 Days', 'W'],
       ['Last 28 Days', 'F'],
       ['Last 91 Days', 'N'],

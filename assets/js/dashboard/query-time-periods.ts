@@ -307,19 +307,6 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last 24h', 'H'],
-        {
-          search: (s) => ({
-            ...s,
-            ...clearedDateSearch,
-            period: QueryPeriod['24h'],
-            keybindHint: 'H'
-          }),
-          isActive: ({ query }) => query.period === QueryPeriod['24h'],
-          onEvent
-        }
-      ],
-      [
         ['Realtime', 'R'],
         {
           search: (s) => ({
@@ -334,6 +321,19 @@ export const getDatePeriodGroups = ({
       ]
     ],
     [
+      [
+        ['Last 24 Hours', 'H'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['24h'],
+            keybindHint: 'H'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['24h'],
+          onEvent
+        }
+      ],
       [
         ['Last 7 Days', 'W'],
         {
@@ -620,7 +620,7 @@ export function getCurrentPeriodDisplayName({
     return formatDay(query.date)
   }
   if (query.period === '24h') {
-    return 'Last 24h'
+    return 'Last 24 Hours'
   }
   if (query.period === '7d') {
     return 'Last 7 days'
