@@ -381,6 +381,7 @@ PlausibleWeb.DebugView.html
 PlausibleWeb.DevSubscriptionController.html
 PlausibleWeb.DevSubscriptionView.html
 PlausibleWeb.Dogfood.html
+PlausibleWeb.E2EController.html
 PlausibleWeb.Email.html
 PlausibleWeb.EmailView.html
 PlausibleWeb.Endpoint.html
@@ -561,8 +562,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-5D26350C.js
-dist/sidebar_items-9D654086.js
+dist/search_data-DF46D3AC.js
+dist/sidebar_items-E35D3AF9.js
 index.html
 readme.html
 search.html
