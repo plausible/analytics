@@ -8,7 +8,7 @@ defmodule Plausible.Stats.QueryResult do
   """
 
   use Plausible
-  alias Plausible.Stats.{Query, QueryRunner, QueryInclude}
+  alias Plausible.Stats.{Query, QueryRunner, QueryInclude, Filters}
 
   defstruct results: [],
             meta: %{},
@@ -30,6 +30,13 @@ defmodule Plausible.Stats.QueryResult do
   }
 
   def no_imported_scroll_depth_warning(), do: @no_imported_scroll_depth_warning
+
+  @no_imported_bounce_rate_warning %{
+    code: :no_imported_bounce_rate,
+    warning: "imported bounce_rate is not available when using a page filter"
+  }
+
+  def no_imported_bounce_rate_warning(), do: @no_imported_bounce_rate_warning
 
   @doc """
   Builds full JSON-serializable query response.
@@ -100,7 +107,7 @@ defmodule Plausible.Stats.QueryResult do
   defp add_dashboard_metric_labels(meta, query) do
     context = %{
       goal_filter?:
-        Plausible.Stats.Filters.filtering_on_dimension?(query, "event:goal",
+        Filters.filtering_on_dimension?(query, "event:goal",
           max_depth: 0,
           behavioral_filters: :ignore
         ),
@@ -198,6 +205,13 @@ defmodule Plausible.Stats.QueryResult do
 
       _ ->
         nil
+    end
+  end
+
+  defp metric_warning(:bounce_rate, %Query{} = query) do
+    if query.include_imported and
+         Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) do
+      @no_imported_bounce_rate_warning
     end
   end
 

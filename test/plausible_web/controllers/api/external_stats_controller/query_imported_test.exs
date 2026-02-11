@@ -1296,11 +1296,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
     end
   end
 
-  describe "scroll depth metric warnings" do
-    test "returns warning when a site_import without scroll depth is in queried range", %{
-      conn: conn,
-      site: site
-    } do
+  describe "metric warnings" do
+    test "returns scroll_depth warning when a site_import without scroll depth is in queried range",
+         %{
+           conn: conn,
+           site: site
+         } do
       site_import =
         insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
 
@@ -1336,7 +1337,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
              }
     end
 
-    test "does not return warning when imports requested but rejected", %{
+    test "does not return scroll depth warning when imports requested but rejected", %{
       conn: conn,
       site: site
     } do
@@ -1372,7 +1373,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       refute meta["metric_warnings"]["scroll_depth"]
     end
 
-    test "does not return warning when imports without scroll depth exist but outside the queried range",
+    test "does not return scroll_depth warning when imports without scroll depth exist but outside the queried range",
          %{
            conn: conn,
            site: site
@@ -1404,7 +1405,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       refute meta["metric_warnings"]["scroll_depth"]
     end
 
-    test "does not return warning when imported scroll depth exists", %{
+    test "does not return scroll_depth warning when imported scroll depth exists", %{
       conn: conn,
       site: site
     } do
@@ -1448,6 +1449,42 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
       assert meta["imports_included"]
       refute meta["metric_warnings"]["scroll_depth"]
+    end
+
+    test "returns bounce_rate warning when query includes imported and page filter used", %{
+      conn: conn,
+      site: site
+    } do
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
+        build(:pageview, user_id: 123, pathname: "/next", timestamp: ~N[2021-02-01 00:10:00]),
+        build(:pageview, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
+        build(:imported_pages, page: "/", date: ~D[2021-02-01])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "bounce_rate"],
+          "date_range" => "all",
+          "filters" => [["is", "event:page", ["/"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
+
+      assert results == [%{"dimensions" => [], "metrics" => [3, 50.0]}]
+
+      assert meta["imports_included"] == true
+
+      assert bounce_rate_warning = meta["metric_warnings"]["bounce_rate"]
+
+      expected_warning = Plausible.Stats.QueryResult.no_imported_bounce_rate_warning()
+      assert bounce_rate_warning["code"] == to_string(expected_warning.code)
+      assert bounce_rate_warning["warning"] == expected_warning.warning
     end
   end
 
