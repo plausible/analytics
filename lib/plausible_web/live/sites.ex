@@ -529,26 +529,32 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def ellipsis_menu(assigns) do
-    ~H"""
-    <.dropdown>
-      <:button class="size-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
-        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 size-5 transition-colors duration-150" />
-      </:button>
-      <:menu class="!mt-0 mr-4 min-w-40">
-        <!-- adjust position because click area is much bigger than icon. Default positioning from click area looks weird -->
-        <.dropdown_item
-          :if={@can_manage?}
-          href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
-          class="group/item !flex items-center gap-x-2"
-        >
-          <Heroicons.cog_6_tooth class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100" />
-          <span>Settings</span>
-        </.dropdown_item>
+    assigns = assign(assigns, %{dropdown_id: "site-#{assigns[:site].domain}-dropdown"})
 
-        <.dropdown_item
+    ~H"""
+    <PrimaDropdown.dropdown id={@dropdown_id}>
+      <PrimaDropdown.dropdown_trigger
+        id={"#{@dropdown_id}-trigger"}
+        as={&button/1}
+        mt?={false}
+        theme="icon"
+      >
+        <Heroicons.ellipsis_vertical class="size-5" />
+      </PrimaDropdown.dropdown_trigger>
+
+      <PrimaDropdown.dropdown_menu id={"#{@dropdown_id}-menu"}>
+        <PrimaDropdown.dropdown_item
+          :if={@can_manage?}
+          id={"#{@dropdown_id}-item-1"}
+          as={&link/1}
+          href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain)}
+        >
+          <Heroicons.cog_6_tooth class={PrimaDropdown.dropdown_item_icon_class()} /> Settings
+        </PrimaDropdown.dropdown_item>
+
+        <PrimaDropdown.dropdown_item
           :if={Sites.regular?(@site)}
-          href="#"
-          x-on:click.prevent
+          id={"#{@dropdown_id}-item-2"}
           phx-click={
             JS.hide(
               transition: {"duration-500", "opacity-100", "opacity-0"},
@@ -558,32 +564,29 @@ defmodule PlausibleWeb.Live.Sites do
             |> JS.push("pin-toggle")
           }
           phx-value-domain={@site.domain}
-          class="group/item !flex items-center gap-x-2"
         >
           <.icon_pin
             :if={@site.pinned_at}
             filled={true}
-            class="size-[1.15rem] text-indigo-600 dark:text-indigo-500 group-hover/item:text-indigo-700 dark:group-hover/item:text-indigo-400"
+            class={PrimaDropdown.dropdown_item_icon_class()}
           />
-          <span :if={@site.pinned_at}>Unpin site</span>
-
           <.icon_pin
             :if={!@site.pinned_at}
-            class="size-5 text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-gray-100"
+            class={PrimaDropdown.dropdown_item_icon_class()}
           />
-          <span :if={!@site.pinned_at}>Pin site</span>
-        </.dropdown_item>
-        <.dropdown_item
+          {if @site.pinned_at, do: "Unpin site", else: "Pin site"}
+        </PrimaDropdown.dropdown_item>
+
+        <PrimaDropdown.dropdown_item
           :if={Application.get_env(:plausible, :environment) == "dev" and Sites.regular?(@site)}
-          href={Routes.site_path(PlausibleWeb.Endpoint, :delete_site, @site.domain)}
-          method="delete"
-          class="group/item !flex items-center gap-x-2"
+          id={"#{@dropdown_id}-item-3"}
+          phx-click="delete-site"
+          phx-value-domain={@site.domain}
         >
-          <Heroicons.trash class="size-5 text-red-500" />
-          <span class="text-red-500">[DEV ONLY] Quick delete</span>
-        </.dropdown_item>
-      </:menu>
-    </.dropdown>
+          <Heroicons.trash class="size-4 text-red-600" /> [DEV ONLY] Quick delete
+        </PrimaDropdown.dropdown_item>
+      </PrimaDropdown.dropdown_menu>
+    </PrimaDropdown.dropdown>
     """
   end
 

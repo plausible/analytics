@@ -43,7 +43,8 @@ defmodule PlausibleWeb.Components.Generic do
     "danger" =>
       "border border-gray-300 dark:border-gray-800 text-red-600 bg-white dark:bg-gray-800 hover:text-red-700 dark:hover:text-red-400 dark:text-red-500 active:text-red-800 disabled:text-red-700/40 disabled:hover:shadow-none dark:disabled:text-red-500/35 dark:disabled:bg-gray-800",
     "ghost" =>
-      "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:text-gray-500 disabled:dark:text-gray-600 disabled:hover:bg-transparent"
+      "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:text-gray-500 disabled:dark:text-gray-600 disabled:hover:bg-transparent",
+    "icon" => "text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
   }
 
   @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-md cursor-pointer disabled:cursor-not-allowed"
