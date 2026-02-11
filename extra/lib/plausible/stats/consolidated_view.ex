@@ -1,11 +1,11 @@
 defmodule Plausible.Stats.ConsolidatedView do
   alias Plausible.{Site, Stats}
-  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryInclude}
+  alias Plausible.Stats.QueryBuilder
   require Logger
 
   @spec overview_24h(Site.t(), NaiveDateTime.t()) :: map()
   def overview_24h(%Site{consolidated: true} = view, now \\ NaiveDateTime.utc_now()) do
-    stats = query_24h_stats(view, now)
+    stats = query_24h_stats(view)
     intervals = query_24h_intervals(view, now)
 
     Map.merge(stats, intervals)
@@ -38,29 +38,13 @@ defmodule Plausible.Stats.ConsolidatedView do
     end
   end
 
-  defp query_24h_stats(view, now) do
-    from =
-      NaiveDateTime.shift(now, hour: -24)
-      |> DateTime.from_naive!("Etc/UTC")
-
-    to = now |> DateTime.from_naive!("Etc/UTC")
-
-    c_from =
-      NaiveDateTime.shift(now, hour: -48)
-      |> DateTime.from_naive!("Etc/UTC")
-
-    c_to =
-      NaiveDateTime.shift(now, hour: -24)
-      |> DateTime.from_naive!("Etc/UTC")
-
-    {:ok, stats_query} =
-      QueryBuilder.build(view, %ParsedQueryParams{
-        input_date_range: {:datetime_range, from, to},
+  defp query_24h_stats(view) do
+    stats_query =
+      QueryBuilder.build!(view,
+        input_date_range: :"24h",
         metrics: [:visitors, :visits, :pageviews, :views_per_visit],
-        include: %QueryInclude{
-          compare: {:datetime_range, c_from, c_to}
-        }
-      })
+        include: [compare: :previous_period]
+      )
 
     %Stats.QueryResult{
       results: [
@@ -86,13 +70,10 @@ defmodule Plausible.Stats.ConsolidatedView do
   end
 
   defp query_24h_intervals(view, now) do
-    from_datetime = now |> NaiveDateTime.shift(hour: -24) |> DateTime.from_naive!("Etc/UTC")
-    to_datetime = now |> DateTime.from_naive!("Etc/UTC")
-
     graph_query =
       QueryBuilder.build!(view,
         metrics: [:visitors],
-        input_date_range: {:datetime_range, from_datetime, to_datetime},
+        input_date_range: :"24h",
         dimensions: ["time:hour"],
         order_by: [{"time:hour", :asc}]
       )

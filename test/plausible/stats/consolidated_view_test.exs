@@ -4,6 +4,8 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
   on_ee do
     test "returns stats for a consolidated view merged with placeholder" do
       fixed_now = ~N[2023-10-26 10:00:15]
+      Plausible.Stats.Query.Test.fix_now(DateTime.from_naive!(fixed_now, "Etc/UTC"))
+
       owner = new_user()
       site1 = new_site(owner: owner)
       site2 = new_site(owner: owner)
@@ -68,6 +70,8 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
 
     test "excludes engagement events from visitor counts" do
       fixed_now = ~N[2025-10-20 12:49:15]
+      Plausible.Stats.Query.Test.fix_now(DateTime.from_naive!(fixed_now, "Etc/UTC"))
+
       owner = new_user()
       site = new_site(owner: owner)
       new_site(owner: owner)
@@ -92,6 +96,8 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
 
     test "filters out-of-range timeslots correctly" do
       fixed_now = ~N[2025-10-20 12:49:15]
+      Plausible.Stats.Query.Test.fix_now(DateTime.from_naive!(fixed_now, "Etc/UTC"))
+
       owner = new_user()
       site = new_site(owner: owner)
       new_site(owner: owner)
@@ -120,6 +126,8 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
 
     test "orders timeslots chronologically" do
       fixed_now = ~N[2025-10-20 12:49:15]
+      Plausible.Stats.Query.Test.fix_now(DateTime.from_naive!(fixed_now, "Etc/UTC"))
+
       owner = new_user()
       site = new_site(owner: owner)
       new_site(owner: owner)

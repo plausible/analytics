@@ -26,4 +26,15 @@ defmodule Plausible.Stats.ApiQueryParserTest do
             }} =
              parse(params)
   end
+
+  test "parses 24h date_range shorthand" do
+    params = %{
+      "site_id" => "example.com",
+      "metrics" => ["visitors"],
+      "date_range" => "24h"
+    }
+
+    assert {:ok, parsed} = parse(params)
+    assert parsed.input_date_range == :"24h"
+  end
 end

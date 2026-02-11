@@ -21,6 +21,11 @@ describe(`${getStoredPeriod.name}`, () => {
     localStorage.setItem(key, QueryPeriod['7d'])
     expect(getStoredPeriod(domain, null)).toEqual(QueryPeriod['7d'])
   })
+
+  it('returns correct value for 24h period if stored', () => {
+    localStorage.setItem(key, QueryPeriod['24h'])
+    expect(getStoredPeriod(domain, null)).toEqual(QueryPeriod['24h'])
+  })
 })
 
 describe(`${getDashboardTimeSettings.name}`, () => {

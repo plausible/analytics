@@ -18,6 +18,7 @@ export type Metric =
 export type DateRangeShorthand =
   | "all"
   | "day"
+  | "24h"
   | "7d"
   | "28d"
   | "30d"

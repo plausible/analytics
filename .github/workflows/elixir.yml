@@ -206,9 +206,6 @@ jobs:
       - run: mix download_country_database
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
-      - name: Setup E2E seeds
-        run: mix run priv/repo/e2e_seeds.exs
-
       - name: Install E2E dependencies
         run: npm --prefix ./e2e ci
 
