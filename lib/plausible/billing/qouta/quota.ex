@@ -203,7 +203,7 @@ defmodule Plausible.Billing.Quota do
       Plausible.Teams.GracePeriod.expired?(team) ->
         :dashboard_locked
 
-      Plausible.Teams.on_trial?(team) == false and is_nil(subscription) ->
+      not Plausible.Teams.on_trial?(team) and is_nil(subscription) ->
         :trial_ended
 
       pageview_notification ->

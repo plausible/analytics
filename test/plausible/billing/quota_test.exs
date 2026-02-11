@@ -1095,4 +1095,183 @@ defmodule Plausible.Billing.QuotaTest do
       end
     end
   end
+
+  describe "usage_notification_type/2" do
+    @describetag :ee_only
+
+    test "returns :dashboard_locked when grace period has expired" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      expired_grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.add(Date.utc_today(), -1),
+        is_over: false,
+        manual_lock: false
+      }
+
+      team = %{team | grace_period: expired_grace_period}
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 15_000},
+          penultimate_cycle: %{total: 14_000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :dashboard_locked
+    end
+
+    test "returns :trial_ended when trial expired and no subscription" do
+      user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -5))
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{last_30_days: %{total: 5000}},
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :trial_ended
+    end
+
+    test "returns :traffic_exceeded_sustained when both last cycles exceeded" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 15_000},
+          penultimate_cycle: %{total: 14_000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :traffic_exceeded_sustained
+    end
+
+    test "returns :traffic_exceeded_last_cycle when only last cycle exceeded" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 15_000},
+          penultimate_cycle: %{total: 8000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :traffic_exceeded_last_cycle
+    end
+
+    test "returns :pageview_approaching_limit when at 90% of limit" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 9000},
+          last_cycle: %{total: 8000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :pageview_approaching_limit
+    end
+
+    test "pageview notification takes precedence over site/member limits" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 9000}
+        },
+        sites: 10,
+        team_members: 3
+      }
+
+      # At limits for both sites and members, but pageview approaching takes precedence
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :pageview_approaching_limit
+    end
+
+    test "returns :site_and_team_member_limit_reached when both site and member limits reached" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 10,
+        team_members: 3
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :site_and_team_member_limit_reached
+    end
+
+    test "returns :site_limit_reached when only site limit reached" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 10,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :site_limit_reached
+    end
+
+    test "returns :team_member_limit_reached when only member limit reached" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 5,
+        team_members: 3
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :team_member_limit_reached
+    end
+
+    test "returns nil when no notification is needed" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == nil
+    end
+
+    test "handles :unlimited limits correctly" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == nil
+    end
+  end
 end
