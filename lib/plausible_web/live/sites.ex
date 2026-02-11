@@ -117,19 +117,23 @@ defmodule PlausibleWeb.Live.Sites do
           :if={@consolidated_view_cta_dismissed?}
           id="add-site-dropdown"
         >
-          <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+          <PrimaDropdown.dropdown_trigger as={&button/1} id="add-site-dropdown-trigger" mt?={false}>
             <Heroicons.plus class="size-4" /> Add
             <Heroicons.chevron_down mini class="size-4 mt-0.5" />
           </PrimaDropdown.dropdown_trigger>
 
-          <PrimaDropdown.dropdown_menu>
+          <PrimaDropdown.dropdown_menu id="add-site-dropdown-menu">
             <PrimaDropdown.dropdown_item
               as={&link/1}
+              id="add-site-dropdown-menuitem-1"
               href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
             >
               <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
             </PrimaDropdown.dropdown_item>
-            <PrimaDropdown.dropdown_item phx-click="consolidated-view-cta-restore">
+            <PrimaDropdown.dropdown_item
+              id="add-site-dropdown-menuitem-2"
+              phx-click="consolidated-view-cta-restore"
+            >
               <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
               Add consolidated view
             </PrimaDropdown.dropdown_item>
