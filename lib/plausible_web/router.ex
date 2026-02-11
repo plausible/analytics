@@ -104,8 +104,9 @@ defmodule PlausibleWeb.Router do
     end
   end
 
-  if Mix.env() in [:dev, :ce_dev] do
+  if Mix.env() in [:dev, :ce_dev, :e2e_test] do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
+    forward "/sent-emails-api", Bamboo.SentEmailApiPlug
   end
 
   scope "/" do
@@ -169,6 +170,15 @@ defmodule PlausibleWeb.Router do
         get("/api-basic", TestController, :api_basic)
         get("/:domain/api-with-domain", TestController, :api_basic)
       end
+    end
+  end
+
+  # Routes for E2E testing
+  if Mix.env() in [:test, :ce_test, :e2e_test] do
+    scope "/e2e-tests", PlausibleWeb do
+      pipe_through :api
+
+      post "/stats", E2EController, :populate_stats
     end
   end
 
