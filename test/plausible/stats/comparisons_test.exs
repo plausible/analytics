@@ -453,4 +453,83 @@ defmodule Plausible.Stats.ComparisonsTest do
     |> Query.date_range()
     |> Enum.count()
   end
+
+  describe "with period set to 24h" do
+    test "shifts back 24h period when mode is previous_period", %{site: site} do
+      Plausible.Stats.Query.Test.fix_now(~U[2023-03-15 18:30:00Z])
+
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :"24h",
+          include: [compare: :previous_period]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      # 24h range from 2023-03-14 18:30:00 to 2023-03-15 18:30:00 (UTC)
+      # Previous period shifts back exactly 24 hours
+      assert comparison_query.utc_time_range.first == ~U[2023-03-13 18:30:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2023-03-14 18:30:00Z]
+    end
+
+    test "shifts back 24h period when mode is year_over_year", %{site: site} do
+      Plausible.Stats.Query.Test.fix_now(~U[2023-03-15 18:30:00Z])
+
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :"24h",
+          include: [compare: :year_over_year]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      # 24h range: 2023-03-14 18:30:00 to 2023-03-15 18:30:00 (UTC)
+      # Year over year shifts back exactly 1 year
+      assert comparison_query.utc_time_range.first == ~U[2022-03-14 18:30:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2022-03-15 18:30:00Z]
+    end
+
+    test "custom time zone works with 24h comparison" do
+      site = insert(:site, timezone: "US/Eastern")
+
+      Plausible.Stats.Query.Test.fix_now(~U[2023-03-15 18:30:00Z])
+
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :"24h",
+          include: [compare: :previous_period]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      # 24h range: 2023-03-14 18:30:00 to 2023-03-15 18:30:00 (UTC)
+      # Previous period shifts back exactly 24 hours
+      assert comparison_query.utc_time_range.first == ~U[2023-03-13 18:30:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2023-03-14 18:30:00Z]
+    end
+
+    test "shifts back 24h period to match day of week when mode is previous_period with match_day_of_week",
+         %{site: site} do
+      # Wednesday
+      Plausible.Stats.Query.Test.fix_now(~U[2023-03-15 18:30:00Z])
+
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :"24h",
+          include: [compare: :previous_period, compare_match_day_of_week: true]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      # 24h range: Tuesday 2023-03-14 18:30:00 to Wednesday 2023-03-15 18:30:00 (UTC)
+      # Match day of week: shift back 7 days to get the same Tuesday->Wednesday window
+      # Result: Tuesday 2023-03-07 18:30:00 to Wednesday 2023-03-08 18:30:00
+      assert comparison_query.utc_time_range.first == ~U[2023-03-07 18:30:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2023-03-08 18:30:00Z]
+    end
+  end
 end
