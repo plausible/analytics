@@ -152,13 +152,13 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       assert rendered =~ "Upgrade"
     end
 
-    test "renders limits_reached_combined notification" do
+    test "renders site_and_team_member_limit_reached notification" do
       user = new_user()
       team = team_of(user)
 
       rendered =
         render_component(&Notice.usage_notification/1,
-          type: :limits_reached_combined,
+          type: :site_and_team_member_limit_reached,
           team: team
         )
 
@@ -242,7 +242,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
     end
   end
 
-  describe "determine_notification_type/8" do
+  describe "Plausible.Billing.Quota.usage_notification_type/2" do
     @tag :ee_only
     test "returns :dashboard_locked when grace period has expired" do
       user = new_user() |> subscribe_to_growth_plan()
@@ -257,13 +257,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       team = %{team | grace_period: expired_grace_period}
 
       usage = %{
-        current_cycle: %{total: 5000},
-        last_cycle: %{total: 15_000},
-        penultimate_cycle: %{total: 14_000}
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 15_000},
+          penultimate_cycle: %{total: 14_000}
+        },
+        sites: 3,
+        team_members: 2
       }
 
-      assert Notice.determine_notification_type(team, usage, 10_000, 3, 10, 5, 10, nil) ==
-               :dashboard_locked
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :dashboard_locked
     end
 
     @tag :ee_only
@@ -271,10 +274,13 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -5))
       team = team_of(user)
 
-      usage = %{current_cycle: %{total: 5000}}
+      usage = %{
+        monthly_pageviews: %{last_30_days: %{total: 5000}},
+        sites: 3,
+        team_members: 2
+      }
 
-      assert Notice.determine_notification_type(team, usage, :unlimited, 3, 10, 5, 10, nil) ==
-               :trial_ended
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :trial_ended
     end
 
     @tag :ee_only
@@ -283,21 +289,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       team = team_of(user)
 
       usage = %{
-        current_cycle: %{total: 5000},
-        last_cycle: %{total: 15_000},
-        penultimate_cycle: %{total: 14_000}
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 15_000},
+          penultimate_cycle: %{total: 14_000}
+        },
+        sites: 3,
+        team_members: 2
       }
 
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               10_000,
-               3,
-               10,
-               5,
-               10,
-               team.subscription
-             ) ==
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
                :traffic_exceeded_sustained
     end
 
@@ -307,21 +308,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       team = team_of(user)
 
       usage = %{
-        current_cycle: %{total: 5000},
-        last_cycle: %{total: 15_000},
-        penultimate_cycle: %{total: 8000}
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 15_000},
+          penultimate_cycle: %{total: 8000}
+        },
+        sites: 3,
+        team_members: 2
       }
 
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               10_000,
-               3,
-               10,
-               5,
-               10,
-               team.subscription
-             ) ==
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
                :traffic_exceeded_last_cycle
     end
 
@@ -331,20 +327,15 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       team = team_of(user)
 
       usage = %{
-        current_cycle: %{total: 9000},
-        last_cycle: %{total: 8000}
+        monthly_pageviews: %{
+          current_cycle: %{total: 9000},
+          last_cycle: %{total: 8000}
+        },
+        sites: 3,
+        team_members: 2
       }
 
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               10_000,
-               3,
-               10,
-               5,
-               10,
-               team.subscription
-             ) ==
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
                :pageview_approaching_limit
     end
 
@@ -354,41 +345,31 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       team = team_of(user)
 
       usage = %{
-        current_cycle: %{total: 9500}
+        monthly_pageviews: %{
+          current_cycle: %{total: 9000}
+        },
+        sites: 10,
+        team_members: 3
       }
 
       # At limits for both sites and members, but pageview approaching takes precedence
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               10_000,
-               10,
-               10,
-               10,
-               10,
-               team.subscription
-             ) ==
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
                :pageview_approaching_limit
     end
 
     @tag :ee_only
-    test "returns :limits_reached_combined when both site and member limits reached" do
+    test "returns :site_and_team_member_limit_reached when both site and member limits reached" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
 
-      usage = %{current_cycle: %{total: 5000}}
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 10,
+        team_members: 3
+      }
 
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               10_000,
-               10,
-               10,
-               10,
-               10,
-               team.subscription
-             ) ==
-               :limits_reached_combined
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :site_and_team_member_limit_reached
     end
 
     @tag :ee_only
@@ -396,19 +377,13 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
 
-      usage = %{current_cycle: %{total: 5000}}
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 10,
+        team_members: 2
+      }
 
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               10_000,
-               10,
-               10,
-               5,
-               10,
-               team.subscription
-             ) ==
-               :site_limit_reached
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :site_limit_reached
     end
 
     @tag :ee_only
@@ -416,18 +391,13 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
 
-      usage = %{current_cycle: %{total: 5000}}
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 5,
+        team_members: 3
+      }
 
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               10_000,
-               5,
-               10,
-               10,
-               10,
-               team.subscription
-             ) ==
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
                :team_member_limit_reached
     end
 
@@ -436,19 +406,13 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
 
-      usage = %{current_cycle: %{total: 5000}}
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 3,
+        team_members: 2
+      }
 
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               10_000,
-               3,
-               10,
-               5,
-               10,
-               team.subscription
-             ) ==
-               nil
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == nil
     end
 
     @tag :ee_only
@@ -456,19 +420,13 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
 
-      usage = %{current_cycle: %{total: 50_000}}
+      usage = %{
+        monthly_pageviews: %{current_cycle: %{total: 5000}},
+        sites: 3,
+        team_members: 2
+      }
 
-      # Should not trigger notifications for unlimited limits
-      assert Notice.determine_notification_type(
-               team,
-               usage,
-               :unlimited,
-               100,
-               :unlimited,
-               100,
-               :unlimited,
-               team.subscription
-             ) == nil
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == nil
     end
   end
 end

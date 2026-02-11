@@ -330,7 +330,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  def usage_notification(%{type: :limits_reached_combined} = assigns) do
+  def usage_notification(%{type: :site_and_team_member_limit_reached} = assigns) do
     ~H"""
     <.notice
       title="You've reached your current limits for team members and sites"
@@ -437,67 +437,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   def usage_notification(assigns), do: ~H""
-
-  @doc """
-  Determines which notification type should be shown based on current usage and limits.
-
-  Returns an atom representing the notification type, or nil if no notification should be shown.
-
-  Priority order:
-  1. Dashboard locked (grace period expired after 2 cycles exceeded)
-  2. Trial ended (no subscription after trial expires - blocks all access)
-  3. Traffic exceeded for 2 consecutive cycles
-  4. Traffic exceeded for 1 cycle
-  5. Pageview limit approaching (90%+) - takes precedence over site/member limits
-  6. Site and team member limits both reached
-  7. Site limit reached
-  8. Team member limit reached
-  """
-  def determine_notification_type(
-        team,
-        pageview_usage,
-        pageview_limit,
-        site_usage,
-        site_limit,
-        team_member_usage,
-        team_member_limit,
-        subscription
-      ) do
-    cond do
-      Plausible.Teams.GracePeriod.expired?(team) ->
-        :dashboard_locked
-
-      Plausible.Teams.on_trial?(team) == false and is_nil(subscription) ->
-        :trial_ended
-
-      pageview_limit != :unlimited and
-        is_map_key(pageview_usage, :last_cycle) and is_map_key(pageview_usage, :penultimate_cycle) and
-          Plausible.Billing.Quota.exceeds_last_two_usage_cycles?(pageview_usage, pageview_limit) ->
-        :traffic_exceeded_sustained
-
-      is_map_key(pageview_usage, :last_cycle) and
-        pageview_usage.last_cycle.total > pageview_limit and
-          pageview_limit != :unlimited ->
-        :traffic_exceeded_last_cycle
-
-      pageview_limit != :unlimited and is_map_key(pageview_usage, :current_cycle) and
-          pageview_usage.current_cycle.total >= pageview_limit * 0.9 ->
-        :pageview_approaching_limit
-
-      site_usage >= site_limit and site_limit != :unlimited and
-        team_member_usage >= team_member_limit and team_member_limit != :unlimited ->
-        :limits_reached_combined
-
-      site_usage >= site_limit and site_limit != :unlimited ->
-        :site_limit_reached
-
-      team_member_usage >= team_member_limit and team_member_limit != :unlimited ->
-        :team_member_limit_reached
-
-      true ->
-        nil
-    end
-  end
 
   defp subscription_cancelled_notice_body(assigns) do
     ~H"""
