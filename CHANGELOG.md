@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Adds team_id to query debug metadata (saved in system.query_log log_comment column)
 - Add "Unknown" option to Countries shield, for when the country code is unrecognized
-- Add "Last 24 Hours" to dashboard time range picker
+- Add "Last 24 Hours" to dashboard time range picker and Stats API v2
 
 ### Removed
 
