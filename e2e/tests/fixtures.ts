@@ -15,6 +15,7 @@ type EventTimestamp =
 
 type Event = {
   name: string
+  user_id?: number
   pathname?: string
   timestamp?: EventTimestamp
 }
@@ -150,6 +151,49 @@ export async function populateStats({
   })
 
   expect(response.ok()).toBeTruthy()
+}
+
+export async function addCustomGoal({
+  page,
+  domain,
+  name,
+  displayName
+}: {
+  page: Page
+  domain: string
+  name: string
+  displayName: string
+}) {
+  await page.goto(`/${domain}/settings/goals`)
+
+  await expectLiveViewConnected(page)
+
+  await page.getByRole('button', { name: 'Add goal' }).click()
+  const customEventButton = page.locator(
+    'button[phx-value-goal-type="custom_events"]'
+  )
+  await expect(customEventButton).toBeVisible()
+  await customEventButton.click()
+  const addManuallyButton = page.getByRole('button', { name: 'Add manually' })
+  await expect(addManuallyButton).toBeVisible()
+  await addManuallyButton.click()
+  await expect(
+    page.getByRole('heading', { name: `Add goal for ${domain}` })
+  ).toBeVisible()
+  // NOTE: Locating inputs by role and label does not work in this case
+  // for some reason.
+  const nameInput = page.locator('input[placeholder="e.g. Signup"]')
+  await nameInput.fill(name)
+  await page.locator(`a[data-display-value="${name}"]`).click()
+  await expect(nameInput).toHaveAttribute('value', name)
+  await page.locator('input#custom_event_display_name_input').fill(displayName)
+
+  await page
+    .locator('form[phx-submit="save-goal"]')
+    .getByRole('button', { name: 'Add goal' })
+    .click()
+
+  await expect(page.locator('body')).toContainText('Goal saved successfully')
 }
 
 export async function setupSite({
