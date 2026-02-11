@@ -30,6 +30,7 @@ export enum QueryPeriod {
   'day' = 'day',
   'month' = 'month',
   '7d' = '7d',
+  '24h' = '24h',
   '28d' = '28d',
   '30d' = '30d',
   '91d' = '91d',
@@ -302,6 +303,19 @@ export const getDatePeriodGroups = ({
           isActive: ({ query }) =>
             query.period === QueryPeriod.day &&
             isSameDate(query.date, yesterday(site)),
+          onEvent
+        }
+      ],
+      [
+        ['Last 24h', 'H'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['24h'],
+            keybindHint: 'H'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['24h'],
           onEvent
         }
       ],
@@ -604,6 +618,9 @@ export function getCurrentPeriodDisplayName({
       return 'Today'
     }
     return formatDay(query.date)
+  }
+  if (query.period === '24h') {
+    return 'Last 24h'
   }
   if (query.period === '7d') {
     return 'Last 7 days'
