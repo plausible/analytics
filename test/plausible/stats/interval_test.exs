@@ -17,6 +17,7 @@ defmodule Plausible.Stats.IntervalTest do
     test "by input_date_range" do
       assert default_for_query(build_query(%{input_date_range: :realtime})) == "minute"
       assert default_for_query(build_query(%{input_date_range: :day})) == "hour"
+      assert default_for_query(build_query(%{input_date_range: :"24h"})) == "hour"
       assert default_for_query(build_query(%{input_date_range: {:last_n_days, 7}})) == "day"
       assert default_for_query(build_query(%{input_date_range: {:last_n_months, 12}})) == "month"
     end
@@ -46,6 +47,7 @@ defmodule Plausible.Stats.IntervalTest do
       assert valid_by_period(site: site) == %{
                "realtime" => ["minute"],
                "day" => ["minute", "hour"],
+               "24h" => ["minute", "hour"],
                "month" => ["day", "week"],
                "7d" => ["hour", "day"],
                "28d" => ["day", "week"],
@@ -65,6 +67,7 @@ defmodule Plausible.Stats.IntervalTest do
       assert valid_by_period(site: site) == %{
                "realtime" => ["minute"],
                "day" => ["minute", "hour"],
+               "24h" => ["minute", "hour"],
                "month" => ["day", "week"],
                "7d" => ["hour", "day"],
                "28d" => ["day", "week"],
@@ -85,6 +88,7 @@ defmodule Plausible.Stats.IntervalTest do
       assert valid_by_period(site: site, from: ago_13m, to: Date.utc_today()) == %{
                "realtime" => ["minute"],
                "day" => ["minute", "hour"],
+               "24h" => ["minute", "hour"],
                "month" => ["day", "week"],
                "7d" => ["hour", "day"],
                "28d" => ["day", "week"],

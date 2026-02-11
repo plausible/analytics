@@ -108,6 +108,15 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     struct!(query, input_date_range: :day, utc_time_range: datetime_range)
   end
 
+  defp put_input_date_range(%Query{now: now} = query, site, %{"period" => "24h"}) do
+    to = now |> DateTime.shift_zone!(site.timezone) |> DateTime.shift_zone!("Etc/UTC")
+    from = to |> DateTime.shift(hour: -24)
+
+    datetime_range = DateTimeRange.new!(from, to)
+
+    struct!(query, input_date_range: :"24h", utc_time_range: datetime_range)
+  end
+
   defp put_input_date_range(query, site, %{"period" => period} = params)
        when period in ["7d", "28d", "30d", "91d"] do
     {days, "d"} = Integer.parse(period)
