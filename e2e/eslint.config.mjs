@@ -27,7 +27,7 @@ export default tseslint.config([
   },
   // config for tests of tracker scripts and installation support scripts
   {
-    files: ['test/**/*.js', 'test/**/*.ts'],
+    files: ['tests/**/*.ts'],
     ...pluginPlaywright.configs['flat/recommended'],
     languageOptions: {
       ecmaVersion: 'latest'
