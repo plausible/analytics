@@ -100,11 +100,9 @@ defmodule Plausible.Stats.QueryBuilder do
     DateTimeRange.new!(relative_date, relative_date, site.timezone)
   end
 
-  defp build_datetime_range(:"24h", site, _relative_date, now) do
-    to = now |> DateTime.shift_zone!(site.timezone) |> DateTime.shift_zone!("Etc/UTC")
-    from = to |> DateTime.shift(hour: -24)
-
-    DateTimeRange.new!(from, to)
+  defp build_datetime_range(:"24h", _site, _relative_date, now) do
+    from = DateTime.shift(now, hour: -24)
+    DateTimeRange.new!(from, now)
   end
 
   defp build_datetime_range(:month, site, relative_date, _now) do
