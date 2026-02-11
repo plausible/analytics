@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, logout, makeSitePublic, populateStats } from './fixtures.ts'
+import {
+  setupSite,
+  logout,
+  makeSitePublic,
+  populateStats,
+  addCustomGoal
+} from './fixtures.ts'
 
 test('dashboard renders for logged in user', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
@@ -164,4 +170,30 @@ test('back navigation closes the modal', async ({ page, request, baseURL }) => {
   await page.goBack()
 
   await expect(page).toHaveURL(baseURL + '/' + domain)
+})
+
+test('goals are rendered', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { user_id: 123, name: 'pageview', timestamp: { minutesAgo: 60 } },
+      { user_id: 123, name: 'add_site', timestamp: { minutesAgo: 50 } }
+    ]
+  })
+
+  await addCustomGoal({
+    page,
+    domain,
+    name: 'add_site',
+    displayName: 'Add a site'
+  })
+
+  await page.goto('/' + domain)
+
+  await expect(page.getByRole('button', { name: domain })).toBeVisible()
+  // To ensure lazy loading of behaviours is triggered
+  page.getByRole('button', { name: 'Goals' }).scrollIntoViewIfNeeded()
+  await expect(page.getByRole('link', { name: 'Add a site' })).toBeVisible()
 })
