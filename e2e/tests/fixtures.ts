@@ -16,6 +16,9 @@ type EventTimestamp =
 type Event = {
   name: string
   user_id?: number
+  scroll_depth?: number
+  revenue_reporting_amount?: string
+  revenue_reporting_currency?: string
   pathname?: string
   timestamp?: EventTimestamp
 }
@@ -157,12 +160,17 @@ export async function addCustomGoal({
   page,
   domain,
   name,
-  displayName
+  displayName,
+  currency,
+  // Useful when adding a goal for which there's no matching stat yet
+  clickManually = true
 }: {
   page: Page
   domain: string
   name: string
-  displayName: string
+  displayName?: string
+  currency?: string
+  clickManually?: boolean
 }) {
   await page.goto(`/${domain}/settings/goals`)
 
@@ -174,9 +182,11 @@ export async function addCustomGoal({
   )
   await expect(customEventButton).toBeVisible()
   await customEventButton.click()
-  const addManuallyButton = page.getByRole('button', { name: 'Add manually' })
-  await expect(addManuallyButton).toBeVisible()
-  await addManuallyButton.click()
+
+  if (clickManually) {
+    await page.getByRole('button', { name: 'Add manually' }).click()
+  }
+
   await expect(
     page.getByRole('heading', { name: `Add goal for ${domain}` })
   ).toBeVisible()
@@ -186,7 +196,116 @@ export async function addCustomGoal({
   await nameInput.fill(name)
   await page.locator(`a[data-display-value="${name}"]`).click()
   await expect(nameInput).toHaveAttribute('value', name)
-  await page.locator('input#custom_event_display_name_input').fill(displayName)
+
+  if (displayName) {
+    await page
+      .locator('input#custom_event_display_name_input')
+      .fill(displayName)
+  }
+
+  if (currency) {
+    page.locator('button[aria-labelledby="enable-revenue-tracking"]').click()
+    const currencyInput = page.locator('input[id^=currency_input_]')
+    await currencyInput.fill(currency)
+    await page.locator(`a[phx-value-submit-value="${currency}"]`).click()
+    await expect(page.locator('input[name="goal[currency]"]')).toHaveAttribute(
+      'value',
+      currency
+    )
+  }
+
+  await page
+    .locator('form[phx-submit="save-goal"]')
+    .getByRole('button', { name: 'Add goal' })
+    .click()
+
+  await expect(page.locator('body')).toContainText('Goal saved successfully')
+}
+
+export async function addPageviewGoal({
+  page,
+  domain,
+  pathname,
+  displayName
+}: {
+  page: Page
+  domain: string
+  pathname: string
+  displayName?: string
+}) {
+  await page.goto(`/${domain}/settings/goals`)
+
+  await expectLiveViewConnected(page)
+
+  await page.getByRole('button', { name: 'Add goal' }).click()
+  const pageviewEventButton = page.locator(
+    'button[phx-value-goal-type="pageviews"]'
+  )
+  await expect(pageviewEventButton).toBeVisible()
+  await pageviewEventButton.click()
+
+  await expect(
+    page.getByRole('heading', { name: `Add goal for ${domain}` })
+  ).toBeVisible()
+
+  const pathnameInput = page.locator('input[id^="page_path_input"]')
+  await pathnameInput.fill(pathname)
+  await page.locator(`a[data-display-value="${pathname}"]`).click()
+  await expect(pathnameInput).toHaveAttribute('value', pathname)
+  if (displayName) {
+    await page.locator('input#pageview_display_name_input').fill(displayName)
+  }
+
+  await page
+    .locator('form[phx-submit="save-goal"]')
+    .getByRole('button', { name: 'Add goal' })
+    .click()
+
+  await expect(page.locator('body')).toContainText('Goal saved successfully')
+}
+
+export async function addScrollDepthGoal({
+  page,
+  domain,
+  pathname,
+  displayName,
+  scrollPercentage
+}: {
+  page: Page
+  domain: string
+  pathname: string
+  displayName?: string
+  scrollPercentage?: number
+}) {
+  await page.goto(`/${domain}/settings/goals`)
+
+  await expectLiveViewConnected(page)
+
+  await page.getByRole('button', { name: 'Add goal' }).click()
+  const scrollDepthEventButton = page.locator(
+    'button[phx-value-goal-type="scroll"]'
+  )
+  await expect(scrollDepthEventButton).toBeVisible()
+  await scrollDepthEventButton.click()
+
+  await expect(
+    page.getByRole('heading', { name: `Add goal for ${domain}` })
+  ).toBeVisible()
+
+  if (scrollPercentage) {
+    await page
+      .locator('input[name="goal[scroll_threshold]"]')
+      .fill(scrollPercentage.toString())
+  }
+
+  const pathnameInput = page.locator('input[id^="scroll_page_path_input"]')
+  await pathnameInput.fill(pathname)
+  await page.locator(`a[data-display-value="${pathname}"]`).click()
+  await expect(pathnameInput).toHaveAttribute('value', pathname)
+
+  if (displayName) {
+    await page.locator('input#scroll_display_name_input').fill(displayName)
+  }
 
   await page
     .locator('form[phx-submit="save-goal"]')
