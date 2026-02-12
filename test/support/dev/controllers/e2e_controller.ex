@@ -11,7 +11,7 @@ defmodule PlausibleWeb.E2EController do
       |> Enum.map(&deserialize/1)
       |> Enum.map(&build/1)
 
-    stats_start_time = Enum.min_by(events, & &1.timestamp).timestamp
+    stats_start_time = Enum.min_by(events, & &1.timestamp, NaiveDateTime).timestamp
     stats_start_date = NaiveDateTime.to_date(stats_start_time)
 
     site
@@ -64,5 +64,9 @@ defmodule PlausibleWeb.E2EController do
 
   defp to_timestamp(%{"minutesAgo" => offset}) do
     NaiveDateTime.utc_now(:second) |> NaiveDateTime.add(-offset, :minute)
+  end
+
+  defp to_timestamp(ts) when is_binary(ts) do
+    NaiveDateTime.from_iso8601!(ts)
   end
 end
