@@ -1,0 +1,200 @@
+import { test, expect } from '@playwright/test'
+import { ZonedDateTime, ZoneOffset, ChronoUnit } from '@js-joda/core'
+import { setupSite, populateStats } from '../fixtures.ts'
+
+test('top stats show relevant metrics', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+  await populateStats({
+    request,
+    domain,
+    events: [
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/',
+        timestamp: { minutesAgo: 120 }
+      },
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/',
+        timestamp: { minutesAgo: 60 }
+      },
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/page1',
+        timestamp: { minutesAgo: 50 }
+      },
+      {
+        user_id: 456,
+        name: 'pageview',
+        pathname: '/',
+        timestamp: { minutesAgo: 80 }
+      }
+    ]
+  })
+
+  await page.goto('/' + domain)
+
+  await expect(page).toHaveTitle(/Plausible/)
+
+  await expect(page.getByRole('button', { name: domain })).toBeVisible()
+
+  await expect(page.locator('#visitors')).toHaveText('2')
+  await expect(page.locator('#visits')).toHaveText('3')
+  await expect(page.locator('#pageviews')).toHaveText('4')
+  await expect(page.locator('#views_per_visit')).toHaveText('1.33')
+  await expect(page.locator('#bounce_rate')).toHaveText('67%')
+  await expect(page.locator('#visit_duration')).toHaveText('3m 20s')
+})
+
+test.only('different time intervals are supported', async ({
+  page,
+  request
+}) => {
+  const now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
+  const startOfDay = now.truncatedTo(ChronoUnit.DAYS)
+  const startOfYesterday = startOfDay.minusDays(1)
+  const startOfMonth = startOfDay.withDayOfMonth(1)
+  const startOfLastMonth = startOfMonth.minusMonths(1)
+  const startOfYear = now.withDayOfYear(1)
+
+  const expectedCounts = [
+    {
+      label: 'Today',
+      from: startOfDay,
+      to: now,
+      key: 'd',
+      value: 0
+    },
+    {
+      label: null,
+      from: startOfYesterday,
+      to: startOfDay,
+      key: 'e',
+      value: 0
+    },
+    {
+      label: 'Realtime',
+      from: now.minusMinutes(30),
+      to: now,
+      key: 'r',
+      value: 0
+    },
+    {
+      label: 'Last 24 hours',
+      from: now.minusHours(24),
+      to: now,
+      key: 'h',
+      value: 0
+    },
+    {
+      label: 'Last 7 days',
+      from: startOfDay.minusDays(7),
+      to: startOfDay,
+      key: 'w',
+      value: 0
+    },
+    {
+      label: 'Last 28 days',
+      from: startOfDay.minusDays(28),
+      to: startOfDay,
+      key: 'f',
+      value: 0
+    },
+    {
+      label: 'Last 91 days',
+      from: startOfDay.minusDays(91),
+      to: startOfDay,
+      key: 'n',
+      value: 0
+    },
+    {
+      label: 'Month to Date',
+      from: startOfMonth,
+      to: now,
+      key: 'm',
+      value: 0
+    },
+    {
+      label: null,
+      from: startOfLastMonth,
+      to: startOfMonth,
+      key: 'p',
+      value: 0
+    },
+    {
+      label: 'Year to Date',
+      from: startOfYear,
+      to: now,
+      key: 'y',
+      value: 0
+    },
+    {
+      label: 'Last 12 Months',
+      from: startOfMonth.minusMonths(12),
+      to: startOfMonth,
+      key: 'l',
+      value: 0
+    }
+  ]
+
+  const eventTimes = [
+    now.minusMinutes(20),
+    now.minusHours(12),
+    now.minusHours(26),
+    now.minusHours(30),
+    now.minusHours(35),
+    now.minusDays(5),
+    now.minusDays(17),
+    now.minusDays(54),
+    now.minusDays(120),
+    now.minusDays(720)
+  ]
+
+  const events = []
+
+  eventTimes.forEach((ts, idx) => {
+    expectedCounts.forEach((expected) => {
+      if (ts.compareTo(expected.from) >= 0 && ts.compareTo(expected.to) < 0) {
+        expected.value += 1
+      }
+    })
+
+    events.push({
+      user_id: idx + 1,
+      name: 'pageview',
+      timestamp: ts.toString()
+    })
+  })
+
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({ request, domain, events })
+
+  await page.goto('/' + domain)
+  await expect(page.getByRole('button', { name: domain })).toBeVisible()
+
+  await expect(page.getByRole('button', { name: 'Last 28 days' })).toBeVisible()
+
+  const visitors = page.locator('#visitors')
+
+  for (const expected of expectedCounts) {
+    await page.keyboard.press(expected.key)
+    if (expected.label) {
+      await expect(
+        page.getByRole('button', { name: expected.label })
+      ).toBeVisible()
+    }
+    await expect(visitors).toHaveText(`${expected.value}`)
+  }
+
+  // Realtime
+  await page.keyboard.press('r')
+  await expect(visitors).toHaveText('1')
+
+  // All time
+  await page.keyboard.press('a')
+  await expect(visitors).toHaveText(`${events.length}`)
+})
