@@ -29,6 +29,9 @@ defmodule PlausibleWeb.E2EController do
       {"timestamp", value} ->
         {:timestamp, to_timestamp(value)}
 
+      {"revenue_reporting_amount", value} ->
+        {:revenue_reporting_amount, Decimal.new(value)}
+
       {key, value} ->
         {String.to_existing_atom(key), value}
     end)
