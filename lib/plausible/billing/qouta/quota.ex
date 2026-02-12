@@ -219,7 +219,7 @@ defmodule Plausible.Billing.Quota do
       end
 
     cond do
-      Plausible.Teams.GracePeriod.expired?(team) ->
+      Plausible.Teams.locked?(team) or Plausible.Teams.GracePeriod.expired?(team) ->
         :dashboard_locked
 
       not Plausible.Teams.on_trial?(team) and is_nil(subscription) ->
