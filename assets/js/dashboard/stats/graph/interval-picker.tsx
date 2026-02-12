@@ -50,6 +50,7 @@ function getDefaultInterval(
 ): string {
   const defaultByPeriod: Record<string, string> = {
     day: 'hour',
+    '24h': 'hour',
     '7d': 'day',
     '6mo': 'month',
     '12mo': 'month',

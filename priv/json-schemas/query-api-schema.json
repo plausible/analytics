@@ -135,6 +135,10 @@
           "description": "Last day"
         },
         {
+          "const": "24h",
+          "description": "Last 24 hours (rolling window from now-24h to now)"
+        },
+        {
           "const": "7d",
           "description": "Last 7 days relative to today"
         },

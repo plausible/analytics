@@ -12,6 +12,7 @@
         (@site.public && Routes.site_path(@conn, :make_private, @site.domain)) ||
           Routes.site_path(@conn, :make_public, @site.domain)
       }
+      aria-label="Make stats publicly available"
       method="post"
       for={nil}
     >

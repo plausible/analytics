@@ -11,6 +11,10 @@ defmodule Plausible.Stats.QueryBuilderTest do
     first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
   }
+  @date_range_24h %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-04], ~T[12:30:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
+  }
   @date_range_day %DateTimeRange{
     first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
@@ -180,7 +184,8 @@ defmodule Plausible.Stats.QueryBuilderTest do
   describe "date range" do
     for {input_date_range, expected_utc_time_range} <- [
           {:realtime, @date_range_realtime},
-          {:realtime_30m, @date_range_30m}
+          {:realtime_30m, @date_range_30m},
+          {:"24h", @date_range_24h}
         ] do
       test "builds utc_time_range for #{input_date_range} input_date_range", %{site: site} do
         assert {:ok, query} =

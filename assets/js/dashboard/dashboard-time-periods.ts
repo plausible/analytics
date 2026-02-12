@@ -30,6 +30,7 @@ export enum DashboardPeriod {
   'day' = 'day',
   'month' = 'month',
   '7d' = '7d',
+  '24h' = '24h',
   '28d' = '28d',
   '30d' = '30d',
   '91d' = '91d',
@@ -325,6 +326,19 @@ export const getDatePeriodGroups = ({
     ],
     [
       [
+        ['Last 24 Hours', 'H'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: DashboardPeriod['24h'],
+            keybindHint: 'H'
+          }),
+          isActive: ({ dashboardState }) => dashboardState.period === DashboardPeriod['24h'],
+          onEvent
+        }
+      ],
+      [
         ['Last 7 Days', 'W'],
         {
           search: (s) => ({
@@ -618,6 +632,10 @@ export function getCurrentPeriodDisplayName({
       return 'Today'
     }
     return formatDay(dashboardState.date)
+  }
+
+  if (dashboardState.period === '24h') {
+    return 'Last 24 Hours'
   }
   if (dashboardState.period === '7d') {
     return 'Last 7 days'

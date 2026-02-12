@@ -79,7 +79,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
-      {:ecto_ch, "~> 0.8.4"},
+      {:ecto_ch, "~> 0.8.6"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
@@ -183,10 +183,10 @@ defmodule Plausible.MixProject do
         "ecto.migrate",
         "clean_postgres",
         "clean_clickhouse",
-        "run priv/repo/e2e_seeds.exs",
-        "cmd npm run --prefix ./e2e test",
-        "clean_postgres",
-        "clean_clickhouse"
+        # NOTE: This speeds up subsequent backend app
+        # startup. It's not clear why though :shrug:
+        "run -e \":noop\"",
+        "cmd npm run --prefix ./e2e test"
       ],
       "test.e2e.ui": [
         "esbuild default",
@@ -194,10 +194,10 @@ defmodule Plausible.MixProject do
         "ecto.migrate",
         "clean_postgres",
         "clean_clickhouse",
-        "run priv/repo/e2e_seeds.exs",
-        "cmd npm run --prefix ./e2e test:ui",
-        "clean_postgres",
-        "clean_clickhouse"
+        # NOTE: This speeds up subsequent backend app
+        # startup. It's not clear why though :shrug:
+        "run -e \":noop\"",
+        "cmd npm run --prefix ./e2e test:ui"
       ],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
