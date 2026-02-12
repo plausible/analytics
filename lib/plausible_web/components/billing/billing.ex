@@ -291,6 +291,12 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   def monthly_quota_box(assigns) do
+    is_upgrade =
+      is_nil(assigns[:subscription]) or
+        assigns[:subscription].status == Subscription.Status.deleted()
+
+    assigns = assign(assigns, :is_upgrade, is_upgrade)
+
     ~H"""
     <div
       id="monthly-quota-box"
@@ -302,13 +308,27 @@ defmodule PlausibleWeb.Components.Billing do
       </div>
       <.styled_link
         :if={
-          not (Plausible.Teams.Billing.enterprise_configured?(@team) &&
-                 Subscriptions.halted?(@subscription))
+          @is_upgrade and
+            not (Plausible.Teams.Billing.enterprise_configured?(@team) &&
+                   Subscriptions.halted?(@subscription))
         }
-        id="#upgrade-or-change-plan-link"
+        id="#upgrade-link"
         href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+        class="plausible-event-name=Upgrade+Button:+Click"
       >
-        {change_plan_or_upgrade_text(@subscription)}
+        Upgrade
+      </.styled_link>
+      <.styled_link
+        :if={
+          not @is_upgrade and
+            not (Plausible.Teams.Billing.enterprise_configured?(@team) &&
+                   Subscriptions.halted?(@subscription))
+        }
+        id="#change-plan-link"
+        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+        class="plausible-event-name=Change+Plan+Button:+Click"
+      >
+        Change plan
       </.styled_link>
     </div>
     """
@@ -419,18 +439,12 @@ defmodule PlausibleWeb.Components.Billing do
       id="upgrade-link-2"
       href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
       mt?={false}
+      class="plausible-event-name=Upgrade+Button:+Click"
     >
       Upgrade
     </.button_link>
     """
   end
-
-  defp change_plan_or_upgrade_text(nil), do: "Upgrade"
-
-  defp change_plan_or_upgrade_text(%Subscription{status: Subscription.Status.deleted()}),
-    do: "Upgrade"
-
-  defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
   attr :link_class, :string, default: ""
   attr :current_team, :any, required: true
