@@ -334,7 +334,8 @@ export const getDatePeriodGroups = ({
             period: DashboardPeriod['24h'],
             keybindHint: 'H'
           }),
-          isActive: ({ dashboardState }) => dashboardState.period === DashboardPeriod['24h'],
+          isActive: ({ dashboardState }) =>
+            dashboardState.period === DashboardPeriod['24h'],
           onEvent
         }
       ],
