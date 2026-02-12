@@ -18,7 +18,11 @@ defmodule Plausible.Ingestion.Persistor.EmbeddedWithRelay do
   end
 
   defp persist_remote_event_async(event, previous_user_id, opts) do
+    ctx = OpenTelemetry.Ctx.get_current()
+
     Task.start(fn ->
+      OpenTelemetry.Ctx.attach(ctx)
+
       Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
         telemetry_pipeline_step_duration(),
         fn -> do_persist_event(event, previous_user_id, opts) end,
