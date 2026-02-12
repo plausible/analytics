@@ -134,7 +134,7 @@ class LineGraph extends React.Component {
 
                   // Returns a combination of date and hour. This is because
                   // small intervals like hour may return multiple days
-                  // depending on the dashboardState period.
+                  // depending on the queried period.
                   return `${date}, ${hour}`
                 }
 
