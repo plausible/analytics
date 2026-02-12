@@ -48,10 +48,10 @@ defmodule Mix.Tasks.SendPageview do
       [] ->
         batches = Keyword.get(parsed, :batches, @default_batches)
         batch_size = Keyword.get(parsed, :batch_size, @default_batch_size)
-
+        from_same_ip_limit = 20
         for _ <- 1..batches do
           batch_ips =
-            1..max(Integer.floor_div(batch_size, 20), 1)
+            1..max(Integer.floor_div(batch_size, from_same_ip_limit), 1)
             |> Enum.map(fn _ -> Enum.map_join(1..4, ".", fn _ -> Enum.random(1..254) end) end)
 
           tasks =
