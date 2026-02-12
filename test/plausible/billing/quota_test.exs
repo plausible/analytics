@@ -1124,6 +1124,32 @@ defmodule Plausible.Billing.QuotaTest do
       assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :dashboard_locked
     end
 
+    test "returns :grace_period_active when both cycles exceeded with margin and grace period active" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      active_grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.add(Date.utc_today(), 5),
+        is_over: false,
+        manual_lock: false
+      }
+
+      team = %{team | grace_period: active_grace_period}
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 15_000},
+          penultimate_cycle: %{total: 14_000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :grace_period_active
+    end
+
     test "returns :trial_ended when trial expired and no subscription" do
       user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -5))
       team = team_of(user)
@@ -1144,8 +1170,8 @@ defmodule Plausible.Billing.QuotaTest do
       usage = %{
         monthly_pageviews: %{
           current_cycle: %{total: 5000},
-          last_cycle: %{total: 15_000},
-          penultimate_cycle: %{total: 14_000}
+          last_cycle: %{total: 10_500},
+          penultimate_cycle: %{total: 10_200}
         },
         sites: 3,
         team_members: 2
@@ -1162,7 +1188,7 @@ defmodule Plausible.Billing.QuotaTest do
       usage = %{
         monthly_pageviews: %{
           current_cycle: %{total: 5000},
-          last_cycle: %{total: 15_000},
+          last_cycle: %{total: 10_100},
           penultimate_cycle: %{total: 8000}
         },
         sites: 3,

@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
           team: team
         )
 
-      assert rendered =~ "Traffic exceeded plan limit last cycle"
+      assert rendered =~ "Traffic exceeded your plan limit last cycle"
       assert rendered =~ "Occasional traffic spikes are normal"
       assert rendered =~ "Upgrade"
       assert rendered =~ "Learn more"
@@ -193,9 +193,55 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         )
 
       assert rendered =~ "Upgrade required due to sustained higher traffic"
-      assert rendered =~ "within the next 7 days"
+      assert rendered =~ "To ensure uninterrupted access to your stats"
+      refute rendered =~ "within the next"
       assert rendered =~ "Upgrade"
       assert rendered =~ "Learn more"
+    end
+
+    test "renders grace_period_active notification with days countdown" do
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.add(Date.utc_today(), 5),
+        is_over: false,
+        manual_lock: false
+      }
+
+      team =
+        new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+        |> team_of()
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :grace_period_active,
+          team: team
+        )
+
+      assert rendered =~ "Upgrade required due to sustained higher traffic"
+      assert rendered =~ "within the next 5 days"
+      assert rendered =~ "Upgrade"
+      assert rendered =~ "Learn more"
+    end
+
+    test "renders grace_period_active notification with singular day" do
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.add(Date.utc_today(), 1),
+        is_over: false,
+        manual_lock: false
+      }
+
+      team =
+        new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+        |> team_of()
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :grace_period_active,
+          team: team
+        )
+
+      assert rendered =~ "Upgrade required due to sustained higher traffic"
+      assert rendered =~ "within the next day"
+      refute rendered =~ "1 day"
     end
 
     test "renders dashboard_locked notification" do

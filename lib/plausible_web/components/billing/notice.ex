@@ -280,7 +280,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <.notice title="You're close to your monthly pageview limit" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4">
-        <p>
+        <p class="text-pretty">
           No action is required. Occasional traffic spikes are normal, and we'll keep tracking your stats as usual. Upgrading now gives you room to grow if higher traffic continues.
         </p>
         <div class="flex gap-3 items-center">
@@ -304,7 +304,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <.notice title="You've reached your current team member limit" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4 items-start">
-        <p>
+        <p class="text-pretty">
           Upgrading lets you add more as your team grows.
         </p>
         <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
@@ -319,7 +319,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <.notice title="You've reached your current site limit" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4 items-start">
-        <p>
+        <p class="text-pretty">
           Upgrading lets you add more sites as you grow.
         </p>
         <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
@@ -338,7 +338,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       show_icon={false}
     >
       <div class="flex flex-col gap-4 items-start">
-        <p>
+        <p class="text-pretty">
           Upgrading gives you room to grow.
         </p>
         <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
@@ -351,9 +351,9 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   def usage_notification(%{type: :traffic_exceeded_last_cycle} = assigns) do
     ~H"""
-    <.notice title="Traffic exceeded plan limit last cycle" theme={:gray} show_icon={false}>
+    <.notice title="Traffic exceeded your plan limit last cycle" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4">
-        <p>
+        <p class="text-pretty">
           No action is required. Occasional traffic spikes are normal, but upgrading now gives you room to grow if higher traffic continues.
         </p>
         <div class="flex gap-3 items-center">
@@ -377,8 +377,42 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <.notice title="Upgrade required due to sustained higher traffic" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4">
-        <p>
-          To ensure uninterrupted access to your stats, please upgrade to a plan that fits your current usage within the next 7 days.
+        <p class="text-pretty">
+          To ensure uninterrupted access to your stats, please upgrade to a plan that fits your current usage.
+        </p>
+        <div class="flex gap-3 items-center">
+          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+            Upgrade
+          </.button_link>
+          <.button_link
+            href="https://plausible.io/docs/subscription-plans"
+            theme="secondary"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :grace_period_active, team: team} = assigns) do
+    days_left = Plausible.Teams.GracePeriod.days_left(team)
+
+    deadline_text =
+      case days_left do
+        1 -> "within the next day"
+        n -> "within the next #{n} days"
+      end
+
+    assigns = assign(assigns, :deadline_text, deadline_text)
+
+    ~H"""
+    <.notice title="Upgrade required due to sustained higher traffic" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4">
+        <p class="text-pretty">
+          To ensure uninterrupted access to your stats, please upgrade to a plan that fits your current usage {@deadline_text}.
         </p>
         <div class="flex gap-3 items-center">
           <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
@@ -401,7 +435,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <.notice title="Dashboard access temporarily locked" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4">
-        <p>
+        <p class="text-pretty">
           Your stats are still being tracked, but dashboard access is temporarily locked because your site exceeded your plan's pageview limit for two consecutive billing cycles. Upgrade to restore access.
         </p>
         <div class="flex gap-3 items-center">
@@ -425,7 +459,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <.notice title="Your free trial has ended" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4 items-start">
-        <p>
+        <p class="text-pretty">
           Upgrade to a monthly or yearly plan to continue accessing your sites.
         </p>
         <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
