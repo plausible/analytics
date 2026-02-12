@@ -4,20 +4,21 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { addFilter, revenueAvailable } from '../../query'
+import { addFilter, revenueAvailable } from '../../dashboard-state'
 import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { SortDirection } from '../../hooks/use-order-by'
 
 function EntryPagesModal() {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
   /*global BUILD_EXTRA*/
-  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
+  const showRevenueMetrics =
+    BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
   const reportInfo = {
     title: 'Entry pages',
@@ -38,8 +39,8 @@ function EntryPagesModal() {
   )
 
   const addSearchFilter = useCallback(
-    (query, searchString) => {
-      return addFilter(query, [
+    (dashboardState, searchString) => {
+      return addFilter(dashboardState, [
         'contains',
         reportInfo.dimension,
         [searchString],
@@ -50,11 +51,11 @@ function EntryPagesModal() {
   )
 
   function chooseMetrics() {
-    if (hasConversionGoalFilter(query)) {
+    if (hasConversionGoalFilter(dashboardState)) {
       return [
         metrics.createTotalVisitors(),
         metrics.createVisitors({
-          renderLabel: (_query) => 'Conversions',
+          renderLabel: (_dashboardState) => 'Conversions',
           width: 'w-28'
         }),
         metrics.createConversionRate(),
@@ -63,19 +64,22 @@ function EntryPagesModal() {
       ].filter((metric) => !!metric)
     }
 
-    if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
+    if (
+      isRealTimeDashboard(dashboardState) &&
+      !hasConversionGoalFilter(dashboardState)
+    ) {
       return [
         metrics.createVisitors({
-          renderLabel: (_query) => 'Current visitors',
+          renderLabel: (_dashboardState) => 'Current visitors',
           width: 'w-32'
         })
       ]
     }
 
     return [
-      metrics.createVisitors({ renderLabel: (_query) => 'Visitors' }),
+      metrics.createVisitors({ renderLabel: (_dashboardState) => 'Visitors' }),
       metrics.createVisits({
-        renderLabel: (_query) => 'Total entrances',
+        renderLabel: (_dashboardState) => 'Total entrances',
         width: 'w-32'
       }),
       metrics.createBounceRate(),

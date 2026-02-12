@@ -7,7 +7,7 @@ import ListReport from './../reports/list'
 import * as metrics from './../reports/metrics'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import { hasConversionGoalFilter } from '../../util/filters'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { entryPagesRoute, exitPagesRoute, topPagesRoute } from '../../router'
 import { ReportLayout } from '../reports/report-layout'
@@ -17,10 +17,12 @@ import MoreLink from '../more-link'
 import { MoreLinkState } from '../more-link-state'
 
 function EntryPages({ afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   function fetchData() {
-    return api.get(url.apiPath(site, '/entry-pages'), query, { limit: 9 })
+    return api.get(url.apiPath(site, '/entry-pages'), dashboardState, {
+      limit: 9
+    })
   }
 
   function getExternalLinkUrl(page) {
@@ -41,9 +43,9 @@ function EntryPages({ afterFetchData }) {
         width: 'w-36',
         meta: { plot: true }
       }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -62,9 +64,11 @@ function EntryPages({ afterFetchData }) {
 
 function ExitPages({ afterFetchData }) {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   function fetchData() {
-    return api.get(url.apiPath(site, '/exit-pages'), query, { limit: 9 })
+    return api.get(url.apiPath(site, '/exit-pages'), dashboardState, {
+      limit: 9
+    })
   }
 
   function getExternalLinkUrl(page) {
@@ -85,9 +89,9 @@ function ExitPages({ afterFetchData }) {
         width: 'w-36',
         meta: { plot: true }
       }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -105,10 +109,10 @@ function ExitPages({ afterFetchData }) {
 }
 
 function TopPages({ afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   function fetchData() {
-    return api.get(url.apiPath(site, '/pages'), query, { limit: 9 })
+    return api.get(url.apiPath(site, '/pages'), dashboardState, { limit: 9 })
   }
 
   function getExternalLinkUrl(page) {
@@ -125,9 +129,9 @@ function TopPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -145,7 +149,7 @@ function TopPages({ afterFetchData }) {
 }
 
 export default function Pages() {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
   const tabKey = `pageTab__${site.domain}`
@@ -173,7 +177,7 @@ export default function Pages() {
   useEffect(() => {
     setLoading(true)
     setMoreLinkState(MoreLinkState.LOADING)
-  }, [query, mode])
+  }, [dashboardState, mode])
 
   function moreLinkProps() {
     switch (mode) {
@@ -215,7 +219,7 @@ export default function Pages() {
           <TabWrapper>
             {[
               {
-                label: hasConversionGoalFilter(query)
+                label: hasConversionGoalFilter(dashboardState)
                   ? 'Conversion pages'
                   : 'Top pages',
                 value: 'pages'

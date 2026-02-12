@@ -1,4 +1,4 @@
-import { DashboardQuery, Filter } from '../query'
+import { DashboardState, Filter } from '../dashboard-state'
 import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS } from './filters'
 
 // As of March 2023, Safari does not support negative lookbehind regexes. In case it throws an error, falls back to plain | matching. This means
@@ -53,7 +53,7 @@ function parseSearch(searchString: string): Record<string, unknown> {
   const searchParams = new URLSearchParams(searchString)
   const updatedSearchRecordEntries = []
   const filters: Filter[] = []
-  let labels: DashboardQuery['labels'] = {}
+  let labels: DashboardState['labels'] = {}
 
   for (const [key, value] of searchParams.entries()) {
     if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {

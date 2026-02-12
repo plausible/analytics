@@ -9,10 +9,10 @@ import {
   isRealTimeDashboard,
   hasConversionGoalFilter
 } from '../../util/filters'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { Metric } from './metrics'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
-import { BreakdownResultMeta } from '../../query'
+import { BreakdownResultMeta } from '../../dashboard-state'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356
@@ -99,10 +99,10 @@ type ListReportProps = {
 
 /**
  * @returns {HTMLElement} Table of metrics, in the following format:
- * | keyLabel           | METRIC_1.renderLabel(query) | METRIC_2.renderLabel(query) | ...
- * |--------------------|-----------------------------|-----------------------------| ---
- * | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]    | LISTITEM_1[METRIC_2.key]    | ...
- * | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]    | LISTITEM_2[METRIC_2.key]    | ...
+ * | keyLabel           | METRIC_1.renderLabel(dashboardState) | METRIC_2.renderLabel(dashboardState) | ...
+ * |--------------------|--------------------------------------|--------------------------------------| ---
+ * | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]             | LISTITEM_1[METRIC_2.key]             | ...
+ * | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]             | LISTITEM_2[METRIC_2.key]             | ...
  */
 export default function ListReport<
   TListItem extends Record<string, unknown> & { name: string }
@@ -118,7 +118,7 @@ export default function ListReport<
   getExternalLinkUrl,
   fetchData
 }: Omit<SharedReportProps<TListItem>, 'afterFetchNextPage'> & ListReportProps) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const [state, setState] = useState<{
     loading: boolean
     list: TListItem[] | null
@@ -127,8 +127,8 @@ export default function ListReport<
   const [visible, setVisible] = useState(false)
   const [tappedRow, setTappedRow] = useState<string | null>(null)
 
-  const isRealtime = isRealTimeDashboard(query)
-  const goalFilterApplied = hasConversionGoalFilter(query)
+  const isRealtime = isRealTimeDashboard(dashboardState)
+  const goalFilterApplied = hasConversionGoalFilter(dashboardState)
 
   const getData = useCallback(() => {
     if (!isRealtime) {
@@ -142,7 +142,7 @@ export default function ListReport<
       setState({ loading: false, list: response.results, meta: response.meta })
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyLabel, query])
+  }, [keyLabel, dashboardState])
 
   const onVisible = () => {
     setVisible(true)
@@ -170,7 +170,7 @@ export default function ListReport<
       document.removeEventListener('tick', getData)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyLabel, query, visible])
+  }, [keyLabel, dashboardState, visible])
 
   // returns a filtered `metrics` list. Since currently, the backend can return different
   // metrics based on filters and existing data, this function validates that the metrics
@@ -253,7 +253,7 @@ export default function ListReport<
             className={`${metric.key} text-right ${hiddenOnMobileClass(metric)}`}
             style={{ minWidth: colMinWidth }}
           >
-            {metric.renderLabel(query)}
+            {metric.renderLabel(dashboardState)}
           </div>
         )
       })

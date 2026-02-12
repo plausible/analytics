@@ -12,7 +12,7 @@ import {
   getPropertyKeyFromFilterKey,
   isFreeChoiceFilterOperation
 } from '../../util/filters'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 
 export default function FilterModalPropsRow({
@@ -22,7 +22,7 @@ export default function FilterModalPropsRow({
   onUpdate,
   onDelete
 }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   const [operation, filterKey, clauses] = filter
 
@@ -39,7 +39,7 @@ export default function FilterModalPropsRow({
   function fetchPropKeyOptions(input) {
     return fetchSuggestions(
       apiPath(site, `/suggestions/prop_key`),
-      query,
+      dashboardState,
       input
     )
   }
@@ -58,7 +58,7 @@ export default function FilterModalPropsRow({
         site,
         `/suggestions/custom-prop-values/${encodeURIComponent(propKey)}`
       ),
-      query,
+      dashboardState,
       input,
       [FILTER_OPERATIONS.isNot, filterKey, ['(none)']]
     )

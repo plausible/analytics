@@ -13,7 +13,7 @@ import {
 } from '../../util/filters'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
@@ -21,9 +21,9 @@ import { TabButton, TabWrapper } from '../../components/tabs'
 import MoreLink from '../more-link'
 import { MoreLinkState } from '../more-link-state'
 
-function Countries({ query, site, onClick, afterFetchData }) {
+function Countries({ dashboardState, site, onClick, afterFetchData }) {
   function fetchData() {
-    return api.get(apiPath(site, '/countries'), query, { limit: 9 })
+    return api.get(apiPath(site, '/countries'), dashboardState, { limit: 9 })
   }
 
   function renderIcon(country) {
@@ -41,9 +41,9 @@ function Countries({ query, site, onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -61,9 +61,9 @@ function Countries({ query, site, onClick, afterFetchData }) {
   )
 }
 
-function Regions({ query, site, onClick, afterFetchData }) {
+function Regions({ dashboardState, site, onClick, afterFetchData }) {
   function fetchData() {
-    return api.get(apiPath(site, '/regions'), query, { limit: 9 })
+    return api.get(apiPath(site, '/regions'), dashboardState, { limit: 9 })
   }
 
   function renderIcon(region) {
@@ -81,9 +81,9 @@ function Regions({ query, site, onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -101,9 +101,9 @@ function Regions({ query, site, onClick, afterFetchData }) {
   )
 }
 
-function Cities({ query, site, afterFetchData }) {
+function Cities({ dashboardState, site, afterFetchData }) {
   function fetchData() {
-    return api.get(apiPath(site, '/cities'), query, { limit: 9 })
+    return api.get(apiPath(site, '/cities'), dashboardState, { limit: 9 })
   }
 
   function renderIcon(city) {
@@ -121,9 +121,9 @@ function Cities({ query, site, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -159,8 +159,9 @@ class Locations extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     const isRemovingFilter = (filterName) => {
       return (
-        getFiltersByKeyPrefix(prevProps.query, filterName).length > 0 &&
-        getFiltersByKeyPrefix(this.props.query, filterName).length == 0
+        getFiltersByKeyPrefix(prevProps.dashboardState, filterName).length >
+          0 &&
+        getFiltersByKeyPrefix(this.props.dashboardState, filterName).length == 0
       )
     }
 
@@ -173,7 +174,7 @@ class Locations extends React.Component {
     }
 
     if (
-      this.props.query !== prevProps.query ||
+      this.props.dashboardState !== prevProps.dashboardState ||
       this.state.mode !== prevState.mode
     ) {
       this.setState({ loading: true, moreLinkState: MoreLinkState.LOADING })
@@ -219,7 +220,7 @@ class Locations extends React.Component {
         return (
           <Cities
             site={this.props.site}
-            query={this.props.query}
+            dashboardState={this.props.dashboardState}
             afterFetchData={this.afterFetchData}
           />
         )
@@ -228,7 +229,7 @@ class Locations extends React.Component {
           <Regions
             onClick={this.onRegionFilter}
             site={this.props.site}
-            query={this.props.query}
+            dashboardState={this.props.dashboardState}
             afterFetchData={this.afterFetchData}
           />
         )
@@ -237,7 +238,7 @@ class Locations extends React.Component {
           <Countries
             onClick={this.onCountryFilter('countries')}
             site={this.props.site}
-            query={this.props.query}
+            dashboardState={this.props.dashboardState}
             afterFetchData={this.afterFetchData}
           />
         )
@@ -306,8 +307,8 @@ class Locations extends React.Component {
 }
 
 function LocationsWithContext() {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
-  return <Locations site={site} query={query} />
+  return <Locations site={site} dashboardState={dashboardState} />
 }
 export default LocationsWithContext

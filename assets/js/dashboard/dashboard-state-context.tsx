@@ -9,35 +9,36 @@ import { nowForSite, yesterday } from './util/date'
 import {
   getDashboardTimeSettings,
   getSavedTimePreferencesFromStorage,
-  QueryPeriod,
+  DashboardPeriod,
   useSaveTimePreferencesToStorage
-} from './query-time-periods'
+} from './dashboard-time-periods'
 import {
   Filter,
   FilterClauseLabels,
-  queryDefaultValue,
+  dashboardStateDefaultValue,
   postProcessFilters
-} from './query'
+} from './dashboard-state'
 import { resolveFilters, SavedSegment, SegmentData } from './filtering/segments'
 import { useDefiniteLocationState } from './navigation/use-definite-location-state'
 import { useClearExpandedSegmentModeOnFilterClear } from './nav-menu/segments/segment-menu'
 import { useSegmentsContext } from './filtering/segments-context'
 
-const queryContextDefaultValue = {
-  query: queryDefaultValue,
+const dashboardStateContextDefaultValue = {
+  dashboardState: dashboardStateDefaultValue,
   otherSearch: {} as Record<string, unknown>,
   expandedSegment: null as (SavedSegment & { segment_data: SegmentData }) | null
 }
 
-export type QueryContextValue = typeof queryContextDefaultValue
+export type DashboardStateContextValue =
+  typeof dashboardStateContextDefaultValue
 
-const QueryContext = createContext(queryContextDefaultValue)
+const DashboardStateContext = createContext(dashboardStateContextDefaultValue)
 
-export const useQueryContext = () => {
-  return useContext(QueryContext)
+export const useDashboardStateContext = () => {
+  return useContext(DashboardStateContext)
 }
 
-export default function QueryContextProvider({
+export default function DashboardStateContextProvider({
   children
 }: {
   children: ReactNode
@@ -64,10 +65,10 @@ export default function QueryContextProvider({
     ...otherSearch
   } = useMemo(() => parseSearch(location.search), [location.search])
 
-  const query = useMemo(() => {
-    const defaultValues = queryDefaultValue
+  const dashboardState = useMemo(() => {
+    const defaultValues = dashboardStateDefaultValue
     const storedValues = getSavedTimePreferencesFromStorage({ site })
-    const timeQuery = getDashboardTimeSettings({
+    const timeSettings = getDashboardTimeSettings({
       site,
       searchValues: { period, comparison, match_day_of_week },
       storedValues,
@@ -82,7 +83,7 @@ export default function QueryContextProvider({
     const resolvedFilters = resolveFilters(filters, segmentsContext.segments)
 
     return {
-      ...timeQuery,
+      ...timeSettings,
       compare_from:
         typeof compare_from === 'string' && compare_from.length
           ? dayjs.utc(compare_from)
@@ -98,13 +99,13 @@ export default function QueryContextProvider({
       from:
         typeof from === 'string' && from.length
           ? dayjs.utc(from)
-          : timeQuery.period === QueryPeriod.custom
+          : timeSettings.period === DashboardPeriod.custom
             ? yesterday(site)
             : defaultValues.from,
       to:
         typeof to === 'string' && to.length
           ? dayjs.utc(to)
-          : timeQuery.period === QueryPeriod.custom
+          : timeSettings.period === DashboardPeriod.custom
             ? nowForSite(site)
             : defaultValues.to,
       with_imported: [true, false].includes(with_imported as boolean)
@@ -131,7 +132,7 @@ export default function QueryContextProvider({
     segmentsContext.segments
   ])
 
-  useClearExpandedSegmentModeOnFilterClear({ expandedSegment, query })
+  useClearExpandedSegmentModeOnFilterClear({ expandedSegment, dashboardState })
   useSaveTimePreferencesToStorage({
     site,
     period,
@@ -144,14 +145,14 @@ export default function QueryContextProvider({
   }, [])
 
   return (
-    <QueryContext.Provider
+    <DashboardStateContext.Provider
       value={{
-        query,
+        dashboardState,
         otherSearch,
         expandedSegment
       }}
     >
       {children}
-    </QueryContext.Provider>
+    </DashboardStateContext.Provider>
   )
 }

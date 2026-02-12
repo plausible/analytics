@@ -5,18 +5,18 @@ import {
   QueryFilters
 } from '@tanstack/react-query'
 import * as api from '../api'
-import { DashboardQuery } from '../query'
+import { DashboardState } from '../dashboard-state'
 
 const LIMIT = 100
 
 /** full endpoint URL */
 type Endpoint = string
 
-type PaginatedQueryKeyBase = [Endpoint, { query: DashboardQuery }]
+type PaginatedQueryKeyBase = [Endpoint, { dashboardState: DashboardState }]
 
 type GetRequestParams<TKey extends PaginatedQueryKeyBase> = (
   k: TKey
-) => [DashboardQuery, Record<string, unknown>]
+) => [DashboardState, Record<string, unknown>]
 
 /**
  * Hook that fetches the first page from the defined GET endpoint on mount,
@@ -53,9 +53,9 @@ export function usePaginatedGetAPI<
   return useInfiniteQuery({
     queryKey: key,
     queryFn: async ({ pageParam, queryKey }): Promise<TResponse['results']> => {
-      const [query, params] = getRequestParams(queryKey)
+      const [dashboardState, params] = getRequestParams(queryKey)
 
-      const response: TResponse = await api.get(endpoint, query, {
+      const response: TResponse = await api.get(endpoint, dashboardState, {
         ...params,
         limit: LIMIT,
         page: pageParam

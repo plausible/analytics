@@ -6,16 +6,16 @@ import {
   getFiltersByKeyPrefix,
   isFilteringOnFixedValue
 } from '../../util/filters'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 
 export default function Sources() {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
 
-  if (isFilteringOnFixedValue(query, 'source', 'Google')) {
+  if (isFilteringOnFixedValue(dashboardState, 'source', 'Google')) {
     return <SearchTerms />
-  } else if (isFilteringOnFixedValue(query, 'source')) {
+  } else if (isFilteringOnFixedValue(dashboardState, 'source')) {
     const [[_operation, _filterKey, clauses]] = getFiltersByKeyPrefix(
-      query,
+      dashboardState,
       'source'
     )
     return <ReferrerList source={clauses[0]} />
