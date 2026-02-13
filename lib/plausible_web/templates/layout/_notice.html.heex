@@ -6,7 +6,6 @@
   <Notice.active_grace_period
     :if={Plausible.Teams.GracePeriod.active?(@current_team)}
     enterprise?={Plausible.Teams.Billing.enterprise_configured?(@current_team)}
-    grace_period_end={grace_period_end(@current_team)}
   />
 
   <Notice.dashboard_locked :if={Plausible.Teams.GracePeriod.expired?(@current_team)} />

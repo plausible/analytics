@@ -398,12 +398,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   def usage_notification(%{type: :grace_period_active, team: team} = assigns) do
-    days_left = Plausible.Teams.GracePeriod.days_left(team)
-
     deadline_text =
-      case days_left do
-        1 -> "within the next day"
-        n -> "within the next #{n} days"
+      case Plausible.Teams.GracePeriod.expires_in(team) do
+        {0, :hours} -> "within the hour"
+        {1, :hours} -> "within the next hour"
+        {n, :hours} -> "within the next #{n} hours"
+        {n, :days} -> "within the next #{n} days"
       end
 
     assigns = assign(assigns, :deadline_text, deadline_text)
