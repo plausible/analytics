@@ -114,14 +114,12 @@ defmodule Plausible.Billing.Quota do
     if Keyword.get(opts, :ignore_pageview_limit) do
       false
     else
-      case usage do
-        %{last_30_days: %{total: total}} ->
-          margin = Keyword.get(opts, :pageview_allowance_margin)
-          limit = Limits.pageview_limit_with_margin(plan.monthly_pageview_limit, margin)
-          !within_limit?(total, limit)
-
-        cycles_usage ->
-          exceeds_last_two_usage_cycles?(cycles_usage, plan.monthly_pageview_limit)
+      if has_billing_cycles?(usage) do
+        exceeds_last_two_usage_cycles?(usage, plan.monthly_pageview_limit)
+      else
+        margin = Keyword.get(opts, :pageview_allowance_margin)
+        limit = Limits.pageview_limit_with_margin(plan.monthly_pageview_limit, margin)
+        !within_limit?(usage.last_30_days.total, limit)
       end
     end
   end
@@ -162,5 +160,110 @@ defmodule Plausible.Billing.Quota do
   """
   def within_limit?(usage, limit) do
     if limit == :unlimited, do: true, else: usage <= limit
+  end
+
+  @doc """
+  Returns whether the usage has billing cycle data.
+  """
+  def has_billing_cycles?(usage) do
+    not is_map_key(usage, :last_30_days)
+  end
+
+  @doc """
+  Determines which notification type should be shown based on current usage and limits.
+
+  Returns an atom representing the notification type, or nil if no notification should be shown.
+
+  ## Pageview limit enforcement
+
+  Pageview limit notifications use different thresholds for warnings vs enforcement:
+
+  - Warning notifications (approaching, exceeded): Check against base limit (e.g., 10k)
+    to notify users when they exceed their purchased plan allowance
+  - Enforcement (grace period & locking): The background job checks limit with 10% margin
+    (e.g., 11k) and starts a 7-day grace period when both cycles exceed this threshold. After
+    the grace period expires, dashboard access is locked.
+
+  Example for 10k plan:
+  - 9,000 pageviews: `:pageview_approaching_limit` (90% of base limit)
+  - 10,500 pageviews (1 cycle): `:traffic_exceeded_last_cycle` (over base limit)
+  - 10,500 + 10,200 pageviews: `:traffic_exceeded_sustained` (both cycles over base limit)
+  - 12,000 + 11,500 pageviews + grace period active: `:grace_period_active` (over margin)
+  - 12,000 + 11,500 pageviews + grace period expired: `:dashboard_locked` (over margin)
+
+  ## Priority order
+
+  1. Dashboard locked
+  2. Trial ended
+  3. Grace period active
+  4. Traffic exceeded for 2 consecutive cycles
+  5. Traffic exceeded for 1 cycle
+  6. Pageview limit approaching
+  7. Site and team member limits both reached
+  8. Site limit reached
+  9. Team member limit reached
+  """
+  def usage_notification_type(team, usage) do
+    subscription = Plausible.Teams.Billing.get_subscription(team)
+    pageview_limit = Plausible.Teams.Billing.monthly_pageview_limit(subscription)
+    site_limit = Plausible.Teams.Billing.site_limit(team)
+    team_member_limit = Plausible.Teams.Billing.team_member_limit(team)
+
+    pageview_usage = usage.monthly_pageviews
+    site_usage = usage.sites
+    team_member_usage = usage.team_members
+
+    pageview_notification =
+      if not Plausible.Teams.on_trial?(team) and has_billing_cycles?(pageview_usage) do
+        pageview_cycle_usage_notification_type(pageview_usage, pageview_limit)
+      end
+
+    cond do
+      Plausible.Teams.locked?(team) or Plausible.Teams.GracePeriod.expired?(team) ->
+        :dashboard_locked
+
+      not Plausible.Teams.on_trial?(team) and is_nil(subscription) ->
+        :trial_ended
+
+      Plausible.Teams.GracePeriod.active?(team) ->
+        :grace_period_active
+
+      pageview_notification ->
+        pageview_notification
+
+      site_usage >= site_limit and site_limit != :unlimited and
+        team_member_usage >= team_member_limit and team_member_limit != :unlimited ->
+        :site_and_team_member_limit_reached
+
+      site_usage >= site_limit and site_limit != :unlimited ->
+        :site_limit_reached
+
+      team_member_usage >= team_member_limit and team_member_limit != :unlimited ->
+        :team_member_limit_reached
+
+      true ->
+        nil
+    end
+  end
+
+  defp pageview_cycle_usage_notification_type(usage, limit) do
+    last_exceeded? = is_map_key(usage, :last_cycle) and usage.last_cycle.total > limit
+
+    penultimate_exceeded? =
+      is_map_key(usage, :penultimate_cycle) and usage.penultimate_cycle.total > limit
+
+    cond do
+      last_exceeded? and penultimate_exceeded? ->
+        :traffic_exceeded_sustained
+
+      last_exceeded? ->
+        :traffic_exceeded_last_cycle
+
+      is_map_key(usage, :current_cycle) and usage.current_cycle.total >= limit * 0.9 ->
+        :pageview_approaching_limit
+
+      true ->
+        nil
+    end
   end
 end

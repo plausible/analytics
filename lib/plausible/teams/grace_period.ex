@@ -99,4 +99,17 @@ defmodule Plausible.Teams.GracePeriod do
   def expired?(team) do
     if team && team.grace_period, do: !active?(team), else: false
   end
+
+  @spec days_left(Teams.Team.t() | nil) :: integer() | nil
+  @doc """
+  Returns the number of days left in the grace period for a Team. Returns nil
+  if there is no grace period or it's a manual lock (no end date).
+  """
+  def days_left(team)
+
+  def days_left(%{grace_period: %__MODULE__{end_date: %Date{} = end_date}}) do
+    Date.diff(end_date, Date.utc_today())
+  end
+
+  def days_left(_team), do: nil
 end

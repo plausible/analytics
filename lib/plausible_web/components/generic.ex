@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Components.Generic do
       bg: "bg-gray-100 dark:bg-gray-800",
       icon: "text-gray-600 dark:text-gray-300",
       title_text: "text-sm text-gray-900 dark:text-gray-100",
-      body_text: "text-sm text-gray-600 dark:text-gray-300 leading-5"
+      body_text: "text-sm text-gray-800 dark:text-gray-200 leading-5"
     },
     yellow: %{
       bg: "bg-yellow-100/60 dark:bg-yellow-900/40",
@@ -186,6 +186,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:title, :any, default: nil)
   attr(:theme, :atom, default: :yellow)
   attr(:dismissable_id, :any, default: nil)
+  attr(:show_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
@@ -204,7 +205,7 @@ defmodule PlausibleWeb.Components.Generic do
           <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
         </button>
         <div class="flex gap-x-3">
-          <div :if={@title} class="shrink-0">
+          <div :if={@show_icon && @title} class="shrink-0">
             <svg
               class={"h-5 w-5 #{@theme.icon}"}
               viewBox="0 0 20 20"
@@ -219,7 +220,7 @@ defmodule PlausibleWeb.Components.Generic do
             </svg>
           </div>
           <div class="w-full flex flex-col gap-y-1.5">
-            <h3 :if={@title} class={"font-medium #{@theme.title_text}"}>
+            <h3 :if={@title} class={"font-semibold #{@theme.title_text}"}>
               {@title}
             </h3>
             <div class={"#{@theme.body_text}"}>

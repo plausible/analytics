@@ -106,4 +106,185 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
     assert rendered =~ "hello@plausible.io"
     assert rendered =~ "upgrade your subscription"
   end
+
+  describe "usage_notification/1" do
+    test "renders pageview_approaching_limit notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :pageview_approaching_limit,
+          team: team
+        )
+
+      assert rendered =~ "close to your monthly pageview limit"
+      assert rendered =~ "Occasional traffic spikes are normal"
+      assert rendered =~ "Upgrade"
+      assert rendered =~ "Learn more"
+    end
+
+    test "renders team_member_limit_reached notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :team_member_limit_reached,
+          team: team
+        )
+
+      assert rendered =~ "reached your current team member limit"
+      assert rendered =~ "Upgrade"
+    end
+
+    test "renders site_limit_reached notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :site_limit_reached,
+          team: team
+        )
+
+      assert rendered =~ "reached your current site limit"
+      assert rendered =~ "Upgrade"
+    end
+
+    test "renders site_and_team_member_limit_reached notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :site_and_team_member_limit_reached,
+          team: team
+        )
+
+      assert rendered =~ "reached your current limits for team members and sites"
+      assert rendered =~ "Upgrade"
+    end
+
+    test "renders traffic_exceeded_last_cycle notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :traffic_exceeded_last_cycle,
+          team: team
+        )
+
+      assert rendered =~ "Traffic exceeded your plan limit last cycle"
+      assert rendered =~ "Occasional traffic spikes are normal"
+      assert rendered =~ "Upgrade"
+      assert rendered =~ "Learn more"
+    end
+
+    test "renders traffic_exceeded_sustained notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :traffic_exceeded_sustained,
+          team: team
+        )
+
+      assert rendered =~ "Upgrade required due to sustained higher traffic"
+      assert rendered =~ "To ensure uninterrupted access to your stats"
+      refute rendered =~ "within the next"
+      assert rendered =~ "Upgrade"
+      assert rendered =~ "Learn more"
+    end
+
+    test "renders grace_period_active notification with days countdown" do
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.add(Date.utc_today(), 5),
+        is_over: false,
+        manual_lock: false
+      }
+
+      team =
+        new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+        |> team_of()
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :grace_period_active,
+          team: team
+        )
+
+      assert rendered =~ "Upgrade required due to sustained higher traffic"
+      assert rendered =~ "within the next 5 days"
+      assert rendered =~ "Upgrade"
+      assert rendered =~ "Learn more"
+    end
+
+    test "renders grace_period_active notification with singular day" do
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.add(Date.utc_today(), 1),
+        is_over: false,
+        manual_lock: false
+      }
+
+      team =
+        new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+        |> team_of()
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :grace_period_active,
+          team: team
+        )
+
+      assert rendered =~ "Upgrade required due to sustained higher traffic"
+      assert rendered =~ "within the next day"
+      refute rendered =~ "1 day"
+    end
+
+    test "renders dashboard_locked notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :dashboard_locked,
+          team: team
+        )
+
+      assert rendered =~ "Dashboard access temporarily locked"
+      assert rendered =~ "stats are still being tracked"
+      assert rendered =~ "Upgrade"
+      assert rendered =~ "Learn more"
+    end
+
+    test "renders trial_ended notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :trial_ended,
+          team: team
+        )
+
+      assert rendered =~ "Your free trial has ended"
+      assert rendered =~ "Choose a plan"
+    end
+
+    test "renders nothing for unknown notification type" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :unknown_type,
+          team: team
+        )
+
+      assert rendered == ""
+    end
+  end
 end
