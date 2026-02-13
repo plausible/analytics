@@ -9,7 +9,7 @@ import { sendRequest } from './networking'
 var listeningOnEngagement = false
 
 var currentEngagementIgnored
-var currentEngagementURL = location.href
+var currentEngagementURL = ''
 var currentEngagementProps = {}
 var currentEngagementMaxScrollDepth = -1
 
