@@ -1,14 +1,168 @@
 defmodule Plausible.Teams.Sites do
   @moduledoc false
+  @sample_threshold 10_000_000
 
   import Ecto.Query
+  use Plausible.Stats.SQL.Fragments
 
   alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Teams
 
+  def list_with_clickhouse(user, team, opts \\ []) do
+    # TODO maybe filter by domain
+    date_range = Keyword.get(opts, :date_range, {:last_n_days, 30})
+    now = Keyword.get(opts, :now, DateTime.utc_now())
+
+    {relative_start_date, relative_end_date} = calculate_relative_dates(date_range, now)
+
+    all_query =
+      if Teams.setup?(team) do
+        from(tm in Teams.Membership,
+          inner_join: t in assoc(tm, :team),
+          inner_join: s in assoc(t, :sites),
+          where: tm.user_id == ^user.id and tm.role != :guest,
+          where: tm.team_id == ^team.id,
+          where: not s.consolidated,
+          select: struct(s, [:id, :domain, :timezone])
+        )
+      else
+        my_team_query =
+          from(tm in Teams.Membership,
+            inner_join: t in assoc(tm, :team),
+            inner_join: s in assoc(t, :sites),
+            where: not s.consolidated,
+            where: tm.user_id == ^user.id and tm.role != :guest,
+            where: tm.is_autocreated,
+            where: not t.setup_complete,
+            select: struct(s, [:id, :domain, :timezone])
+          )
+
+        guest_membership_query =
+          from(tm in Teams.Membership,
+            inner_join: gm in assoc(tm, :guest_memberships),
+            inner_join: s in assoc(gm, :site),
+            where: not s.consolidated,
+            where: tm.user_id == ^user.id and tm.role == :guest,
+            select: struct(s, [:id, :domain, :timezone])
+          )
+
+        from(s in my_team_query,
+          union_all: ^guest_membership_query
+        )
+      end
+
+    all_query =
+      from(u in subquery(all_query),
+        inner_join: s in ^Plausible.Site.regular(),
+        on: u.id == s.id,
+        as: :site,
+        left_join: up in Site.UserPreference,
+        on: up.site_id == s.id and up.user_id == ^user.id,
+        select: %{
+          s
+          | entry_type:
+              selected_as(
+                fragment(
+                  """
+                      CASE
+                        WHEN ? IS NOT NULL THEN 'pinned_site'
+                        ELSE ?
+                      END
+                  """,
+                  up.pinned_at,
+                  "site"
+                ),
+                :entry_type
+              ),
+            pinned_at: selected_as(up.pinned_at, :pinned_at)
+        }
+      )
+
+    clickhouse_query =
+      from(e in Plausible.ClickhouseEventV2,
+        hints: unsafe_fragment(^"SAMPLE #{@sample_threshold}"),
+        right_join: sites in subquery(all_query, prefix: "postgres_remote"),
+        on: fragment("CAST(?, 'UInt64')", sites.id) == e.site_id,
+        select: %{
+          entry_type: selected_as(sites.entry_type, :entry_type),
+          pinned_at: selected_as(sites.pinned_at, :pinned_at),
+          site_id: sites.id,
+          domain: sites.domain,
+          timezone: sites.timezone,
+          visitors:
+            selected_as(
+              scale_sample(fragment("uniqIf(?, ? != 0)", e.user_id, e.site_id)),
+              :visitors
+            )
+        },
+        where:
+          e.site_id == 0 or
+            fragment(
+              """
+              toString(?, ?) >= concat(?, ' 00:00:00')
+              AND toString(?, ?) <= concat(?, ' 23:59:59')
+              """,
+              e.timestamp,
+              sites.timezone,
+              ^relative_start_date,
+              e.timestamp,
+              sites.timezone,
+              ^relative_end_date
+            ),
+        group_by: [sites.id, sites.domain, sites.entry_type, sites.pinned_at, sites.timezone],
+        order_by: [
+          asc: selected_as(:entry_type),
+          desc: selected_as(:pinned_at),
+          desc: selected_as(:visitors)
+        ]
+      )
+
+    clickhouse_query |> dbg()
+
+    Paginator.paginate(
+      clickhouse_query,
+      [limit: 24, cursor_fields: [:visitors, :id], sort_direction: :desc],
+      Plausible.ClickhouseRepo,
+      []
+    )
+  end
+
+  # Helper function to calculate date range for ClickHouse queries
+  # Returns {start_date, end_date} as Date structs or date strings
+  defp calculate_relative_dates({:last_n_days, n}, now) do
+    end_date = now |> DateTime.to_date() |> Date.add(-1)
+    start_date = end_date |> Date.add(-(n - 1))
+    {Date.to_string(start_date), Date.to_string(end_date)}
+  end
+
+  defp calculate_relative_dates(:day, now) do
+    date = DateTime.to_date(now)
+    {Date.to_string(date), Date.to_string(date)}
+  end
+
+  defp calculate_relative_dates(:month, now) do
+    date = DateTime.to_date(now)
+    start_date = Date.beginning_of_month(date)
+    end_date = Date.end_of_month(date)
+    {Date.to_string(start_date), Date.to_string(end_date)}
+  end
+
+  defp calculate_relative_dates(:year, now) do
+    date = DateTime.to_date(now)
+    start_date = %{date | month: 1, day: 1}
+    end_date = %{date | month: 12, day: 31}
+    {Date.to_string(start_date), Date.to_string(end_date)}
+  end
+
+  defp calculate_relative_dates({:date_range, from, to}, _now) do
+    {Date.to_string(from), Date.to_string(to)}
+  end
+
   @type list_opt() :: {:filter_by_domain, String.t()} | {:team, Teams.Team.t() | nil}
+
+  @role_type Plausible.Teams.Invitation.__schema__(:type, :role)
 
   @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
@@ -22,7 +176,7 @@ defmodule Plausible.Teams.Sites do
           inner_join: s in assoc(t, :sites),
           where: tm.user_id == ^user.id and tm.role != :guest,
           where: tm.team_id == ^team.id,
-          select: %{site_id: s.id, entry_type: "site"}
+          select: %{site_id: s.id, entry_type: "site", role: tm.role}
         )
       else
         my_team_query =
@@ -31,19 +185,35 @@ defmodule Plausible.Teams.Sites do
             inner_join: s in assoc(t, :sites),
             where: tm.user_id == ^user.id and tm.role != :guest,
             where: tm.is_autocreated == true,
-            where: t.setup_complete == false,
-            select: %{site_id: s.id, entry_type: "site"}
+            where: not t.setup_complete,
+            select: %{site_id: s.id, entry_type: "site", role: tm.role}
           )
 
         guest_membership_query =
-          from tm in Teams.Membership,
+          from(tm in Teams.Membership,
             inner_join: gm in assoc(tm, :guest_memberships),
             inner_join: s in assoc(gm, :site),
             where: tm.user_id == ^user.id and tm.role == :guest,
-            select: %{site_id: s.id, entry_type: "site"}
+            select: %{
+              site_id: s.id,
+              entry_type: "site",
+              role:
+                fragment(
+                  """
+                  CASE
+                    WHEN ? = 'editor' THEN 'admin'
+                    ELSE ?
+                  END
+                  """,
+                  gm.role,
+                  gm.role
+                )
+            }
+          )
 
-        from s in my_team_query,
+        from(s in my_team_query,
           union_all: ^guest_membership_query
+        )
       end
 
     from(u in subquery(all_query),
@@ -68,76 +238,9 @@ defmodule Plausible.Teams.Sites do
               ),
               :entry_type
             ),
-          pinned_at: selected_as(up.pinned_at, :pinned_at)
-      },
-      order_by: [
-        asc: selected_as(:entry_type),
-        desc: selected_as(:pinned_at),
-        asc: s.domain
-      ]
-    )
-    |> maybe_filter_by_domain(domain_filter)
-    |> Repo.paginate(pagination_params)
-  end
-
-  @role_type Plausible.Teams.Invitation.__schema__(:type, :role)
-
-  @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
-  def list_with_invitations(user, pagination_params, opts \\ []) do
-    domain_filter = Keyword.get(opts, :filter_by_domain)
-    team = Keyword.get(opts, :team)
-
-    union_query =
-      if Teams.setup?(team) do
-        list_with_invitations_setup_query(team, user)
-      else
-        list_with_invitations_personal_query(team, user)
-      end
-
-    from(u in subquery(union_query),
-      inner_join: s in ^Plausible.Site.regular(),
-      on: u.site_id == s.id,
-      as: :site,
-      left_join: up in Site.UserPreference,
-      on: up.site_id == s.id and up.user_id == ^user.id,
-      left_join: ti in Teams.Invitation,
-      on: ti.id == u.team_invitation_id,
-      left_join: gi in Teams.GuestInvitation,
-      on: gi.id == u.guest_invitation_id,
-      left_join: st in Teams.SiteTransfer,
-      on: st.id == u.transfer_id,
-      select: %{
-        s
-        | entry_type:
-            selected_as(
-              fragment(
-                """
-                CASE
-                  WHEN ? IS NOT NULL THEN 'invitation'
-                  WHEN ? IS NOT NULL THEN 'invitation'
-                  WHEN ? IS NOT NULL THEN 'pinned_site'
-                  ELSE ?
-                END
-                """,
-                gi.id,
-                st.id,
-                up.pinned_at,
-                u.entry_type
-              ),
-              :entry_type
-            ),
           pinned_at: selected_as(up.pinned_at, :pinned_at),
           memberships: [
             %{
-              role: type(u.role, ^@role_type),
-              site_id: s.id,
-              site: s
-            }
-          ],
-          invitations: [
-            %{
-              invitation_id: coalesce(gi.invitation_id, st.transfer_id),
-              email: coalesce(ti.email, st.email),
               role: type(u.role, ^@role_type),
               site_id: s.id,
               site: s
@@ -152,177 +255,6 @@ defmodule Plausible.Teams.Sites do
     )
     |> maybe_filter_by_domain(domain_filter)
     |> Repo.paginate(pagination_params)
-    |> Map.update!(:entries, fn entries ->
-      Enum.map(entries, fn
-        %{invitation: [%{invitation_id: nil}]} = entry ->
-          %{entry | invitations: []}
-
-        entry ->
-          entry
-      end)
-    end)
-  end
-
-  defp list_with_invitations_setup_query(team, user) do
-    team_membership_query =
-      from(tm in Teams.Membership,
-        inner_join: t in assoc(tm, :team),
-        inner_join: u in assoc(tm, :user),
-        as: :user,
-        inner_join: s in assoc(t, :sites),
-        as: :site,
-        where: tm.user_id == ^user.id and tm.role != :guest,
-        where: tm.team_id == ^team.id,
-        select: %{
-          site_id: s.id,
-          entry_type: "site",
-          guest_invitation_id: 0,
-          team_invitation_id: 0,
-          role: tm.role,
-          transfer_id: 0
-        }
-      )
-
-    site_transfer_query =
-      from st in Teams.SiteTransfer,
-        as: :site_transfer,
-        inner_join: s in assoc(st, :site),
-        as: :site,
-        where: s.team_id != ^team.id,
-        where: st.email == ^user.email,
-        where:
-          exists(
-            from tm in Teams.Membership,
-              inner_join: u in assoc(tm, :user),
-              where: tm.team_id == ^team.id,
-              where: u.email == parent_as(:site_transfer).email,
-              where: tm.role in [:owner, :admin],
-              select: 1
-          ),
-        select: %{
-          site_id: s.id,
-          entry_type: "invitation",
-          guest_invitation_id: 0,
-          team_invitation_id: 0,
-          role: "owner",
-          transfer_id: st.id
-        }
-
-    from s in team_membership_query,
-      union_all: ^site_transfer_query
-  end
-
-  defp list_with_invitations_personal_query(team, user) do
-    my_team_query =
-      from(tm in Teams.Membership,
-        inner_join: t in assoc(tm, :team),
-        inner_join: u in assoc(tm, :user),
-        as: :user,
-        inner_join: s in assoc(t, :sites),
-        as: :site,
-        where: tm.user_id == ^user.id and tm.role == :owner,
-        where: t.setup_complete == false,
-        select: %{
-          site_id: s.id,
-          entry_type: "site",
-          guest_invitation_id: 0,
-          team_invitation_id: 0,
-          role: tm.role,
-          transfer_id: 0
-        }
-      )
-
-    guest_membership_query =
-      from(tm in Teams.Membership,
-        inner_join: u in assoc(tm, :user),
-        as: :user,
-        inner_join: gm in assoc(tm, :guest_memberships),
-        inner_join: s in assoc(gm, :site),
-        as: :site,
-        where: tm.user_id == ^user.id and tm.role == :guest,
-        select: %{
-          site_id: s.id,
-          entry_type: "site",
-          guest_invitation_id: 0,
-          team_invitation_id: 0,
-          role:
-            fragment(
-              """
-              CASE
-                WHEN ? = 'editor' THEN 'admin'
-                ELSE ?
-              END
-              """,
-              gm.role,
-              gm.role
-            ),
-          transfer_id: 0
-        }
-      )
-
-    guest_invitation_query =
-      from ti in Teams.Invitation,
-        as: :team_invitation,
-        inner_join: gi in assoc(ti, :guest_invitations),
-        inner_join: s in assoc(gi, :site),
-        as: :site,
-        where:
-          not exists(
-            from tm in Teams.Membership,
-              inner_join: u in assoc(tm, :user),
-              left_join: gm in assoc(tm, :guest_memberships),
-              on: gm.site_id == parent_as(:site).id,
-              where: tm.team_id == parent_as(:team_invitation).team_id,
-              where: u.email == parent_as(:team_invitation).email,
-              where: not is_nil(gm.id) or tm.role != :guest,
-              select: 1
-          ),
-        where: ti.email == ^user.email and ti.role == :guest,
-        select: %{
-          site_id: s.id,
-          entry_type: "invitation",
-          guest_invitation_id: gi.id,
-          team_invitation_id: ti.id,
-          role:
-            fragment(
-              """
-              CASE
-                WHEN ? = 'editor' THEN 'admin'
-                ELSE ?
-              END
-              """,
-              gi.role,
-              gi.role
-            ),
-          transfer_id: 0
-        }
-
-    site_transfer_query =
-      from st in Teams.SiteTransfer,
-        as: :site_transfer,
-        inner_join: s in assoc(st, :site),
-        as: :site,
-        where: st.email == ^user.email,
-        select: %{
-          site_id: s.id,
-          entry_type: "invitation",
-          guest_invitation_id: 0,
-          team_invitation_id: 0,
-          role: "owner",
-          transfer_id: st.id
-        }
-
-    site_transfer_query =
-      if team do
-        where(site_transfer_query, [site: s], s.team_id != ^team.id)
-      else
-        site_transfer_query
-      end
-
-    from s in my_team_query,
-      union_all: ^guest_membership_query,
-      union_all: ^guest_invitation_query,
-      union_all: ^site_transfer_query
   end
 
   defp maybe_filter_by_domain(query, domain)
