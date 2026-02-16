@@ -119,7 +119,7 @@ defmodule Plausible.Teams.GracePeriodTest do
     end
 
     test "returns nil for team without grace period" do
-      team = new_user() |> team_of()
+      team = new_user(team: [grace_period: nil]) |> team_of()
       refute team.grace_period
       assert Plausible.Teams.GracePeriod.expires_in(team) == nil
     end
@@ -145,7 +145,7 @@ defmodule Plausible.Teams.GracePeriodTest do
 
       team = new_user(team: [grace_period: grace_period]) |> team_of()
 
-      assert Plausible.Teams.GracePeriod.expires_in(team, now) == {:days, 2}
+      assert Plausible.Teams.GracePeriod.expires_in(team, now) == {2, :days}
     end
 
     test "returns diff in hours when less than 48 hours left" do
@@ -158,10 +158,10 @@ defmodule Plausible.Teams.GracePeriodTest do
 
       team = new_user(team: [grace_period: grace_period]) |> team_of()
 
-      assert Plausible.Teams.GracePeriod.expires_in(team, now) == {:hours, 47}
+      assert Plausible.Teams.GracePeriod.expires_in(team, now) == {47, :hours}
     end
 
-    test "returns {:hours, 0} when less than an hour left" do
+    test "returns {0, :hours} when less than an hour left" do
       now = ~N[2021-01-01 23:00:01]
 
       grace_period = %Plausible.Teams.GracePeriod{
@@ -171,10 +171,10 @@ defmodule Plausible.Teams.GracePeriodTest do
 
       team = new_user(team: [grace_period: grace_period]) |> team_of()
 
-      assert Plausible.Teams.GracePeriod.expires_in(team, now) == {:hours, 0}
+      assert Plausible.Teams.GracePeriod.expires_in(team, now) == {0, :hours}
     end
 
-    test "returns {:hours, 0} when end date in already in the past" do
+    test "returns {0, :hours} when end date in already in the past" do
       now = ~N[2021-01-01 10:00:00]
 
       grace_period = %Plausible.Teams.GracePeriod{
@@ -184,7 +184,7 @@ defmodule Plausible.Teams.GracePeriodTest do
 
       team = new_user(team: [grace_period: grace_period]) |> team_of()
 
-      assert Plausible.Teams.GracePeriod.expires_in(team, now) == {:hours, 0}
+      assert Plausible.Teams.GracePeriod.expires_in(team, now) == {0, :hours}
     end
   end
 end

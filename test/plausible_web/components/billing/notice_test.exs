@@ -240,7 +240,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         )
 
       assert rendered =~ "Upgrade required due to sustained higher traffic"
-      assert rendered =~ "within the next day"
+      assert rendered =~ "within the next 14 hours"
       refute rendered =~ "1 day"
     end
 
