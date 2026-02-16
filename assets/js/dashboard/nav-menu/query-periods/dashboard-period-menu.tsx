@@ -96,7 +96,10 @@ export const DashboardPeriodMenu = ({
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
-        <span className={popover.toggleButton.classNames.truncatedText}>
+        <span
+          data-testid="current-query-period"
+          className={popover.toggleButton.classNames.truncatedText}
+        >
           {getCurrentPeriodDisplayName({ dashboardState, site })}
         </span>
         <DateMenuChevron />
