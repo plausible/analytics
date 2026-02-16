@@ -107,7 +107,9 @@ test('different time ranges are supported', async ({ page, request }) => {
   await page.goto('/' + domain)
   await expect(page.getByRole('button', { name: domain })).toBeVisible()
 
-  await expect(page.getByRole('button', { name: 'Last 28 days' })).toBeVisible()
+  await expect(page.getByTestId('current-query-period')).toHaveText(
+    'Last 28 days'
+  )
 
   const visitors = page.locator('#visitors')
 
@@ -123,4 +125,48 @@ test('different time ranges are supported', async ({ page, request }) => {
   // All time
   await page.keyboard.press('a')
   await expect(visitors).toHaveText(`${events.length}`)
+})
+
+test.only('different graph time intervals are available', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'pageview', timestamp: { minutesAgo: 60 } },
+      { name: 'pageview', timestamp: { daysAgo: 5 } }
+    ]
+  })
+
+  await page.goto('/' + domain)
+
+  await expect(page.getByRole('button', { name: 'Last 28 days' })).toBeVisible()
+
+  const intervalButton = page.getByTestId('current-graph-interval')
+  const intervalOptions = page.getByTestId('graph-interval')
+  await expect(intervalButton).toHaveText('Days')
+  await intervalButton.click()
+  const intervalOptions28Days = await intervalOptions.allTextContents()
+
+  expect(intervalOptions28Days.indexOf('Days') > -1).toBeTruthy()
+  expect(intervalOptions28Days.indexOf('Weeks') > -1).toBeTruthy()
+
+  await page.getByTestId('current-query-period').click()
+  await page
+    .getByTestId('query-period-picker')
+    .getByRole('link', { name: 'Today' })
+    .click()
+
+  await expect(intervalButton).toHaveText('Hours')
+  await intervalButton.click()
+  // The popover does not appear right away
+  await expect(intervalOptions).toHaveCount(2)
+  const intervalOptionsToday = await intervalOptions.allTextContents()
+
+  expect(intervalOptionsToday.indexOf('Hours') > -1).toBeTruthy()
+  expect(intervalOptionsToday.indexOf('Minutes') > -1).toBeTruthy()
 })
