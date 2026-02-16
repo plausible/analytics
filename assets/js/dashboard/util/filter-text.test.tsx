@@ -1,5 +1,5 @@
 import React from 'react'
-import { Filter, FilterClauseLabels } from '../query'
+import { Filter, FilterClauseLabels } from '../dashboard-state'
 import { plainFilterText, styledFilterText } from './filter-text'
 import { render, screen } from '@testing-library/react'
 
@@ -25,11 +25,15 @@ describe('styledFilterText() and plainFilterText()', () => {
   ])(
     'when filter is %p and labels are %p, functions return %p',
     (filter, labels, expectedPlainText) => {
-      const query = { labels }
+      const dashboardState = { labels }
 
-      expect(plainFilterText(query, filter)).toBe(expectedPlainText)
+      expect(plainFilterText(dashboardState, filter)).toBe(expectedPlainText)
 
-      render(<p data-testid="filter-text">{styledFilterText(query, filter)}</p>)
+      render(
+        <p data-testid="filter-text">
+          {styledFilterText(dashboardState, filter)}
+        </p>
+      )
       expect(screen.getByTestId('filter-text')).toHaveTextContent(
         expectedPlainText
       )

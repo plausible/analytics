@@ -6,7 +6,7 @@ import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
 import { FilterMenu } from './filter-menu'
 import { FiltersBar } from './filters-bar'
-import { QueryPeriodsPicker } from './query-periods/query-periods-picker'
+import { DashboardPeriodPicker } from './query-periods/dashboard-period-picker'
 import { SegmentMenu } from './segments/segment-menu'
 
 interface TopBarProps {
@@ -70,7 +70,7 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
       <div className="flex gap-x-4 shrink-0">
         <FilterMenu />
         <SegmentMenu />
-        <QueryPeriodsPicker />
+        <DashboardPeriodPicker />
       </div>
     </div>
   )

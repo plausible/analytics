@@ -79,7 +79,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
-      {:ecto_ch, "~> 0.8.4"},
+      {:ecto_ch, "~> 0.8.6"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
@@ -112,9 +112,11 @@ defmodule Plausible.MixProject do
       {:opentelemetry_api, "~> 1.5"},
       {:opentelemetry_ecto, "~> 1.2"},
       {:opentelemetry_exporter, "~> 1.10"},
-      {:opentelemetry_phoenix, "~> 1.1"},
+      {:opentelemetry_phoenix, "~> 2.0"},
       {:opentelemetry_oban, "~> 1.1"},
-      {:opentelemetry_cowboy, "~> 0.3"},
+      {:opentelemetry_cowboy, "~> 1.0"},
+      # # https://github.com/open-telemetry/opentelemetry-erlang-contrib/issues/428
+      {:opentelemetry_semantic_conventions, "~> 1.27", override: true},
       {:phoenix, "~> 1.8.2"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.5"},
@@ -161,6 +163,7 @@ defmodule Plausible.MixProject do
       {:con_cache,
        git: "https://github.com/aerosol/con_cache", branch: "ensure-dirty-ops-emit-telemetry"},
       {:req, "~> 0.5.16"},
+      {:opentelemetry_req, "~> 1.0"},
       {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:ex_json_schema, "~> 0.11.1"},
       {:odgn_json_pointer, "~> 3.1.0"},
@@ -183,10 +186,10 @@ defmodule Plausible.MixProject do
         "ecto.migrate",
         "clean_postgres",
         "clean_clickhouse",
-        "run priv/repo/e2e_seeds.exs",
-        "cmd npm run --prefix ./e2e test",
-        "clean_postgres",
-        "clean_clickhouse"
+        # NOTE: This speeds up subsequent backend app
+        # startup. It's not clear why though :shrug:
+        "run -e \":noop\"",
+        "cmd npm run --prefix ./e2e test"
       ],
       "test.e2e.ui": [
         "esbuild default",
@@ -194,10 +197,10 @@ defmodule Plausible.MixProject do
         "ecto.migrate",
         "clean_postgres",
         "clean_clickhouse",
-        "run priv/repo/e2e_seeds.exs",
-        "cmd npm run --prefix ./e2e test:ui",
-        "clean_postgres",
-        "clean_clickhouse"
+        # NOTE: This speeds up subsequent backend app
+        # startup. It's not clear why though :shrug:
+        "run -e \":noop\"",
+        "cmd npm run --prefix ./e2e test:ui"
       ],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],

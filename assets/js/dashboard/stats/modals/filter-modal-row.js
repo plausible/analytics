@@ -13,7 +13,7 @@ import {
   formattedFilters
 } from '../../util/filters'
 import { apiPath } from '../../util/url'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 
 export default function FilterModalRow({
@@ -24,7 +24,7 @@ export default function FilterModalRow({
   onUpdate,
   onDelete
 }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   const [operation, filterKey, clauses] = filter
 
@@ -64,7 +64,7 @@ export default function FilterModalRow({
 
     return fetchSuggestions(
       apiPath(site, `/suggestions/${filterKey}`),
-      query,
+      dashboardState,
       input,
       additionalFilter
     )

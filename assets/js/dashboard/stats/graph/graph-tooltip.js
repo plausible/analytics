@@ -7,7 +7,7 @@ import { ChangeArrow } from '../reports/change-arrow'
 import { UIMode } from '../../theme-context'
 
 const renderBucketLabel = function (
-  query,
+  dashboardState,
   graphData,
   label,
   comparison = false
@@ -20,16 +20,16 @@ const renderBucketLabel = function (
   const formattedLabel = dateFormatter({
     interval: graphData.interval,
     longForm: true,
-    period: query.period,
+    period: dashboardState.period,
     isPeriodFull,
     shouldShowYear
   })(label)
 
-  if (query.period === 'realtime') {
+  if (dashboardState.period === 'realtime') {
     return dateFormatter({
       interval: graphData.interval,
       longForm: true,
-      period: query.period,
+      period: dashboardState.period,
       shouldShowYear
     })(label)
   }
@@ -38,7 +38,7 @@ const renderBucketLabel = function (
     const date = dateFormatter({
       interval: 'day',
       longForm: true,
-      period: query.period,
+      period: dashboardState.period,
       shouldShowYear
     })(label)
     return `${date}, ${formattedLabel}`
@@ -57,7 +57,12 @@ const calculatePercentageDifference = function (oldValue, newValue) {
   }
 }
 
-const buildTooltipData = function (query, graphData, metric, tooltipModel) {
+const buildTooltipData = function (
+  dashboardState,
+  graphData,
+  metric,
+  tooltipModel
+) {
   const data = tooltipModel.dataPoints.find(
     (dataPoint) => dataPoint.dataset.yAxisID == 'y'
   )
@@ -67,11 +72,15 @@ const buildTooltipData = function (query, graphData, metric, tooltipModel) {
 
   const label =
     data &&
-    renderBucketLabel(query, graphData, graphData.labels[data.dataIndex])
+    renderBucketLabel(
+      dashboardState,
+      graphData,
+      graphData.labels[data.dataIndex]
+    )
   const comparisonLabel =
     comparisonData &&
     renderBucketLabel(
-      query,
+      dashboardState,
       graphData,
       graphData.comparison_labels[comparisonData.dataIndex],
       true
@@ -100,7 +109,7 @@ const buildTooltipData = function (query, graphData, metric, tooltipModel) {
 
 let tooltipRoot
 
-export default function GraphTooltip(graphData, metric, query, theme) {
+export default function GraphTooltip(graphData, metric, dashboardState, theme) {
   return (context) => {
     const tooltipModel = context.tooltip
     const offset = document
@@ -136,7 +145,7 @@ export default function GraphTooltip(graphData, metric, query, theme) {
 
     if (tooltipModel.body) {
       const tooltipData = buildTooltipData(
-        query,
+        dashboardState,
         graphData,
         metric,
         tooltipModel

@@ -8,7 +8,7 @@ import UserContextProvider, {
 } from '../js/dashboard/user-context'
 import { MemoryRouter, MemoryRouterProps } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import QueryContextProvider from '../js/dashboard/query-context'
+import DashboardStateContextProvider from '../js/dashboard/dashboard-state-context'
 import { getRouterBasepath } from '../js/dashboard/router'
 import { RoutelessModalsContextProvider } from '../js/dashboard/navigation/routeless-modals-context'
 import { SegmentsContextProvider } from '../js/dashboard/filtering/segments-context'
@@ -91,7 +91,9 @@ export const TestContextProviders = ({
           >
             <QueryClientProvider client={queryClient}>
               <RoutelessModalsContextProvider>
-                <QueryContextProvider>{children}</QueryContextProvider>
+                <DashboardStateContextProvider>
+                  {children}
+                </DashboardStateContextProvider>
               </RoutelessModalsContextProvider>
             </QueryClientProvider>
           </MemoryRouter>

@@ -12,10 +12,10 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useRoutelessModalsContext } from '../../navigation/routeless-modals-context'
 import { SavedSegment } from '../../filtering/segments'
-import { DashboardQuery } from '../../query'
+import { DashboardState } from '../../dashboard-state'
 
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -28,15 +28,15 @@ const buttonClassName = classNames(
 
 export const useClearExpandedSegmentModeOnFilterClear = ({
   expandedSegment,
-  query
+  dashboardState
 }: {
   expandedSegment: SavedSegment | null
-  query: DashboardQuery
+  dashboardState: DashboardState
 }) => {
   const navigate = useAppNavigate()
   useEffect(() => {
     // clear edit mode on clearing all filters or removing last filter
-    if (!!expandedSegment && !query.filters.length) {
+    if (!!expandedSegment && !dashboardState.filters.length) {
       navigate({
         search: (s) => s,
         state: {
@@ -45,12 +45,12 @@ export const useClearExpandedSegmentModeOnFilterClear = ({
         replace: true
       })
     }
-  }, [query.filters, expandedSegment, navigate])
+  }, [dashboardState.filters, expandedSegment, navigate])
 }
 
 export const SegmentMenu = () => {
   const { setModal } = useRoutelessModalsContext()
-  const { expandedSegment } = useQueryContext()
+  const { expandedSegment } = useDashboardStateContext()
 
   if (!expandedSegment) {
     return null

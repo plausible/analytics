@@ -2,18 +2,19 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../../util/filters'
-import { revenueAvailable } from '../../../query'
+import { revenueAvailable } from '../../../dashboard-state'
 import * as metrics from '../../reports/metrics'
 
-export default function chooseMetrics(query, site) {
+export default function chooseMetrics(dashboardState, site) {
   /*global BUILD_EXTRA*/
-  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
+  const showRevenueMetrics =
+    BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
-  if (hasConversionGoalFilter(query)) {
+  if (hasConversionGoalFilter(dashboardState)) {
     return [
       metrics.createTotalVisitors(),
       metrics.createVisitors({
-        renderLabel: (_query) => 'Conversions',
+        renderLabel: (_dashboardState) => 'Conversions',
         width: 'w-32 md:w-28'
       }),
       metrics.createConversionRate(),
@@ -22,10 +23,13 @@ export default function chooseMetrics(query, site) {
     ].filter((metric) => !!metric)
   }
 
-  if (isRealTimeDashboard(query) && !hasConversionGoalFilter(query)) {
+  if (
+    isRealTimeDashboard(dashboardState) &&
+    !hasConversionGoalFilter(dashboardState)
+  ) {
     return [
       metrics.createVisitors({
-        renderLabel: (_query) => 'Current visitors',
+        renderLabel: (_dashboardState) => 'Current visitors',
         width: 'w-32'
       }),
       metrics.createPercentage()
@@ -33,7 +37,7 @@ export default function chooseMetrics(query, site) {
   }
 
   return [
-    metrics.createVisitors({ renderLabel: (_query) => 'Visitors' }),
+    metrics.createVisitors({ renderLabel: (_dashboardState) => 'Visitors' }),
     metrics.createPercentage(),
     metrics.createBounceRate(),
     metrics.createVisitDuration()

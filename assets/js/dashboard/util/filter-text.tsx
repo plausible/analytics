@@ -1,5 +1,5 @@
 import React, { ReactNode, isValidElement, Fragment } from 'react'
-import { DashboardQuery, Filter } from '../query'
+import { DashboardState, Filter } from '../dashboard-state'
 import {
   EVENT_PROPS_PREFIX,
   FILTER_OPERATIONS_DISPLAY_NAMES,
@@ -9,7 +9,7 @@ import {
 } from './filters'
 
 export function styledFilterText(
-  query: Pick<DashboardQuery, 'labels'>,
+  dashboardState: Pick<DashboardState, 'labels'>,
   [operation, filterKey, clauses]: Filter
 ) {
   if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
@@ -26,7 +26,7 @@ export function styledFilterText(
     formattedFilters as Record<string, string | undefined>
   )[filterKey]
   const clausesLabels = clauses.map((value) =>
-    getLabel(query.labels, filterKey, value)
+    getLabel(dashboardState.labels, filterKey, value)
   )
 
   if (!formattedFilter) {
@@ -42,10 +42,10 @@ export function styledFilterText(
 }
 
 export function plainFilterText(
-  query: Pick<DashboardQuery, 'labels'>,
+  dashboardState: Pick<DashboardState, 'labels'>,
   filter: Filter
 ) {
-  return reactNodeToString(styledFilterText(query, filter))
+  return reactNodeToString(styledFilterText(dashboardState, filter))
 }
 
 function formatClauses(labels: Array<string | number>): ReactNode[] {

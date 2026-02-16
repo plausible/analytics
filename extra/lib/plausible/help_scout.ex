@@ -20,9 +20,13 @@ defmodule Plausible.HelpScout do
 
   @signature_errors [:missing_signature, :bad_signature]
 
+  @excluded_email_domains ["paddle.com"]
+
   @type signature_error() :: unquote(Enum.reduce(@signature_errors, &{:|, [], [&1, &2]}))
 
   def signature_errors(), do: @signature_errors
+
+  def excluded_email_domains(), do: @excluded_email_domains
 
   @doc """
   Validates signature against secret key configured for the
@@ -72,18 +76,19 @@ defmodule Plausible.HelpScout do
     end
   end
 
-  @spec get_details_for_customer(String.t()) :: {:ok, map()} | {:error, any()}
-  def get_details_for_customer(customer_id) do
-    with {:ok, emails} <- get_customer_emails(customer_id) do
-      get_details_for_emails(emails, customer_id)
+  @spec get_details_for_customer(String.t(), String.t()) :: {:ok, map()} | {:error, any()}
+  def get_details_for_customer(customer_id, conversation_id) do
+    with {:ok, emails} <- get_customer_emails(customer_id, conversation_id) do
+      get_details_for_emails(emails, customer_id, conversation_id, nil)
     end
   end
 
-  @spec get_details_for_emails([String.t()], String.t(), String.t() | nil) ::
+  @spec get_details_for_emails([String.t()], String.t(), String.t(), String.t() | nil) ::
           {:ok, map()} | {:error, any()}
-  def get_details_for_emails(emails, customer_id, team_identifier \\ nil) do
+  def get_details_for_emails(emails, customer_id, conversation_id, team_identifier) do
     with {:ok, user} <- get_user(emails) do
-      set_mapping(customer_id, user.email)
+      set_customer_mapping(customer_id, user.email)
+      set_conversation_mapping(conversation_id, user.email)
 
       teams = Teams.Users.owned_teams(user)
 
@@ -164,9 +169,9 @@ defmodule Plausible.HelpScout do
     end
   end
 
-  @spec search_users(String.t(), String.t()) :: [map()]
-  def search_users(term, customer_id) do
-    clear_mapping(customer_id)
+  @spec search_users(String.t(), String.t(), String.t()) :: [map()]
+  def search_users(term, customer_id, conversation_id) do
+    clear_mappings(customer_id, conversation_id)
 
     search_term = "%#{term}%"
 
@@ -302,13 +307,39 @@ defmodule Plausible.HelpScout do
     )
   end
 
-  defp get_customer_emails(customer_id) do
-    case lookup_mapping(customer_id) do
-      {:ok, email} ->
-        {:ok, [email]}
+  defp get_customer_emails(customer_id, conversation_id) do
+    get_emails_with_conversation_mapping(conversation_id, customer_id)
+  end
 
-      {:error, :mapping_not_found} ->
-        fetch_customer_emails(customer_id)
+  defp get_emails_with_conversation_mapping(conversation_id, customer_id) do
+    case lookup_conversation_mapping(conversation_id) do
+      {:ok, mapped_emails} ->
+        {:ok, mapped_emails}
+
+      {:error, :not_found} ->
+        get_emails_with_customer_mapping(customer_id)
+    end
+  end
+
+  defp get_emails_with_customer_mapping(customer_id) do
+    # We want to explicitly reject customer emails from HS which
+    # are in one of excluded domains. That's why we fetch 
+    # emails from HS first before checking the mapping.
+    case fetch_customer_emails(customer_id) do
+      {:ok, emails} ->
+        case lookup_customer_mapping(customer_id) do
+          {:ok, mapped_emails} ->
+            {:ok, mapped_emails}
+
+          {:error, :not_found} ->
+            {:ok, emails}
+        end
+
+      {:error, error} when error in [:not_found, :no_emails] ->
+        lookup_customer_mapping(customer_id)
+
+      {:error, _} = error ->
+        error
     end
   end
 
@@ -323,7 +354,13 @@ defmodule Plausible.HelpScout do
 
     case Req.get(url, opts) do
       {:ok, %{body: %{"_embedded" => %{"emails" => [_ | _] = emails}}}} ->
-        {:ok, Enum.map(emails, & &1["value"])}
+        emails = Enum.map(emails, & &1["value"])
+
+        if Enum.any?(emails, &email_excluded?/1) do
+          {:error, :excluded_email}
+        else
+          {:ok, emails}
+        end
 
       {:ok, %{status: 200}} ->
         {:error, :no_emails}
@@ -350,25 +387,43 @@ defmodule Plausible.HelpScout do
 
   # Exposed for testing
   @doc false
-  def lookup_mapping(customer_id) do
-    email =
+  def lookup_customer_mapping(customer_id) do
+    email_row =
       "SELECT email FROM help_scout_mappings WHERE customer_id = $1"
       |> Repo.query!([customer_id])
       |> Map.get(:rows)
       |> List.first()
 
-    case email do
+    case email_row do
       [email] ->
-        {:ok, email}
+        {:ok, [email]}
 
       _ ->
-        {:error, :mapping_not_found}
+        {:error, :not_found}
     end
   end
 
   # Exposed for testing
   @doc false
-  def set_mapping(customer_id, email) do
+  def lookup_conversation_mapping(conversation_id) do
+    email_row =
+      "SELECT email FROM help_scout_mappings WHERE conversation_id = $1"
+      |> Repo.query!([conversation_id])
+      |> Map.get(:rows)
+      |> List.first()
+
+    case email_row do
+      [email] ->
+        {:ok, [email]}
+
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
+  # Exposed for testing
+  @doc false
+  def set_customer_mapping(customer_id, email) do
     now = NaiveDateTime.utc_now(:second)
 
     Repo.insert_all(
@@ -379,8 +434,33 @@ defmodule Plausible.HelpScout do
     )
   end
 
-  defp clear_mapping(customer_id) do
-    Repo.query!("DELETE FROM help_scout_mappings WHERE customer_id = $1", [customer_id])
+  # Exposed for testing
+  @doc false
+  def set_conversation_mapping(conversation_id, email) do
+    now = NaiveDateTime.utc_now(:second)
+
+    Repo.insert_all(
+      "help_scout_mappings",
+      [[conversation_id: conversation_id, email: email, inserted_at: now, updated_at: now]],
+      conflict_target: :conversation_id,
+      on_conflict: [set: [email: email, updated_at: now]]
+    )
+  end
+
+  defp email_excluded?(email) when is_binary(email) do
+    case String.split(email, "@") do
+      [_, domain] -> String.trim(domain) in @excluded_email_domains
+      _ -> false
+    end
+  end
+
+  defp email_excluded?(_), do: false
+
+  defp clear_mappings(customer_id, conversation_id) do
+    Repo.query!(
+      "DELETE FROM help_scout_mappings WHERE customer_id = $1 or conversation_id = $2",
+      [customer_id, conversation_id]
+    )
   end
 
   defp get_token!() do

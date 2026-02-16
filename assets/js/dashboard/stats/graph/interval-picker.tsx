@@ -4,14 +4,14 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext, PlausibleSite } from '../../site-context'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { BlurMenuButtonOnEscape, popover } from '../../components/popover'
-import { DashboardQuery } from '../../query'
+import { DashboardState } from '../../dashboard-state'
 import { Dayjs } from 'dayjs'
-import { QueryPeriod } from '../../query-time-periods'
+import { DashboardPeriod } from '../../dashboard-time-periods'
 
 const INTERVAL_LABELS: Record<string, string> = {
   minute: 'Minutes',
@@ -21,38 +21,50 @@ const INTERVAL_LABELS: Record<string, string> = {
   month: 'Months'
 }
 
-function validIntervals(site: PlausibleSite, query: DashboardQuery): string[] {
-  if (query.period === QueryPeriod.custom && query.from && query.to) {
-    if (query.to.diff(query.from, 'days') < 7) {
+function validIntervals(
+  site: PlausibleSite,
+  dashboardState: DashboardState
+): string[] {
+  if (
+    dashboardState.period === DashboardPeriod.custom &&
+    dashboardState.from &&
+    dashboardState.to
+  ) {
+    if (dashboardState.to.diff(dashboardState.from, 'days') < 7) {
       return ['day']
-    } else if (query.to.diff(query.from, 'months') < 1) {
+    } else if (dashboardState.to.diff(dashboardState.from, 'months') < 1) {
       return ['day', 'week']
-    } else if (query.to.diff(query.from, 'months') < 12) {
+    } else if (dashboardState.to.diff(dashboardState.from, 'months') < 12) {
       return ['day', 'week', 'month']
     } else {
       return ['week', 'month']
     }
   } else {
-    return site.validIntervalsByPeriod[query.period]
+    return site.validIntervalsByPeriod[dashboardState.period]
   }
 }
 
 function getDefaultInterval(
-  query: DashboardQuery,
+  dashboardState: DashboardState,
   validIntervals: string[]
 ): string {
   const defaultByPeriod: Record<string, string> = {
     day: 'hour',
+    '24h': 'hour',
     '7d': 'day',
     '6mo': 'month',
     '12mo': 'month',
     year: 'month'
   }
 
-  if (query.period === QueryPeriod.custom && query.from && query.to) {
-    return defaultForCustomPeriod(query.from, query.to)
+  if (
+    dashboardState.period === DashboardPeriod.custom &&
+    dashboardState.from &&
+    dashboardState.to
+  ) {
+    return defaultForCustomPeriod(dashboardState.from, dashboardState.to)
   } else {
-    return defaultByPeriod[query.period] || validIntervals[0]
+    return defaultByPeriod[dashboardState.period] || validIntervals[0]
   }
 }
 
@@ -82,12 +94,12 @@ function storeInterval(period: string, domain: string, interval: string): void {
 
 export const getCurrentInterval = function (
   site: PlausibleSite,
-  query: DashboardQuery
+  dashboardState: DashboardState
 ): string {
-  const options = validIntervals(site, query)
+  const options = validIntervals(site, dashboardState)
 
-  const storedInterval = getStoredInterval(query.period, site.domain)
-  const defaultInterval = getDefaultInterval(query, options)
+  const storedInterval = getStoredInterval(dashboardState.period, site.domain)
+  const defaultInterval = getDefaultInterval(dashboardState, options)
 
   if (storedInterval && options.includes(storedInterval)) {
     return storedInterval
@@ -102,19 +114,19 @@ export function IntervalPicker({
   onIntervalUpdate: (interval: string) => void
 }): JSX.Element | null {
   const menuElement = useRef<HTMLButtonElement>(null)
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   const dashboardRouteMatch = useMatch(rootRoute.path)
 
-  if (query.period == 'realtime') {
+  if (dashboardState.period == 'realtime') {
     return null
   }
 
-  const options = validIntervals(site, query)
-  const currentInterval = getCurrentInterval(site, query)
+  const options = validIntervals(site, dashboardState)
+  const currentInterval = getCurrentInterval(site, dashboardState)
 
   function updateInterval(interval: string): void {
-    storeInterval(query.period, site.domain, interval)
+    storeInterval(dashboardState.period, site.domain, interval)
     onIntervalUpdate(interval)
   }
 
