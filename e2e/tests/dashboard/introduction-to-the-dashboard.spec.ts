@@ -127,7 +127,7 @@ test('different time ranges are supported', async ({ page, request }) => {
   await expect(visitors).toHaveText(`${events.length}`)
 })
 
-test.only('different graph time intervals are available', async ({
+test('different graph time intervals are available', async ({
   page,
   request
 }) => {
@@ -144,7 +144,9 @@ test.only('different graph time intervals are available', async ({
 
   await page.goto('/' + domain)
 
-  await expect(page.getByRole('button', { name: 'Last 28 days' })).toBeVisible()
+  await expect(page.getByTestId('current-query-period')).toHaveText(
+    'Last 28 days'
+  )
 
   const intervalButton = page.getByTestId('current-graph-interval')
   const intervalOptions = page.getByTestId('graph-interval')
@@ -169,4 +171,55 @@ test.only('different graph time intervals are available', async ({
 
   expect(intervalOptionsToday.indexOf('Hours') > -1).toBeTruthy()
   expect(intervalOptionsToday.indexOf('Minutes') > -1).toBeTruthy()
+})
+
+test('comparing stats over time is supported', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'pageview', timestamp: { daysAgo: 2 } },
+      { name: 'pageview', timestamp: { daysAgo: 4 } },
+      { name: 'pageview', timestamp: { daysAgo: 30 } },
+      { name: 'pageview', timestamp: { daysAgo: 30 } },
+      { name: 'pageview', timestamp: { daysAgo: 31 } },
+      { name: 'pageview', timestamp: { daysAgo: 370 } }
+    ]
+  })
+
+  await page.goto('/' + domain)
+
+  await expect(page.getByTestId('current-query-period')).toHaveText(
+    'Last 28 days'
+  )
+
+  await page.getByTestId('query-period-picker').click()
+  await page
+    .getByTestId('query-period-picker')
+    .getByRole('link', { name: 'Compare' })
+    .click()
+
+  const previousPeriodButton = page.getByRole('button', {
+    name: 'Previous period'
+  })
+
+  await expect(previousPeriodButton).toBeVisible()
+
+  const visitors = page.locator('#visitors')
+  const previousVisitors = page.locator('#previous-visitors')
+
+  await expect(visitors).toHaveText('2')
+  await expect(previousVisitors).toHaveText('3')
+
+  await previousPeriodButton.click()
+  await page.getByRole('link', { name: 'Year over year' }).click()
+
+  await expect(
+    page.getByRole('button', { name: 'Year over year' })
+  ).toBeVisible()
+
+  await expect(visitors).toHaveText('2')
+  await expect(previousVisitors).toHaveText('1')
 })
