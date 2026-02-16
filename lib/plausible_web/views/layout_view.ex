@@ -68,7 +68,7 @@ defmodule PlausibleWeb.LayoutView do
           %{key: "Funnels", value: "funnels", icon: :funnel}
         end
       end,
-      %{key: "Custom properties", value: "properties", icon: :document_text},
+      %{key: "Custom properties", value: "properties", icon: :tag},
       if regular_site? do
         %{key: "Integrations", value: "integrations", icon: :puzzle_piece}
       end,
@@ -108,13 +108,13 @@ defmodule PlausibleWeb.LayoutView do
           %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
           %{key: "Security", value: "security", icon: :lock_closed},
           if(ee?() and not Teams.setup?(current_team),
-            do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
+            do: %{key: "Subscription", value: "billing/subscription", icon: :subscription}
           ),
           if(ee?() and not Teams.setup?(current_team) and subscription?,
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(not Teams.setup?(current_team),
-            do: %{key: "API keys", value: "api-keys", icon: :key}
+            do: %{key: "API keys", value: "api-keys", icon: :api_keys}
           ),
           if(Plausible.Users.type(conn.assigns.current_user) == :standard,
             do: %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
@@ -130,13 +130,13 @@ defmodule PlausibleWeb.LayoutView do
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
           if(ee?() and current_team_role in [:owner, :billing],
-            do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
+            do: %{key: "Subscription", value: "billing/subscription", icon: :subscription}
           ),
           if(ee?() and current_team_role in [:owner, :billing] and subscription?,
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(current_team_role in [:owner, :billing, :admin, :editor],
-            do: %{key: "API keys", value: "api-keys", icon: :key}
+            do: %{key: "API keys", value: "api-keys", icon: :api_keys}
           ),
           if(
             ee?() and current_team_role == :owner and

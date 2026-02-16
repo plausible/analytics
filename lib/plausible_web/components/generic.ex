@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Components.Generic do
   """
   use Phoenix.Component, global_prefixes: ~w(x-)
 
+  import PlausibleWeb.Components.Icons
+
   @notice_themes %{
     gray: %{
       bg: "bg-gray-100 dark:bg-gray-800",
@@ -404,7 +406,7 @@ defmodule PlausibleWeb.Components.Generic do
         {@rest}
       >
         {render_slot(@inner_block)}
-        <Heroicons.arrow_top_right_on_square class={["stroke-2", @icon_class]} />
+        <.external_link_icon class={[@icon_class]} />
       </.link>
       """
     else
@@ -760,14 +762,26 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr(:rest, :global, include: ~w(fill stroke stroke-width))
+  attr(:rest, :global, include: ~w(fill stroke stroke-width class))
   attr(:name, :atom, required: true)
   attr(:outline, :boolean, default: true)
   attr(:solid, :boolean, default: false)
   attr(:mini, :boolean, default: false)
 
   def dynamic_icon(assigns) do
-    apply(Heroicons, assigns.name, [assigns])
+    case assigns.name do
+      :tag ->
+        PlausibleWeb.Components.Icons.tag_icon(%{class: assigns.rest[:class]})
+
+      :subscription ->
+        PlausibleWeb.Components.Icons.subscription_icon(%{class: assigns.rest[:class]})
+
+      :api_keys ->
+        PlausibleWeb.Components.Icons.key_icon(%{class: assigns.rest[:class]})
+
+      icon_name ->
+        apply(Heroicons, icon_name, [assigns])
+    end
   end
 
   attr(:width, :integer, default: 100)
