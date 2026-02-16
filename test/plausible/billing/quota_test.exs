@@ -1150,6 +1150,32 @@ defmodule Plausible.Billing.QuotaTest do
                :grace_period_active
     end
 
+    test "returns :manual_lock_grace_period_active when manual lock is active" do
+      user = new_user() |> subscribe_to_enterprise_plan(monthly_pageview_limit: 10_000)
+      team = team_of(user)
+
+      manual_lock_grace_period = %Plausible.Teams.GracePeriod{
+        end_date: nil,
+        is_over: false,
+        manual_lock: true
+      }
+
+      team = %{team | grace_period: manual_lock_grace_period}
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 15_000},
+          penultimate_cycle: %{total: 14_000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :manual_lock_grace_period_active
+    end
+
     test "returns :trial_ended when trial expired and no subscription" do
       user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -5))
       team = team_of(user)

@@ -199,7 +199,30 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       assert rendered =~ "Learn more"
     end
 
-    test "renders grace_period_active notification with days countdown" do
+    test "renders grace_period_active notification with hours (less than 48h)" do
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.add(Date.utc_today(), 1),
+        is_over: false,
+        manual_lock: false
+      }
+
+      team =
+        new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+        |> team_of()
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :grace_period_active,
+          team: team
+        )
+
+      assert rendered =~ "Upgrade required due to sustained higher traffic"
+      assert rendered =~ "within the next"
+      assert rendered =~ "hours"
+      refute rendered =~ "days"
+    end
+
+    test "renders grace_period_active notification with days (more than 48h)" do
       grace_period = %Plausible.Teams.GracePeriod{
         end_date: Date.add(Date.utc_today(), 5),
         is_over: false,
@@ -222,11 +245,11 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       assert rendered =~ "Learn more"
     end
 
-    test "renders grace_period_active notification with singular day" do
+    test "renders manual_lock_grace_period_active notification without countdown" do
       grace_period = %Plausible.Teams.GracePeriod{
-        end_date: Date.add(Date.utc_today(), 1),
+        end_date: nil,
         is_over: false,
-        manual_lock: false
+        manual_lock: true
       }
 
       team =
@@ -235,13 +258,16 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
       rendered =
         render_component(&Notice.usage_notification/1,
-          type: :grace_period_active,
+          type: :manual_lock_grace_period_active,
           team: team
         )
 
       assert rendered =~ "Upgrade required due to sustained higher traffic"
-      assert rendered =~ "within the next 14 hours"
-      refute rendered =~ "1 day"
+      assert rendered =~ "To ensure uninterrupted access to your stats"
+      refute rendered =~ "within the next"
+      refute rendered =~ "days"
+      assert rendered =~ "Upgrade"
+      assert rendered =~ "Learn more"
     end
 
     test "renders dashboard_locked notification" do

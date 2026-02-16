@@ -91,6 +91,18 @@ defmodule Plausible.Teams.GracePeriod do
 
   def active?(_team), do: false
 
+  @spec manual_lock_active?(Teams.Team.t() | nil) :: boolean()
+  @doc """
+  Returns whether the team has an active manual lock grace period.
+  Manual locks are used for enterprise customers and have no end date.
+  """
+  def manual_lock_active?(team)
+
+  def manual_lock_active?(%{grace_period: %__MODULE__{manual_lock: true, is_over: false}}),
+    do: true
+
+  def manual_lock_active?(_team), do: false
+
   @spec expired?(Teams.Team.t() | nil) :: boolean()
   @doc """
   Returns whether the grace period has already expired for a Team. Defaults to

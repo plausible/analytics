@@ -131,9 +131,14 @@ defmodule Plausible.Billing.Quota do
     :penultimate_cycle in exceeded && :last_cycle in exceeded
   end
 
-  @spec exceeded_cycles(cycles_usage(), non_neg_integer()) :: list()
-  def exceeded_cycles(cycles_usage, allowed_volume) do
-    limit = Limits.pageview_limit_with_margin(allowed_volume)
+  @spec exceeded_cycles(cycles_usage(), non_neg_integer(), keyword()) :: list()
+  def exceeded_cycles(cycles_usage, allowed_volume, opts \\ []) do
+    limit =
+      if Keyword.get(opts, :with_margin, true) do
+        Limits.pageview_limit_with_margin(allowed_volume)
+      else
+        allowed_volume
+      end
 
     Enum.reduce(cycles_usage, [], fn {cycle, %{total: total}}, exceeded_cycles ->
       if below_limit?(total, limit) do
@@ -195,13 +200,14 @@ defmodule Plausible.Billing.Quota do
 
   1. Dashboard locked
   2. Trial ended
-  3. Grace period active
-  4. Traffic exceeded for 2 consecutive cycles
-  5. Traffic exceeded for 1 cycle
-  6. Pageview limit approaching
-  7. Site and team member limits both reached
-  8. Site limit reached
-  9. Team member limit reached
+  3. Manual lock grace period active (enterprise, no end date)
+  4. Grace period active (with countdown)
+  5. Traffic exceeded for 2 consecutive cycles
+  6. Traffic exceeded for 1 cycle
+  7. Pageview limit approaching
+  8. Site and team member limits both reached
+  9. Site limit reached
+  10. Team member limit reached
   """
   def usage_notification_type(team, usage) do
     subscription = Plausible.Teams.Billing.get_subscription(team)
@@ -225,6 +231,9 @@ defmodule Plausible.Billing.Quota do
       not Plausible.Teams.on_trial?(team) and is_nil(subscription) ->
         :trial_ended
 
+      Plausible.Teams.GracePeriod.manual_lock_active?(team) ->
+        :manual_lock_grace_period_active
+
       Plausible.Teams.GracePeriod.active?(team) ->
         :grace_period_active
 
@@ -247,16 +256,13 @@ defmodule Plausible.Billing.Quota do
   end
 
   defp pageview_cycle_usage_notification_type(usage, limit) do
-    last_exceeded? = is_map_key(usage, :last_cycle) and usage.last_cycle.total > limit
-
-    penultimate_exceeded? =
-      is_map_key(usage, :penultimate_cycle) and usage.penultimate_cycle.total > limit
+    exceeded = exceeded_cycles(usage, limit, with_margin: false)
 
     cond do
-      last_exceeded? and penultimate_exceeded? ->
+      :penultimate_cycle in exceeded and :last_cycle in exceeded ->
         :traffic_exceeded_sustained
 
-      last_exceeded? ->
+      :last_cycle in exceeded ->
         :traffic_exceeded_last_cycle
 
       is_map_key(usage, :current_cycle) and usage.current_cycle.total >= limit * 0.9 ->

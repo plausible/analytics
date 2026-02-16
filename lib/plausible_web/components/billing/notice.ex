@@ -373,7 +373,8 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  def usage_notification(%{type: :traffic_exceeded_sustained} = assigns) do
+  def usage_notification(%{type: type} = assigns)
+      when type in [:traffic_exceeded_sustained, :manual_lock_grace_period_active] do
     ~H"""
     <.notice title="Upgrade required due to sustained higher traffic" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4">
