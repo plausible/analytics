@@ -100,16 +100,39 @@ defmodule Plausible.Teams.GracePeriod do
     if team && team.grace_period, do: !active?(team), else: false
   end
 
-  @spec days_left(Teams.Team.t() | nil) :: integer() | nil
+  @spec expires_in(Teams.Team.t() | nil) :: {non_neg_integer(), :days | :hours} | nil
   @doc """
-  Returns the number of days left in the grace period for a Team. Returns nil
-  if there is no grace period or it's a manual lock (no end date).
-  """
-  def days_left(team)
+  Returns a tuple representing either the days (if hours_left < 48) or days left
+  until the end of a grace period. Switching to hours near the end is to avoid
+  confusion with timezones.
 
-  def days_left(%{grace_period: %__MODULE__{end_date: %Date{} = end_date}}) do
-    Date.diff(end_date, Date.utc_today())
+  Returns `nil` in all the following cases:
+
+  * the given team is `nil`
+  * the given team does not have a grace period
+  * the given team has a manual lock grace period
+  """
+  def expires_in(team, now \\ NaiveDateTime.utc_now(:second))
+
+  def expires_in(%Teams.Team{grace_period: %__MODULE__{end_date: %Date{} = end_date}}, now) do
+    case full_hours_left(end_date, now) do
+      hours when hours < 48 -> {hours, :hours}
+      _ -> {days_left(end_date, now), :days}
+    end
   end
 
-  def days_left(_team), do: nil
+  def expires_in(_, _), do: nil
+
+  defp days_left(%Date{} = end_date, now) do
+    today = NaiveDateTime.to_date(now)
+    Date.diff(end_date, today)
+  end
+
+  defp full_hours_left(%Date{} = end_date, now) do
+    end_date
+    |> NaiveDateTime.new!(~T[00:00:00])
+    |> NaiveDateTime.diff(now, :second)
+    |> max(0)
+    |> div(3600)
+  end
 end
