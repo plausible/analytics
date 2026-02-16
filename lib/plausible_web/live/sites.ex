@@ -619,7 +619,7 @@ defmodule PlausibleWeb.Live.Sites do
             </p>
           </div>
 
-          <.percentage_change change={@hourly_stats.change} />
+          <.percentage_change change={@hourly_stats.visitors_change} />
         </div>
       </span>
     </div>
@@ -808,7 +808,10 @@ defmodule PlausibleWeb.Live.Sites do
     hourly_stats =
       if connected?(socket) do
         try do
-          Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+          Task.async_stream(sites.entries, fn site ->
+            {site.domain, Plausible.Stats.ConsolidatedView.overview_24h(site)}
+          end)
+          |> Enum.into(%{}, fn {:ok, stats} -> stats end)
         catch
           kind, value ->
             Logger.error(

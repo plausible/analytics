@@ -4,9 +4,9 @@ defmodule Plausible.Stats.ConsolidatedView do
   require Logger
 
   @spec overview_24h(Site.t(), NaiveDateTime.t()) :: map()
-  def overview_24h(%Site{consolidated: true} = view, now \\ NaiveDateTime.utc_now()) do
-    stats = query_24h_stats(view)
-    intervals = query_24h_intervals(view, now)
+  def overview_24h(view_or_site, now \\ NaiveDateTime.utc_now()) do
+    stats = query_24h_stats(view_or_site)
+    intervals = query_24h_intervals(view_or_site, now)
 
     Map.merge(stats, intervals)
   end
@@ -38,9 +38,9 @@ defmodule Plausible.Stats.ConsolidatedView do
     end
   end
 
-  defp query_24h_stats(view) do
+  defp query_24h_stats(view_or_site) do
     stats_query =
-      QueryBuilder.build!(view,
+      QueryBuilder.build!(view_or_site,
         input_date_range: :"24h",
         metrics: [:visitors, :visits, :pageviews, :views_per_visit],
         include: [compare: :previous_period]
@@ -55,7 +55,7 @@ defmodule Plausible.Stats.ConsolidatedView do
           }
         }
       ]
-    } = Stats.query(view, stats_query)
+    } = Stats.query(view_or_site, stats_query)
 
     %{
       visitors: visitors,
@@ -69,16 +69,16 @@ defmodule Plausible.Stats.ConsolidatedView do
     }
   end
 
-  defp query_24h_intervals(view, now) do
+  defp query_24h_intervals(view_or_site, now) do
     graph_query =
-      QueryBuilder.build!(view,
+      QueryBuilder.build!(view_or_site,
         metrics: [:visitors],
         input_date_range: :"24h",
         dimensions: ["time:hour"],
         order_by: [{"time:hour", :asc}]
       )
 
-    %Stats.QueryResult{results: results} = Stats.query(view, graph_query)
+    %Stats.QueryResult{results: results} = Stats.query(view_or_site, graph_query)
 
     placeholder =
       empty_24h_intervals(now)
