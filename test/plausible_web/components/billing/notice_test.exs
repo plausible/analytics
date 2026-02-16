@@ -262,12 +262,15 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
           team: team
         )
 
-      assert rendered =~ "Upgrade required due to sustained higher traffic"
-      assert rendered =~ "To ensure uninterrupted access to your stats"
+      assert rendered =~ "outgrown your custom plan"
+
+      assert rendered =~
+               "contact you by email to discuss an updated custom plan based on your current usage"
+
       refute rendered =~ "within the next"
       refute rendered =~ "days"
-      assert rendered =~ "Upgrade"
-      assert rendered =~ "Learn more"
+      refute rendered =~ "Upgrade"
+      refute rendered =~ "Learn more"
     end
 
     test "renders dashboard_locked notification" do

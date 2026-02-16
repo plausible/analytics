@@ -373,8 +373,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  def usage_notification(%{type: type} = assigns)
-      when type in [:traffic_exceeded_sustained, :manual_lock_grace_period_active] do
+  def usage_notification(%{type: :traffic_exceeded_sustained} = assigns) do
     ~H"""
     <.notice title="Upgrade required due to sustained higher traffic" theme={:gray} show_icon={false}>
       <div class="flex flex-col gap-4">
@@ -394,6 +393,16 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           </.button_link>
         </div>
       </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :manual_lock_grace_period_active} = assigns) do
+    ~H"""
+    <.notice title="You've outgrown your custom plan" theme={:yellow} show_icon={false}>
+      <p class="text-pretty">
+        We'll contact you by email to discuss an updated custom plan based on your current usage.
+      </p>
     </.notice>
     """
   end
