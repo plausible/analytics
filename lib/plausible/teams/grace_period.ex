@@ -114,7 +114,7 @@ defmodule Plausible.Teams.GracePeriod do
 
   @spec expires_in(Teams.Team.t() | nil) :: {non_neg_integer(), :days | :hours} | nil
   @doc """
-  Returns a tuple representing either the days (if hours_left < 48) or days left
+  Returns a tuple representing either the hours (if hours_left < 48) or days left
   until the end of a grace period. Switching to hours near the end is to avoid
   confusion with timezones.
 
