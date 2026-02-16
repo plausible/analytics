@@ -1489,6 +1489,48 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       assert bounce_rate_warning["code"] == to_string(expected_warning.code)
       assert bounce_rate_warning["warning"] == expected_warning.warning
     end
+
+    test "returns bounce_rate warning when query includes imported and page dimension used", %{
+      conn: conn,
+      site: site
+    } do
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
+        build(:pageview, user_id: 123, pathname: "/next", timestamp: ~N[2021-02-01 00:10:00]),
+        build(:pageview, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
+        build(:imported_pages, page: "/", date: ~D[2021-02-01]),
+        build(:imported_pages, pageviews: 3, page: "/", date: ~D[2021-02-02]),
+        build(:imported_visitors, date: ~D[2021-02-01]),
+        build(:imported_visitors, pageviews: 3, date: ~D[2021-02-02])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews", "bounce_rate"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{"imports" => true}
+        })
+
+      assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["/"], "metrics" => [4, 6, 50.0]},
+               %{"dimensions" => ["/next"], "metrics" => [1, 1, 0.0]}
+             ]
+
+      assert meta["imports_included"] == true
+
+      assert bounce_rate_warning = meta["metric_warnings"]["bounce_rate"]
+
+      expected_warning = Plausible.Stats.QueryResult.no_imported_bounce_rate_warning()
+      assert bounce_rate_warning["code"] == to_string(expected_warning.code)
+      assert bounce_rate_warning["warning"] == expected_warning.warning
+    end
   end
 
   describe "order_by" do

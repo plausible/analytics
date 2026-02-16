@@ -208,9 +208,16 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
+  # Native queries (i.e. ones that don't include imported data) allow querying bounce rate
+  # with an `event:page` filter or dimension. In those cases, an `event:page` gets treated
+  # as `visit:entry_page`. While theoretically possible, this behaviour does not yet exist
+  # for imported data, which is why we're returning a metric warning here.
   defp metric_warning(:bounce_rate, %Query{} = query) do
-    if query.include_imported and
-         Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) do
+    page_filter_or_dimension? =
+      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) or
+        "event:page" in query.dimensions
+
+    if query.include_imported and page_filter_or_dimension? do
       @no_imported_bounce_rate_warning
     end
   end
