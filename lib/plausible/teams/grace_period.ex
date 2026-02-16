@@ -91,6 +91,18 @@ defmodule Plausible.Teams.GracePeriod do
 
   def active?(_team), do: false
 
+  @spec manual_lock_active?(Teams.Team.t() | nil) :: boolean()
+  @doc """
+  Returns whether the team has an active manual lock grace period.
+  Manual locks are used for enterprise customers and have no end date.
+  """
+  def manual_lock_active?(team)
+
+  def manual_lock_active?(%{grace_period: %__MODULE__{manual_lock: true, is_over: false}}),
+    do: true
+
+  def manual_lock_active?(_team), do: false
+
   @spec expired?(Teams.Team.t() | nil) :: boolean()
   @doc """
   Returns whether the grace period has already expired for a Team. Defaults to
@@ -98,5 +110,41 @@ defmodule Plausible.Teams.GracePeriod do
   """
   def expired?(team) do
     if team && team.grace_period, do: !active?(team), else: false
+  end
+
+  @spec expires_in(Teams.Team.t() | nil) :: {non_neg_integer(), :days | :hours} | nil
+  @doc """
+  Returns a tuple representing either the hours (if hours_left < 48) or days left
+  until the end of a grace period. Switching to hours near the end is to avoid
+  confusion with timezones.
+
+  Returns `nil` in all the following cases:
+
+  * the given team is `nil`
+  * the given team does not have a grace period
+  * the given team has a manual lock grace period
+  """
+  def expires_in(team, now \\ NaiveDateTime.utc_now(:second))
+
+  def expires_in(%Teams.Team{grace_period: %__MODULE__{end_date: %Date{} = end_date}}, now) do
+    case full_hours_left(end_date, now) do
+      hours when hours < 48 -> {hours, :hours}
+      _ -> {days_left(end_date, now), :days}
+    end
+  end
+
+  def expires_in(_, _), do: nil
+
+  defp days_left(%Date{} = end_date, now) do
+    today = NaiveDateTime.to_date(now)
+    Date.diff(end_date, today)
+  end
+
+  defp full_hours_left(%Date{} = end_date, now) do
+    end_date
+    |> NaiveDateTime.new!(~T[00:00:00])
+    |> NaiveDateTime.diff(now, :second)
+    |> max(0)
+    |> div(3600)
   end
 end
