@@ -1462,13 +1462,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
         build(:pageview, user_id: 123, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
         build(:pageview, user_id: 123, pathname: "/next", timestamp: ~N[2021-02-01 00:10:00]),
         build(:pageview, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
-        build(:imported_pages, page: "/", date: ~D[2021-02-01])
+        build(:imported_pages, page: "/", date: ~D[2021-02-01]),
+        build(:imported_pages, pageviews: 3, page: "/", date: ~D[2021-02-02]),
+        build(:imported_visitors, date: ~D[2021-02-01]),
+        build(:imported_visitors, pageviews: 3, date: ~D[2021-02-02])
       ])
 
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
-          "metrics" => ["visitors", "bounce_rate"],
+          "metrics" => ["visitors", "pageviews", "bounce_rate"],
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/"]]],
           "include" => %{"imports" => true}
@@ -1476,7 +1479,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
       assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
 
-      assert results == [%{"dimensions" => [], "metrics" => [3, 50.0]}]
+      assert results == [%{"dimensions" => [], "metrics" => [4, 6, 50.0]}]
 
       assert meta["imports_included"] == true
 

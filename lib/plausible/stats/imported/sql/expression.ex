@@ -72,7 +72,11 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_metric(:bounce_rate, "imported_pages", _query) do
-    wrap_alias([i], %{bounce_rate: 0, bounces: 0, __internal_visits: 0})
+    wrap_alias([i], %{
+      bounce_rate: fragment("any(0)"),
+      bounces: fragment("any(0)"),
+      __internal_visits: fragment("any(0)")
+    })
   end
 
   defp select_metric(:bounce_rate, "imported_exit_pages", _query) do
