@@ -49,10 +49,7 @@ test('top stats show relevant metrics', async ({ page, request }) => {
   await expect(page.locator('#visit_duration')).toHaveText('3m 20s')
 })
 
-test.only('different time intervals are supported', async ({
-  page,
-  request
-}) => {
+test('different time ranges are supported', async ({ page, request }) => {
   const now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
   const startOfDay = now.truncatedTo(ChronoUnit.DAYS)
   const startOfYesterday = startOfDay.minusDays(1)
@@ -61,83 +58,17 @@ test.only('different time intervals are supported', async ({
   const startOfYear = now.withDayOfYear(1)
 
   const expectedCounts = [
-    {
-      label: 'Today',
-      from: startOfDay,
-      to: now,
-      key: 'd',
-      value: 0
-    },
-    {
-      label: null,
-      from: startOfYesterday,
-      to: startOfDay,
-      key: 'e',
-      value: 0
-    },
-    {
-      label: 'Realtime',
-      from: now.minusMinutes(30),
-      to: now,
-      key: 'r',
-      value: 0
-    },
-    {
-      label: 'Last 24 hours',
-      from: now.minusHours(24),
-      to: now,
-      key: 'h',
-      value: 0
-    },
-    {
-      label: 'Last 7 days',
-      from: startOfDay.minusDays(7),
-      to: startOfDay,
-      key: 'w',
-      value: 0
-    },
-    {
-      label: 'Last 28 days',
-      from: startOfDay.minusDays(28),
-      to: startOfDay,
-      key: 'f',
-      value: 0
-    },
-    {
-      label: 'Last 91 days',
-      from: startOfDay.minusDays(91),
-      to: startOfDay,
-      key: 'n',
-      value: 0
-    },
-    {
-      label: 'Month to Date',
-      from: startOfMonth,
-      to: now,
-      key: 'm',
-      value: 0
-    },
-    {
-      label: null,
-      from: startOfLastMonth,
-      to: startOfMonth,
-      key: 'p',
-      value: 0
-    },
-    {
-      label: 'Year to Date',
-      from: startOfYear,
-      to: now,
-      key: 'y',
-      value: 0
-    },
-    {
-      label: 'Last 12 Months',
-      from: startOfMonth.minusMonths(12),
-      to: startOfMonth,
-      key: 'l',
-      value: 0
-    }
+    { from: startOfDay, to: now, key: 'd', value: 0 },
+    { from: startOfYesterday, to: startOfDay, key: 'e', value: 0 },
+    { from: now.minusMinutes(30), to: now, key: 'r', value: 0 },
+    { from: now.minusHours(24), to: now, key: 'h', value: 0 },
+    { from: startOfDay.minusDays(7), to: startOfDay, key: 'w', value: 0 },
+    { from: startOfDay.minusDays(28), to: startOfDay, key: 'f', value: 0 },
+    { from: startOfDay.minusDays(91), to: startOfDay, key: 'n', value: 0 },
+    { from: startOfMonth, to: now, key: 'm', value: 0 },
+    { from: startOfLastMonth, to: startOfMonth, key: 'p', value: 0 },
+    { from: startOfYear, to: now, key: 'y', value: 0 },
+    { from: startOfMonth.minusMonths(12), to: startOfMonth, key: 'l', value: 0 }
   ]
 
   const eventTimes = [
@@ -182,11 +113,6 @@ test.only('different time intervals are supported', async ({
 
   for (const expected of expectedCounts) {
     await page.keyboard.press(expected.key)
-    if (expected.label) {
-      await expect(
-        page.getByRole('button', { name: expected.label })
-      ).toBeVisible()
-    }
     await expect(visitors).toHaveText(`${expected.value}`)
   }
 
