@@ -109,13 +109,9 @@ defmodule Plausible.Stats.Sparkline do
       empty_24h_intervals(now)
 
     results =
-      Enum.map(
-        results,
-        fn %{metrics: [visitors], dimensions: [timestamp]} ->
-          {NaiveDateTime.from_iso8601!(timestamp), visitors}
-        end
-      )
-      |> Enum.into(%{})
+      Enum.into(results, %{}, fn %{metrics: [visitors], dimensions: [timestamp]} ->
+        {NaiveDateTime.from_iso8601!(timestamp), visitors}
+      end)
 
     graph_data =
       placeholder
