@@ -10,28 +10,21 @@ defmodule Plausible.Stats.Sparkline do
 
   @spec parallel_overview([Site.t()], NaiveDateTime.t()) :: map()
   def parallel_overview(sites, now \\ NaiveDateTime.utc_now()) when is_list(sites) do
-    try do
-      Task.async_stream(
-        sites,
-        fn site ->
-          {site.domain, safe_overview_24h(site, now)}
-        end,
-        timeout: 5000,
-        on_timeout: :kill_task
-      )
-      |> Enum.reduce(%{}, fn
-        {:ok, {domain, {:ok, stats}}}, acc ->
-          Map.put(acc, domain, stats)
+    Task.async_stream(
+      sites,
+      fn site ->
+        {site.domain, safe_overview_24h(site, now)}
+      end,
+      timeout: 5000,
+      on_timeout: :kill_task
+    )
+    |> Enum.reduce(%{}, fn
+      {:ok, {domain, {:ok, stats}}}, acc ->
+        Map.put(acc, domain, stats)
 
-        _, acc ->
-          acc
-      end)
-    catch
-      kind, value ->
-        Logger.error("Could not render sparkline: #{inspect(kind)} #{inspect(value)}")
-
-        %{}
-    end
+      _, acc ->
+        acc
+    end)
   end
 
   @spec overview_24h(Site.t(), NaiveDateTime.t()) :: map()
