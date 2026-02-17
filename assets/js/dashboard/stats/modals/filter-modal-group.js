@@ -55,6 +55,7 @@ export default function FilterModalGroup({
             />
           ) : (
             <FilterModalRow
+              testId={id}
               key={id}
               filter={filter}
               labels={labels}

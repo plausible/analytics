@@ -17,6 +17,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 
 export default function FilterModalRow({
+  testId,
   filter,
   labels,
   canDelete,
@@ -72,6 +73,7 @@ export default function FilterModalRow({
 
   return (
     <div
+      data-testid={`filter-row-${testId}`}
       className={classNames('grid mt-1', {
         'grid-cols-12': canDelete,
         'grid-cols-11': !canDelete
