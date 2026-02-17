@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, populateStats } from '../fixtures.ts'
+import { setupSite, populateStats, addPageviewGoal } from '../fixtures.ts'
 
 const filterButton = (page) =>
   page.getByRole('button', { name: 'Filter', exact: true })
@@ -299,3 +299,75 @@ test.describe('hostname filtering tests', () => {
     await expect(page).toHaveURL(/f=is,hostname,one.example.com/)
   })
 })
+
+test.describe('goal filtering tests', () => {
+  const goalFilterButton = (page) =>
+    page.getByTestId('filtermenu').getByRole('link', { name: 'Goal' })
+
+  test('filtering by goals', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        { name: 'pageview', pathname: '/page1' },
+        { name: 'pageview', pathname: '/page2' }
+      ]
+    })
+
+    await addPageviewGoal({ page, domain, pathname: '/page1' })
+    await addPageviewGoal({ page, domain, pathname: '/page2' })
+
+    await page.goto('/' + domain)
+
+    const goalFilterRow = filterRow(page, 'goal')
+    const goalInput = goalFilterRow.getByPlaceholder('Select a Goal')
+
+    await test.step('single goal filter', async () => {
+      await filterButton(page).click()
+      await goalFilterButton(page).click()
+
+      await goalInput.fill('page1')
+      await suggestedItem(goalFilterRow, 'Visit /page1').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Goal is Visit /page1' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,goal,Visit%20\/page1/)
+    })
+
+    const goalFilterRow2 = filterRow(page, 'goal1')
+    const goalInput2 = goalFilterRow2.getByPlaceholder('Select a Goal')
+
+    await test.step('multiple goal filters', async () => {
+      await page.getByRole('link', { name: 'Goal is Visit /page1' }).click()
+
+      await page.getByText('+ Add another').click()
+
+      await filterOperator(goalFilterRow2).click()
+      await filterOperatorOption(goalFilterRow2, 'is not').click()
+
+      await goalInput2.fill('page2')
+      await suggestedItem(goalFilterRow2, 'Visit /page2').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Goal is Visit /page1' })
+      ).toBeVisible()
+
+      await expect(
+        page.getByRole('link', { name: 'Goal is not Visit /page2' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,goal,Visit%20\/page1/)
+      await expect(page).toHaveURL(/f=has_not_done,goal,Visit%20\/page2/)
+    })
+  })
+})
+
+test.describe('property filtering tests', () => {})
