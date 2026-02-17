@@ -370,4 +370,92 @@ test.describe('goal filtering tests', () => {
   })
 })
 
-test.describe('property filtering tests', () => {})
+test.describe('property filtering tests', () => {
+  const propFilterButton = (page) =>
+    page.getByTestId('filtermenu').getByRole('link', { name: 'Property' })
+
+  test('filtering by properties', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        {
+          name: 'pageview',
+          'meta.key': ['logged_in', 'browser_language'],
+          'meta.value': ['false', 'en_US']
+        },
+        {
+          name: 'pageview',
+          'meta.key': ['logged_in', 'browser_language'],
+          'meta.value': ['true', 'es']
+        }
+      ]
+    })
+
+    await page.goto('/' + domain)
+
+    const propFilterRow = filterRow(page, 'props')
+    const propNameInput = propFilterRow.getByPlaceholder('Property')
+    const propValueInput = propFilterRow.getByPlaceholder('Value')
+
+    await test.step('single property filter', async () => {
+      await filterButton(page).click()
+      await propFilterButton(page).click()
+
+      await propNameInput.fill('logged')
+      await suggestedItem(propFilterRow, 'logged_in').click()
+      await propValueInput.fill('false')
+      await suggestedItem(propFilterRow, 'false').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Property logged_in is false' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,props:logged_in,false/)
+    })
+
+    const propFilterRow2 = filterRow(page, 'props1')
+    const propNameInput2 = propFilterRow2.getByPlaceholder('Property')
+    const propValueInput2 = propFilterRow2.getByPlaceholder('Value')
+
+    await test.step('multiple property filters', async () => {
+      await page
+        .getByRole('link', { name: 'Property logged_in is false' })
+        .click()
+
+      await page.getByText('+ Add another').click()
+
+      await propNameInput2.fill('browser')
+      await suggestedItem(propFilterRow2, 'browser_language').click()
+      await filterOperator(propFilterRow2).click()
+      await filterOperatorOption(propFilterRow2, 'is not').click()
+      await propValueInput2.fill('US')
+      await suggestedItem(propFilterRow2, 'en_US').click()
+
+      await applyFilterButton(page).click()
+
+      await page
+        .getByRole('button', { name: 'See 1 more filter and actions' })
+        .click()
+
+      await expect(
+        page.getByRole('link', {
+          name: 'Property logged_in is false'
+        })
+      ).toBeVisible()
+
+      await expect(
+        page.getByRole('link', {
+          name: 'Property browser_language is not en_US'
+        })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,props:logged_in,false/)
+      await expect(page).toHaveURL(/f=is_not,props:browser_language,en_US/)
+    })
+  })
+})
