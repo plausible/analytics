@@ -262,3 +262,40 @@ test.describe('page filtering tests', () => {
     await expect(page).toHaveURL(/f=is,exit_page,\/page3/)
   })
 })
+
+test.describe('hostname filtering tests', () => {
+  const hostnameFilterButton = (page) =>
+    page.getByTestId('filtermenu').getByRole('link', { name: 'Hostname' })
+
+  test('filtering by hostname', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        { name: 'pageview', hostname: 'one.example.com' },
+        { name: 'pageview', hostname: 'two.example.com' }
+      ]
+    })
+
+    await page.goto('/' + domain)
+
+    const hostnameFilterRow = filterRow(page, 'hostname')
+    const hostnameInput = page.getByPlaceholder('Select a Hostname')
+
+    await filterButton(page).click()
+    await hostnameFilterButton(page).click()
+
+    await hostnameInput.fill('one')
+    await suggestedItem(hostnameFilterRow, 'one.example.com').click()
+
+    await applyFilterButton(page).click()
+
+    await expect(
+      page.getByRole('link', { name: 'Hostname is one.example.com' })
+    ).toBeVisible()
+
+    await expect(page).toHaveURL(/f=is,hostname,one.example.com/)
+  })
+})
