@@ -228,8 +228,9 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       populate_stats(site, [build(:pageview), build(:pageview), build(:pageview)])
 
-      {:ok, _lv, html} = live(conn, "/sites")
+      {:ok, lv, _html} = live(conn, "/sites")
 
+      html = render(lv)
       site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
       assert site_card =~ "3 visitors in last 24h"
       assert site_card =~ site.domain

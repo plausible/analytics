@@ -1,28 +1,58 @@
-defmodule Plausible.Stats.ConsolidatedView do
+defmodule Plausible.Stats.Sparkline do
   alias Plausible.{Site, Stats}
   alias Plausible.Stats.QueryBuilder
   require Logger
 
+  @spec parallel_overview([Site.t()], NaiveDateTime.t()) :: map()
+  def parallel_overview(sites, now \\ NaiveDateTime.utc_now()) when is_list(sites) do
+    try do
+      Task.async_stream(
+        sites,
+        fn site ->
+          {site.domain, safe_overview_24h(site, now)}
+        end,
+        timeout: 5000,
+        on_timeout: :kill_task
+      )
+      |> Enum.reduce(%{}, fn
+        {:ok, {domain, {:ok, stats}}}, acc ->
+          Map.put(acc, domain, stats)
+
+        _, acc ->
+          acc
+      end)
+    catch
+      kind, value ->
+        Logger.error("Could not render sparkline: #{inspect(kind)} #{inspect(value)}")
+
+        %{}
+    end
+  end
+
   @spec overview_24h(Site.t(), NaiveDateTime.t()) :: map()
-  def overview_24h(%Site{consolidated: true} = view, now \\ NaiveDateTime.utc_now()) do
-    stats = query_24h_stats(view)
-    intervals = query_24h_intervals(view, now)
+  def overview_24h(view_or_site, now \\ NaiveDateTime.utc_now()) do
+    # here now must be fixed via Plausible.Stats.Query.Test.fix_now() in tests, 
+    # otherwise the intervals will be generated based on the actual current time and the test will fail
+    stats = query_24h_stats(view_or_site, now)
+    intervals = query_24h_intervals(view_or_site, now)
 
     Map.merge(stats, intervals)
   end
 
-  @spec safe_overview_24h(Site.t()) ::
+  @spec safe_overview_24h(Site.t(), NaiveDateTime.t()) ::
           {:ok, map()} | {:error, :inaccessible} | {:error, :not_found}
-  def safe_overview_24h(nil), do: {:error, :not_found}
 
-  def safe_overview_24h(%Site{} = view) do
+  def safe_overview_24h(site, now \\ NaiveDateTime.utc_now())
+  def safe_overview_24h(nil, _now), do: {:error, :not_found}
+
+  def safe_overview_24h(%Site{} = view, now) do
     try do
-      {:ok, overview_24h(view)}
+      {:ok, overview_24h(view, now)}
     catch
       kind, value ->
-        Logger.error(
-          "Could not render 24h consolidated view stats: #{inspect(kind)} #{inspect(value)}"
-        )
+        Logger.error("Could not render overview 24h: #{inspect(kind)} #{inspect(value)}")
+
+        IO.inspect(__STACKTRACE__, label: "Stacktrace")
 
         {:error, :inaccessible}
     end
@@ -38,9 +68,10 @@ defmodule Plausible.Stats.ConsolidatedView do
     end
   end
 
-  defp query_24h_stats(view) do
+  defp query_24h_stats(view_or_site, now) do
     stats_query =
-      QueryBuilder.build!(view,
+      QueryBuilder.build!(view_or_site,
+        fixed_now: DateTime.from_naive!(now, "Etc/UTC"),
         input_date_range: :"24h",
         metrics: [:visitors, :visits, :pageviews, :views_per_visit],
         include: [compare: :previous_period]
@@ -55,7 +86,7 @@ defmodule Plausible.Stats.ConsolidatedView do
           }
         }
       ]
-    } = Stats.query(view, stats_query)
+    } = Stats.query(view_or_site, stats_query)
 
     %{
       visitors: visitors,
@@ -69,16 +100,17 @@ defmodule Plausible.Stats.ConsolidatedView do
     }
   end
 
-  defp query_24h_intervals(view, now) do
+  defp query_24h_intervals(view_or_site, now) do
     graph_query =
-      QueryBuilder.build!(view,
+      QueryBuilder.build!(view_or_site,
+        fixed_now: DateTime.from_naive!(now, "Etc/UTC"),
         metrics: [:visitors],
         input_date_range: :"24h",
         dimensions: ["time:hour"],
         order_by: [{"time:hour", :asc}]
       )
 
-    %Stats.QueryResult{results: results} = Stats.query(view, graph_query)
+    %Stats.QueryResult{results: results} = Stats.query(view_or_site, graph_query)
 
     placeholder =
       empty_24h_intervals(now)

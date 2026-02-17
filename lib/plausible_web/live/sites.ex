@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Live.Sites do
         :team_invitations,
         Teams.Invitations.all(user)
       )
-      |> assign(:hourly_stats, %{})
+      |> assign(:sparkline, %{})
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
       |> assign(init_consolidated_view_assigns(user, team))
 
@@ -213,13 +213,13 @@ defmodule PlausibleWeb.Live.Sites do
             <.site
               :if={site.entry_type in ["pinned_site", "site"]}
               site={site}
-              hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
+              sparkline={Map.get(@sparkline, site.domain, :loading)}
             />
             <.invitation
               :if={site.entry_type == "invitation"}
               site={site}
               invitation={@invitations_map[hd(site.invitations).invitation_id]}
-              hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
+              sparkline={Map.get(@sparkline, site.domain, :loading)}
             />
           <% end %>
         </ul>
@@ -486,7 +486,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   attr(:site, Plausible.Site, required: true)
   attr(:invitation, :map, required: true)
-  attr(:hourly_stats, :map, required: true)
+  attr(:sparkline, :map, required: true)
 
   def invitation(assigns) do
     assigns =
@@ -512,7 +512,7 @@ defmodule PlausibleWeb.Live.Sites do
             Pending invitation
           </.pill>
         </div>
-        <.site_stats hourly_stats={@hourly_stats} />
+        <.site_stats sparkline={@sparkline} />
       </div>
       <.invitation_modal id={@modal_id} site={@site} invitation={@invitation} />
     </li>
@@ -520,7 +520,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:site, Plausible.Site, required: true)
-  attr(:hourly_stats, :map, required: true)
+  attr(:sparkline, :map, required: true)
 
   def site(assigns) do
     ~H"""
@@ -554,7 +554,7 @@ defmodule PlausibleWeb.Live.Sites do
               </h3>
             </div>
           </div>
-          <.site_stats hourly_stats={@hourly_stats} />
+          <.site_stats sparkline={@sparkline} />
         </div>
       </.unstyled_link>
 
@@ -644,36 +644,36 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr(:hourly_stats, :any, required: true)
+  attr(:sparkline, :any, required: true)
 
   def site_stats(assigns) do
     ~H"""
     <div class={[
       "flex flex-col gap-y-2 h-[122px] text-center animate-pulse",
-      is_map(@hourly_stats) && " hidden"
+      is_map(@sparkline) && " hidden"
     ]}>
       <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
       <div class="flex-1 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
     </div>
-    <div :if={is_map(@hourly_stats)}>
+    <div :if={is_map(@sparkline)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
         <span class="max-w-sm sm:max-w-none text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
-            intervals={@hourly_stats.intervals}
+            intervals={@sparkline.intervals}
             height={80}
           />
         </span>
         <div class="flex justify-between items-end">
           <div class="flex flex-col">
             <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
-              {large_number_format(@hourly_stats.visitors)}
+              {large_number_format(@sparkline.visitors)}
             </p>
             <p class="text-gray-600 dark:text-gray-400">
-              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
+              visitor<span :if={@sparkline.visitors != 1}>s</span> in last 24h
             </p>
           </div>
 
-          <.percentage_change change={@hourly_stats.change} />
+          <.percentage_change change={@sparkline.visitors_change} />
         </div>
       </span>
     </div>
@@ -970,18 +970,9 @@ defmodule PlausibleWeb.Live.Sites do
         team: assigns.current_team
       )
 
-    hourly_stats =
+    sparkline =
       if connected?(socket) do
-        try do
-          Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
-        catch
-          kind, value ->
-            Logger.error(
-              "Could not render 24h visitors hourly intervals: #{inspect(kind)} #{inspect(value)}"
-            )
-
-            %{}
-        end
+        Plausible.Stats.Sparkline.parallel_overview(sites.entries)
       else
         %{}
       end
@@ -997,7 +988,7 @@ defmodule PlausibleWeb.Live.Sites do
       socket,
       sites: sites,
       invitations: invitations,
-      hourly_stats: hourly_stats,
+      sparkline: sparkline,
       consolidated_stats: consolidated_stats || Map.get(assigns, :consolidated_stats)
     )
   end
@@ -1138,7 +1129,7 @@ defmodule PlausibleWeb.Live.Sites do
     end
 
     defp load_consolidated_stats(consolidated_view) do
-      case Plausible.Stats.ConsolidatedView.safe_overview_24h(consolidated_view) do
+      case Plausible.Stats.Sparkline.safe_overview_24h(consolidated_view) do
         {:ok, stats} -> stats
         {:error, :not_found} -> nil
         {:error, :inaccessible} -> :loading

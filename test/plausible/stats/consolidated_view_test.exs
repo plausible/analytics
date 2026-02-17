@@ -28,7 +28,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
 
       view = new_consolidated_view(team_of(owner))
 
-      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+      result = Plausible.Stats.Sparkline.overview_24h(view, fixed_now)
 
       assert %{
                visitors_change: 100,
@@ -89,7 +89,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       ])
 
       view = new_consolidated_view(team_of(owner))
-      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+      result = Plausible.Stats.Sparkline.overview_24h(view, fixed_now)
 
       assert %{visitors: 2} = result
     end
@@ -110,7 +110,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       ])
 
       view = new_consolidated_view(team_of(owner))
-      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+      result = Plausible.Stats.Sparkline.overview_24h(view, fixed_now)
 
       expected_non_zero_intervals = [
         {~N[2025-10-19 12:00:00], 1},
@@ -139,7 +139,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       ])
 
       view = new_consolidated_view(team_of(owner))
-      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+      result = Plausible.Stats.Sparkline.overview_24h(view, fixed_now)
 
       timeslots = Enum.map(result.intervals, & &1.interval)
       sorted_timeslots = Enum.sort(timeslots, NaiveDateTime)

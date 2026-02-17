@@ -11,11 +11,22 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
 
     hourly_stats =
       if connected?(socket) do
-        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites)
+        Enum.map(sites, fn site ->
+          {site.domain, Plausible.Stats.Sparkline.overview_24h(site)}
+        end)
+        |> Enum.into(%{})
       else
         sites
         |> Enum.map(fn site ->
-          {site.domain, Plausible.Stats.Clickhouse.empty_24h_intervals()}
+          {site.domain,
+           %{
+             intervals:
+               Enum.map(Plausible.Stats.Sparkline.empty_24h_intervals(), fn {interval, visitors} ->
+                 %{interval: interval, visitors: visitors}
+               end),
+             visitors: 0,
+             change: 0
+           }}
         end)
         |> Enum.into(%{})
       end

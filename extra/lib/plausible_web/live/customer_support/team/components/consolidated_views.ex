@@ -14,11 +14,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
 
     hourly_stats =
       with true <- connected?(socket),
-           {:ok, hourly_stats} <- Stats.ConsolidatedView.safe_overview_24h(consolidated_view) do
+           {:ok, hourly_stats} <- Stats.Sparkline.safe_overview_24h(consolidated_view) do
         hourly_stats.intervals
       else
         _ ->
-          Stats.ConsolidatedView.empty_24h_intervals()
+          Stats.Sparkline.empty_24h_intervals()
           |> Enum.map(fn {i, v} -> %{interval: i, visitors: v} end)
       end
 
