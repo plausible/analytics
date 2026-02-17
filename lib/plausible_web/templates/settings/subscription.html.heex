@@ -1,109 +1,141 @@
 <.settings_tiles>
-  <.tile docs="billing">
+  <%= if Plausible.Teams.on_trial?(@current_team) do %>
+    <.tile docs="trial-to-paid">
+      <:title>Current plan</:title>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold dark:text-gray-100">Free trial</span>
+          <.pill color={:yellow}>
+            {Plausible.Teams.trial_days_left(@current_team)} days left
+          </.pill>
+        </div>
+        <.button_link
+          href={Routes.billing_path(@conn, :choose_plan)}
+          mt?={false}
+          id="upgrade-or-change-plan-link"
+        >
+          {trial_button_label(@current_team)}
+        </.button_link>
+      </div>
+    </.tile>
+  <% else %>
+    <.tile docs="billing">
+      <:title>Current plan</:title>
+      <%= if @subscription do %>
+        <div class="flex flex-col gap-5">
+          <PlausibleWeb.Components.Billing.Notice.subscription_cancelled
+            subscription={@subscription}
+            dismissable={false}
+          />
+          <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <% plan = Plausible.Billing.Plans.get_subscription_plan(@subscription)
+
+                plan_name =
+                  case plan do
+                    %Plausible.Billing.Plan{kind: kind} -> String.capitalize(to_string(kind))
+                    %Plausible.Billing.EnterprisePlan{} -> "Enterprise"
+                    :free_10k -> "Free"
+                    _ -> "Plan"
+                  end %>
+                <span class="text-sm font-semibold dark:text-gray-100">{plan_name}</span>
+                <.pill color={subscription_pill_color(@subscription.status)}>
+                  {present_subscription_status(@subscription.status)}
+                </.pill>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                Up to {PlausibleWeb.AuthView.subscription_quota(@subscription)} monthly pageviews
+              </p>
+              <%= if @subscription.next_bill_amount && @subscription.next_bill_date do %>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  {PlausibleWeb.BillingView.present_currency(@subscription.currency_code)}{@subscription.next_bill_amount} / {present_subscription_interval(
+                    @subscription
+                  )} • Renews on {Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y")}
+                </p>
+              <% end %>
+            </div>
+            <div class="flex gap-2">
+              <.button_link
+                :if={
+                  @subscription &&
+                    Plausible.Billing.Subscriptions.resumable?(@subscription) &&
+                    @subscription.update_url
+                }
+                theme="secondary"
+                href={@subscription.update_url}
+                mt?={false}
+                id="billing-details-link"
+              >
+                Billing details
+              </.button_link>
+              <.button_link
+                :if={
+                  not (Plausible.Teams.Billing.enterprise_configured?(@current_team) &&
+                         Plausible.Billing.Subscriptions.halted?(@subscription))
+                }
+                href={Routes.billing_path(@conn, :choose_plan)}
+                mt?={false}
+                id="upgrade-or-change-plan-link"
+              >
+                {change_plan_button_label(@subscription)}
+              </.button_link>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <PlausibleWeb.Components.Billing.Notice.usage_notification
+          type={:trial_ended}
+          team={@current_team}
+        />
+      <% end %>
+    </.tile>
+  <% end %>
+
+  <.tile docs="subscription-plans">
     <:title>
-      <a id="subscription">Subscription</a>
+      <a id="subscription">Monthly usage</a>
     </:title>
-    <:subtitle>
-      Manage your plan.
-    </:subtitle>
-    <div :if={@subscription} class="w-full inline-flex gap-x-4 justify-end items-center mt-4 mb-4">
-      <span
-        :if={Plausible.Billing.Plans.business_tier?(@subscription)}
-        class={[
-          "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 text-indigo-600 bg-blue-100 dark:text-yellow-200 dark:border dark:bg-inherit dark:border-yellow-200"
-        ]}
-      >
-        Business
-      </span>
-      <span class={[
-        "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
-        subscription_colors(@subscription.status)
-      ]}>
-        {present_subscription_status(@subscription.status)}
-      </span>
-    </div>
-
-    <PlausibleWeb.Components.Billing.Notice.subscription_cancelled
-      subscription={@subscription}
-      dismissable={false}
-    />
-
-    <div class="flex flex-col gap-4 my-4 items-center justify-between sm:flex-row sm:items-start">
-      <PlausibleWeb.Components.Billing.monthly_quota_box
-        team={@current_team}
-        subscription={@subscription}
-      />
-      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-800">
-        <h4 class="font-black dark:text-gray-100">Next bill amount</h4>
-        <%= if Plausible.Billing.Subscription.Status.in?(@subscription, [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()]) do %>
-          <div class="py-2 text-xl font-medium dark:text-gray-100">
-            {PlausibleWeb.BillingView.present_currency(@subscription.currency_code)}{@subscription.next_bill_amount}
-          </div>
-          <.styled_link :if={@subscription.update_url} href={@subscription.update_url}>
-            Update billing info
-          </.styled_link>
-        <% else %>
-          <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>
-        <% end %>
-      </div>
-      <div class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-800">
-        <h4 class="font-black dark:text-gray-100">Next bill date</h4>
-
-        <%= if @subscription && @subscription.next_bill_date && Plausible.Billing.Subscription.Status.in?(@subscription, [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()]) do %>
-          <div class="py-2 text-xl font-medium dark:text-gray-100">
-            {Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y")}
-          </div>
-          <span class="text-gray-600 dark:text-gray-400">
-            ({subscription_interval(@subscription)} billing)
-          </span>
-        <% else %>
-          <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>
-        <% end %>
-      </div>
-    </div>
 
     <PlausibleWeb.Components.Billing.render_monthly_pageview_usage
       usage={@pageview_usage}
       limit={@pageview_limit}
     />
+  </.tile>
 
-    <article class="mt-8">
-      <.title>Sites & team members usage</.title>
-      <PlausibleWeb.Components.Billing.usage_and_limits_table>
-        <PlausibleWeb.Components.Billing.usage_and_limits_row
-          id="site-usage-row"
-          title="Owned sites"
-          usage={@site_usage}
-          limit={@site_limit}
-        />
-        <PlausibleWeb.Components.Billing.usage_and_limits_row
-          id="team-member-usage-row"
-          title="Team members"
-          usage={@team_member_usage}
-          limit={@team_member_limit}
-        />
-      </PlausibleWeb.Components.Billing.usage_and_limits_table>
-    </article>
+  <.tile docs="subscription-plans">
+    <:title>Site and team usage</:title>
 
-    <%= cond do %>
-      <% Plausible.Billing.Subscriptions.resumable?(@subscription) && @subscription.cancel_url -> %>
-        <div class="mt-8">
-          <.button_link theme="danger" href={@subscription.cancel_url}>
-            Cancel my subscription
-          </.button_link>
-          <%= if Application.get_env(:plausible, :environment) == "dev" do %>
-            <a
-              href={@subscription.update_url}
-              class="ml-2 font-medium rounded-md px-3.5 py-2.5 text-sm shadow-xs border border-gray-300 dark:border-gray-500 text-yellow-600 dark:text-yellow-400 bg-white dark:bg-gray-900"
-            >
-              [DEV ONLY] Change subscription status
-            </a>
-          <% end %>
-        </div>
-      <% true -> %>
-        <div class="mt-8">
-          <PlausibleWeb.Components.Billing.upgrade_link />
-        </div>
-    <% end %>
+    <PlausibleWeb.Components.Billing.usage_and_limits_table>
+      <PlausibleWeb.Components.Billing.usage_and_limits_row
+        id="site-usage-row"
+        title="Owned sites"
+        usage={@site_usage}
+        limit={@site_limit}
+      />
+      <PlausibleWeb.Components.Billing.usage_and_limits_row
+        id="team-member-usage-row"
+        title="Team members"
+        usage={@team_member_usage}
+        limit={@team_member_limit}
+      />
+    </PlausibleWeb.Components.Billing.usage_and_limits_table>
   </.tile>
 </.settings_tiles>
+
+<%= if Plausible.Billing.Subscriptions.resumable?(@subscription) && @subscription.cancel_url do %>
+  <div class="flex gap-2">
+    <.button_link theme="danger" href={@subscription.cancel_url}>
+      Cancel plan
+    </.button_link>
+    <%= if Application.get_env(:plausible, :environment) == "dev" do %>
+      <.button_link
+        href={@subscription.update_url}
+        theme="secondary"
+        class="text-yellow-600 dark:text-yellow-400"
+      >
+        [DEV ONLY] Change status
+      </.button_link>
+    <% end %>
+  </div>
+<% end %>
