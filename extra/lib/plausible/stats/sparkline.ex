@@ -1,4 +1,9 @@
 defmodule Plausible.Stats.Sparkline do
+  @moduledoc """
+  Module used to generate sparkline overview data for sites, including consolidated views.
+  The sparkline graphs are used in site index and in CRM.
+  """
+
   alias Plausible.{Site, Stats}
   alias Plausible.Stats.QueryBuilder
   require Logger
