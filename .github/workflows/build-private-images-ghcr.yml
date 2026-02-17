@@ -73,8 +73,8 @@ jobs:
         if: ${{ success() && github.ref == 'refs/heads/master' }}
         id: commitmsg
         run: |
-          first_line=$(echo "${{ github.event.head_commit.message }}" | head -n1)
-          co_authors=$(echo "${{ github.event.head_commit.message }}" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, -)
+          first_line=$(echo "${{ github.event.head_commit.message }}" | head -n1 | xargs)
+          co_authors=$(echo "${{ github.event.head_commit.message }}" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, - | xargs)
           {
             echo "first_line=$first_line"
             echo "co_authors=$co_authors"
