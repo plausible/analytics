@@ -31,8 +31,6 @@ defmodule Plausible.Stats.Sparkline do
 
   @spec overview_24h(Site.t(), NaiveDateTime.t()) :: map()
   def overview_24h(view_or_site, now \\ NaiveDateTime.utc_now()) do
-    # here now must be fixed via Plausible.Stats.Query.Test.fix_now() in tests, 
-    # otherwise the intervals will be generated based on the actual current time and the test will fail
     stats = query_24h_stats(view_or_site, now)
     intervals = query_24h_intervals(view_or_site, now)
 

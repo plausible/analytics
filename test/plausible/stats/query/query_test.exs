@@ -64,8 +64,6 @@ defmodule Plausible.Stats.QueryTest do
     end
 
     test "shows month to date with time labels trimmed", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2021-01-15 12:00:00Z])
-
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
@@ -77,7 +75,8 @@ defmodule Plausible.Stats.QueryTest do
           metrics: [:visitors],
           input_date_range: :month,
           dimensions: ["time:day"],
-          include: %QueryInclude{trim_relative_date_range: true}
+          include: %QueryInclude{trim_relative_date_range: true},
+          fixed_now: ~U[2021-01-15 12:00:00Z]
         })
 
       %Stats.QueryResult{results: results, query: query} = Stats.query(site, query)

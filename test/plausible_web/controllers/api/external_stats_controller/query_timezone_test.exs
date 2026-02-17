@@ -16,11 +16,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimezoneTest do
         build(:pageview, timestamp: ~N[2024-01-02 14:00:00])
       ])
 
-      # 9pm on Jan 1st, 2024 in EST (UTC-5)
-      Plausible.Stats.Query.Test.fix_now(~U[2024-01-02 02:00:00Z])
-
       conn =
-        post(conn, "/api/v2/query", %{
+        conn
+        # 9pm on Jan 1st, 2024 in EST (UTC-5)
+        |> Plug.Conn.put_private(:fixed_now, ~U[2024-01-02 02:00:00Z])
+        |> post("/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["pageviews"],
           "date_range" => "day"
@@ -44,11 +44,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimezoneTest do
         build(:pageview, timestamp: ~N[2024-01-02 12:00:00])
       ])
 
-      # 01:00 on Jan 2nd, 2024 in JST (UTC+9)
-      Plausible.Stats.Query.Test.fix_now(~U[2024-01-01 16:00:00Z])
-
       conn =
-        post(conn, "/api/v2/query", %{
+        conn
+        # 01:00 on Jan 2nd, 2024 in JST (UTC+9)
+        |> Plug.Conn.put_private(:fixed_now, ~U[2024-01-01 16:00:00Z])
+        |> post("/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["pageviews"],
           "date_range" => "day"

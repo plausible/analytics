@@ -49,18 +49,37 @@ defmodule Plausible.Stats.Query do
   @type t :: %__MODULE__{}
 
   def parse_and_build(
+        site,
+        params,
+        opts
+      )
+      when is_list(opts) do
+    parse_and_build(site, params, %{}, opts)
+  end
+
+  def parse_and_build(
+        site,
+        params,
+        debug_metadata
+      )
+      when is_map(debug_metadata) do
+    parse_and_build(site, params, debug_metadata, [])
+  end
+
+  def parse_and_build(
         %Plausible.Site{domain: domain} = site,
         %{"site_id" => domain} = params,
-        debug_metadata \\ %{}
+        debug_metadata \\ %{},
+        opts \\ []
       ) do
     with {:ok, %ParsedQueryParams{} = parsed_query_params} <-
-           ApiQueryParser.parse(params) do
+           ApiQueryParser.parse(params, opts) do
       QueryBuilder.build(site, parsed_query_params, debug_metadata)
     end
   end
 
-  def parse_and_build!(site, params, debug_metadata \\ %{}) do
-    case parse_and_build(site, params, debug_metadata) do
+  def parse_and_build!(site, params, debug_metadata \\ %{}, opts \\ []) do
+    case parse_and_build(site, params, debug_metadata, opts) do
       {:ok, query} ->
         query
 

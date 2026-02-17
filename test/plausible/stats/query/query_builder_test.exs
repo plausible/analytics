@@ -54,11 +54,6 @@ defmodule Plausible.Stats.QueryBuilderTest do
 
   setup [:create_user, :create_site]
 
-  setup do
-    Plausible.Stats.Query.Test.fix_now(@now)
-    :ok
-  end
-
   describe "filter validation" do
     for operation <- [
           :is,
@@ -190,6 +185,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
       test "builds utc_time_range for #{input_date_range} input_date_range", %{site: site} do
         assert {:ok, query} =
                  QueryBuilder.build(site, %ParsedQueryParams{
+                   fixed_now: @now,
                    metrics: [:visitors],
                    input_date_range: unquote(input_date_range)
                  })
@@ -202,7 +198,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
       relative_date = @now |> DateTime.to_date()
 
       # Replace the fixed now. Otherwise this test could pass ignoring relative_date
-      Plausible.Stats.Query.Test.fix_now(DateTime.utc_now(:second))
+      now = DateTime.utc_now(:second)
 
       for {date_range_shortcut, expected_utc_time_range} <- [
             {:day, @date_range_day},
@@ -217,6 +213,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
           ] do
         assert {:ok, query} =
                  QueryBuilder.build(site, %ParsedQueryParams{
+                   fixed_now: now,
                    metrics: [:visitors],
                    relative_date: relative_date,
                    input_date_range: date_range_shortcut

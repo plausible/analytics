@@ -143,7 +143,7 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp do_build(parsed_query_params, site, debug_metadata) do
-    now = parsed_query_params.fixed_now || Plausible.Stats.Query.Test.get_fixed_now()
+    now = parsed_query_params.fixed_now || DateTime.utc_now(:second)
 
     %ParsedQueryParams{
       input_date_range: input_date_range,
