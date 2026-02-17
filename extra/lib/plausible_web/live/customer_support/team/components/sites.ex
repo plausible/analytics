@@ -22,7 +22,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
                  %{interval: interval, visitors: visitors}
                end),
              visitors: 0,
-             change: 0
+             visitors_change: 0
            }}
         end)
         |> Enum.into(%{})
