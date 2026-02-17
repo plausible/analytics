@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Api.StatsController do
   """
   def main_graph(conn, params) do
     site = conn.assigns[:site]
-    now = conn.private[:fixed_now]
+    now = conn.private[:now]
 
     with {:ok, dates} <- parse_date_params(params),
          :ok <- validate_interval(params),

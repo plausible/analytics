@@ -130,7 +130,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
         dimensions: ["time"],
         input_date_range: {:last_n_days, 28},
         include: %QueryInclude{time_labels: true, compare: :previous_period},
-        fixed_now: now
+        now: now
       })
 
     query2 = Stats.Query.set_include(query1, :compare_match_day_of_week, true)
@@ -186,7 +186,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                dimensions: ["time:day"],
                input_date_range: {:last_n_days, 91},
                include: %QueryInclude{time_labels: true, compare: :year_over_year},
-               fixed_now: ~U[2022-07-01 14:00:00Z]
+               now: ~U[2022-07-01 14:00:00Z]
              })
 
     assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)

@@ -1350,7 +1350,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       conn =
         conn
-        |> Plug.Conn.put_private(:fixed_now, ~U[2021-01-08 08:05:00Z])
+        |> Plug.Conn.put_private(:now, ~U[2021-01-08 08:05:00Z])
         |> get(
           "/api/stats/#{site.domain}/main-graph?period=day&metric=visitors&date=2021-01-08&interval=hour"
         )
@@ -1381,7 +1381,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       conn =
         conn
-        |> Plug.Conn.put_private(:fixed_now, ~U[2021-01-07 12:00:00Z])
+        |> Plug.Conn.put_private(:now, ~U[2021-01-07 12:00:00Z])
         |> get(
           "/api/stats/#{site.domain}/main-graph?period=month&metric=visitors&date=2021-01-07&interval=day"
         )
@@ -1412,7 +1412,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       conn =
         conn
-        |> Plug.Conn.put_private(:fixed_now, ~U[2021-02-07 12:00:00Z])
+        |> Plug.Conn.put_private(:now, ~U[2021-02-07 12:00:00Z])
         |> get(
           "/api/stats/#{site.domain}/main-graph?period=year&metric=visitors&date=2021-02-07&interval=month"
         )
@@ -1593,7 +1593,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       conn =
         conn
-        |> Plug.Conn.put_private(:fixed_now, ~U[2021-01-08 08:05:00Z])
+        |> Plug.Conn.put_private(:now, ~U[2021-01-08 08:05:00Z])
         |> get(
           "/api/stats/#{site.domain}/main-graph?period=day&metric=visitors&date=2021-01-08&interval=hour&comparison=previous_period"
         )

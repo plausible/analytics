@@ -185,7 +185,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
       test "builds utc_time_range for #{input_date_range} input_date_range", %{site: site} do
         assert {:ok, query} =
                  QueryBuilder.build(site, %ParsedQueryParams{
-                   fixed_now: @now,
+                   now: @now,
                    metrics: [:visitors],
                    input_date_range: unquote(input_date_range)
                  })
@@ -213,7 +213,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
           ] do
         assert {:ok, query} =
                  QueryBuilder.build(site, %ParsedQueryParams{
-                   fixed_now: now,
+                   now: now,
                    metrics: [:visitors],
                    relative_date: relative_date,
                    input_date_range: date_range_shortcut

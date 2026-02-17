@@ -9,14 +9,14 @@ defmodule Plausible.Stats.SparklineTest do
     end
 
     test "returns empty intervals placeholder on no clickhouse stats" do
-      fixed_now = ~N[2023-10-26 10:00:15]
+      now = ~N[2023-10-26 10:00:15]
 
       site = new_site()
       domain = site.domain
 
       assert Sparkline.parallel_overview(
                [site],
-               fixed_now
+               now
              ) ==
                %{
                  domain => %{
@@ -60,7 +60,7 @@ defmodule Plausible.Stats.SparklineTest do
     end
 
     test "returns clickhouse data merged with placeholder" do
-      fixed_now = ~U[2023-10-26 10:00:15Z]
+      now = ~U[2023-10-26 10:00:15Z]
 
       site = new_site()
 
@@ -105,11 +105,11 @@ defmodule Plausible.Stats.SparklineTest do
                  %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
                  %{interval: ~N[2023-10-26 10:00:00], visitors: 1}
                ]
-             } = Sparkline.parallel_overview([site], fixed_now)[site.domain]
+             } = Sparkline.parallel_overview([site], now)[site.domain]
     end
 
     test "ignores visits before native stats start time (after reset)" do
-      fixed_now = ~N[2023-10-26 10:00:15]
+      now = ~N[2023-10-26 10:00:15]
       site1 = insert(:site, native_stats_start_at: ~N[2023-10-25 14:15:00])
       site2 = insert(:site, native_stats_start_at: ~N[2023-10-23 12:00:00])
 
@@ -160,7 +160,7 @@ defmodule Plausible.Stats.SparklineTest do
                  %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
                  %{interval: ~N[2023-10-26 10:00:00], visitors: 0}
                ]
-             } = Sparkline.parallel_overview([site1], fixed_now)[site1.domain]
+             } = Sparkline.parallel_overview([site1], now)[site1.domain]
 
       assert %{
                visitors_change: 100,
@@ -192,11 +192,11 @@ defmodule Plausible.Stats.SparklineTest do
                  %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
                  %{interval: ~N[2023-10-26 10:00:00], visitors: 0}
                ]
-             } = Sparkline.parallel_overview([site2], fixed_now)[site2.domain]
+             } = Sparkline.parallel_overview([site2], now)[site2.domain]
     end
 
     test "returns clickhouse data merged with placeholder for multiple sites" do
-      fixed_now = ~N[2023-10-26 10:00:15]
+      now = ~N[2023-10-26 10:00:15]
       site1 = new_site()
       site2 = new_site()
       site3 = new_site()
@@ -218,7 +218,7 @@ defmodule Plausible.Stats.SparklineTest do
       ])
 
       assert result =
-               Sparkline.parallel_overview([site1, site2, site3], fixed_now)
+               Sparkline.parallel_overview([site1, site2, site3], now)
 
       assert result[site1.domain].visitors == 3
       assert result[site1.domain].visitors_change == 100
@@ -238,7 +238,7 @@ defmodule Plausible.Stats.SparklineTest do
     end
 
     test "returns calculated change" do
-      fixed_now = ~N[2023-10-26 10:00:15]
+      now = ~N[2023-10-26 10:00:15]
       site = new_site()
 
       populate_stats(site, [
@@ -252,11 +252,11 @@ defmodule Plausible.Stats.SparklineTest do
       assert %{
                visitors_change: 50,
                visitors: 3
-             } = Sparkline.parallel_overview([site], fixed_now)[site.domain]
+             } = Sparkline.parallel_overview([site], now)[site.domain]
     end
 
     test "calculates uniques correctly across hour boundaries" do
-      fixed_now = ~N[2023-10-26 10:00:15]
+      now = ~N[2023-10-26 10:00:15]
       site = new_site()
 
       user_id = 111
@@ -266,12 +266,12 @@ defmodule Plausible.Stats.SparklineTest do
         build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 16:00:00])
       ])
 
-      result = Sparkline.parallel_overview([site], fixed_now)[site.domain]
+      result = Sparkline.parallel_overview([site], now)[site.domain]
       assert result[:visitors] == 1
     end
 
     test "another one" do
-      fixed_now = ~N[2023-10-26 10:00:15]
+      now = ~N[2023-10-26 10:00:15]
       site = new_site()
 
       user_id = 111
@@ -313,12 +313,12 @@ defmodule Plausible.Stats.SparklineTest do
                  %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
                  %{interval: ~N[2023-10-26 10:00:00], visitors: 0}
                ]
-             } = Sparkline.parallel_overview([site], fixed_now)[site.domain]
+             } = Sparkline.parallel_overview([site], now)[site.domain]
     end
 
     test "excludes engagement events from visitor counts" do
       site = new_site()
-      fixed_now = ~N[2025-10-20 12:49:15]
+      now = ~N[2025-10-20 12:49:15]
 
       populate_stats(site, [
         build(:pageview, user_id: 111, timestamp: ~N[2025-10-20 12:00:00]),
@@ -332,7 +332,7 @@ defmodule Plausible.Stats.SparklineTest do
         )
       ])
 
-      result = Sparkline.parallel_overview([site], fixed_now)[site.domain]
+      result = Sparkline.parallel_overview([site], now)[site.domain]
 
       assert %{visitors: 2} = result
     end

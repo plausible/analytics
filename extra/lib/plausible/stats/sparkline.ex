@@ -74,7 +74,7 @@ defmodule Plausible.Stats.Sparkline do
   defp query_24h_stats(view_or_site, now) do
     stats_query =
       QueryBuilder.build!(view_or_site,
-        fixed_now: DateTime.from_naive!(now, "Etc/UTC"),
+        now: DateTime.from_naive!(now, "Etc/UTC"),
         input_date_range: :"24h",
         metrics: [:visitors, :visits, :pageviews, :views_per_visit],
         include: [compare: :previous_period]
@@ -106,7 +106,7 @@ defmodule Plausible.Stats.Sparkline do
   defp query_24h_intervals(view_or_site, now) do
     graph_query =
       QueryBuilder.build!(view_or_site,
-        fixed_now: DateTime.from_naive!(now, "Etc/UTC"),
+        now: DateTime.from_naive!(now, "Etc/UTC"),
         metrics: [:visitors],
         input_date_range: :"24h",
         dimensions: ["time:hour"],

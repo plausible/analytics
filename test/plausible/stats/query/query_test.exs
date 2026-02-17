@@ -76,7 +76,7 @@ defmodule Plausible.Stats.QueryTest do
           input_date_range: :month,
           dimensions: ["time:day"],
           include: %QueryInclude{trim_relative_date_range: true},
-          fixed_now: ~U[2021-01-15 12:00:00Z]
+          now: ~U[2021-01-15 12:00:00Z]
         })
 
       %Stats.QueryResult{results: results, query: query} = Stats.query(site, query)

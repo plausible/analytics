@@ -12,7 +12,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
           include: [compare: :previous_period],
-          fixed_now: ~U[2023-03-02 14:00:00Z]
+          now: ~U[2023-03-02 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -29,7 +29,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2023-03-01],
           include: [compare: :previous_period],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -46,7 +46,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
           include: [compare: :previous_period, compare_match_day_of_week: true],
-          fixed_now: ~U[2023-03-02 14:00:00Z]
+          now: ~U[2023-03-02 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -64,7 +64,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
           include: [compare: :previous_period],
-          fixed_now: ~U[2023-03-02 14:00:00Z]
+          now: ~U[2023-03-02 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -82,7 +82,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
           include: [compare: :previous_period],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -98,7 +98,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
           include: [compare: :year_over_year],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -116,7 +116,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2020-02-01],
           include: [compare: :year_over_year],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -134,7 +134,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
           include: [compare: :previous_period, compare_match_day_of_week: true],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -150,7 +150,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :month,
           relative_date: ~D[2023-01-01],
           include: [compare: :previous_period, compare_match_day_of_week: true],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -219,7 +219,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
           include: [compare: :previous_period],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -235,7 +235,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
           include: [compare: :year_over_year],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -251,7 +251,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
           include: [compare: :year_over_year, compare_match_day_of_week: true],
-          fixed_now: ~U[2023-03-01 14:00:00Z]
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -449,7 +449,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           metrics: [:visitors],
           input_date_range: :"24h",
           include: [compare: :previous_period],
-          fixed_now: ~U[2023-03-15 18:30:00Z]
+          now: ~U[2023-03-15 18:30:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -466,7 +466,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           metrics: [:visitors],
           input_date_range: :"24h",
           include: [compare: :year_over_year],
-          fixed_now: ~U[2023-03-15 18:30:00Z]
+          now: ~U[2023-03-15 18:30:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -485,7 +485,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           metrics: [:visitors],
           input_date_range: :"24h",
           include: [compare: :previous_period],
-          fixed_now: ~U[2023-03-15 18:30:00Z]
+          now: ~U[2023-03-15 18:30:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -505,7 +505,7 @@ defmodule Plausible.Stats.ComparisonsTest do
           include: [compare: :previous_period, compare_match_day_of_week: true],
 
           # Wednesday
-          fixed_now: ~U[2023-03-15 18:30:00Z]
+          now: ~U[2023-03-15 18:30:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)

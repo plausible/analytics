@@ -41,7 +41,7 @@ defmodule Plausible.Stats.ApiQueryParser do
          order_by: order_by,
          pagination: pagination,
          include: include,
-         fixed_now: Keyword.get(opts, :fixed_now)
+         now: Keyword.get(opts, :now)
        })}
     end
   end
