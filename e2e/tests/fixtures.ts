@@ -19,8 +19,10 @@ type Event = {
   scroll_depth?: number
   revenue_reporting_amount?: string
   revenue_reporting_currency?: string
-  pathname?: string,
-  hostname?: string,
+  pathname?: string
+  hostname?: string
+  'meta.key'?: string[]
+  'meta.value'?: string[]
   timestamp?: EventTimestamp
 }
 
