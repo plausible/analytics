@@ -124,7 +124,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
 
   defp select_metric(:views_per_visit, "imported_exit_pages", _query) do
     wrap_alias([i], %{
-      views_per_visit: fragment("ifNotFinite(round(? / ?), 0)", sum(i.pageviews), sum(i.exits)),
+      views_per_visit: fragment("ifNotFinite(round(? / ?, 2), 0)", sum(i.pageviews), sum(i.exits)),
       pageviews: sum(i.pageviews),
       __internal_visits: sum(i.exits)
     })
@@ -133,7 +133,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   defp select_metric(:views_per_visit, "imported_entry_pages", _query) do
     wrap_alias([i], %{
       views_per_visit:
-        fragment("ifNotFinite(round(? / ?), 0)", sum(i.pageviews), sum(i.entrances)),
+        fragment("ifNotFinite(round(? / ?, 2), 0)", sum(i.pageviews), sum(i.entrances)),
       pageviews: sum(i.pageviews),
       __internal_visits: sum(i.entrances)
     })
@@ -141,7 +141,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
 
   defp select_metric(:views_per_visit, _table, _query) do
     wrap_alias([i], %{
-      views_per_visit: fragment("ifNotFinite(round(? / ?), 0)", sum(i.pageviews), sum(i.visits)),
+      views_per_visit: fragment("ifNotFinite(round(? / ?, 2), 0)", sum(i.pageviews), sum(i.visits)),
       pageviews: sum(i.pageviews),
       __internal_visits: sum(i.visits)
     })
