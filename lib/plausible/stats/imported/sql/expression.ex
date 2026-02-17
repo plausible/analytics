@@ -72,35 +72,19 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_metric(:bounce_rate, "imported_pages", _query) do
-    wrap_alias([i], %{
-      bounce_rate: fragment("any(0)"),
-      bounces: fragment("any(0)"),
-      __internal_visits: fragment("any(0)")
-    })
+    wrap_alias([i], %{bounces: fragment("any(0)"), __internal_visits: fragment("any(0)")})
   end
 
   defp select_metric(:bounce_rate, "imported_exit_pages", _query) do
-    wrap_alias([i], %{
-      bounce_rate: fragment("ifNotFinite(round(? / ?), 0)", sum(i.bounces), sum(i.exits)),
-      bounces: sum(i.bounces),
-      __internal_visits: sum(i.exits)
-    })
+    wrap_alias([i], %{bounces: sum(i.bounces), __internal_visits: sum(i.exits)})
   end
 
   defp select_metric(:bounce_rate, "imported_entry_pages", _query) do
-    wrap_alias([i], %{
-      bounce_rate: fragment("ifNotFinite(round(? / ?), 0)", sum(i.bounces), sum(i.entrances)),
-      bounces: sum(i.bounces),
-      __internal_visits: sum(i.entrances)
-    })
+    wrap_alias([i], %{bounces: sum(i.bounces), __internal_visits: sum(i.entrances)})
   end
 
   defp select_metric(:bounce_rate, _table, _query) do
-    wrap_alias([i], %{
-      bounce_rate: fragment("ifNotFinite(round(? / ?), 0)", sum(i.bounces), sum(i.visits)),
-      bounces: sum(i.bounces),
-      __internal_visits: sum(i.visits)
-    })
+    wrap_alias([i], %{bounces: sum(i.bounces), __internal_visits: sum(i.visits)})
   end
 
   defp select_metric(:exit_rate, "imported_exit_pages", _query) do
