@@ -27,6 +27,30 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:sparklines, %{})
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
       |> assign(init_consolidated_view_assigns(user, team))
+      |> assign(:team_invitations, [
+        %{
+          invitation_id: "team_inv_789",
+          inviter: %{name: "Jane Doe"},
+          team: %{name: "Acme Corp"},
+          role: :admin
+        }
+      ])
+      |> assign(:site_ownership_invitations, [
+        %{
+          invitation_id: "ownership_123",
+          site: %{domain: "example.com"},
+          role: :owner,
+          inviter: %{name: "John Doe"}
+        }
+      ])
+      |> assign(:site_invitations, [
+        %{
+          invitation_id: "invitation_456",
+          site: %{domain: "dummy.site"},
+          role: :viewer,
+          inviter: %{name: "Jane Smith"}
+        }
+      ])
 
     {:ok, socket}
   end
@@ -135,10 +159,18 @@ defmodule PlausibleWeb.Live.Sites do
         <a
           :if={!@consolidated_view_cta_dismissed?}
           href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
-          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
+          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
         >
           <Heroicons.plus class="size-4" /> Add website
         </a>
+      </div>
+
+      <div class="flex flex-col gap-y-4 my-4">
+        <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
+        <PlausibleWeb.Team.Notice.site_ownership_invitations site_ownership_invitations={
+          @site_ownership_invitations
+        } />
+        <PlausibleWeb.Team.Notice.site_invitations site_invitations={@site_invitations} />
       </div>
 
       <p :if={@searching? and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
