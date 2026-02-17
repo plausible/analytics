@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 
 import Modal from './modal'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
 import { createVisitors, Metric } from '../reports/metrics'
@@ -10,7 +10,7 @@ import {
   percentageFormatter
 } from '../../util/number-formatter'
 import { apiPath } from '../../util/url'
-import { DashboardQuery } from '../../query'
+import { DashboardState } from '../../dashboard-state'
 import { ColumnConfiguraton } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
 
@@ -48,7 +48,7 @@ const metrics = [
 ]
 
 function GoogleKeywordsModal() {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   const endpoint = apiPath(site, '/referrers/Google')
 
@@ -56,14 +56,14 @@ function GoogleKeywordsModal() {
 
   const apiState = usePaginatedGetAPI<
     { results: GoogleKeywordItem[] },
-    [string, { query: DashboardQuery; search: string }]
+    [string, { dashboardState: DashboardState; search: string }]
   >({
-    key: [endpoint, { query, search }],
+    key: [endpoint, { dashboardState, search }],
     getRequestParams: (key) => {
-      const [_endpoint, { query, search }] = key
+      const [_endpoint, { dashboardState, search }] = key
       const params = { detailed: true }
 
-      return [query, search === '' ? params : { ...params, search }]
+      return [dashboardState, search === '' ? params : { ...params, search }]
     },
     initialPageParam: 0
   })
@@ -78,14 +78,14 @@ function GoogleKeywordsModal() {
       },
       ...metrics.map(
         (m): ColumnConfiguraton<GoogleKeywordItem> => ({
-          label: m.renderLabel(query),
+          label: m.renderLabel(dashboardState),
           key: m.key,
           width: m.width,
           align: 'right'
         })
       )
     ],
-    [query]
+    [dashboardState]
   )
 
   return (

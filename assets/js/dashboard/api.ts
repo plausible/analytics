@@ -1,4 +1,4 @@
-import { DashboardQuery } from './query'
+import { DashboardState } from './dashboard-state'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
 
@@ -32,39 +32,39 @@ export function cancelAll() {
   abortController = new AbortController()
 }
 
-export function queryToSearchParams(
-  query: DashboardQuery,
+export function dashboardStateToSearchParams(
+  dashboardState: DashboardState,
   extraQuery: unknown[] = []
 ): string {
   const queryObj: Record<string, string> = {}
-  if (query.period) {
-    queryObj.period = query.period
+  if (dashboardState.period) {
+    queryObj.period = dashboardState.period
   }
-  if (query.date) {
-    queryObj.date = formatISO(query.date)
+  if (dashboardState.date) {
+    queryObj.date = formatISO(dashboardState.date)
   }
-  if (query.from) {
-    queryObj.from = formatISO(query.from)
+  if (dashboardState.from) {
+    queryObj.from = formatISO(dashboardState.from)
   }
-  if (query.to) {
-    queryObj.to = formatISO(query.to)
+  if (dashboardState.to) {
+    queryObj.to = formatISO(dashboardState.to)
   }
-  if (query.filters) {
-    queryObj.filters = serializeApiFilters(query.filters)
+  if (dashboardState.filters) {
+    queryObj.filters = serializeApiFilters(dashboardState.filters)
   }
-  if (query.with_imported) {
-    queryObj.with_imported = String(query.with_imported)
+  if (dashboardState.with_imported) {
+    queryObj.with_imported = String(dashboardState.with_imported)
   }
 
-  if (query.comparison) {
-    queryObj.comparison = query.comparison
-    queryObj.compare_from = query.compare_from
-      ? formatISO(query.compare_from)
+  if (dashboardState.comparison) {
+    queryObj.comparison = dashboardState.comparison
+    queryObj.compare_from = dashboardState.compare_from
+      ? formatISO(dashboardState.compare_from)
       : undefined
-    queryObj.compare_to = query.compare_to
-      ? formatISO(query.compare_to)
+    queryObj.compare_to = dashboardState.compare_to
+      ? formatISO(dashboardState.compare_to)
       : undefined
-    queryObj.match_day_of_week = String(query.match_day_of_week)
+    queryObj.match_day_of_week = String(dashboardState.match_day_of_week)
   }
 
   const sharedLinkParams = getSharedLinkSearchParams()
@@ -96,11 +96,11 @@ function getSharedLinkSearchParams(): Record<string, string> {
 
 export async function get(
   url: string,
-  query?: DashboardQuery,
+  dashboardState?: DashboardState,
   ...extraQueryParams: unknown[]
 ) {
-  const queryString = query
-    ? queryToSearchParams(query, [...extraQueryParams])
+  const queryString = dashboardState
+    ? dashboardStateToSearchParams(dashboardState, [...extraQueryParams])
     : serializeUrlParams(getSharedLinkSearchParams())
 
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {

@@ -4,12 +4,14 @@ defmodule PlausibleWeb.Components.Generic do
   """
   use Phoenix.Component, global_prefixes: ~w(x-)
 
+  import PlausibleWeb.Components.Icons
+
   @notice_themes %{
     gray: %{
       bg: "bg-gray-100 dark:bg-gray-800",
       icon: "text-gray-600 dark:text-gray-300",
       title_text: "text-sm text-gray-900 dark:text-gray-100",
-      body_text: "text-sm text-gray-600 dark:text-gray-300 leading-5"
+      body_text: "text-sm text-gray-800 dark:text-gray-200 leading-5"
     },
     yellow: %{
       bg: "bg-yellow-100/60 dark:bg-yellow-900/40",
@@ -186,6 +188,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:title, :any, default: nil)
   attr(:theme, :atom, default: :yellow)
   attr(:dismissable_id, :any, default: nil)
+  attr(:show_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
@@ -204,7 +207,7 @@ defmodule PlausibleWeb.Components.Generic do
           <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
         </button>
         <div class="flex gap-x-3">
-          <div :if={@title} class="shrink-0">
+          <div :if={@show_icon && @title} class="shrink-0">
             <svg
               class={"h-5 w-5 #{@theme.icon}"}
               viewBox="0 0 20 20"
@@ -219,7 +222,7 @@ defmodule PlausibleWeb.Components.Generic do
             </svg>
           </div>
           <div class="w-full flex flex-col gap-y-1.5">
-            <h3 :if={@title} class={"font-medium #{@theme.title_text}"}>
+            <h3 :if={@title} class={"font-semibold #{@theme.title_text}"}>
               {@title}
             </h3>
             <div class={"#{@theme.body_text}"}>
@@ -403,7 +406,7 @@ defmodule PlausibleWeb.Components.Generic do
         {@rest}
       >
         {render_slot(@inner_block)}
-        <Heroicons.arrow_top_right_on_square class={["stroke-2", @icon_class]} />
+        <.external_link_icon class={[@icon_class]} />
       </.link>
       """
     else
@@ -759,14 +762,26 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr(:rest, :global, include: ~w(fill stroke stroke-width))
+  attr(:rest, :global, include: ~w(fill stroke stroke-width class))
   attr(:name, :atom, required: true)
   attr(:outline, :boolean, default: true)
   attr(:solid, :boolean, default: false)
   attr(:mini, :boolean, default: false)
 
   def dynamic_icon(assigns) do
-    apply(Heroicons, assigns.name, [assigns])
+    case assigns.name do
+      :tag ->
+        PlausibleWeb.Components.Icons.tag_icon(%{class: assigns.rest[:class]})
+
+      :subscription ->
+        PlausibleWeb.Components.Icons.subscription_icon(%{class: assigns.rest[:class]})
+
+      :api_keys ->
+        PlausibleWeb.Components.Icons.key_icon(%{class: assigns.rest[:class]})
+
+      icon_name ->
+        apply(Heroicons, icon_name, [assigns])
+    end
   end
 
   attr(:width, :integer, default: 100)

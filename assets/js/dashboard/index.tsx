@@ -6,7 +6,7 @@ import Locations from './stats/locations'
 import Devices from './stats/devices'
 import { TopBar } from './nav-menu/top-bar'
 import Behaviours from './stats/behaviours'
-import { useQueryContext } from './query-context'
+import { useDashboardStateContext } from './dashboard-state-context'
 import { isRealTimeDashboard } from './util/filters'
 
 function DashboardStats({
@@ -30,8 +30,8 @@ function DashboardStats({
 
 function useIsRealtimeDashboard() {
   const {
-    query: { period }
-  } = useQueryContext()
+    dashboardState: { period }
+  } = useDashboardStateContext()
   return useMemo(() => isRealTimeDashboard({ period }), [period])
 }
 

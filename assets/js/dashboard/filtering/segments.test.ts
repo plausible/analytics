@@ -12,7 +12,7 @@ import {
   SegmentData,
   canExpandSegment
 } from './segments'
-import { Filter } from '../query'
+import { Filter } from '../dashboard-state'
 import { PlausibleSite } from '../site-context'
 import { Role, UserContextValue } from '../user-context'
 

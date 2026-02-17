@@ -2,7 +2,7 @@ import {
   getSearchToSetSegmentFilter,
   SavedSegment
 } from '../filtering/segments'
-import { Filter, FilterClauseLabels } from '../query'
+import { Filter, FilterClauseLabels } from '../dashboard-state'
 import { v1 } from './url-search-params-v1'
 import { v2 } from './url-search-params-v2'
 

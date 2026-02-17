@@ -1,4 +1,4 @@
-import { DashboardQuery, Filter } from '../query'
+import { DashboardState, Filter } from '../dashboard-state'
 import { cleanLabels, remapFromApiFilters } from '../util/filters'
 import { plainFilterText } from '../util/filter-text'
 import { AppNavigationTarget } from '../navigation/use-app-navigate'
@@ -77,14 +77,14 @@ export function handleSegmentResponse(
 }
 
 export const getSegmentNamePlaceholder = (
-  query: Pick<DashboardQuery, 'labels' | 'filters'>
+  dashboardState: Pick<DashboardState, 'labels' | 'filters'>
 ) =>
-  query.filters
+  dashboardState.filters
     .reduce(
       (combinedName, filter) =>
         combinedName.length > 100
           ? combinedName
-          : `${combinedName}${combinedName.length ? ' and ' : ''}${plainFilterText(query, filter)}`,
+          : `${combinedName}${combinedName.length ? ' and ' : ''}${plainFilterText(dashboardState, filter)}`,
       ''
     )
     .slice(0, 255)

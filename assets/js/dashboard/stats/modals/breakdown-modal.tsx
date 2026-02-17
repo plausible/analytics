@@ -1,6 +1,6 @@
 import React, { useState, ReactNode, useMemo } from 'react'
 
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
 import {
@@ -12,7 +12,7 @@ import {
 } from '../../hooks/use-order-by'
 import { Metric } from '../reports/metrics'
 import * as metricsModule from '../reports/metrics'
-import { BreakdownResultMeta, DashboardQuery } from '../../query'
+import { BreakdownResultMeta, DashboardState } from '../../dashboard-state'
 import { ColumnConfiguraton } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
 import { useSiteContext } from '../../site-context'
@@ -34,8 +34,8 @@ export type ReportInfo = {
 type BreakdownModalProps = {
   /** Dimension and title of the breakdown. */
   reportInfo: ReportInfo
-  /** Function that must return a new query that contains appropriate search filter for searchValue param. */
-  addSearchFilter?: (q: DashboardQuery, searchValue: string) => DashboardQuery
+  /** Function that must return a new dashboardState that contains appropriate search filter for searchValue param. */
+  addSearchFilter?: (q: DashboardState, searchValue: string) => DashboardState
   searchEnabled?: boolean
   /** When true, keep the percentage metric as a permanently visible, sortable column. */
   showPercentageColumn?: boolean
@@ -47,7 +47,7 @@ type BreakdownModalProps = {
 
   BreakdownModal is expected to be rendered inside a `<Modal>`, which has it's own
   specific URL pathname (e.g. /plausible.io/sources). During the lifecycle of a
-  BreakdownModal, the `query` object is not expected to change.
+  BreakdownModal, the `dashboardState` object is not expected to change.
 
   ### Search As You Type
   @see BreakdownTable
@@ -73,16 +73,16 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   getFilterInfo
 }: Omit<SharedReportProps<TListItem>, 'fetchData'> & BreakdownModalProps) {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const [meta, setMeta] = useState<BreakdownResultMeta | null>(null)
 
   const breakdownMetrics = useMemo(() => {
     const hasPercentage = metrics.some((m) => m.key === 'percentage')
-    if (!hasPercentage && !hasConversionGoalFilter(query)) {
+    if (!hasPercentage && !hasConversionGoalFilter(dashboardState)) {
       return [...metrics, metricsModule.createPercentage()]
     }
     return metrics
-  }, [metrics, query])
+  }, [metrics, dashboardState])
 
   const [search, setSearch] = useState('')
   const defaultOrderBy = getStoredOrderBy({
@@ -102,24 +102,27 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   })
   const apiState = usePaginatedGetAPI<
     { results: Array<TListItem>; meta: BreakdownResultMeta },
-    [string, { query: DashboardQuery; search: string; orderBy: OrderBy }]
+    [
+      string,
+      { dashboardState: DashboardState; search: string; orderBy: OrderBy }
+    ]
   >({
-    key: [reportInfo.endpoint, { query, search, orderBy }],
+    key: [reportInfo.endpoint, { dashboardState, search, orderBy }],
     getRequestParams: (key) => {
-      const [_endpoint, { query, search }] = key
+      const [_endpoint, { dashboardState, search }] = key
 
-      let queryWithSearchFilter = { ...query }
+      let dashboardStateWithSearchFilter = { ...dashboardState }
 
       if (
         searchEnabled &&
         typeof addSearchFilter === 'function' &&
         search !== ''
       ) {
-        queryWithSearchFilter = addSearchFilter(query, search)
+        dashboardStateWithSearchFilter = addSearchFilter(dashboardState, search)
       }
 
       return [
-        queryWithSearchFilter,
+        dashboardStateWithSearchFilter,
         {
           detailed: true,
           order_by: JSON.stringify(orderBy)
@@ -153,7 +156,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
         .filter((m) => showPercentageColumn || m.key !== 'percentage')
         .map(
           (m): ColumnConfiguraton<TListItem> => ({
-            label: m.renderLabel(query),
+            label: m.renderLabel(dashboardState),
             key: m.key,
             width: m.width,
             align: 'right',
@@ -175,7 +178,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       reportInfo.dimensionLabel,
       breakdownMetrics,
       getFilterInfo,
-      query,
+      dashboardState,
       orderByDictionary,
       toggleSortByMetric,
       renderIcon,

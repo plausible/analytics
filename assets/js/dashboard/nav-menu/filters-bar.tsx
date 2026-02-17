@@ -2,13 +2,13 @@ import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import classNames from 'classnames'
 import React, { useRef, useState, useLayoutEffect } from 'react'
 import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
-import { useQueryContext } from '../query-context'
+import { useDashboardStateContext } from '../dashboard-state-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
-import { DashboardQuery } from '../query'
+import { DashboardState } from '../dashboard-state'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -108,23 +108,25 @@ interface FiltersBarProps {
 
 const canShowClearAllAction = ({
   filters
-}: Pick<DashboardQuery, 'filters'>): boolean => filters.length >= 2
+}: Pick<DashboardState, 'filters'>): boolean => filters.length >= 2
 
 const canShowSaveAsSegmentAction = ({
   filters,
   isEditingSegment
-}: Pick<DashboardQuery, 'filters'> & { isEditingSegment: boolean }): boolean =>
+}: Pick<DashboardState, 'filters'> & { isEditingSegment: boolean }): boolean =>
   filters.length >= 1 && !filters.some(isSegmentFilter) && !isEditingSegment
 
 export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
-  const { query, expandedSegment } = useQueryContext()
+  const { dashboardState, expandedSegment } = useDashboardStateContext()
 
-  const showingClearAll = canShowClearAllAction({ filters: query.filters })
+  const showingClearAll = canShowClearAllAction({
+    filters: dashboardState.filters
+  })
   const showingSaveAsSegment = canShowSaveAsSegmentAction({
-    filters: query.filters,
+    filters: dashboardState.filters,
     isEditingSegment: !!expandedSegment
   })
 
@@ -173,9 +175,9 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [accessors, query.filters, mustShowSeeMoreMenu])
+  }, [accessors, dashboardState.filters, mustShowSeeMoreMenu])
 
-  if (!query.filters.length) {
+  if (!dashboardState.filters.length) {
     // functions as spacer between elements.leftSection and elements.rightSection
     return <div className="w-4" />
   }
@@ -203,12 +205,12 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
         />
       </div>
       {visibility !== null &&
-        (query.filters.length !== visibility.visibleCount ||
+        (dashboardState.filters.length !== visibility.visibleCount ||
           mustShowSeeMoreMenu) && (
           <SeeMoreMenu
             actions={actionsInSeeMoreMenu}
             className="md:relative"
-            filtersCount={query.filters.length}
+            filtersCount={dashboardState.filters.length}
             visibleFiltersCount={visibility.visibleCount}
           />
         )}

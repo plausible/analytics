@@ -1,4 +1,4 @@
-import { Filter } from '../query'
+import { Filter } from '../dashboard-state'
 import {
   encodeURIComponentPermissive,
   getSearchWithEnforcedSegment,

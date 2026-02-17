@@ -56,6 +56,16 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
       end
     end
 
+    test "parses 24h period" do
+      {:ok, parsed} = parse("?period=24h", build(:site), %{})
+      assert_matches %ParsedQueryParams{input_date_range: :"24h"} = parsed
+    end
+
+    test "parses 24h period from user prefs" do
+      {:ok, parsed} = parse("", build(:site), %{"period" => "24h"})
+      assert_matches %ParsedQueryParams{input_date_range: :"24h"} = parsed
+    end
+
     for i <- [6, 12] do
       test "parses #{i}mo period" do
         {:ok, parsed} = parse("?period=#{unquote(i)}mo", build(:site), %{})

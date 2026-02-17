@@ -4,6 +4,7 @@ defmodule Plausible.Ingestion.Persistor.Remote do
   """
 
   require Logger
+  require OpenTelemetry.Tracer
 
   @max_transient_retries 3
 
@@ -61,13 +62,24 @@ defmodule Plausible.Ingestion.Persistor.Remote do
     Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
       telemetry_request_duration(),
       fn ->
-        Req.post(persistor_url(override_url),
-          finch: Plausible.Finch,
-          body: encode_payload(event, session_attrs),
-          headers: headers,
-          retry: &handle_transient_error/2,
-          max_retries: @max_transient_retries
-        )
+        url = persistor_url(override_url)
+
+        OpenTelemetry.Tracer.with_span "persistor.remote.request",
+                                       %{attributes: persistor_span_attributes(headers)} do
+          result =
+            Req.new(
+              finch: Plausible.Finch,
+              body: encode_payload(event, session_attrs),
+              headers: headers,
+              retry: &handle_transient_error/2,
+              max_retries: @max_transient_retries
+            )
+            |> OpentelemetryReq.attach(propagate_trace_headers: true)
+            |> Req.post(url: url, span_name: "persistor.remote.post")
+
+          trace_result(result)
+          result
+        end
       end
     )
   end
@@ -81,6 +93,28 @@ defmodule Plausible.Ingestion.Persistor.Remote do
   end
 
   defp handle_transient_error(_reqeust, _response), do: false
+
+  defp persistor_span_attributes(headers) do
+    site_id = find_header(headers, "x-site-id")
+    user_id = find_header(headers, "x-current-user-id")
+
+    [{"plausible.persistor.site_id", site_id}, {"plausible.persistor.user_id", user_id}]
+  end
+
+  defp find_header(headers, name) do
+    case List.keyfind(headers, name, 0) do
+      {_, value} -> value
+      nil -> ""
+    end
+  end
+
+  defp trace_result({:ok, %{status: status}}) do
+    OpenTelemetry.Tracer.set_attributes([{"http.response.status_code", status}])
+  end
+
+  defp trace_result({:error, error}) do
+    OpenTelemetry.Tracer.set_status(:error, inspect(error))
+  end
 
   defp encode_payload(event, session_attrs) do
     event_data =

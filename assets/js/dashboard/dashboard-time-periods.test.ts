@@ -4,8 +4,8 @@ import {
   getDashboardTimeSettings,
   getPeriodStorageKey,
   getStoredPeriod,
-  QueryPeriod
-} from './query-time-periods'
+  DashboardPeriod
+} from './dashboard-time-periods'
 import { formatISO, utcNow } from './util/date'
 
 describe(`${getStoredPeriod.name}`, () => {
@@ -18,8 +18,13 @@ describe(`${getStoredPeriod.name}`, () => {
   })
 
   it('returns correct value if value stored', () => {
-    localStorage.setItem(key, QueryPeriod['7d'])
-    expect(getStoredPeriod(domain, null)).toEqual(QueryPeriod['7d'])
+    localStorage.setItem(key, DashboardPeriod['7d'])
+    expect(getStoredPeriod(domain, null)).toEqual(DashboardPeriod['7d'])
+  })
+
+  it('returns correct value for 24h period if stored', () => {
+    localStorage.setItem(key, DashboardPeriod['24h'])
+    expect(getStoredPeriod(domain, null)).toEqual(DashboardPeriod['24h'])
   })
 })
 
@@ -27,7 +32,7 @@ describe(`${getDashboardTimeSettings.name}`, () => {
   const site = DEFAULT_SITE
 
   const defaultValues = {
-    period: QueryPeriod['28d'],
+    period: DashboardPeriod['28d'],
     comparison: null,
     match_day_of_week: true
   }
@@ -87,7 +92,7 @@ describe(`${getDashboardTimeSettings.name}`, () => {
         site: site,
         searchValues: emptySearchValues,
         storedValues: {
-          period: QueryPeriod['12mo'],
+          period: DashboardPeriod['12mo'],
           comparison: ComparisonMode.year_over_year,
           match_day_of_week: false
         },
@@ -95,7 +100,7 @@ describe(`${getDashboardTimeSettings.name}`, () => {
         segmentIsExpanded: false
       })
     ).toEqual({
-      period: QueryPeriod['12mo'],
+      period: DashboardPeriod['12mo'],
       comparison: ComparisonMode.year_over_year,
       match_day_of_week: false
     })
@@ -106,12 +111,12 @@ describe(`${getDashboardTimeSettings.name}`, () => {
       getDashboardTimeSettings({
         site: site,
         searchValues: {
-          period: QueryPeriod['year'],
+          period: DashboardPeriod['year'],
           comparison: ComparisonMode.off,
           match_day_of_week: true
         },
         storedValues: {
-          period: QueryPeriod['12mo'],
+          period: DashboardPeriod['12mo'],
           comparison: ComparisonMode.year_over_year,
           match_day_of_week: false
         },
@@ -119,7 +124,7 @@ describe(`${getDashboardTimeSettings.name}`, () => {
         segmentIsExpanded: false
       })
     ).toEqual({
-      period: QueryPeriod['year'],
+      period: DashboardPeriod['year'],
       comparison: null,
       match_day_of_week: true
     })
@@ -130,7 +135,7 @@ describe(`${getDashboardTimeSettings.name}`, () => {
       getDashboardTimeSettings({
         site: site,
         searchValues: {
-          period: QueryPeriod['custom'],
+          period: DashboardPeriod['custom'],
           comparison: ComparisonMode.previous_period,
           match_day_of_week: true
         },
@@ -139,7 +144,7 @@ describe(`${getDashboardTimeSettings.name}`, () => {
         segmentIsExpanded: true
       })
     ).toEqual({
-      period: QueryPeriod['custom'],
+      period: DashboardPeriod['custom'],
       comparison: null,
       match_day_of_week: true
     })
