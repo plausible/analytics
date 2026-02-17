@@ -11,10 +11,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
 
     hourly_stats =
       if connected?(socket) do
-        Enum.map(sites, fn site ->
-          {site.domain, Plausible.Stats.Sparkline.overview_24h(site)}
-        end)
-        |> Enum.into(%{})
+        Plausible.Stats.Sparkline.parallel_overview(sites)
       else
         sites
         |> Enum.map(fn site ->
