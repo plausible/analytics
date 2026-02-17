@@ -12,10 +12,10 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   def update(%{team: team}, socket) do
     consolidated_view = ConsolidatedView.get(team)
 
-    hourly_stats =
+    sparkline_intervals =
       with true <- connected?(socket),
-           {:ok, hourly_stats} <- Stats.Sparkline.safe_overview_24h(consolidated_view) do
-        hourly_stats.intervals
+           {:ok, sparkline} <- Stats.Sparkline.safe_overview_24h(consolidated_view) do
+        sparkline.intervals
       else
         _ ->
           Stats.Sparkline.empty_24h_intervals()
@@ -26,7 +26,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
      assign(socket,
        team: team,
        consolidated_views: List.wrap(consolidated_view),
-       hourly_stats: hourly_stats
+       sparkline_intervals: sparkline_intervals
      )}
   end
 
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
             <.td>
               <span class="h-[24px] text-indigo-500">
                 <PlausibleWeb.Live.Components.Visitors.chart
-                  intervals={@hourly_stats}
+                  intervals={@sparkline_intervals}
                   height={20}
                 />
               </span>
