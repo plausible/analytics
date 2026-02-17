@@ -96,12 +96,13 @@ defmodule PlausibleWeb.Api.StatsController do
   """
   def main_graph(conn, params) do
     site = conn.assigns[:site]
+    now = conn.private[:fixed_now]
 
     with {:ok, dates} <- parse_date_params(params),
          :ok <- validate_interval(params),
          :ok <- validate_interval_granularity(site, params, dates),
          params <- realtime_period_to_30m(params),
-         query = Query.from(site, params, debug_metadata(conn)),
+         query = Query.from(site, params, debug_metadata(conn), now),
          query <- Query.set_include(query, :trim_relative_date_range, true),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
       {timeseries_result, comparison_result, _meta} = Stats.timeseries(site, query, [metric])
