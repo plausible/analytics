@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Team.Notice do
   Components with teams related notices.
   """
   use PlausibleWeb, :component
+  import PlausibleWeb.Components.Icons
 
   def owner_cta_banner(assigns) do
     ~H"""
@@ -58,30 +59,124 @@ defmodule PlausibleWeb.Team.Notice do
 
   def team_invitations(assigns) do
     ~H"""
-    <aside :if={not Enum.empty?(@team_invitations)} class="mt-4 mb-4">
+    <aside :if={not Enum.empty?(@team_invitations)}>
       <.notice
         :for={i <- @team_invitations}
         id={"invitation-#{i.invitation_id}"}
-        title="You have received team invitation"
-        class="shadow-md dark:shadow-none mt-4"
+        title="Team invitation"
+        theme={:white}
       >
+        <:icon>
+          <div class="shrink-0 -mt-1 bg-green-100/80 dark:bg-green-900/30 rounded-lg p-1.5">
+            <.envelope_icon class="size-4 text-green-600 dark:text-green-400" />
+          </div>
+        </:icon>
         {i.inviter.name} has invited you to join the "{i.team.name}" as {i.role} member.
-        <.link
-          method="post"
-          href={Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, i.invitation_id)}
-          class="whitespace-nowrap font-semibold"
-        >
-          Accept
-        </.link>
-        or
-        <.link
-          method="post"
-          href={Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, i.invitation_id)}
-          phx-value-invitation-id={i.invitation_id}
-          class="whitespace-nowrap font-semibold"
-        >
-          Reject
-        </.link>
+        <:actions>
+          <.button_link
+            method="post"
+            href={Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, i.invitation_id)}
+            phx-value-invitation-id={i.invitation_id}
+            theme="ghost"
+            size="sm"
+            class="order-2 md:order-1"
+            mt?={false}
+          >
+            Reject
+          </.button_link>
+          <.button_link
+            method="post"
+            href={Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, i.invitation_id)}
+            theme="secondary"
+            size="sm"
+            class="order-1 md:order-2"
+            mt?={false}
+          >
+            Accept
+          </.button_link>
+        </:actions>
+      </.notice>
+    </aside>
+    """
+  end
+
+  def site_ownership_invitations(assigns) do
+    ~H"""
+    <aside :if={not Enum.empty?(@site_ownership_invitations)}>
+      <.notice
+        :for={i <- @site_ownership_invitations}
+        id={"site-ownership-invitation-#{i.invitation_id}"}
+        title={"Become owner of #{i.site.domain}"}
+        theme={:white}
+      >
+
+        <:icon>
+          <div class="shrink-0 -mt-1 bg-green-100/80 dark:bg-green-900/30 rounded-lg p-1.5">
+            <.envelope_icon class="size-4 text-green-600 dark:text-green-400" />
+          </div>
+        </:icon>
+        You've been invited to become the owner of {i.site.domain}. <b>Note:</b>
+        If you accept, you'll be responsible for billing going forward.
+        <:actions>
+          <.button_link
+            href="#"
+            theme="ghost"
+            size="sm"
+            class="order-2 md:order-1"
+            mt?={false}
+          >
+            Reject
+          </.button_link>
+          <.button_link
+            href="#"
+            theme="secondary"
+            size="sm"
+            class="order-1 md:order-2"
+            mt?={false}
+          >
+            Accept
+          </.button_link>
+        </:actions>
+      </.notice>
+    </aside>
+    """
+  end
+
+  def site_invitations(assigns) do
+    ~H"""
+    <aside :if={not Enum.empty?(@site_invitations)}>
+      <.notice
+        :for={i <- @site_invitations}
+        id={"site-invitation-#{i.invitation_id}"}
+        title={"Invitation to #{i.site.domain}"}
+        theme={:white}
+      >
+        <:icon>
+          <div class="shrink-0 -mt-1 bg-green-100/80 dark:bg-green-900/30 rounded-lg p-1.5">
+            <.envelope_icon class="size-4 text-green-600 dark:text-green-400" />
+          </div>
+        </:icon>
+        You've been invited to join the {i.site.domain} analytics dashboard as a {i.role}.
+        <:actions>
+          <.button_link
+            href="#"
+            theme="ghost"
+            size="sm"
+            class="order-2 md:order-1"
+            mt?={false}
+          >
+            Reject
+          </.button_link>
+          <.button_link
+            href="#"
+            theme="secondary"
+            size="sm"
+            class="order-1 md:order-2"
+            mt?={false}
+          >
+            Accept
+          </.button_link>
+        </:actions>
       </.notice>
     </aside>
     """
