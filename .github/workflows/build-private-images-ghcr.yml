@@ -72,9 +72,11 @@ jobs:
       - name: Get first line and Co-Authored-By lines of the commit message
         if: ${{ success() && github.ref == 'refs/heads/master' }}
         id: commitmsg
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          first_line=$(echo "${{ github.event.head_commit.message }}" | head -n1 | xargs)
-          co_authors=$(echo "${{ github.event.head_commit.message }}" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, - | xargs)
+          first_line=$(printf '%s\n' "$COMMIT_MSG" | head -n1 | xargs)
+          co_authors=$(printf '%s\n' "$COMMIT_MSG" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, - | xargs)
           {
             echo "first_line=$first_line"
             echo "co_authors=$co_authors"
