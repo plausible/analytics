@@ -54,9 +54,6 @@ defmodule Plausible.Stats.Sparkline do
     catch
       kind, value ->
         Logger.error("Could not render overview 24h: #{inspect(kind)} #{inspect(value)}")
-
-        IO.inspect(__STACKTRACE__, label: "Stacktrace")
-
         {:error, :inaccessible}
     end
   end
