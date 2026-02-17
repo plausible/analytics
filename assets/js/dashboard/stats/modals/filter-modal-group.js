@@ -46,6 +46,7 @@ export default function FilterModalGroup({
         {rows.map(({ id, filter }) =>
           filterGroup === 'props' ? (
             <FilterModalPropsRow
+              testId={id}
               key={id}
               filter={filter}
               showDelete={rows.length > 1}
