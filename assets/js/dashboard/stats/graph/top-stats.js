@@ -82,6 +82,13 @@ export default function TopStats({
     }
 
     if (
+      metric === 'bounce_rate' &&
+      warning.code === 'no_imported_bounce_rate'
+    ) {
+      return 'Does not include imported data'
+    }
+
+    if (
       metric === 'scroll_depth' &&
       warning.code === 'no_imported_scroll_depth'
     ) {

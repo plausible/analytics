@@ -402,8 +402,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       cond do
-        page_filter? && query.include_imported ->
-          metrics ++ [:scroll_depth]
+        page_filter? and query.include_imported ->
+          metrics ++ [:bounce_rate, :scroll_depth]
 
         page_filter? ->
           metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
