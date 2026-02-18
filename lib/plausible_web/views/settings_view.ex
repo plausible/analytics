@@ -6,6 +6,13 @@ defmodule PlausibleWeb.SettingsView do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Plans, Subscription, Subscriptions}
 
+  def present_plan_name(%Plausible.Billing.Plan{kind: kind}),
+    do: kind |> to_string() |> String.capitalize()
+
+  def present_plan_name(%Plausible.Billing.EnterprisePlan{}), do: "Enterprise"
+  def present_plan_name(:free_10k), do: "Free"
+  def present_plan_name(_), do: "Plan"
+
   def subscription_interval(subscription) do
     Plans.subscription_interval(subscription)
   end
@@ -35,7 +42,7 @@ defmodule PlausibleWeb.SettingsView do
     if Plausible.Teams.Billing.enterprise_configured?(team) do
       "Upgrade"
     else
-      "Choose a plan &rarr;"
+      "Choose a plan →"
     end
   end
 

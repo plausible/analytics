@@ -74,7 +74,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    test "renders a link to '/billing/choose-plan' with the text 'Choose a plan'", %{conn: conn} do
+    test "shows trial state without days-left pill when user has no team yet", %{conn: conn} do
       doc =
         conn
         |> get(Routes.settings_path(conn, :subscription))
@@ -84,6 +84,29 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert text(upgrade_link) =~ "Choose a plan"
       assert text_of_attr(upgrade_link, "href") == Routes.billing_path(conn, :choose_plan)
+      assert doc =~ "Your 30-day trial will start when you add your first site"
+      refute doc =~ "days left"
+    end
+
+    @tag :ee_only
+    test "shows trial state with days-left pill when user is on trial", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), 10))
+      |> Plausible.Repo.update!()
+
+      doc =
+        conn
+        |> get(Routes.settings_path(conn, :subscription))
+        |> html_response(200)
+
+      upgrade_link = find(doc, "#upgrade-or-change-plan-link")
+
+      assert text(upgrade_link) =~ "Choose a plan"
+      assert text_of_attr(upgrade_link, "href") == Routes.billing_path(conn, :choose_plan)
+      assert doc =~ "days left"
+      refute doc =~ "Your 30-day trial will start when you add your first site"
     end
 
     @tag :ee_only

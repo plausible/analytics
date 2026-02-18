@@ -1,13 +1,21 @@
 <.settings_tiles>
-  <%= if Plausible.Teams.on_trial?(@current_team) do %>
+  <%= if is_nil(@current_team) || Plausible.Teams.on_trial?(@current_team) do %>
     <.tile docs="trial-to-paid">
       <:title>Current plan</:title>
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-semibold dark:text-gray-100">Free trial</span>
-          <.pill color={:yellow}>
-            {Plausible.Teams.trial_days_left(@current_team)} days left
-          </.pill>
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold dark:text-gray-100">Free trial</span>
+            <.pill :if={@current_team} color={:yellow}>
+              {Plausible.Teams.trial_days_left(@current_team)} days left
+            </.pill>
+          </div>
+          <p
+            :if={is_nil(@current_team)}
+            class="text-sm text-gray-600 dark:text-gray-400"
+          >
+            Your 30-day trial will start when you add your first site
+          </p>
         </div>
         <.button_link
           href={Routes.billing_path(@conn, :choose_plan)}
@@ -30,16 +38,9 @@
           <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div class="flex flex-col gap-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <% plan = Plausible.Billing.Plans.get_subscription_plan(@subscription)
-
-                plan_name =
-                  case plan do
-                    %Plausible.Billing.Plan{kind: kind} -> String.capitalize(to_string(kind))
-                    %Plausible.Billing.EnterprisePlan{} -> "Enterprise"
-                    :free_10k -> "Free"
-                    _ -> "Plan"
-                  end %>
-                <span class="text-sm font-semibold dark:text-gray-100">{plan_name}</span>
+                <span class="text-sm font-semibold dark:text-gray-100">
+                  {present_plan_name(Plausible.Billing.Plans.get_subscription_plan(@subscription))}
+                </span>
                 <.pill color={subscription_pill_color(@subscription.status)}>
                   {present_subscription_status(@subscription.status)}
                 </.pill>
