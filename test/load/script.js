@@ -18,16 +18,15 @@ const endpoints = {
     method: "POST",
     name: "/api/event",
     getUrl: () => `${baseURL}/api/event`,
-    getBody: (options) => {
-      const { name, domain, url, ...rest } = {
-        name: "pageview",
-        ...options,
+    getBody: ({ domain }) => {
+      const { n, d } = {
+        n: "pageview",
+        d: domain,
       };
       const payload = {
-        n: name,
-        u: url ?? `https://${domain}/page`,
-        d: domain,
-        ...rest,
+        d,
+        n,
+        u: `https://${domain}/page/${Math.floor(Math.random() * 100) + 1}`,
       };
       return JSON.stringify(payload);
     },
@@ -120,63 +119,63 @@ export const queryHeavy = () =>
 export const queryLight = () =>
   makeRequest(endpoints.externalApi, { domain: domainLight });
 
-const sharedScenarioOptions = {
+const scenarioOptions = {
   executor: "constant-arrival-rate",
   timeUnit: "1s",
   duration: "20s",
 };
 
 const selectors = [
-  `{endpoint: "${endpoints.health.name}"}`,
-  `{endpoint: "${endpoints.track.name}", domain: "${domainHeavy}"}`,
-  `{endpoint: "${endpoints.track.name}", domain: "${domainLight}"}`,
-  `{endpoint: "${endpoints.internalApi.name}", domain: "${domainHeavy}"}`,
-  `{endpoint: "${endpoints.internalApi.name}", domain: "${domainLight}"}`,
-  `{endpoint: "${endpoints.externalApi.name}", domain: "${domainHeavy}"}`,
-  `{endpoint: "${endpoints.externalApi.name}", domain: "${domainLight}"}`,
+  `endpoint: "${endpoints.health.name}"`,
+  `endpoint: "${endpoints.track.name}", domain: "${domainHeavy}"`,
+  `endpoint: "${endpoints.track.name}", domain: "${domainLight}"`,
+  `endpoint: "${endpoints.internalApi.name}", domain: "${domainHeavy}"`,
+  `endpoint: "${endpoints.internalApi.name}", domain: "${domainLight}"`,
+  `endpoint: "${endpoints.externalApi.name}", domain: "${domainHeavy}"`,
+  `endpoint: "${endpoints.externalApi.name}", domain: "${domainLight}"`,
 ];
 
 export const options = {
   scenarios: {
     [trackHeavy.name]: {
-      ...sharedScenarioOptions,
-      rate: 200,
-      preAllocatedVUs: 1000,
+      ...scenarioOptions,
+      rate: 500,
+      preAllocatedVUs: 2000,
       exec: trackHeavy.name,
     },
     [trackLight.name]: {
-      ...sharedScenarioOptions,
-      rate: 20,
-      preAllocatedVUs: 100,
+      ...scenarioOptions,
+      rate: 50,
+      preAllocatedVUs: 200,
       exec: trackLight.name,
     },
     [healthCheck.name]: {
-      ...sharedScenarioOptions,
+      ...scenarioOptions,
       rate: 1,
       preAllocatedVUs: 10,
       exec: healthCheck.name,
     },
     [pagesHeavy.name]: {
-      ...sharedScenarioOptions,
-      rate: 3,
+      ...scenarioOptions,
+      rate: 6,
       preAllocatedVUs: 50,
       exec: pagesHeavy.name,
     },
     [pagesLight.name]: {
-      ...sharedScenarioOptions,
-      rate: 3,
+      ...scenarioOptions,
+      rate: 6,
       preAllocatedVUs: 50,
       exec: pagesLight.name,
     },
     [queryHeavy.name]: {
-      ...sharedScenarioOptions,
-      rate: 3,
+      ...scenarioOptions,
+      rate: 6,
       preAllocatedVUs: 50,
       exec: queryHeavy.name,
     },
     [queryLight.name]: {
-      ...sharedScenarioOptions,
-      rate: 3,
+      ...scenarioOptions,
+      rate: 6,
       preAllocatedVUs: 50,
       exec: queryLight.name,
     },
@@ -184,13 +183,13 @@ export const options = {
   thresholds: {
     ...Object.fromEntries(
       selectors.map((selector) => [
-        `http_req_duration${selector}`,
+        `http_req_duration{${selector}}`,
         ["p(95)<500"],
       ]),
     ),
     ...Object.fromEntries(
       selectors.map((selector) => [
-        `http_req_failed${selector}`,
+        `http_req_failed{${selector}}`,
         ["rate<0.01"],
       ]),
     ),
