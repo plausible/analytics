@@ -401,10 +401,15 @@ defmodule PlausibleWeb.Api.StatsController do
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
-      if page_filter? do
-        metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
-      else
-        metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
+      cond do
+        page_filter? and query.include_imported ->
+          metrics ++ [:bounce_rate, :scroll_depth]
+
+        page_filter? ->
+          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
+
+        true ->
+          metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
       end
 
     %{results: results, meta: meta} = Stats.aggregate(site, query, metrics)

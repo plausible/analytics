@@ -697,7 +697,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                %{"name" => "Total visits", "value" => 4, "graph_metric" => "visits"},
                %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"},
                %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"},
-               %{"name" => "Time on page", "value" => 10, "graph_metric" => "time_on_page"},
                %{"name" => "Scroll depth", "value" => nil, "graph_metric" => "scroll_depth"}
              ]
     end
