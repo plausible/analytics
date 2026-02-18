@@ -183,7 +183,7 @@ export async function addCustomGoal({
   const customEventButton = page.locator(
     'button[phx-value-goal-type="custom_events"]'
   )
-  await expect(customEventButton).toBeVisible()
+
   await customEventButton.click()
 
   if (clickManually) {
@@ -244,7 +244,7 @@ export async function addPageviewGoal({
   const pageviewEventButton = page.locator(
     'button[phx-value-goal-type="pageviews"]'
   )
-  await expect(pageviewEventButton).toBeVisible()
+
   await pageviewEventButton.click()
 
   await expect(
@@ -288,7 +288,7 @@ export async function addScrollDepthGoal({
   const scrollDepthEventButton = page.locator(
     'button[phx-value-goal-type="scroll"]'
   )
-  await expect(scrollDepthEventButton).toBeVisible()
+
   await scrollDepthEventButton.click()
 
   await expect(
