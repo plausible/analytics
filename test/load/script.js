@@ -76,7 +76,8 @@ const endpoints = {
       },
     }),
     checks: {
-      "request is successful": (res) => res.status === 200,
+      "request is successful (200)": (res) => res.status === 200,
+      "request is rate limited (429)": (res) => res.status === 429,
     },
   },
   health: {
