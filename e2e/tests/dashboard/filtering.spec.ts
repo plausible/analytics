@@ -754,6 +754,84 @@ test.describe('browser filtering tests', () => {
   })
 })
 
+test.describe('operating system filtering tests', () => {
+  const operatingSystemFilterButton = (page) =>
+    page
+      .getByTestId('filtermenu')
+      .getByRole('link', { name: 'Operating system' })
+
+  test.fixme('filtering by operating system', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        {
+          name: 'pageview',
+          operating_system: 'Windows',
+          operating_system_version: '11'
+        },
+        {
+          name: 'pageview',
+          operating_system: 'MacOS',
+          operating_system_version: '10.15'
+        }
+      ]
+    })
+
+    await page.goto('/' + domain)
+
+    await test.step('filtering by operating system type', async () => {
+      const operatingSystemFilterRow = filterRow(page, 'operating_system')
+      const operatingSystemInput = page.getByPlaceholder(
+        'Select an Operating system',
+        { exact: true }
+      )
+
+      await filterButton(page).click()
+      await operatingSystemFilterButton(page).click()
+
+      // The same problem as in the case of screen size filter test.
+      await operatingSystemInput.click()
+      await suggestedItem(operatingSystemFilterRow, 'Windows').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Operating System is Windows' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,operating_system,Windows/)
+    })
+
+    await test.step('filtering by operating system version', async () => {
+      const operatingSystemVersionFilterRow = filterRow(
+        page,
+        'operating_system_version'
+      )
+      const operatingSystemVersionInput = page.getByPlaceholder(
+        'Select an Operating system version'
+      )
+
+      await filterButton(page).click()
+      await operatingSystemFilterButton(page).click()
+
+      await operatingSystemVersionInput.click()
+      await suggestedItem(operatingSystemVersionFilterRow, '11').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Operating system version is 11' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,operating_system_version,11/)
+      await expect(page).toHaveURL(/f=is,operating_system,Windows/)
+    })
+  })
+})
+
 test.describe('goal filtering tests', () => {
   const goalFilterButton = (page) =>
     page.getByTestId('filtermenu').getByRole('link', { name: 'Goal' })
