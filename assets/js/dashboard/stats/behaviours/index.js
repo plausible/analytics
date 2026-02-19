@@ -493,7 +493,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
                 Properties
               </TabButton>
             )}
-            {isEnabled(Mode.FUNNELS) &&
+            {!site.isConsolidatedView && isEnabled(Mode.FUNNELS) &&
               Funnel &&
               (site.funnels.length > 0 && site.funnelsAvailable ? (
                 <DropdownTabButton
