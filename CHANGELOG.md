@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Keybind hints are hidden on smaller screens
+- Subscription settings page design is updated
 
 ### Fixed
 
