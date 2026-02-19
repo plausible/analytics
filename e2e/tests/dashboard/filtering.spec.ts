@@ -650,6 +650,47 @@ test.describe('location filtering tests', () => {
   })
 })
 
+test.describe('screen size filtering tests', () => {
+  const screenSizeFilterButton = (page) =>
+    page.getByTestId('filtermenu').getByRole('link', { name: 'Screen size' })
+
+  test.fixme('filtering by screen size', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        { name: 'pageview', screen_size: 'Desktop' },
+        { name: 'pageview', screen_size: 'Mobile' }
+      ]
+    })
+
+    await page.goto('/' + domain)
+
+    const screenSizeFilterRow = filterRow(page, 'screen_size')
+    const screenSizeInput = page.getByPlaceholder('Select a Screen size')
+
+    await filterButton(page).click()
+    await screenSizeFilterButton(page).click()
+
+    // When testing via test.e2e.ui, it shows there are no
+    // suggestions found but there are 2 pageview in the top stats.
+    // When navigating live via `MIX_ENV=e2e_test iex -S mix`,
+    // all works fine. Puzzling.
+    await screenSizeInput.click()
+    await suggestedItem(screenSizeFilterRow, 'Mobile').click()
+
+    await applyFilterButton(page).click()
+
+    await expect(
+      page.getByRole('link', { name: 'Screen size is Mobile' })
+    ).toBeVisible()
+
+    await expect(page).toHaveURL(/f=is,screen_size,Mobile/)
+  })
+})
+
 test.describe('goal filtering tests', () => {
   const goalFilterButton = (page) =>
     page.getByTestId('filtermenu').getByRole('link', { name: 'Goal' })
