@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-B011A241.js"></script>
+    <script src="dist/sidebar_items-EF2F88D3.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -369,7 +369,7 @@ Pages
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">color</code> (<code class="inline">:atom</code>) - Defaults to <code class="inline">:gray</code>. Must be one of <code class="inline">:gray</code>, <code class="inline">:indigo</code>, <code class="inline">:yellow</code>, or <code class="inline">:green</code>.</li><li>Global attributes are accepted.</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code> (required)</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">color</code> (<code class="inline">:atom</code>) - Defaults to <code class="inline">:gray</code>. Must be one of <code class="inline">:gray</code>, <code class="inline">:indigo</code>, <code class="inline">:yellow</code>, <code class="inline">:green</code>, or <code class="inline">:red</code>.</li><li>Global attributes are accepted.</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code> (required)</li></ul></div>
 
     </div>
 
@@ -1157,7 +1157,7 @@ Pages
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">color</code> (<code class="inline">:atom</code>) - Defaults to <code class="inline">:gray</code>. Must be one of <code class="inline">:gray</code>, <code class="inline">:indigo</code>, <code class="inline">:yellow</code>, or <code class="inline">:green</code>.</li><li>Global attributes are accepted.</li></ul><h2 id="pill/1-slots" class="section-heading">
+<ul><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">color</code> (<code class="inline">:atom</code>) - Defaults to <code class="inline">:gray</code>. Must be one of <code class="inline">:gray</code>, <code class="inline">:indigo</code>, <code class="inline">:yellow</code>, <code class="inline">:green</code>, or <code class="inline">:red</code>.</li><li>Global attributes are accepted.</li></ul><h2 id="pill/1-slots" class="section-heading">
   <a href="#pill/1-slots" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -1486,7 +1486,7 @@ Pages
 <p> Renders toggle input.</p><p> Can be used in two modes:</p><ol><li><p>Alpine JS mode: Pass <code class="inline">:js_active_var</code> to control toggle state via Alpine JS.
 Set this outside this component with <code class="inline">x-data=&quot;{ &lt;variable name&gt;: &lt;initial state&gt; }&quot;</code>.</p></li><li><p>Server-side mode: Pass <code class="inline">:checked</code> boolean and <code class="inline">phx-click</code> event handler.</p></li></ol><p> ### Examples - Alpine JS mode</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">data</span><span class="o">=</span><span class="s">&quot;{ showGoals: false }&gt;
     &lt;.toggle_switch id=&quot;</span><span class="n">show_goals</span><span class="s">&quot; js_active_var=&quot;</span><span class="n">showGoals</span><span class="err">&quot;</span><span class="w"> </span><span class="o">/</span><span class="o">&gt;</span><span class="w">
-  </span><span class="o">&lt;</span><span class="o">/</span><span class="n">div</span><span class="o">&gt;</span></code></pre><p> ### Examples - Server-side mode</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="o">&lt;</span><span class="o">.</span><span class="n">toggle_switch</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;my_toggle&quot;</span><span class="w"> </span><span class="n">checked</span><span class="o">=</span><span class="p" data-group-id="9310822451-1">{</span><span class="na">@my_toggle</span><span class="p" data-group-id="9310822451-1">}</span><span class="w"> </span><span class="n">phx</span><span class="o">-</span><span class="n">click</span><span class="o">=</span><span class="s">&quot;toggle-my-setting&quot;</span><span class="w"> </span><span class="n">phx</span><span class="o">-</span><span class="n">target</span><span class="o">=</span><span class="p" data-group-id="9310822451-2">{</span><span class="na">@myself</span><span class="p" data-group-id="9310822451-2">}</span><span class="w"> </span><span class="o">/</span><span class="o">&gt;</span></code></pre><h2 id="toggle_switch/1-attributes" class="section-heading">
+  </span><span class="o">&lt;</span><span class="o">/</span><span class="n">div</span><span class="o">&gt;</span></code></pre><p> ### Examples - Server-side mode</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="o">&lt;</span><span class="o">.</span><span class="n">toggle_switch</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;my_toggle&quot;</span><span class="w"> </span><span class="n">checked</span><span class="o">=</span><span class="p" data-group-id="1503625629-1">{</span><span class="na">@my_toggle</span><span class="p" data-group-id="1503625629-1">}</span><span class="w"> </span><span class="n">phx</span><span class="o">-</span><span class="n">click</span><span class="o">=</span><span class="s">&quot;toggle-my-setting&quot;</span><span class="w"> </span><span class="n">phx</span><span class="o">-</span><span class="n">target</span><span class="o">=</span><span class="p" data-group-id="1503625629-2">{</span><span class="na">@myself</span><span class="p" data-group-id="1503625629-2">}</span><span class="w"> </span><span class="o">/</span><span class="o">&gt;</span></code></pre><h2 id="toggle_switch/1-attributes" class="section-heading">
   <a href="#toggle_switch/1-attributes" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
