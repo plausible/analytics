@@ -300,6 +300,268 @@ test.describe('hostname filtering tests', () => {
   })
 })
 
+test.describe('acquisition filtering tests', () => {
+  const sourceFilterButton = (page) =>
+    page.getByTestId('filtermenu').getByRole('link', { name: 'Source' })
+
+  test('filtering by source information', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        { name: 'pageview', referrer_source: 'Google', utm_source: 'Adwords' },
+        { name: 'pageview', referrer_source: 'Facebook', utm_source: 'fb' },
+        { name: 'pageview', referrer: 'https://theguardian.com' }
+      ]
+    })
+
+    await page.goto('/' + domain)
+
+    await test.step('filtering by source', async () => {
+      const sourceFilterRow = filterRow(page, 'source')
+      const sourceInput = page.getByPlaceholder('Select a Source')
+
+      await filterButton(page).click()
+      await sourceFilterButton(page).click()
+
+      await sourceInput.fill('goog')
+      await suggestedItem(sourceFilterRow, 'Google').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Source is Google' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,source,Google/)
+
+      await page
+        .getByRole('button', {
+          name: 'Remove filter: Source is Google'
+        })
+        .click()
+
+      await expect(page).not.toHaveURL(/f=is,source,Google/)
+    })
+
+    await test.step('filtering by channel', async () => {
+      const channelFilterRow = filterRow(page, 'channel')
+      const channelInput = page.getByPlaceholder('Select a Channel')
+
+      await filterButton(page).click()
+      await sourceFilterButton(page).click()
+
+      await channelInput.fill('paid')
+      await suggestedItem(channelFilterRow, 'Paid Search').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Channel is Paid Search' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,channel,Paid%20Search/)
+
+      await page
+        .getByRole('button', {
+          name: 'Remove filter: Channel is Paid Search'
+        })
+        .click()
+
+      await expect(page).not.toHaveURL(/f=is,channel,Paid%20Search/)
+    })
+
+    await test.step('filtering by referrer URL', async () => {
+      const referrerFilterRow = filterRow(page, 'referrer')
+      const referrerInput = page.getByPlaceholder('Select a Referrer URL')
+
+      await filterButton(page).click()
+      await sourceFilterButton(page).click()
+
+      await referrerInput.fill('guard')
+      await suggestedItem(referrerFilterRow, 'https://theguardian.com').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', {
+          name: 'Referrer URL is https://theguardian.com'
+        })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,referrer,https:\/\/theguardian\.com/)
+
+      await page
+        .getByRole('button', {
+          name: 'Remove filter: Referrer URL is https://theguardian.com'
+        })
+        .click()
+
+      await expect(page).not.toHaveURL(
+        /f=is,referrer,https:\/\/theguardian\.com/
+      )
+    })
+  })
+
+  const utmTagsFilterButton = (page) =>
+    page.getByTestId('filtermenu').getByRole('link', { name: 'UTM Tags' })
+
+  test('filtering by UTM tags', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        { name: 'pageview', utm_medium: 'social' },
+        { name: 'pageview', utm_source: 'producthunt' },
+        { name: 'pageview', utm_campaign: 'ads' },
+        { name: 'pageview', utm_term: 'post' },
+        { name: 'pageview', utm_content: 'website' }
+      ]
+    })
+
+    await page.goto('/' + domain)
+
+    await test.step('filtering by UTM medium', async () => {
+      const utmMediumFilterRow = filterRow(page, 'utm_medium')
+      const utmMediumInput = page.getByPlaceholder('Select a UTM Medium')
+
+      await filterButton(page).click()
+      await utmTagsFilterButton(page).click()
+
+      await utmMediumInput.fill('soc')
+      await suggestedItem(utmMediumFilterRow, 'social').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'UTM Medium is social' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,utm_medium,social/)
+
+      await page
+        .getByRole('button', {
+          name: 'Remove filter: UTM Medium is social'
+        })
+        .click()
+
+      await expect(page).not.toHaveURL(/f=is,utm_medium,social/)
+    })
+
+    await test.step('filtering by UTM source', async () => {
+      const utmSourceFilterRow = filterRow(page, 'utm_source')
+      const utmSourceInput = page.getByPlaceholder('Select a UTM Source')
+
+      await filterButton(page).click()
+      await utmTagsFilterButton(page).click()
+
+      await utmSourceInput.fill('hunt')
+      await suggestedItem(utmSourceFilterRow, 'producthunt').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'UTM Source is producthunt' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,utm_source,producthunt/)
+
+      await page
+        .getByRole('button', {
+          name: 'Remove filter: UTM Source is producthunt'
+        })
+        .click()
+
+      await expect(page).not.toHaveURL(/f=is,utm_source,producthunt/)
+    })
+
+    await test.step('filtering by UTM campaign', async () => {
+      const utmCampaignFilterRow = filterRow(page, 'utm_campaign')
+      const utmCampaignInput = page.getByPlaceholder('Select a UTM Campaign')
+
+      await filterButton(page).click()
+      await utmTagsFilterButton(page).click()
+
+      await utmCampaignInput.fill('ads')
+      await suggestedItem(utmCampaignFilterRow, 'ads').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'UTM Campaign is ads' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,utm_campaign,ads/)
+
+      await page
+        .getByRole('button', {
+          name: 'Remove filter: UTM Campaign is ads'
+        })
+        .click()
+
+      await expect(page).not.toHaveURL(/f=is,utm_campaign,ads/)
+    })
+
+    await test.step('filtering by UTM term', async () => {
+      const utmTermFilterRow = filterRow(page, 'utm_term')
+      const utmTermInput = page.getByPlaceholder('Select a UTM Term')
+
+      await filterButton(page).click()
+      await utmTagsFilterButton(page).click()
+
+      await utmTermInput.fill('pos')
+      await suggestedItem(utmTermFilterRow, 'post').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'UTM Term is post' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,utm_term,post/)
+
+      await page
+        .getByRole('button', {
+          name: 'Remove filter: UTM Term is post'
+        })
+        .click()
+
+      await expect(page).not.toHaveURL(/f=is,utm_term,post/)
+    })
+
+    await test.step('filtering by UTM content', async () => {
+      const utmContentFilterRow = filterRow(page, 'utm_content')
+      const utmContentInput = page.getByPlaceholder('Select a UTM Content')
+
+      await filterButton(page).click()
+      await utmTagsFilterButton(page).click()
+
+      await utmContentInput.fill('web')
+      await suggestedItem(utmContentFilterRow, 'website').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'UTM Content is website' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,utm_content,website/)
+
+      await page
+        .getByRole('button', {
+          name: 'Remove filter: UTM Content is website'
+        })
+        .click()
+
+      await expect(page).not.toHaveURL(/f=is,utm_content,website/)
+    })
+  })
+})
+
 test.describe('goal filtering tests', () => {
   const goalFilterButton = (page) =>
     page.getByTestId('filtermenu').getByRole('link', { name: 'Goal' })
