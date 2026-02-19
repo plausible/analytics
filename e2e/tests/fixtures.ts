@@ -29,6 +29,8 @@ type Event = {
   utm_term?: string
   utm_content?: string
   screen_size?: string
+  browser?: string
+  browser_version?: string
   'meta.key'?: string[]
   'meta.value'?: string[]
   timestamp?: EventTimestamp

@@ -691,6 +691,69 @@ test.describe('screen size filtering tests', () => {
   })
 })
 
+test.describe('browser filtering tests', () => {
+  const browserFilterButton = (page) =>
+    page.getByTestId('filtermenu').getByRole('link', { name: 'Browser' })
+
+  test('filtering by browser', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        { name: 'pageview', browser: 'Chrome', browser_version: '14.0.7' },
+        { name: 'pageview', browser: 'Firefox', browser_version: '98' }
+      ]
+    })
+
+    await page.goto('/' + domain)
+
+    await test.step('filtering by browser type', async () => {
+      const browserFilterRow = filterRow(page, 'browser')
+      const browserInput = page.getByPlaceholder('Select a Browser', {
+        exact: true
+      })
+
+      await filterButton(page).click()
+      await browserFilterButton(page).click()
+
+      await browserInput.fill('chrom')
+      await suggestedItem(browserFilterRow, 'Chrome').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Browser is Chrome' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,browser,Chrome/)
+    })
+
+    await test.step('filtering by browser version', async () => {
+      const browserVersionFilterRow = filterRow(page, 'browser_version')
+      const browserVersionInput = page.getByPlaceholder(
+        'Select a Browser Version'
+      )
+
+      await filterButton(page).click()
+      await browserFilterButton(page).click()
+
+      await browserVersionInput.fill('14')
+      await suggestedItem(browserVersionFilterRow, '14.0.7').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Browser version is 14.0.7' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,browser_version,14\.0\.7/)
+      await expect(page).toHaveURL(/f=is,browser,Chrome/)
+    })
+  })
+})
+
 test.describe('goal filtering tests', () => {
   const goalFilterButton = (page) =>
     page.getByTestId('filtermenu').getByRole('link', { name: 'Goal' })
