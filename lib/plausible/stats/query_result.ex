@@ -103,25 +103,24 @@ defmodule Plausible.Stats.QueryResult do
 
   defp query(%QueryRunner{site: site, main_query: query}) do
     [
-      {:site_id, site.domain},
-      {:metrics, query.metrics},
-      {:date_range,
-       [
-         to_iso8601(query.utc_time_range.first, query.timezone),
-         to_iso8601(query.utc_time_range.last, query.timezone)
-       ]},
-      {:comparison_date_range,
-       if(query.include.compare,
-         do: [
-           to_iso8601(query.comparison_utc_time_range.first, query.timezone),
-           to_iso8601(query.comparison_utc_time_range.last, query.timezone)
-         ]
-       )},
-      {:filters, query.filters},
-      {:dimensions, query.dimensions},
-      {:order_by, query.order_by |> Enum.map(&Tuple.to_list/1)},
-      {:include, include(query) |> Map.filter(fn {_key, val} -> val end)},
-      {:pagination, query.pagination}
+      site_id: site.domain,
+      metrics: query.metrics,
+      date_range: [
+        to_iso8601(query.utc_time_range.first, query.timezone),
+        to_iso8601(query.utc_time_range.last, query.timezone)
+      ],
+      comparison_date_range:
+        if(query.include.compare,
+          do: [
+            to_iso8601(query.comparison_utc_time_range.first, query.timezone),
+            to_iso8601(query.comparison_utc_time_range.last, query.timezone)
+          ]
+        ),
+      filters: query.filters,
+      dimensions: query.dimensions,
+      order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
+      include: include(query) |> Map.filter(fn {_key, val} -> val end),
+      pagination: query.pagination
     ]
     |> Enum.reject(fn {_k, v} -> is_nil(v) end)
   end
