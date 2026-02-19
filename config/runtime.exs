@@ -118,7 +118,7 @@ ch_db_url =
   get_var_from_path_or_env(
     config_dir,
     "CLICKHOUSE_DATABASE_URL",
-    "http://plausible_events_db:8124/plausible_events_db"
+    "http://plausible_events_db:8123/plausible_events_db"
   )
 
 {ingest_pool_size, ""} =
