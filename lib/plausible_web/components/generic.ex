@@ -1261,7 +1261,7 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr(:class, :string, default: "")
-  attr(:color, :atom, default: :gray, values: [:gray, :indigo, :yellow, :green])
+  attr(:color, :atom, default: :gray, values: [:gray, :indigo, :yellow, :green, :red])
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
@@ -1296,5 +1296,9 @@ defmodule PlausibleWeb.Components.Generic do
 
   defp get_pill_color_classes(:green) do
     "bg-green-100/70 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+  end
+
+  defp get_pill_color_classes(:red) do
+    "bg-red-100/60 text-red-700 dark:bg-red-800/40 dark:text-red-300"
   end
 end

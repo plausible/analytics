@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Components.Billing do
   use Plausible
 
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.{Subscription, Subscriptions, Plan, Plans, EnterprisePlan}
+  alias Plausible.Billing.{Plan, Plans, EnterprisePlan}
 
   attr :site, Plausible.Site, required: false, default: nil
   attr :current_user, Plausible.Auth.User, required: true
@@ -58,9 +58,8 @@ defmodule PlausibleWeb.Components.Billing do
 
   def render_monthly_pageview_usage(assigns) do
     ~H"""
-    <article id="monthly_pageview_usage_container" x-data="{ tab: 'last_cycle' }" class="mt-8">
-      <.title>Monthly pageviews usage</.title>
-      <div class="mt-4 mb-4">
+    <article id="monthly_pageview_usage_container" x-data="{ tab: 'last_cycle' }">
+      <div class="mb-4">
         <ol class="divide-y divide-gray-300 dark:divide-gray-600 rounded-md border dark:border-gray-600 md:flex md:flex-row-reverse md:divide-y-0 md:overflow-hidden">
           <.billing_cycle_tab
             name="Upcoming cycle"
@@ -290,30 +289,6 @@ defmodule PlausibleWeb.Components.Billing do
     end
   end
 
-  def monthly_quota_box(assigns) do
-    ~H"""
-    <div
-      id="monthly-quota-box"
-      class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-800 w-max-md"
-    >
-      <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
-      <div class="py-2 text-xl font-medium dark:text-gray-100">
-        {PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long)}
-      </div>
-      <.styled_link
-        :if={
-          not (Plausible.Teams.Billing.enterprise_configured?(@team) &&
-                 Subscriptions.halted?(@subscription))
-        }
-        id="#upgrade-or-change-plan-link"
-        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-      >
-        {change_plan_or_upgrade_text(@subscription)}
-      </.styled_link>
-    </div>
-    """
-  end
-
   def present_enterprise_plan(assigns) do
     ~H"""
     <ul class="w-full py-4">
@@ -412,25 +387,6 @@ defmodule PlausibleWeb.Components.Billing do
       """
     end
   end
-
-  def upgrade_link(assigns) do
-    ~H"""
-    <.button_link
-      id="upgrade-link-2"
-      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-      mt?={false}
-    >
-      Upgrade
-    </.button_link>
-    """
-  end
-
-  defp change_plan_or_upgrade_text(nil), do: "Upgrade"
-
-  defp change_plan_or_upgrade_text(%Subscription{status: Subscription.Status.deleted()}),
-    do: "Upgrade"
-
-  defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
   attr :link_class, :string, default: ""
   attr :current_team, :any, required: true

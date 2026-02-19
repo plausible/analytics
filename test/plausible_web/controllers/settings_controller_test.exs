@@ -25,24 +25,24 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "shows subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "558018")
       conn = get(conn, Routes.settings_path(conn, :subscription))
-      assert html_response(conn, 200) =~ "10k pageviews"
-      assert html_response(conn, 200) =~ "monthly billing"
+      assert html_response(conn, 200) =~ "10k monthly pageviews"
+      assert html_response(conn, 200) =~ "/ month"
     end
 
     @tag :ee_only
     test "shows yearly subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "590752")
       conn = get(conn, Routes.settings_path(conn, :subscription))
-      assert html_response(conn, 200) =~ "100k pageviews"
-      assert html_response(conn, 200) =~ "yearly billing"
+      assert html_response(conn, 200) =~ "100k monthly pageviews"
+      assert html_response(conn, 200) =~ "/ year"
     end
 
     @tag :ee_only
     test "shows free subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "free_10k")
       conn = get(conn, Routes.settings_path(conn, :subscription))
-      assert html_response(conn, 200) =~ "10k pageviews"
-      assert html_response(conn, 200) =~ "N/A billing"
+      assert html_response(conn, 200) =~ "10k monthly pageviews"
+      assert html_response(conn, 200) =~ "N/A"
     end
 
     @tag :ee_only
@@ -50,8 +50,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
       configure_enterprise_plan(user)
 
       conn = get(conn, Routes.settings_path(conn, :subscription))
-      assert html_response(conn, 200) =~ "20M pageviews"
-      assert html_response(conn, 200) =~ "yearly billing"
+      assert html_response(conn, 200) =~ "20M monthly pageviews"
+      assert html_response(conn, 200) =~ "/ year"
     end
 
     @tag :ee_only
@@ -69,25 +69,44 @@ defmodule PlausibleWeb.SettingsControllerTest do
       )
 
       conn = get(conn, Routes.settings_path(conn, :subscription))
-      assert html_response(conn, 200) =~ "20M pageviews"
-      assert html_response(conn, 200) =~ "yearly billing"
+      assert html_response(conn, 200) =~ "20M monthly pageviews"
+      assert html_response(conn, 200) =~ "/ year"
     end
 
     @tag :ee_only
-    test "renders two links to '/billing/choose-plan` with the text 'Upgrade'", %{conn: conn} do
+    test "shows trial state without days-left pill when user has no team yet", %{conn: conn} do
       doc =
         conn
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      upgrade_link_1 = find(doc, "#monthly-quota-box a")
-      upgrade_link_2 = find(doc, "#upgrade-link-2")
+      upgrade_link = find(doc, "#upgrade-or-change-plan-link")
 
-      assert text(upgrade_link_1) == "Upgrade"
-      assert text_of_attr(upgrade_link_1, "href") == Routes.billing_path(conn, :choose_plan)
+      assert text(upgrade_link) =~ "Choose a plan"
+      assert text_of_attr(upgrade_link, "href") == Routes.billing_path(conn, :choose_plan)
+      assert doc =~ "Your 30-day trial will start when you add your first site"
+      refute doc =~ "days left"
+    end
 
-      assert text(upgrade_link_2) == "Upgrade"
-      assert text_of_attr(upgrade_link_2, "href") == Routes.billing_path(conn, :choose_plan)
+    @tag :ee_only
+    test "shows trial state with days-left pill when user is on trial", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), 10))
+      |> Plausible.Repo.update!()
+
+      doc =
+        conn
+        |> get(Routes.settings_path(conn, :subscription))
+        |> html_response(200)
+
+      upgrade_link = find(doc, "#upgrade-or-change-plan-link")
+
+      assert text(upgrade_link) =~ "Choose a plan"
+      assert text_of_attr(upgrade_link, "href") == Routes.billing_path(conn, :choose_plan)
+      assert doc =~ "days left"
+      refute doc =~ "Your 30-day trial will start when you add your first site"
     end
 
     @tag :ee_only
@@ -102,15 +121,15 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      refute element_exists?(doc, "#upgrade-link-2")
-      assert doc =~ "Cancel my subscription"
+      assert doc =~ "Cancel plan"
 
-      change_plan_link = find(doc, "#monthly-quota-box a")
+      change_plan_link = find(doc, "#upgrade-or-change-plan-link")
 
       assert text(change_plan_link) == "Change plan"
       assert text_of_attr(change_plan_link, "href") == Routes.billing_path(conn, :choose_plan)
     end
 
+    @tag :ee_only
     test "/billing/choose-plan link does not show up when enterprise subscription is past_due", %{
       conn: conn,
       user: user
@@ -125,6 +144,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
     end
 
+    @tag :ee_only
     test "/billing/choose-plan link does not show up when enterprise subscription is paused", %{
       conn: conn,
       user: user
@@ -140,7 +160,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    test "renders two links to '/billing/choose-plan' with the text 'Upgrade' for a configured enterprise plan",
+    test "renders a link to '/billing/choose-plan' with the text 'Upgrade' for a configured enterprise plan",
          %{conn: conn, user: user} do
       subscribe_to_enterprise_plan(user,
         paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
@@ -154,18 +174,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      upgrade_link_1 = find(doc, "#monthly-quota-box a")
-      upgrade_link_2 = find(doc, "#upgrade-link-2")
+      upgrade_link = find(doc, "#upgrade-or-change-plan-link")
 
-      assert text(upgrade_link_1) == "Upgrade"
-
-      assert text_of_attr(upgrade_link_1, "href") ==
-               Routes.billing_path(conn, :choose_plan)
-
-      assert text(upgrade_link_2) == "Upgrade"
-
-      assert text_of_attr(upgrade_link_2, "href") ==
-               Routes.billing_path(conn, :choose_plan)
+      assert text(upgrade_link) == "Upgrade"
+      assert text_of_attr(upgrade_link, "href") == Routes.billing_path(conn, :choose_plan)
     end
 
     @tag :ee_only
@@ -178,10 +190,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      refute element_exists?(doc, "#upgrade-link-2")
-      assert doc =~ "Cancel my subscription"
+      assert doc =~ "Cancel plan"
 
-      change_plan_link = find(doc, "#monthly-quota-box a")
+      change_plan_link = find(doc, "#upgrade-or-change-plan-link")
 
       assert text(change_plan_link) == "Change plan"
 
