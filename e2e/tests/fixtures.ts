@@ -21,6 +21,14 @@ type Event = {
   revenue_reporting_currency?: string
   pathname?: string
   hostname?: string
+  referrer_source?: string
+  referrer?: string
+  utm_medium?: string
+  utm_source?: string
+  utm_campaign?: string
+  utm_term?: string
+  utm_content?: string
+  screen_size?: string
   'meta.key'?: string[]
   'meta.value'?: string[]
   timestamp?: EventTimestamp
