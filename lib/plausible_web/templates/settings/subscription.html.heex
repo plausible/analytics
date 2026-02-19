@@ -107,20 +107,40 @@
   <.tile docs="subscription-plans">
     <:title>Site and team usage</:title>
 
-    <PlausibleWeb.Components.Billing.usage_and_limits_table>
-      <PlausibleWeb.Components.Billing.usage_and_limits_row
-        id="site-usage-row"
-        title="Owned sites"
-        usage={@site_usage}
-        limit={@site_limit}
-      />
-      <PlausibleWeb.Components.Billing.usage_and_limits_row
-        id="team-member-usage-row"
-        title="Team members"
-        usage={@team_member_usage}
-        limit={@team_member_limit}
-      />
-    </PlausibleWeb.Components.Billing.usage_and_limits_table>
+    <div class="grid grid-cols-2 gap-8">
+      <div class="flex flex-col gap-3">
+        <PlausibleWeb.Components.Billing.usage_progress_bar
+          id="site-usage-row"
+          usage={@site_usage}
+          limit={@site_limit}
+        />
+        <div class="flex justify-between text-sm font-medium text-gray-900 dark:text-gray-100">
+          <span>Owned sites</span>
+          <span>
+            {PlausibleWeb.TextHelpers.number_format(@site_usage)}
+            {if is_number(@site_limit),
+              do: "/ #{PlausibleWeb.TextHelpers.number_format(@site_limit)}"}
+            {if @site_limit == :unlimited, do: "/ Unlimited"}
+          </span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-3">
+        <PlausibleWeb.Components.Billing.usage_progress_bar
+          id="team-member-usage-row"
+          usage={@team_member_usage}
+          limit={@team_member_limit}
+        />
+        <div class="flex justify-between text-sm font-medium text-gray-900 dark:text-gray-100">
+          <span>Team members</span>
+          <span>
+            {PlausibleWeb.TextHelpers.number_format(@team_member_usage)}
+            {if is_number(@team_member_limit),
+              do: "/ #{PlausibleWeb.TextHelpers.number_format(@team_member_limit)}"}
+            {if @team_member_limit == :unlimited, do: "/ Unlimited"}
+          </span>
+        </div>
+      </div>
+    </div>
   </.tile>
 </.settings_tiles>
 
