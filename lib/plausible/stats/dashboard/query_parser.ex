@@ -78,7 +78,9 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          compare: compare,
          compare_match_day_of_week: params["include"]["compare_match_day_of_week"] !== false,
          time_labels: params["include"]["time_labels"] === true,
-         trim_relative_date_range: true
+         trim_relative_date_range: true,
+         drop_unavailable_time_on_page:
+           params["include"]["drop_unavailable_time_on_page"] === true
        }}
     end
   end
