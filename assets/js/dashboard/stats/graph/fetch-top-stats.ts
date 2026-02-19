@@ -90,16 +90,6 @@ export function chooseMetrics(
       ...revenueMetrics,
       { key: 'conversion_rate', label: 'Conversion rate' }
     ]
-  } else if (hasPageFilter(dashboardState) && dashboardState.with_imported) {
-    // Note: Copied this condition over from the backend, but need to investigate why time_on_page
-    // and bounce_rate cannot be queried with imported data. In any case, we should drop the metrics
-    // on the backend, and simply request them here.
-    return [
-      { key: 'visitors', label: 'Unique visitors' },
-      { key: 'visits', label: 'Total visits' },
-      { key: 'pageviews', label: 'Total pageviews' },
-      { key: 'scroll_depth', label: 'Scroll depth' }
-    ]
   } else if (hasPageFilter(dashboardState)) {
     return [
       { key: 'visitors', label: 'Unique visitors' },
@@ -127,7 +117,7 @@ function constructTopStatsQuery(
 ): StatsQuery {
   const reportParams: ReportParams = {
     metrics: metrics.map((m) => m.key),
-    include: { imports_meta: true }
+    include: { imports_meta: true, drop_unavailable_time_on_page: true }
   }
 
   const statsQuery = createStatsQuery(dashboardState, reportParams)

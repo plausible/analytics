@@ -17,6 +17,7 @@ type QueryInclude = {
   time_labels: boolean
   compare: IncludeCompare
   compare_match_day_of_week: boolean
+  drop_unavailable_time_on_page: boolean
 }
 
 export type ReportParams = {
@@ -49,7 +50,9 @@ export function createStatsQuery(
       imports_meta: reportParams.include?.imports_meta || false,
       time_labels: reportParams.include?.time_labels || false,
       compare: createIncludeCompare(dashboardState),
-      compare_match_day_of_week: dashboardState.match_day_of_week
+      compare_match_day_of_week: dashboardState.match_day_of_week,
+      drop_unavailable_time_on_page:
+        reportParams.include?.drop_unavailable_time_on_page || false
     }
   }
 }

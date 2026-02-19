@@ -18,14 +18,20 @@ const expectedBaseInclude: StatsQuery['include'] = {
   compare_match_day_of_week: true,
   imports: true,
   imports_meta: true,
-  time_labels: false
+  time_labels: false,
+  drop_unavailable_time_on_page: true
 }
 
 const expectedRealtimeVisitorsQuery: StatsQuery = {
   date_range: DashboardPeriod.realtime,
   dimensions: [],
   filters: [],
-  include: { ...expectedBaseInclude, compare: null, imports_meta: false },
+  include: {
+    ...expectedBaseInclude,
+    compare: null,
+    imports_meta: false,
+    drop_unavailable_time_on_page: false
+  },
   metrics: ['visitors'],
   relative_date: null
 }
@@ -35,11 +41,7 @@ type TestCase = [
   string,
   /** input dashboard state & site state */
   Pick<DashboardState, 'filters' | 'period'> &
-    Partial<
-      Pick<DashboardState, 'with_imported'> & {
-        site?: Pick<PlausibleSite, 'revenueGoals'>
-      }
-    >,
+    Partial<{ site?: Pick<PlausibleSite, 'revenueGoals'> }>,
   /** expected metrics */
   MetricDef[],
   /** expected queries */
@@ -147,33 +149,10 @@ const cases: TestCase[] = [
   ],
 
   [
-    'page filter with imported data',
-    { period: aPeriodNotRealtime, filters: [aPageFilter], with_imported: true },
-    [
-      { key: 'visitors', label: 'Unique visitors' },
-      { key: 'visits', label: 'Total visits' },
-      { key: 'pageviews', label: 'Total pageviews' },
-      { key: 'scroll_depth', label: 'Scroll depth' }
-    ],
-    [
-      {
-        date_range: aPeriodNotRealtime,
-        dimensions: [],
-        filters: remapToApiFilters([aPageFilter]),
-        include: expectedBaseInclude,
-        metrics: ['visitors', 'visits', 'pageviews', 'scroll_depth'],
-        relative_date: null
-      },
-      null
-    ]
-  ],
-
-  [
-    'page filter without imported data',
+    'page filter',
     {
       period: aPeriodNotRealtime,
-      filters: [aPageFilter],
-      with_imported: false
+      filters: [aPageFilter]
     },
     [
       { key: 'visitors', label: 'Unique visitors' },
@@ -189,7 +168,7 @@ const cases: TestCase[] = [
         date_range: aPeriodNotRealtime,
         dimensions: [],
         filters: remapToApiFilters([aPageFilter]),
-        include: { ...expectedBaseInclude, imports: false },
+        include: { ...expectedBaseInclude },
         metrics: [
           'visitors',
           'visits',
