@@ -34,7 +34,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
     const warning = warningText(stat.metric, site)
-    statName = stat.value === 1 ? statName.slice(0, -1) : statName
+    statName = stat.value === 1 ? statName.replace(/s$/, '') : statName
 
     return (
       <div>
@@ -160,7 +160,6 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
         'border-r lg:border-r-0': index % 2 === 0
       }
     )
-
     return (
       <Tooltip
         key={stat.name}

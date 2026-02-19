@@ -272,7 +272,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    test "renders pageview usage for current, last, and penultimate billing cycles", %{
+    test "renders billing cycle usage breakdown", %{
       conn: conn,
       user: user
     } do
@@ -300,44 +300,15 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      assert text_of_element(html, "#billing_cycle_tab_current_cycle") =~
-               Date.range(
-                 last_bill_date,
-                 Date.shift(last_bill_date, month: 1, day: -1)
-               )
+      assert html =~
+               Date.range(last_bill_date, Date.shift(last_bill_date, month: 1, day: -1))
                |> PlausibleWeb.TextHelpers.format_date_range()
-
-      assert text_of_element(html, "#billing_cycle_tab_last_cycle") =~
-               Date.range(
-                 Date.shift(last_bill_date, month: -1),
-                 Date.shift(last_bill_date, day: -1)
-               )
-               |> PlausibleWeb.TextHelpers.format_date_range()
-
-      assert text_of_element(html, "#billing_cycle_tab_penultimate_cycle") =~
-               Date.range(
-                 Date.shift(last_bill_date, month: -2),
-                 Date.shift(last_bill_date, month: -1, day: -1)
-               )
-               |> PlausibleWeb.TextHelpers.format_date_range()
-
-      assert text_of_element(html, "#total_pageviews_current_cycle") =~
-               "Total billable pageviews 1"
 
       assert text_of_element(html, "#pageviews_current_cycle") =~ "Pageviews 1"
       assert text_of_element(html, "#custom_events_current_cycle") =~ "Custom events 0"
 
-      assert text_of_element(html, "#total_pageviews_last_cycle") =~
-               "Total billable pageviews 1 / 10,000"
-
-      assert text_of_element(html, "#pageviews_last_cycle") =~ "Pageviews 0"
-      assert text_of_element(html, "#custom_events_last_cycle") =~ "Custom events 1"
-
-      assert text_of_element(html, "#total_pageviews_penultimate_cycle") =~
-               "Total billable pageviews 2 / 10,000"
-
-      assert text_of_element(html, "#pageviews_penultimate_cycle") =~ "Pageviews 1"
-      assert text_of_element(html, "#custom_events_penultimate_cycle") =~ "Custom events 1"
+      refute element_exists?(html, "#total_pageviews_last_cycle")
+      refute element_exists?(html, "#total_pageviews_penultimate_cycle")
     end
 
     @tag :ee_only
@@ -349,8 +320,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
         refute element_exists?(doc, "#total_pageviews_last_30_days")
 
         assert element_exists?(doc, "#total_pageviews_current_cycle")
-        assert element_exists?(doc, "#total_pageviews_last_cycle")
-        assert element_exists?(doc, "#total_pageviews_penultimate_cycle")
       end
 
       subscribe_to_plan(user, @v4_plan_id,
@@ -394,49 +363,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    test "penultimate cycle is disabled if there's no usage", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-
-      populate_stats(site, [
-        build(:event, name: "pageview", timestamp: DateTime.shift(DateTime.utc_now(), day: -5)),
-        build(:event,
-          name: "customevent",
-          timestamp: DateTime.shift(DateTime.utc_now(), day: -20)
-        )
-      ])
-
-      last_bill_date = Date.shift(Date.utc_today(), day: -10)
-
-      subscribe_to_plan(user, @v4_plan_id, last_bill_date: last_bill_date)
-
-      html =
-        conn
-        |> get(Routes.settings_path(conn, :subscription))
-        |> html_response(200)
-
-      assert class_of_element(html, "#billing_cycle_tab_penultimate_cycle button") =~
-               "pointer-events-none"
-
-      assert text_of_element(html, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
-    end
-
-    @tag :ee_only
-    test "last cycle tab is selected by default", %{
-      conn: conn,
-      user: user
-    } do
-      subscribe_to_plan(user, @v4_plan_id, last_bill_date: Date.shift(Date.utc_today(), day: -1))
-
-      html =
-        conn
-        |> get(Routes.settings_path(conn, :subscription))
-        |> html_response(200)
-
-      assert text_of_attr(find(html, "#monthly_pageview_usage_container"), "x-data") ==
-               "{ tab: 'last_cycle' }"
-    end
-
-    @tag :ee_only
     test "renders last 30 days pageview usage for trials and non-active/free_10k subscriptions",
          %{
            conn: conn,
@@ -458,10 +384,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert_usage = fn doc ->
         refute element_exists?(doc, "#total_pageviews_current_cycle")
-
-        assert text_of_element(doc, "#total_pageviews_last_30_days") =~
-                 "Total billable pageviews (last 30 days) 3"
-
+        assert element_exists?(doc, "#total_pageviews_last_30_days")
         assert text_of_element(doc, "#pageviews_last_30_days") =~ "Pageviews 1"
         assert text_of_element(doc, "#custom_events_last_30_days") =~ "Custom events 2"
       end
@@ -519,39 +442,39 @@ defmodule PlausibleWeb.SettingsControllerTest do
       subscribe_to_plan(user, @v3_plan_id)
       new_site(owner: user)
 
-      site_usage_row_text =
+      html =
         conn
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
-        |> text_of_element("#site-usage-row")
 
-      assert site_usage_row_text =~ "Owned sites 1 / 50"
+      sites_usage_text = text_of_element(html, "[data-test-id='sites-usage']")
+      assert sites_usage_text =~ "1 / 50"
     end
 
     @tag :ee_only
     test "renders team members usage and limit", %{conn: conn, user: user} do
       subscribe_to_plan(user, @v4_plan_id)
 
-      team_member_usage_row_text =
+      html =
         conn
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
-        |> text_of_element("#team-member-usage-row")
 
-      assert team_member_usage_row_text =~ "Team members 0 / 3"
+      team_member_usage_text = text_of_element(html, "[data-test-id='team-member-usage']")
+      assert team_member_usage_text =~ "0 / 3"
     end
 
     @tag :ee_only
-    test "renders team member usage without limit if it's unlimited", %{conn: conn, user: user} do
+    test "renders team member usage with unlimited limit", %{conn: conn, user: user} do
       subscribe_to_plan(user, @v3_plan_id)
 
-      team_member_usage_row_text =
+      html =
         conn
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
-        |> text_of_element("#team-member-usage-row")
 
-      assert team_member_usage_row_text == "Team members 0"
+      team_member_usage_text = text_of_element(html, "[data-test-id='team-member-usage']")
+      assert team_member_usage_text =~ "/ Unlimited"
     end
   end
 
