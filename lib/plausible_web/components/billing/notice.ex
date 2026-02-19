@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       <PlausibleWeb.Components.Billing.upgrade_call_to_action
         current_team={@current_team}
         current_user={@current_user}
-      />.
+      />
     </.notice>
     """
   end
