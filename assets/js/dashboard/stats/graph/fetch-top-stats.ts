@@ -81,7 +81,7 @@ export function chooseMetrics(
   } else if (isRealTimeDashboard(dashboardState)) {
     return [
       { key: 'visitors', label: 'Unique visitors (last 30 min)' },
-      { key: 'pageviews', label: 'Total pageviews (last 30 min)' }
+      { key: 'pageviews', label: 'Pageviews (last 30 min)' }
     ]
   } else if (hasConversionGoalFilter(dashboardState)) {
     return [

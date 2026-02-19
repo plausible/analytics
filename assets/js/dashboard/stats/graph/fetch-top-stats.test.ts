@@ -72,7 +72,7 @@ const cases: TestCase[] = [
     { period: DashboardPeriod.realtime, filters: [] },
     [
       { key: 'visitors', label: 'Unique visitors (last 30 min)' },
-      { key: 'pageviews', label: 'Total pageviews (last 30 min)' }
+      { key: 'pageviews', label: 'Pageviews (last 30 min)' }
     ],
     [
       {
