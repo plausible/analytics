@@ -73,14 +73,13 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
     with {:ok, compare} <- parse_include_compare(params["include"]) do
       {:ok,
        %QueryInclude{
-         imports: params["include"]["imports"] !== false,
-         imports_meta: params["include"]["imports_meta"] === true,
+         imports: params["include"]["imports"] == true,
+         imports_meta: params["include"]["imports_meta"] == true,
          compare: compare,
-         compare_match_day_of_week: params["include"]["compare_match_day_of_week"] !== false,
-         time_labels: params["include"]["time_labels"] === true,
+         compare_match_day_of_week: params["include"]["compare_match_day_of_week"] == true,
+         time_labels: params["include"]["time_labels"] == true,
          trim_relative_date_range: true,
-         drop_unavailable_time_on_page:
-           params["include"]["drop_unavailable_time_on_page"] === true
+         drop_unavailable_time_on_page: params["include"]["drop_unavailable_time_on_page"] == true
        }}
     end
   end

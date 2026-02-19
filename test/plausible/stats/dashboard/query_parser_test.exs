@@ -96,10 +96,10 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
       assert parsed.include.imports == true
     end
 
-    test "invalid -> true" do
+    test "invalid -> false" do
       params = %{@base_params | "include" => %{@base_params["include"] | "imports" => "foo"}}
       {:ok, parsed} = parse(params)
-      assert parsed.include.imports == true
+      assert parsed.include.imports == false
     end
 
     test "false -> false" do
@@ -172,14 +172,14 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
       assert parsed.include.compare_match_day_of_week == true
     end
 
-    test "invalid -> true" do
+    test "invalid -> false" do
       params = %{
         @base_params
         | "include" => %{@base_params["include"] | "compare_match_day_of_week" => "foo"}
       }
 
       {:ok, parsed} = parse(params)
-      assert parsed.include.compare_match_day_of_week == true
+      assert parsed.include.compare_match_day_of_week == false
     end
 
     test "false -> false" do
