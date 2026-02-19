@@ -144,12 +144,19 @@ defmodule PlausibleWeb.Live.Sites do
           </PrimaDropdown.dropdown_menu>
         </PrimaDropdown.dropdown>
 
-        <a
+        <%!-- <a
           :if={!@consolidated_view_cta_dismissed?}
           href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
           class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
         >
           <Heroicons.plus class="size-4" /> Add website
+        </a> --%>
+        <a
+          :if={!@consolidated_view_cta_dismissed?}
+          href={"https://umakers.dk"}
+          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
+        >
+          Hosting af Umakers
         </a>
       </div>
 
@@ -167,12 +174,19 @@ defmodule PlausibleWeb.Live.Sites do
           {@empty_state_description}
         </p>
         <div class="flex flex-col sm:flex-row gap-3 mt-6">
-          <.button_link
+          <%!-- <.button_link
             href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
             theme="primary"
             mt?={false}
           >
             <Heroicons.plus class="size-4" /> Add website
+          </.button_link> --%>
+          <.button_link
+            href={"https://umakers.dk"}
+            theme="primary"
+            mt?={false}
+          >
+            Hosting af Umakers
           </.button_link>
           <.button_link
             :if={not Teams.setup?(@current_team) and @has_sites?}
