@@ -447,8 +447,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      assert html =~ "Owned sites"
-      assert html =~ "/ 50"
+      sites_usage_text = text_of_element(html, "[data-test-id='sites-usage']")
+      assert sites_usage_text =~ "1 / 50"
     end
 
     @tag :ee_only
@@ -460,8 +460,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      assert html =~ "Team members"
-      assert html =~ "/ 3"
+      team_member_usage_text = text_of_element(html, "[data-test-id='team-member-usage']")
+      assert team_member_usage_text =~ "0 / 3"
     end
 
     @tag :ee_only
@@ -473,8 +473,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      assert html =~ "Team members"
-      assert html =~ "/ Unlimited"
+      team_member_usage_text = text_of_element(html, "[data-test-id='team-member-usage']")
+      assert team_member_usage_text =~ "/ Unlimited"
     end
   end
 

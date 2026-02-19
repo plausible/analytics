@@ -116,7 +116,7 @@
         />
         <div class="flex justify-between text-sm font-medium text-gray-900 dark:text-gray-100">
           <span>Owned sites</span>
-          <span>
+          <span data-test-id="sites-usage">
             {PlausibleWeb.TextHelpers.number_format(@site_usage)}
             {if is_number(@site_limit),
               do: "/ #{PlausibleWeb.TextHelpers.number_format(@site_limit)}"}
@@ -132,7 +132,7 @@
         />
         <div class="flex justify-between text-sm font-medium text-gray-900 dark:text-gray-100">
           <span>Team members</span>
-          <span>
+          <span data-test-id="team-member-usage">
             {PlausibleWeb.TextHelpers.number_format(@team_member_usage)}
             {if is_number(@team_member_limit),
               do: "/ #{PlausibleWeb.TextHelpers.number_format(@team_member_limit)}"}
