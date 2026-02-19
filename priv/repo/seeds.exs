@@ -82,6 +82,15 @@ user2 = new_user(name: "Mary Jane", email: "user2@plausible.test", password: "pl
 site2 = new_site(domain: "computer.example.com", owner: user2)
 invite_guest(site2, user, inviter: user2, role: :viewer)
 
+user3 = new_user(name: "Harvey Dent", email: "user3@plausible.test", password: "plausible")
+site3 = new_site(domain: "bank.example.com", owner: user3)
+subscribe_to_business_plan(user3)
+invite_member(team_of(user3), "user@plausible.test", role: :editor, inviter: user3)
+
+user4 = new_user(name: "Bruce Wayne", email: "user4@plausible.test", password: "plausible")
+site4 = new_site(domain: "cave.example.com", owner: user4)
+invite_transfer(site4, "user@plausible.test", inviter: user4)
+
 on_ee do
   solo_user = new_user(name: "Solo User", email: "solo@plausible.test", password: "plausible")
   new_site(domain: "mysolosite.com", owner: solo_user)
@@ -156,7 +165,7 @@ if ee?() do
 
   {:ok, _funnel} =
     Plausible.Funnels.create(site, "From logged in homepage to Purchase", [
-      %{"goal_id" => goal6.id},
+      %{"goal_id" => goal7.id},
       %{"goal_id" => goal2.id},
       %{"goal_id" => revenue_goal.id}
     ])
