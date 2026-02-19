@@ -31,6 +31,8 @@ type Event = {
   screen_size?: string
   browser?: string
   browser_version?: string
+  operating_system?: string
+  operating_system_version?: string
   'meta.key'?: string[]
   'meta.value'?: string[]
   timestamp?: EventTimestamp
