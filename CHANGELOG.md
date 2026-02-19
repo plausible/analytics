@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Add `bounce_rate` to page-filtered Top Stats even when imports are included, but render a metric warning about imported data not included in `bounce_rate` tooltip.
+- Add `time_on_page` to page-filtered Top Stats even when imports are included, unless legacy time on page is in view. 
 - Adds team_id to query debug metadata (saved in system.query_log log_comment column)
 - Add "Unknown" option to Countries shield, for when the country code is unrecognized
 - Add "Last 24 Hours" to dashboard time range picker and Stats API v2
