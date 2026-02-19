@@ -562,6 +562,94 @@ test.describe('acquisition filtering tests', () => {
   })
 })
 
+test.describe('location filtering tests', () => {
+  const locationFilterButton = (page) =>
+    page.getByTestId('filtermenu').getByRole('link', { name: 'Location' })
+
+  test('filtering by location', async ({ page, request }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        {
+          name: 'pageview',
+          country_code: 'EE',
+          subdivision1_code: 'EE-37',
+          city_geoname_id: 588_409
+        }
+      ]
+    })
+
+    await page.goto('/' + domain)
+
+    await test.step('filtering by country', async () => {
+      const countryFilterRow = filterRow(page, 'country')
+      const countryInput = page.getByPlaceholder('Select a Country')
+
+      await filterButton(page).click()
+      await locationFilterButton(page).click()
+
+      await countryInput.fill('est')
+      await suggestedItem(countryFilterRow, 'Estonia').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Country is Estonia' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,country,EE/)
+    })
+
+    await test.step('filtering by region', async () => {
+      const regionFilterRow = filterRow(page, 'region')
+      const regionInput = page.getByPlaceholder('Select a Region')
+
+      await filterButton(page).click()
+      await locationFilterButton(page).click()
+
+      await regionInput.fill('har')
+      await suggestedItem(regionFilterRow, 'Harjumaa').click()
+
+      await applyFilterButton(page).click()
+
+      await expect(
+        page.getByRole('link', { name: 'Region is Harjumaa' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,region,EE-37/)
+      await expect(page).toHaveURL(/f=is,country,EE/)
+    })
+
+    await test.step('filtering by city', async () => {
+      const cityFilterRow = filterRow(page, 'city')
+      const cityInput = page.getByPlaceholder('Select a City')
+
+      await filterButton(page).click()
+      await locationFilterButton(page).click()
+
+      await cityInput.click()
+      await suggestedItem(cityFilterRow, 'Tallinn').click()
+
+      await applyFilterButton(page).click()
+
+      await page
+        .getByRole('button', { name: 'See 1 more filter and actions' })
+        .click()
+
+      await expect(
+        page.getByRole('link', { name: 'City is Tallinn' })
+      ).toBeVisible()
+
+      await expect(page).toHaveURL(/f=is,city,588409/)
+      await expect(page).toHaveURL(/f=is,region,EE-37/)
+      await expect(page).toHaveURL(/f=is,country,EE/)
+    })
+  })
+})
+
 test.describe('goal filtering tests', () => {
   const goalFilterButton = (page) =>
     page.getByTestId('filtermenu').getByRole('link', { name: 'Goal' })
