@@ -38,7 +38,7 @@ export default function TopStats({
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
     const warning = warningText(stat.graph_metric, site)
-    statName = stat.value === 1 ? statName.replace(/s$/, "") : statName
+    statName = stat.value === 1 ? statName.replace(/s$/, '') : statName
 
     return (
       <div>
