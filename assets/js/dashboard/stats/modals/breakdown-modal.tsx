@@ -257,6 +257,9 @@ const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
   if (warnings && warnings[metric.key]) {
     const { code, message } = warnings[metric.key]
 
+    if (metric.key == 'bounce_rate' && code == 'no_imported_bounce_rate') {
+      return 'Does not include imported data'
+    }
     if (metric.key == 'scroll_depth' && code == 'no_imported_scroll_depth') {
       return 'Does not include imported data'
     }

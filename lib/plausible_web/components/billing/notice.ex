@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       <PlausibleWeb.Components.Billing.upgrade_call_to_action
         current_team={@current_team}
         current_user={@current_user}
-      />.
+      />
     </.notice>
     """
   end
@@ -123,7 +123,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@subscription.id)}
         title={Plausible.Billing.subscription_cancelled_notice_title()}
         theme={:red}
-        class="shadow-md dark:shadow-none"
       >
         <.subscription_cancelled_notice_body subscription={@subscription} />
       </.notice>
@@ -144,7 +143,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       <.notice
         title={Plausible.Billing.subscription_cancelled_notice_title()}
         theme={:red}
-        class="shadow-md dark:shadow-none"
+        show_icon={false}
       >
         <.subscription_cancelled_notice_body subscription={@subscription} />
       </.notice>
@@ -172,10 +171,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       ) do
     ~H"""
     <aside class={@class}>
-      <.notice
-        title={Plausible.Billing.subscription_past_due_notice_title()}
-        class="shadow-md dark:shadow-none"
-      >
+      <.notice title={Plausible.Billing.subscription_past_due_notice_title()}>
         There was a problem with your latest payment. Please update your payment information to keep using Plausible.<.link
           href={@subscription.update_url}
           class="whitespace-nowrap font-semibold"
@@ -198,7 +194,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       <.notice
         title={Plausible.Billing.subscription_paused_notice_title()}
         theme={:red}
-        class="shadow-md dark:shadow-none"
       >
         Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.<.link
           href={@subscription.update_url}
@@ -472,7 +467,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <p class="text-pretty">
           Upgrade to a monthly or yearly plan to continue accessing your sites.
         </p>
-        <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+        <.button_link
+          id="upgrade-or-change-plan-link"
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          mt?={false}
+        >
           Choose a plan
         </.button_link>
       </div>
