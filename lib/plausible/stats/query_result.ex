@@ -8,7 +8,7 @@ defmodule Plausible.Stats.QueryResult do
   """
 
   use Plausible
-  alias Plausible.Stats.{Query, QueryRunner, QueryInclude, Filters}
+  alias Plausible.Stats.{Query, QueryRunner, Filters}
 
   defstruct results: [],
             meta: %{},
@@ -43,25 +43,12 @@ defmodule Plausible.Stats.QueryResult do
 
   `results` should already-built by Plausible.Stats.QueryRunner
   """
-  def from(%QueryRunner{site: site, main_query: query, results: results} = runner) do
+  def from(%QueryRunner{results: results} = runner) do
     struct!(
       __MODULE__,
       results: results,
-      meta: meta(runner) |> Enum.sort_by(&elem(&1, 0)) |> Jason.OrderedObject.new(),
-      query:
-        Jason.OrderedObject.new(
-          site_id: site.domain,
-          metrics: query.metrics,
-          date_range: [
-            to_iso8601(query.utc_time_range.first, query.timezone),
-            to_iso8601(query.utc_time_range.last, query.timezone)
-          ],
-          filters: query.filters,
-          dimensions: query.dimensions,
-          order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
-          include: include(query) |> Map.filter(fn {_key, val} -> val end),
-          pagination: query.pagination
-        )
+      meta: meta(runner) |> Jason.OrderedObject.new(),
+      query: query(runner) |> Jason.OrderedObject.new()
     )
   end
 
@@ -69,9 +56,9 @@ defmodule Plausible.Stats.QueryResult do
     %{}
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
-    |> add_dashboard_metric_labels(runner.main_query)
     |> add_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
+    |> Enum.sort_by(&elem(&1, 0))
   end
 
   defp add_imports_meta(meta, %Query{include: include} = query) do
@@ -98,32 +85,6 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_dashboard_metric_labels(meta, %Query{
-         include: %QueryInclude{dashboard_metric_labels: false}
-       }) do
-    meta
-  end
-
-  defp add_dashboard_metric_labels(meta, query) do
-    context = %{
-      goal_filter?:
-        Filters.filtering_on_dimension?(query, "event:goal",
-          max_depth: 0,
-          behavioral_filters: :ignore
-        ),
-      realtime?: query.input_date_range in [:realtime, :realtime_30m],
-      dimensions: query.dimensions
-    }
-
-    metric_labels =
-      query.metrics
-      |> Enum.map(fn metric ->
-        Plausible.Stats.Metrics.dashboard_metric_label(metric, context)
-      end)
-
-    Map.put(meta, :metric_labels, metric_labels)
-  end
-
   defp add_time_labels_meta(meta, query) do
     if query.include.time_labels do
       Map.put(meta, :time_labels, Plausible.Stats.Time.time_labels(query))
@@ -138,6 +99,31 @@ defmodule Plausible.Stats.QueryResult do
     else
       meta
     end
+  end
+
+  defp query(%QueryRunner{site: site, main_query: query}) do
+    [
+      {:site_id, site.domain},
+      {:metrics, query.metrics},
+      {:date_range,
+       [
+         to_iso8601(query.utc_time_range.first, query.timezone),
+         to_iso8601(query.utc_time_range.last, query.timezone)
+       ]},
+      {:comparison_date_range,
+       if(query.include.compare,
+         do: [
+           to_iso8601(query.comparison_utc_time_range.first, query.timezone),
+           to_iso8601(query.comparison_utc_time_range.last, query.timezone)
+         ]
+       )},
+      {:filters, query.filters},
+      {:dimensions, query.dimensions},
+      {:order_by, query.order_by |> Enum.map(&Tuple.to_list/1)},
+      {:include, include(query) |> Map.filter(fn {_key, val} -> val end)},
+      {:pagination, query.pagination}
+    ]
+    |> Enum.reject(fn {_k, v} -> is_nil(v) end)
   end
 
   defp include(query) do

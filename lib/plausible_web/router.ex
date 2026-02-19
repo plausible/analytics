@@ -279,6 +279,7 @@ defmodule PlausibleWeb.Router do
       end
 
       scope private: %{allow_consolidated_views: true} do
+        post "/:domain/query", StatsController, :query
         get "/:domain/current-visitors", StatsController, :current_visitors
         get "/:domain/main-graph", StatsController, :main_graph
         get "/:domain/top-stats", StatsController, :top_stats
