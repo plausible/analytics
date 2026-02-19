@@ -19,8 +19,6 @@ defmodule Mix.Tasks.SendPageview do
   @default_props "{}"
   @default_queryparams ""
   @default_interactive true
-  @default_batches 1
-  @default_batch_size 1
   @options [
     ip: :string,
     user_agent: :string,
@@ -34,9 +32,7 @@ defmodule Mix.Tasks.SendPageview do
     revenue_currency: :string,
     revenue_amount: :string,
     queryparams: :string,
-    interactive: :string,
-    batches: :integer,
-    batch_size: :integer
+    interactive: :string
   ]
 
   def run(opts) do
@@ -46,28 +42,7 @@ defmodule Mix.Tasks.SendPageview do
 
     case invalid do
       [] ->
-        batches = Keyword.get(parsed, :batches, @default_batches)
-        batch_size = Keyword.get(parsed, :batch_size, @default_batch_size)
-        from_same_ip_limit = 20
-        for _ <- 1..batches do
-          batch_ips =
-            1..max(Integer.floor_div(batch_size, from_same_ip_limit), 1)
-            |> Enum.map(fn _ -> Enum.map_join(1..4, ".", fn _ -> Enum.random(1..254) end) end)
-
-          tasks =
-            1..batch_size
-            |> Enum.map(fn i ->
-              Task.async(fn ->
-                do_send_pageview(
-                  parsed
-                  |> Keyword.update(:page, "#{@default_page}#{i}", fn page -> "#{page}/#{i}" end)
-                  |> Keyword.put(:ip, Enum.random(batch_ips))
-                )
-              end)
-            end)
-
-          Task.await_many(tasks)
-        end
+        do_send_pageview(parsed)
 
       [invalid_option | _] ->
         {key, _val} = invalid_option
