@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Api.SystemController do
 
     clickhouse_health_task =
       Task.async(fn ->
-        Plausible.ClickhouseRepo.query("SELECT 1", [], [settings: [workload: "admin"]])
+        Plausible.ClickhouseRepo.query("SELECT 1", [], [settings: [workload: "ingestion"]])
       end)
 
     postgres_health =
