@@ -17,13 +17,13 @@
   </:title>
 
   <:subtitle :if={@has_email_code?}>
-    <p class="truncate">
+    <p class="break-all">
       Please enter the 4-digit code we sent to <b>{@conn.assigns[:current_user].email}</b>
     </p>
   </:subtitle>
 
   <:subtitle :if={!@has_email_code?}>
-    <p class="truncate">
+    <p class="break-all">
       A 4-digit activation code will be sent to <b>{@conn.assigns[:current_user].email}</b>
     </p>
   </:subtitle>
