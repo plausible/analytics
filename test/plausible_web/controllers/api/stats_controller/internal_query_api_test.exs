@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Api.StatsController.InternalQueryApiTest do
         "date_range" => "all",
         "filters" => [["is", "event:page", ["/"]]],
         "metrics" => ["visitors", "time_on_page"],
-        "include" => %{"imports" => true, "drop_unavailable_time_on_page" => true}
+        "include" => %{"imports" => true}
       }
 
       response = do_query_success(conn, site, params)

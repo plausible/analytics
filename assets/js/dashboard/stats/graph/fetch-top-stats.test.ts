@@ -18,8 +18,7 @@ const expectedBaseInclude: StatsQuery['include'] = {
   compare_match_day_of_week: true,
   imports: true,
   imports_meta: true,
-  time_labels: false,
-  drop_unavailable_time_on_page: true
+  time_labels: false
 }
 
 const expectedRealtimeVisitorsQuery: StatsQuery = {
@@ -29,8 +28,7 @@ const expectedRealtimeVisitorsQuery: StatsQuery = {
   include: {
     ...expectedBaseInclude,
     compare: null,
-    imports_meta: false,
-    drop_unavailable_time_on_page: false
+    imports_meta: false
   },
   metrics: ['visitors'],
   relative_date: null

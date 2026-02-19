@@ -21,6 +21,8 @@ export function topStatsQueries(
 ): [StatsQuery, StatsQuery | null] {
   let currentVisitorsQuery = null
 
+  console.log(dashboardState)
+
   if (isRealTimeDashboard(dashboardState)) {
     currentVisitorsQuery = createStatsQuery(dashboardState, {
       metrics: ['visitors']
@@ -117,7 +119,7 @@ function constructTopStatsQuery(
 ): StatsQuery {
   const reportParams: ReportParams = {
     metrics: metrics.map((m) => m.key),
-    include: { imports_meta: true, drop_unavailable_time_on_page: true }
+    include: { imports_meta: true }
   }
 
   const statsQuery = createStatsQuery(dashboardState, reportParams)
