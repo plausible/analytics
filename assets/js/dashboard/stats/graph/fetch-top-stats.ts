@@ -4,7 +4,8 @@ import { DashboardState } from '../../dashboard-state'
 import {
   ComparisonMode,
   DashboardPeriod,
-  isComparisonEnabled
+  isComparisonEnabled,
+  isComparisonForbidden
 } from '../../dashboard-time-periods'
 import { PlausibleSite } from '../../site-context'
 import { createStatsQuery, ReportParams, StatsQuery } from '../../stats-query'
@@ -133,7 +134,10 @@ function constructTopStatsQuery(
 
   if (
     !isComparisonEnabled(dashboardState.comparison) &&
-    !isRealTimeDashboard(dashboardState)
+    !isComparisonForbidden({
+      period: dashboardState.period,
+      segmentIsExpanded: false
+    })
   ) {
     statsQuery.include.compare = ComparisonMode.previous_period
   }
