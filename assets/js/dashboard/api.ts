@@ -1,9 +1,27 @@
+import { Metric } from '../types/query-api'
 import { DashboardState } from './dashboard-state'
+import { PlausibleSite } from './site-context'
+import { StatsQuery } from './stats-query'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
+import * as url from './util/url'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
+
+export type QueryApiResponse = {
+  query: {
+    metrics: Metric[]
+    date_range: [string, string]
+    comparison_date_range: [string, string]
+  }
+  meta: Record<string, unknown>
+  results: {
+    metrics: Array<number>
+    dimensions: Array<string>
+    comparison: { metrics: Array<number>; change: Array<number> }
+  }[]
+}
 
 export class ApiError extends Error {
   payload: unknown
@@ -92,6 +110,21 @@ async function handleApiResponse(response: Response) {
 
 function getSharedLinkSearchParams(): Record<string, string> {
   return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
+}
+
+export async function stats(site: PlausibleSite, statsQuery: StatsQuery) {
+  const response = await fetch(url.apiPath(site, '/query'), {
+    method: 'POST',
+    signal: abortController.signal,
+    headers: {
+      ...getHeaders(),
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify(statsQuery)
+  })
+
+  return handleApiResponse(response)
 }
 
 export async function get(
