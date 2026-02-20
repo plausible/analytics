@@ -58,7 +58,7 @@ defmodule Plausible.Stats.Sparkline do
     first = NaiveDateTime.new!(NaiveDateTime.to_date(first), time)
 
     for offset <- 0..24 do
-      %{interval: NaiveDateTime.add(first, offset, :hour), visitors: 0}
+      %{interval: to_string(NaiveDateTime.add(first, offset, :hour)), visitors: 0}
     end
   end
 
@@ -101,28 +101,27 @@ defmodule Plausible.Stats.Sparkline do
         metrics: [:visitors],
         input_date_range: :"24h",
         dimensions: ["time:hour"],
-        order_by: [{"time:hour", :asc}]
+        order_by: [{"time:hour", :asc}],
+        include: [time_labels: true]
       )
 
-    %Stats.QueryResult{results: results} = Stats.query(view_or_site, graph_query)
-
-    placeholder =
-      empty_24h_intervals(now)
-
-    results =
-      Enum.into(results, %{}, fn %{metrics: [visitors], dimensions: [timestamp]} ->
-        {NaiveDateTime.from_iso8601!(timestamp), visitors}
-      end)
-
-    graph_data =
-      placeholder
-      |> Enum.reduce([], fn %{interval: interval, visitors: 0}, acc ->
-        [%{interval: interval, visitors: results[interval] || 0} | acc]
-      end)
-      |> Enum.sort_by(fn %{interval: interval} -> interval end, NaiveDateTime)
+    %Stats.QueryResult{results: results, meta: %{values: [time_labels: time_labels]}} =
+      Stats.query(view_or_site, graph_query)
 
     %{
-      intervals: graph_data
+      intervals:
+        for timestamp <- time_labels do
+          visitors =
+            Enum.reduce_while(results, 0, fn
+              %{dimensions: [^timestamp], metrics: [visitors]}, _acc ->
+                {:halt, visitors}
+
+              _, acc ->
+                {:cont, acc}
+            end)
+
+          %{interval: timestamp, visitors: visitors}
+        end
     }
   end
 end

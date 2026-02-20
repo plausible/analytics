@@ -14,49 +14,53 @@ defmodule Plausible.Stats.SparklineTest do
       site = new_site()
       domain = site.domain
 
-      assert Sparkline.parallel_overview(
-               [site],
-               now
-             ) ==
-               %{
-                 domain => %{
-                   visitors: 0,
-                   pageviews: 0,
-                   pageviews_change: 0,
-                   views_per_visit: 0.0,
-                   views_per_visit_change: 0,
-                   visitors_change: 0,
-                   visits: 0,
-                   visits_change: 0,
-                   intervals: [
-                     %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 13:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 14:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 15:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 16:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 17:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 18:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 19:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 20:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 21:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 22:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-25 23:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 00:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 01:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 02:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 03:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 04:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 05:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 06:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 07:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 08:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
-                     %{interval: ~N[2023-10-26 10:00:00], visitors: 0}
-                   ]
-                 }
+      assert %{
+               ^domain => %{
+                 visitors: 0,
+                 pageviews: 0,
+                 pageviews_change: 0,
+                 views_per_visit: +0.0,
+                 views_per_visit_change: 0,
+                 visitors_change: 0,
+                 visits: 0,
+                 visits_change: 0,
+                 intervals: intervals
                }
+             } =
+               Sparkline.parallel_overview(
+                 [site],
+                 now
+               )
+
+      assert intervals == [
+               %{interval: "2023-10-25 10:00:00", visitors: 0},
+               %{interval: "2023-10-25 11:00:00", visitors: 0},
+               %{interval: "2023-10-25 12:00:00", visitors: 0},
+               %{interval: "2023-10-25 13:00:00", visitors: 0},
+               %{interval: "2023-10-25 14:00:00", visitors: 0},
+               %{interval: "2023-10-25 15:00:00", visitors: 0},
+               %{interval: "2023-10-25 16:00:00", visitors: 0},
+               %{interval: "2023-10-25 17:00:00", visitors: 0},
+               %{interval: "2023-10-25 18:00:00", visitors: 0},
+               %{interval: "2023-10-25 19:00:00", visitors: 0},
+               %{interval: "2023-10-25 20:00:00", visitors: 0},
+               %{interval: "2023-10-25 21:00:00", visitors: 0},
+               %{interval: "2023-10-25 22:00:00", visitors: 0},
+               %{interval: "2023-10-25 23:00:00", visitors: 0},
+               %{interval: "2023-10-26 00:00:00", visitors: 0},
+               %{interval: "2023-10-26 01:00:00", visitors: 0},
+               %{interval: "2023-10-26 02:00:00", visitors: 0},
+               %{interval: "2023-10-26 03:00:00", visitors: 0},
+               %{interval: "2023-10-26 04:00:00", visitors: 0},
+               %{interval: "2023-10-26 05:00:00", visitors: 0},
+               %{interval: "2023-10-26 06:00:00", visitors: 0},
+               %{interval: "2023-10-26 07:00:00", visitors: 0},
+               %{interval: "2023-10-26 08:00:00", visitors: 0},
+               %{interval: "2023-10-26 09:00:00", visitors: 0},
+               %{interval: "2023-10-26 10:00:00", visitors: 0}
+             ]
+
+      assert intervals == Sparkline.empty_24h_intervals(now)
     end
 
     test "returns clickhouse data merged with placeholder" do
@@ -79,31 +83,31 @@ defmodule Plausible.Stats.SparklineTest do
                visitors: 5,
                visitors_change: 100,
                intervals: [
-                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 11:00:00], visitors: 1},
-                 %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 13:00:00], visitors: 2},
-                 %{interval: ~N[2023-10-25 14:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 15:00:00], visitors: 1},
-                 %{interval: ~N[2023-10-25 16:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 17:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 18:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 19:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 20:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 21:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 22:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 23:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 00:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 01:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 02:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 03:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 04:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 05:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 06:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 07:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 08:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 10:00:00], visitors: 1}
+                 %{interval: "2023-10-25 10:00:00", visitors: 0},
+                 %{interval: "2023-10-25 11:00:00", visitors: 1},
+                 %{interval: "2023-10-25 12:00:00", visitors: 0},
+                 %{interval: "2023-10-25 13:00:00", visitors: 2},
+                 %{interval: "2023-10-25 14:00:00", visitors: 0},
+                 %{interval: "2023-10-25 15:00:00", visitors: 1},
+                 %{interval: "2023-10-25 16:00:00", visitors: 0},
+                 %{interval: "2023-10-25 17:00:00", visitors: 0},
+                 %{interval: "2023-10-25 18:00:00", visitors: 0},
+                 %{interval: "2023-10-25 19:00:00", visitors: 0},
+                 %{interval: "2023-10-25 20:00:00", visitors: 0},
+                 %{interval: "2023-10-25 21:00:00", visitors: 0},
+                 %{interval: "2023-10-25 22:00:00", visitors: 0},
+                 %{interval: "2023-10-25 23:00:00", visitors: 0},
+                 %{interval: "2023-10-26 00:00:00", visitors: 0},
+                 %{interval: "2023-10-26 01:00:00", visitors: 0},
+                 %{interval: "2023-10-26 02:00:00", visitors: 0},
+                 %{interval: "2023-10-26 03:00:00", visitors: 0},
+                 %{interval: "2023-10-26 04:00:00", visitors: 0},
+                 %{interval: "2023-10-26 05:00:00", visitors: 0},
+                 %{interval: "2023-10-26 06:00:00", visitors: 0},
+                 %{interval: "2023-10-26 07:00:00", visitors: 0},
+                 %{interval: "2023-10-26 08:00:00", visitors: 0},
+                 %{interval: "2023-10-26 09:00:00", visitors: 0},
+                 %{interval: "2023-10-26 10:00:00", visitors: 1}
                ]
              } = Sparkline.parallel_overview([site], now)[site.domain]
     end
@@ -134,31 +138,31 @@ defmodule Plausible.Stats.SparklineTest do
                visitors_change: 100,
                visitors: 1,
                intervals: [
-                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 13:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 14:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 15:00:00], visitors: 1},
-                 %{interval: ~N[2023-10-25 16:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 17:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 18:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 19:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 20:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 21:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 22:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 23:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 00:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 01:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 02:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 03:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 04:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 05:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 06:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 07:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 08:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 10:00:00], visitors: 0}
+                 %{interval: "2023-10-25 10:00:00", visitors: 0},
+                 %{interval: "2023-10-25 11:00:00", visitors: 0},
+                 %{interval: "2023-10-25 12:00:00", visitors: 0},
+                 %{interval: "2023-10-25 13:00:00", visitors: 0},
+                 %{interval: "2023-10-25 14:00:00", visitors: 0},
+                 %{interval: "2023-10-25 15:00:00", visitors: 1},
+                 %{interval: "2023-10-25 16:00:00", visitors: 0},
+                 %{interval: "2023-10-25 17:00:00", visitors: 0},
+                 %{interval: "2023-10-25 18:00:00", visitors: 0},
+                 %{interval: "2023-10-25 19:00:00", visitors: 0},
+                 %{interval: "2023-10-25 20:00:00", visitors: 0},
+                 %{interval: "2023-10-25 21:00:00", visitors: 0},
+                 %{interval: "2023-10-25 22:00:00", visitors: 0},
+                 %{interval: "2023-10-25 23:00:00", visitors: 0},
+                 %{interval: "2023-10-26 00:00:00", visitors: 0},
+                 %{interval: "2023-10-26 01:00:00", visitors: 0},
+                 %{interval: "2023-10-26 02:00:00", visitors: 0},
+                 %{interval: "2023-10-26 03:00:00", visitors: 0},
+                 %{interval: "2023-10-26 04:00:00", visitors: 0},
+                 %{interval: "2023-10-26 05:00:00", visitors: 0},
+                 %{interval: "2023-10-26 06:00:00", visitors: 0},
+                 %{interval: "2023-10-26 07:00:00", visitors: 0},
+                 %{interval: "2023-10-26 08:00:00", visitors: 0},
+                 %{interval: "2023-10-26 09:00:00", visitors: 0},
+                 %{interval: "2023-10-26 10:00:00", visitors: 0}
                ]
              } = Sparkline.parallel_overview([site1], now)[site1.domain]
 
@@ -166,31 +170,31 @@ defmodule Plausible.Stats.SparklineTest do
                visitors_change: 100,
                visitors: 3,
                intervals: [
-                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 13:00:00], visitors: 2},
-                 %{interval: ~N[2023-10-25 14:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 15:00:00], visitors: 1},
-                 %{interval: ~N[2023-10-25 16:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 17:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 18:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 19:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 20:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 21:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 22:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 23:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 00:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 01:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 02:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 03:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 04:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 05:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 06:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 07:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 08:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 10:00:00], visitors: 0}
+                 %{interval: "2023-10-25 10:00:00", visitors: 0},
+                 %{interval: "2023-10-25 11:00:00", visitors: 0},
+                 %{interval: "2023-10-25 12:00:00", visitors: 0},
+                 %{interval: "2023-10-25 13:00:00", visitors: 2},
+                 %{interval: "2023-10-25 14:00:00", visitors: 0},
+                 %{interval: "2023-10-25 15:00:00", visitors: 1},
+                 %{interval: "2023-10-25 16:00:00", visitors: 0},
+                 %{interval: "2023-10-25 17:00:00", visitors: 0},
+                 %{interval: "2023-10-25 18:00:00", visitors: 0},
+                 %{interval: "2023-10-25 19:00:00", visitors: 0},
+                 %{interval: "2023-10-25 20:00:00", visitors: 0},
+                 %{interval: "2023-10-25 21:00:00", visitors: 0},
+                 %{interval: "2023-10-25 22:00:00", visitors: 0},
+                 %{interval: "2023-10-25 23:00:00", visitors: 0},
+                 %{interval: "2023-10-26 00:00:00", visitors: 0},
+                 %{interval: "2023-10-26 01:00:00", visitors: 0},
+                 %{interval: "2023-10-26 02:00:00", visitors: 0},
+                 %{interval: "2023-10-26 03:00:00", visitors: 0},
+                 %{interval: "2023-10-26 04:00:00", visitors: 0},
+                 %{interval: "2023-10-26 05:00:00", visitors: 0},
+                 %{interval: "2023-10-26 06:00:00", visitors: 0},
+                 %{interval: "2023-10-26 07:00:00", visitors: 0},
+                 %{interval: "2023-10-26 08:00:00", visitors: 0},
+                 %{interval: "2023-10-26 09:00:00", visitors: 0},
+                 %{interval: "2023-10-26 10:00:00", visitors: 0}
                ]
              } = Sparkline.parallel_overview([site2], now)[site2.domain]
     end
@@ -231,10 +235,10 @@ defmodule Plausible.Stats.SparklineTest do
         Enum.find(result[domain].intervals, &(&1.interval == interval))
       end
 
-      assert find_interval.(result, site1.domain, ~N[2023-10-25 13:00:00]).visitors == 1
-      assert find_interval.(result, site1.domain, ~N[2023-10-25 15:00:00]).visitors == 2
-      assert find_interval.(result, site2.domain, ~N[2023-10-25 13:00:00]).visitors == 2
-      assert find_interval.(result, site2.domain, ~N[2023-10-25 15:00:00]).visitors == 1
+      assert find_interval.(result, site1.domain, "2023-10-25 13:00:00").visitors == 1
+      assert find_interval.(result, site1.domain, "2023-10-25 15:00:00").visitors == 2
+      assert find_interval.(result, site2.domain, "2023-10-25 13:00:00").visitors == 2
+      assert find_interval.(result, site2.domain, "2023-10-25 15:00:00").visitors == 1
     end
 
     test "returns calculated change" do
@@ -287,31 +291,31 @@ defmodule Plausible.Stats.SparklineTest do
                visitors_change: 100,
                visitors: 3,
                intervals: [
-                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 13:00:00], visitors: 2},
-                 %{interval: ~N[2023-10-25 14:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 15:00:00], visitors: 1},
-                 %{interval: ~N[2023-10-25 16:00:00], visitors: 1},
-                 %{interval: ~N[2023-10-25 17:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 18:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 19:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 20:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 21:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 22:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 23:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 00:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 01:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 02:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 03:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 04:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 05:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 06:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 07:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 08:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 10:00:00], visitors: 0}
+                 %{interval: "2023-10-25 10:00:00", visitors: 0},
+                 %{interval: "2023-10-25 11:00:00", visitors: 0},
+                 %{interval: "2023-10-25 12:00:00", visitors: 0},
+                 %{interval: "2023-10-25 13:00:00", visitors: 2},
+                 %{interval: "2023-10-25 14:00:00", visitors: 0},
+                 %{interval: "2023-10-25 15:00:00", visitors: 1},
+                 %{interval: "2023-10-25 16:00:00", visitors: 1},
+                 %{interval: "2023-10-25 17:00:00", visitors: 0},
+                 %{interval: "2023-10-25 18:00:00", visitors: 0},
+                 %{interval: "2023-10-25 19:00:00", visitors: 0},
+                 %{interval: "2023-10-25 20:00:00", visitors: 0},
+                 %{interval: "2023-10-25 21:00:00", visitors: 0},
+                 %{interval: "2023-10-25 22:00:00", visitors: 0},
+                 %{interval: "2023-10-25 23:00:00", visitors: 0},
+                 %{interval: "2023-10-26 00:00:00", visitors: 0},
+                 %{interval: "2023-10-26 01:00:00", visitors: 0},
+                 %{interval: "2023-10-26 02:00:00", visitors: 0},
+                 %{interval: "2023-10-26 03:00:00", visitors: 0},
+                 %{interval: "2023-10-26 04:00:00", visitors: 0},
+                 %{interval: "2023-10-26 05:00:00", visitors: 0},
+                 %{interval: "2023-10-26 06:00:00", visitors: 0},
+                 %{interval: "2023-10-26 07:00:00", visitors: 0},
+                 %{interval: "2023-10-26 08:00:00", visitors: 0},
+                 %{interval: "2023-10-26 09:00:00", visitors: 0},
+                 %{interval: "2023-10-26 10:00:00", visitors: 0}
                ]
              } = Sparkline.parallel_overview([site], now)[site.domain]
     end
