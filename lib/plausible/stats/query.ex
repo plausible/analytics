@@ -49,37 +49,18 @@ defmodule Plausible.Stats.Query do
   @type t :: %__MODULE__{}
 
   def parse_and_build(
-        site,
-        params,
-        opts
-      )
-      when is_list(opts) do
-    parse_and_build(site, params, %{}, opts)
-  end
-
-  def parse_and_build(
-        site,
-        params,
-        debug_metadata
-      )
-      when is_map(debug_metadata) do
-    parse_and_build(site, params, debug_metadata, [])
-  end
-
-  def parse_and_build(
         %Plausible.Site{domain: domain} = site,
         %{"site_id" => domain} = params,
-        debug_metadata \\ %{},
         opts \\ []
       ) do
     with {:ok, %ParsedQueryParams{} = parsed_query_params} <-
            ApiQueryParser.parse(params, opts) do
-      QueryBuilder.build(site, parsed_query_params, debug_metadata)
+      QueryBuilder.build(site, parsed_query_params, Keyword.get(opts, :debug_metadata, %{}))
     end
   end
 
-  def parse_and_build!(site, params, debug_metadata \\ %{}, opts \\ []) do
-    case parse_and_build(site, params, debug_metadata, opts) do
+  def parse_and_build!(site, params, opts \\ []) do
+    case parse_and_build(site, params, opts) do
       {:ok, query} ->
         query
 
@@ -92,8 +73,13 @@ defmodule Plausible.Stats.Query do
   Builds query from old-style stats APIv1 params. New code should use `Query.parse_and_build`
   or `QueryBuilder.build` with already parsed params.
   """
-  def from(site, params, debug_metadata \\ %{}, now \\ nil) do
-    Legacy.QueryBuilder.from(site, params, debug_metadata, now)
+  def from(site, params, opts \\ []) do
+    Legacy.QueryBuilder.from(
+      site,
+      params,
+      Keyword.get(opts, :debug_metadata, %{}),
+      Keyword.get(opts, :now)
+    )
   end
 
   def date_range(query, options \\ []) do
