@@ -24,6 +24,12 @@ defmodule PlausibleWeb.Components.Generic do
       icon: "text-red-600 dark:text-red-500",
       title_text: "text-sm text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
+    },
+    white: %{
+      bg: "bg-white dark:bg-gray-900 shadow-sm dark:shadow-none",
+      icon: "text-gray-600 dark:text-gray-400",
+      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-300 leading-5"
     }
   }
 
@@ -31,17 +37,25 @@ defmodule PlausibleWeb.Components.Generic do
     "primary" =>
       "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35",
     "secondary" =>
-      "border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:text-gray-900 hover:shadow-sm dark:hover:bg-gray-600 dark:hover:text-white disabled:text-gray-700/40 disabled:hover:shadow-none dark:disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:border-gray-800",
+      "border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-50 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:border-gray-600 dark:hover:text-white disabled:text-gray-700/40 dark:disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:border-gray-800",
     "yellow" =>
       "bg-yellow-600/90 text-white hover:bg-yellow-600 focus-visible:outline-yellow-600 disabled:bg-yellow-400/60 disabled:dark:bg-yellow-600/30 disabled:dark:text-white/35",
     "danger" =>
-      "border border-gray-300 dark:border-gray-800 text-red-600 bg-white dark:bg-gray-800 hover:text-red-700 hover:shadow-sm dark:hover:text-red-400 dark:text-red-500 active:text-red-800 disabled:text-red-700/40 disabled:hover:shadow-none dark:disabled:text-red-500/35 dark:disabled:bg-gray-800"
+      "border border-gray-300 dark:border-gray-800 text-red-600 bg-white dark:bg-gray-800 hover:text-red-700 dark:hover:text-red-400 dark:text-red-500 active:text-red-800 disabled:text-red-700/40 disabled:hover:shadow-none dark:disabled:text-red-500/35 dark:disabled:bg-gray-800",
+    "ghost" =>
+      "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:text-gray-500 disabled:dark:text-gray-600 disabled:hover:bg-transparent"
   }
 
-  @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed"
+  @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-md cursor-pointer disabled:cursor-not-allowed"
+
+  @button_sizes %{
+    "sm" => "px-3 py-2",
+    "md" => "px-3.5 py-2.5"
+  }
 
   attr(:type, :string, default: "button")
   attr(:theme, :string, default: "primary")
+  attr(:size, :string, default: "md")
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
   attr(:mt?, :boolean, default: true)
@@ -53,7 +67,8 @@ defmodule PlausibleWeb.Components.Generic do
     assigns =
       assign(assigns,
         button_base_class: @button_base_class,
-        theme_class: @button_themes[assigns.theme]
+        theme_class: @button_themes[assigns.theme],
+        size_class: @button_sizes[assigns.size]
       )
 
     ~H"""
@@ -63,6 +78,7 @@ defmodule PlausibleWeb.Components.Generic do
       class={[
         @mt? && "mt-6",
         @button_base_class,
+        @size_class,
         @theme_class,
         @class
       ]}
@@ -76,6 +92,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:href, :string, required: true)
   attr(:class, :string, default: "")
   attr(:theme, :string, default: "primary")
+  attr(:size, :string, default: "md")
   attr(:disabled, :boolean, default: false)
   attr(:method, :string, default: "get")
   attr(:mt?, :boolean, default: true)
@@ -115,7 +132,8 @@ defmodule PlausibleWeb.Components.Generic do
       assign(assigns,
         onclick: onclick,
         button_base_class: @button_base_class,
-        theme_class: theme_class
+        theme_class: theme_class,
+        size_class: @button_sizes[assigns.size]
       )
 
     ~H"""
@@ -125,6 +143,7 @@ defmodule PlausibleWeb.Components.Generic do
       class={[
         @mt? && "mt-6",
         @button_base_class,
+        @size_class,
         @theme_class,
         @class
       ]}
@@ -192,6 +211,8 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
+  slot(:actions)
+  slot(:icon)
 
   def notice(assigns) do
     assigns = assign(assigns, :theme, Map.fetch!(@notice_themes, assigns.theme))
@@ -206,30 +227,31 @@ defmodule PlausibleWeb.Components.Generic do
         >
           <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
         </button>
-        <div class="flex gap-x-3">
-          <div :if={@show_icon && @title} class="shrink-0">
-            <svg
-              class={"h-5 w-5 #{@theme.icon}"}
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </div>
-          <div class="w-full flex flex-col gap-y-1.5">
-            <h3 :if={@title} class={"font-semibold #{@theme.title_text}"}>
-              {@title}
-            </h3>
-            <div class={"#{@theme.body_text}"}>
-              <p>
-                {render_slot(@inner_block)}
-              </p>
+        <div class={[
+          "flex gap-3",
+          @actions != [] && "items-start flex-col md:items-center md:flex-row"
+        ]}>
+          <div class="flex gap-x-3 flex-1">
+            <div :if={@show_icon && @title} class="shrink-0 mt-px">
+              <%= if @icon != [] do %>
+                {render_slot(@icon)}
+              <% else %>
+                <.exclamation_triangle_icon class={"size-4.5 #{@theme.icon}"} />
+              <% end %>
             </div>
+            <div class="flex-1 flex flex-col gap-y-1.5">
+              <h3 :if={@title} class={"font-medium #{@theme.title_text}"}>
+                {@title}
+              </h3>
+              <div class={"#{@theme.body_text}"}>
+                <p class="text-pretty">
+                  {render_slot(@inner_block)}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div :if={@actions != []} class="shrink-0 flex gap-2">
+            {render_slot(@actions)}
           </div>
         </div>
       </div>

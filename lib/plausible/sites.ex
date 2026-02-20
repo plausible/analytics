@@ -136,9 +136,6 @@ defmodule Plausible.Sites do
 
   defdelegate list(user, pagination_params, opts \\ []), to: Plausible.Teams.Sites
 
-  defdelegate list_with_invitations(user, pagination_params, opts \\ []),
-    to: Plausible.Teams.Sites
-
   def list_people(site) do
     owner_memberships =
       from(
