@@ -21,8 +21,6 @@ export function topStatsQueries(
 ): [StatsQuery, StatsQuery | null] {
   let currentVisitorsQuery = null
 
-  console.log(dashboardState)
-
   if (isRealTimeDashboard(dashboardState)) {
     currentVisitorsQuery = createStatsQuery(dashboardState, {
       metrics: ['visitors']
