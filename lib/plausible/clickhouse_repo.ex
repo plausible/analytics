@@ -59,11 +59,56 @@ defmodule Plausible.ClickhouseRepo do
     log_comment = Jason.encode!(log_comment_data)
 
     opts =
-      Keyword.update(opts, :settings, [log_comment: log_comment], fn settings ->
-        [{:log_comment, log_comment} | settings]
+      opts
+      |> Keyword.update(:settings, [log_comment: log_comment], fn current_settings ->
+        [{:log_comment, log_comment} | current_settings]
       end)
 
+    opts =
+      if plausible_query do
+        opts
+        |> Keyword.update!(:settings, fn current_settings ->
+          current_settings |> Enum.concat(get_extra_connection_settings(log_comment_data))
+        end)
+        |> Keyword.update!(:settings, fn current_settings ->
+          should_use_workload? =
+            Map.get(plausible_query.debug_metadata, :phoenix_controller, nil) in [
+              PlausibleWeb.Api.ExternalStatsController |> to_string(),
+              PlausibleWeb.Api.ExternalQueryApiController |> to_string()
+            ]
+
+          if should_use_workload? do
+            [{:workload, "external_api"} | current_settings]
+          else
+            current_settings
+          end
+        end)
+      else
+        opts
+      end
+
     {query, opts}
+  end
+
+  defp get_extra_connection_settings(%{params: params}) do
+    keys =
+      params
+      |> Map.keys()
+      |> Enum.filter(fn k ->
+        case k do
+          "clickhouse_readonly" -> false
+          "clickhouse_" <> _k -> true
+          _ -> false
+        end
+      end)
+
+    Enum.map(keys, fn k ->
+      {k |> String.trim_leading("clickhouse_") |> String.to_atom(), params[k]}
+    end)
+  end
+
+  defp get_extra_connection_settings(_) do
+    []
   end
 
   def get_config_without_ch_query_execution_timeout() do
