@@ -36,7 +36,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
   end
 
   test "parses day format", %{site: site} do
-    q = Query.from(site, %{"period" => "day", "date" => "2019-01-01"}, %{}, @now)
+    q = Query.from(site, %{"period" => "day", "date" => "2019-01-01"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2019-01-02 04:59:59Z]
@@ -44,7 +44,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
   end
 
   test "day format defaults to today", %{site: site} do
-    q = Query.from(site, %{"period" => "day"}, %{}, @now)
+    q = Query.from(site, %{"period" => "day"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
@@ -52,7 +52,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
   end
 
   test "parses realtime format", %{site: site} do
-    q = Query.from(site, %{"period" => "realtime"}, %{}, @now)
+    q = Query.from(site, %{"period" => "realtime"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-05-03 16:25:00Z]
     assert q.utc_time_range.last == ~U[2024-05-03 16:30:05Z]
@@ -60,7 +60,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
   end
 
   test "parses month format", %{site: site} do
-    q = Query.from(site, %{"period" => "month", "date" => "2019-01-01"}, %{}, @now)
+    q = Query.from(site, %{"period" => "month", "date" => "2019-01-01"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2019-02-01 04:59:59Z]
@@ -68,7 +68,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
   end
 
   test "parses 6 month format", %{site: site} do
-    q = Query.from(site, %{"period" => "6mo"}, %{}, @now)
+    q = Query.from(site, %{"period" => "6mo"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2023-11-01 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-01 03:59:59Z]
@@ -76,7 +76,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
   end
 
   test "parses 12 month format", %{site: site} do
-    q = Query.from(site, %{"period" => "12mo"}, %{}, @now)
+    q = Query.from(site, %{"period" => "12mo"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2023-05-01 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-01 03:59:59Z]
@@ -84,7 +84,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
   end
 
   test "parses year to date format", %{site: site} do
-    q = Query.from(site, %{"period" => "year"}, %{}, @now)
+    q = Query.from(site, %{"period" => "year"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2025-01-01 04:59:59Z]
@@ -92,7 +92,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
   end
 
   test "parses all time", %{site: site} do
-    q = Query.from(site, %{"period" => "all"}, %{}, @now)
+    q = Query.from(site, %{"period" => "all"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2020-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
@@ -102,7 +102,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
   test "parses all time in GMT+12 timezone", %{site: site} do
     site = Map.put(site, :timezone, "Etc/GMT+12")
-    q = Query.from(site, %{"period" => "all"}, %{}, @now)
+    q = Query.from(site, %{"period" => "all"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2020-01-01 12:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 11:59:59Z]
@@ -110,7 +110,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
   test "all time shows today if site has no start date", %{site: site} do
     site = Map.put(site, :stats_start_date, nil)
-    q = Query.from(site, %{"period" => "all"}, %{}, @now)
+    q = Query.from(site, %{"period" => "all"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
@@ -120,7 +120,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
   test "all time shows hourly if site is completely new", %{site: site} do
     site = Map.put(site, :stats_start_date, @now |> DateTime.to_date())
-    q = Query.from(site, %{"period" => "all"}, %{}, @now)
+    q = Query.from(site, %{"period" => "all"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
@@ -132,7 +132,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     yesterday = @now |> DateTime.to_date() |> Date.shift(day: -1)
     site = Map.put(site, :stats_start_date, yesterday)
 
-    q = Query.from(site, %{"period" => "all"}, %{}, @now)
+    q = Query.from(site, %{"period" => "all"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-05-02 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
@@ -144,7 +144,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     last_month = @now |> DateTime.to_date() |> Date.shift(month: -1)
     site = Map.put(site, :stats_start_date, last_month)
 
-    q = Query.from(site, %{"period" => "all"}, %{}, @now)
+    q = Query.from(site, %{"period" => "all"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-04-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
@@ -156,7 +156,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     last_month = @now |> DateTime.to_date() |> Date.shift(month: -1)
     site = Map.put(site, :stats_start_date, last_month)
 
-    q = Query.from(site, %{"period" => "all", "interval" => "week"}, %{}, @now)
+    q = Query.from(site, %{"period" => "all", "interval" => "week"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-04-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
@@ -176,8 +176,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
       Query.from(
         site,
         %{"period" => "custom", "from" => "2019-01-01", "to" => "2019-01-15"},
-        %{},
-        @now
+        now: @now
       )
 
     assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]

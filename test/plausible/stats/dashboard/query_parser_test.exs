@@ -322,5 +322,14 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
     test "errors when segment filter cannot be parsed to integer" do
       assert {:error, :invalid_filters} = parse("?f=is,segment,MySegment", build(:site), %{})
     end
+
+    test "now can't be fixed externally" do
+      {:ok, parsed} =
+        parse("?now=2026-02-17T10:08:52.272894Z", build(:site), %{
+          "now" => "2026-02-17T10:08:52.272894Z"
+        })
+
+      assert parsed.now == nil
+    end
   end
 end
