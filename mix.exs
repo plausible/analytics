@@ -126,7 +126,7 @@ defmodule Plausible.MixProject do
       {:phoenix_live_view, "~> 1.1.17"},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
-      {:prima, "~> 0.2.1"},
+      {:prima, "~> 0.2.5"},
       {:plug_cowboy, "~> 2.3"},
       {:polymorphic_embed, "~> 5.0"},
       {:postgrex, "~> 0.21.1"},
