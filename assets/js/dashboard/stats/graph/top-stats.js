@@ -201,7 +201,10 @@ export default function TopStats({
 
           {isComparison ? (
             <div>
-              <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
+              <p
+                id={`previous-${stat.graph_metric}`}
+                className="font-bold text-xl text-gray-500 dark:text-gray-400"
+              >
                 {topStatNumberShort(stat.graph_metric, stat.comparison_value)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
