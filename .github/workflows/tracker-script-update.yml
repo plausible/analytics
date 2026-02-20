@@ -122,7 +122,7 @@ jobs:
 
       - name: Get changed files
         id: changelog_changed
-        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891
+        uses: tj-actions/changed-files@8cba46e29c11878d930bca7870bb54394d3e8b21
         with:
           files: |
             tracker/npm_package/CHANGELOG.md
