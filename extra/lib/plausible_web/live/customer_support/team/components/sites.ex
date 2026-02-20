@@ -17,10 +17,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
         |> Enum.map(fn site ->
           {site.domain,
            %{
-             intervals:
-               Enum.map(Plausible.Stats.Sparkline.empty_24h_intervals(), fn {interval, visitors} ->
-                 %{interval: interval, visitors: visitors}
-               end),
+             intervals: Plausible.Stats.Sparkline.empty_24h_intervals(),
              visitors: 0,
              visitors_change: 0
            }}

@@ -16,7 +16,8 @@ defmodule Plausible.Stats.Sparkline do
         {site.domain, safe_overview_24h(site, now)}
       end,
       timeout: 5000,
-      on_timeout: :kill_task
+      on_timeout: :kill_task,
+      max_concurrency: 4
     )
     |> Enum.reduce(%{}, fn
       {:ok, {domain, {:ok, stats}}}, acc ->
@@ -56,8 +57,8 @@ defmodule Plausible.Stats.Sparkline do
     {:ok, time} = Time.new(first.hour, 0, 0)
     first = NaiveDateTime.new!(NaiveDateTime.to_date(first), time)
 
-    for offset <- 0..24, into: %{} do
-      {NaiveDateTime.add(first, offset, :hour), 0}
+    for offset <- 0..24 do
+      %{interval: NaiveDateTime.add(first, offset, :hour), visitors: 0}
     end
   end
 
@@ -115,13 +116,13 @@ defmodule Plausible.Stats.Sparkline do
 
     graph_data =
       placeholder
-      |> Enum.reduce([], fn {interval, 0}, acc ->
-        [{interval, results[interval] || 0} | acc]
+      |> Enum.reduce([], fn %{interval: interval, visitors: 0}, acc ->
+        [%{interval: interval, visitors: results[interval] || 0} | acc]
       end)
-      |> Enum.sort_by(fn {interval, _} -> interval end, NaiveDateTime)
+      |> Enum.sort_by(fn %{interval: interval} -> interval end, NaiveDateTime)
 
     %{
-      intervals: Enum.map(graph_data, fn {k, v} -> %{interval: k, visitors: v} end)
+      intervals: graph_data
     }
   end
 end

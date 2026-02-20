@@ -19,7 +19,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
       else
         _ ->
           Stats.Sparkline.empty_24h_intervals()
-          |> Enum.map(fn {i, v} -> %{interval: i, visitors: v} end)
       end
 
     {:ok,
