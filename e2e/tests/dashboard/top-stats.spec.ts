@@ -173,6 +173,51 @@ test('different graph time intervals are available', async ({
   expect(intervalOptionsToday.indexOf('Minutes') > -1).toBeTruthy()
 })
 
+test.only('navigating dates previous next time periods', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+
+  const now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
+  const startOfDay = now.truncatedTo(ChronoUnit.DAYS)
+  const startOfYesterday = startOfDay.minusDays(1)
+  const startOfMonth = startOfDay.withDayOfMonth(1)
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'pageview', timestamp: now },
+      { name: 'pageview', timestamp: startOfDay.minusHours(3) },
+      { name: 'pageview', timestamp: startOfDay.minusHours(4) },
+      { name: 'pageview', timestamp: startOfYesterday.minusHours(3) },
+      { name: 'pageview', timestamp: startOfYesterday.minusHours(4) },
+      { name: 'pageview', timestamp: startOfMonth.minusDays(3) },
+      { name: 'pageview', timestamp: startOfMonth.minusDays(4) },
+      { name: 'pageview', timestamp: startOfMonth.minusDays(5) },
+      { name: 'pageview', timestamp: startOfMonth.minusDays(6) },
+      { name: 'pageview', timestamp: startOfMonth.minusDays(7) }
+    ]
+  })
+
+  await page.goto('/' + domain)
+
+  const visitors = page.locator('#visitors')
+
+  await page.getByTestId('current-query-period').click()
+  await page
+    .getByTestId('query-period-picker')
+    .getByRole('link', { name: 'Today' })
+    .click()
+
+  await expect(visitors).toHaveText('1')
+})
+
+test('selecting a custom date range', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+})
+
 test('comparing stats over time is supported', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
 
