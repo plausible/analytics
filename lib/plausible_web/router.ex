@@ -493,7 +493,6 @@ defmodule PlausibleWeb.Router do
     post "/security/password", SettingsController, :update_password
 
     get "/billing/subscription", SettingsController, :subscription
-    get "/billing/invoices", SettingsController, :invoices
     get "/api-keys", SettingsController, :api_keys
 
     get "/api-keys/new", SettingsController, :new_api_key

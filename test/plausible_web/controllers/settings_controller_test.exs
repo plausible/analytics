@@ -264,11 +264,14 @@ defmodule PlausibleWeb.SettingsControllerTest do
                "by letting your subscription expire, you lose access to our grandfathered terms"
     end
 
+    @tag :ee_only
     test "does not show invoice section for a user with no subscription", %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :invoices))
+      html =
+        conn
+        |> get(Routes.settings_path(conn, :subscription))
+        |> html_response(200)
 
-      assert html_response(conn, 200) =~
-               "Your invoice will be created once you upgrade to a subscription"
+      refute element_exists?(html, "#invoices")
     end
 
     @tag :ee_only
@@ -476,10 +479,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
       team_member_usage_text = text_of_element(html, "[data-test-id='team-member-usage']")
       assert team_member_usage_text =~ "/ Unlimited"
     end
-  end
-
-  describe "GET /billing/invoices" do
-    setup [:create_user, :log_in]
 
     test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
       new_site(owner: user)
@@ -491,10 +490,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :invoices))
+        |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
-      assert html =~ "Your invoice will be created once you upgrade to a subscription"
+      assert html =~ "You don't have any invoices yet."
     end
 
     @tag :ee_only
@@ -503,7 +502,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :invoices))
+        |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
       assert html =~ "Dec 24, 2020"
@@ -518,7 +517,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :invoices))
+        |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
       assert html =~ "Invoices"
@@ -1281,7 +1280,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
     preferences: {"Preferences", "/settings/preferences"},
     security: {"Security", "/settings/security"},
     subscription: {"Subscription", "/settings/billing/subscription"},
-    invoices: {"Invoices", "/settings/billing/invoices"},
     api_keys: {"API keys", "/settings/api-keys"},
     danger_zone: {"Danger zone", "/settings/danger-zone"},
     team_general: {"General", "/settings/team/general"},
@@ -1301,7 +1299,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
         html
         |> refute_unexpected_menu_items([
-          :invoices,
           :team_general,
           :sso,
           :team_danger_zone,
@@ -1359,8 +1356,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
       html
       |> refute_unexpected_menu_items(
         if(ee?(),
-          do: [:invoices, :team_general, :sso],
-          else: [:subscription, :invoices, :team_general, :sso]
+          do: [:team_general, :sso],
+          else: [:subscription, :team_general, :sso]
         )
       )
       |> Floki.parse_document!()
@@ -1368,7 +1365,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> assert_mobile_menu(expected_account_menu)
     end
 
-    test "when no team is assigned & the user has a subscription, the account menu contains invoices",
+    test "when no team is assigned & the user has a subscription, the account menu shows subscription",
          %{
            conn: conn,
            user: user
@@ -1380,7 +1377,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       expected_account_menu =
         if(ee?(),
-          do: [:preferences, :security, :subscription, :invoices, :api_keys, :danger_zone],
+          do: [:preferences, :security, :subscription, :api_keys, :danger_zone],
           else: [:preferences, :security, :api_keys, :danger_zone]
         )
 
@@ -1388,7 +1385,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> refute_unexpected_menu_items(
         if(ee?(),
           do: [:team_general, :sso],
-          else: [:subscription, :invoices, :team_general, :sso]
+          else: [:subscription, :team_general, :sso]
         )
       )
       |> Floki.parse_document!()
@@ -1422,15 +1419,12 @@ defmodule PlausibleWeb.SettingsControllerTest do
         )
 
       html
-      |> refute_unexpected_menu_items(
-        if(ee?(), do: [:invoices], else: [:subscription, :invoices])
-      )
       |> Floki.parse_document!()
       |> assert_sidebar_menu(expected_account_menu, expected_team_menu)
       |> assert_mobile_menu(expected_account_menu, expected_team_menu)
     end
 
-    test "when team is set up, and there's a subscription, renders account & team menu with invoices",
+    test "when team is set up, and there's a subscription, renders account & team menu with subscription",
          %{
            conn: conn,
            user: user
@@ -1456,7 +1450,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
           do: [
             :team_general,
             :subscription,
-            :invoices,
             :api_keys,
             :sso,
             :team_danger_zone

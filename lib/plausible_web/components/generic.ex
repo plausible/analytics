@@ -864,7 +864,14 @@ defmodule PlausibleWeb.Components.Generic do
 
   def table(assigns) do
     ~H"""
-    <table :if={not Enum.empty?(@rows)} class={@width} {@rest}>
+    <table
+      :if={not Enum.empty?(@rows)}
+      class={[
+        "[&:not(:has(thead))>tbody>tr:first-child>td]:pt-0 [&>tbody>tr:last-child>td]:pb-0",
+        @width
+      ]}
+      {@rest}
+    >
       <thead :if={@thead != []}>
         <tr class="border-b border-gray-200 dark:border-gray-700">
           {render_slot(@thead)}
