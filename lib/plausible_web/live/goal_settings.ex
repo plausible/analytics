@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
   """
   use PlausibleWeb, :live_view
 
-  alias Plausible.Goals
+  alias Plausible.{Goals, Teams}
   alias PlausibleWeb.Live.Components.Modal
 
   def mount(
@@ -15,11 +15,14 @@ defmodule PlausibleWeb.Live.GoalSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        current_user
-        |> Plausible.Sites.get_for_user!(domain,
-          roles: [:owner, :admin, :editor, :super_admin],
-          include_consolidated?: true
-        )
+        site =
+          current_user
+          |> Plausible.Sites.get_for_user!(domain,
+            roles: [:owner, :admin, :editor, :super_admin],
+            include_consolidated?: true
+          )
+
+        %{site | team: Teams.with_subscription(site.team)}
       end)
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)
@@ -38,7 +41,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
 
     {:ok,
      assign(socket,
-       site_team: socket.assigns.site.team,
+       site_team: Teams.with_subscription(socket.assigns.site.team),
        site_id: site_id,
        domain: domain,
        displayed_goals: socket.assigns.all_goals,
