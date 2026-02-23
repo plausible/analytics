@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-3AA5CFBC.js"></script>
+    <script src="dist/sidebar_items-0056CC4E.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,9 +138,9 @@ Pages
 
 
     <section id="moduledoc">
-<p>Helper for setting up Sentry test mode in ExUnit tests.</p><p>Usage inside a <code class="inline">setup</code> callback:</p><pre><code class="makeup elixir" translate="no"><span class="n">setup</span><span class="w"> </span><span class="p" data-group-id="7660367533-1">%{</span><span class="ss">test_pid</span><span class="p">:</span><span class="w"> </span><span class="n">test_pid</span><span class="p" data-group-id="7660367533-1">}</span><span class="w"> </span><span class="k" data-group-id="7660367533-2">do</span><span class="w">
-  </span><span class="nc">Plausible.Test.Support.Sentry</span><span class="o">.</span><span class="n">setup</span><span class="p" data-group-id="7660367533-3">(</span><span class="n">test_pid</span><span class="p" data-group-id="7660367533-3">)</span><span class="w">
-</span><span class="k" data-group-id="7660367533-2">end</span></code></pre><p>This enables Sentry's test mode, starts collecting reports owned by the
+<p>Helper for setting up Sentry test mode in ExUnit tests.</p><p>Usage inside a <code class="inline">setup</code> callback:</p><pre><code class="makeup elixir" translate="no"><span class="n">setup</span><span class="w"> </span><span class="p" data-group-id="3441595637-1">%{</span><span class="ss">test_pid</span><span class="p">:</span><span class="w"> </span><span class="n">test_pid</span><span class="p" data-group-id="3441595637-1">}</span><span class="w"> </span><span class="k" data-group-id="3441595637-2">do</span><span class="w">
+  </span><span class="nc">Plausible.Test.Support.Sentry</span><span class="o">.</span><span class="n">setup</span><span class="p" data-group-id="3441595637-3">(</span><span class="n">test_pid</span><span class="p" data-group-id="3441595637-3">)</span><span class="w">
+</span><span class="k" data-group-id="3441595637-2">end</span></code></pre><p>This enables Sentry's test mode, starts collecting reports owned by the
 test process, and restores the original config on exit.</p>
     </section>
 
