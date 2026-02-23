@@ -12,6 +12,60 @@ function timeToISO(ts: ZonedDateTime): string {
   return ts.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 }
 
+test('site switcher allows switching between different sites', async ({
+  page,
+  request
+}) => {
+  const { domain: domain1, user } = await setupSite({ page, request })
+  const { domain: domain2 } = await setupSite({ page, request, user })
+  const { domain: domain3 } = await setupSite({ page, request, user })
+
+  await populateStats({
+    request,
+    domain: domain1,
+    events: [{ name: 'pageview' }]
+  })
+  await populateStats({
+    request,
+    domain: domain2,
+    events: [{ name: 'pageview' }]
+  })
+  await populateStats({
+    request,
+    domain: domain3,
+    events: [{ name: 'pageview' }]
+  })
+
+  await page.goto('/' + domain1)
+
+  const switcherButton = page.getByTestId('site-switcher-current-site')
+
+  await expect(switcherButton).toHaveText(domain1)
+
+  await switcherButton.click()
+
+  await expect(page.getByRole('link', { name: domain1 })).toBeVisible()
+  await expect(page.getByRole('link', { name: domain2 })).toBeVisible()
+  await expect(page.getByRole('link', { name: domain3 })).toBeVisible()
+
+  await page.getByRole('link', { name: domain2 }).click()
+
+  await expect(page).toHaveURL(`/${domain2}`)
+  await expect(switcherButton).toHaveText(domain2)
+
+  const sortedDomains = [domain1, domain2, domain3].sort()
+
+  await page.keyboard.press('3')
+
+  await expect(page).toHaveURL(`/${sortedDomains[2]}`)
+  await expect(switcherButton).toHaveText(sortedDomains[2])
+
+  await page.keyboard.press('1')
+
+  await expect(page).toHaveURL(`/${sortedDomains[0]}`)
+  await expect(switcherButton).toHaveText(sortedDomains[0])
+})
+
 test('top stats show relevant metrics', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
   await populateStats({
