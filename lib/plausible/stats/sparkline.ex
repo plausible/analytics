@@ -108,20 +108,16 @@ defmodule Plausible.Stats.Sparkline do
     %Stats.QueryResult{results: results, meta: %{values: [time_labels: time_labels]}} =
       Stats.query(view_or_site, graph_query)
 
+    visitors_by_timestamp =
+      Map.new(results, fn %{dimensions: [timestamp], metrics: [visitors]} ->
+        {timestamp, visitors}
+      end)
+
     %{
       intervals:
-        for timestamp <- time_labels do
-          visitors =
-            Enum.reduce_while(results, 0, fn
-              %{dimensions: [^timestamp], metrics: [visitors]}, _acc ->
-                {:halt, visitors}
-
-              _, acc ->
-                {:cont, acc}
-            end)
-
-          %{interval: timestamp, visitors: visitors}
-        end
+        Enum.map(time_labels, fn timestamp ->
+          %{interval: timestamp, visitors: Map.get(visitors_by_timestamp, timestamp, 0)}
+        end)
     }
   end
 end
