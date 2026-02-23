@@ -5,17 +5,7 @@ defmodule Plausible.Stats.SparklineTest do
 
   describe "errors" do
     setup %{test_pid: test_pid} do
-      Sentry.put_config(:test_mode, true)
-      Sentry.put_config(:send_result, :sync)
-      Sentry.put_config(:dedup_events, false)
-
-      assert :ok = Sentry.Test.start_collecting(owner: test_pid)
-
-      on_exit(fn ->
-        Sentry.put_config(:test_mode, false)
-        Sentry.put_config(:send_result, :none)
-        Sentry.put_config(:dedup_events, true)
-      end)
+      Plausible.Test.Support.Sentry.setup(test_pid)
     end
 
     test "safe overview catches errors" do

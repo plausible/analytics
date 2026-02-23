@@ -4,16 +4,11 @@ defmodule Plausible.CondolidatedView.CacheSyncTest do
   on_ee do
     alias Plausible.ConsolidatedView.Cache
 
-    setup do
-      Sentry.put_config(:test_mode, true)
-
-      on_exit(fn ->
-        Sentry.put_config(:test_mode, false)
-      end)
+    setup %{test_pid: test_pid} do
+      Plausible.Test.Support.Sentry.setup(test_pid)
     end
 
     test "big views get cropped up to 14k", %{test: test} do
-      assert :ok = Sentry.Test.start_collecting_sentry_reports()
       {:ok, _pid} = start_test_cache(test)
 
       Plausible.Cache.Adapter.put(test, "key", Enum.to_list(1..20_000))
