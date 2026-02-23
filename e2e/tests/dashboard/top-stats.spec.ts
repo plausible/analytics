@@ -1,6 +1,16 @@
 import { test, expect } from '@playwright/test'
-import { ZonedDateTime, ZoneOffset, ChronoUnit } from '@js-joda/core'
+import {
+  ZonedDateTime,
+  ZoneOffset,
+  ChronoUnit,
+  DateTimeFormatter
+} from '@js-joda/core'
+import { Locale } from '@js-joda/locale'
 import { setupSite, populateStats } from '../fixtures.ts'
+
+function timeToISO(ts: ZonedDateTime): string {
+  return ts.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+}
 
 test('top stats show relevant metrics', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
@@ -96,7 +106,7 @@ test('different time ranges are supported', async ({ page, request }) => {
     events.push({
       user_id: idx + 1,
       name: 'pageview',
-      timestamp: ts.toString()
+      timestamp: timeToISO(ts)
     })
   })
 
@@ -173,7 +183,7 @@ test('different graph time intervals are available', async ({
   expect(intervalOptionsToday.indexOf('Minutes') > -1).toBeTruthy()
 })
 
-test.only('navigating dates previous next time periods', async ({
+test('navigating dates previous next time periods', async ({
   page,
   request
 }) => {
@@ -182,40 +192,121 @@ test.only('navigating dates previous next time periods', async ({
   const now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
   const startOfDay = now.truncatedTo(ChronoUnit.DAYS)
   const startOfYesterday = startOfDay.minusDays(1)
-  const startOfMonth = startOfDay.withDayOfMonth(1)
 
   await populateStats({
     request,
     domain,
     events: [
-      { name: 'pageview', timestamp: now },
-      { name: 'pageview', timestamp: startOfDay.minusHours(3) },
-      { name: 'pageview', timestamp: startOfDay.minusHours(4) },
-      { name: 'pageview', timestamp: startOfYesterday.minusHours(3) },
-      { name: 'pageview', timestamp: startOfYesterday.minusHours(4) },
-      { name: 'pageview', timestamp: startOfMonth.minusDays(3) },
-      { name: 'pageview', timestamp: startOfMonth.minusDays(4) },
-      { name: 'pageview', timestamp: startOfMonth.minusDays(5) },
-      { name: 'pageview', timestamp: startOfMonth.minusDays(6) },
-      { name: 'pageview', timestamp: startOfMonth.minusDays(7) }
+      { name: 'pageview', timestamp: timeToISO(now) },
+      { name: 'pageview', timestamp: timeToISO(startOfDay.minusHours(3)) },
+      { name: 'pageview', timestamp: timeToISO(startOfDay.minusHours(4)) },
+      {
+        name: 'pageview',
+        timestamp: timeToISO(startOfYesterday.minusHours(3))
+      },
+      {
+        name: 'pageview',
+        timestamp: timeToISO(startOfYesterday.minusHours(4))
+      },
+      {
+        name: 'pageview',
+        timestamp: timeToISO(startOfYesterday.minusHours(5))
+      }
     ]
   })
 
   await page.goto('/' + domain)
 
+  const currentQueryPeriod = page.getByTestId('current-query-period')
+  const queryPeriodPicker = page.getByTestId('query-period-picker')
+  const backButton = queryPeriodPicker.getByTestId('period-move-back')
+  const forwardButton = queryPeriodPicker.getByTestId('period-move-forward')
   const visitors = page.locator('#visitors')
 
-  await page.getByTestId('current-query-period').click()
-  await page
-    .getByTestId('query-period-picker')
-    .getByRole('link', { name: 'Today' })
-    .click()
+  await currentQueryPeriod.click()
+  await queryPeriodPicker.getByRole('link', { name: 'Today' }).click()
 
+  await expect(currentQueryPeriod).toHaveText('Today')
+  await expect(visitors).toHaveText('1')
+  await expect(backButton).not.toHaveCSS('cursor', 'not-allowed')
+  await expect(forwardButton).toHaveCSS('cursor', 'not-allowed')
+
+  await backButton.click()
+
+  const yesterdayLabel = startOfYesterday.format(
+    DateTimeFormatter.ofPattern('EEE, d MMM').withLocale(Locale.ENGLISH)
+  )
+
+  await expect(currentQueryPeriod).toHaveText(yesterdayLabel)
+  await expect(backButton).not.toHaveCSS('cursor', 'not-allowed')
+  await expect(forwardButton).not.toHaveCSS('cursor', 'not-allowed')
+  await expect(visitors).toHaveText('2')
+
+  await backButton.click()
+
+  const beforeYesterdayLabel = startOfYesterday
+    .minusDays(1)
+    .format(
+      DateTimeFormatter.ofPattern('EEE, d MMM').withLocale(Locale.ENGLISH)
+    )
+
+  await expect(currentQueryPeriod).toHaveText(beforeYesterdayLabel)
+  await expect(backButton).toHaveCSS('cursor', 'not-allowed')
+  await expect(forwardButton).not.toHaveCSS('cursor', 'not-allowed')
+  await expect(visitors).toHaveText('3')
+
+  await forwardButton.click()
+
+  await expect(currentQueryPeriod).toHaveText(yesterdayLabel)
+  await expect(backButton).not.toHaveCSS('cursor', 'not-allowed')
+  await expect(forwardButton).not.toHaveCSS('cursor', 'not-allowed')
+  await expect(visitors).toHaveText('2')
+
+  await forwardButton.click()
+
+  await expect(currentQueryPeriod).toHaveText('Today')
+  await expect(backButton).not.toHaveCSS('cursor', 'not-allowed')
+  await expect(forwardButton).toHaveCSS('cursor', 'not-allowed')
   await expect(visitors).toHaveText('1')
 })
 
 test('selecting a custom date range', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
+
+  // NOTE: As the calendar renders contents dynamically, we cannot tell for sure
+  // whether the day before today will be visible without switching month.
+  // To make things simpler, we only test a single-day range of today.
+
+  const now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
+  const startOfDay = now.truncatedTo(ChronoUnit.DAYS)
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'pageview', timestamp: timeToISO(now) },
+      { name: 'pageview', timestamp: timeToISO(startOfDay.minusDays(3)) }
+    ]
+  })
+
+  await page.goto('/' + domain)
+
+  const currentQueryPeriod = page.getByTestId('current-query-period')
+  const queryPeriodPicker = page.getByTestId('query-period-picker')
+  const visitors = page.locator('#visitors')
+
+  currentQueryPeriod.click()
+  await queryPeriodPicker.getByRole('link', { name: 'Custom range' }).click()
+
+  const todayLabel = startOfDay.format(
+    DateTimeFormatter.ofPattern('MMMM d, YYYY').withLocale(Locale.ENGLISH)
+  )
+
+  await page.getByLabel(todayLabel).click()
+  await page.getByLabel(todayLabel).click()
+
+  await expect(currentQueryPeriod).toHaveText('Today')
+  await expect(visitors).toHaveText('1')
 })
 
 test('comparing stats over time is supported', async ({ page, request }) => {
