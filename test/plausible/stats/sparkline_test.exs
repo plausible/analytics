@@ -3,6 +3,35 @@ defmodule Plausible.Stats.SparklineTest do
 
   alias Plausible.Stats.Sparkline
 
+  describe "errors" do
+    setup %{test_pid: test_pid} do
+      Sentry.put_config(:test_mode, true)
+      Sentry.put_config(:send_result, :sync)
+      Sentry.put_config(:dedup_events, false)
+
+      assert :ok = Sentry.Test.start_collecting(owner: test_pid)
+
+      on_exit(fn ->
+        Sentry.put_config(:test_mode, false)
+        Sentry.put_config(:send_result, :none)
+        Sentry.put_config(:dedup_events, true)
+      end)
+    end
+
+    test "safe overview catches errors" do
+      bad_site = %Plausible.Site{domain: "bad-site"}
+      assert Sparkline.safe_overview_24h(bad_site) == {:error, :inaccessible}
+
+      assert [report] = Sentry.Test.pop_sentry_reports()
+
+      assert report.extra.error =~
+               "(FunctionClauseError) no function clause matching in NaiveDateTime.compare"
+
+      assert report.extra.site == "bad-site"
+      assert report.extra.comment == "Probing error volume"
+    end
+  end
+
   describe "parallel_overview" do
     test "returns no data on no sites" do
       assert Sparkline.parallel_overview([]) == %{}

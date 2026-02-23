@@ -42,12 +42,22 @@ defmodule Plausible.Stats.Sparkline do
   def safe_overview_24h(site, now \\ NaiveDateTime.utc_now())
   def safe_overview_24h(nil, _now), do: {:error, :not_found}
 
-  def safe_overview_24h(%Site{} = view, now) do
+  def safe_overview_24h(%Site{} = site, now) do
     try do
-      {:ok, overview_24h(view, now)}
+      {:ok, overview_24h(site, now)}
     catch
-      kind, value ->
-        Logger.error("Could not render overview 24h: #{inspect(kind)} #{inspect(value)}")
+      kind, reason ->
+        message = Exception.format(kind, reason, __STACKTRACE__)
+
+        Sentry.capture_message(
+          "Could not render overview 24h - site will be kept in loading indefinitely",
+          extra: %{
+            error: message,
+            site: site.domain,
+            comment: "Probing error volume"
+          }
+        )
+
         {:error, :inaccessible}
     end
   end
