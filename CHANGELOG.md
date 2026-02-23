@@ -15,8 +15,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Keybind hints are hidden on smaller screens
-- Subscription settings page design is updated
-- Invoices are now shown directly on the Subscription settings page instead of a separate tab
 
 ### Fixed
 
