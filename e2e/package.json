@@ -10,6 +10,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@js-joda/core": "^5.7.0",
+    "@js-joda/locale": "^4.15.3",
     "@playwright/test": "^1.58.0",
     "@types/node": "^25.1.0",
     "eslint": "^9.39.2",
