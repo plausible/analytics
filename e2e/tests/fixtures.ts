@@ -331,23 +331,28 @@ export async function addScrollDepthGoal({
 }
 
 export async function setupSite({
+  user,
   page,
   request
 }: {
+  user?: User
   page: Page
   request: Request
 }): { domain: string; user: user } {
   const domain = `${randomID()}.example.com`
 
-  const userID = randomID()
+  if (!user) {
+    const userID = randomID()
 
-  const user: User = {
-    name: `User ${userID}`,
-    email: `email-${userID}@example.com`,
-    password: 'VeryStrongVerySecret'
+    user = {
+      name: `User ${userID}`,
+      email: `email-${userID}@example.com`,
+      password: 'VeryStrongVerySecret'
+    }
+
+    await register({ page, request, user })
   }
 
-  await register({ page, request, user })
   await addSite({ page, domain })
 
   return { domain, user }
