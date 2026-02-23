@@ -142,11 +142,59 @@
       </div>
     </div>
   </.tile>
+
+  <.tile :if={@subscription} docs="download-invoices">
+    <:title>
+      <a id="invoices">Invoices</a>
+    </:title>
+    <%= case @invoices do %>
+      <% {:error, :no_invoices} -> %>
+        <p class="mt-10 mb-12 text-center text-sm text-gray-600 dark:text-gray-400">
+          You don't have any invoices yet.
+        </p>
+      <% {:error, :request_failed} -> %>
+        <.notice theme={:gray} title="We couldn't retrieve your invoices">
+          Please refresh the page or try again later
+        </.notice>
+      <% {:ok, invoice_list} when is_list(invoice_list) -> %>
+        <div x-data="{showAll: false}" x-cloak>
+          <.table
+            rows={Enum.with_index(format_invoices(invoice_list))}
+            row_attrs={
+              fn {_invoice, idx} ->
+                %{
+                  "x-show" => "showAll || #{idx} < 3"
+                }
+              end
+            }
+          >
+            <:tbody :let={{invoice, _idx}}>
+              <.td>{invoice.date}</.td>
+              <.td>{invoice.currency <> invoice.amount}</.td>
+              <.td class="flex justify-end">
+                <.styled_link href={invoice.url} new_tab={true}></.styled_link>
+              </.td>
+            </:tbody>
+            <tr :if={length(invoice_list) > 3}>
+              <td colspan="3">
+                <.button
+                  theme="secondary"
+                  x-on:click="showAll = true"
+                  x-show="!showAll"
+                >
+                  Show more
+                </.button>
+              </td>
+            </tr>
+          </.table>
+        </div>
+    <% end %>
+  </.tile>
 </.settings_tiles>
 
 <%= if Plausible.Billing.Subscriptions.resumable?(@subscription) && @subscription.cancel_url do %>
   <div class="flex gap-2">
-    <.button_link theme="danger" href={@subscription.cancel_url}>
+    <.button_link theme="danger" href={@subscription.cancel_url} mt?={false}>
       Cancel plan
     </.button_link>
     <%= if Application.get_env(:plausible, :environment) == "dev" do %>
@@ -154,6 +202,7 @@
         href={@subscription.update_url}
         theme="secondary"
         class="text-yellow-600 dark:text-yellow-400"
+        mt?={false}
       >
         [DEV ONLY] Change status
       </.button_link>

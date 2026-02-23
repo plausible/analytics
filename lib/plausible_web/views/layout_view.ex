@@ -99,9 +99,6 @@ defmodule PlausibleWeb.LayoutView do
     current_team = conn.assigns[:current_team]
     current_team_role = conn.assigns[:current_team_role]
 
-    # NOTE: Subscription will still exist if it has expired or cancelled
-    subscription? = !!(conn.assigns[:current_team] && conn.assigns.current_team.subscription)
-
     options = %{
       "Account" =>
         [
@@ -109,9 +106,6 @@ defmodule PlausibleWeb.LayoutView do
           %{key: "Security", value: "security", icon: :lock_closed},
           if(ee?() and not Teams.setup?(current_team),
             do: %{key: "Subscription", value: "billing/subscription", icon: :subscription}
-          ),
-          if(ee?() and not Teams.setup?(current_team) and subscription?,
-            do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(not Teams.setup?(current_team),
             do: %{key: "API keys", value: "api-keys", icon: :api_keys}
@@ -131,9 +125,6 @@ defmodule PlausibleWeb.LayoutView do
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
           if(ee?() and current_team_role in [:owner, :billing],
             do: %{key: "Subscription", value: "billing/subscription", icon: :subscription}
-          ),
-          if(ee?() and current_team_role in [:owner, :billing] and subscription?,
-            do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
           if(current_team_role in [:owner, :billing, :admin, :editor],
             do: %{key: "API keys", value: "api-keys", icon: :api_keys}
