@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-EF2F88D3.js"></script>
+    <script src="dist/sidebar_items-3AA5CFBC.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -183,7 +183,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#from/4" data-no-tooltip translate="no">from(site, params, debug_metadata \\ %{}, now \\ nil)</a>
+        <a href="#from/3" data-no-tooltip translate="no">from(site, params, opts \\ [])</a>
 
       </div>
 
@@ -202,7 +202,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse_and_build/3" data-no-tooltip translate="no">parse_and_build(site, params, debug_metadata \\ %{})</a>
+        <a href="#parse_and_build/3" data-no-tooltip translate="no">parse_and_build(site, params, opts \\ [])</a>
 
       </div>
 
@@ -210,7 +210,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse_and_build!/3" data-no-tooltip translate="no">parse_and_build!(site, params, debug_metadata \\ %{})</a>
+        <a href="#parse_and_build!/3" data-no-tooltip translate="no">parse_and_build!(site, params, opts \\ [])</a>
 
       </div>
 
@@ -347,7 +347,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
     </a>
     <h1 class="signature" translate="no">add_filter(query, filter)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L117" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L122" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -369,7 +369,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
     </a>
     <h1 class="signature" translate="no">date_range(query, options \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L80" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L85" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -381,17 +381,15 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
 
   </section>
 </section>
-<section class="detail" id="from/4">
+<section class="detail" id="from/3">
 
     <span id="from/2"></span>
 
-    <span id="from/3"></span>
-
   <div class="detail-header">
-    <a href="#from/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#from/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">from(site, params, debug_metadata \\ %{}, now \\ nil)</h1>
+    <h1 class="signature" translate="no">from(site, params, opts \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L76" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -414,7 +412,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
     </a>
     <h1 class="signature" translate="no">get_skip_imported_reason(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L187" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L192" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -441,7 +439,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
     <a href="#parse_and_build/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">parse_and_build(site, params, debug_metadata \\ %{})</h1>
+    <h1 class="signature" translate="no">parse_and_build(site, params, opts \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L51" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -463,7 +461,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
     <a href="#parse_and_build!/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">parse_and_build!(site, params, debug_metadata \\ %{})</h1>
+    <h1 class="signature" translate="no">parse_and_build!(site, params, opts \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L62" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -485,7 +483,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
     </a>
     <h1 class="signature" translate="no">put_imported_opts(query, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L145" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L150" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -505,7 +503,7 @@ or <code class="inline">QueryBuilder.build</code> with already parsed params.</p
     </a>
     <h1 class="signature" translate="no">remove_top_level_filters(query, prefixes)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L129" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L134" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -526,7 +524,7 @@ from use.</p>
     </a>
     <h1 class="signature" translate="no">set(query, keywords)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L103" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L108" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -546,7 +544,7 @@ from use.</p>
     </a>
     <h1 class="signature" translate="no">set_include(query, key, value)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L113" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L118" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -566,7 +564,7 @@ from use.</p>
     </a>
     <h1 class="signature" translate="no">trace(query, metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L207" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L212" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
