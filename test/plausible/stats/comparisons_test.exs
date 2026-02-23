@@ -6,14 +6,13 @@ defmodule Plausible.Stats.ComparisonsTest do
 
   describe "with period set to this month" do
     test "shifts back this month period when mode is previous_period", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-02 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
-          include: [compare: :previous_period]
+          include: [compare: :previous_period],
+          now: ~U[2023-03-02 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -24,14 +23,13 @@ defmodule Plausible.Stats.ComparisonsTest do
 
     test "shifts back this month period when it's the first day of the month and mode is previous_period",
          %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-03-01],
-          include: [compare: :previous_period]
+          include: [compare: :previous_period],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -42,14 +40,13 @@ defmodule Plausible.Stats.ComparisonsTest do
 
     test "matches the day of the week when nearest day is original query start date and mode is previous_period",
          %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-02 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
-          include: [compare: :previous_period, compare_match_day_of_week: true]
+          include: [compare: :previous_period, compare_match_day_of_week: true],
+          now: ~U[2023-03-02 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -61,14 +58,13 @@ defmodule Plausible.Stats.ComparisonsTest do
     test "custom time zone sets timezone to UTC" do
       site = insert(:site, timezone: "US/Eastern")
 
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-02 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-03-02],
-          include: [compare: :previous_period]
+          include: [compare: :previous_period],
+          now: ~U[2023-03-02 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -80,14 +76,13 @@ defmodule Plausible.Stats.ComparisonsTest do
 
   describe "with period set to previous month" do
     test "shifts back using the same number of days when mode is previous_period", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
-          include: [compare: :previous_period]
+          include: [compare: :previous_period],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -97,14 +92,13 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
 
     test "shifts back the full month when mode is year_over_year", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
-          include: [compare: :year_over_year]
+          include: [compare: :year_over_year],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -116,14 +110,13 @@ defmodule Plausible.Stats.ComparisonsTest do
     test "shifts back whole month plus one day when mode is year_over_year and a leap year", %{
       site: site
     } do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2020-02-01],
-          include: [compare: :year_over_year]
+          include: [compare: :year_over_year],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -135,14 +128,13 @@ defmodule Plausible.Stats.ComparisonsTest do
     test "matches the day of the week when mode is previous_period keeping the same day", %{
       site: site
     } do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-02-01],
-          include: [compare: :previous_period, compare_match_day_of_week: true]
+          include: [compare: :previous_period, compare_match_day_of_week: true],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -152,14 +144,13 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
 
     test "matches the day of the week when mode is previous_period", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :month,
           relative_date: ~D[2023-01-01],
-          include: [compare: :previous_period, compare_match_day_of_week: true]
+          include: [compare: :previous_period, compare_match_day_of_week: true],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -222,14 +213,13 @@ defmodule Plausible.Stats.ComparisonsTest do
 
   describe "with period set to year to date" do
     test "shifts back by the same number of days when mode is previous_period", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
-          include: [compare: :previous_period]
+          include: [compare: :previous_period],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -239,14 +229,13 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
 
     test "shifts back by the same number of days when mode is year_over_year", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
-          include: [compare: :year_over_year]
+          include: [compare: :year_over_year],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -256,14 +245,13 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
 
     test "matches the day of the week when mode is year_over_year", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-01 14:00:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :year,
           relative_date: ~D[2023-03-01],
-          include: [compare: :year_over_year, compare_match_day_of_week: true]
+          include: [compare: :year_over_year, compare_match_day_of_week: true],
+          now: ~U[2023-03-01 14:00:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -456,13 +444,12 @@ defmodule Plausible.Stats.ComparisonsTest do
 
   describe "with period set to 24h" do
     test "shifts back 24h period when mode is previous_period", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-15 18:30:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :"24h",
-          include: [compare: :previous_period]
+          include: [compare: :previous_period],
+          now: ~U[2023-03-15 18:30:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -474,13 +461,12 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
 
     test "shifts back 24h period when mode is year_over_year", %{site: site} do
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-15 18:30:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :"24h",
-          include: [compare: :year_over_year]
+          include: [compare: :year_over_year],
+          now: ~U[2023-03-15 18:30:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -494,13 +480,12 @@ defmodule Plausible.Stats.ComparisonsTest do
     test "custom time zone works with 24h comparison" do
       site = insert(:site, timezone: "US/Eastern")
 
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-15 18:30:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :"24h",
-          include: [compare: :previous_period]
+          include: [compare: :previous_period],
+          now: ~U[2023-03-15 18:30:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)
@@ -513,14 +498,14 @@ defmodule Plausible.Stats.ComparisonsTest do
 
     test "shifts back 24h period to match day of week when mode is previous_period with match_day_of_week",
          %{site: site} do
-      # Wednesday
-      Plausible.Stats.Query.Test.fix_now(~U[2023-03-15 18:30:00Z])
-
       query =
         QueryBuilder.build!(site,
           metrics: [:visitors],
           input_date_range: :"24h",
-          include: [compare: :previous_period, compare_match_day_of_week: true]
+          include: [compare: :previous_period, compare_match_day_of_week: true],
+
+          # Wednesday
+          now: ~U[2023-03-15 18:30:00Z]
         )
 
       comparison_query = Comparisons.get_comparison_query(query)

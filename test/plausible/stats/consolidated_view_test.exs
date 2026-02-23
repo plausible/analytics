@@ -3,8 +3,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
 
   on_ee do
     test "returns stats for a consolidated view merged with placeholder" do
-      fixed_now = ~N[2023-10-26 10:00:15]
-      Plausible.Stats.Query.Test.fix_now(DateTime.from_naive!(fixed_now, "Etc/UTC"))
+      now = ~N[2023-10-26 10:00:15]
 
       owner = new_user()
       site1 = new_site(owner: owner)
@@ -28,7 +27,7 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
 
       view = new_consolidated_view(team_of(owner))
 
-      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+      result = Plausible.Stats.Sparkline.overview_24h(view, now)
 
       assert %{
                visitors_change: 100,
@@ -39,38 +38,37 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
                pageviews: 6,
                views_per_visit: 1.2,
                intervals: [
-                 %{interval: ~N[2023-10-25 10:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 11:00:00], visitors: 1},
-                 %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 13:00:00], visitors: 2},
-                 %{interval: ~N[2023-10-25 14:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 15:00:00], visitors: 1},
-                 %{interval: ~N[2023-10-25 16:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 17:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 18:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 19:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 20:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 21:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 22:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-25 23:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 00:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 01:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 02:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 03:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 04:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 05:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 06:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 07:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 08:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
-                 %{interval: ~N[2023-10-26 10:00:00], visitors: 1}
+                 %{interval: "2023-10-25 10:00:00", visitors: 0},
+                 %{interval: "2023-10-25 11:00:00", visitors: 1},
+                 %{interval: "2023-10-25 12:00:00", visitors: 0},
+                 %{interval: "2023-10-25 13:00:00", visitors: 2},
+                 %{interval: "2023-10-25 14:00:00", visitors: 0},
+                 %{interval: "2023-10-25 15:00:00", visitors: 1},
+                 %{interval: "2023-10-25 16:00:00", visitors: 0},
+                 %{interval: "2023-10-25 17:00:00", visitors: 0},
+                 %{interval: "2023-10-25 18:00:00", visitors: 0},
+                 %{interval: "2023-10-25 19:00:00", visitors: 0},
+                 %{interval: "2023-10-25 20:00:00", visitors: 0},
+                 %{interval: "2023-10-25 21:00:00", visitors: 0},
+                 %{interval: "2023-10-25 22:00:00", visitors: 0},
+                 %{interval: "2023-10-25 23:00:00", visitors: 0},
+                 %{interval: "2023-10-26 00:00:00", visitors: 0},
+                 %{interval: "2023-10-26 01:00:00", visitors: 0},
+                 %{interval: "2023-10-26 02:00:00", visitors: 0},
+                 %{interval: "2023-10-26 03:00:00", visitors: 0},
+                 %{interval: "2023-10-26 04:00:00", visitors: 0},
+                 %{interval: "2023-10-26 05:00:00", visitors: 0},
+                 %{interval: "2023-10-26 06:00:00", visitors: 0},
+                 %{interval: "2023-10-26 07:00:00", visitors: 0},
+                 %{interval: "2023-10-26 08:00:00", visitors: 0},
+                 %{interval: "2023-10-26 09:00:00", visitors: 0},
+                 %{interval: "2023-10-26 10:00:00", visitors: 1}
                ]
              } = result
     end
 
     test "excludes engagement events from visitor counts" do
-      fixed_now = ~N[2025-10-20 12:49:15]
-      Plausible.Stats.Query.Test.fix_now(DateTime.from_naive!(fixed_now, "Etc/UTC"))
+      now = ~N[2025-10-20 12:49:15]
 
       owner = new_user()
       site = new_site(owner: owner)
@@ -89,14 +87,13 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       ])
 
       view = new_consolidated_view(team_of(owner))
-      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+      result = Plausible.Stats.Sparkline.overview_24h(view, now)
 
       assert %{visitors: 2} = result
     end
 
     test "filters out-of-range timeslots correctly" do
-      fixed_now = ~N[2025-10-20 12:49:15]
-      Plausible.Stats.Query.Test.fix_now(DateTime.from_naive!(fixed_now, "Etc/UTC"))
+      now = ~N[2025-10-20 12:49:15]
 
       owner = new_user()
       site = new_site(owner: owner)
@@ -110,23 +107,22 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       ])
 
       view = new_consolidated_view(team_of(owner))
-      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+      result = Plausible.Stats.Sparkline.overview_24h(view, now)
 
       expected_non_zero_intervals = [
-        {~N[2025-10-19 12:00:00], 1},
-        {~N[2025-10-20 12:00:00], 1}
+        {"2025-10-19 12:00:00", 1},
+        {"2025-10-20 12:00:00", 1}
       ]
 
       consolidated_result = filter_only_non_zero_intervals(result.intervals)
       assert consolidated_result == expected_non_zero_intervals
 
-      assert List.first(result.intervals).interval == ~N[2025-10-19 12:00:00]
-      assert List.last(result.intervals).interval == ~N[2025-10-20 12:00:00]
+      assert List.first(result.intervals).interval == "2025-10-19 12:00:00"
+      assert List.last(result.intervals).interval == "2025-10-20 12:00:00"
     end
 
     test "orders timeslots chronologically" do
-      fixed_now = ~N[2025-10-20 12:49:15]
-      Plausible.Stats.Query.Test.fix_now(DateTime.from_naive!(fixed_now, "Etc/UTC"))
+      now = ~N[2025-10-20 12:49:15]
 
       owner = new_user()
       site = new_site(owner: owner)
@@ -139,9 +135,9 @@ defmodule Plausible.Stats.ConsolidatedViewTest do
       ])
 
       view = new_consolidated_view(team_of(owner))
-      result = Plausible.Stats.ConsolidatedView.overview_24h(view, fixed_now)
+      result = Plausible.Stats.Sparkline.overview_24h(view, now)
 
-      timeslots = Enum.map(result.intervals, & &1.interval)
+      timeslots = Enum.map(result.intervals, &NaiveDateTime.from_iso8601!(&1.interval))
       sorted_timeslots = Enum.sort(timeslots, NaiveDateTime)
 
       assert timeslots == sorted_timeslots

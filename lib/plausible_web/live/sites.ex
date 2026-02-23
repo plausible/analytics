@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Live.Sites do
         :team_invitations,
         Teams.Invitations.all(user)
       )
-      |> assign(:hourly_stats, %{})
+      |> assign(:sparklines, %{})
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
       |> assign(init_consolidated_view_assigns(user, team))
 
@@ -205,7 +205,7 @@ defmodule PlausibleWeb.Live.Sites do
             }
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
             consolidated_view={@consolidated_view}
-            consolidated_stats={@consolidated_stats}
+            consolidated_sparkline={@consolidated_sparkline}
             current_user={@current_user}
             current_team={@current_team}
           />
@@ -213,13 +213,13 @@ defmodule PlausibleWeb.Live.Sites do
             <.site
               :if={site.entry_type in ["pinned_site", "site"]}
               site={site}
-              hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
+              sparkline={Map.get(@sparklines, site.domain, :loading)}
             />
             <.invitation
               :if={site.entry_type == "invitation"}
               site={site}
               invitation={@invitations_map[hd(site.invitations).invitation_id]}
-              hourly_stats={Map.get(@hourly_stats, site.domain, :loading)}
+              sparkline={Map.get(@sparklines, site.domain, :loading)}
             />
           <% end %>
         </ul>
@@ -404,48 +404,48 @@ defmodule PlausibleWeb.Live.Sites do
             </h3>
           </div>
           <span
-            :if={is_map(@consolidated_stats)}
+            :if={is_map(@consolidated_sparkline)}
             class="max-w-sm sm:max-w-none text-indigo-500 my-auto"
             data-test-id="consolidated-view-chart-loaded"
           >
             <PlausibleWeb.Live.Components.Visitors.chart
-              intervals={@consolidated_stats.intervals}
+              intervals={@consolidated_sparkline.intervals}
               height={80}
             />
           </span>
         </div>
         <div
-          :if={is_map(@consolidated_stats)}
+          :if={is_map(@consolidated_sparkline)}
           data-test-id="consolidated-view-stats-loaded"
           class="flex flex-col flex-1 justify-between gap-y-2.5 sm:gap-y-5"
         >
           <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
             <.consolidated_view_stat
-              value={large_number_format(@consolidated_stats.visitors)}
+              value={large_number_format(@consolidated_sparkline.visitors)}
               label="Unique visitors"
-              change={@consolidated_stats.visitors_change}
+              change={@consolidated_sparkline.visitors_change}
             />
             <.consolidated_view_stat
-              value={large_number_format(@consolidated_stats.visits)}
+              value={large_number_format(@consolidated_sparkline.visits)}
               label="Total visits"
-              change={@consolidated_stats.visits_change}
+              change={@consolidated_sparkline.visits_change}
             />
           </div>
           <div class="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-2 flex-1 w-full">
             <.consolidated_view_stat
-              value={large_number_format(@consolidated_stats.pageviews)}
+              value={large_number_format(@consolidated_sparkline.pageviews)}
               label="Total pageviews"
-              change={@consolidated_stats.pageviews_change}
+              change={@consolidated_sparkline.pageviews_change}
             />
             <.consolidated_view_stat
-              value={@consolidated_stats.views_per_visit}
+              value={@consolidated_sparkline.views_per_visit}
               label="Views per visit"
-              change={@consolidated_stats.views_per_visit_change}
+              change={@consolidated_sparkline.views_per_visit_change}
             />
           </div>
         </div>
         <div
-          :if={@consolidated_stats == :loading}
+          :if={@consolidated_sparkline == :loading}
           class="flex flex-col gap-y-2 min-h-[254px] h-full text-center animate-pulse"
           data-test-id="consolidated-viw-stats-loading"
         >
@@ -486,7 +486,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   attr(:site, Plausible.Site, required: true)
   attr(:invitation, :map, required: true)
-  attr(:hourly_stats, :map, required: true)
+  attr(:sparkline, :map, required: true)
 
   def invitation(assigns) do
     assigns =
@@ -512,7 +512,7 @@ defmodule PlausibleWeb.Live.Sites do
             Pending invitation
           </.pill>
         </div>
-        <.site_stats hourly_stats={@hourly_stats} />
+        <.site_stats sparkline={@sparkline} />
       </div>
       <.invitation_modal id={@modal_id} site={@site} invitation={@invitation} />
     </li>
@@ -520,7 +520,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:site, Plausible.Site, required: true)
-  attr(:hourly_stats, :map, required: true)
+  attr(:sparkline, :map, required: true)
 
   def site(assigns) do
     ~H"""
@@ -554,7 +554,7 @@ defmodule PlausibleWeb.Live.Sites do
               </h3>
             </div>
           </div>
-          <.site_stats hourly_stats={@hourly_stats} />
+          <.site_stats sparkline={@sparkline} />
         </div>
       </.unstyled_link>
 
@@ -644,36 +644,36 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr(:hourly_stats, :any, required: true)
+  attr(:sparkline, :any, required: true)
 
   def site_stats(assigns) do
     ~H"""
     <div class={[
       "flex flex-col gap-y-2 h-[122px] text-center animate-pulse",
-      is_map(@hourly_stats) && " hidden"
+      is_map(@sparkline) && " hidden"
     ]}>
       <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
       <div class="flex-1 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
     </div>
-    <div :if={is_map(@hourly_stats)}>
+    <div :if={is_map(@sparkline)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
         <span class="max-w-sm sm:max-w-none text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
-            intervals={@hourly_stats.intervals}
+            intervals={@sparkline.intervals}
             height={80}
           />
         </span>
         <div class="flex justify-between items-end">
           <div class="flex flex-col">
             <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
-              {large_number_format(@hourly_stats.visitors)}
+              {large_number_format(@sparkline.visitors)}
             </p>
             <p class="text-gray-600 dark:text-gray-400">
-              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
+              visitor<span :if={@sparkline.visitors != 1}>s</span> in last 24h
             </p>
           </div>
 
-          <.percentage_change change={@hourly_stats.change} />
+          <.percentage_change change={@sparkline.visitors_change} />
         </div>
       </span>
     </div>
@@ -970,25 +970,16 @@ defmodule PlausibleWeb.Live.Sites do
         team: assigns.current_team
       )
 
-    hourly_stats =
+    sparklines =
       if connected?(socket) do
-        try do
-          Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
-        catch
-          kind, value ->
-            Logger.error(
-              "Could not render 24h visitors hourly intervals: #{inspect(kind)} #{inspect(value)}"
-            )
-
-            %{}
-        end
+        Plausible.Stats.Sparkline.parallel_overview(sites.entries)
       else
         %{}
       end
 
-    consolidated_stats =
+    consolidated_sparkline =
       if connected?(socket),
-        do: load_consolidated_stats(assigns.consolidated_view),
+        do: load_consolidated_sparkline(assigns.consolidated_view),
         else: :loading
 
     invitations = extract_invitations(sites.entries, assigns.current_team)
@@ -997,8 +988,8 @@ defmodule PlausibleWeb.Live.Sites do
       socket,
       sites: sites,
       invitations: invitations,
-      hourly_stats: hourly_stats,
-      consolidated_stats: consolidated_stats || Map.get(assigns, :consolidated_stats)
+      sparklines: sparklines,
+      consolidated_sparkline: consolidated_sparkline || Map.get(assigns, :consolidated_sparkline)
     )
   end
 
@@ -1098,7 +1089,7 @@ defmodule PlausibleWeb.Live.Sites do
     [
       consolidated_view: nil,
       can_manage_consolidated_view?: false,
-      consolidated_stats: nil,
+      consolidated_sparkline: nil,
       no_consolidated_view_reason: nil,
       consolidated_view_cta_dismissed?: false
     ]
@@ -1123,7 +1114,7 @@ defmodule PlausibleWeb.Live.Sites do
           %{
             consolidated_view: view,
             can_manage_consolidated_view?: ConsolidatedView.can_manage?(user, team),
-            consolidated_stats: :loading,
+            consolidated_sparkline: :loading,
             no_consolidated_view_reason: nil,
             consolidated_view_cta_dismissed?: ConsolidatedView.cta_dismissed?(user, team)
           }
@@ -1137,8 +1128,8 @@ defmodule PlausibleWeb.Live.Sites do
       end
     end
 
-    defp load_consolidated_stats(consolidated_view) do
-      case Plausible.Stats.ConsolidatedView.safe_overview_24h(consolidated_view) do
+    defp load_consolidated_sparkline(consolidated_view) do
+      case Plausible.Stats.Sparkline.safe_overview_24h(consolidated_view) do
         {:ok, stats} -> stats
         {:error, :not_found} -> nil
         {:error, :inaccessible} -> :loading
@@ -1150,6 +1141,6 @@ defmodule PlausibleWeb.Live.Sites do
     defp init_consolidated_view_assigns(_user, _team),
       do: no_consolidated_view(no_consolidated_view_reason: :unavailable)
 
-    defp load_consolidated_stats(_consolidated_view), do: nil
+    defp load_consolidated_sparkline(_consolidated_view), do: nil
   end
 end
