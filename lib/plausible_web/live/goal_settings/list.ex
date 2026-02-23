@@ -13,18 +13,11 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)
   attr(:site, Plausible.Site, required: true)
+  attr(:revenue_goals_enabled?, :boolean, required: true)
+  attr(:props_available?, :boolean, required: true)
 
   def render(assigns) do
-    revenue_goals_enabled? = Plausible.Billing.Feature.RevenueGoals.enabled?(assigns.site)
-
-    props_available? =
-      Plausible.Billing.Feature.Props.check_availability(assigns.site.team) == :ok
-
-    assigns =
-      assigns
-      |> assign(:revenue_goals_enabled?, revenue_goals_enabled?)
-      |> assign(:props_available?, props_available?)
-      |> assign(:searching?, String.trim(assigns.filter_text) != "")
+    assigns = assign(assigns, :searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
     <div class="flex flex-col gap-4">
