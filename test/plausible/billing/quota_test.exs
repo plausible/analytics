@@ -1189,7 +1189,7 @@ defmodule Plausible.Billing.QuotaTest do
       assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :trial_ended
     end
 
-    test "returns :traffic_exceeded_sustained when both last cycles exceeded" do
+    test "returns :traffic_exceeded_sustained when penultimate and last cycles both exceeded" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
 
@@ -1205,6 +1205,60 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
                :traffic_exceeded_sustained
+    end
+
+    test "returns :traffic_exceeded_sustained when last and current cycles both exceeded" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 10_500},
+          last_cycle: %{total: 10_200},
+          penultimate_cycle: %{total: 5000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :traffic_exceeded_sustained
+    end
+
+    test "returns :traffic_exceeded_current_cycle when only current cycle exceeded" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 10_500},
+          last_cycle: %{total: 8000},
+          penultimate_cycle: %{total: 7000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :traffic_exceeded_current_cycle
+    end
+
+    test "returns :traffic_exceeded_current_cycle when penultimate and current exceeded but not last" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 10_500},
+          last_cycle: %{total: 8000},
+          penultimate_cycle: %{total: 10_200}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :traffic_exceeded_current_cycle
     end
 
     test "returns :traffic_exceeded_last_cycle when only last cycle exceeded" do

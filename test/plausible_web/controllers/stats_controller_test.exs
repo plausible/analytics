@@ -239,8 +239,8 @@ defmodule PlausibleWeb.StatsControllerTest do
       locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       conn = get(conn, "/" <> locked_site.domain)
       resp = html_response(conn, 200)
-      assert resp =~ "Dashboard Locked"
-      assert resp =~ "Please subscribe to the appropriate tier with the link below"
+      assert resp =~ "Your dashboard is unavailable"
+      assert resp =~ "Upgrade to the appropriate plan to restore access"
     end
 
     test "shows locked page if site is locked for billing role", %{conn: conn, user: user} do
@@ -251,8 +251,8 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/" <> locked_site.domain)
       resp = html_response(conn, 200)
-      assert resp =~ "Dashboard Locked"
-      assert resp =~ "Please subscribe to the appropriate tier with the link below"
+      assert resp =~ "Your dashboard is unavailable"
+      assert resp =~ "Upgrade to the appropriate plan to restore access"
     end
 
     test "shows locked page if site is locked for viewer role", %{conn: conn, user: user} do
@@ -263,9 +263,9 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/" <> locked_site.domain)
       resp = html_response(conn, 200)
-      assert resp =~ "Dashboard Locked"
-      refute resp =~ "Please subscribe to the appropriate tier with the link below"
-      assert resp =~ "Owner of this site must upgrade their subscription plan"
+      assert resp =~ "Your dashboard is unavailable"
+      refute resp =~ "Upgrade to the appropriate plan to restore access"
+      assert resp =~ "The owner of this site must upgrade their subscription plan"
     end
 
     test "shows locked page for anonymous" do
@@ -273,7 +273,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       conn = get(build_conn(), "/" <> locked_site.domain)
       resp = html_response(conn, 200)
-      assert resp =~ "Dashboard Locked"
+      assert resp =~ "Your dashboard is unavailable"
       assert resp =~ "You can check back later or contact the site owner"
     end
 
@@ -1433,7 +1433,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
 
-      assert html_response(conn, 200) =~ "Dashboard Locked"
+      assert html_response(conn, 200) =~ "Your dashboard is unavailable"
       refute String.contains?(html_response(conn, 200), "Back to my sites")
     end
 
@@ -1447,7 +1447,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
 
-      assert html_response(conn, 200) =~ "Shared Link Unavailable"
+      assert html_response(conn, 200) =~ "Shared link unavailable"
       refute String.contains?(html_response(conn, 200), "Back to my sites")
     end
 
@@ -1708,7 +1708,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       script_params = html |> get_script_params()
 
-      assert html =~ "Dashboard Locked"
+      assert html =~ "Your dashboard is unavailable"
       assert script_params["location_override"] == PlausibleWeb.Endpoint.url() <> "/:dashboard"
     end
 
@@ -1723,7 +1723,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       script_params = get_script_params(html)
 
-      assert html =~ "Shared Link Unavailable"
+      assert html =~ "Shared link unavailable"
 
       assert script_params["location_override"] ==
                PlausibleWeb.Endpoint.url() <> "/share/:dashboard"

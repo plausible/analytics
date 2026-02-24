@@ -71,8 +71,14 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   def limit_exceeded(assigns) do
     ~H"""
-    <.notice {@rest} title="Notice" data-test="limit-exceeded-notice">
-      {account_label(@current_team)} is limited to {pretty_print_resource_limit(@limit, @resource)}. To increase this limit,
+    <.notice
+      {@rest}
+      title={"#{account_label(@current_team)} is limited to #{pretty_print_resource_limit(@limit, @resource)}"}
+      data-test="limit-exceeded-notice"
+      theme={:gray}
+      show_icon={false}
+    >
+      To add more {@resource},
       <PlausibleWeb.Components.Billing.upgrade_call_to_action
         current_team={@current_team}
         current_user={@current_user}
@@ -339,6 +345,30 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
           Upgrade
         </.button_link>
+      </div>
+    </.notice>
+    """
+  end
+
+  def usage_notification(%{type: :traffic_exceeded_current_cycle} = assigns) do
+    ~H"""
+    <.notice title="Traffic has exceeded your plan limit this cycle" theme={:gray} show_icon={false}>
+      <div class="flex flex-col gap-4">
+        <p class="text-pretty">
+          No action is required. Occasional traffic spikes are normal, but upgrading now gives you room to grow if higher traffic continues.
+        </p>
+        <div class="flex gap-3 items-center">
+          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+            Upgrade
+          </.button_link>
+          <.button_link
+            href="https://plausible.io/docs/subscription-plans"
+            theme="secondary"
+            mt?={false}
+          >
+            Learn more
+          </.button_link>
+        </div>
       </div>
     </.notice>
     """
