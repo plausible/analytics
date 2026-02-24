@@ -73,7 +73,7 @@ defmodule PlausibleWeb.Team.Notice do
             <.envelope_icon class="size-4 text-green-600 dark:text-green-400" />
           </div>
         </:icon>
-        {i.inviter.name} has invited you to join the "{i.team.name}" as {i.role} member.
+        {i.inviter.name} has invited you to join the "{i.team.name}" as {i.role}.
         <:actions>
           <.button_link
             method="post"
@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Team.Notice do
     ~H"""
     <.notice
       id={"site-ownership-invitation-#{@invitation.transfer_id}"}
-      title={"Become owner of #{@invitation.site.domain}"}
+      title={"#{@invitation.initiator.name} has invited you to own #{@invitation.site.domain}"}
       theme={:white}
     >
       <:icon>
@@ -142,7 +142,6 @@ defmodule PlausibleWeb.Team.Notice do
           <.envelope_icon class="size-4 text-green-600 dark:text-green-400" />
         </div>
       </:icon>
-      {@invitation.initiator.name} has invited you to own {@invitation.site.domain}.
       <p :if={@invitation.ownership_check == :ok}>
         On acceptance, you'll be responsible for billing and this site will join "{Teams.name(
           @current_team
@@ -196,7 +195,7 @@ defmodule PlausibleWeb.Team.Notice do
           class="order-1 md:order-2"
           mt?={false}
         >
-          Upgrade
+          Upgrade to accept
         </.button_link>
       </:actions>
     </.notice>
