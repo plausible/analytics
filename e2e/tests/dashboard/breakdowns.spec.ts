@@ -10,6 +10,9 @@ const expectHeaders = async (report, headers) =>
 const expectRows = async (report, labels) =>
   expect(report.getByTestId('report-row').getByRole('link')).toHaveText(labels)
 
+const rowLink = (report, label) =>
+  report.getByTestId('report-row').filter({ hasText: label }).getByRole('link')
+
 const expectMetricValues = async (report, label, values) =>
   expect(
     report
@@ -27,10 +30,17 @@ test('sources breakdown', async ({ page, request }) => {
     request,
     domain,
     events: [
-      { name: 'pageview', referrer_source: 'DuckDuckGo', utm_medium: 'paid' },
       {
         name: 'pageview',
         referrer_source: 'DuckDuckGo',
+
+        referrer: 'https://duckduckgo.com/a1',
+        utm_medium: 'paid'
+      },
+      {
+        name: 'pageview',
+        referrer_source: 'DuckDuckGo',
+        referrer: 'https://duckduckgo.com/a2',
         click_id_param: 'gclid'
       },
       { name: 'pageview', referrer_source: 'Facebook', utm_source: 'fb' },
@@ -50,6 +60,53 @@ test('sources breakdown', async ({ page, request }) => {
   await page.goto('/' + domain)
 
   const report = page.getByTestId('report-sources')
+
+  await test.step('sources tab', async () => {
+    const sourcesTabButton = tabButton(report, 'Sources')
+    await sourcesTabButton.scrollIntoViewIfNeeded()
+    await expect(sourcesTabButton).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['Source', 'Visitors'])
+
+    await expectRows(report, [
+      'DuckDuckGo',
+      'Direct / None',
+      'Facebook',
+      'ablog.example.com',
+      'theguardian.com'
+    ])
+
+    await expectMetricValues(report, 'DuckDuckGo', ['2', '33.3%'])
+    await expectMetricValues(report, 'Direct / None', ['1', '16.7%'])
+    await expectMetricValues(report, 'Facebook', ['1', '16.7%'])
+    await expectMetricValues(report, 'ablog.example.com', ['1', '16.7%'])
+    await expectMetricValues(report, 'theguardian.com', ['1', '16.7%'])
+  })
+
+  await test.step('clicking sources entry shows referrers', async () => {
+    await rowLink(report, 'DuckDuckGo').click()
+    const referrersReport = page.getByTestId('report-referrers')
+    await expect(page).toHaveURL(/f=is,source,DuckDuckGo/)
+
+    await expect(tabButton(referrersReport, 'Top referrers')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    // Move mouse away from report rows
+    await tabButton(referrersReport, 'Top referrers').hover()
+
+    await expectHeaders(referrersReport, ['Referrer', 'Visitors'])
+
+    await expectRows(referrersReport, [
+      'https://duckduckgo.com/a1',
+      'https://duckduckgo.com/a2'
+    ])
+
+    await page
+      .getByRole('button', { name: 'Remove filter: Source is DuckDuckGo' })
+      .click()
+  })
 
   await test.step('sources tab', async () => {
     const sourcesTabButton = tabButton(report, 'Sources')
@@ -299,8 +356,20 @@ test('locations breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'Poland', ['1', '33.3%'])
   })
 
+  const regionsTabButton = tabButton(report, 'Regions')
+
+  await test.step('clicking country entry shows regions', async () => {
+    await rowLink(report, 'Estonia').click()
+    await expect(page).toHaveURL(/f=is,country,EE/)
+
+    await expect(regionsTabButton).toHaveAttribute('data-active', 'true')
+
+    await page
+      .getByRole('button', { name: 'Remove filter: Country is Estonia' })
+      .click()
+  })
+
   await test.step('regions tab', async () => {
-    const regionsTabButton = tabButton(report, 'Regions')
     await regionsTabButton.click()
     await expect(regionsTabButton).toHaveAttribute('data-active', 'true')
 
@@ -313,8 +382,20 @@ test('locations breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'Mazovia', ['1', '33.3%'])
   })
 
+  const citiesTabButton = tabButton(report, 'Cities')
+
+  await test.step('clicking region entry shows cities', async () => {
+    await rowLink(report, 'Harjumaa').click()
+    await expect(page).toHaveURL(/f=is,region,EE-37/)
+
+    await expect(citiesTabButton).toHaveAttribute('data-active', 'true')
+
+    await page
+      .getByRole('button', { name: 'Remove filter: Region is Harjumaa' })
+      .click()
+  })
+
   await test.step('cities tab', async () => {
-    const citiesTabButton = tabButton(report, 'Cities')
     await citiesTabButton.click()
     await expect(citiesTabButton).toHaveAttribute('data-active', 'true')
 
@@ -366,8 +447,9 @@ test('devices breakdown', async ({ page, request }) => {
 
   const report = page.getByTestId('report-devices')
 
+  const browsersTabButton = tabButton(report, 'Browsers')
+
   await test.step('browsers tab', async () => {
-    const browsersTabButton = tabButton(report, 'Browsers')
     await browsersTabButton.scrollIntoViewIfNeeded()
     await expect(browsersTabButton).toHaveAttribute('data-active', 'true')
 
@@ -380,8 +462,27 @@ test('devices breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'Safari', ['1', '33.3%'])
   })
 
+  await test.step('browser versions', async () => {
+    await rowLink(report, 'Firefox').click()
+
+    await expect(page).toHaveURL(/f=is,browser,Firefox/)
+
+    await expect(browsersTabButton).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['Browser version', 'Visitors'])
+
+    await expectRows(report, ['Firefox 98'])
+
+    await expectMetricValues(report, 'Firefox 98', ['1', '100%'])
+
+    await page
+      .getByRole('button', { name: 'Remove filter: Browser is Firefox' })
+      .click()
+  })
+
+  const osTabButton = tabButton(report, 'Operating systems')
+
   await test.step('operating systems tab', async () => {
-    const osTabButton = tabButton(report, 'Operating systems')
     await osTabButton.click()
     await expect(osTabButton).toHaveAttribute('data-active', 'true')
 
@@ -392,6 +493,20 @@ test('devices breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'MacOS', ['1', '33.3%'])
     await expectMetricValues(report, 'Windows', ['1', '33.3%'])
     await expectMetricValues(report, 'iOS', ['1', '33.3%'])
+  })
+
+  await test.step('operating system versions', async () => {
+    await rowLink(report, 'Windows').click()
+
+    await expect(page).toHaveURL(/f=is,os,Windows/)
+
+    await expect(osTabButton).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['Operating system version', 'Visitors'])
+
+    await page
+      .getByRole('button', { name: 'Remove filter: Operating system is Windows' })
+      .click()
   })
 
   await test.step('devices tab', async () => {
