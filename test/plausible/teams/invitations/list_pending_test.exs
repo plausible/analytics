@@ -108,11 +108,17 @@ defmodule Plausible.Teams.Invitations.ListPendingTest do
       site2 = new_site(owner: inviter)
       invitee = new_user()
 
-      gi1 = site1
-            |> invite_guest(invitee, inviter: inviter, role: :viewer)
-            |> Plausible.Repo.preload(:team_invitation)
+      gi1 =
+        site1
+        |> invite_guest(invitee, inviter: inviter, role: :viewer)
+        |> Plausible.Repo.preload(:team_invitation)
 
-      gi2 = insert(:guest_invitation, site: site2, team_invitation: gi1.team_invitation, role: :editor)
+      gi2 =
+        insert(:guest_invitation,
+          site: site2,
+          team_invitation: gi1.team_invitation,
+          role: :editor
+        )
 
       results = Invitations.pending_guest_invitations_for(invitee)
 
