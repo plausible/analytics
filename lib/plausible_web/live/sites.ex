@@ -27,30 +27,9 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:sparklines, %{})
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
       |> assign(init_consolidated_view_assigns(user, team))
-      |> assign(:team_invitations, [
-        %{
-          invitation_id: "team_inv_789",
-          inviter: %{name: "Jane Doe"},
-          team: %{name: "Acme Corp"},
-          role: :admin
-        }
-      ])
-      |> assign(:site_ownership_invitations, [
-        %{
-          invitation_id: "ownership_123",
-          site: %{domain: "example.com"},
-          role: :owner,
-          inviter: %{name: "John Doe"}
-        }
-      ])
-      |> assign(:site_invitations, [
-        %{
-          invitation_id: "invitation_456",
-          site: %{domain: "dummy.site"},
-          role: :viewer,
-          inviter: %{name: "Jane Smith"}
-        }
-      ])
+      |> assign(:team_invitations, [])
+      |> assign(:site_invitations, [])
+      |> assign(:site_ownership_invitations, [])
 
     {:ok, socket}
   end
@@ -60,6 +39,7 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> assign(:params, params)
       |> load_sites()
+      |> load_invitations()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
         Teams.Users.has_sites?(current_user, include_pending?: true)
       end)
@@ -167,9 +147,10 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div class="flex flex-col gap-y-4 my-4">
         <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
-        <PlausibleWeb.Team.Notice.site_ownership_invitations site_ownership_invitations={
-          @site_ownership_invitations
-        } />
+        <PlausibleWeb.Team.Notice.site_ownership_invitations
+          site_ownership_invitations={@site_ownership_invitations}
+          current_team={@current_team}
+        />
         <PlausibleWeb.Team.Notice.site_invitations site_invitations={@site_invitations} />
       </div>
 
@@ -830,6 +811,22 @@ defmodule PlausibleWeb.Live.Sites do
     end
   end
 
+  defp load_invitations(%{assigns: %{params: %{"page" => page}}} = socket) when page != "1" do
+    socket
+  end
+
+  defp load_invitations(%{assigns: %{current_user: user, current_team: team}} = socket) do
+    site_transfers =
+      user
+      |> Teams.Invitations.pending_site_transfers_for()
+      |> Enum.map(&Map.put(&1, :ownership_check, ensure_can_take_ownership(&1.site, team)))
+
+    socket
+    |> assign(:team_invitations, Teams.Invitations.pending_team_invitations_for(user))
+    |> assign(:site_invitations, Teams.Invitations.pending_guest_invitations_for(user))
+    |> assign(:site_ownership_invitations, site_transfers)
+  end
+
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
       Sites.list(assigns.current_user, assigns.params,
@@ -855,6 +852,12 @@ defmodule PlausibleWeb.Live.Sites do
       sparklines: sparklines,
       consolidated_sparkline: consolidated_sparkline || Map.get(assigns, :consolidated_sparkline)
     )
+  end
+
+  on_ee do
+    defdelegate ensure_can_take_ownership(site, team), to: Teams.Invitations
+  else
+    defp ensure_can_take_ownership(_site, _team), do: :ok
   end
 
   defp set_filter_text(socket, filter_text) do
