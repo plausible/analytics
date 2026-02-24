@@ -85,9 +85,22 @@ defmodule Plausible.Teams.Invitations do
     Repo.all(
       from gi in Teams.GuestInvitation,
         inner_join: ti in assoc(gi, :team_invitation),
+        as: :team_invitation,
         inner_join: inviter in assoc(ti, :inviter),
         inner_join: s in assoc(gi, :site),
+        as: :site,
         where: ti.email == ^user.email,
+        where:
+          not exists(
+            from tm in Teams.Membership,
+              inner_join: u in assoc(tm, :user),
+              left_join: gm in assoc(tm, :guest_memberships),
+              on: gm.site_id == parent_as(:site).id,
+              where: tm.team_id == parent_as(:team_invitation).team_id,
+              where: u.email == parent_as(:team_invitation).email,
+              where: not is_nil(gm.id) or tm.role != :guest,
+              select: 1
+          ),
         preload: [site: s, team_invitation: {ti, inviter: inviter}]
     )
   end

@@ -102,6 +102,28 @@ defmodule Plausible.Teams.Invitations.ListPendingTest do
       assert Invitations.pending_guest_invitations_for(new_user()) == []
     end
 
+    test "does not return invitation if invitee is already a full team member" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+      invitee = new_user()
+
+      invite_guest(site, invitee, inviter: inviter, role: :viewer)
+      add_member(site.team, user: invitee, role: :editor)
+
+      assert Invitations.pending_guest_invitations_for(invitee) == []
+    end
+
+    test "does not return invitation if invitee is already a guest member of that site" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+      invitee = new_user()
+
+      invite_guest(site, invitee, inviter: inviter, role: :viewer)
+      add_guest(site, user: invitee, role: :viewer)
+
+      assert Invitations.pending_guest_invitations_for(invitee) == []
+    end
+
     test "returns invitations to multiple sites within single team" do
       inviter = new_user()
       site1 = new_site(owner: inviter)
