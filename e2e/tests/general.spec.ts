@@ -236,7 +236,7 @@ test('goals are rendered', async ({ page, request }) => {
 
   await expect(page.getByRole('button', { name: domain })).toBeVisible()
   // To ensure lazy loading of behaviours is triggered
-  page.getByRole('button', { name: 'Goals' }).scrollIntoViewIfNeeded()
+  await page.getByRole('button', { name: 'Goals' }).scrollIntoViewIfNeeded()
   await expect(page.getByRole('link', { name: 'Add a site' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Visit /page1' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'purchase' })).toBeVisible()
