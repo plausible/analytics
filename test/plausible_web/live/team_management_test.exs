@@ -186,7 +186,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       add_invite(lv, "new4@example.com", "admin")
 
       assert lv |> render() |> text() =~ "Your account is limited to 3 team members"
-      assert Enum.count(Plausible.Teams.Invitations.all(team)) == 3
+      assert Enum.count(Plausible.Teams.Invitations.pending_team_invitations_for(team)) == 3
     end
 
     test "fails to accept invitation to already existing e-mail", %{
