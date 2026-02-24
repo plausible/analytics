@@ -59,7 +59,8 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def all(%Teams.Team{} = team) do
+  @spec pending_team_invitations_for(Auth.User.t() | Teams.Team.t()) :: [Teams.Invitation.t()]
+  def pending_team_invitations_for(%Teams.Team{} = team) do
     Repo.all(
       from ti in Teams.Invitation,
         inner_join: inviter in assoc(ti, :inviter),
@@ -68,7 +69,7 @@ defmodule Plausible.Teams.Invitations do
     )
   end
 
-  def all(%Plausible.Auth.User{} = user) do
+  def pending_team_invitations_for(%Plausible.Auth.User{} = user) do
     Repo.all(
       from ti in Teams.Invitation,
         inner_join: inviter in assoc(ti, :inviter),
@@ -76,6 +77,29 @@ defmodule Plausible.Teams.Invitations do
         where: ti.email == ^user.email,
         where: ti.role != :guest,
         preload: [inviter: inviter, team: team]
+    )
+  end
+
+  @spec pending_guest_invitations_for(Auth.User.t()) :: [Teams.GuestInvitation.t()]
+  def pending_guest_invitations_for(%Plausible.Auth.User{} = user) do
+    Repo.all(
+      from gi in Teams.GuestInvitation,
+        inner_join: ti in assoc(gi, :team_invitation),
+        inner_join: inviter in assoc(ti, :inviter),
+        inner_join: s in assoc(gi, :site),
+        where: ti.email == ^user.email,
+        preload: [site: s, team_invitation: {ti, inviter: inviter}]
+    )
+  end
+
+  @spec pending_site_transfers_for(Auth.User.t()) :: [Teams.SiteTransfer.t()]
+  def pending_site_transfers_for(%Plausible.Auth.User{} = user) do
+    Repo.all(
+      from st in Teams.SiteTransfer,
+        inner_join: s in assoc(st, :site),
+        inner_join: initiator in assoc(st, :initiator),
+        where: st.email == ^user.email,
+        preload: [site: s, initiator: initiator]
     )
   end
 
