@@ -249,7 +249,7 @@ function OperatingSystemVersions({ afterFetchData }) {
       renderIcon={renderIcon}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
-      keyLabel="Operating System Version"
+      keyLabel="Operating system version"
       metrics={chooseMetrics()}
     />
   )
