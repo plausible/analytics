@@ -270,6 +270,7 @@ class Locations extends React.Component {
   render() {
     return (
       <ReportLayout
+        testId="report-locations"
         className={this.state.mode === 'map' ? '' : 'overflow-x-hidden'}
       >
         <ReportHeader>

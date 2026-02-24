@@ -249,6 +249,7 @@ export default function ListReport<
       .map((metric) => {
         return (
           <div
+            data-testid="report-header"
             key={metric.key}
             className={`${metric.key} text-right ${hiddenOnMobileClass(metric)}`}
             style={{ minWidth: colMinWidth }}
@@ -260,7 +261,9 @@ export default function ListReport<
 
     return (
       <div className="pt-3 w-full text-xs font-medium text-gray-500 flex items-center dark:text-gray-400">
-        <span className="grow truncate">{keyLabel}</span>
+        <span data-testid="report-header" className="grow truncate">
+          {keyLabel}
+        </span>
         {metricLabels}
       </div>
     )
@@ -280,6 +283,7 @@ export default function ListReport<
     return (
       <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
         <div
+          data-testid="report-row"
           className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm md:cursor-default cursor-pointer"
           style={{ marginTop: ROW_GAP_HEIGHT }}
           onClick={handleRowClick}
