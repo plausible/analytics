@@ -1,27 +1,13 @@
 import { test, expect } from '@playwright/test'
 import { setupSite, populateStats } from '../fixtures.ts'
-
-const tabButton = (page, label) =>
-  page.getByTestId('tab-button').filter({ hasText: label })
-
-const expectHeaders = async (report, headers) =>
-  expect(report.getByTestId('report-header')).toHaveText(headers)
-
-const expectRows = async (report, labels) =>
-  expect(report.getByTestId('report-row').getByRole('link')).toHaveText(labels)
-
-const rowLink = (report, label) =>
-  report.getByTestId('report-row').filter({ hasText: label }).getByRole('link')
-
-const expectMetricValues = async (report, label, values) =>
-  expect(
-    report
-      .getByTestId('report-row')
-      .filter({ hasText: label })
-      .getByTestId('metric-value')
-  ).toHaveText(values)
-
-const dropdown = (report) => report.getByTestId('dropdown-items')
+import {
+  tabButton,
+  expectHeaders,
+  expectRows,
+  rowLink,
+  expectMetricValues,
+  dropdown
+} from '../test-utils.ts'
 
 test('sources breakdown', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
@@ -505,7 +491,9 @@ test('devices breakdown', async ({ page, request }) => {
     await expectHeaders(report, ['Operating system version', 'Visitors'])
 
     await page
-      .getByRole('button', { name: 'Remove filter: Operating system is Windows' })
+      .getByRole('button', {
+        name: 'Remove filter: Operating system is Windows'
+      })
       .click()
   })
 
