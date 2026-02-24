@@ -85,7 +85,7 @@ invite_transfer(site2, user, inviter: user2)
 invite_member(team_of(user), user2, inviter: user, role: :editor)
 
 user3 = new_user(name: "Harvey Dent", email: "user3@plausible.test", password: "plausible")
-site3 = new_site(domain: "bank.example.com", owner: user3)
+_site3 = new_site(domain: "bank.example.com", owner: user3)
 subscribe_to_business_plan(user3)
 invite_member(team_of(user3), "user@plausible.test", role: :editor, inviter: user3)
 
