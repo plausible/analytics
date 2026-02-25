@@ -140,16 +140,29 @@ defmodule PlausibleWeb.SettingsController do
 
     invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
 
+    pageview_usage = Teams.Billing.monthly_pageview_usage(team)
+    site_usage = Teams.Billing.site_usage(team)
+    team_member_usage = Teams.Billing.team_member_usage(team)
+
+    usage = %{
+      monthly_pageviews: pageview_usage,
+      sites: site_usage,
+      team_members: team_member_usage
+    }
+
+    notification_type = Plausible.Billing.Quota.usage_notification_type(team, usage)
+
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
       subscription: subscription,
       invoices: invoices,
       pageview_limit: Teams.Billing.monthly_pageview_limit(subscription),
-      pageview_usage: Teams.Billing.monthly_pageview_usage(team),
-      site_usage: Teams.Billing.site_usage(team),
+      pageview_usage: pageview_usage,
+      site_usage: site_usage,
       site_limit: Teams.Billing.site_limit(team),
       team_member_limit: Teams.Billing.team_member_limit(team),
-      team_member_usage: Teams.Billing.team_member_usage(team)
+      team_member_usage: team_member_usage,
+      notification_type: notification_type
     )
   end
 

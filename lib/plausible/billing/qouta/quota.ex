@@ -191,23 +191,24 @@ defmodule Plausible.Billing.Quota do
 
   Example for 10k plan:
   - 9,000 pageviews: `:pageview_approaching_limit` (90% of base limit)
-  - 10,500 pageviews (1 cycle): `:traffic_exceeded_last_cycle` (over base limit)
-  - 10,500 + 10,200 pageviews: `:traffic_exceeded_sustained` (both cycles over base limit)
+  - 10,500 pageviews (1 cycle): `:traffic_exceeded_last_cycle` or `:traffic_exceeded_current_cycle` (over base limit)
+  - 10,500 + 10,200 pageviews: `:traffic_exceeded_sustained` (two consecutive cycles over base limit)
   - 12,000 + 11,500 pageviews + grace period active: `:grace_period_active` (over margin)
   - 12,000 + 11,500 pageviews + grace period expired: `:dashboard_locked` (over margin)
 
   ## Priority order
 
-  1. Dashboard locked
-  2. Trial ended
+  1. Trial ended
+  2. Dashboard locked
   3. Manual lock grace period active (enterprise, no end date)
   4. Grace period active (with countdown)
   5. Traffic exceeded for 2 consecutive cycles
-  6. Traffic exceeded for 1 cycle
-  7. Pageview limit approaching
-  8. Site and team member limits both reached
-  9. Site limit reached
-  10. Team member limit reached
+  6. Traffic exceeded for current cycle only
+  7. Traffic exceeded for last cycle only
+  8. Pageview limit approaching
+  9. Site and team member limits both reached
+  10. Site limit reached
+  11. Team member limit reached
   """
   def usage_notification_type(team, usage) do
     subscription = Plausible.Teams.Billing.get_subscription(team)
@@ -225,11 +226,11 @@ defmodule Plausible.Billing.Quota do
       end
 
     cond do
-      Plausible.Teams.locked?(team) or Plausible.Teams.GracePeriod.expired?(team) ->
-        :dashboard_locked
-
       not Plausible.Teams.on_trial?(team) and is_nil(subscription) ->
         :trial_ended
+
+      Plausible.Teams.locked?(team) or Plausible.Teams.GracePeriod.expired?(team) ->
+        :dashboard_locked
 
       Plausible.Teams.GracePeriod.manual_lock_active?(team) ->
         :manual_lock_grace_period_active
@@ -258,11 +259,18 @@ defmodule Plausible.Billing.Quota do
   defp pageview_cycle_usage_notification_type(usage, limit) do
     exceeded = exceeded_cycles(usage, limit, with_margin: false)
 
+    current_exceeded? = :current_cycle in exceeded
+    last_exceeded? = :last_cycle in exceeded
+    penultimate_exceeded? = :penultimate_cycle in exceeded
+
     cond do
-      :penultimate_cycle in exceeded and :last_cycle in exceeded ->
+      (penultimate_exceeded? and last_exceeded?) or (last_exceeded? and current_exceeded?) ->
         :traffic_exceeded_sustained
 
-      :last_cycle in exceeded ->
+      current_exceeded? ->
+        :traffic_exceeded_current_cycle
+
+      last_exceeded? ->
         :traffic_exceeded_last_cycle
 
       is_map_key(usage, :current_cycle) and usage.current_cycle.total >= limit * 0.9 ->
