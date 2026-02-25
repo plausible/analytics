@@ -592,7 +592,7 @@ are already on a higher tier (even if their usage is low enough).</p><p><code cl
     </a>
     <h1 class="signature" translate="no">usage_notification_type(team, usage)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L212" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L213" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -610,13 +610,13 @@ are already on a higher tier (even if their usage is low enough).</p><p><code cl
 <p>Pageview limit notifications use different thresholds for warnings vs enforcement:</p><ul><li>Warning notifications (approaching, exceeded): Check against base limit (e.g., 10k)
 to notify users when they exceed their purchased plan allowance</li><li>Enforcement (grace period &amp; locking): The background job checks limit with 10% margin
 (e.g., 11k) and starts a 7-day grace period when both cycles exceed this threshold. After
-the grace period expires, dashboard access is locked.</li></ul><p>Example for 10k plan:</p><ul><li>9,000 pageviews: <code class="inline">:pageview_approaching_limit</code> (90% of base limit)</li><li>10,500 pageviews (1 cycle): <code class="inline">:traffic_exceeded_last_cycle</code> (over base limit)</li><li>10,500 + 10,200 pageviews: <code class="inline">:traffic_exceeded_sustained</code> (both cycles over base limit)</li><li>12,000 + 11,500 pageviews + grace period active: <code class="inline">:grace_period_active</code> (over margin)</li><li>12,000 + 11,500 pageviews + grace period expired: <code class="inline">:dashboard_locked</code> (over margin)</li></ul><h2 id="usage_notification_type/2-priority-order" class="section-heading">
+the grace period expires, dashboard access is locked.</li></ul><p>Example for 10k plan:</p><ul><li>9,000 pageviews: <code class="inline">:pageview_approaching_limit</code> (90% of base limit)</li><li>10,500 pageviews (1 cycle): <code class="inline">:traffic_exceeded_last_cycle</code> or <code class="inline">:traffic_exceeded_current_cycle</code> (over base limit)</li><li>10,500 + 10,200 pageviews: <code class="inline">:traffic_exceeded_sustained</code> (two consecutive cycles over base limit)</li><li>12,000 + 11,500 pageviews + grace period active: <code class="inline">:grace_period_active</code> (over margin)</li><li>12,000 + 11,500 pageviews + grace period expired: <code class="inline">:dashboard_locked</code> (over margin)</li></ul><h2 id="usage_notification_type/2-priority-order" class="section-heading">
   <a href="#usage_notification_type/2-priority-order" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Priority order</span>
 </h2>
-<ol><li>Dashboard locked</li><li>Trial ended</li><li>Manual lock grace period active (enterprise, no end date)</li><li>Grace period active (with countdown)</li><li>Traffic exceeded for 2 consecutive cycles</li><li>Traffic exceeded for 1 cycle</li><li>Pageview limit approaching</li><li>Site and team member limits both reached</li><li>Site limit reached</li><li>Team member limit reached</li></ol>
+<ol><li>Trial ended</li><li>Dashboard locked</li><li>Manual lock grace period active (enterprise, no end date)</li><li>Grace period active (with countdown)</li><li>Traffic exceeded for 2 consecutive cycles</li><li>Traffic exceeded for current cycle only</li><li>Traffic exceeded for last cycle only</li><li>Pageview limit approaching</li><li>Site and team member limits both reached</li><li>Site limit reached</li><li>Team member limit reached</li></ol>
   </section>
 </section>
 <section class="detail" id="within_limit?/2">
