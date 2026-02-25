@@ -166,6 +166,10 @@ defmodule PlausibleWeb.SettingsController do
     )
   end
 
+  def redirect_invoices(conn, _params) do
+    redirect(conn, to: Routes.settings_path(conn, :subscription))
+  end
+
   def api_keys(conn, _params) do
     current_user = conn.assigns.current_user
     current_team = conn.assigns[:current_team]
