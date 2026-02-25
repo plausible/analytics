@@ -183,7 +183,8 @@ defmodule PlausibleWeb.Components.BillingTest do
       pageviews: 0,
       custom_events: 0,
       total: 0,
-      date_range: Date.range(~D[2024-01-01], ~D[2024-01-31])
+      date_range: Date.range(~D[2024-01-01], ~D[2024-01-31]),
+      sites: []
     }
 
     test "only shows current cycle when neither last nor current cycle is exceeded" do
@@ -240,6 +241,84 @@ defmodule PlausibleWeb.Components.BillingTest do
       assert element_exists?(html, "#total_pageviews_current_cycle")
       assert element_exists?(html, "#total_pageviews_last_cycle")
       assert element_exists?(html, "#total_pageviews_penultimate_cycle")
+    end
+
+    test "shows 'Pageviews' and 'Custom events' labels when no per-site breakdown" do
+      usage = %{current_cycle: @cycle, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html = render_monthly_pageview_usage(usage, 10_000)
+
+      assert text_of_element(html, "#pageviews_current_cycle") =~ "Pageviews"
+      refute text_of_element(html, "#pageviews_current_cycle") =~ "Total pageviews"
+      assert text_of_element(html, "#custom_events_current_cycle") =~ "Custom events"
+      refute text_of_element(html, "#custom_events_current_cycle") =~ "Total custom events"
+    end
+
+    test "shows 'Total pageviews' and 'Total custom events' labels when per-site breakdown is present" do
+      cycle_with_sites = %{
+        @cycle
+        | sites: [
+            %{domain: "example.com", pageviews: 100, custom_events: 50, total: 150},
+            %{domain: "app.example.com", pageviews: 200, custom_events: 30, total: 230}
+          ]
+      }
+
+      usage = %{current_cycle: cycle_with_sites, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html = render_monthly_pageview_usage(usage, 10_000)
+
+      assert text_of_element(html, "#pageviews_current_cycle") =~ "Total pageviews"
+      assert text_of_element(html, "#custom_events_current_cycle") =~ "Total custom events"
+    end
+
+    test "renders per-site breakdown when sites are present" do
+      cycle_with_sites = %{
+        @cycle
+        | sites: [
+            %{domain: "example.com", pageviews: 100, custom_events: 50, total: 150},
+            %{domain: "app.example.com", pageviews: 200, custom_events: 30, total: 230}
+          ]
+      }
+
+      usage = %{current_cycle: cycle_with_sites, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html = render_monthly_pageview_usage(usage, 10_000)
+
+      assert element_exists?(html, "#per_site_breakdown_current_cycle")
+      assert text_of_element(html, "#per_site_breakdown_current_cycle") =~ "example.com"
+      assert text_of_element(html, "#per_site_breakdown_current_cycle") =~ "app.example.com"
+    end
+
+    test "does not render per-site breakdown when sites list is empty" do
+      usage = %{current_cycle: @cycle, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html = render_monthly_pageview_usage(usage, 10_000)
+
+      refute element_exists?(html, "#per_site_breakdown_current_cycle")
+    end
+
+    test "current cycle is expanded by default when no per-site breakdown" do
+      usage = %{current_cycle: @cycle, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html = render_monthly_pageview_usage(usage, 10_000)
+
+      assert html =~ "{ open: true }"
+    end
+
+    test "current cycle is not expanded by default when per-site breakdown is present" do
+      cycle_with_sites = %{
+        @cycle
+        | sites: [
+            %{domain: "example.com", pageviews: 100, custom_events: 50, total: 150},
+            %{domain: "app.example.com", pageviews: 200, custom_events: 30, total: 230}
+          ]
+      }
+
+      usage = %{current_cycle: cycle_with_sites, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html = render_monthly_pageview_usage(usage, 10_000)
+
+      refute html =~ "{ open: true }"
     end
   end
 
