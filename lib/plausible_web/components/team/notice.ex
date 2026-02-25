@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Team.Notice do
           <.envelope_icon class="size-4 text-green-600 dark:text-green-400" />
         </div>
       </:icon>
-      <p :if={@invitation.ownership_check == :ok}>
+      <p :if={@can_accept?}>
         On acceptance, you'll be responsible for billing and this site will join "{Teams.name(
           @current_team
         )}"
