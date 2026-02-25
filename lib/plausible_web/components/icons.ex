@@ -88,4 +88,55 @@ defmodule PlausibleWeb.Components.Icons do
     </svg>
     """
   end
+
+  attr :class, :any, default: []
+
+  def exclamation_triangle_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class={@class}>
+      <g fill="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          fill="none"
+          stroke="currentColor"
+          stroke-miterlimit="10"
+          stroke-width="1.5"
+        />
+        <path
+          fill="none"
+          stroke="currentColor"
+          stroke-miterlimit="10"
+          stroke-width="1.5"
+          d="M12 7v6"
+        />
+        <circle cx="12" cy="16.75" r="1.25" />
+      </g>
+    </svg>
+    """
+  end
+
+  attr :class, :any, default: []
+
+  def envelope_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class={@class}>
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M2.333 9c0-.97.528-1.814 1.38-2.284L11.355 2.5a1.332 1.332 0 0 1 1.288 0l7.644 4.217c.85.47 1.379 1.312 1.379 2.284"
+      />
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M21.667 9.005v8.662A2.666 2.666 0 0 1 19 20.333H5a2.666 2.666 0 0 1-2.667-2.666V9l9.087 4.387c.367.177.793.177 1.159 0L21.666 9v.005Z"
+      />
+    </svg>
+    """
+  end
 end

@@ -24,13 +24,12 @@ defmodule PlausibleWeb.Live.Sites do
     socket =
       socket
       |> assign(:uri, uri)
-      |> assign(
-        :team_invitations,
-        Teams.Invitations.all(user)
-      )
       |> assign(:sparklines, %{})
       |> assign(:filter_text, String.trim(params["filter_text"] || ""))
       |> assign(init_consolidated_view_assigns(user, team))
+      |> assign(:team_invitations, [])
+      |> assign(:site_invitations, [])
+      |> assign(:site_ownership_invitations, [])
 
     {:ok, socket}
   end
@@ -40,6 +39,7 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> assign(:params, params)
       |> load_sites()
+      |> load_invitations()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
         Teams.Users.has_sites?(current_user, include_pending?: true)
       end)
@@ -84,13 +84,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    assigns =
-      assign(
-        assigns,
-        :invitations_map,
-        Enum.map(assigns.invitations, &{&1.invitation.invitation_id, &1}) |> Enum.into(%{})
-      )
-      |> assign(:searching?, String.trim(assigns.filter_text) != "")
+    assigns = assign(assigns, :searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
     <.flash_messages flash={@flash} />
@@ -113,8 +107,6 @@ defmodule PlausibleWeb.Live.Sites do
           <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
         </.unstyled_link>
       </div>
-
-      <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
       <div
         :if={not @is_empty_state?}
@@ -147,10 +139,19 @@ defmodule PlausibleWeb.Live.Sites do
         <a
           :if={!@consolidated_view_cta_dismissed?}
           href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
-          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
+          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
         >
           <Heroicons.plus class="size-4" /> Add website
         </a>
+      </div>
+
+      <div class="flex flex-col gap-y-4 my-4">
+        <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
+        <PlausibleWeb.Team.Notice.site_ownership_invitations
+          site_ownership_invitations={@site_ownership_invitations}
+          current_team={@current_team}
+        />
+        <PlausibleWeb.Team.Notice.site_invitations site_invitations={@site_invitations} />
       </div>
 
       <p :if={@searching? and @sites.entries == []} class="mt-4 dark:text-gray-100 text-center">
@@ -211,14 +212,7 @@ defmodule PlausibleWeb.Live.Sites do
           />
           <%= for site <- @sites.entries do %>
             <.site
-              :if={site.entry_type in ["pinned_site", "site"]}
               site={site}
-              sparkline={Map.get(@sparklines, site.domain, :loading)}
-            />
-            <.invitation
-              :if={site.entry_type == "invitation"}
-              site={site}
-              invitation={@invitations_map[hd(site.invitations).invitation_id]}
               sparkline={Map.get(@sparklines, site.domain, :loading)}
             />
           <% end %>
@@ -485,41 +479,6 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:site, Plausible.Site, required: true)
-  attr(:invitation, :map, required: true)
-  attr(:sparkline, :map, required: true)
-
-  def invitation(assigns) do
-    assigns =
-      assigns
-      |> assign(:modal_id, "invitation-modal-#{assigns[:invitation].invitation.invitation_id}")
-
-    ~H"""
-    <li
-      class="group relative cursor-pointer"
-      id={"site-card-#{hash_domain(@site.domain)}"}
-      data-domain={@site.domain}
-      phx-click={Prima.Modal.JS.open(@modal_id)}
-    >
-      <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
-        <div class="w-full flex items-center justify-between gap-x-2.5">
-          <.favicon domain={@site.domain} />
-          <div class="flex-1 w-full truncate">
-            <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-[22px] truncate dark:text-gray-100">
-              {@site.domain}
-            </h3>
-          </div>
-          <.pill color={:green}>
-            Pending invitation
-          </.pill>
-        </div>
-        <.site_stats sparkline={@sparkline} />
-      </div>
-      <.invitation_modal id={@modal_id} site={@site} invitation={@invitation} />
-    </li>
-    """
-  end
-
-  attr(:site, Plausible.Site, required: true)
   attr(:sparkline, :map, required: true)
 
   def site(assigns) do
@@ -720,117 +679,6 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr(:id, :string, required: true)
-  attr(:site, Plausible.Site, required: true)
-  attr(:invitation, :map, required: true)
-
-  def invitation_modal(assigns) do
-    ~H"""
-    <PlausibleWeb.Live.Components.PrimaModal.modal id={@id}>
-      <div class="p-5 pb-3 sm:p-6 sm:pb-3">
-        <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
-          <button
-            phx-click={Prima.Modal.JS.close()}
-            class="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400"
-          >
-            <span class="sr-only">Close</span>
-            <Heroicons.x_mark class="size-6" />
-          </button>
-        </div>
-        <div class="flex flex-col gap-y-4 text-center sm:text-left">
-          <PlausibleWeb.Live.Components.PrimaModal.modal_title>
-            You're invited to {@site.domain}
-          </PlausibleWeb.Live.Components.PrimaModal.modal_title>
-          <div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 text-pretty">
-              You've been added as <b class="capitalize">{@invitation.invitation.role}</b>
-              to the {@site.domain} analytics dashboard.
-              <%= if !(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)) &&
-                        @invitation.invitation.role == :owner do %>
-                If you accept the ownership transfer, you will be responsible for billing going forward.
-              <% else %>
-                Welcome aboard!
-              <% end %>
-            </p>
-          </div>
-        </div>
-        <.notice
-          :if={Map.get(@invitation, :missing_features)}
-          title="Missing features"
-          class="mt-4 shadow-xs dark:shadow-none"
-        >
-          <p>
-            The site uses {Map.get(@invitation, :missing_features)},
-            which your current subscription does not support. After accepting ownership of this site,
-            you will not be able to access them unless you <.styled_link
-              class="inline-block"
-              href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-            >
-              upgrade to a suitable plan
-            </.styled_link>.
-          </p>
-        </.notice>
-        <.notice
-          :if={Map.get(@invitation, :exceeded_limits)}
-          title="Unable to accept site ownership"
-          class="mt-4 shadow-xs dark:shadow-none"
-        >
-          <p>
-            Owning this site would exceed your {Map.get(@invitation, :exceeded_limits)}. Please check your usage in
-            <.styled_link
-              class="inline-block"
-              href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            >
-              account settings
-            </.styled_link>
-            and upgrade your subscription to accept the site ownership.
-          </p>
-        </.notice>
-        <.notice
-          :if={Map.get(@invitation, :no_plan)}
-          title="No subscription"
-          class="mt-4 shadow-xs dark:shadow-none"
-        >
-          You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
-        </.notice>
-      </div>
-      <div class="flex flex-col sm:flex-row-reverse gap-3 p-5 sm:p-6">
-        <.button
-          :if={!(Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan))}
-          mt?={false}
-          class="w-full sm:w-auto sm:text-sm"
-          data-method="post"
-          data-csrf={Plug.CSRFProtection.get_csrf_token()}
-          data-to={"/sites/invitations/#{@invitation.invitation.invitation_id}/accept"}
-          data-autofocus
-        >
-          Accept and continue
-        </.button>
-        <.button_link
-          :if={Map.get(@invitation, :exceeded_limits) || Map.get(@invitation, :no_plan)}
-          mt?={false}
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-          class="w-full sm:w-auto sm:text-sm"
-          data-autofocus
-        >
-          Upgrade
-        </.button_link>
-        <.button_link
-          mt?={false}
-          class="w-full sm:w-auto sm:text-sm"
-          href="#"
-          theme="secondary"
-          data-method="post"
-          data-csrf={Plug.CSRFProtection.get_csrf_token()}
-          data-to={"/sites/invitations/#{@invitation.invitation.invitation_id}/reject"}
-        >
-          Reject
-        </.button_link>
-      </div>
-    </PlausibleWeb.Live.Components.PrimaModal.modal>
-    """
-  end
-
   attr(:filter_text, :string, default: "")
   attr(:uri, URI, required: true)
 
@@ -963,9 +811,25 @@ defmodule PlausibleWeb.Live.Sites do
     end
   end
 
+  defp load_invitations(%{assigns: %{params: %{"page" => page}}} = socket) when page != "1" do
+    socket
+  end
+
+  defp load_invitations(%{assigns: %{current_user: user, current_team: team}} = socket) do
+    site_transfers =
+      user
+      |> Teams.Invitations.pending_site_transfers_for()
+      |> Enum.map(&Map.put(&1, :ownership_check, ensure_can_take_ownership(&1.site, team)))
+
+    socket
+    |> assign(:team_invitations, Teams.Invitations.pending_team_invitations_for(user))
+    |> assign(:site_invitations, Teams.Invitations.pending_guest_invitations_for(user))
+    |> assign(:site_ownership_invitations, site_transfers)
+  end
+
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
-      Sites.list_with_invitations(assigns.current_user, assigns.params,
+      Sites.list(assigns.current_user, assigns.params,
         filter_by_domain: assigns.filter_text,
         team: assigns.current_team
       )
@@ -982,69 +846,18 @@ defmodule PlausibleWeb.Live.Sites do
         do: load_consolidated_sparkline(assigns.consolidated_view),
         else: :loading
 
-    invitations = extract_invitations(sites.entries, assigns.current_team)
-
     assign(
       socket,
       sites: sites,
-      invitations: invitations,
       sparklines: sparklines,
       consolidated_sparkline: consolidated_sparkline || Map.get(assigns, :consolidated_sparkline)
     )
   end
 
-  defp extract_invitations(sites, team) do
-    sites
-    |> Enum.filter(&(&1.entry_type == "invitation"))
-    |> Enum.flat_map(& &1.invitations)
-    |> Enum.map(&check_limits(&1, team))
-  end
-
   on_ee do
-    defp check_limits(%{role: :owner, site: site} = invitation, team) do
-      case ensure_can_take_ownership(site, team) do
-        :ok ->
-          check_features(invitation, team)
-
-        {:error, :no_plan} ->
-          %{invitation: invitation, no_plan: true}
-
-        {:error, {:over_plan_limits, limits}} ->
-          limits = PlausibleWeb.TextHelpers.pretty_list(limits)
-          %{invitation: invitation, exceeded_limits: limits}
-      end
-    end
-  end
-
-  defp check_limits(invitation, _), do: %{invitation: invitation}
-
-  defdelegate ensure_can_take_ownership(site, team), to: Teams.Invitations
-
-  def check_features(%{role: :owner, site: site} = invitation, team) do
-    case check_feature_access(site, team) do
-      :ok ->
-        %{invitation: invitation}
-
-      {:error, {:missing_features, features}} ->
-        feature_names =
-          features
-          |> Enum.map(& &1.display_name())
-          |> PlausibleWeb.TextHelpers.pretty_list()
-
-        %{invitation: invitation, missing_features: feature_names}
-    end
-  end
-
-  defp check_feature_access(site, new_team) do
-    missing_features =
-      Teams.Billing.features_usage(nil, [site.id])
-      |> Enum.filter(&(&1.check_availability(new_team) != :ok))
-
-    if missing_features == [] do
-      :ok
-    else
-      {:error, {:missing_features, missing_features}}
-    end
+    defdelegate ensure_can_take_ownership(site, team), to: Teams.Invitations
+  else
+    defp ensure_can_take_ownership(_site, _team), do: :ok
   end
 
   defp set_filter_text(socket, filter_text) do
@@ -1104,7 +917,7 @@ defmodule PlausibleWeb.Live.Sites do
     end
 
     defp init_consolidated_view_assigns(_user, nil) do
-      # technically this is team not setup, but is also equivalent of having no sites at this moment (can have invitations though), so CTA should not be shown
+      # technically this is team not setup, but is also equivalent of having no sites at this moment, so CTA should not be shown
       no_consolidated_view(no_consolidated_view_reason: :no_sites)
     end
 
