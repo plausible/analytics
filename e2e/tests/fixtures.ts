@@ -330,6 +330,107 @@ export async function addScrollDepthGoal({
   await expect(page.locator('body')).toContainText('Goal saved successfully')
 }
 
+export async function addCustomProp({
+  page,
+  domain,
+  name
+}: {
+  page: Page
+  domain: string
+  name: string
+}) {
+  await page.goto(`/${domain}/settings/properties`)
+
+  await expectLiveViewConnected(page)
+
+  await page.getByRole('button', { name: 'Add property' }).click()
+
+  await expect(
+    page.getByRole('heading', { name: `Add property for ${domain}` })
+  ).toBeVisible()
+
+  const propInput = page.locator('input#prop_input')
+  propInput.fill(name)
+  await page.locator(`a[data-display-value="${name}"]`).click()
+  await expect(propInput).toHaveAttribute('value', name)
+
+  await page
+    .locator('form[phx-submit="allow-prop"]')
+    .getByRole('button', { name: 'Add property' })
+    .click()
+
+  await expect(page.locator('body')).toContainText(
+    'Property added successfully'
+  )
+}
+
+export async function addAllCustomProps({
+  page,
+  domain
+}: {
+  page: Page
+  domain: string
+}) {
+  await page.goto(`/${domain}/settings/properties`)
+
+  await expectLiveViewConnected(page)
+
+  await page.getByRole('button', { name: 'Add property' }).click()
+
+  await expect(
+    page.getByRole('heading', { name: `Add property for ${domain}` })
+  ).toBeVisible()
+
+  await page.getByText(/Click to add [0-9]+ existing properties/).click()
+
+  await expect(page.locator('body')).toContainText(
+    'Properties added successfully'
+  )
+}
+
+export async function addFunnel({
+  page,
+  domain,
+  name,
+  steps
+}: {
+  page: Page
+  domain: string
+  name: string
+  steps: string[]
+}) {
+  await page.goto(`/${domain}/settings/funnels`)
+
+  await expectLiveViewConnected(page)
+
+  await page.getByRole('button', { name: 'Add funnel' }).click()
+
+  await page.locator('input#funnel_name').fill(name)
+
+  const addStepLink = page.getByText('Add another step')
+
+  for (let idx = 0; idx < steps.length; idx++) {
+    const step = steps[idx]
+
+    if (idx > 1) {
+      await addStepLink.click()
+    }
+    const propInput = page.locator(`input#step-${idx + 1}`)
+    await propInput.fill(step)
+    await page
+      .locator(`a[data-display-value="${step}"][phx-target="${idx + 1}"]`)
+      .click()
+    await expect(propInput).toHaveAttribute('value', step)
+  }
+
+  await page
+    .locator('form[phx-submit="save"]')
+    .getByRole('button', { name: 'Add funnel' })
+    .click()
+
+  await expect(page.locator('body')).toContainText('Funnel saved successfully')
+}
+
 export async function setupSite({
   user,
   page,
