@@ -31,4 +31,10 @@ export const expectMetricValues = async (report, label, values) =>
 
 export const dropdown = (report) => report.getByTestId('dropdown-items')
 
+export const modal = (page) => page.locator('.modal')
 
+export const detailsLink = (report) =>
+  report.getByRole('link', { name: 'View details' })
+
+export const closeModalButton = (page) =>
+  page.getByRole('button', { name: 'Close modal' })

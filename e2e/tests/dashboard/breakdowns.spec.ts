@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, populateStats } from '../fixtures.ts'
+import { setupSite, populateStats, addCustomGoal } from '../fixtures.ts'
 import {
   tabButton,
   expectHeaders,
   expectRows,
   rowLink,
   expectMetricValues,
-  dropdown
+  dropdown,
+  modal,
+  detailsLink,
+  closeModalButton
 } from '../test-utils.ts'
 
 test('sources breakdown', async ({ page, request }) => {
@@ -285,6 +288,117 @@ test('pages breakdown', async ({ page, request }) => {
     await expectMetricValues(report, '/page1', ['1', '25%'])
     await expectMetricValues(report, '/page2', ['1', '25%'])
     await expectMetricValues(report, '/page3', ['1', '25%'])
+  })
+})
+
+test('pages breakdown with a pageview goal filter applied', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { user_id: 123, name: 'pageview', pathname: '/page1' },
+      { user_id: 123, name: 'pageview', pathname: '/page2' },
+      { user_id: 123, name: 'pageview', pathname: '/page3' },
+      {
+        user_id: 123,
+        name: 'purchase',
+        revenue_reporting_amount: '23',
+        revenue_reporting_currency: 'EUR'
+      },
+      { user_id: 124, name: 'pageview', pathname: '/page1' },
+      { user_id: 124, name: 'pageview', pathname: '/page2' },
+      { user_id: 124, name: 'create_site' },
+      { name: 'pageview', pathname: '/page1' },
+      { name: 'pageview', pathname: '/other' }
+    ]
+  })
+
+  await addCustomGoal({ page, domain, name: 'create_site' })
+  await addCustomGoal({ page, domain, name: 'purchase', currency: 'EUR' })
+
+  const report = page.getByTestId('report-pages')
+
+  await test.step('custom goal filter applied', async () => {
+    await page.goto('/' + domain + '?f=is,goal,create_site')
+
+    const pagesTabButton = tabButton(report, 'Conversion pages')
+    await pagesTabButton.scrollIntoViewIfNeeded()
+    await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['Page', 'Conversions', 'CR'])
+
+    await expectRows(report, ['/'])
+
+    await expectMetricValues(report, '/', ['1', '50%'])
+  })
+
+  await test.step('details modal after custom goal filter applied', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top pages' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Page url',
+      /Total visitors/,
+      /Conversions/,
+      /CR/
+    ])
+
+    await expectRows(modal(page), ['/'])
+
+    await expectMetricValues(modal(page), '/', ['2', '1', '50%'])
+
+    await closeModalButton(page).click()
+  })
+
+  await test.step('revenue goal filter applied', async () => {
+    await page.goto('/' + domain + '?f=is,goal,purchase')
+
+    const pagesTabButton = tabButton(report, 'Conversion pages')
+    await pagesTabButton.scrollIntoViewIfNeeded()
+    await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['Page', 'Conversions', 'CR'])
+
+    await expectRows(report, ['/'])
+
+    await expectMetricValues(report, '/', ['1', '50%'])
+  })
+
+  await test.step('details modal after revenue goal filter applied', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top pages' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Page url',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), ['/'])
+
+    await expectMetricValues(modal(page), '/', [
+      '2',
+      '1',
+      '50%',
+      '€23.0',
+      '€23.0'
+    ])
+
+    await closeModalButton(page).click()
   })
 })
 
