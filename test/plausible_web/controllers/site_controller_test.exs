@@ -552,10 +552,10 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     for role <- Plausible.Teams.Membership.roles() -- [:owner, :admin, :editor] do
       test "#{role} trying access the duplicate domain, an error is shown",
-      %{
-        conn: conn,
-        user: user
-      } do
+           %{
+             conn: conn,
+             user: user
+           } do
         site = new_site(domain: "example.com")
         add_member(site.team, user: user, role: unquote(role))
 
@@ -568,7 +568,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           })
 
         assert html_response(conn, 200) =~
-        "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+                 "This domain cannot be registered. Perhaps one of your colleagues registered it?"
       end
     end
   end

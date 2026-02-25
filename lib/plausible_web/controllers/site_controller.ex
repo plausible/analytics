@@ -656,6 +656,6 @@ defmodule PlausibleWeb.SiteController do
     Enum.any?(changeset.errors, fn
       {:domain, {_, [constraint: :unique, constraint_name: "sites_domain_index"]}} -> true
       _ -> false
-        end)
+    end)
   end
 end
