@@ -467,7 +467,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
-      insert(:site, domain: "example.com")
+      new_site(domain: "example.com")
 
       conn =
         post(conn, "/sites", %{
@@ -527,6 +527,49 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert redirected_to(conn) ==
                "/example.com/installation?site_created=true&flow="
+    end
+
+    for role <- [:owner, :admin, :editor] do
+      test "redirects to stats when user already has #{role} access to the duplicate domain",
+           %{
+             conn: conn,
+             user: user
+           } do
+        site = new_site(domain: "example.com")
+        add_member(site.team, user: user, role: unquote(role))
+
+        conn =
+          post(conn, "/sites", %{
+            "site" => %{
+              "domain" => "example.com",
+              "timezone" => "Europe/London"
+            }
+          })
+
+        assert redirected_to(conn) == "/example.com/"
+      end
+    end
+
+    for role <- Plausible.Teams.Membership.roles() -- [:owner, :admin, :editor] do
+      test "#{role} trying access the duplicate domain, an error is shown",
+           %{
+             conn: conn,
+             user: user
+           } do
+        site = new_site(domain: "example.com")
+        add_member(site.team, user: user, role: unquote(role))
+
+        conn =
+          post(conn, "/sites", %{
+            "site" => %{
+              "domain" => "example.com",
+              "timezone" => "Europe/London"
+            }
+          })
+
+        assert html_response(conn, 200) =~
+                 "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+      end
     end
   end
 
