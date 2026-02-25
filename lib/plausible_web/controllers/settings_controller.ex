@@ -13,7 +13,7 @@ defmodule PlausibleWeb.SettingsController do
        when action in [:update_team_name]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
-       [:owner, :billing] when action in [:subscription]
+       [:owner, :billing] when action in [:subscription, :redirect_invoices]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner]
@@ -164,6 +164,10 @@ defmodule PlausibleWeb.SettingsController do
       team_member_usage: team_member_usage,
       notification_type: notification_type
     )
+  end
+
+  def redirect_invoices(conn, _params) do
+    redirect(conn, to: Routes.settings_path(conn, :subscription))
   end
 
   def api_keys(conn, _params) do

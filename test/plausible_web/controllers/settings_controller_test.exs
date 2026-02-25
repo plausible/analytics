@@ -18,6 +18,15 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
   setup [:verify_on_exit!]
 
+  describe "GET /billing/invoices" do
+    setup [:create_user, :log_in]
+
+    test "redirects to subscription settings", %{conn: conn} do
+      conn = get(conn, Routes.settings_path(conn, :redirect_invoices))
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :subscription)
+    end
+  end
+
   describe "GET /billing/subscription" do
     setup [:create_user, :log_in]
 
