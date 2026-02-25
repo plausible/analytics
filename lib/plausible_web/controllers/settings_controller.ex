@@ -13,7 +13,7 @@ defmodule PlausibleWeb.SettingsController do
        when action in [:update_team_name]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
-       [:owner, :billing] when action in [:subscription, :redirect_invoices]
+       [:owner, :billing] when action in [:subscription]
 
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner]
