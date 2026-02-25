@@ -115,20 +115,14 @@ defmodule PlausibleWeb.Team.Notice do
   end
 
   defp site_ownership_invitation(assigns) do
+    {can_accept?, exceeded_limits} = case assigns.invitation.ownership_check do
+      :ok -> {true, nil}
+      {:error, {:over_plan_limits, limits}} -> {false, PlausibleWeb.TextHelpers.pretty_list(limits)
+      _ -> {false, nil}
+    end
+    
     assigns =
-      assign(assigns, :can_accept?, assigns.invitation.ownership_check == :ok)
-
-    assigns =
-      assign(
-        assigns,
-        :exceeded_limits,
-        case assigns.invitation.ownership_check do
-          {:error, {:over_plan_limits, limits}} ->
-            PlausibleWeb.TextHelpers.pretty_list(limits)
-
-          _ ->
-            nil
-        end
+      assign(assigns, can_accept?: can_accept?, exceeded_limits: exceeded_limits)
       )
 
     ~H"""
