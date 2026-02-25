@@ -181,21 +181,26 @@ test('props breakdown', async ({ page, request }) => {
     events: [
       {
         name: 'pageview',
+        pathname: '/page',
         'meta.key': ['logged_in', 'browser_language'],
         'meta.value': ['false', 'en_US']
       },
       {
         name: 'pageview',
+        pathname: '/page',
         'meta.key': ['logged_in', 'browser_language'],
         'meta.value': ['false', 'en_US']
       },
       {
         name: 'pageview',
+        pathname: '/page',
         'meta.key': ['logged_in', 'browser_language'],
         'meta.value': ['true', 'es']
       }
     ]
   })
+
+  await addPageviewGoal({ page, domain, pathname: '/page' })
 
   await addAllCustomProps({ page, domain })
 
@@ -203,20 +208,40 @@ test('props breakdown', async ({ page, request }) => {
 
   const propsTabButton = tabButton(report, 'Properties')
 
-  await propsTabButton.scrollIntoViewIfNeeded()
-  await propsTabButton.click()
-  await dropdown(report)
-    .getByRole('button', { name: 'browser_language' })
-    .click()
+  await test.step('listing props', async () => {
+    await propsTabButton.scrollIntoViewIfNeeded()
+    await propsTabButton.click()
+    await dropdown(report)
+      .getByRole('button', { name: 'browser_language' })
+      .click()
 
-  await expect(propsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(propsTabButton).toHaveAttribute('data-active', 'true')
 
-  await expectHeaders(report, ['browser_language', 'Visitors', 'Events', '%'])
+    await expectHeaders(report, ['browser_language', 'Visitors', 'Events', '%'])
 
-  await expectRows(report, ['en_US', 'es'])
+    await expectRows(report, ['en_US', 'es'])
 
-  await expectMetricValues(report, 'en_US', ['2', '2', '66.7%'])
-  await expectMetricValues(report, 'es', ['1', '1', '33.3%'])
+    await expectMetricValues(report, 'en_US', ['2', '2', '66.7%'])
+    await expectMetricValues(report, 'es', ['1', '1', '33.3%'])
+  })
+
+  await test.step('clicking goal opens props', async () => {
+    const goalsTabButton = tabButton(report, 'Goals')
+    goalsTabButton.click()
+
+    await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
+
+    await rowLink(report, 'Visit /page').click()
+
+    await expect(propsTabButton).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['browser_language', 'Visitors', 'Events', 'CR'])
+
+    await expectRows(report, ['en_US', 'es'])
+
+    await expectMetricValues(report, 'en_US', ['2', '2', '66.7%'])
+    await expectMetricValues(report, 'es', ['1', '1', '33.3%'])
+  })
 })
 
 test('funnels', async ({ page, request }) => {
@@ -287,7 +312,7 @@ test('funnels', async ({ page, request }) => {
   await expect(funnelsTabButton).toHaveAttribute('data-active', 'true')
 
   await expect(report.getByRole('heading')).toHaveText('Shopping')
-  
+
   await expect(report.getByText('3-step funnel')).toBeVisible()
 
   await expect(report.getByText('33.33% conversion rate')).toBeVisible()
