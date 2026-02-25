@@ -97,7 +97,7 @@ defmodule Plausible.Teams.Invitations do
               left_join: gm in assoc(tm, :guest_memberships),
               on: gm.site_id == parent_as(:site).id,
               where: tm.team_id == parent_as(:team_invitation).team_id,
-              where: u.email == parent_as(:team_invitation).email,
+              where: u.email == ^user.email,
               where: not is_nil(gm.id) or tm.role != :guest,
               select: 1
           ),
