@@ -551,7 +551,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     for role <- Plausible.Teams.Membership.roles() -- [:owner, :admin, :editor] do
-      test "#{role} trying access to the duplicate domain, an error is shown",
+      test "#{role} trying access the duplicate domain, an error is shown",
       %{
         conn: conn,
         user: user
