@@ -9,7 +9,8 @@ import {
   dropdown,
   modal,
   detailsLink,
-  closeModalButton
+  closeModalButton,
+  header
 } from '../test-utils.ts'
 
 test('sources breakdown', async ({ page, request }) => {
@@ -288,6 +289,158 @@ test('pages breakdown', async ({ page, request }) => {
     await expectMetricValues(report, '/page1', ['1', '25%'])
     await expectMetricValues(report, '/page2', ['1', '25%'])
     await expectMetricValues(report, '/page3', ['1', '25%'])
+  })
+})
+
+test('pages breakdown modal', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+
+  const pagesCount = 110
+
+  // We generate <pagesCount> unique page entries, each with a different number of visits
+  const pageEvents = Array(pagesCount)
+    .fill()
+    .map((_, idx) => {
+      return Array(idx + 1)
+        .fill()
+        .map(() => {
+          return { name: 'pageview', pathname: `/page${idx + 1}/foo` }
+        })
+    })
+    .flat()
+
+  await populateStats({
+    request,
+    domain,
+    events: pageEvents
+  })
+
+  await page.goto('/' + domain)
+
+  const report = page.getByTestId('report-pages')
+
+  const pagesTabButton = tabButton(report, 'Top pages')
+  await pagesTabButton.scrollIntoViewIfNeeded()
+  await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
+
+  await detailsLink(report).click()
+
+  await expect(
+    modal(page).getByRole('heading', { name: 'Top pages' })
+  ).toBeVisible()
+
+  await expectHeaders(modal(page), [
+    'Page url',
+    /Visitors/,
+    /Pageviews/,
+    /Bounce rate/,
+    /Time on page/,
+    /Scroll depth/
+  ])
+
+  await test.step('displays 100 entries on a single page', async () => {
+    const pageRows = Array(100)
+      .fill()
+      .map((_, idx) => {
+        return `/page${pagesCount - idx}/foo`
+      })
+
+    await expectRows(modal(page), pageRows)
+
+    await expectMetricValues(modal(page), '/page110/foo', [
+      '110',
+      '110',
+      '100%',
+      '-',
+      '-'
+    ])
+
+    await expectMetricValues(modal(page), '/page11/foo', [
+      '11',
+      '11',
+      '100%',
+      '-',
+      '-'
+    ])
+  })
+
+  await test.step('loads more when requested', async () => {
+    const loadMoreButton = modal(page).getByRole('button', {
+      name: 'Load more'
+    })
+
+    await loadMoreButton.scrollIntoViewIfNeeded()
+    await loadMoreButton.click()
+
+    await expectMetricValues(modal(page), '/page10/foo', [
+      '10',
+      '10',
+      '100%',
+      '-',
+      '-'
+    ])
+
+    await expectMetricValues(modal(page), '/page1/foo', [
+      '1',
+      '1',
+      '100%',
+      '-',
+      '-'
+    ])
+  })
+
+  await test.step('sorts when clicking on column header', async () => {
+    await header(modal(page), 'Visitors').click()
+
+    const pageRows = Array(100)
+      .fill()
+      .map((_, idx) => {
+        return `/page${idx + 1}/foo`
+      })
+
+    await expectRows(modal(page), pageRows)
+  })
+
+  const searchInput = modal(page).locator('input[type=text]')
+
+  await test.step('filters when using search', async () => {
+    await searchInput.fill('page9')
+
+    await expectRows(modal(page), [
+      '/page9/foo',
+      '/page90/foo',
+      '/page91/foo',
+      '/page92/foo',
+      '/page93/foo',
+      '/page94/foo',
+      '/page95/foo',
+      '/page96/foo',
+      '/page97/foo',
+      '/page98/foo',
+      '/page99/foo'
+    ])
+  })
+
+  await test.step('close button closes the modal', async () => {
+    await closeModalButton(page).click()
+
+    await expect(modal(page)).toBeHidden()
+  })
+
+  await test.step('reopening the modal resets the search state but preserves', async () => {
+    await detailsLink(report).click()
+
+    await expect(modal(page)).toContainClass('is-open')
+
+    await expect(searchInput).toHaveValue('')
+
+    const pageRows = Array(100)
+      .fill()
+      .map((_, idx) => {
+        return `/page${idx + 1}/foo`
+      })
+
+    await expectRows(modal(page), pageRows)
   })
 })
 
