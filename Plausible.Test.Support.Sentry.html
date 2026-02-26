@@ -138,9 +138,9 @@ Pages
 
 
     <section id="moduledoc">
-<p>Helper for setting up Sentry test mode in ExUnit tests.</p><p>Usage inside a <code class="inline">setup</code> callback:</p><pre><code class="makeup elixir" translate="no"><span class="n">setup</span><span class="w"> </span><span class="p" data-group-id="1639156125-1">%{</span><span class="ss">test_pid</span><span class="p">:</span><span class="w"> </span><span class="n">test_pid</span><span class="p" data-group-id="1639156125-1">}</span><span class="w"> </span><span class="k" data-group-id="1639156125-2">do</span><span class="w">
-  </span><span class="nc">Plausible.Test.Support.Sentry</span><span class="o">.</span><span class="n">setup</span><span class="p" data-group-id="1639156125-3">(</span><span class="n">test_pid</span><span class="p" data-group-id="1639156125-3">)</span><span class="w">
-</span><span class="k" data-group-id="1639156125-2">end</span></code></pre><p>This enables Sentry's test mode, starts collecting reports owned by the
+<p>Helper for setting up Sentry test mode in ExUnit tests.</p><p>Usage inside a <code class="inline">setup</code> callback:</p><pre><code class="makeup elixir" translate="no"><span class="n">setup</span><span class="w"> </span><span class="p" data-group-id="8147385646-1">%{</span><span class="ss">test_pid</span><span class="p">:</span><span class="w"> </span><span class="n">test_pid</span><span class="p" data-group-id="8147385646-1">}</span><span class="w"> </span><span class="k" data-group-id="8147385646-2">do</span><span class="w">
+  </span><span class="nc">Plausible.Test.Support.Sentry</span><span class="o">.</span><span class="n">setup</span><span class="p" data-group-id="8147385646-3">(</span><span class="n">test_pid</span><span class="p" data-group-id="8147385646-3">)</span><span class="w">
+</span><span class="k" data-group-id="8147385646-2">end</span></code></pre><p>This enables Sentry's test mode, starts collecting reports owned by the
 test process, and restores the original config on exit.</p>
     </section>
 
