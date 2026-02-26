@@ -240,8 +240,32 @@ test('props breakdown', async ({ page, request }) => {
       {
         name: 'pageview',
         pathname: '/page',
-        'meta.key': ['logged_in', 'browser_language'],
-        'meta.value': ['false', 'en_US']
+        'meta.key': [
+          'logged_in',
+          'browser_language',
+          'prop3',
+          'prop4',
+          'prop5',
+          'prop6',
+          'prop7',
+          'prop8',
+          'prop9',
+          'prop10',
+          'prop11'
+        ],
+        'meta.value': [
+          'false',
+          'en_US',
+          'val3',
+          'val4',
+          'val5',
+          'val6',
+          'val7',
+          'val8',
+          'val9',
+          'val10',
+          'val11'
+        ]
       },
       {
         name: 'pageview',
@@ -281,6 +305,21 @@ test('props breakdown', async ({ page, request }) => {
 
     await expectMetricValues(report, 'en_US', ['2', '2', '66.7%'])
     await expectMetricValues(report, 'es', ['1', '1', '33.3%'])
+  })
+
+  await test.step('loading more', async () => {
+    await propsTabButton.click()
+    const showMoreButton = dropdown(report).getByRole('button', {
+      name: 'Show 1 more'
+    })
+    await showMoreButton.click()
+    await expect(showMoreButton).toBeHidden()
+    await expect(dropdown(report).getByRole('button')).toHaveCount(11)
+  })
+
+  await test.step('searching', async () => {
+    await searchInput(report).fill('prop1')
+    await expect(dropdown(report).getByRole('button')).toHaveCount(2)
   })
 
   await test.step('props modal', async () => {
