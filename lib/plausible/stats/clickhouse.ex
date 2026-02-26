@@ -76,6 +76,40 @@ defmodule Plausible.Stats.Clickhouse do
 
   def usage_breakdown([], _date_range), do: {0, 0}
 
+  def per_site_usage_breakdown(
+        site_ids,
+        date_range,
+        limit \\ Plausible.Teams.Billing.max_sites_for_usage_breakdown()
+      )
+
+  def per_site_usage_breakdown([], _date_range, _limit), do: []
+
+  def per_site_usage_breakdown(
+        [sid | _] = site_ids,
+        date_range,
+        limit
+      )
+      when is_integer(sid) and length(site_ids) <= limit do
+    ClickhouseRepo.all(
+      from(e in "events_v2",
+        where: e.site_id in ^site_ids,
+        where: e.name != "engagement",
+        where: fragment("toDate(?)", e.timestamp) >= ^date_range.first,
+        where: fragment("toDate(?)", e.timestamp) <= ^date_range.last,
+        group_by: e.site_id,
+        order_by: [
+          desc: fragment("countIf(? = 'pageview') + countIf(? != 'pageview')", e.name, e.name)
+        ],
+        limit: ^limit,
+        select: {
+          e.site_id,
+          fragment("countIf(? = 'pageview')", e.name),
+          fragment("countIf(? != 'pageview')", e.name)
+        }
+      )
+    )
+  end
+
   def current_visitors(site) do
     Stats.current_visitors(site)
   end
