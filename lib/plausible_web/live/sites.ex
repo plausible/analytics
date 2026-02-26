@@ -200,10 +200,7 @@ defmodule PlausibleWeb.Live.Sites do
             current_team={@current_team}
           />
           <.consolidated_view_card
-            :if={
-              not @searching? and not is_nil(@consolidated_view) and
-                consolidated_view_ok_to_display?(@current_team)
-            }
+            :if={not @searching? and not is_nil(@consolidated_view)}
             can_manage_consolidated_view?={@can_manage_consolidated_view?}
             consolidated_view={@consolidated_view}
             consolidated_sparkline={@consolidated_sparkline}
@@ -912,10 +909,6 @@ defmodule PlausibleWeb.Live.Sites do
   on_ee do
     alias Plausible.ConsolidatedView
 
-    defp consolidated_view_ok_to_display?(team) do
-      ConsolidatedView.ok_to_display?(team)
-    end
-
     defp init_consolidated_view_assigns(_user, nil) do
       # technically this is team not setup, but is also equivalent of having no sites at this moment, so CTA should not be shown
       no_consolidated_view(no_consolidated_view_reason: :no_sites)
@@ -949,8 +942,6 @@ defmodule PlausibleWeb.Live.Sites do
       end
     end
   else
-    defp consolidated_view_ok_to_display?(_team), do: false
-
     defp init_consolidated_view_assigns(_user, _team),
       do: no_consolidated_view(no_consolidated_view_reason: :unavailable)
 
