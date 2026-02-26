@@ -483,43 +483,34 @@ defmodule Plausible.Teams.Billing do
       Plausible.Stats.Clickhouse.per_site_usage_breakdown(owned_site_ids, date_range)
 
     active_site_ids = Enum.map(per_site_usage_breakdown, fn {site_id, _, _} -> site_id end)
+    inactive_site_ids = owned_site_ids -- active_site_ids
 
     domains =
       Map.new(
         Repo.all(
           from(s in Plausible.Site,
-            where: s.id in ^active_site_ids,
+            where: s.id in ^owned_site_ids,
             select: {s.id, s.domain}
           )
         )
       )
 
-    active_entries =
-      Enum.map(per_site_usage_breakdown, fn {site_id, pageviews, custom_events} ->
-        %{
-          domain: Map.get(domains, site_id),
-          pageviews: pageviews,
-          custom_events: custom_events,
-          total: pageviews + custom_events
-        }
+    usage_mapping =
+      Map.new(per_site_usage_breakdown, fn {site_id, pageviews, custom_events} ->
+        {site_id, %{pageviews: pageviews, custom_events: custom_events}}
       end)
 
-    zero_entries =
-      if length(per_site_usage_breakdown) < @max_sites_for_usage_breakdown do
-        inactive_site_ids = owned_site_ids -- active_site_ids
+    Enum.map(active_site_ids ++ inactive_site_ids, fn site_id ->
+      pageviews = usage_mapping[site_id][:pageviews] || 0
+      custom_events = usage_mapping[site_id][:custom_events] || 0
 
-        Repo.all(
-          from(s in Plausible.Site,
-            where: s.id in ^inactive_site_ids,
-            select: %{domain: s.domain, pageviews: 0, custom_events: 0, total: 0},
-            order_by: [asc: s.domain]
-          )
-        )
-      else
-        []
-      end
-
-    active_entries ++ zero_entries
+      %{
+        domain: Map.get(domains, site_id),
+        pageviews: pageviews,
+        custom_events: custom_events,
+        total: pageviews + custom_events
+      }
+    end)
   end
 
   @spec features_usage(Teams.Team.t() | nil, list() | nil) :: [atom()]
