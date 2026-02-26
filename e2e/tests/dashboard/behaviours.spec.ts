@@ -14,7 +14,10 @@ import {
   expectRows,
   rowLink,
   expectMetricValues,
-  dropdown
+  dropdown,
+  detailsLink,
+  modal,
+  closeModalButton
 } from '../test-utils.ts'
 
 const getReport = (page) => page.getByTestId('report-behaviours')
@@ -147,6 +150,40 @@ test('goals breakdown', async ({ page, request }) => {
     ])
   })
 
+  await test.step('goals modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Goal conversions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Goal',
+      /Uniques/,
+      /Total/,
+      /CR/,
+      /Average/,
+      /Revenue/
+    ])
+
+    await expectRows(modal(page), [
+      'Visit /page1',
+      'Scroll 75% on /page1',
+      'Add a site',
+      'purchase'
+    ])
+
+    await expectMetricValues(modal(page), 'Visit /page1', [
+      '4',
+      '4',
+      '100%',
+      '-',
+      '-'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('listing goals without revenue', async () => {
     await page.goto('/' + domain + '?f=has_not_done,goal,purchase')
 
@@ -168,6 +205,26 @@ test('goals breakdown', async ({ page, request }) => {
       '-',
       '66.7%'
     ])
+  })
+
+  await test.step('goals modal without revenue', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Goal conversions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['Goal', /Uniques/, /Total/, /CR/])
+
+    await expectRows(modal(page), [
+      'Visit /page1',
+      'Add a site',
+      'Scroll 75% on /page1'
+    ])
+
+    await expectMetricValues(modal(page), 'Visit /page1', ['3', '3', '100%'])
+
+    await closeModalButton(page).click()
   })
 })
 
@@ -225,6 +282,27 @@ test('props breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'es', ['1', '1', '33.3%'])
   })
 
+  await test.step('props modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Custom property breakdown' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'browser_language',
+      /Visitors/,
+      /Events/,
+      /%/
+    ])
+
+    await expectRows(modal(page), ['en_US', 'es'])
+
+    await expectMetricValues(modal(page), 'en_US', ['2', '2', '66.7%'])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('clicking goal opens props', async () => {
     const goalsTabButton = tabButton(report, 'Goals')
     goalsTabButton.click()
@@ -235,7 +313,12 @@ test('props breakdown', async ({ page, request }) => {
 
     await expect(propsTabButton).toHaveAttribute('data-active', 'true')
 
-    await expectHeaders(report, ['browser_language', 'Visitors', 'Events', 'CR'])
+    await expectHeaders(report, [
+      'browser_language',
+      'Visitors',
+      'Events',
+      'CR'
+    ])
 
     await expectRows(report, ['en_US', 'es'])
 
