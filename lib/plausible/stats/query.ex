@@ -193,7 +193,7 @@ defmodule Plausible.Stats.Query do
           nil | :no_imported_data | :out_of_range | :unsupported_interval | :unsupported_query
   def get_skip_imported_reason(query) do
     cond do
-      "time:minute" in query.dimensions or "time:hour" in query.dimensions ->
+      not Imported.schema_supports_interval?(query) ->
         :unsupported_interval
 
       not Imported.schema_supports_query?(query) ->
@@ -211,8 +211,7 @@ defmodule Plausible.Stats.Query do
   end
 
   defp imports_supported_by_query?(query) do
-    "time:minute" not in query.dimensions and
-      "time:hour" not in query.dimensions and
+    Imported.schema_supports_interval?(query) and
       Imported.schema_supports_query?(query)
   end
 
