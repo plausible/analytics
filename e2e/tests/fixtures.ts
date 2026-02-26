@@ -389,47 +389,71 @@ export async function addAllCustomProps({
 }
 
 export async function addFunnel({
-  page,
+  request,
   domain,
   name,
   steps
 }: {
-  page: Page
+  request: Request
   domain: string
   name: string
   steps: string[]
 }) {
-  await page.goto(`/${domain}/settings/funnels`)
+  const response = await request.post('/e2e-tests/funnel', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    data: { domain: domain, name: name, steps: steps }
+  })
 
-  await expectLiveViewConnected(page)
-
-  await page.getByRole('button', { name: 'Add funnel' }).click()
-
-  await page.locator('input#funnel_name').fill(name)
-
-  const addStepLink = page.getByText('Add another step')
-
-  for (let idx = 0; idx < steps.length; idx++) {
-    const step = steps[idx]
-
-    if (idx > 1) {
-      await addStepLink.click()
-    }
-    const propInput = page.locator(`input#step-${idx + 1}`)
-    await propInput.fill(step)
-    await page
-      .locator(`a[data-display-value="${step}"][phx-target="${idx + 1}"]`)
-      .click()
-    await expect(propInput).toHaveAttribute('value', step)
-  }
-
-  await page
-    .locator('form[phx-submit="save"]')
-    .getByRole('button', { name: 'Add funnel' })
-    .click()
-
-  await expect(page.locator('body')).toContainText('Funnel saved successfully')
+  expect(response.ok()).toBeTruthy()
 }
+//
+// export async function addFunnel({
+//   page,
+//   domain,
+//   name,
+//   steps
+// }: {
+//   page: Page
+//   domain: string
+//   name: string
+//   steps: string[]
+// }) {
+//   await page.goto(`/${domain}/settings/funnels`)
+//
+//   await expectLiveViewConnected(page)
+//
+//   await page.getByRole('button', { name: 'Add funnel' }).click()
+//
+//   await page.locator('input#funnel_name').fill(name)
+//
+//   const addStepLink = page.getByText('Add another step')
+//
+//   for (let idx = 0; idx < steps.length; idx++) {
+//     const step = steps[idx]
+//
+//     if (idx > 1) {
+//       await addStepLink.click()
+//     }
+//     const propInput = page.locator(`input#step-${idx + 1}`)
+//     await propInput.fill(step)
+//     await page
+//       .locator(`a[data-display-value="${step}"][phx-target="${idx + 1}"]`)
+//       .click()
+//     await expect(propInput).toHaveAttribute('value', step)
+//   }
+//
+//   const addFunnelButton = page
+//     .locator('form[phx-submit="save"]')
+//     .getByRole('button', { name: 'Add funnel' })
+//
+//   await addFunnelButton.click()
+//
+//   await expect(addFunnelButton).toBeHidden()
+//   await expect(page.locator('body')).toContainText('Funnel saved successfully')
+// }
 
 export async function setupSite({
   user,

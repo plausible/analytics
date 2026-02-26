@@ -24,6 +24,24 @@ defmodule PlausibleWeb.E2EController do
     send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
   end
 
+  def create_funnel(conn, %{"domain" => domain, "name" => name, "steps" => steps}) do
+    site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
+
+    steps =
+      Enum.map(steps, fn step ->
+        goal = get_goal(site, step)
+        %{"goal_id" => goal.id}
+      end)
+
+    {:ok, _} = Plausible.Funnels.create(site, name, steps)
+
+    send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+  end
+
+  defp get_goal(site, name) do
+    Plausible.Repo.get_by!(Plausible.Goal, site_id: site.id, display_name: name)
+  end
+
   defp deserialize(event) do
     Enum.map(event, fn
       {"timestamp", value} ->
