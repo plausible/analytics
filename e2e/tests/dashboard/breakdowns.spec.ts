@@ -73,9 +73,37 @@ test('sources breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'theguardian.com', ['1', '16.7%'])
   })
 
+  await test.step('sources modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top sources' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Source',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), [
+      'DuckDuckGo',
+      'Direct / None',
+      'Facebook',
+      'ablog.example.com',
+      'theguardian.com'
+    ])
+
+    await expectMetricValues(modal(page), 'DuckDuckGo', ['2', '100%', '0s'])
+
+    await closeModalButton(page).click()
+  })
+
+  const referrersReport = page.getByTestId('report-referrers')
+
   await test.step('clicking sources entry shows referrers', async () => {
     await rowLink(report, 'DuckDuckGo').click()
-    const referrersReport = page.getByTestId('report-referrers')
     await expect(page).toHaveURL(/f=is,source,DuckDuckGo/)
 
     await expect(tabButton(referrersReport, 'Top referrers')).toHaveAttribute(
@@ -92,32 +120,32 @@ test('sources breakdown', async ({ page, request }) => {
       'https://duckduckgo.com/a1',
       'https://duckduckgo.com/a2'
     ])
+  })
+
+  await test.step('referrers modal', async () => {
+    await detailsLink(referrersReport).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Referrer drilldown' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Referrer',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), [
+      'https://duckduckgo.com/a1',
+      'https://duckduckgo.com/a2'
+    ])
+
+    await closeModalButton(page).click()
 
     await page
       .getByRole('button', { name: 'Remove filter: Source is DuckDuckGo' })
       .click()
-  })
-
-  await test.step('sources tab', async () => {
-    const sourcesTabButton = tabButton(report, 'Sources')
-    await sourcesTabButton.scrollIntoViewIfNeeded()
-    await expect(sourcesTabButton).toHaveAttribute('data-active', 'true')
-
-    await expectHeaders(report, ['Source', 'Visitors'])
-
-    await expectRows(report, [
-      'DuckDuckGo',
-      'Direct / None',
-      'Facebook',
-      'ablog.example.com',
-      'theguardian.com'
-    ])
-
-    await expectMetricValues(report, 'DuckDuckGo', ['2', '33.3%'])
-    await expectMetricValues(report, 'Direct / None', ['1', '16.7%'])
-    await expectMetricValues(report, 'Facebook', ['1', '16.7%'])
-    await expectMetricValues(report, 'ablog.example.com', ['1', '16.7%'])
-    await expectMetricValues(report, 'theguardian.com', ['1', '16.7%'])
   })
 
   await test.step('channels tab', async () => {
@@ -142,6 +170,33 @@ test('sources breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'Paid Search', ['1', '16.7%'])
   })
 
+  await test.step('channels modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top acquisition channels' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Channel',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), [
+      'Referral',
+      'Direct',
+      'Organic Search',
+      'Organic Social',
+      'Paid Search'
+    ])
+
+    await expectMetricValues(modal(page), 'Referral', ['2', '100%', '0s'])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('campaigns > UTM mediums tab', async () => {
     await tabButton(report, 'Campaigns').click()
     await dropdown(report).getByRole('button', { name: 'UTM mediums' }).click()
@@ -159,6 +214,27 @@ test('sources breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'paid', ['1', '50%'])
   })
 
+  await test.step('UTM mediums modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top UTM mediums' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'UTM medium',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['SomeUTMMedium', 'paid'])
+
+    await expectMetricValues(modal(page), 'SomeUTMMedium', ['1', '100%', '0s'])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('campaigns > UTM sources tab', async () => {
     await tabButton(report, 'UTM mediums').click()
     await dropdown(report).getByRole('button', { name: 'UTM sources' }).click()
@@ -174,6 +250,27 @@ test('sources breakdown', async ({ page, request }) => {
 
     await expectMetricValues(report, 'SomeUTMSource', ['1', '50%'])
     await expectMetricValues(report, 'fb', ['1', '50%'])
+  })
+
+  await test.step('UTM sources modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top UTM sources' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'UTM source',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['SomeUTMSource', 'fb'])
+
+    await expectMetricValues(modal(page), 'SomeUTMSource', ['1', '100%', '0s'])
+
+    await closeModalButton(page).click()
   })
 
   await test.step('campaigns > UTM campaigns tab', async () => {
@@ -194,6 +291,31 @@ test('sources breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'SomeUTMCampaign', ['1', '100%'])
   })
 
+  await test.step('UTM campaigns modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top UTM campaigns' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'UTM campaign',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['SomeUTMCampaign'])
+
+    await expectMetricValues(modal(page), 'SomeUTMCampaign', [
+      '1',
+      '100%',
+      '0s'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('campaigns > UTM contents tab', async () => {
     await tabButton(report, 'UTM campaigns').click()
     await dropdown(report).getByRole('button', { name: 'UTM contents' }).click()
@@ -210,6 +332,27 @@ test('sources breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'SomeUTMContent', ['1', '100%'])
   })
 
+  await test.step('UTM contents modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top UTM contents' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'UTM content',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['SomeUTMContent'])
+
+    await expectMetricValues(modal(page), 'SomeUTMContent', ['1', '100%', '0s'])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('campaigns > UTM terms tab', async () => {
     await tabButton(report, 'UTM contents').click()
     await dropdown(report).getByRole('button', { name: 'UTM terms' }).click()
@@ -224,6 +367,27 @@ test('sources breakdown', async ({ page, request }) => {
     await expectRows(report, ['SomeUTMTerm'])
 
     await expectMetricValues(report, 'SomeUTMTerm', ['1', '100%'])
+  })
+
+  await test.step('UTM terms modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top UTM terms' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'UTM term',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['SomeUTMTerm'])
+
+    await expectMetricValues(modal(page), 'SomeUTMTerm', ['1', '100%', '0s'])
+
+    await closeModalButton(page).click()
   })
 })
 
@@ -276,6 +440,28 @@ test('pages breakdown', async ({ page, request }) => {
     await expectMetricValues(report, '/other', ['1', '25%'])
   })
 
+  await test.step('Entry pages modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Entry pages' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Entry page',
+      /Visitors/,
+      /Total entrances/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['/page1', '/other'])
+
+    await expectMetricValues(modal(page), '/page1', ['3', '3', '33%', '0s'])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('exit pages tab', async () => {
     const exitPagesTabButton = tabButton(report, 'Exit pages')
     exitPagesTabButton.click()
@@ -289,6 +475,27 @@ test('pages breakdown', async ({ page, request }) => {
     await expectMetricValues(report, '/page1', ['1', '25%'])
     await expectMetricValues(report, '/page2', ['1', '25%'])
     await expectMetricValues(report, '/page3', ['1', '25%'])
+  })
+
+  await test.step('Exit pages modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Exit pages' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Page url',
+      /Visitors/,
+      /Total exits/,
+      /Exit rate/
+    ])
+
+    await expectRows(modal(page), ['/other', '/page1', '/page2', '/page3'])
+
+    await expectMetricValues(modal(page), '/other', ['1', '1', '100%'])
+
+    await closeModalButton(page).click()
   })
 })
 
@@ -609,6 +816,22 @@ test('locations breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'Poland', ['1', '33.3%'])
   })
 
+  await test.step('countries modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top countries' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['Country', /Visitors/])
+
+    await expectRows(modal(page), [/Estonia/, /Poland/])
+
+    await expectMetricValues(modal(page), 'Estonia', ['2'])
+
+    await closeModalButton(page).click()
+  })
+
   const regionsTabButton = tabButton(report, 'Regions')
 
   await test.step('clicking country entry shows regions', async () => {
@@ -635,6 +858,22 @@ test('locations breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'Mazovia', ['1', '33.3%'])
   })
 
+  await test.step('regions modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top regions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['Region', /Visitors/])
+
+    await expectRows(modal(page), [/Harjumaa/, /Tartumaa/, /Mazovia/])
+
+    await expectMetricValues(modal(page), 'Harjumaa', ['1'])
+
+    await closeModalButton(page).click()
+  })
+
   const citiesTabButton = tabButton(report, 'Cities')
 
   await test.step('clicking region entry shows cities', async () => {
@@ -659,6 +898,22 @@ test('locations breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'Tartu', ['1', '33.3%'])
     await expectMetricValues(report, 'Tallinn', ['1', '33.3%'])
     await expectMetricValues(report, 'Warsaw', ['1', '33.3%'])
+  })
+
+  await test.step('cities modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top cities' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['City', /Visitors/])
+
+    await expectRows(modal(page), [/Tartu/, /Tallinn/, /Warsaw/])
+
+    await expectMetricValues(modal(page), 'Tartu', ['1'])
+
+    await closeModalButton(page).click()
   })
 })
 
@@ -715,6 +970,27 @@ test('devices breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'Safari', ['1', '33.3%'])
   })
 
+  await test.step('browsers modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Browsers' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Browser',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['Chrome', 'Firefox', 'Safari'])
+
+    await expectMetricValues(modal(page), 'Chrome', ['1', '100%', '0s'])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('browser versions', async () => {
     await rowLink(report, 'Firefox').click()
 
@@ -727,6 +1003,27 @@ test('devices breakdown', async ({ page, request }) => {
     await expectRows(report, ['Firefox 98'])
 
     await expectMetricValues(report, 'Firefox 98', ['1', '100%'])
+  })
+
+  await test.step('browser versions modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Browser versions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Browser version',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['98'])
+
+    await expectMetricValues(modal(page), '98', ['1', '100%', '0s'])
+
+    await closeModalButton(page).click()
 
     await page
       .getByRole('button', { name: 'Remove filter: Browser is Firefox' })
@@ -748,6 +1045,27 @@ test('devices breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'iOS', ['1', '33.3%'])
   })
 
+  await test.step('operating systems modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Operating systems' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Operating system',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['MacOS', 'Windows', 'iOS'])
+
+    await expectMetricValues(modal(page), 'MacOS', ['1', '100%', '0s'])
+
+    await closeModalButton(page).click()
+  })
+
   await test.step('operating system versions', async () => {
     await rowLink(report, 'Windows').click()
 
@@ -756,6 +1074,31 @@ test('devices breakdown', async ({ page, request }) => {
     await expect(osTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Operating system version', 'Visitors'])
+
+    await expectRows(report, ['Windows 11'])
+
+    await expectMetricValues(report, 'Windows 11', ['1', '100%'])
+  })
+
+  await test.step('operating system versions modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Operating system versions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Operating system version',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['11'])
+
+    await expectMetricValues(modal(page), '11', ['1', '100%', '0s'])
+
+    await closeModalButton(page).click()
 
     await page
       .getByRole('button', {
@@ -775,5 +1118,26 @@ test('devices breakdown', async ({ page, request }) => {
 
     await expectMetricValues(report, 'Desktop', ['2', '66.7%'])
     await expectMetricValues(report, 'Mobile', ['1', '33.3%'])
+  })
+
+  await test.step('devices modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Devices' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Device',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['Desktop', 'Mobile'])
+
+    await expectMetricValues(modal(page), 'Desktop', ['2', '100%', '0s'])
+
+    await closeModalButton(page).click()
   })
 })

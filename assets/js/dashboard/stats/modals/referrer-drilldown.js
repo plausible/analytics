@@ -25,7 +25,7 @@ function ReferrerDrilldownModal() {
     BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
   const reportInfo = {
-    title: 'Referrer Drilldown',
+    title: 'Referrer drilldown',
     dimension: 'referrer',
     endpoint: url.apiPath(
       site,
