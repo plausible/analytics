@@ -37,6 +37,8 @@ export const expectMetricValues = async (report, label, values) =>
 
 export const dropdown = (report) => report.getByTestId('dropdown-items')
 
+export const searchInput = (report) => report.getByTestId('search-input')
+
 export const modal = (page) => page.locator('.modal')
 
 export const detailsLink = (report) =>

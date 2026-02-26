@@ -71,6 +71,7 @@ export const SearchInput = ({
       />
       <div className={classNames('relative max-w-64 w-full', className)}>
         <input
+          data-testid="search-input"
           onBlur={() => setIsFocused(false)}
           onFocus={() => setIsFocused(true)}
           ref={searchRef}

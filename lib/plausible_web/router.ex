@@ -179,6 +179,7 @@ defmodule PlausibleWeb.Router do
       pipe_through :api
 
       post "/stats", E2EController, :populate_stats
+      post "/funnel", E2EController, :create_funnel
     end
   end
 

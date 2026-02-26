@@ -17,7 +17,8 @@ import {
   dropdown,
   detailsLink,
   modal,
-  closeModalButton
+  closeModalButton,
+  searchInput
 } from '../test-utils.ts'
 
 const getReport = (page) => page.getByTestId('report-behaviours')
@@ -377,26 +378,54 @@ test('funnels', async ({ page, request }) => {
   await addPageviewGoal({ page, domain, pathname: '/products' })
   await addPageviewGoal({ page, domain, pathname: '/cart' })
   await addPageviewGoal({ page, domain, pathname: '/checkout' })
-  await addFunnel({
-    page,
-    domain,
-    name: 'Shopping',
-    steps: ['Visit /products', 'Visit /cart', 'Visit /checkout']
-  })
+
+  for (let idx = 0; idx < 11; idx++) {
+    await addFunnel({
+      request,
+      domain,
+      name: `Shopping ${idx + 1} Funnel`,
+      steps: ['Visit /products', 'Visit /cart', 'Visit /checkout']
+    })
+  }
 
   await page.goto('/' + domain)
 
   const funnelsTabButton = tabButton(report, 'Funnels')
 
-  await funnelsTabButton.scrollIntoViewIfNeeded()
-  await funnelsTabButton.click()
-  await dropdown(report).getByRole('button', { name: 'Shopping' }).click()
+  await test.step('rendering funnels', async () => {
+    await funnelsTabButton.scrollIntoViewIfNeeded()
+    await funnelsTabButton.click()
+    await dropdown(report)
+      .getByRole('button', { name: 'Shopping 11 Funnel' })
+      .click()
 
-  await expect(funnelsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(funnelsTabButton).toHaveAttribute('data-active', 'true')
 
-  await expect(report.getByRole('heading')).toHaveText('Shopping')
+    await expect(report.getByRole('heading')).toHaveText('Shopping 11 Funnel')
 
-  await expect(report.getByText('3-step funnel')).toBeVisible()
+    await expect(report.getByText('3-step funnel')).toBeVisible()
 
-  await expect(report.getByText('33.33% conversion rate')).toBeVisible()
+    await expect(report.getByText('33.33% conversion rate')).toBeVisible()
+  })
+
+  await test.step('loading more', async () => {
+    await funnelsTabButton.click()
+    await dropdown(report).getByRole('button', { name: 'Show 1 more' }).click()
+    await dropdown(report)
+      .getByRole('button', { name: 'Shopping 1 Funnel' })
+      .click()
+
+    await expect(report.getByRole('heading')).toHaveText('Shopping 1 Funnel')
+  })
+
+  await test.step('searching', async () => {
+    await funnelsTabButton.click()
+    await searchInput(report).fill('Shopping 1')
+
+    await expect(dropdown(report).getByRole('button')).toHaveText([
+      'Shopping 11 Funnel',
+      'Shopping 10 Funnel',
+      'Shopping 1 Funnel'
+    ])
+  })
 })

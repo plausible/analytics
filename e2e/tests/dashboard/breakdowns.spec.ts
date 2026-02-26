@@ -10,7 +10,8 @@ import {
   modal,
   detailsLink,
   closeModalButton,
-  header
+  header,
+  searchInput
 } from '../test-utils.ts'
 
 test('sources breakdown', async ({ page, request }) => {
@@ -608,10 +609,8 @@ test('pages breakdown modal', async ({ page, request }) => {
     await expectRows(modal(page), pageRows)
   })
 
-  const searchInput = modal(page).locator('input[type=text]')
-
   await test.step('filters when using search', async () => {
-    await searchInput.fill('page9')
+    await searchInput(modal(page)).fill('page9')
 
     await expectRows(modal(page), [
       '/page9/foo',
@@ -639,7 +638,7 @@ test('pages breakdown modal', async ({ page, request }) => {
 
     await expect(modal(page)).toContainClass('is-open')
 
-    await expect(searchInput).toHaveValue('')
+    await expect(searchInput(modal(page))).toHaveValue('')
 
     const pageRows = Array(100)
       .fill()
