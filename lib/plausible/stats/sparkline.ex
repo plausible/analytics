@@ -30,7 +30,6 @@ defmodule Plausible.Stats.Sparkline do
 
   @spec overview_24h(Site.t(), NaiveDateTime.t()) :: map()
   def overview_24h(view_or_site, now \\ NaiveDateTime.utc_now()) do
-    view_or_site = Plausible.Repo.preload(view_or_site, :completed_imports)
     stats = query_24h_stats(view_or_site, now)
     intervals = query_24h_intervals(view_or_site, now)
 
