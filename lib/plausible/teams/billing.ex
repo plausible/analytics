@@ -22,6 +22,7 @@ defmodule Plausible.Teams.Billing do
   @limit_sites_since ~D[2021-05-05]
 
   @max_sites_for_usage_breakdown 10
+  def max_sites_for_usage_breakdown, do: @max_sites_for_usage_breakdown
 
   @typep last_30_days_usage() :: %{:last_30_days => Quota.usage_cycle()}
   @typep monthly_pageview_usage() :: Quota.cycles_usage() | last_30_days_usage()
@@ -478,33 +479,47 @@ defmodule Plausible.Teams.Billing do
        do: []
 
   defp per_site_usage(owned_site_ids, date_range) do
-    site_domains =
-      Repo.all(
-        from(s in Plausible.Site,
-          where: s.id in ^owned_site_ids,
-          select: {s.id, s.domain}
+    per_site_usage_breakdown =
+      Plausible.Stats.Clickhouse.per_site_usage_breakdown(owned_site_ids, date_range)
+
+    active_site_ids = Enum.map(per_site_usage_breakdown, fn {site_id, _, _} -> site_id end)
+
+    domains =
+      Map.new(
+        Repo.all(
+          from(s in Plausible.Site,
+            where: s.id in ^active_site_ids,
+            select: {s.id, s.domain}
+          )
         )
       )
-      |> Map.new()
 
-    clickhouse_counts =
-      Plausible.Stats.Clickhouse.per_site_usage_breakdown(owned_site_ids, date_range)
-      |> Map.new(fn {site_id, pageviews, custom_events} ->
-        {site_id, {pageviews, custom_events}}
+    active_entries =
+      Enum.map(per_site_usage_breakdown, fn {site_id, pageviews, custom_events} ->
+        %{
+          domain: Map.get(domains, site_id),
+          pageviews: pageviews,
+          custom_events: custom_events,
+          total: pageviews + custom_events
+        }
       end)
 
-    site_domains
-    |> Enum.map(fn {site_id, domain} ->
-      {pageviews, custom_events} = Map.get(clickhouse_counts, site_id, {0, 0})
+    zero_entries =
+      if length(per_site_usage_breakdown) < @max_sites_for_usage_breakdown do
+        inactive_site_ids = owned_site_ids -- active_site_ids
 
-      %{
-        domain: domain,
-        pageviews: pageviews,
-        custom_events: custom_events,
-        total: pageviews + custom_events
-      }
-    end)
-    |> Enum.sort_by(& &1.total, :desc)
+        Repo.all(
+          from(s in Plausible.Site,
+            where: s.id in ^inactive_site_ids,
+            select: %{domain: s.domain, pageviews: 0, custom_events: 0, total: 0},
+            order_by: [asc: s.domain]
+          )
+        )
+      else
+        []
+      end
+
+    active_entries ++ zero_entries
   end
 
   @spec features_usage(Teams.Team.t() | nil, list() | nil) :: [atom()]
