@@ -161,6 +161,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
   attr :preload?, :boolean, default: true
   slot :inner_block, required: true
 
+  @impl true
   def render(assigns) do
     class = [
       "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-900 shadow-2xl rounded-lg px-8 pt-6 pb-8 top-24",

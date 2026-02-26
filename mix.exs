@@ -112,7 +112,7 @@ defmodule Plausible.MixProject do
       {:opentelemetry_api, "~> 1.5"},
       {:opentelemetry_ecto, "~> 1.2"},
       {:opentelemetry_exporter, "~> 1.10"},
-      {:opentelemetry_phoenix, "~> 2.0"},
+      {:opentelemetry_phoenix, "~> 2.0.1"},
       {:opentelemetry_oban, "~> 1.1"},
       {:opentelemetry_cowboy, "~> 1.0"},
       # # https://github.com/open-telemetry/opentelemetry-erlang-contrib/issues/428
@@ -126,7 +126,7 @@ defmodule Plausible.MixProject do
       {:phoenix_live_view, "~> 1.1.17"},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
-      {:prima, "~> 0.2.1"},
+      {:prima, "~> 0.2.5"},
       {:plug_cowboy, "~> 2.3"},
       {:polymorphic_embed, "~> 5.0"},
       {:postgrex, "~> 0.21.1"},
