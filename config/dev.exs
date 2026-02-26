@@ -35,6 +35,7 @@ config :phoenix, :plug_init_mode, :runtime
 config :plausible, Plausible.Repo, stacktrace: true
 config :plausible, Plausible.ClickhouseRepo, stacktrace: true
 config :plausible, Plausible.IngestRepo, stacktrace: true
+config :plausible, Plausible.AsyncInsertRepo, stacktrace: true
 
 config :phoenix_live_view,
   debug_heex_annotations: true,
