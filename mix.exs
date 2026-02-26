@@ -112,7 +112,7 @@ defmodule Plausible.MixProject do
       {:opentelemetry_api, "~> 1.5"},
       {:opentelemetry_ecto, "~> 1.2"},
       {:opentelemetry_exporter, "~> 1.10"},
-      {:opentelemetry_phoenix, "~> 2.0"},
+      {:opentelemetry_phoenix, "~> 2.0.1"},
       {:opentelemetry_oban, "~> 1.1"},
       {:opentelemetry_cowboy, "~> 1.0"},
       # # https://github.com/open-telemetry/opentelemetry-erlang-contrib/issues/428
