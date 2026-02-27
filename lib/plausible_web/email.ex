@@ -95,20 +95,33 @@ defmodule PlausibleWeb.Email do
     |> render("trial_one_week_reminder.html", user: user, team: team)
   end
 
-  def trial_upgrade_email(user, team, day, usage, suggested_volume) do
-    base_email()
-    |> to(user)
-    |> tag("trial-upgrade-email")
-    |> subject("Your Plausible trial ends #{day}")
-    |> render("trial_upgrade_email.html",
-      user: user,
-      team: team,
-      day: day,
-      custom_events: usage.custom_events,
-      usage: usage.total,
-      suggested_volume: suggested_volume
-    )
-  end
+def trial_ending_tomorrow_email(user, team, usage, suggested_volume) do
+  base_email()
+  |> to(user)
+  |> tag("trial-ending-tomorrow")
+  |> subject("Your Plausible trial ends tomorrow")
+  |> render("trial_ending_tomorrow.html",
+    user: user,
+    team: team,
+    custom_events: usage.custom_events,
+    usage: usage.total,
+    suggested_volume: suggested_volume
+  )
+end
+
+def trial_ending_today_email(user, team, usage, suggested_volume) do
+  base_email()
+  |> to(user)
+  |> tag("trial-ending-today")
+  |> subject("Your Plausible trial ends today")
+  |> render("trial_ending_today.html",
+    user: user,
+    team: team,
+    custom_events: usage.custom_events,
+    usage: usage.total,
+    suggested_volume: suggested_volume
+  )
+end
 
   def trial_over_email(user, team) do
     base_email()
