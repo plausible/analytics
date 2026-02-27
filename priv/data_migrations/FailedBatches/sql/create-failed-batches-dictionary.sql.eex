@@ -1,0 +1,9 @@
+CREATE OR REPLACE DICTIONARY failed_batches_dict
+<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+(
+    `batch` UInt64
+)
+PRIMARY KEY batch
+SOURCE(CLICKHOUSE(TABLE failed_batches <%= @dictionary_connection_params %> invalidate_query 'SELECT max(batch) FROM failed_batches'))
+LIFETIME(MIN 300 MAX 360)
+LAYOUT(hashed())
