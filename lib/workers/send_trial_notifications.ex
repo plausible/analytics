@@ -62,22 +62,24 @@ defmodule Plausible.Workers.SendTrialNotifications do
     end
   end
 
-  defp send_tomorrow_reminder(users, team) do
-    usage = Plausible.Teams.Billing.usage_cycle(team, :last_30_days)
-    suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.total)
+ defp send_tomorrow_reminder(users, team) do
+  usage = Plausible.Teams.Billing.usage_cycle(team, :last_30_days)
+  suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.total)
 
-   for user <- users do
-  PlausibleWeb.Email.trial_ending_tomorrow_email(user, team, usage, suggested_volume)
-  |> Plausible.Mailer.send()
+  for user <- users do
+    PlausibleWeb.Email.trial_ending_tomorrow_email(user, team, usage, suggested_volume)
+    |> Plausible.Mailer.send()
+  end
 end
 
-  defp send_today_reminder(users, team) do
-    usage = Plausible.Teams.Billing.usage_cycle(team, :last_30_days)
-    suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.total)
+defp send_today_reminder(users, team) do
+  usage = Plausible.Teams.Billing.usage_cycle(team, :last_30_days)
+  suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.total)
 
-   for user <- users do
-  PlausibleWeb.Email.trial_ending_today_email(user, team, usage, suggested_volume)
-  |> Plausible.Mailer.send()
+  for user <- users do
+    PlausibleWeb.Email.trial_ending_today_email(user, team, usage, suggested_volume)
+    |> Plausible.Mailer.send()
+  end
 end
 
   defp send_over_reminder(users, team) do
