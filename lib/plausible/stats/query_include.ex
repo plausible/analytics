@@ -9,7 +9,7 @@ defmodule Plausible.Stats.QueryInclude do
             compare: nil,
             compare_match_day_of_week: false,
             legacy_time_on_page_cutoff: nil,
-            dashboard_metric_labels: false
+            drop_unavailable_time_on_page: false
 
   @type date_range_tuple() :: {:date_range, Date.t(), Date.t()}
   @type datetime_range_tuple() :: {:datetime_range, DateTime.t(), DateTime.t()}
@@ -24,6 +24,6 @@ defmodule Plausible.Stats.QueryInclude do
             nil | :previous_period | :year_over_year | date_range_tuple() | datetime_range_tuple(),
           compare_match_day_of_week: boolean(),
           legacy_time_on_page_cutoff: any(),
-          dashboard_metric_labels: boolean()
+          drop_unavailable_time_on_page: boolean()
         }
 end
