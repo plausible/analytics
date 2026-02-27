@@ -73,8 +73,42 @@ defmodule Plausible.Stats.Sparkline do
   end
 
   defp query_24h_stats(view_or_site, now) do
+    if Plausible.Sites.regular?(view_or_site) do
+      query_24h_stats_regular(view_or_site, now)
+    else
+      query_24h_stats_consolidated(view_or_site, now)
+    end
+  end
+
+  defp query_24h_stats_regular(site, now) do
     stats_query =
-      QueryBuilder.build!(view_or_site,
+      QueryBuilder.build!(site,
+        now: DateTime.from_naive!(now, "Etc/UTC"),
+        input_date_range: :"24h",
+        metrics: [:visitors],
+        include: [compare: :previous_period]
+      )
+
+    %Stats.QueryResult{
+      results: [
+        %{
+          metrics: [visitors],
+          comparison: %{
+            change: [visitors_change]
+          }
+        }
+      ]
+    } = Stats.query(site, stats_query)
+
+    %{
+      visitors: visitors,
+      visitors_change: visitors_change
+    }
+  end
+
+  defp query_24h_stats_consolidated(view, now) do
+    stats_query =
+      QueryBuilder.build!(view,
         now: DateTime.from_naive!(now, "Etc/UTC"),
         input_date_range: :"24h",
         metrics: [:visitors, :visits, :pageviews, :views_per_visit],
@@ -90,7 +124,7 @@ defmodule Plausible.Stats.Sparkline do
           }
         }
       ]
-    } = Stats.query(view_or_site, stats_query)
+    } = Stats.query(view, stats_query)
 
     %{
       visitors: visitors,
