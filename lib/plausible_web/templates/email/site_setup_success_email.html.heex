@@ -1,18 +1,4 @@
-Congrats! We've recorded the first visitor on
-<a href={"https://#{@site.domain}"}><%= @site.domain %></a>. Your traffic is now being counted without compromising the user experience and privacy of your visitors.
-<br /><br />
-Do check out your <a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}?__team=#{@site_team.identifier}"}>easy to use, fast-loading and privacy-friendly dashboard</a>.
-<br /><br />
-Something looks off? Take a look at our <a href="https://plausible.io/docs/troubleshoot-integration">installation troubleshooting guide</a>.
-<br /><br />
-<%= if (ee?() and Plausible.Teams.on_trial?(@site_team)) do %>
-  You're on a 30-day free trial with no obligations so do take your time to explore Plausible.
-  Here's how to get <a href="https://plausible.io/docs/your-plausible-experience">the most out of your Plausible experience</a>.
-  <br /><br />
-<% end %>
-PS: You can import your historical Google Analytics stats into your Plausible dashboard.
-<a href="https://plausible.io/docs/google-analytics-import">Learn how our GA importer works</a>.
-<br /><br />
-<%= unless Plausible.ce?() do %>
-  Do reply back to this email if you have any questions. We're here to help.
-<% end %>
+Your first visitor is now visible in Plausible.<br /><br />
+See where visitors come from, which pages they visit and which goals they complete, all in one simple dashboard.<br /><br />
+Everything is designed to be understood at a glance. No custom reports. No digging through menus.<br /><br />
+<a href={plausible_url()}>View your Plausible dashboard</a>
