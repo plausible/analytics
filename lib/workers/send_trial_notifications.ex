@@ -66,21 +66,19 @@ defmodule Plausible.Workers.SendTrialNotifications do
     usage = Plausible.Teams.Billing.usage_cycle(team, :last_30_days)
     suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.total)
 
-    for user <- users do
-      PlausibleWeb.Email.trial_upgrade_email(user, team, "tomorrow", usage, suggested_volume)
-      |> Plausible.Mailer.send()
-    end
-  end
+   for user <- users do
+  PlausibleWeb.Email.trial_ending_tomorrow_email(user, team, usage, suggested_volume)
+  |> Plausible.Mailer.send()
+end
 
   defp send_today_reminder(users, team) do
     usage = Plausible.Teams.Billing.usage_cycle(team, :last_30_days)
     suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.total)
 
-    for user <- users do
-      PlausibleWeb.Email.trial_upgrade_email(user, team, "today", usage, suggested_volume)
-      |> Plausible.Mailer.send()
-    end
-  end
+   for user <- users do
+  PlausibleWeb.Email.trial_ending_today_email(user, team, usage, suggested_volume)
+  |> Plausible.Mailer.send()
+end
 
   defp send_over_reminder(users, team) do
     for user <- users do
