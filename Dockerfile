@@ -2,6 +2,7 @@
 # platform specific, it makes sense to build it in the docker
 
 ARG ALPINE_VERSION=3.22.2
+FROM grafana/k6 AS k6
 
 #### Builder
 FROM hexpm/elixir:1.19.4-erlang-27.3.4.6-alpine-${ALPINE_VERSION} AS buildcontainer
@@ -73,6 +74,7 @@ RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates \
 
 COPY --from=buildcontainer --chmod=555 /app/_build/${MIX_ENV}/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
+COPY --from=k6 --chmod=755 /usr/bin/k6 /usr/bin/k6
 
 # we need to allow "others" access to app folder, because
 # docker container can be started with arbitrary uid
