@@ -1,7 +1,7 @@
 Your Plausible trial ends tomorrow.<br /><br />
 Over the last 30 days, your account has used {PlausibleWeb.AuthView.delimit_integer(@usage)} billable pageviews{if @custom_events > 0, do: " and custom events in total", else: ""}.<br /><br />
 <%= if @suggested_volume == :enterprise do %>
-  This exceeds our standard plans. Please reply to this email and we’ll prepare a quote for your volume.
+  This exceeds our standard plans. Please reply to this email and we’ll prepare a custom plan for your volume.
 <% else %>
   Based on your usage, the {@suggested_volume} pageviews/month plan would be the right fit.<br /><br />
   You can
