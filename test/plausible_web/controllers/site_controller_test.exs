@@ -977,6 +977,26 @@ defmodule PlausibleWeb.SiteControllerTest do
       insert(:spike_notification, site: site)
       insert(:drop_notification, site: site)
 
+      on_ee do
+        {:ok, g1} = Plausible.Goals.create(site, %{"page_path" => "/1"})
+        {:ok, g2} = Plausible.Goals.create(site, %{"event_name" => "/2"})
+        {:ok, [g1, g2]}
+
+        {:ok, _} =
+          Plausible.Funnels.create(
+            site,
+            "funnel1",
+            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}]
+          )
+
+        {:ok, _} =
+          Plausible.Funnels.create(
+            site,
+            "funnel2",
+            [%{"goal_id" => g2.id}, %{"goal_id" => g1.id}]
+          )
+      end
+
       delete(conn, "/#{site.domain}")
 
       refute Repo.exists?(from(s in Plausible.Site, where: s.id == ^site.id))
