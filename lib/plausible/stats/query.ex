@@ -151,7 +151,7 @@ defmodule Plausible.Stats.Query do
     requested? = query.include.imports
 
     query =
-      if site && imports_supported_by_query?(query) do
+      if site && Imported.schema_supports_interval?(query) do
         site = Plausible.Repo.preload(site, :completed_imports)
 
         struct!(query,
@@ -196,23 +196,18 @@ defmodule Plausible.Stats.Query do
       not Imported.schema_supports_interval?(query) ->
         :unsupported_interval
 
-      not Imported.schema_supports_query?(query) ->
-        :unsupported_query
-
       not query.imports_exist ->
         :no_imported_data
 
       query.imports_in_range == [] ->
         :out_of_range
 
+      not Imported.schema_supports_query?(query) ->
+        :unsupported_query
+
       true ->
         nil
     end
-  end
-
-  defp imports_supported_by_query?(query) do
-    Imported.schema_supports_interval?(query) and
-      Imported.schema_supports_query?(query)
   end
 
   @spec trace(%__MODULE__{}, [atom()]) :: %__MODULE__{}
