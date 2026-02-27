@@ -650,7 +650,8 @@ config :plausible, Plausible.IngestRepo,
   max_buffer_size: ch_max_buffer_size,
   pool_size: ingest_pool_size,
   settings: [
-    materialized_views_ignore_errors: 1
+    materialized_views_ignore_errors: 1,
+    workload: "ingestion"
   ],
   table_settings: [
     storage_policy: get_var_from_path_or_env(config_dir, "CLICKHOUSE_DEFAULT_STORAGE_POLICY")
