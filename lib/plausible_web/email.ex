@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("create-site-email")
-    |> subject("Your Plausible setup: Add your website details")
+    |> subject("Add your first site to start tracking")
     |> render("create_site_email.html", user: user)
   end
 
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("help-email")
-    |> subject("Your Plausible setup: Waiting for the first page views")
+    |> subject("No traffic recorded yet")
     |> render("site_setup_help_email.html",
       user: user,
       site: site,
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("setup-success-email")
-    |> subject("Plausible is now tracking your website stats")
+    |> subject("Your first visitor just showed up")
     |> render("site_setup_success_email.html",
       user: user,
       site: site,
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("check-stats-email")
-    |> subject("Check your Plausible website stats")
+    |> subject("How Plausible is different")
     |> render("check_stats_email.html", user: user)
   end
 
@@ -91,7 +91,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("trial-one-week-reminder")
-    |> subject("Your Plausible trial expires next week")
+    |> subject("Your Plausible trial ends in one week")
     |> render("trial_one_week_reminder.html", user: user, team: team)
   end
 
@@ -127,7 +127,7 @@ end
     base_email()
     |> to(user)
     |> tag("trial-over-email")
-    |> subject("Your Plausible trial has ended")
+    |> subject("Your Plausible trial has expired")
     |> render("trial_over_email.html",
       user: user,
       team: team,
