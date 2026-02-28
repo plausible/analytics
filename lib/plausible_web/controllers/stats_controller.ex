@@ -282,7 +282,9 @@ defmodule PlausibleWeb.StatsController do
       )
 
     if shared_link do
-      new_link_format = Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug)
+      new_link_format =
+        Routes.stats_path(conn, :shared_link, shared_link.site.domain, [], auth: slug)
+
       redirect(conn, to: new_link_format)
     else
       render_error(conn, 404)
@@ -306,6 +308,15 @@ defmodule PlausibleWeb.StatsController do
   defp render_password_protected_shared_link(conn, shared_link) do
     conn = Plug.Conn.fetch_cookies(conn)
 
+    star_path = conn.path_params["path"]
+
+    star_path_fragment = serialize_star_path_as_query_string_fragment(star_path)
+
+    query_string =
+      [conn.query_string, star_path_fragment]
+      |> Enum.filter(fn v -> is_binary(v) and String.length(v) > 0 end)
+      |> Enum.join("&")
+
     case validate_shared_link_password(conn, shared_link) do
       {:ok, shared_link} ->
         render_shared_link(conn, shared_link)
@@ -314,7 +325,7 @@ defmodule PlausibleWeb.StatsController do
         conn
         |> render("shared_link_password.html",
           link: shared_link,
-          query_string: conn.query_string,
+          query_string: query_string,
           dogfood_page_path: "/share/:dashboard"
         )
     end
@@ -349,12 +360,25 @@ defmodule PlausibleWeb.StatsController do
       if Plausible.Auth.Password.match?(password, shared_link.password_hash) do
         token = Plausible.Auth.Token.sign_shared_link(slug)
 
+        star_path = parse_star_path(conn)
+
+        query_string_fragment =
+          get_rest_of_query_string(conn)
+          |> omit_from_query_string("return_to")
+          |> omit_from_query_string("auth")
+
         conn
         |> put_resp_cookie(shared_link_cookie_name(slug), token)
         |> redirect(
           to:
-            Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug) <>
-              qs_appendix(conn)
+            Routes.stats_path(
+              conn,
+              :shared_link,
+              shared_link.site.domain,
+              star_path,
+              auth: slug
+            ) <>
+              query_string_fragment
         )
       else
         conn
@@ -370,12 +394,47 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def qs_appendix(conn)
-      when is_nil(conn.query_string) or
-             (is_binary(conn.query_string) and byte_size(conn.query_string)) == 0,
-      do: ""
+  defp serialize_star_path_as_query_string_fragment(star_path) do
+    if length(star_path) > 0 do
+      # make the path start with a /
+      # to be able to reject values that don't start with a /
+      serialized_value =
+        "/#{Enum.join(star_path, "/")}"
+        |> PlausibleWeb.URIEncoding.uri_encode_permissive()
 
-  def qs_appendix(conn), do: "&#{conn.query_string}"
+      "return_to=#{serialized_value}"
+    else
+      nil
+    end
+  end
+
+  defp parse_star_path(conn) do
+    return_to_value = conn.query_params["return_to"]
+
+    if not is_nil(return_to_value) and String.starts_with?(return_to_value, "/") do
+      # get rid of the / character that we added
+      "/" <> trimmed_return_to_value = return_to_value
+      String.split(trimmed_return_to_value, "/")
+    else
+      []
+    end
+  end
+
+  defp get_rest_of_query_string(conn)
+       when is_nil(conn.query_string) or
+              (is_binary(conn.query_string) and byte_size(conn.query_string)) == 0,
+       do: ""
+
+  defp get_rest_of_query_string(conn), do: "&#{conn.query_string}"
+
+  defp omit_from_query_string(query_string, key) do
+    query_string
+    |> String.split("&")
+    |> Enum.reject(fn key_and_value ->
+      key_and_value == key || String.starts_with?(key_and_value, "#{key}=")
+    end)
+    |> Enum.join("&")
+  end
 
   defp render_shared_link(conn, shared_link) do
     shared_links_feature_access? =
