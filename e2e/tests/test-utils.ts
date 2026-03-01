@@ -46,3 +46,22 @@ export const detailsLink = (report) =>
 
 export const closeModalButton = (page) =>
   page.getByRole('button', { name: 'Close modal' })
+
+export const filterButton = (page) =>
+  page.getByRole('button', { name: 'Filter', exact: true })
+
+export const applyFilterButton = (page, { disabled = false } = {}) =>
+  page.getByRole('button', {
+    name: 'Apply filter',
+    disabled
+  })
+
+export const filterRow = (page, key) => page.getByTestId(`filter-row-${key}`)
+
+export const suggestedItem = (scoped, url) =>
+  scoped.getByRole('listitem').filter({ hasText: url })
+
+export const filterOperator = (scoped) => scoped.getByTestId('filter-operator')
+
+export const filterOperatorOption = (scoped, option) =>
+  scoped.getByTestId('filter-operator-option').filter({ hasText: option })
