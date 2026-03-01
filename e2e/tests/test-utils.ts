@@ -50,6 +50,9 @@ export const closeModalButton = (page) =>
 export const filterButton = (page) =>
   page.getByRole('button', { name: 'Filter', exact: true })
 
+export const filterItemButton = (page, label) =>
+  page.getByTestId('filtermenu').getByRole('link', { name: label })
+
 export const applyFilterButton = (page, { disabled = false } = {}) =>
   page.getByRole('button', {
     name: 'Apply filter',

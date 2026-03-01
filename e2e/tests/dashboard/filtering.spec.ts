@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { setupSite, populateStats, addPageviewGoal } from '../fixtures.ts'
 import {
   filterButton,
+  filterItemButton,
   applyFilterButton,
   filterRow,
   suggestedItem,
@@ -10,8 +11,7 @@ import {
 } from '../test-utils.ts'
 
 test.describe('page filtering tests', () => {
-  const pageFilterButton = (page) =>
-    page.getByTestId('filtermenu').getByRole('link', { name: 'Page' })
+  const pageFilterButton = (page) => filterItemButton(page, 'Page')
 
   test('filtering by page with detailed behavior test', async ({
     page,
@@ -258,8 +258,7 @@ test.describe('page filtering tests', () => {
 })
 
 test.describe('hostname filtering tests', () => {
-  const hostnameFilterButton = (page) =>
-    page.getByTestId('filtermenu').getByRole('link', { name: 'Hostname' })
+  const hostnameFilterButton = (page) => filterItemButton(page, 'Hostname')
 
   test('filtering by hostname', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -295,8 +294,7 @@ test.describe('hostname filtering tests', () => {
 })
 
 test.describe('acquisition filtering tests', () => {
-  const sourceFilterButton = (page) =>
-    page.getByTestId('filtermenu').getByRole('link', { name: 'Source' })
+  const sourceFilterButton = (page) => filterItemButton(page, 'Source')
 
   test('filtering by source information', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -399,8 +397,7 @@ test.describe('acquisition filtering tests', () => {
     })
   })
 
-  const utmTagsFilterButton = (page) =>
-    page.getByTestId('filtermenu').getByRole('link', { name: 'UTM Tags' })
+  const utmTagsFilterButton = (page) => filterItemButton(page, 'UTM Tags')
 
   test('filtering by UTM tags', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -557,8 +554,7 @@ test.describe('acquisition filtering tests', () => {
 })
 
 test.describe('location filtering tests', () => {
-  const locationFilterButton = (page) =>
-    page.getByTestId('filtermenu').getByRole('link', { name: 'Location' })
+  const locationFilterButton = (page) => filterItemButton(page, 'Location')
 
   test('filtering by location', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -645,8 +641,7 @@ test.describe('location filtering tests', () => {
 })
 
 test.describe('screen size filtering tests', () => {
-  const screenSizeFilterButton = (page) =>
-    page.getByTestId('filtermenu').getByRole('link', { name: 'Screen size' })
+  const screenSizeFilterButton = (page) => filterItemButton(page, 'Screen size')
 
   test.fixme('filtering by screen size', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -686,8 +681,7 @@ test.describe('screen size filtering tests', () => {
 })
 
 test.describe('browser filtering tests', () => {
-  const browserFilterButton = (page) =>
-    page.getByTestId('filtermenu').getByRole('link', { name: 'Browser' })
+  const browserFilterButton = (page) => filterItemButton(page, 'Browser')
 
   test('filtering by browser', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -750,9 +744,7 @@ test.describe('browser filtering tests', () => {
 
 test.describe('operating system filtering tests', () => {
   const operatingSystemFilterButton = (page) =>
-    page
-      .getByTestId('filtermenu')
-      .getByRole('link', { name: 'Operating system' })
+    filterItemButton(page, 'Operating system')
 
   test.fixme('filtering by operating system', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -827,8 +819,7 @@ test.describe('operating system filtering tests', () => {
 })
 
 test.describe('goal filtering tests', () => {
-  const goalFilterButton = (page) =>
-    page.getByTestId('filtermenu').getByRole('link', { name: 'Goal' })
+  const goalFilterButton = (page) => filterItemButton(page, 'Goal')
 
   test('filtering by goals', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
