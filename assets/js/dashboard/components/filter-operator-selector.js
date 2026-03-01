@@ -30,7 +30,9 @@ export default function FilterOperatorSelector(props) {
               ref={buttonRef}
               className="relative flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-750 px-4 py-2 bg-white dark:bg-gray-750 text-sm text-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500 text-left"
             >
-              {FILTER_OPERATIONS_DISPLAY_NAMES[props.selectedType]}
+              <span data-testid="filter-operator">
+                {FILTER_OPERATIONS_DISPLAY_NAMES[props.selectedType]}
+              </span>
               <ChevronDownIcon
                 className="-mr-2 ml-2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 aria-hidden="true"
@@ -63,6 +65,7 @@ export default function FilterOperatorSelector(props) {
                   .filter(([_operation, supported]) => supported)
                   .map(([operation]) => (
                     <button
+                      data-testid="filter-operator-option"
                       key={operation}
                       data-selected={operation === props.selectedType}
                       onClick={(e) => {

@@ -11,7 +11,7 @@ defmodule PlausibleWeb.E2EController do
       |> Enum.map(&deserialize/1)
       |> Enum.map(&build/1)
 
-    stats_start_time = Enum.min_by(events, & &1.timestamp).timestamp
+    stats_start_time = Enum.min_by(events, & &1.timestamp, NaiveDateTime).timestamp
     stats_start_date = NaiveDateTime.to_date(stats_start_time)
 
     site
@@ -24,10 +24,31 @@ defmodule PlausibleWeb.E2EController do
     send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
   end
 
+  def create_funnel(conn, %{"domain" => domain, "name" => name, "steps" => steps}) do
+    site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
+
+    steps =
+      Enum.map(steps, fn step ->
+        goal = get_goal(site, step)
+        %{"goal_id" => goal.id}
+      end)
+
+    {:ok, _} = Plausible.Funnels.create(site, name, steps)
+
+    send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+  end
+
+  defp get_goal(site, name) do
+    Plausible.Repo.get_by!(Plausible.Goal, site_id: site.id, display_name: name)
+  end
+
   defp deserialize(event) do
     Enum.map(event, fn
       {"timestamp", value} ->
         {:timestamp, to_timestamp(value)}
+
+      {"revenue_reporting_amount", value} ->
+        {:revenue_reporting_amount, Decimal.new(value)}
 
       {key, value} ->
         {String.to_existing_atom(key), value}
@@ -61,5 +82,9 @@ defmodule PlausibleWeb.E2EController do
 
   defp to_timestamp(%{"minutesAgo" => offset}) do
     NaiveDateTime.utc_now(:second) |> NaiveDateTime.add(-offset, :minute)
+  end
+
+  defp to_timestamp(ts) when is_binary(ts) do
+    NaiveDateTime.from_iso8601!(ts)
   end
 end

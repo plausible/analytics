@@ -38,7 +38,9 @@ const TabButtonText = ({
       'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]': active
     })}
   >
-    {children}
+    <span data-active={active ? 'true' : 'false'} data-testid="tab-button">
+      {children}
+    </span>
   </span>
 )
 
@@ -183,6 +185,7 @@ const Items = ({ options, searchable, closeDropdown }: ItemsProps) => {
         </div>
       )}
       <div
+        data-testid="dropdown-items"
         className={'max-h-[224px] overflow-y-auto flex flex-col gap-y-0.5 p-1'}
       >
         {showableData.map(({ selected, label, onClick }, index) => {

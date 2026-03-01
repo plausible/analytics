@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, logout, makeSitePublic, populateStats } from './fixtures.ts'
+import {
+  setupSite,
+  logout,
+  makeSitePublic,
+  populateStats,
+  addCustomGoal,
+  addPageviewGoal,
+  addScrollDepthGoal
+} from './fixtures.ts'
 
 test('dashboard renders for logged in user', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
@@ -164,4 +172,75 @@ test('back navigation closes the modal', async ({ page, request, baseURL }) => {
   await page.goBack()
 
   await expect(page).toHaveURL(baseURL + '/' + domain)
+})
+
+test('goals are rendered', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+  await populateStats({
+    request,
+    domain,
+    events: [
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/page1',
+        timestamp: { minutesAgo: 60 }
+      },
+      {
+        user_id: 123,
+        name: 'engagement',
+        pathname: '/page1',
+        scroll_depth: 80,
+        timestamp: { minutesAgo: 59 }
+      },
+      {
+        user_id: 123,
+        name: 'purchase',
+        pathname: '/buy',
+        revenue_reporting_amount: '23',
+        revenue_reporting_currency: 'EUR',
+        timestamp: { minutesAgo: 59 }
+      },
+      { user_id: 123, name: 'add_site', timestamp: { minutesAgo: 50 } }
+    ]
+  })
+
+  await addCustomGoal({
+    page,
+    domain,
+    name: 'add_site',
+    displayName: 'Add a site'
+  })
+
+  await addCustomGoal({
+    page,
+    domain,
+    name: 'purchase',
+    currency: 'EUR'
+  })
+
+  await addPageviewGoal({
+    page,
+    domain,
+    pathname: '/page1'
+  })
+
+  await addScrollDepthGoal({
+    page,
+    domain,
+    pathname: '/page1',
+    scrollPercentage: 75
+  })
+
+  await page.goto('/' + domain)
+
+  await expect(page.getByRole('button', { name: domain })).toBeVisible()
+  // To ensure lazy loading of behaviours is triggered
+  await page.getByRole('button', { name: 'Goals' }).scrollIntoViewIfNeeded()
+  await expect(page.getByRole('link', { name: 'Add a site' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Visit /page1' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'purchase' })).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: 'Scroll 75% on /page1' })
+  ).toBeVisible()
 })

@@ -154,7 +154,9 @@ export function IntervalPicker({
                 'rounded-sm text-sm flex items-center'
               )}
             >
-              {INTERVAL_LABELS[currentInterval]}
+              <span data-testid="current-graph-interval">
+                {INTERVAL_LABELS[currentInterval]}
+              </span>
               <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
             </Popover.Button>
 
@@ -187,7 +189,9 @@ export function IntervalPicker({
                       'w-full text-left'
                     )}
                   >
-                    {INTERVAL_LABELS[option]}
+                    <span data-testid="graph-interval">
+                      {INTERVAL_LABELS[option]}
+                    </span>
                   </button>
                 ))}
               </Popover.Panel>

@@ -17,7 +17,10 @@ export function DashboardPeriodPicker({ className }: { className?: string }) {
   const compareCalendarButtonRef = useRef<HTMLButtonElement>(null)
 
   return (
-    <div className={classNames('flex shrink-0', className)}>
+    <div
+      data-testid="query-period-picker"
+      className={classNames('flex shrink-0', className)}
+    >
       <MovePeriodArrows className={isComparing ? 'hidden md:flex' : ''} />
       <Popover className="min-w-36 md:relative lg:w-48">
         {({ close }) => (

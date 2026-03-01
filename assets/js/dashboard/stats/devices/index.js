@@ -249,7 +249,7 @@ function OperatingSystemVersions({ afterFetchData }) {
       renderIcon={renderIcon}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
-      keyLabel="Operating System Version"
+      keyLabel="Operating system version"
       metrics={chooseMetrics()}
     />
   )
@@ -503,7 +503,7 @@ export default function Devices() {
   }
 
   return (
-    <ReportLayout className="overflow-x-hidden">
+    <ReportLayout testId="report-devices" className="overflow-x-hidden">
       <ReportHeader>
         <div className="flex gap-x-3">
           <TabWrapper>

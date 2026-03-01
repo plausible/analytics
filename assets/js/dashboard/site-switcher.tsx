@@ -183,7 +183,10 @@ export const SiteSwitcher = () => {
                 className="block h-4 w-4 mx-1"
               />
             )}
-            <span className={'truncate hidden sm:block sm:mr-1 lg:mr-0'}>
+            <span
+              data-testid="site-switcher-current-site"
+              className={'truncate hidden sm:block sm:mr-1 lg:mr-0'}
+            >
               {currentSite.isConsolidatedView
                 ? 'All sites'
                 : currentSite.domain}

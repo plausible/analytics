@@ -47,7 +47,7 @@ export default function MoreLink({ linkProps, state }) {
 
   return (
     <Tooltip info="View details" containerRef={portalRef}>
-      <AppNavigationLink {...linkProps} className={baseClassName}>
+      <AppNavigationLink {...linkProps} aria-label="View details" className={baseClassName}>
         {icon}
       </AppNavigationLink>
     </Tooltip>
