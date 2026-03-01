@@ -66,6 +66,29 @@ test('site switcher allows switching between different sites', async ({
   await expect(switcherButton).toHaveText(sortedDomains[0])
 })
 
+test('current visitors counter shows number of active visitors', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'pageview', timestamp: { minutesAgo: 2 } },
+      { name: 'pageview', timestamp: { minutesAgo: 3 } },
+      { name: 'pageview', timestamp: { minutesAgo: 4 } },
+      { name: 'pageview', timestamp: { minutesAgo: 5 } },
+      { name: 'pageview', timestamp: { minutesAgo: 20 } },
+      { name: 'pageview', timestamp: { minutesAgo: 50 } }
+    ]
+  })
+
+  await page.goto('/' + domain)
+
+  await expect(page.getByText('4 current visitors')).toBeVisible()
+})
+
 test('top stats show relevant metrics', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
   await populateStats({
