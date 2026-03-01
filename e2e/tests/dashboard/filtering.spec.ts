@@ -1,19 +1,13 @@
 import { test, expect } from '@playwright/test'
 import { setupSite, populateStats, addPageviewGoal } from '../fixtures.ts'
-
-const filterButton = (page) =>
-  page.getByRole('button', { name: 'Filter', exact: true })
-const applyFilterButton = (page, { disabled = false } = {}) =>
-  page.getByRole('button', {
-    name: 'Apply filter',
-    disabled
-  })
-const filterRow = (page, key) => page.getByTestId(`filter-row-${key}`)
-const suggestedItem = (scoped, url) =>
-  scoped.getByRole('listitem').filter({ hasText: url })
-const filterOperator = (scoped) => scoped.getByTestId('filter-operator')
-const filterOperatorOption = (scoped, option) =>
-  scoped.getByTestId('filter-operator-option').filter({ hasText: option })
+import {
+  filterButton,
+  applyFilterButton,
+  filterRow,
+  suggestedItem,
+  filterOperator,
+  filterOperatorOption
+} from '../test-utils.ts'
 
 test.describe('page filtering tests', () => {
   const pageFilterButton = (page) =>
