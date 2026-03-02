@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Components.Billing do
   use PlausibleWeb, :component
   use Plausible
 
+  import PlausibleWeb.Components.Icons
+
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Plan, Plans, EnterprisePlan}
 
@@ -49,6 +51,12 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
+  attr :usage, :map, required: true
+  attr :limit, :any, required: true
+  attr :consolidated_view_domain, :string, default: nil
+  attr :site_domain, :string, default: nil
+  attr :team_identifier, :string, default: nil
+
   def render_monthly_pageview_usage(%{usage: usage} = assigns)
       when is_map_key(usage, :last_30_days) do
     ~H"""
@@ -57,6 +65,9 @@ defmodule PlausibleWeb.Components.Billing do
       limit={@limit}
       period={:last_30_days}
       expanded={true}
+      consolidated_view_domain={@consolidated_view_domain}
+      site_domain={@site_domain}
+      team_identifier={@team_identifier}
     />
     """
   end
@@ -76,6 +87,9 @@ defmodule PlausibleWeb.Components.Billing do
         limit={@limit}
         period={:current_cycle}
         expanded={not @show_all and Enum.empty?(@usage.current_cycle.sites)}
+        consolidated_view_domain={@consolidated_view_domain}
+        site_domain={@site_domain}
+        team_identifier={@team_identifier}
       />
       <%= if @show_all do %>
         <.monthly_pageview_usage_breakdown
@@ -83,12 +97,18 @@ defmodule PlausibleWeb.Components.Billing do
           limit={@limit}
           period={:last_cycle}
           expanded={false}
+          consolidated_view_domain={@consolidated_view_domain}
+          site_domain={@site_domain}
+          team_identifier={@team_identifier}
         />
         <.monthly_pageview_usage_breakdown
           usage={@usage.penultimate_cycle}
           limit={@limit}
           period={:penultimate_cycle}
           expanded={false}
+          consolidated_view_domain={@consolidated_view_domain}
+          site_domain={@site_domain}
+          team_identifier={@team_identifier}
         />
       <% end %>
     </div>
@@ -99,8 +119,22 @@ defmodule PlausibleWeb.Components.Billing do
   attr(:limit, :any, required: true)
   attr(:period, :atom, required: true)
   attr(:expanded, :boolean, required: true)
+  attr(:consolidated_view_domain, :string, default: nil)
+  attr(:site_domain, :string, default: nil)
+  attr(:team_identifier, :string, default: nil)
 
   defp monthly_pageview_usage_breakdown(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :total_link,
+        dashboard_url(
+          assigns.consolidated_view_domain || assigns.site_domain,
+          assigns.usage.date_range,
+          assigns.team_identifier
+        )
+      )
+
     ~H"""
     <div class="flex flex-col gap-3" x-data={"{ open: #{@expanded} }"}>
       <div class="flex flex-col gap-2">
@@ -120,6 +154,17 @@ defmodule PlausibleWeb.Components.Billing do
             class="size-4 transition-transform"
             x-bind:class="open ? 'rotate-90' : ''"
           /> Total billable pageviews
+          <.tooltip :if={@total_link} centered?={true}>
+            <:tooltip_content>View billing period in dashboard</:tooltip_content>
+            <.link
+              href={@total_link}
+              class="text-indigo-500 hover:text-indigo-600"
+              data-test-id="total-pageviews-dashboard-link"
+              x-on:click.stop
+            >
+              <.external_link_icon class="ml-0.5 size-3.5 [&_path]:stroke-2" />
+            </.link>
+          </.tooltip>
         </span>
         <span class="ml-5 text-sm font-medium text-gray-900 dark:text-gray-100">
           {PlausibleWeb.TextHelpers.number_format(@usage.total)}
@@ -146,7 +191,18 @@ defmodule PlausibleWeb.Components.Billing do
           <div :for={{site, index} <- Enum.with_index(@usage.sites)} class="flex flex-col gap-3">
             <hr :if={index > 0} class="border-gray-200 dark:border-gray-700" />
             <div class="flex justify-between flex-wrap font-medium">
-              <span class="truncate">{site.domain}</span>
+              <span class="flex items-center gap-1 min-w-0">
+                <span class="truncate">{site.domain}</span>
+                <.tooltip centered?={true}>
+                  <:tooltip_content>View billing period in dashboard</:tooltip_content>
+                  <.link
+                    href={dashboard_url(site.domain, @usage.date_range, @team_identifier)}
+                    class="shrink-0 text-indigo-500 hover:text-indigo-600"
+                  >
+                    <.external_link_icon class="ml-0.5 size-3.5 [&_path]:stroke-2" />
+                  </.link>
+                </.tooltip>
+              </span>
               <span class="shrink-0">{PlausibleWeb.TextHelpers.number_format(site.total)}</span>
             </div>
             <.pageview_usage_row label="Pageviews" value={site.pageviews} />
@@ -172,6 +228,20 @@ defmodule PlausibleWeb.Components.Billing do
       <span class="ml-5">{PlausibleWeb.TextHelpers.number_format(@value)}</span>
     </div>
     """
+  end
+
+  defp dashboard_url(nil, _date_range, _team_identifier), do: nil
+
+  defp dashboard_url(domain, date_range, team_identifier) do
+    base = Routes.stats_path(PlausibleWeb.Endpoint, :stats, domain, [])
+
+    query_string =
+      "?period=custom&from=#{Date.to_iso8601(date_range.first)}&to=#{Date.to_iso8601(date_range.last)}"
+
+    query_string =
+      if team_identifier, do: query_string <> "&__team=#{team_identifier}", else: query_string
+
+    base <> query_string
   end
 
   defp cycle_label(:current_cycle), do: "(current cycle)"
