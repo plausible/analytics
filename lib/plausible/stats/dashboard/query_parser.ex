@@ -36,6 +36,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
     "year" => :year,
     "all" => :all,
     "7d" => {:last_n_days, 7},
+    "24h" => :"24h",
     "28d" => {:last_n_days, 28},
     "30d" => {:last_n_days, 30},
     "91d" => {:last_n_days, 91},

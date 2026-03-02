@@ -369,7 +369,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       assert {:error, :not_a_member} = Teams.Memberships.team_role(team, member1)
       assert {:ok, :viewer} = Teams.Memberships.team_role(team, member2)
-      assert [%{email: "new@example.com"}] = Teams.Invitations.all(team)
+      assert [%{email: "new@example.com"}] = Teams.Invitations.pending_team_invitations_for(team)
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],

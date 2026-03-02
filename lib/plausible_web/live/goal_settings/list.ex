@@ -7,34 +7,30 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   alias PlausibleWeb.Live.Components.Modal
   alias PlausibleWeb.Components.PrimaDropdown
 
+  import PlausibleWeb.Components.Icons
+
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)
   attr(:site, Plausible.Site, required: true)
+  attr(:revenue_goals_enabled?, :boolean, required: true)
+  attr(:props_available?, :boolean, required: true)
 
   def render(assigns) do
-    revenue_goals_enabled? = Plausible.Billing.Feature.RevenueGoals.enabled?(assigns.site)
-
-    props_available? =
-      Plausible.Billing.Feature.Props.check_availability(assigns.site.team) == :ok
-
-    assigns =
-      assigns
-      |> assign(:revenue_goals_enabled?, revenue_goals_enabled?)
-      |> assign(:props_available?, props_available?)
-      |> assign(:searching?, String.trim(assigns.filter_text) != "")
+    assigns = assign(assigns, :searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
     <div class="flex flex-col gap-4">
       <%= if @searching? or Enum.count(@goals) > 0 do %>
         <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
           <PrimaDropdown.dropdown id="add-goal-dropdown">
-            <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+            <PrimaDropdown.dropdown_trigger as={&button/1} id="add-goal-dropdown-trigger" mt?={false}>
               Add goal <Heroicons.chevron_down mini class="size-4 mt-0.5" />
             </PrimaDropdown.dropdown_trigger>
 
-            <PrimaDropdown.dropdown_menu>
+            <PrimaDropdown.dropdown_menu id="add-goal-dropdown-menu">
               <PrimaDropdown.dropdown_item
+                id="add-goal-dropdown-menuitem-1"
                 phx-click="add-goal"
                 phx-value-goal-type="pageviews"
                 x-data
@@ -43,6 +39,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Pageview
               </PrimaDropdown.dropdown_item>
               <PrimaDropdown.dropdown_item
+                id="add-goal-dropdown-menuitem-2"
                 phx-click="add-goal"
                 phx-value-goal-type="custom_events"
                 x-data
@@ -51,6 +48,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Custom event
               </PrimaDropdown.dropdown_item>
               <PrimaDropdown.dropdown_item
+                id="add-goal-dropdown-menuitem-3"
                 phx-click="add-goal"
                 phx-value-goal-type="scroll"
                 x-data
@@ -170,12 +168,17 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
         </.styled_link>
       </p>
       <PrimaDropdown.dropdown id="add-goal-dropdown-empty" class="mt-4">
-        <PrimaDropdown.dropdown_trigger as={&button/1} mt?={false}>
+        <PrimaDropdown.dropdown_trigger
+          as={&button/1}
+          id="add-goal-dropdown-empty-trigger"
+          mt?={false}
+        >
           Add goal <Heroicons.chevron_down mini class="size-4 mt-0.5" />
         </PrimaDropdown.dropdown_trigger>
 
-        <PrimaDropdown.dropdown_menu>
+        <PrimaDropdown.dropdown_menu id="add-goal-dropdown-empty-menu">
           <PrimaDropdown.dropdown_item
+            id="add-goal-dropdown-empty-menuitem-1"
             phx-click="add-goal"
             phx-value-goal-type="pageviews"
             x-data
@@ -184,6 +187,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
             <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Pageview
           </PrimaDropdown.dropdown_item>
           <PrimaDropdown.dropdown_item
+            id="add-goal-dropdown-empty-menuitem-2"
             phx-click="add-goal"
             phx-value-goal-type="custom_events"
             x-data
@@ -192,6 +196,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
             <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Custom event
           </PrimaDropdown.dropdown_item>
           <PrimaDropdown.dropdown_item
+            id="add-goal-dropdown-empty-menuitem-3"
             phx-click="add-goal"
             phx-value-goal-type="scroll"
             x-data
@@ -286,21 +291,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
             </div>
           </div>
         </:tooltip_content>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          class="size-3.5 mt-px flex-shrink-0"
-        >
-          <circle fill="currentColor" cx="7.25" cy="7.25" r="1.25" />
-          <path
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 3h5.172a2 2 0 0 1 1.414.586l5.536 5.536a3 3 0 0 1 0 4.243l-2.757 2.757a3 3 0 0 1-4.243 0l-5.536-5.536A2 2 0 0 1 3 9.172V4a1 1 0 0 1 1-1Z"
-          />
-        </svg>
+        <.tag_icon class="size-3.5 mt-px flex-shrink-0" />
       </.tooltip>
     </div>
     """

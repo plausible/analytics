@@ -49,6 +49,7 @@ defmodule Plausible.Stats.Interval do
     case query.input_date_range do
       period when period in [:realtime, :realtime_30m] -> "minute"
       :day -> "hour"
+      :"24h" -> "hour"
       {:last_n_days, _} -> "day"
       period when period in [:custom, :month] -> "day"
       {:last_n_months, _} -> "month"
@@ -59,6 +60,7 @@ defmodule Plausible.Stats.Interval do
   @valid_by_period %{
     "realtime" => ["minute"],
     "day" => ["minute", "hour"],
+    "24h" => ["minute", "hour"],
     "7d" => ["hour", "day"],
     "28d" => ["day", "week"],
     "30d" => ["day", "week"],

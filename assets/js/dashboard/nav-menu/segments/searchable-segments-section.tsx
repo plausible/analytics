@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import {
   SavedSegmentPublic,
@@ -38,7 +38,7 @@ export const SearchableSegmentsSection = ({
   const site = useSiteContext()
   const segmentsContext = useSegmentsContext()
 
-  const { expandedSegment } = useQueryContext()
+  const { expandedSegment } = useDashboardStateContext()
   const user = useUserContext()
 
   const isPublicListQuery = !user.loggedIn || user.role === Role.public

@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Components.Billing do
   use Plausible
 
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.{Subscription, Subscriptions, Plan, Plans, EnterprisePlan}
+  alias Plausible.Billing.{Plan, Plans, EnterprisePlan}
 
   attr :site, Plausible.Site, required: false, default: nil
   attr :current_user, Plausible.Auth.User, required: true
@@ -52,196 +52,186 @@ defmodule PlausibleWeb.Components.Billing do
   def render_monthly_pageview_usage(%{usage: usage} = assigns)
       when is_map_key(usage, :last_30_days) do
     ~H"""
-    <.monthly_pageview_usage_table usage={@usage.last_30_days} limit={@limit} period={:last_30_days} />
+    <.monthly_pageview_usage_breakdown
+      usage={@usage.last_30_days}
+      limit={@limit}
+      period={:last_30_days}
+      expanded={true}
+    />
     """
   end
 
   def render_monthly_pageview_usage(assigns) do
+    exceeded =
+      Plausible.Billing.Quota.exceeded_cycles(assigns.usage, assigns.limit, with_margin: false)
+
+    show_all = :last_cycle in exceeded or :current_cycle in exceeded
+
+    assigns = assign(assigns, :show_all, show_all)
+
     ~H"""
-    <article id="monthly_pageview_usage_container" x-data="{ tab: 'last_cycle' }" class="mt-8">
-      <.title>Monthly pageviews usage</.title>
-      <div class="mt-4 mb-4">
-        <ol class="divide-y divide-gray-300 dark:divide-gray-600 rounded-md border dark:border-gray-600 md:flex md:flex-row-reverse md:divide-y-0 md:overflow-hidden">
-          <.billing_cycle_tab
-            name="Upcoming cycle"
-            tab={:current_cycle}
-            date_range={@usage.current_cycle.date_range}
-            with_separator={true}
-          />
-          <.billing_cycle_tab
-            name="Last cycle"
-            tab={:last_cycle}
-            date_range={@usage.last_cycle.date_range}
-            with_separator={true}
-          />
-          <.billing_cycle_tab
-            name="Penultimate cycle"
-            tab={:penultimate_cycle}
-            date_range={@usage.penultimate_cycle.date_range}
-            disabled={@usage.penultimate_cycle.total == 0}
-          />
-        </ol>
-      </div>
-      <div x-show="tab === 'current_cycle'">
-        <.monthly_pageview_usage_table
-          usage={@usage.current_cycle}
+    <div id="monthly_pageview_usage_container" class="flex flex-col gap-12 pb-2">
+      <.monthly_pageview_usage_breakdown
+        usage={@usage.current_cycle}
+        limit={@limit}
+        period={:current_cycle}
+        expanded={not @show_all and Enum.empty?(@usage.current_cycle.sites)}
+      />
+      <%= if @show_all do %>
+        <.monthly_pageview_usage_breakdown
+          usage={@usage.last_cycle}
           limit={@limit}
-          period={:current_cycle}
+          period={:last_cycle}
+          expanded={false}
         />
-      </div>
-      <div x-show="tab === 'last_cycle'">
-        <.monthly_pageview_usage_table usage={@usage.last_cycle} limit={@limit} period={:last_cycle} />
-      </div>
-      <div x-show="tab === 'penultimate_cycle'">
-        <.monthly_pageview_usage_table
+        <.monthly_pageview_usage_breakdown
           usage={@usage.penultimate_cycle}
           limit={@limit}
           period={:penultimate_cycle}
+          expanded={false}
         />
-      </div>
-    </article>
+      <% end %>
+    </div>
     """
   end
 
   attr(:usage, :map, required: true)
   attr(:limit, :any, required: true)
   attr(:period, :atom, required: true)
+  attr(:expanded, :boolean, required: true)
 
-  defp monthly_pageview_usage_table(assigns) do
+  defp monthly_pageview_usage_breakdown(assigns) do
     ~H"""
-    <.usage_and_limits_table>
-      <.usage_and_limits_row
-        id={"total_pageviews_#{@period}"}
-        title={"Total billable pageviews#{if @period == :last_30_days, do: " (last 30 days)"}"}
-        usage={@usage.total}
-        limit={@limit}
-      />
-      <.usage_and_limits_row
-        id={"pageviews_#{@period}"}
-        pad
-        title="Pageviews"
-        usage={@usage.pageviews}
-      />
-      <.usage_and_limits_row
-        id={"custom_events_#{@period}"}
-        pad
-        title="Custom events"
-        usage={@usage.custom_events}
-      />
-    </.usage_and_limits_table>
-    """
-  end
-
-  attr(:name, :string, required: true)
-  attr(:date_range, :any, required: true)
-  attr(:tab, :atom, required: true)
-  attr(:disabled, :boolean, default: false)
-  attr(:with_separator, :boolean, default: false)
-
-  defp billing_cycle_tab(assigns) do
-    ~H"""
-    <li id={"billing_cycle_tab_#{@tab}"} class="relative md:w-1/3">
+    <div class="flex flex-col gap-3" x-data={"{ open: #{@expanded} }"}>
+      <div class="flex flex-col gap-2">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
+          {PlausibleWeb.TextHelpers.format_date_range(@usage.date_range)}
+          <span :if={@period in [:current_cycle, :last_30_days]}>{cycle_label(@period)}</span>
+        </p>
+        <.usage_progress_bar id={"total_pageviews_#{@period}"} usage={@usage.total} limit={@limit} />
+      </div>
       <button
-        class={["w-full group", @disabled && "pointer-events-none opacity-50 dark:opacity-25"]}
-        x-on:click={"tab = '#{@tab}'"}
+        class="flex justify-between items-center flex-wrap w-full text-left"
+        x-on:click="open = !open"
       >
-        <span
-          class="absolute left-0 top-0 h-full w-1 md:bottom-0 md:top-auto md:h-1 md:w-full"
-          x-bind:class={"tab === '#{@tab}' ? 'bg-indigo-500' : 'bg-transparent group-hover:bg-gray-200 dark:group-hover:bg-gray-700 '"}
-          aria-hidden="true"
-        >
+        <span class="flex items-center gap-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+          <Heroicons.chevron_right
+            mini
+            class="size-4 transition-transform"
+            x-bind:class="open ? 'rotate-90' : ''"
+          /> Total billable pageviews
         </span>
-        <div class={"flex items-center justify-between md:flex-col md:items-start py-2 pr-2 #{if @with_separator, do: "pl-2 md:pl-4", else: "pl-2"}"}>
-          <span
-            class="text-sm dark:text-gray-100"
-            x-bind:class={"tab === '#{@tab}' ? 'text-indigo-600 dark:text-indigo-500 font-semibold' : 'font-medium'"}
-          >
-            {@name}
-          </span>
-          <span class="flex text-xs text-gray-500 dark:text-gray-400">
-            {if @disabled,
-              do: "Not available",
-              else: PlausibleWeb.TextHelpers.format_date_range(@date_range)}
-          </span>
-        </div>
+        <span class="ml-5 text-sm font-medium text-gray-900 dark:text-gray-100">
+          {PlausibleWeb.TextHelpers.number_format(@usage.total)}
+          {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
+          {if @limit == :unlimited, do: "/ Unlimited"}
+        </span>
       </button>
-      <div
-        :if={@with_separator}
-        class="absolute inset-0 left-0 top-0 w-3 hidden md:block"
-        aria-hidden="true"
-      >
-        <svg
-          class="h-full w-full text-gray-300 dark:text-gray-600"
-          viewBox="0 0 12 82"
-          fill="none"
-          preserveAspectRatio="none"
+      <div x-show="open" class="flex flex-col gap-3 text-sm text-gray-900 dark:text-gray-100">
+        <.pageview_usage_row
+          id={"pageviews_#{@period}"}
+          label={if Enum.empty?(@usage.sites), do: "Pageviews", else: "Total pageviews"}
+          value={@usage.pageviews}
+        />
+        <.pageview_usage_row
+          id={"custom_events_#{@period}"}
+          label={if Enum.empty?(@usage.sites), do: "Custom events", else: "Total custom events"}
+          value={@usage.custom_events}
+        />
+        <div
+          :if={not Enum.empty?(@usage.sites)}
+          id={"per_site_breakdown_#{@period}"}
+          class="flex flex-col gap-3 border-t border-gray-200 dark:border-gray-700 pt-3 pl-5"
         >
-          <path
-            d="M0.5 0V31L10.5 41L0.5 51V82"
-            stroke="currentcolor"
-            vector-effect="non-scaling-stroke"
-          />
-        </svg>
+          <div :for={{site, index} <- Enum.with_index(@usage.sites)} class="flex flex-col gap-3">
+            <hr :if={index > 0} class="border-gray-200 dark:border-gray-700" />
+            <div class="flex justify-between flex-wrap font-medium">
+              <span class="truncate">{site.domain}</span>
+              <span class="shrink-0">{PlausibleWeb.TextHelpers.number_format(site.total)}</span>
+            </div>
+            <.pageview_usage_row label="Pageviews" value={site.pageviews} />
+            <.pageview_usage_row label="Custom events" value={site.custom_events} />
+          </div>
+        </div>
       </div>
-    </li>
-    """
-  end
-
-  slot(:inner_block, required: true)
-  attr(:rest, :global)
-
-  def usage_and_limits_table(assigns) do
-    ~H"""
-    <table class="min-w-full text-gray-900 dark:text-gray-100" {@rest}>
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-        {render_slot(@inner_block)}
-      </tbody>
-    </table>
-    """
-  end
-
-  attr(:title, :string, required: true)
-  attr(:usage, :integer, required: true)
-  attr(:limit, :integer, default: nil)
-  attr(:pad, :boolean, default: false)
-  attr(:rest, :global)
-
-  def usage_and_limits_row(assigns) do
-    ~H"""
-    <tr {@rest}>
-      <td class={["text-sm py-4 pr-1 sm:whitespace-nowrap text-left", @pad && "pl-6"]}>
-        {@title}
-      </td>
-      <td class="text-sm py-4 sm:whitespace-nowrap text-right">
-        {PlausibleWeb.TextHelpers.number_format(@usage)}
-        {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
-      </td>
-    </tr>
-    """
-  end
-
-  def monthly_quota_box(assigns) do
-    ~H"""
-    <div
-      id="monthly-quota-box"
-      class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded-sm dark:bg-gray-800 w-max-md"
-    >
-      <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
-      <div class="py-2 text-xl font-medium dark:text-gray-100">
-        {PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long)}
-      </div>
-      <.styled_link
-        :if={
-          not (Plausible.Teams.Billing.enterprise_configured?(@team) &&
-                 Subscriptions.halted?(@subscription))
-        }
-        id="#upgrade-or-change-plan-link"
-        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-      >
-        {change_plan_or_upgrade_text(@subscription)}
-      </.styled_link>
     </div>
     """
+  end
+
+  attr :id, :string, default: nil
+  attr :label, :string, required: true
+  attr :value, :integer, required: true
+
+  defp pageview_usage_row(assigns) do
+    ~H"""
+    <div id={@id} class="flex justify-between flex-wrap">
+      <span class="flex items-center gap-1">
+        <span class="inline-block size-4 text-center">•</span>
+        {@label}
+      </span>
+      <span class="ml-5">{PlausibleWeb.TextHelpers.number_format(@value)}</span>
+    </div>
+    """
+  end
+
+  defp cycle_label(:current_cycle), do: "(current cycle)"
+  defp cycle_label(:last_30_days), do: "(last 30 days)"
+
+  @doc """
+  Renders a color-coded progress bar based on usage percentage.
+
+  Color scheme:
+  - 0-90%: Green (healthy usage)
+  - 91-99%: Gradient from green through yellow to orange (approaching limit)
+  - 100%: Gradient from green through orange to red (at limit)
+  """
+  attr(:usage, :integer, required: true)
+  attr(:limit, :any, required: true)
+  attr(:rest, :global)
+
+  def usage_progress_bar(assigns) do
+    percentage = calculate_percentage(assigns.usage, assigns.limit)
+
+    assigns =
+      assigns
+      |> assign(:percentage, percentage)
+      |> assign(:color_class, progress_bar_color_from_percentage(percentage, assigns.limit))
+
+    ~H"""
+    <div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700" {@rest}>
+      <div
+        class={["h-1.5 rounded-full transition-all duration-300", @color_class]}
+        style={"width: #{@percentage}%"}
+      >
+      </div>
+    </div>
+    """
+  end
+
+  defp calculate_percentage(_usage, :unlimited), do: 0
+  defp calculate_percentage(_usage, 0), do: 0
+
+  defp calculate_percentage(usage, limit) when is_number(limit) do
+    percentage = usage / limit * 100
+    min(percentage, 100.0) |> Float.round(1)
+  end
+
+  defp progress_bar_color_from_percentage(_percentage, :unlimited),
+    do: "bg-green-500 dark:bg-green-600"
+
+  defp progress_bar_color_from_percentage(_percentage, 0), do: "bg-gray-200 dark:bg-gray-700"
+
+  defp progress_bar_color_from_percentage(percentage, _limit) when is_number(percentage) do
+    cond do
+      percentage >= 100.0 ->
+        "bg-gradient-to-r from-green-500 via-orange-500 via-[80%] to-red-500 dark:from-green-600 dark:via-orange-600 dark:to-red-600"
+
+      percentage >= 91 ->
+        "bg-gradient-to-r from-green-500 via-yellow-500 via-[80%] to-orange-500 dark:from-green-600 dark:via-yellow-600 dark:to-orange-600"
+
+      true ->
+        "bg-green-500 dark:bg-green-600"
+    end
   end
 
   def present_enterprise_plan(assigns) do
@@ -342,25 +332,6 @@ defmodule PlausibleWeb.Components.Billing do
       """
     end
   end
-
-  def upgrade_link(assigns) do
-    ~H"""
-    <.button_link
-      id="upgrade-link-2"
-      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-      mt?={false}
-    >
-      Upgrade
-    </.button_link>
-    """
-  end
-
-  defp change_plan_or_upgrade_text(nil), do: "Upgrade"
-
-  defp change_plan_or_upgrade_text(%Subscription{status: Subscription.Status.deleted()}),
-    do: "Upgrade"
-
-  defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
   attr :link_class, :string, default: ""
   attr :current_team, :any, required: true

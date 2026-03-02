@@ -11,7 +11,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   alias Plausible.Stats.{Filters, Interval, Query, ApiQueryParser, QueryBuilder, DateTimeRange}
 
   def from(site, params, debug_metadata, now \\ nil) do
-    now = now || Plausible.Stats.Query.Test.get_fixed_now()
+    now = now || DateTime.utc_now(:second)
 
     query =
       Query
@@ -106,6 +106,12 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(date, date, site.timezone) |> DateTimeRange.to_timezone("Etc/UTC")
 
     struct!(query, input_date_range: :day, utc_time_range: datetime_range)
+  end
+
+  defp put_input_date_range(%Query{now: now} = query, _site, %{"period" => "24h"}) do
+    from = DateTime.shift(now, hour: -24)
+    datetime_range = DateTimeRange.new!(from, now)
+    struct!(query, input_date_range: :"24h", utc_time_range: datetime_range)
   end
 
   defp put_input_date_range(query, site, %{"period" => period} = params)

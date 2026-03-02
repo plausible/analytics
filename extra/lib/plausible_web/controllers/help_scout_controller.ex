@@ -12,7 +12,7 @@ defmodule PlausibleWeb.HelpScoutController do
     assigns = %{conversation_id: conversation_id, customer_id: customer_id, token: token}
 
     with :ok <- HelpScout.validate_signature(conn),
-         {:ok, details} <- HelpScout.get_details_for_customer(customer_id) do
+         {:ok, details} <- HelpScout.get_details_for_customer(customer_id, conversation_id) do
       conn
       |> render("callback.html", Map.merge(assigns, details))
     else
@@ -49,7 +49,12 @@ defmodule PlausibleWeb.HelpScoutController do
 
     with :ok <- match_conversation(token, conversation_id),
          {:ok, details} <-
-           HelpScout.get_details_for_emails([email], customer_id, params["team_identifier"]) do
+           HelpScout.get_details_for_emails(
+             [email],
+             customer_id,
+             conversation_id,
+             params["team_identifier"]
+           ) do
       render(conn, "callback.html", Map.merge(assigns, details))
     else
       {:error, error} ->
@@ -71,7 +76,7 @@ defmodule PlausibleWeb.HelpScoutController do
 
     case match_conversation(token, conversation_id) do
       :ok ->
-        users = HelpScout.search_users(term, customer_id)
+        users = HelpScout.search_users(term, customer_id, conversation_id)
         render(conn, "search.html", Map.merge(assigns, %{users: users, term: term}))
 
       {:error, error} ->

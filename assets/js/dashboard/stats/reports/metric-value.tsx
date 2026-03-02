@@ -7,8 +7,8 @@ import {
   MetricFormatterShort,
   ValueType
 } from './metric-formatter'
-import { BreakdownResultMeta, DashboardQuery } from '../../query'
-import { useQueryContext } from '../../query-context'
+import { BreakdownResultMeta, DashboardState } from '../../dashboard-state'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 
 type MetricValues = Record<Metric, ValueType>
 
@@ -33,13 +33,13 @@ function valueRenderProps(listItem: ListItem, metric: Metric) {
 export default function MetricValue(props: {
   listItem: ListItem
   metric: Metric
-  renderLabel: (query: DashboardQuery) => string
+  renderLabel: (dashboardState: DashboardState) => string
   formatter?: (value: ValueType) => string
   meta: BreakdownResultMeta | null
   detailedView?: boolean
   isRowHovered?: boolean
 }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const portalRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
@@ -53,7 +53,10 @@ export default function MetricValue(props: {
     () => valueRenderProps(listItem, metric),
     [listItem, metric]
   )
-  const metricLabel = useMemo(() => props.renderLabel(query), [query, props])
+  const metricLabel = useMemo(
+    () => props.renderLabel(dashboardState),
+    [dashboardState, props]
+  )
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
   const longFormatter = props.formatter ?? MetricFormatterLong[metric]
 

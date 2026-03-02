@@ -11,6 +11,10 @@ defmodule Plausible.Stats.QueryBuilderTest do
     first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
   }
+  @date_range_24h %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-04], ~T[12:30:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
+  }
   @date_range_day %DateTimeRange{
     first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
@@ -49,11 +53,6 @@ defmodule Plausible.Stats.QueryBuilderTest do
   }
 
   setup [:create_user, :create_site]
-
-  setup do
-    Plausible.Stats.Query.Test.fix_now(@now)
-    :ok
-  end
 
   describe "filter validation" do
     for operation <- [
@@ -180,11 +179,13 @@ defmodule Plausible.Stats.QueryBuilderTest do
   describe "date range" do
     for {input_date_range, expected_utc_time_range} <- [
           {:realtime, @date_range_realtime},
-          {:realtime_30m, @date_range_30m}
+          {:realtime_30m, @date_range_30m},
+          {:"24h", @date_range_24h}
         ] do
       test "builds utc_time_range for #{input_date_range} input_date_range", %{site: site} do
         assert {:ok, query} =
                  QueryBuilder.build(site, %ParsedQueryParams{
+                   now: @now,
                    metrics: [:visitors],
                    input_date_range: unquote(input_date_range)
                  })
@@ -197,7 +198,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
       relative_date = @now |> DateTime.to_date()
 
       # Replace the fixed now. Otherwise this test could pass ignoring relative_date
-      Plausible.Stats.Query.Test.fix_now(DateTime.utc_now(:second))
+      now = DateTime.utc_now(:second)
 
       for {date_range_shortcut, expected_utc_time_range} <- [
             {:day, @date_range_day},
@@ -212,6 +213,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
           ] do
         assert {:ok, query} =
                  QueryBuilder.build(site, %ParsedQueryParams{
+                   now: now,
                    metrics: [:visitors],
                    relative_date: relative_date,
                    input_date_range: date_range_shortcut

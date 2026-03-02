@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
   """
   use PlausibleWeb, :live_view
 
-  alias Plausible.Goals
+  alias Plausible.{Goals, Teams}
   alias PlausibleWeb.Live.Components.Modal
 
   def mount(
@@ -15,11 +15,14 @@ defmodule PlausibleWeb.Live.GoalSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        current_user
-        |> Plausible.Sites.get_for_user!(domain,
-          roles: [:owner, :admin, :editor, :super_admin],
-          include_consolidated?: true
-        )
+        site =
+          current_user
+          |> Plausible.Sites.get_for_user!(domain,
+            roles: [:owner, :admin, :editor, :super_admin],
+            include_consolidated?: true
+          )
+
+        %{site | team: Teams.with_subscription(site.team)}
       end)
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)
@@ -36,15 +39,20 @@ defmodule PlausibleWeb.Live.GoalSettings do
         )
       end)
 
+    team = socket.assigns.site.team
+
     {:ok,
      assign(socket,
-       site_team: socket.assigns.site.team,
+       site_team: team,
        site_id: site_id,
        domain: domain,
        displayed_goals: socket.assigns.all_goals,
        filter_text: "",
        form_goal: nil,
-       goal_type: nil
+       goal_type: nil,
+       revenue_goals_enabled?:
+         Plausible.Billing.Feature.RevenueGoals.check_availability(team) == :ok,
+       props_available?: Plausible.Billing.Feature.Props.check_availability(team) == :ok
      )}
   end
 
@@ -111,6 +119,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
           domain={@domain}
           filter_text={@filter_text}
           site={@site}
+          revenue_goals_enabled?={@revenue_goals_enabled?}
+          props_available?={@props_available?}
         />
       </.tile>
     </div>

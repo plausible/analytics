@@ -56,6 +56,16 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
       end
     end
 
+    test "parses 24h period" do
+      {:ok, parsed} = parse("?period=24h", build(:site), %{})
+      assert_matches %ParsedQueryParams{input_date_range: :"24h"} = parsed
+    end
+
+    test "parses 24h period from user prefs" do
+      {:ok, parsed} = parse("", build(:site), %{"period" => "24h"})
+      assert_matches %ParsedQueryParams{input_date_range: :"24h"} = parsed
+    end
+
     for i <- [6, 12] do
       test "parses #{i}mo period" do
         {:ok, parsed} = parse("?period=#{unquote(i)}mo", build(:site), %{})
@@ -311,6 +321,15 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
 
     test "errors when segment filter cannot be parsed to integer" do
       assert {:error, :invalid_filters} = parse("?f=is,segment,MySegment", build(:site), %{})
+    end
+
+    test "now can't be fixed externally" do
+      {:ok, parsed} =
+        parse("?now=2026-02-17T10:08:52.272894Z", build(:site), %{
+          "now" => "2026-02-17T10:08:52.272894Z"
+        })
+
+      assert parsed.now == nil
     end
   end
 end

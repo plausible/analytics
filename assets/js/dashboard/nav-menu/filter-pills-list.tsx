@@ -1,5 +1,5 @@
 import React, { DetailedHTMLProps, HTMLAttributes } from 'react'
-import { useQueryContext } from '../query-context'
+import { useDashboardStateContext } from '../dashboard-state-context'
 import { FilterPill, FilterPillProps } from './filter-pill'
 import {
   cleanLabels,
@@ -49,14 +49,14 @@ export const AppliedFilterPillsList = React.forwardRef<
   HTMLDivElement,
   AppliedFilterPillsListProps
 >(({ className, style, slice, direction, pillClassName }, ref) => {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const { limitedToSegment } = useSegmentsContext()
   const navigate = useAppNavigate()
 
   const renderableFilters =
     slice?.type === 'no-render-outside'
-      ? query.filters.slice(slice.start, slice.end)
-      : query.filters
+      ? dashboardState.filters.slice(slice.start, slice.end)
+      : dashboardState.filters
 
   const indexAdjustment =
     slice?.type === 'no-render-outside' ? (slice.start ?? 0) : 0
@@ -64,7 +64,7 @@ export const AppliedFilterPillsList = React.forwardRef<
   const isInvisible = (index: number) => {
     return slice?.type === 'invisible-outside'
       ? index < (slice.start ?? 0) ||
-          index > (slice.end ?? query.filters.length) - 1
+          index > (slice.end ?? dashboardState.filters.length) - 1
       : false
   }
 
@@ -72,8 +72,8 @@ export const AppliedFilterPillsList = React.forwardRef<
     <FilterPillsList
       pills={renderableFilters.map((filter, index) => ({
         className: classNames(isInvisible(index) && 'invisible', pillClassName),
-        plainText: plainFilterText(query, filter),
-        children: styledFilterText(query, filter),
+        plainText: plainFilterText(dashboardState, filter),
+        children: styledFilterText(dashboardState, filter),
         interactive: {
           navigationTarget: {
             path: filterRoute.path,
@@ -87,7 +87,7 @@ export const AppliedFilterPillsList = React.forwardRef<
           },
           onRemoveClick: canRemoveFilter(filter, limitedToSegment)
             ? () => {
-                const newFilters = query.filters.filter(
+                const newFilters = dashboardState.filters.filter(
                   (_, i) => i !== index + indexAdjustment
                 )
 
@@ -95,7 +95,7 @@ export const AppliedFilterPillsList = React.forwardRef<
                   search: (searchRecord) => ({
                     ...searchRecord,
                     filters: newFilters,
-                    labels: cleanLabels(newFilters, query.labels)
+                    labels: cleanLabels(newFilters, dashboardState.labels)
                   })
                 })
               }

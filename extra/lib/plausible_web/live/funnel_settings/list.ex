@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
     assigns = assign(assigns, :searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
-    <div>
+    <div class="flex flex-col gap-4 sm:gap-6">
       <%= if @searching? or Enum.count(@funnels) > 0 do %>
         <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
           <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>

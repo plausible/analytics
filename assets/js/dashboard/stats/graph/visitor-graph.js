@@ -9,31 +9,34 @@ import WithImportedSwitch from './with-imported-switch'
 import { getSamplingNotice, NoticesIcon } from './notices'
 import FadeIn from '../../fade-in'
 import * as url from '../../util/url'
-import { isComparisonEnabled } from '../../query-time-periods'
+import { isComparisonEnabled } from '../../dashboard-time-periods'
 import LineGraphWithRouter from './line-graph'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 
-function fetchTopStats(site, query) {
-  const q = { ...query }
+function fetchTopStats(site, dashboardState) {
+  const q = { ...dashboardState }
 
-  if (!isComparisonEnabled(q.comparison) && query.period !== 'realtime') {
+  if (
+    !isComparisonEnabled(q.comparison) &&
+    dashboardState.period !== 'realtime'
+  ) {
     q.comparison = 'previous_period'
   }
 
   return api.get(url.apiPath(site, '/top-stats'), q)
 }
 
-function fetchMainGraph(site, query, metric, interval) {
+function fetchMainGraph(site, dashboardState, metric, interval) {
   const params = { metric, interval }
-  return api.get(url.apiPath(site, '/main-graph'), query, params)
+  return api.get(url.apiPath(site, '/main-graph'), dashboardState, params)
 }
 
 export default function VisitorGraph({ updateImportedDataInView }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
-  const isRealtime = query.period === 'realtime'
+  const isRealtime = dashboardState.period === 'realtime'
 
   const topStatsBoundary = useRef(null)
 
@@ -54,16 +57,16 @@ export default function VisitorGraph({ updateImportedDataInView }) {
       setGraphRefreshing(true)
       fetchGraphData(getStoredMetric(), newInterval)
     },
-    [query]
+    [dashboardState]
   )
 
   const onMetricUpdate = useCallback(
     (newMetric) => {
       setGraphData(null)
       setGraphRefreshing(true)
-      fetchGraphData(newMetric, getCurrentInterval(site, query))
+      fetchGraphData(newMetric, getCurrentInterval(site, dashboardState))
     },
-    [query]
+    [dashboardState]
   )
 
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
     return () => {
       document.removeEventListener('tick', fetchTopStatsAndGraphData)
     }
-  }, [query])
+  }, [dashboardState])
 
   useEffect(() => {
     if (topStatData) {
@@ -89,7 +92,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   }, [topStatData])
 
   async function fetchTopStatsAndGraphData() {
-    const response = await fetchTopStats(site, query)
+    const response = await fetchTopStats(site, dashboardState)
 
     let metric = getStoredMetric()
     const availableMetrics = response.graphable_metrics
@@ -99,7 +102,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
       storage.setItem(`metric__${site.domain}`, metric)
     }
 
-    const interval = getCurrentInterval(site, query)
+    const interval = getCurrentInterval(site, dashboardState)
 
     if (response.updateImportedDataInView) {
       updateImportedDataInView(response.includes_imported)
@@ -112,7 +115,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
   }
 
   function fetchGraphData(metric, interval) {
-    fetchMainGraph(site, query, metric, interval).then((res) => {
+    fetchMainGraph(site, dashboardState, metric, interval).then((res) => {
       setGraphData(res)
       setGraphLoading(false)
       setGraphRefreshing(false)
@@ -151,10 +154,10 @@ export default function VisitorGraph({ updateImportedDataInView }) {
 
   function getImportedIntervalUnsupportedNotice() {
     const unsupportedInterval = ['hour', 'minute'].includes(
-      getCurrentInterval(site, query)
+      getCurrentInterval(site, dashboardState)
     )
     const showingImported =
-      importedSwitchVisible() && query.with_imported === true
+      importedSwitchVisible() && dashboardState.with_imported === true
 
     if (showingImported && unsupportedInterval) {
       return 'Interval is too short to graph imported data'
@@ -205,7 +208,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
           <LineGraphWithRouter
             graphData={{
               ...graphData,
-              interval: getCurrentInterval(site, query)
+              interval: getCurrentInterval(site, dashboardState)
             }}
           />
         </div>

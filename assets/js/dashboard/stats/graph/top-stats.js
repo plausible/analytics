@@ -4,7 +4,7 @@ import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
 import { ChangeArrow } from '../reports/change-arrow'
@@ -29,16 +29,16 @@ export default function TopStats({
   tooltipBoundary,
   graphableMetrics
 }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
 
-  const isComparison = query.comparison && data && data.comparing_from
+  const isComparison = dashboardState.comparison && data && data.comparing_from
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
     const warning = warningText(stat.graph_metric, site)
-    statName = stat.value === 1 ? statName.slice(0, -1) : statName
+    statName = stat.value === 1 ? statName.replace(/s$/, '') : statName
 
     return (
       <div>
@@ -79,6 +79,13 @@ export default function TopStats({
     const warning = data.meta.metric_warnings?.[metric]
     if (!warning) {
       return null
+    }
+
+    if (
+      metric === 'bounce_rate' &&
+      warning.code === 'no_imported_bounce_rate'
+    ) {
+      return 'Does not include imported data'
     }
 
     if (
@@ -157,11 +164,10 @@ export default function TopStats({
         'border-r lg:border-r-0': index % 2 === 0
       }
     )
-
     return (
       <Tooltip
         key={stat.name}
-        info={tooltip(stat, query)}
+        info={tooltip(stat, dashboardState)}
         className={className}
         onClick={() => {
           maybeUpdateMetric(stat)
@@ -211,7 +217,7 @@ export default function TopStats({
   const stats =
     data && data.top_stats.filter((stat) => stat.value !== null).map(renderStat)
 
-  if (stats && query.period === 'realtime') {
+  if (stats && dashboardState.period === 'realtime') {
     stats.push(blinkingDot())
   }
 

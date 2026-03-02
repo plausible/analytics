@@ -86,5 +86,23 @@ defmodule PlausibleWeb.Api.InternalController.DocsQueryTest do
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
     end
+
+    test "supports 24h date_range shorthand", %{conn: conn, site: site} do
+      now = NaiveDateTime.utc_now()
+
+      populate_stats(site, [
+        build(:pageview, timestamp: NaiveDateTime.add(now, -23, :hour)),
+        build(:pageview, timestamp: NaiveDateTime.add(now, -25, :hour))
+      ])
+
+      conn =
+        post(conn, "/api/docs/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => "24h"
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+    end
   end
 end

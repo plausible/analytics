@@ -100,6 +100,11 @@ defmodule Plausible.Stats.QueryBuilder do
     DateTimeRange.new!(relative_date, relative_date, site.timezone)
   end
 
+  defp build_datetime_range(:"24h", _site, _relative_date, now) do
+    from = DateTime.shift(now, hour: -24)
+    DateTimeRange.new!(from, now)
+  end
+
   defp build_datetime_range(:month, site, relative_date, _now) do
     first = relative_date |> Date.beginning_of_month()
     last = relative_date |> Date.end_of_month()
@@ -138,7 +143,7 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp do_build(parsed_query_params, site, debug_metadata) do
-    now = Plausible.Stats.Query.Test.get_fixed_now()
+    now = parsed_query_params.now || DateTime.utc_now(:second)
 
     %ParsedQueryParams{
       input_date_range: input_date_range,

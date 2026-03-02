@@ -5,14 +5,16 @@ import * as url from '../../util/url'
 import * as metrics from '../reports/metrics'
 import ListReport from '../reports/list'
 import { useSiteContext } from '../../site-context'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 
 export default function Conversions({ afterFetchData, onGoalFilterClick }) {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
 
   function fetchConversions() {
-    return api.get(url.apiPath(site, '/conversions'), query, { limit: 9 })
+    return api.get(url.apiPath(site, '/conversions'), dashboardState, {
+      limit: 9
+    })
   }
 
   function getFilterInfo(listItem) {
@@ -25,11 +27,11 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({
-        renderLabel: (_query) => 'Uniques',
+        renderLabel: (_dashboardState) => 'Uniques',
         meta: { plot: true }
       }),
       metrics.createEvents({
-        renderLabel: (_query) => 'Total',
+        renderLabel: (_dashboardState) => 'Total',
         meta: { hiddenOnMobile: true }
       }),
       metrics.createConversionRate(),

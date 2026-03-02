@@ -23,7 +23,7 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   def default_pagination(), do: @default_pagination
 
-  def parse(params) when is_map(params) do
+  def parse(params, opts \\ []) when is_map(params) do
     with :ok <- JSONSchema.validate(params),
          {:ok, input_date_range} <- parse_input_date_range(params["date_range"]),
          {:ok, metrics} <- parse_metrics(Map.fetch!(params, "metrics")),
@@ -40,7 +40,8 @@ defmodule Plausible.Stats.ApiQueryParser do
          dimensions: dimensions,
          order_by: order_by,
          pagination: pagination,
-         include: include
+         include: include,
+         now: Keyword.get(opts, :now)
        })}
     end
   end
@@ -173,6 +174,7 @@ defmodule Plausible.Stats.ApiQueryParser do
   end
 
   defp parse_input_date_range("day"), do: {:ok, :day}
+  defp parse_input_date_range("24h"), do: {:ok, :"24h"}
   defp parse_input_date_range("month"), do: {:ok, :month}
   defp parse_input_date_range("year"), do: {:ok, :year}
   defp parse_input_date_range("all"), do: {:ok, :all}

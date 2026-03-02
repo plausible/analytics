@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
         <div class="my-4">
           <div class="flex justify-between">
-            <label for={f[:password].name} class="block font-medium text-gray-700 dark:text-gray-300">
+            <label for={f[:password].id} class="block font-medium text-gray-700 dark:text-gray-300">
               Password
             </label>
             <.password_length_hint minimum={12} field={f[:password]} />
@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
         <div class="my-4">
           <label
-            for={f[:password_confirmation].name}
+            for={f[:password_confirmation].id}
             class="block font-medium text-gray-700 dark:text-gray-300"
           >
             Confirm password
@@ -205,7 +205,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   defp name_input(assigns) do
     ~H"""
     <div class="my-4">
-      <label for={@field.name} class="block font-medium text-gray-700 dark:text-gray-300">
+      <label for={@field.id} class="block font-medium text-gray-700 dark:text-gray-300">
         Full name
       </label>
       <div class="mt-1">
@@ -249,7 +249,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     ~H"""
     <div class="my-4">
       <div class="flex justify-between">
-        <label for={@field.name} class="block font-medium text-gray-700 dark:text-gray-300">
+        <label for={@field.id} class="block font-medium text-gray-700 dark:text-gray-300">
           Email
         </label>
         <p class="text-xs text-gray-500 mt-1">No spam, guaranteed.</p>

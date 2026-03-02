@@ -122,8 +122,6 @@ defmodule Plausible.Stats.QueryComparisonsTest do
          site: site
        } do
     now = ~U[2021-06-10 12:00:00Z]
-    Plausible.Stats.Query.Test.fix_now(now)
-
     today = DateTime.to_date(now)
 
     {:ok, query1} =
@@ -131,7 +129,8 @@ defmodule Plausible.Stats.QueryComparisonsTest do
         metrics: [:visitors],
         dimensions: ["time"],
         input_date_range: {:last_n_days, 28},
-        include: %QueryInclude{time_labels: true, compare: :previous_period}
+        include: %QueryInclude{time_labels: true, compare: :previous_period},
+        now: now
       })
 
     query2 = Stats.Query.set_include(query1, :compare_match_day_of_week, true)
@@ -181,14 +180,13 @@ defmodule Plausible.Stats.QueryComparisonsTest do
       build(:pageview, timestamp: ~N[2022-07-01 00:00:00])
     ])
 
-    Plausible.Stats.Query.Test.fix_now(~U[2022-07-01 14:00:00Z])
-
     assert {:ok, query} =
              QueryBuilder.build(site, %ParsedQueryParams{
                metrics: [:visitors],
                dimensions: ["time:day"],
                input_date_range: {:last_n_days, 91},
-               include: %QueryInclude{time_labels: true, compare: :year_over_year}
+               include: %QueryInclude{time_labels: true, compare: :year_over_year},
+               now: ~U[2022-07-01 14:00:00Z]
              })
 
     assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)

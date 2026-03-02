@@ -10,7 +10,7 @@ import * as metrics from '../reports/metrics'
 import * as api from '../../api'
 import * as url from '../../util/url'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
-import { useQueryContext } from '../../query-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { ReportLayout } from '../reports/report-layout'
 import { ReportHeader } from '../reports/report-header'
@@ -61,9 +61,9 @@ export function browserIconFor(browser) {
 
 function Browsers({ afterFetchData }) {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   function fetchData() {
-    return api.get(url.apiPath(site, '/browsers'), query)
+    return api.get(url.apiPath(site, '/browsers'), dashboardState)
   }
 
   function getFilterInfo(listItem) {
@@ -80,9 +80,9 @@ function Browsers({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -99,10 +99,10 @@ function Browsers({ afterFetchData }) {
 }
 
 function BrowserVersions({ afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   function fetchData() {
-    return api.get(url.apiPath(site, '/browser-versions'), query)
+    return api.get(url.apiPath(site, '/browser-versions'), dashboardState)
   }
 
   function renderIcon(listItem) {
@@ -110,7 +110,7 @@ function BrowserVersions({ afterFetchData }) {
   }
 
   function getFilterInfo(listItem) {
-    if (getSingleFilter(query, 'browser') == '(not set)') {
+    if (getSingleFilter(dashboardState, 'browser') == '(not set)') {
       return null
     }
     return {
@@ -122,9 +122,9 @@ function BrowserVersions({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -169,10 +169,10 @@ export function osIconFor(os) {
 }
 
 function OperatingSystems({ afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   function fetchData() {
-    return api.get(url.apiPath(site, '/operating-systems'), query)
+    return api.get(url.apiPath(site, '/operating-systems'), dashboardState)
   }
 
   function getFilterInfo(listItem) {
@@ -185,11 +185,11 @@ function OperatingSystems({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({
           meta: { showOnHover: true }
         }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -210,11 +210,14 @@ function OperatingSystems({ afterFetchData }) {
 }
 
 function OperatingSystemVersions({ afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
   function fetchData() {
-    return api.get(url.apiPath(site, '/operating-system-versions'), query)
+    return api.get(
+      url.apiPath(site, '/operating-system-versions'),
+      dashboardState
+    )
   }
 
   function renderIcon(listItem) {
@@ -222,7 +225,7 @@ function OperatingSystemVersions({ afterFetchData }) {
   }
 
   function getFilterInfo(listItem) {
-    if (getSingleFilter(query, 'os') == '(not set)') {
+    if (getSingleFilter(dashboardState, 'os') == '(not set)') {
       return null
     }
     return {
@@ -234,9 +237,9 @@ function OperatingSystemVersions({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -253,11 +256,11 @@ function OperatingSystemVersions({ afterFetchData }) {
 }
 
 function ScreenSizes({ afterFetchData }) {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
   function fetchData() {
-    return api.get(url.apiPath(site, '/screen-sizes'), query)
+    return api.get(url.apiPath(site, '/screen-sizes'), dashboardState)
   }
 
   function renderIcon(listItem) {
@@ -274,9 +277,9 @@ function ScreenSizes({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(query) &&
+      !hasConversionGoalFilter(dashboardState) &&
         metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate()
+      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
     ].filter((metric) => !!metric)
   }
 
@@ -418,7 +421,7 @@ export function screenSizeIconFor(screenSize) {
 }
 
 export default function Devices() {
-  const { query } = useQueryContext()
+  const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
   const tabKey = `deviceTab__${site.domain}`
@@ -446,12 +449,12 @@ export default function Devices() {
   useEffect(() => {
     setLoading(true)
     setMoreLinkState(MoreLinkState.LOADING)
-  }, [query, mode])
+  }, [dashboardState, mode])
 
   function moreLinkProps() {
     switch (mode) {
       case 'browser':
-        if (isFilteringOnFixedValue(query, 'browser')) {
+        if (isFilteringOnFixedValue(dashboardState, 'browser')) {
           return {
             path: browserVersionsRoute.path,
             search: (search) => search
@@ -462,7 +465,7 @@ export default function Devices() {
           search: (search) => search
         }
       case 'os':
-        if (isFilteringOnFixedValue(query, 'os')) {
+        if (isFilteringOnFixedValue(dashboardState, 'os')) {
           return {
             path: operatingSystemVersionsRoute.path,
             search: (search) => search
@@ -484,12 +487,12 @@ export default function Devices() {
   function renderContent() {
     switch (mode) {
       case 'browser':
-        if (isFilteringOnFixedValue(query, 'browser')) {
+        if (isFilteringOnFixedValue(dashboardState, 'browser')) {
           return <BrowserVersions afterFetchData={afterFetchData} />
         }
         return <Browsers afterFetchData={afterFetchData} />
       case 'os':
-        if (isFilteringOnFixedValue(query, 'os')) {
+        if (isFilteringOnFixedValue(dashboardState, 'os')) {
           return <OperatingSystemVersions afterFetchData={afterFetchData} />
         }
         return <OperatingSystems afterFetchData={afterFetchData} />
@@ -530,8 +533,8 @@ export default function Devices() {
   )
 }
 
-function getSingleFilter(query, filterKey) {
-  const matches = getFiltersByKeyPrefix(query, filterKey)
+function getSingleFilter(dashboardState, filterKey) {
+  const matches = getFiltersByKeyPrefix(dashboardState, filterKey)
   if (matches.length != 1) {
     return null
   }

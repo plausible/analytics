@@ -352,6 +352,7 @@ defmodule Plausible.Stats.Imported do
     :exit_rate,
     :scroll_depth,
     :percentage,
+    :bounce_rate,
     :conversion_rate,
     :group_conversion_rate,
     :time_on_page

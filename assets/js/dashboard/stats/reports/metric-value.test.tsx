@@ -223,7 +223,7 @@ function valueProps<T>(
       date_range_label: '01 Aug - 31 Aug',
       comparison_date_range_label: '01 July - 31 July'
     },
-    renderLabel: (_query: unknown) => metric.toUpperCase()
+    renderLabel: (_dashboardState: unknown) => metric.toUpperCase()
   } as any /* eslint-disable-line @typescript-eslint/no-explicit-any */
 }
 
