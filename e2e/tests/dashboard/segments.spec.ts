@@ -367,3 +367,38 @@ test('deleting segment', async ({ page, request }) => {
 
   await expect(filterItemButton(page, 'Traffic from Google')).toBeHidden()
 })
+
+test('closing edited segment without saving', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSiteAndStats({ page, request })
+
+  await page.goto('/' + domain)
+
+  await addSourceFilter(page, 'Google')
+  await createPersonalSegment(page, 'Traffic from Google')
+
+  await page
+    .getByRole('link', { name: 'Segment is Traffic from Google' })
+    .click()
+
+  await modal(page).getByRole('link', { name: 'Edit segment' }).click()
+
+  await addUtmSourceFilter(page, 'Adwords')
+
+  await segmentMenu(page).click()
+
+  await page.getByRole('link', { name: 'Close without saving' }).click()
+
+  await filterButton(page).click()
+
+  await filterItemButton(page, 'Traffic from Google').click()
+
+  await page
+    .getByRole('link', { name: 'Segment is Traffic from Google' })
+    .click()
+
+  await expect(modal(page)).not.toContainText('UTM source is Adwords')
+  await expect(modal(page)).toContainText('Source is Google')
+})
