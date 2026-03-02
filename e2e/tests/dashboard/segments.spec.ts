@@ -10,8 +10,41 @@ import {
 } from '../test-utils.ts'
 
 const sourceFilterButton = (page) => filterItemButton(page, 'Source')
+const utmTagsFilterButton = (page) => filterItemButton(page, 'UTM tags')
 
-test('saving personal segment', async ({ page, request }) => {
+const addSourceFilter = async (page, sourceLabel) => {
+  const sourceFilterRow = filterRow(page, 'source')
+  const sourceInput = page.getByPlaceholder('Select a Source')
+
+  await filterButton(page).click()
+  await sourceFilterButton(page).click()
+
+  await sourceInput.click()
+  await suggestedItem(sourceFilterRow, sourceLabel).click()
+
+  await applyFilterButton(page).click()
+
+  const url = new RegExp(`f=is,source,${sourceLabel}`)
+  await expect(page).toHaveURL(url)
+}
+
+const addUtmSourceFilter = async (page, utmSource) => {
+  const utmSourceFilterRow = filterRow(page, 'utm_source')
+  const utmSourceInput = page.getByPlaceholder('Select a UTM Source')
+
+  await filterButton(page).click()
+  await utmTagsFilterButton(page).click()
+
+  await utmSourceInput.click()
+  await suggestedItem(utmSourceFilterRow, utmSource).click()
+
+  await applyFilterButton(page).click()
+
+  const url = new RegExp(`f=is,utm_source,${utmSource}`)
+  await expect(page).toHaveURL(url)
+}
+
+test.only('saving a segment', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
 
   await populateStats({
@@ -26,40 +59,131 @@ test('saving personal segment', async ({ page, request }) => {
 
   await page.goto('/' + domain)
 
-  const sourceFilterRow = filterRow(page, 'source')
-  const sourceInput = page.getByPlaceholder('Select a Source')
+  await test.step('creating personal segment using defaults', async () => {
+    await addSourceFilter(page, 'Facebook')
 
-  await filterButton(page).click()
-  await sourceFilterButton(page).click()
+    await page.getByRole('button', { name: 'See actions' }).click()
 
-  await sourceInput.click()
-  await suggestedItem(sourceFilterRow, 'Facebook').click()
+    await page.getByRole('link', { name: 'Save as segment' }).click()
 
-  await applyFilterButton(page).click()
+    await expect(
+      modal(page).getByRole('heading', { name: 'Create segment' })
+    ).toBeVisible()
 
-  await expect(page).toHaveURL(/f=is,source,Facebook/)
+    await expect(
+      modal(page).getByPlaceholder('Source is Facebook')
+    ).toHaveAccessibleName('Segment name')
 
-  await page.getByRole('button', { name: 'See actions' }).click()
+    await expect(
+      modal(page).getByRole('radio', { name: 'Personal segment' })
+    ).toBeChecked()
 
-  await page.getByRole('link', { name: 'Save as segment' }).click()
+    await modal(page).getByRole('button', { name: 'Save' }).click()
 
-  await expect(
-    modal(page).getByRole('heading', { name: 'Create segment' })
-  ).toBeVisible()
+    await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
 
-  await expect(
-    modal(page).getByPlaceholder('Source is Facebook')
-  ).toHaveAccessibleName('Segment name')
+    await expect(
+      page.getByRole('link', { name: 'Segment is Source is Facebook' })
+    ).toBeVisible()
 
-  await expect(
-    modal(page).getByRole('radio', { name: 'Personal segment' })
-  ).toBeChecked()
+    await page
+      .getByRole('button', {
+        name: 'Remove filter: Segment is Source is Facebook'
+      })
+      .click()
 
-  await modal(page).getByRole('button', { name: 'Save' }).click()
+    await filterButton(page).click()
 
-  await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
+    await expect(filterItemButton(page, 'Source is Facebook')).toBeVisible()
 
-  await expect(
-    page.getByRole('link', { name: 'Segment is Source is Facebook' })
-  ).toBeVisible()
+    await filterButton(page).click()
+  })
+
+  await test.step('creating a personal segment with a custom name', async () => {
+    await addSourceFilter(page, 'Google')
+
+    await page.getByRole('button', { name: 'See actions' }).click()
+
+    await page.getByRole('link', { name: 'Save as segment' }).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Create segment' })
+    ).toBeVisible()
+
+    await modal(page).getByLabel('Segment name').fill('Traffic from Google')
+
+    await expect(
+      modal(page).getByRole('radio', { name: 'Personal segment' })
+    ).toBeChecked()
+
+    await modal(page).getByRole('button', { name: 'Save' }).click()
+
+    await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
+
+    await expect(
+      page.getByRole('link', { name: 'Segment is Traffic from Google' })
+    ).toBeVisible()
+
+    await page
+      .getByRole('button', {
+        name: 'Remove filter: Segment is Traffic from Google'
+      })
+      .click()
+
+    await filterButton(page).click()
+
+    await expect(filterItemButton(page, 'Traffic from Google')).toBeVisible()
+    await expect(filterItemButton(page, 'Source is Facebook')).toBeVisible()
+
+    await filterButton(page).click()
+  })
+
+  await test.step('creating a site segment from more than one filter', async () => {
+    await addSourceFilter(page, 'Google')
+    await addUtmSourceFilter(page, 'Adwords')
+
+    await page.getByRole('button', { name: 'See actions' }).click()
+
+    await page.getByRole('link', { name: 'Save as segment' }).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Create segment' })
+    ).toBeVisible()
+
+    await expect(
+      modal(page).getByPlaceholder('UTM source is Adwords and Source is Google')
+    ).toHaveAccessibleName('Segment name')
+
+    await modal(page).getByLabel('Segment name').fill('Ads from Google')
+
+    const siteSegmentRadio = modal(page).getByRole('radio', {
+      name: 'Site segment'
+    })
+
+    await siteSegmentRadio.click()
+
+    await expect(siteSegmentRadio).toBeChecked()
+
+    await modal(page).getByRole('button', { name: 'Save' }).click()
+
+    await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
+
+    await expect(
+      page.getByRole('link', { name: 'Segment is Ads from Google' })
+    ).toBeVisible()
+
+    await page
+      .getByRole('button', {
+        name: 'Remove filter: Segment is Ads from Google'
+      })
+      .click()
+
+    await filterButton(page).click()
+
+    await expect(filterItemButton(page, 'Ads from Google')).toBeVisible()
+    await expect(filterItemButton(page, 'Traffic from Google')).toBeVisible()
+    await expect(filterItemButton(page, 'Source is Facebook')).toBeVisible()
+
+    await filterButton(page).click()
+  })
 })
