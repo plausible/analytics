@@ -1,7 +1,11 @@
 import React from 'react'
 import classNames from 'classnames'
 
-export function ReportLayout({ children, testId = undefined, className = undefined }) {
+export function ReportLayout({
+  children,
+  testId = undefined,
+  className = undefined
+}) {
   return (
     <div
       data-testid={testId}
