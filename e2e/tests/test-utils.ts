@@ -51,7 +51,7 @@ export const filterButton = (page) =>
   page.getByRole('button', { name: 'Filter', exact: true })
 
 export const filterItemButton = (page, label) =>
-  page.getByTestId('filtermenu').getByRole('link', { name: label })
+  page.getByTestId('filtermenu').getByRole('link', { name: label, exact: true })
 
 export const applyFilterButton = (page, { disabled = false } = {}) =>
   page.getByRole('button', {

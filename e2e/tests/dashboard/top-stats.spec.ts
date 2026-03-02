@@ -78,7 +78,7 @@ test('current visitors counter shows number of active visitors', async ({
       { name: 'pageview', timestamp: { minutesAgo: 2 } },
       { name: 'pageview', timestamp: { minutesAgo: 3 } },
       { name: 'pageview', timestamp: { minutesAgo: 4 } },
-      { name: 'pageview', timestamp: { minutesAgo: 5 } },
+      { name: 'pageview', timestamp: { minutesAgo: 4 } },
       { name: 'pageview', timestamp: { minutesAgo: 20 } },
       { name: 'pageview', timestamp: { minutesAgo: 50 } }
     ]
@@ -311,7 +311,7 @@ test('navigating dates previous next time periods', async ({
   await backButton.click()
 
   const yesterdayLabel = startOfYesterday.format(
-    DateTimeFormatter.ofPattern('EEE, d MMM').withLocale(Locale.ENGLISH)
+    DateTimeFormatter.ofPattern('EEE, dd MMM').withLocale(Locale.ENGLISH)
   )
 
   await expect(currentQueryPeriod).toHaveText(yesterdayLabel)
@@ -324,7 +324,7 @@ test('navigating dates previous next time periods', async ({
   const beforeYesterdayLabel = startOfYesterday
     .minusDays(1)
     .format(
-      DateTimeFormatter.ofPattern('EEE, d MMM').withLocale(Locale.ENGLISH)
+      DateTimeFormatter.ofPattern('EEE, dd MMM').withLocale(Locale.ENGLISH)
     )
 
   await expect(currentQueryPeriod).toHaveText(beforeYesterdayLabel)

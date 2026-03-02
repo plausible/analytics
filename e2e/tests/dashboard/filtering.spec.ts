@@ -397,7 +397,7 @@ test.describe('acquisition filtering tests', () => {
     })
   })
 
-  const utmTagsFilterButton = (page) => filterItemButton(page, 'UTM Tags')
+  const utmTagsFilterButton = (page) => filterItemButton(page, 'UTM tags')
 
   test('filtering by UTM tags', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
