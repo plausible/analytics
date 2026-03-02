@@ -475,8 +475,6 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   on_ee do
-    defp get_consolidated_view_domain(nil), do: nil
-
     defp get_consolidated_view_domain(team) do
       case Plausible.ConsolidatedView.get(team) do
         nil -> nil
