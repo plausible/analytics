@@ -643,7 +643,7 @@ test.describe('location filtering tests', () => {
 test.describe('screen size filtering tests', () => {
   const screenSizeFilterButton = (page) => filterItemButton(page, 'Screen size')
 
-  test.fixme('filtering by screen size', async ({ page, request }) => {
+  test('filtering by screen size', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
 
     await populateStats({
@@ -657,7 +657,7 @@ test.describe('screen size filtering tests', () => {
 
     await page.goto('/' + domain)
 
-    const screenSizeFilterRow = filterRow(page, 'screen_size')
+    const screenSizeFilterRow = filterRow(page, 'screen')
     const screenSizeInput = page.getByPlaceholder('Select a Screen size')
 
     await filterButton(page).click()
@@ -667,7 +667,7 @@ test.describe('screen size filtering tests', () => {
     // suggestions found but there are 2 pageview in the top stats.
     // When navigating live via `MIX_ENV=e2e_test iex -S mix`,
     // all works fine. Puzzling.
-    await screenSizeInput.click()
+    await screenSizeInput.fill('mob')
     await suggestedItem(screenSizeFilterRow, 'Mobile').click()
 
     await applyFilterButton(page).click()
@@ -676,7 +676,7 @@ test.describe('screen size filtering tests', () => {
       page.getByRole('link', { name: 'Screen size is Mobile' })
     ).toBeVisible()
 
-    await expect(page).toHaveURL(/f=is,screen_size,Mobile/)
+    await expect(page).toHaveURL(/f=is,screen,Mobile/)
   })
 })
 
@@ -746,7 +746,7 @@ test.describe('operating system filtering tests', () => {
   const operatingSystemFilterButton = (page) =>
     filterItemButton(page, 'Operating system')
 
-  test.fixme('filtering by operating system', async ({ page, request }) => {
+  test('filtering by operating system', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
 
     await populateStats({
@@ -769,7 +769,7 @@ test.describe('operating system filtering tests', () => {
     await page.goto('/' + domain)
 
     await test.step('filtering by operating system type', async () => {
-      const operatingSystemFilterRow = filterRow(page, 'operating_system')
+      const operatingSystemFilterRow = filterRow(page, 'os')
       const operatingSystemInput = page.getByPlaceholder(
         'Select an Operating system',
         { exact: true }
@@ -788,14 +788,11 @@ test.describe('operating system filtering tests', () => {
         page.getByRole('link', { name: 'Operating System is Windows' })
       ).toBeVisible()
 
-      await expect(page).toHaveURL(/f=is,operating_system,Windows/)
+      await expect(page).toHaveURL(/f=is,os,Windows/)
     })
 
     await test.step('filtering by operating system version', async () => {
-      const operatingSystemVersionFilterRow = filterRow(
-        page,
-        'operating_system_version'
-      )
+      const operatingSystemVersionFilterRow = filterRow(page, 'os_version')
       const operatingSystemVersionInput = page.getByPlaceholder(
         'Select an Operating system version'
       )
@@ -808,12 +805,16 @@ test.describe('operating system filtering tests', () => {
 
       await applyFilterButton(page).click()
 
+      await page
+        .getByRole('button', { name: 'See 1 more filter and actions' })
+        .click()
+
       await expect(
         page.getByRole('link', { name: 'Operating system version is 11' })
       ).toBeVisible()
 
-      await expect(page).toHaveURL(/f=is,operating_system_version,11/)
-      await expect(page).toHaveURL(/f=is,operating_system,Windows/)
+      await expect(page).toHaveURL(/f=is,os_version,11/)
+      await expect(page).toHaveURL(/f=is,os,Windows/)
     })
   })
 })
