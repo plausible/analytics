@@ -25,6 +25,8 @@ const setupSiteAndStats = async ({ page, request }) => {
   return context
 }
 
+const segmentMenu = (page) => page.getByTestId('segmentmenu')
+
 const sourceFilterButton = (page) => filterItemButton(page, 'Source')
 const utmTagsFilterButton = (page) => filterItemButton(page, 'UTM tags')
 
@@ -281,4 +283,58 @@ test('editing an existing segment', async ({ page, request }) => {
 
   await expect(filterItemButton(page, 'Ads from Google')).toBeVisible()
   await expect(filterItemButton(page, 'Traffic from Google')).toBeHidden()
+})
+
+test('saving edited segment as new', async ({ page, request }) => {
+  const { domain } = await setupSiteAndStats({ page, request })
+
+  await page.goto('/' + domain)
+
+  await addSourceFilter(page, 'Google')
+  await createPersonalSegment(page, 'Traffic from Google')
+
+  await page
+    .getByRole('link', { name: 'Segment is Traffic from Google' })
+    .click()
+
+  await modal(page).getByRole('link', { name: 'Edit segment' }).click()
+
+  await addUtmSourceFilter(page, 'Adwords')
+
+  await segmentMenu(page).click()
+
+  await page.getByRole('link', { name: 'Save as a new segment' }).click()
+
+  await expect(
+    modal(page).getByRole('heading', { name: 'Create segment' })
+  ).toBeVisible()
+
+  await expect(modal(page).getByLabel('Segment name')).toHaveValue(
+    'Copy of Traffic from Google'
+  )
+
+  await modal(page).getByLabel('Segment name').fill('Ads from Google')
+
+  await modal(page).getByRole('button', { name: 'Save' }).click()
+
+  await page.getByRole('link', { name: 'Segment is Ads from Google' }).click()
+
+  await expect(modal(page)).toContainText('UTM source is Adwords')
+  await expect(modal(page)).toContainText('Source is Google')
+
+  await modal(page).getByRole('button', { name: 'Remove filter' }).click()
+
+  await filterButton(page).click()
+
+  await expect(filterItemButton(page, 'Ads from Google')).toBeVisible()
+  await expect(filterItemButton(page, 'Traffic from Google')).toBeVisible()
+
+  await filterItemButton(page, 'Traffic from Google').click()
+
+  await page
+    .getByRole('link', { name: 'Segment is Traffic from Google' })
+    .click()
+
+  await expect(modal(page)).not.toContainText('UTM source is Adwords')
+  await expect(modal(page)).toContainText('Source is Google')
 })
