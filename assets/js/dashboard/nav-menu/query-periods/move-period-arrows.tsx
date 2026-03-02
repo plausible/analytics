@@ -45,6 +45,7 @@ function ArrowIcon({
   direction,
   disabled = false
 }: {
+  testId?: string
   direction: 'left' | 'right'
   disabled?: boolean
 }) {
