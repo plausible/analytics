@@ -2,7 +2,6 @@ import React from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
-import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
@@ -23,7 +22,12 @@ function topStatNumberLong(metric, value) {
   return formatter(value)
 }
 
-export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
+export default function TopStats({
+  data,
+  selectedMetric,
+  setSelectedMetric,
+  tooltipBoundary
+}) {
   const { dashboardState } = useDashboardStateContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
@@ -97,17 +101,6 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
     return null
   }
 
-  function canMetricBeGraphed(stat) {
-    return stat.graphable
-  }
-
-  function maybeUpdateMetric(stat) {
-    if (canMetricBeGraphed(stat)) {
-      storage.setItem(`metric__${site.domain}`, stat.metric)
-      onMetricUpdate(stat.metric)
-    }
-  }
-
   function blinkingDot() {
     return (
       <div
@@ -118,13 +111,8 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
     )
   }
 
-  function getStoredMetric() {
-    return storage.getItem(`metric__${site.domain}`)
-  }
-
   function renderStatName(stat) {
-    const isSelected =
-      canMetricBeGraphed(stat) && stat.metric === getStoredMetric()
+    const isSelected = stat.graphable && stat.metric === selectedMetric
 
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
@@ -155,7 +143,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
     const className = classNames(
       'px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none',
       {
-        'cursor-pointer': canMetricBeGraphed(stat),
+        'cursor-pointer': stat.graphable,
         'lg:border-l border-gray-300 dark:border-gray-700': index > 0,
         'border-r lg:border-r-0': index % 2 === 0
       }
@@ -165,9 +153,9 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
         key={stat.name}
         info={tooltip(stat, dashboardState)}
         className={className}
-        onClick={() => {
-          maybeUpdateMetric(stat)
-        }}
+        onClick={
+          stat.graphable ? () => setSelectedMetric(stat.metric) : () => {}
+        }
         boundary={tooltipBoundary}
       >
         {renderStatName(stat)}
@@ -217,5 +205,5 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
     stats.push(blinkingDot())
   }
 
-  return stats || null
+  return stats ? <>{stats}</> : null
 }

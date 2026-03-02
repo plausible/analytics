@@ -268,14 +268,16 @@ class LineGraph extends React.Component {
       'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval)
     })
 
-    return (
-      <FadeIn show={graphData}>
-        <div className="relative h-96 print:h-auto print:pb-8 w-full z-0">
-          <canvas id="main-graph-canvas" className={canvasClass}></canvas>
-        </div>
-      </FadeIn>
-    )
+    return <canvas id="main-graph-canvas" className={canvasClass}></canvas>
   }
+}
+
+export function LineGraphContainer({ children }) {
+  return (
+    <div className="relative h-96 print:h-auto print:pb-8 w-full z-0">
+      {children}
+    </div>
+  )
 }
 
 export default function LineGraphWrapped(props) {

@@ -148,11 +148,20 @@ type TopStatItem = {
   comparisonValue?: number
 }
 
+export type FormattedTopStatsData = {
+  topStats: TopStatItem[]
+  meta: Record<string, unknown>
+  from: string
+  to: string
+  comparingFrom: string | null
+  comparingTo: string | null
+}
+
 function formatTopStatsData(
   topStatsResponse: api.QueryApiResponse,
   currentVisitorsResponse: api.QueryApiResponse | null,
   metrics: MetricDef[]
-) {
+): FormattedTopStatsData {
   const { query, meta, results } = topStatsResponse
 
   const topStats: TopStatItem[] = []

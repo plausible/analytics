@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import { useSiteContext, PlausibleSite } from '../../site-context'
+import { PlausibleSite } from '../../site-context'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { BlurMenuButtonOnEscape, popover } from '../../components/popover'
@@ -21,7 +21,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   month: 'Months'
 }
 
-function validIntervals(
+export function validIntervals(
   site: PlausibleSite,
   dashboardState: DashboardState
 ): string[] {
@@ -44,7 +44,7 @@ function validIntervals(
   }
 }
 
-function getDefaultInterval(
+export function getDefaultInterval(
   dashboardState: DashboardState,
   validIntervals: string[]
 ): string {
@@ -88,7 +88,7 @@ function getStoredInterval(period: string, domain: string): string | null {
   }
 }
 
-function storeInterval(period: string, domain: string, interval: string): void {
+export function storeInterval(period: string, domain: string, interval: string): void {
   storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
@@ -109,25 +109,20 @@ export const getCurrentInterval = function (
 }
 
 export function IntervalPicker({
-  onIntervalUpdate
+  selectedInterval,
+  setSelectedInterval,
+  options
 }: {
-  onIntervalUpdate: (interval: string) => void
+  selectedInterval: string
+  setSelectedInterval: (interval: string) => void
+  options: string[]
 }): JSX.Element | null {
   const menuElement = useRef<HTMLButtonElement>(null)
   const { dashboardState } = useDashboardStateContext()
-  const site = useSiteContext()
   const dashboardRouteMatch = useMatch(rootRoute.path)
 
   if (dashboardState.period == 'realtime') {
     return null
-  }
-
-  const options = validIntervals(site, dashboardState)
-  const currentInterval = getCurrentInterval(site, dashboardState)
-
-  function updateInterval(interval: string): void {
-    storeInterval(dashboardState.period, site.domain, interval)
-    onIntervalUpdate(interval)
   }
 
   return (
@@ -154,7 +149,7 @@ export function IntervalPicker({
                 'rounded-sm text-sm flex items-center'
               )}
             >
-              {INTERVAL_LABELS[currentInterval]}
+              {INTERVAL_LABELS[selectedInterval]}
               <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
             </Popover.Button>
 
@@ -176,10 +171,10 @@ export function IntervalPicker({
                   <button
                     key={option}
                     onClick={() => {
-                      updateInterval(option)
+                      setSelectedInterval(option)
                       closeDropdown()
                     }}
-                    data-selected={option == currentInterval}
+                    data-selected={option == selectedInterval}
                     className={classNames(
                       popover.items.classNames.navigationLink,
                       popover.items.classNames.selectedOption,
