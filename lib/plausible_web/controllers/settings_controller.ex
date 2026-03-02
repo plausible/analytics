@@ -160,7 +160,7 @@ defmodule PlausibleWeb.SettingsController do
         end
       end
 
-    consolidated_view_domain = on_ee(do: get_consolidated_view_domain(team), else: nil)
+    consolidated_view_domain = on_ee(do: team && get_consolidated_view_domain(team), else: nil)
 
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
