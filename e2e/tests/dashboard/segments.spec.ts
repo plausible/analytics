@@ -9,6 +9,22 @@ import {
   modal
 } from '../test-utils.ts'
 
+const setupSiteAndStats = async ({ page, request }) => {
+  const context = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain: context.domain,
+    events: [
+      { name: 'pageview', referrer_source: 'Google', utm_source: 'Adwords' },
+      { name: 'pageview', referrer_source: 'Facebook', utm_source: 'fb' },
+      { name: 'pageview', referrer: 'https://theguardian.com' }
+    ]
+  })
+
+  return context
+}
+
 const sourceFilterButton = (page) => filterItemButton(page, 'Source')
 const utmTagsFilterButton = (page) => filterItemButton(page, 'UTM tags')
 
@@ -57,17 +73,7 @@ const createPersonalSegment = async (page, name) => {
 }
 
 test('saving a segment', async ({ page, request }) => {
-  const { domain } = await setupSite({ page, request })
-
-  await populateStats({
-    request,
-    domain,
-    events: [
-      { name: 'pageview', referrer_source: 'Google', utm_source: 'Adwords' },
-      { name: 'pageview', referrer_source: 'Facebook', utm_source: 'fb' },
-      { name: 'pageview', referrer: 'https://theguardian.com' }
-    ]
-  })
+  const { domain } = await setupSiteAndStats({ page, request })
 
   await page.goto('/' + domain)
 
@@ -204,17 +210,7 @@ test('creating a segment from a combination of segment and a filter is not allow
   page,
   request
 }) => {
-  const { domain } = await setupSite({ page, request })
-
-  await populateStats({
-    request,
-    domain,
-    events: [
-      { name: 'pageview', referrer_source: 'Google', utm_source: 'Adwords' },
-      { name: 'pageview', referrer_source: 'Facebook', utm_source: 'fb' },
-      { name: 'pageview', referrer: 'https://theguardian.com' }
-    ]
-  })
+  const { domain } = await setupSiteAndStats({ page, request })
 
   await page.goto('/' + domain)
 
@@ -240,4 +236,49 @@ test('creating a segment from a combination of segment and a filter is not allow
   await expect(
     modal(page).getByRole('heading', { name: 'Create segment' })
   ).toBeHidden()
+})
+
+test('editing an existing segment', async ({ page, request }) => {
+  const { domain } = await setupSiteAndStats({ page, request })
+
+  await page.goto('/' + domain)
+
+  await addSourceFilter(page, 'Google')
+  await createPersonalSegment(page, 'Traffic from Google')
+
+  await page
+    .getByRole('link', { name: 'Segment is Traffic from Google' })
+    .click()
+
+  await expect(
+    modal(page).getByRole('heading', { name: 'Traffic from Google' })
+  ).toBeVisible()
+
+  await modal(page).getByRole('link', { name: 'Edit segment' }).click()
+
+  await addUtmSourceFilter(page, 'Adwords')
+
+  await page.getByRole('link', { name: 'Update segment' }).click()
+
+  await expect(
+    modal(page).getByRole('heading', { name: 'Update segment' })
+  ).toBeVisible()
+
+  await modal(page).getByLabel('Segment name').fill('Ads from Google')
+
+  await modal(page).getByRole('button', { name: 'Save' }).click()
+
+  await page.getByRole('link', { name: 'Segment is Ads from Google' }).click()
+
+  await expect(modal(page)).toContainText('UTM source is Adwords')
+  await expect(modal(page)).toContainText('Source is Google')
+
+  await modal(page).getByRole('button', { name: 'Remove filter' }).click()
+
+  await expect(page).not.toHaveURL(/f=is,segment,[0-9]+/)
+
+  await filterButton(page).click()
+
+  await expect(filterItemButton(page, 'Ads from Google')).toBeVisible()
+  await expect(filterItemButton(page, 'Traffic from Google')).toBeHidden()
 })
