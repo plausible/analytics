@@ -35,6 +35,21 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def plain_config() do
+    case Application.get_env(:plausible, :plain) do
+      [app_id: app_id, hmac_secret: secret] when is_binary(app_id) and is_binary(secret) ->
+        {app_id, secret}
+
+      _ ->
+        nil
+    end
+  end
+
+  def plain_email_hash(secret, email) do
+    :crypto.mac(:hmac, :sha256, secret, email)
+    |> Base.encode16(case: :lower)
+  end
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"
