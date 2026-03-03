@@ -308,9 +308,7 @@ defmodule PlausibleWeb.StatsController do
   defp render_password_protected_shared_link(conn, shared_link) do
     conn = Plug.Conn.fetch_cookies(conn)
 
-    star_path = conn.path_params["path"]
-
-    star_path_fragment = serialize_star_path_as_query_string_fragment(star_path)
+    star_path_fragment = serialize_star_path_as_query_string_fragment(conn)
 
     query_string =
       [conn.query_string, star_path_fragment]
@@ -362,9 +360,13 @@ defmodule PlausibleWeb.StatsController do
 
         star_path = parse_star_path(conn)
 
+        # The filter query params format used by the FE breaks when it passes through Phoenix / Plug.Conn decode/encode.
+        # This function works around that by using the original query string.
         query_string_fragment =
           get_rest_of_query_string(conn)
+          # omitted because return_to param was needed only for this function
           |> omit_from_query_string("return_to")
+          # omitted because `auth: slug` query param is set definitively below
           |> omit_from_query_string("auth")
 
         conn
@@ -394,29 +396,23 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  defp serialize_star_path_as_query_string_fragment(star_path) do
+  defp serialize_star_path_as_query_string_fragment(conn) do
+    star_path = conn.path_params["path"]
+
     if length(star_path) > 0 do
       # make the path start with a /
       # to be able to reject values that don't start with a /
-      serialized_value =
-        "/#{Enum.join(star_path, "/")}"
-        |> PlausibleWeb.URIEncoding.uri_encode_permissive()
-
-      "return_to=#{serialized_value}"
+      %{"return_to" => "/#{Enum.join(star_path, "/")}"} |> URI.encode_query()
     else
       nil
     end
   end
 
   defp parse_star_path(conn) do
-    return_to_value = conn.query_params["return_to"]
-
-    if not is_nil(return_to_value) and String.starts_with?(return_to_value, "/") do
-      # get rid of the / character that we added
-      "/" <> trimmed_return_to_value = return_to_value
-      String.split(trimmed_return_to_value, "/")
-    else
-      []
+    case conn.query_params["return_to"] do
+      # omit prefix added in `serialize_star_path_as_query_string_fragment`
+      "/" <> return_to -> String.split(return_to, "/")
+      _ -> []
     end
   end
 
