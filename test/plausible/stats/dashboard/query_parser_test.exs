@@ -251,10 +251,8 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
     end
 
     test "now can't be fixed externally" do
-      {:ok, parsed} =
-        parse("?now=2026-02-17T10:08:52.272894Z", build(:site), %{
-          "now" => "2026-02-17T10:08:52.272894Z"
-        })
+      params = Map.merge(@base_params, %{"now" => "2026-02-17T10:08:52.272894Z"})
+      {:ok, parsed} = parse(params)
 
       assert parsed.now == nil
     end
