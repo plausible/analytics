@@ -37,7 +37,7 @@ defmodule PlausibleWeb.LayoutView do
 
   def plain_config() do
     case Application.get_env(:plausible, :plain) do
-      [app_id: app_id, hmac_secret: secret] when is_binary(app_id) and is_binary(secret) ->
+      [app_id: app_id, hmac_secret: secret] ->
         {app_id, secret}
 
       _ ->
