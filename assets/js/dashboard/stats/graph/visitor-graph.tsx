@@ -134,6 +134,7 @@ export default function VisitorGraph({
     const updateTopStats = () => refetchTopStats()
 
     if (isRealtime) {
+      updateTopStats()
       document.addEventListener('tick', updateTopStats)
     }
 
