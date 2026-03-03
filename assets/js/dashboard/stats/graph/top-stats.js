@@ -176,7 +176,11 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
             <span className="flex items-center justify-between whitespace-nowrap">
               <p
                 className="font-bold text-xl dark:text-gray-100"
-                id={stat.metric}
+                id={
+                  stat.name === 'Current visitors'
+                    ? 'current_visitors'
+                    : stat.metric
+                }
               >
                 {topStatNumberShort(stat.metric, stat.value)}
               </p>
