@@ -59,20 +59,20 @@
       <script type="text/javascript" src={Routes.static_path(@conn, "/js/dashboard.js")}>
       </script>
     <% end %>
-    <%= if (user = assigns[:current_user]) && FunWithFlags.enabled?(:plain_chat, for: user) do %>
-      <%= if {plain_app_id, plain_secret} = plain_config() do %>
+    <%= case plain_chat_config(assigns[:current_user]) do %>
+      <% %{app_id: app_id, email: email, email_hash: email_hash, full_name: full_name} -> %>
         <script>
           (function(d, script) {
           script = d.createElement('script');
           script.async = false;
           script.onload = function(){
             Plain.init({
-              appId: '<%= plain_app_id %>',
+              appId: '<%= app_id %>',
               hideBranding: true,
               customerDetails: {
-                email: '<%= user.email %>',
-                emailHash: '<%= plain_email_hash(plain_secret, user.email) %>',
-                fullName: '<%= user.name %>',
+                email: '<%= email %>',
+                emailHash: '<%= email_hash %>',
+                fullName: '<%= full_name %>',
               },
             });
           };
@@ -80,7 +80,7 @@
           d.getElementsByTagName('head')[0].appendChild(script);
           }(document));
         </script>
-      <% end %>
+      <% nil -> %>
     <% end %>
   </body>
 </html>
