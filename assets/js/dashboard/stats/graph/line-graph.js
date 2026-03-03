@@ -5,7 +5,6 @@ import Chart from 'chart.js/auto'
 import GraphTooltip from './graph-tooltip'
 import { buildDataSet, METRIC_LABELS, hasMultipleYears } from './graph-util'
 import dateFormatter from './date-formatter'
-import FadeIn from '../../fade-in'
 import classNames from 'classnames'
 import { hasConversionGoalFilter } from '../../util/filters'
 import { MetricFormatterShort } from '../reports/metric-formatter'
@@ -264,18 +263,20 @@ class LineGraph extends React.Component {
 
   render() {
     const { graphData } = this.props
-    const canvasClass = classNames('mt-4 select-none', {
+    const canvasClass = classNames('select-none', {
       'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval)
     })
 
-    return (
-      <FadeIn show={graphData}>
-        <div className="relative h-96 print:h-auto print:pb-8 w-full z-0">
-          <canvas id="main-graph-canvas" className={canvasClass}></canvas>
-        </div>
-      </FadeIn>
-    )
+    return <canvas id="main-graph-canvas" className={canvasClass} />
   }
+}
+
+export function LineGraphContainer(props) {
+  return (
+    <div className="relative mt-4 h-96 print:h-auto print:pb-8 w-full z-0">
+      {props.children}
+    </div>
+  )
 }
 
 export default function LineGraphWrapped(props) {
