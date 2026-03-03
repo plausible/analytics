@@ -206,7 +206,6 @@ export default function VisitorGraph({
                 notices={
                   [
                     importedIntervalUnsupportedNotice
-                    // getSamplingNotice(topStatsQuery.data)
                   ].filter((n) => !!n) as string[]
                 }
               />
