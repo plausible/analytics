@@ -113,7 +113,12 @@ function getSharedLinkSearchParams(): Record<string, string> {
 }
 
 export async function stats(site: PlausibleSite, statsQuery: StatsQuery) {
-  const response = await fetch(url.apiPath(site, '/query'), {
+  const sharedLinkParams = getSharedLinkSearchParams()
+  const queryString = sharedLinkParams.auth
+    ? new URLSearchParams(sharedLinkParams).toString()
+    : ''
+  const path = url.apiPath(site, '/query')
+  const response = await fetch(queryString ? `${path}?${queryString}` : path, {
     method: 'POST',
     signal: abortController.signal,
     headers: {
