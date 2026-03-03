@@ -259,7 +259,7 @@ export default function VisitorGraph({
 
 function Loader() {
   return (
-    <div className="absolute inset-0 bg-white rounded-md flex items-center justify-center">
+    <div className="absolute inset-0 bg-white rounded-md dark:bg-gray-900 flex items-center justify-center">
       <div className="loading">
         <div></div>
       </div>
