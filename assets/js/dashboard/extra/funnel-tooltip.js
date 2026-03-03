@@ -8,11 +8,13 @@ export default function FunnelTooltip(palette, funnel) {
     if (!tooltipEl) {
       tooltipEl = document.createElement('div')
       tooltipEl.id = 'chartjs-tooltip-funnel'
-      tooltipEl.className = 'chartjs-tooltip'
       tooltipEl.style.display = 'none'
       tooltipEl.style.opacity = 0
       document.body.appendChild(tooltipEl)
     }
+
+    tooltipEl.className =
+      'absolute text-sm font-normal py-3 px-4 pointer-events-none rounded-md z-[100] bg-[rgb(25_30_56)]'
 
     if (tooltipEl && offset) {
       tooltipEl.style.opacity = 1

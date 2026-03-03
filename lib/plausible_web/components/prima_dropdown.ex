@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
   defdelegate dropdown(assigns), to: Prima.Dropdown
   defdelegate dropdown_trigger(assigns), to: Prima.Dropdown
 
+  attr(:id, :string, required: true)
   slot(:inner_block, required: true)
 
   # placement: bottom-end should probably be default in prima. Feels more natural
@@ -15,6 +16,7 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
   def dropdown_menu(assigns) do
     ~H"""
     <Dropdown.dropdown_menu
+      id={@id}
       placement="bottom-end"
       class="bg-white rounded-md shadow-lg ring-1 ring-black/5 focus:outline-none p-1.5 dark:bg-gray-800"
     >
@@ -24,6 +26,7 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
   end
 
   attr(:as, :any, default: nil)
+  attr(:id, :string, required: true)
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global, include: ~w(navigate patch href))
   slot(:inner_block, required: true)
@@ -32,6 +35,7 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
     ~H"""
     <Dropdown.dropdown_item
       as={@as}
+      id={@id}
       disabled={@disabled}
       class="group/item z-50 flex items-center gap-x-2 min-w-max w-full rounded-md pl-3 pr-5 py-2 text-gray-700 text-sm dark:text-gray-300 data-focus:bg-gray-100 dark:data-focus:bg-gray-700 data-focus:text-gray-900 dark:data-focus:text-gray-100"
       {@rest}

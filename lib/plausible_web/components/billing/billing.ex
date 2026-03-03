@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Components.Billing do
         usage={@usage.current_cycle}
         limit={@limit}
         period={:current_cycle}
-        expanded={not @show_all}
+        expanded={not @show_all and Enum.empty?(@usage.current_cycle.sites)}
       />
       <%= if @show_all do %>
         <.monthly_pageview_usage_breakdown
@@ -110,7 +110,10 @@ defmodule PlausibleWeb.Components.Billing do
         </p>
         <.usage_progress_bar id={"total_pageviews_#{@period}"} usage={@usage.total} limit={@limit} />
       </div>
-      <button class="flex justify-between items-center w-full text-left" x-on:click="open = !open">
+      <button
+        class="flex justify-between items-center flex-wrap w-full text-left"
+        x-on:click="open = !open"
+      >
         <span class="flex items-center gap-1 text-sm font-medium text-gray-900 dark:text-gray-100">
           <Heroicons.chevron_right
             mini
@@ -118,26 +121,55 @@ defmodule PlausibleWeb.Components.Billing do
             x-bind:class="open ? 'rotate-90' : ''"
           /> Total billable pageviews
         </span>
-        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span class="ml-5 text-sm font-medium text-gray-900 dark:text-gray-100">
           {PlausibleWeb.TextHelpers.number_format(@usage.total)}
           {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
           {if @limit == :unlimited, do: "/ Unlimited"}
         </span>
       </button>
       <div x-show="open" class="flex flex-col gap-3 text-sm text-gray-900 dark:text-gray-100">
-        <div id={"pageviews_#{@period}"} class="flex justify-between">
-          <span>
-            <span class="inline-block size-4 mr-1 text-center">•</span> Pageviews
-          </span>
-          <span>{PlausibleWeb.TextHelpers.number_format(@usage.pageviews)}</span>
-        </div>
-        <div id={"custom_events_#{@period}"} class="flex justify-between">
-          <span>
-            <span class="inline-block size-4 mr-1 text-center">•</span> Custom events
-          </span>
-          <span>{PlausibleWeb.TextHelpers.number_format(@usage.custom_events)}</span>
+        <.pageview_usage_row
+          id={"pageviews_#{@period}"}
+          label={if Enum.empty?(@usage.sites), do: "Pageviews", else: "Total pageviews"}
+          value={@usage.pageviews}
+        />
+        <.pageview_usage_row
+          id={"custom_events_#{@period}"}
+          label={if Enum.empty?(@usage.sites), do: "Custom events", else: "Total custom events"}
+          value={@usage.custom_events}
+        />
+        <div
+          :if={not Enum.empty?(@usage.sites)}
+          id={"per_site_breakdown_#{@period}"}
+          class="flex flex-col gap-3 border-t border-gray-200 dark:border-gray-700 pt-3 pl-5"
+        >
+          <div :for={{site, index} <- Enum.with_index(@usage.sites)} class="flex flex-col gap-3">
+            <hr :if={index > 0} class="border-gray-200 dark:border-gray-700" />
+            <div class="flex justify-between flex-wrap font-medium">
+              <span class="truncate">{site.domain}</span>
+              <span class="shrink-0">{PlausibleWeb.TextHelpers.number_format(site.total)}</span>
+            </div>
+            <.pageview_usage_row label="Pageviews" value={site.pageviews} />
+            <.pageview_usage_row label="Custom events" value={site.custom_events} />
+          </div>
         </div>
       </div>
+    </div>
+    """
+  end
+
+  attr :id, :string, default: nil
+  attr :label, :string, required: true
+  attr :value, :integer, required: true
+
+  defp pageview_usage_row(assigns) do
+    ~H"""
+    <div id={@id} class="flex justify-between flex-wrap">
+      <span class="flex items-center gap-1">
+        <span class="inline-block size-4 text-center">•</span>
+        {@label}
+      </span>
+      <span class="ml-5">{PlausibleWeb.TextHelpers.number_format(@value)}</span>
     </div>
     """
   end

@@ -134,7 +134,7 @@ defmodule PlausibleWeb.StatsController do
   def csv_export(conn, params) do
     if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
       site = Plausible.Repo.preload(conn.assigns.site, :owners)
-      query = Query.from(site, params, debug_metadata(conn))
+      query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
       date_range = Query.date_range(query)
 

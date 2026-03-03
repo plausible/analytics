@@ -956,6 +956,72 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
+  describe "usage_cycle/1 per-site breakdown" do
+    test "includes per-site breakdown when team has between 2 and 10 sites" do
+      user = new_user()
+      site1 = new_site(owner: user)
+      site2 = new_site(owner: user)
+      team = team_of(user)
+      today = ~D[2023-06-01]
+
+      populate_stats(site1, [
+        build(:event, timestamp: ~N[2023-05-15 00:00:00], name: "pageview"),
+        build(:event, timestamp: ~N[2023-05-15 00:00:00], name: "custom")
+      ])
+
+      populate_stats(site2, [
+        build(:event, timestamp: ~N[2023-05-15 00:00:00], name: "pageview")
+      ])
+
+      %{sites: sites} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
+
+      assert length(sites) == 2
+
+      assert %{pageviews: 1, custom_events: 1, total: 2} =
+               Enum.find(sites, &(&1.domain == site1.domain))
+
+      assert %{pageviews: 1, custom_events: 0, total: 1} =
+               Enum.find(sites, &(&1.domain == site2.domain))
+    end
+
+    test "sites with zero events in the period still appear in the breakdown" do
+      user = new_user()
+      site1 = new_site(owner: user)
+      site2 = new_site(owner: user)
+      team = team_of(user)
+      today = ~D[2023-06-01]
+
+      populate_stats(site1, [
+        build(:event, timestamp: ~N[2023-05-15 00:00:00], name: "pageview")
+      ])
+
+      %{sites: sites} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
+
+      assert length(sites) == 2
+
+      assert %{pageviews: 0, custom_events: 0, total: 0} =
+               Enum.find(sites, &(&1.domain == site2.domain))
+    end
+
+    test "returns empty sites list when team has only one site" do
+      user = new_user()
+      _site = new_site(owner: user)
+      team = team_of(user)
+      today = ~D[2023-06-01]
+
+      assert %{sites: []} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
+    end
+
+    test "returns empty sites list when team has more than 10 sites" do
+      user = new_user()
+      for _ <- 1..11, do: new_site(owner: user)
+      team = team_of(user)
+      today = ~D[2023-06-01]
+
+      assert %{sites: []} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
+    end
+  end
+
   describe "suggest_tier/2" do
     setup do
       user = new_user()
@@ -1189,7 +1255,7 @@ defmodule Plausible.Billing.QuotaTest do
       assert Plausible.Billing.Quota.usage_notification_type(team, usage) == :trial_ended
     end
 
-    test "returns :traffic_exceeded_sustained when both last cycles exceeded" do
+    test "returns :traffic_exceeded_sustained when penultimate and last cycles both exceeded" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
 
@@ -1205,6 +1271,60 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
                :traffic_exceeded_sustained
+    end
+
+    test "returns :traffic_exceeded_sustained when last and current cycles both exceeded" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 10_500},
+          last_cycle: %{total: 10_200},
+          penultimate_cycle: %{total: 5000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :traffic_exceeded_sustained
+    end
+
+    test "returns :traffic_exceeded_current_cycle when only current cycle exceeded" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 10_500},
+          last_cycle: %{total: 8000},
+          penultimate_cycle: %{total: 7000}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :traffic_exceeded_current_cycle
+    end
+
+    test "returns :traffic_exceeded_current_cycle when penultimate and current exceeded but not last" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 10_500},
+          last_cycle: %{total: 8000},
+          penultimate_cycle: %{total: 10_200}
+        },
+        sites: 3,
+        team_members: 2
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) ==
+               :traffic_exceeded_current_cycle
     end
 
     test "returns :traffic_exceeded_last_cycle when only last cycle exceeded" do

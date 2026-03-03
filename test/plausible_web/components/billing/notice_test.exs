@@ -12,10 +12,11 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         current_user: user,
         current_team: team,
         limit: 10,
-        resource: "users"
+        resource: "members"
       )
 
-    assert rendered =~ "This account is limited to 10 users. To increase this limit"
+    assert rendered =~ "This account is limited to 10 members"
+    assert rendered =~ "To add more members"
     assert rendered =~ "upgrade your subscription"
     assert rendered =~ "/billing/choose-plan"
   end
@@ -28,10 +29,11 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         current_user: user,
         current_team: team_of(user),
         limit: 1,
-        resource: "users"
+        resource: "members"
       )
 
-    assert rendered =~ "This account is limited to a single user. To increase this limit"
+    assert rendered =~ "This account is limited to a single member"
+    assert rendered =~ "To add more members"
     assert rendered =~ "upgrade your subscription"
     assert rendered =~ "/billing/choose-plan"
   end
@@ -46,10 +48,10 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         current_user: editor,
         current_team: team,
         limit: 10,
-        resource: "users"
+        resource: "members"
       )
 
-    assert rendered =~ "This team is limited to 10 users"
+    assert rendered =~ "This team is limited to 10 members"
     assert rendered =~ "ask your team owner to upgrade their subscription"
   end
 
@@ -62,10 +64,10 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         current_user: user,
         current_team: team_of(user),
         limit: 10,
-        resource: "users"
+        resource: "members"
       )
 
-    assert rendered =~ "This account is limited to 10 users"
+    assert rendered =~ "This account is limited to 10 members"
     assert rendered =~ "upgrade your subscription"
     assert rendered =~ "/billing/choose-plan"
   end
@@ -79,10 +81,11 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         current_user: user,
         current_team: team_of(user),
         limit: 10,
-        resource: "users"
+        resource: "members"
       )
 
-    assert rendered =~ "This account is limited to 10 users."
+    assert rendered =~ "This account is limited to 10 members"
+    assert rendered =~ "To add more members"
 
     assert rendered =~ "hello@plausible.io"
     assert rendered =~ "upgrade your subscription"
@@ -98,10 +101,11 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         current_user: user,
         current_team: team,
         limit: 10,
-        resource: "users"
+        resource: "members"
       )
 
-    assert rendered =~ "This account is limited to 10 users."
+    assert rendered =~ "This account is limited to 10 members"
+    assert rendered =~ "To add more members"
 
     assert rendered =~ "hello@plausible.io"
     assert rendered =~ "upgrade your subscription"
@@ -164,6 +168,22 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
       assert rendered =~ "reached your current limits for team members and sites"
       assert rendered =~ "Upgrade"
+    end
+
+    test "renders traffic_exceeded_current_cycle notification" do
+      user = new_user()
+      team = team_of(user)
+
+      rendered =
+        render_component(&Notice.usage_notification/1,
+          type: :traffic_exceeded_current_cycle,
+          team: team
+        )
+
+      assert rendered =~ "Traffic has exceeded your plan limit this cycle"
+      assert rendered =~ "Occasional traffic spikes are normal"
+      assert rendered =~ "Upgrade"
+      assert rendered =~ "Learn more"
     end
 
     test "renders traffic_exceeded_last_cycle notification" do

@@ -249,5 +249,14 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
       params = Map.merge(@base_params, %{"metrics" => []})
       assert {:error, %QueryError{code: :invalid_metrics}} = parse(params)
     end
+
+    test "now can't be fixed externally" do
+      {:ok, parsed} =
+        parse("?now=2026-02-17T10:08:52.272894Z", build(:site), %{
+          "now" => "2026-02-17T10:08:52.272894Z"
+        })
+
+      assert parsed.now == nil
+    end
   end
 end
