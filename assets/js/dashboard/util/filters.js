@@ -124,6 +124,10 @@ export function isFilteringOnFixedValue(
   return false
 }
 
+export function hasPageFilter(dashboardState) {
+  return dashboardState.resolvedFilters.some(hasDimensionPrefix('page'))
+}
+
 export function hasConversionGoalFilter(dashboardState) {
   const resolvedGoalFilters = dashboardState.resolvedFilters.filter(
     hasDimensionPrefix('goal')
