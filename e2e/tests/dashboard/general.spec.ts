@@ -64,6 +64,44 @@ test('dashboard renders via shared link', async ({ page, request }) => {
   })
 })
 
+test('dashboard renders with imported data', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'pageview' },
+      {
+        type: 'imported_visitors',
+        visitors: 3,
+        visits: 4,
+        pageviews: 6,
+        bounces: 1
+      }
+    ]
+  })
+
+  await page.goto('/' + domain)
+
+  await test.step('with imported data included', async () => {
+    await expect(page.locator('#visitors')).toHaveText('4')
+    await expect(page.locator('#visits')).toHaveText('5')
+    await expect(page.locator('#pageviews')).toHaveText('7')
+    await expect(page.locator('#bounce_rate')).toHaveText('40%')
+  })
+
+  await test.step('with imported data excluded', async () => {
+    await page.getByTestId('import-switch').click()
+
+    await expect(page).toHaveURL(/with_imported=false/)
+
+    await expect(page.locator('#visitors')).toHaveText('1')
+    await expect(page.locator('#visits')).toHaveText('1')
+    await expect(page.locator('#pageviews')).toHaveText('1')
+    await expect(page.locator('#bounce_rate')).toHaveText('100%')
+  })
+})
+
 test('tab selection user preferences are preserved across reloads', async ({
   page,
   request

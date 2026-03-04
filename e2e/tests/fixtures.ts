@@ -14,6 +14,7 @@ type EventTimestamp =
   | { daysAgo: number }
 
 type Event = {
+  type: 'event'
   name: string
   user_id?: number
   scroll_depth?: number
@@ -37,6 +38,18 @@ type Event = {
   'meta.value'?: string[]
   timestamp?: EventTimestamp
 }
+
+type ImportedVisitors = {
+  type: 'imported_visitors'
+  visitors?: number
+  pageviews?: number
+  bounces?: number
+  visits?: number
+  visit_duration?: number
+  date?: string
+}
+
+type StatsEntry = Event | ImportedVisitors
 
 export async function register({
   page,
@@ -197,7 +210,7 @@ export async function populateStats({
 }: {
   request: Request
   domain: string
-  events: Event[]
+  events: StatsEntry[]
 }) {
   const response = await request.post('/e2e-tests/stats', {
     headers: {
