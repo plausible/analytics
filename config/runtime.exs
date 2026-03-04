@@ -887,9 +887,13 @@ config :plausible, :hcaptcha,
 nolt_sso_secret = get_var_from_path_or_env(config_dir, "NOLT_SSO_SECRET")
 config :joken, default_signer: nolt_sso_secret
 
+# Plain customer support integration.
+# hmac_secret - used for signing data in the chat widget
+# token - used for authenticating customer card requests (Bearer token in Authorization header)
 config :plausible, :plain,
   app_id: get_var_from_path_or_env(config_dir, "PLAIN_APP_ID"),
-  hmac_secret: get_var_from_path_or_env(config_dir, "PLAIN_HMAC_SECRET")
+  hmac_secret: get_var_from_path_or_env(config_dir, "PLAIN_HMAC_SECRET"),
+  token: get_var_from_path_or_env(config_dir, "PLAIN_TOKEN")
 
 config :plausible, Plausible.Sentry.Client,
   finch_request_opts: [
