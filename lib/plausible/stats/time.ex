@@ -120,6 +120,64 @@ defmodule Plausible.Stats.Time do
     |> Enum.map(&format_datetime/1)
   end
 
+  def partial_time_labels(time_labels, query) do
+    case time_dimension(query) do
+      "time:week" ->
+        date_range = Query.date_range(query)
+        partial_labels(time_labels, date_range, &Date.beginning_of_week/1, &Date.end_of_week/1)
+
+      "time:month" ->
+        date_range = Query.date_range(query)
+        partial_labels(time_labels, date_range, &Date.beginning_of_month/1, &Date.end_of_month/1)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp partial_labels(time_labels, date_range, start_fn, end_fn) do
+    Enum.filter(time_labels, fn label ->
+      case Date.from_iso8601(label) do
+        {:ok, date} ->
+          start_in_range = Enum.member?(date_range, start_fn.(date))
+          end_in_range = Enum.member?(date_range, end_fn.(date))
+          not start_in_range or not end_in_range
+
+        _ ->
+          false
+      end
+    end)
+  end
+
+  def present_index(time_labels, query) do
+    now = DateTime.now!(query.timezone)
+
+    current_label =
+      case time_dimension(query) do
+        "time:month" ->
+          DateTime.to_date(now)
+          |> Date.beginning_of_month()
+          |> Date.to_string()
+
+        "time:week" ->
+          DateTime.to_date(now)
+          |> date_or_weekstart(Query.date_range(query))
+          |> Date.to_string()
+
+        "time:day" ->
+          DateTime.to_date(now)
+          |> Date.to_string()
+
+        "time:hour" ->
+          Calendar.strftime(now, "%Y-%m-%d %H:00:00")
+
+        "time:minute" ->
+          Calendar.strftime(now, "%Y-%m-%d %H:%M:00")
+      end
+
+    Enum.find_index(time_labels, &(&1 == current_label))
+  end
+
   def date_or_weekstart(date, date_range) do
     weekstart = Date.beginning_of_week(date)
 
