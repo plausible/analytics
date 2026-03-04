@@ -57,6 +57,8 @@ defmodule Plausible.Stats.QueryResult do
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
     |> add_time_labels_meta(runner.main_query)
+    |> add_present_index_meta(runner.main_query)
+    |> add_partial_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
     |> Enum.sort_by(&elem(&1, 0))
   end
@@ -88,6 +90,30 @@ defmodule Plausible.Stats.QueryResult do
   defp add_time_labels_meta(meta, query) do
     if query.include.time_labels do
       Map.put(meta, :time_labels, Plausible.Stats.Time.time_labels(query))
+    else
+      meta
+    end
+  end
+
+  defp add_present_index_meta(meta, query) do
+    time_labels = meta[:time_labels]
+
+    if query.include.present_index and is_list(time_labels) do
+      Map.put(meta, :present_index, Plausible.Stats.Time.present_index(time_labels, query))
+    else
+      meta
+    end
+  end
+
+  defp add_partial_time_labels_meta(meta, query) do
+    time_labels = meta[:time_labels]
+
+    if query.include.partial_time_labels and is_list(time_labels) do
+      Map.put(
+        meta,
+        :partial_time_labels,
+        Plausible.Stats.Time.partial_time_labels(time_labels, query)
+      )
     else
       meta
     end

@@ -4,6 +4,8 @@ defmodule Plausible.Stats.QueryInclude do
   defstruct imports: false,
             imports_meta: false,
             time_labels: false,
+            present_index: false,
+            partial_time_labels: false,
             total_rows: false,
             trim_relative_date_range: false,
             compare: nil,
@@ -18,6 +20,8 @@ defmodule Plausible.Stats.QueryInclude do
           imports: boolean(),
           imports_meta: boolean(),
           time_labels: boolean(),
+          present_index: boolean(),
+          partial_time_labels: boolean(),
           total_rows: boolean(),
           trim_relative_date_range: boolean(),
           compare:
