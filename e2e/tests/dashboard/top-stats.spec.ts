@@ -44,26 +44,31 @@ test('site switcher allows switching between different sites', async ({
 
   await switcherButton.click()
 
-  await expect(page.getByRole('link', { name: domain1 })).toBeVisible()
-  await expect(page.getByRole('link', { name: domain2 })).toBeVisible()
-  await expect(page.getByRole('link', { name: domain3 })).toBeVisible()
+  const domain1Link = page.getByRole('link', { name: domain1 })
+  const domain2Link = page.getByRole('link', { name: domain2 })
+  const domain3Link = page.getByRole('link', { name: domain3 })
+
+  const domain1Key = await domain1Link.locator('kbd').textContent()
+  const domain3Key = await domain3Link.locator('kbd').textContent()
+
+  await expect(domain1Link).toBeVisible()
+  await expect(domain2Link).toBeVisible()
+  await expect(domain3Link).toBeVisible()
 
   await page.getByRole('link', { name: domain2 }).click()
 
   await expect(page).toHaveURL(`/${domain2}`)
   await expect(switcherButton).toHaveText(domain2)
 
-  const sortedDomains = [domain1, domain2, domain3].sort()
+  await page.keyboard.press(domain3Key)
 
-  await page.keyboard.press('3')
+  await expect(page).toHaveURL(`/${domain3}`)
+  await expect(switcherButton).toHaveText(domain3)
 
-  await expect(page).toHaveURL(`/${sortedDomains[2]}`)
-  await expect(switcherButton).toHaveText(sortedDomains[2])
+  await page.keyboard.press(domain1Key)
 
-  await page.keyboard.press('1')
-
-  await expect(page).toHaveURL(`/${sortedDomains[0]}`)
-  await expect(switcherButton).toHaveText(sortedDomains[0])
+  await expect(page).toHaveURL(`/${domain1}`)
+  await expect(switcherButton).toHaveText(domain1)
 })
 
 test('current visitors counter shows number of active visitors', async ({
