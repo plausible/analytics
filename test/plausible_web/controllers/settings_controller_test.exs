@@ -532,6 +532,57 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html =~ "Invoices"
       assert text(html) =~ "We couldn't retrieve your invoices"
     end
+
+    @tag :ee_only
+    test "shows dashboard link to the site when team has exactly one site", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+
+      html =
+        conn
+        |> get(Routes.settings_path(conn, :subscription))
+        |> html_response(200)
+
+      assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
+    end
+
+    @tag :ee_only
+    test "shows no total dashboard link when team has multiple sites and no consolidated view", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+      new_site(owner: user)
+
+      html =
+        conn
+        |> get(Routes.settings_path(conn, :subscription))
+        |> html_response(200)
+
+      refute element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
+    end
+
+    on_ee do
+      test "shows consolidated view dashboard link when team has a consolidated view", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+        team = team_of(user)
+        new_consolidated_view(team)
+
+        html =
+          conn
+          |> set_current_team(team)
+          |> get(Routes.settings_path(conn, :subscription))
+          |> html_response(200)
+
+        assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
+      end
+    end
   end
 
   describe "GET /security" do

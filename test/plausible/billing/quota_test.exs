@@ -973,15 +973,15 @@ defmodule Plausible.Billing.QuotaTest do
         build(:event, timestamp: ~N[2023-05-15 00:00:00], name: "pageview")
       ])
 
-      %{sites: sites} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
+      %{per_site: per_site} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
 
-      assert length(sites) == 2
+      assert length(per_site) == 2
 
       assert %{pageviews: 1, custom_events: 1, total: 2} =
-               Enum.find(sites, &(&1.domain == site1.domain))
+               Enum.find(per_site, &(&1.domain == site1.domain))
 
       assert %{pageviews: 1, custom_events: 0, total: 1} =
-               Enum.find(sites, &(&1.domain == site2.domain))
+               Enum.find(per_site, &(&1.domain == site2.domain))
     end
 
     test "sites with zero events in the period still appear in the breakdown" do
@@ -995,12 +995,12 @@ defmodule Plausible.Billing.QuotaTest do
         build(:event, timestamp: ~N[2023-05-15 00:00:00], name: "pageview")
       ])
 
-      %{sites: sites} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
+      %{per_site: per_site} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
 
-      assert length(sites) == 2
+      assert length(per_site) == 2
 
       assert %{pageviews: 0, custom_events: 0, total: 0} =
-               Enum.find(sites, &(&1.domain == site2.domain))
+               Enum.find(per_site, &(&1.domain == site2.domain))
     end
 
     test "returns empty sites list when team has only one site" do
@@ -1009,7 +1009,8 @@ defmodule Plausible.Billing.QuotaTest do
       team = team_of(user)
       today = ~D[2023-06-01]
 
-      assert %{sites: []} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
+      assert %{per_site: []} =
+               Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
     end
 
     test "returns empty sites list when team has more than 10 sites" do
@@ -1018,7 +1019,8 @@ defmodule Plausible.Billing.QuotaTest do
       team = team_of(user)
       today = ~D[2023-06-01]
 
-      assert %{sites: []} = Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
+      assert %{per_site: []} =
+               Plausible.Teams.Billing.usage_cycle(team, :last_30_days, nil, today)
     end
   end
 

@@ -219,7 +219,7 @@ defmodule Plausible.Teams.Billing do
   @doc """
   Returns the number of sites the given team owns.
   """
-  @spec site_usage(Teams.Team.t()) :: non_neg_integer()
+  @spec site_usage(Teams.Team.t() | nil) :: non_neg_integer()
   def site_usage(nil), do: 0
 
   def site_usage(team) do
@@ -350,7 +350,7 @@ defmodule Plausible.Teams.Billing do
   team owns. Alternatively, given an optional argument of `site_ids`, the usage from
   across all those sites is queried instead.
   """
-  @spec monthly_pageview_usage(Teams.Team.t(), list() | nil) :: monthly_pageview_usage()
+  @spec monthly_pageview_usage(Teams.Team.t() | nil, list() | nil) :: monthly_pageview_usage()
   def monthly_pageview_usage(team, site_ids \\ nil)
 
   def monthly_pageview_usage(team, nil) do
@@ -376,7 +376,7 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-  @spec team_member_usage(Teams.Team.t(), Keyword.t()) :: non_neg_integer()
+  @spec team_member_usage(Teams.Team.t() | nil, Keyword.t()) :: non_neg_integer()
   @doc """
   Returns the total count of team members associated with the team's sites.
 
@@ -430,7 +430,7 @@ defmodule Plausible.Teams.Billing do
       pageviews: pageviews,
       custom_events: custom_events,
       total: pageviews + custom_events,
-      sites: per_site_usage(owned_site_ids, date_range)
+      per_site: per_site_usage(owned_site_ids, date_range)
     }
   end
 
@@ -470,7 +470,7 @@ defmodule Plausible.Teams.Billing do
       pageviews: pageviews,
       custom_events: custom_events,
       total: pageviews + custom_events,
-      sites: per_site_usage(owned_site_ids, date_range)
+      per_site: per_site_usage(owned_site_ids, date_range)
     }
   end
 
