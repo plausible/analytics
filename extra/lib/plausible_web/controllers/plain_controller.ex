@@ -4,7 +4,7 @@ defmodule PlausibleWeb.PlainController do
   alias Plausible.PlainCustomerCards
 
   def customer_cards(conn, params) do
-    token = Application.get_env(:plausible, :plain)[:token]
+    token = Application.get_env(:plausible, :plain)[:customer_card_token]
     auth = get_req_header(conn, "authorization") |> List.first()
 
     if Plug.Crypto.secure_compare(auth || "", "Bearer #{token}") do

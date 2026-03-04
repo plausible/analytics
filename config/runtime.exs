@@ -893,7 +893,7 @@ config :joken, default_signer: nolt_sso_secret
 config :plausible, :plain,
   app_id: get_var_from_path_or_env(config_dir, "PLAIN_APP_ID"),
   hmac_secret: get_var_from_path_or_env(config_dir, "PLAIN_HMAC_SECRET"),
-  token: get_var_from_path_or_env(config_dir, "PLAIN_TOKEN")
+  customer_card_token: get_var_from_path_or_env(config_dir, "PLAIN_CUSTOMER_CARD_TOKEN")
 
 config :plausible, Plausible.Sentry.Client,
   finch_request_opts: [

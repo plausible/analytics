@@ -4,7 +4,7 @@ defmodule PlausibleWeb.PlainControllerTest do
   @moduletag :ee_only
 
   on_ee do
-    @token Application.compile_env(:plausible, :plain)[:token]
+    @token Application.compile_env(:plausible, :plain)[:customer_card_token]
 
     defp auth_header(conn) do
       put_req_header(conn, "authorization", "Bearer #{@token}")
