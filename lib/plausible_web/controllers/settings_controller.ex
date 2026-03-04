@@ -154,10 +154,8 @@ defmodule PlausibleWeb.SettingsController do
 
     total_pageview_usage_domain =
       if site_usage == 1 do
-        case Plausible.Teams.owned_sites(team, 1) do
-          [site | _] -> site.domain
-          _ -> nil
-        end
+        [site] = Plausible.Teams.owned_sites(team)
+        site.domain
       else
         on_ee(do: team && get_consolidated_view_domain(team), else: nil)
       end
