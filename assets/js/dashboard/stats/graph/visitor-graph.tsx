@@ -204,9 +204,9 @@ export default function VisitorGraph({
             <div className="absolute right-4 -top-8 py-1 flex items-center gap-x-4">
               <NoticesIcon
                 notices={
-                  [
-                    importedIntervalUnsupportedNotice
-                  ].filter((n) => !!n) as string[]
+                  [importedIntervalUnsupportedNotice].filter(
+                    (n) => !!n
+                  ) as string[]
                 }
               />
               {!isRealtime && (
