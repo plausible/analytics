@@ -416,10 +416,7 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  defp get_rest_of_query_string(conn)
-       when is_nil(conn.query_string) or
-              (is_binary(conn.query_string) and byte_size(conn.query_string)) == 0,
-       do: ""
+  defp get_rest_of_query_string(conn) when conn.query_string in [nil, ""], do: ""
 
   defp get_rest_of_query_string(conn), do: "&#{conn.query_string}"
 

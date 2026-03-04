@@ -1656,7 +1656,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     html = html_response(conn, 200)
 
     expected_action_string =
-      "/share/#{link.slug}/authenticate?auth=#{link.slug}&#{filters}&return_to=#{URI.encode_www_form(deep_path)}"
+      "/share/#{link.slug}/authenticate?auth=#{link.slug}&#{filters}&#{URI.encode_query(%{"return_to" => deep_path})}"
 
     assert text_of_attr(html, "form", "action") == expected_action_string
 
