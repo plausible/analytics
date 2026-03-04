@@ -109,4 +109,50 @@ defmodule Plausible.Teams.Sites do
   end
 
   defp maybe_filter_by_domain(query, _), do: query
+
+  @spec accessible_by(Auth.User.t(), Teams.Team.t() | nil) :: Ecto.Query.t()
+  def accessible_by(user, team) do
+    if Teams.setup?(team) do
+      from(tm in Teams.Membership,
+        inner_join: t in assoc(tm, :team),
+        inner_join: s in assoc(t, :sites),
+        where: tm.user_id == ^user.id and tm.role != :guest,
+        where: tm.team_id == ^team.id,
+        select: %{site_id: s.id, role: tm.role}
+      )
+    else
+      my_team_query =
+        from(tm in Teams.Membership,
+          inner_join: t in assoc(tm, :team),
+          inner_join: s in assoc(t, :sites),
+          where: tm.user_id == ^user.id and tm.role != :guest,
+          where: tm.is_autocreated == true,
+          where: t.setup_complete == false,
+          select: %{site_id: s.id, role: tm.role}
+        )
+
+      guest_membership_query =
+        from(tm in Teams.Membership,
+          inner_join: gm in assoc(tm, :guest_memberships),
+          inner_join: s in assoc(gm, :site),
+          where: tm.user_id == ^user.id and tm.role == :guest,
+          select: %{
+            site_id: s.id,
+            role:
+              fragment(
+                """
+                CASE
+                  WHEN ? = 'editor' THEN 'admin'
+                  ELSE ?
+                END
+                """,
+                gm.role,
+                gm.role
+              )
+          }
+        )
+
+      from(s in my_team_query, union_all: ^guest_membership_query)
+    end
+  end
 end
