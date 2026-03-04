@@ -36,13 +36,7 @@ defmodule Plausible.Stats.SparklineTest do
       assert %{
                ^domain => %{
                  visitors: 0,
-                 pageviews: 0,
-                 pageviews_change: 0,
-                 views_per_visit: +0.0,
-                 views_per_visit_change: 0,
                  visitors_change: 0,
-                 visits: 0,
-                 visits_change: 0,
                  intervals: intervals
                }
              } =
