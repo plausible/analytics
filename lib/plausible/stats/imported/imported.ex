@@ -25,6 +25,11 @@ defmodule Plausible.Stats.Imported do
     length(Imported.Base.decide_tables(query)) > 0
   end
 
+  def schema_supports_interval?(query) do
+    "time:minute" not in query.dimensions and
+      "time:hour" not in query.dimensions
+  end
+
   def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{
         include_imported: false
       }) do
