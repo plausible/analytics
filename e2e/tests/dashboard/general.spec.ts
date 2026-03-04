@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, logout, makeSitePublic, populateStats } from '../fixtures.ts'
+import {
+  setupSite,
+  logout,
+  makeSitePublic,
+  populateStats,
+  createSharedLink
+} from '../fixtures.ts'
 
 test('dashboard renders for logged in user', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
@@ -23,6 +29,39 @@ test('dashboard renders for anonymous viewer', async ({ page, request }) => {
   await expect(page).toHaveTitle(/Plausible/)
 
   await expect(page.getByRole('button', { name: domain })).toBeVisible()
+})
+
+test('dashboard renders via shared link', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+  await populateStats({ request, domain, events: [{ name: 'pageview' }] })
+  const link = await createSharedLink({ page, domain, name: 'public_link' })
+  const passwordLink = await createSharedLink({
+    page,
+    domain,
+    name: 'password_link',
+    password: 'secret'
+  })
+  await logout(page)
+
+  await test.step('public link', async () => {
+    await page.goto(link)
+
+    await expect(page.getByRole('button', { name: domain })).toBeVisible()
+
+    await expect(page.locator('#visitors')).toHaveText('1')
+  })
+
+  await test.step('password protected link', async () => {
+    await page.goto(passwordLink)
+
+    await page.locator('input#password').fill('secret')
+
+    await page.getByRole('button', { name: 'Continue' }).click()
+
+    await expect(page.getByRole('button', { name: domain })).toBeVisible()
+
+    await expect(page.locator('#visitors')).toHaveText('1')
+  })
 })
 
 test('tab selection user preferences are preserved across reloads', async ({

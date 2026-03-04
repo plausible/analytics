@@ -151,6 +151,45 @@ export async function makeSitePublic({
   await expect(page.locator('body')).toContainText('are now public')
 }
 
+export async function createSharedLink({
+  page,
+  domain,
+  name,
+  password
+}: {
+  page: Page
+  domain: string
+  name: string
+  password?: string
+}): string {
+  const modal = page.locator('#shared-links-form-modal')
+  const table = page.locator('#shared-links-table')
+
+  await page.goto(`/${domain}/settings/visibility`)
+
+  await page.getByRole('button', { name: 'Add shared link' }).click()
+
+  await modal.getByLabel('Name').fill(name)
+
+  if (password) {
+    await modal.locator('button#password-protect-').click()
+
+    await modal.locator('input#shared_link_password').fill(password)
+  }
+
+  await page.getByRole('button', { name: 'Create shared link' }).click()
+
+  await expect(page.locator('body')).toContainText('Shared link saved')
+
+  const link = await table
+    .locator('tr')
+    .filter({ hasText: name })
+    .locator('input')
+    .inputValue()
+
+  return link
+}
+
 export async function populateStats({
   request,
   domain,
