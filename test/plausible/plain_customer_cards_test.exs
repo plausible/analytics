@@ -6,22 +6,62 @@ defmodule Plausible.PlainCustomerCardsTest do
   on_ee do
     alias Plausible.PlainCustomerCards
 
-    describe "get_customer_data/1" do
-      test "returns error when user not found" do
-        assert {:error, {:user_not_found, "notfound@example.com"}} =
-                 PlainCustomerCards.get_customer_data("notfound@example.com")
+    describe "build_cards/2" do
+      test "returns not found card when user does not exist" do
+        [card] = PlainCustomerCards.build_cards("notfound@example.com", ["customer-details"])
+
+        assert card.key == "customer-details"
+
+        texts = text_components(card)
+        assert "Customer not found" in texts
       end
 
-      test "returns single team details for a user with one team" do
+      test "returns not found card for nil email" do
+        [card] = PlainCustomerCards.build_cards(nil, ["customer-details"])
+
+        texts = text_components(card)
+        assert "Customer not found" in texts
+      end
+
+      test "returns card with status, plan and sites for a known user" do
         user = insert(:user, email: "plain.test@example.com")
 
-        {:ok, details} = PlainCustomerCards.get_customer_data(user.email)
+        [card] = PlainCustomerCards.build_cards(user.email, ["customer-details"])
 
-        assert details.multiple_teams? == false
-        assert details.email == user.email
+        assert card.key == "customer-details"
+        assert card.timeToLiveSeconds == 60
+
+        row_labels = row_main_labels(card)
+        assert "Status" in row_labels
+        assert "Plan" in row_labels
+        assert "Sites" in row_labels
       end
 
-      test "returns multiple teams details for user in multiple teams" do
+      test "includes notes when present" do
+        user = insert(:user, email: "plain.notes@example.com", notes: "VIP customer")
+
+        [card] = PlainCustomerCards.build_cards(user.email, ["customer-details"])
+
+        assert "VIP customer" in text_components(card)
+      end
+
+      test "includes View in CRM link button" do
+        user = insert(:user, email: "plain.link@example.com")
+
+        [card] = PlainCustomerCards.build_cards(user.email, ["customer-details"])
+
+        assert "View in CRM" in link_button_labels(card)
+      end
+
+      test "returns one card per requested key" do
+        user = insert(:user, email: "plain.keys@example.com")
+
+        cards = PlainCustomerCards.build_cards(user.email, ["customer-details", "other-key"])
+
+        assert length(cards) == 2
+      end
+
+      test "returns multiple teams card for user in multiple teams" do
         user = new_user(email: "plain.multi@example.com")
         other_user = new_user()
         _site1 = new_site(owner: user)
@@ -37,122 +77,35 @@ defmodule Plausible.PlainCustomerCardsTest do
 
         add_member(team2, user: user, role: :owner)
 
-        {:ok, details} = PlainCustomerCards.get_customer_data(user.email)
+        [card] = PlainCustomerCards.build_cards(user.email, ["customer-details"])
 
-        assert details.multiple_teams? == true
-        assert length(details.teams) == 2
-      end
-
-      test "includes notes when present" do
-        user = insert(:user, email: "plain.notes@example.com", notes: "Important customer")
-
-        {:ok, details} = PlainCustomerCards.get_customer_data(user.email)
-
-        assert details.notes == "Important customer"
+        assert Enum.any?(text_components(card), &String.contains?(&1, "Multiple teams"))
+        assert "View user in CRM" in link_button_labels(card)
       end
     end
 
-    describe "build_card/1 for single team" do
-      test "builds card with status, plan, sites, and admin link" do
-        user = insert(:user, email: "plain.card@example.com")
-
-        {:ok, details} = PlainCustomerCards.get_customer_data(user.email)
-        card = PlainCustomerCards.build_card(details)
-
-        assert card.key == "customer-details"
-        assert card.timeToLiveSeconds == 60
-        assert is_list(card.components)
-
-        labels =
-          card.components
-          |> Enum.flat_map(fn
-            %{componentRow: %{rowMainContent: content}} ->
-              Enum.map(content, fn %{componentText: %{text: t}} -> t end)
-
-            _ ->
-              []
-          end)
-
-        assert "Status" in labels
-        assert "Plan" in labels
-        assert "Sites" in labels
-      end
-
-      test "includes notes as text component when present" do
-        user = insert(:user, email: "plain.card2@example.com", notes: "VIP customer")
-
-        {:ok, details} = PlainCustomerCards.get_customer_data(user.email)
-        card = PlainCustomerCards.build_card(details)
-
-        texts =
-          card.components
-          |> Enum.flat_map(fn
-            %{componentText: %{text: t}} -> [t]
-            _ -> []
-          end)
-
-        assert "VIP customer" in texts
-      end
-
-      test "includes View in admin link button" do
-        user = insert(:user, email: "plain.card3@example.com")
-
-        {:ok, details} = PlainCustomerCards.get_customer_data(user.email)
-        card = PlainCustomerCards.build_card(details)
-
-        link_buttons =
-          card.components
-          |> Enum.flat_map(fn
-            %{componentLinkButton: btn} -> [btn]
-            _ -> []
-          end)
-
-        labels = Enum.map(link_buttons, & &1.linkButtonLabel)
-        assert "View in CRM" in labels
-      end
+    defp text_components(card) do
+      Enum.flat_map(card.components, fn
+        %{componentText: %{text: t}} -> [t]
+        _ -> []
+      end)
     end
 
-    describe "build_card/1 for multiple teams" do
-      test "builds card with team list" do
-        user = new_user(email: "plain.multi2@example.com")
-        other_user = new_user()
-        _site1 = new_site(owner: user)
-        _site2 = new_site(owner: other_user)
+    defp row_main_labels(card) do
+      Enum.flat_map(card.components, fn
+        %{componentRow: %{rowMainContent: content}} ->
+          Enum.map(content, fn %{componentText: %{text: t}} -> t end)
 
-        team2 = team_of(other_user)
+        _ ->
+          []
+      end)
+    end
 
-        team2 =
-          team2
-          |> Plausible.Teams.complete_setup()
-          |> Ecto.Changeset.change(name: "Plain Multi Team")
-          |> Plausible.Repo.update!()
-
-        add_member(team2, user: user, role: :owner)
-
-        {:ok, details} = PlainCustomerCards.get_customer_data(user.email)
-        card = PlainCustomerCards.build_card(details)
-
-        assert card.key == "customer-details"
-
-        texts =
-          card.components
-          |> Enum.flat_map(fn
-            %{componentText: %{text: t}} -> [t]
-            _ -> []
-          end)
-
-        assert Enum.any?(texts, &String.contains?(&1, "Multiple teams"))
-
-        link_buttons =
-          card.components
-          |> Enum.flat_map(fn
-            %{componentLinkButton: btn} -> [btn]
-            _ -> []
-          end)
-
-        labels = Enum.map(link_buttons, & &1.linkButtonLabel)
-        assert "View user in CRM" in labels
-      end
+    defp link_button_labels(card) do
+      Enum.flat_map(card.components, fn
+        %{componentLinkButton: %{linkButtonLabel: label}} -> [label]
+        _ -> []
+      end)
     end
   end
 end

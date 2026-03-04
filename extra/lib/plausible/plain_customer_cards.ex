@@ -17,15 +17,31 @@ defmodule Plausible.PlainCustomerCards do
 
   require Plausible.Billing.Subscription.Status
 
-  @doc """
-  Looks up customer data by email address.
-  """
+  @spec build_cards(String.t() | nil, [String.t()]) :: [map()]
+  def build_cards(email, card_keys) do
+    case get_customer_data(email || "") do
+      {:ok, details} ->
+        card = build_card(details)
+        Enum.map(card_keys, fn _key -> card end)
+
+      {:error, _} ->
+        Enum.map(card_keys, fn key ->
+          %{
+            key: key,
+            timeToLiveSeconds: 60,
+            components: [
+              %{componentText: %{text: "Customer not found", textSize: "M", textColor: "MUTED"}}
+            ]
+          }
+        end)
+    end
+  end
+
   @spec get_customer_data(String.t()) :: {:ok, map()} | {:error, any()}
-  def get_customer_data(email) do
+  defp get_customer_data(email) do
     user =
       users_query()
       |> where([user: u], u.email == ^email)
-      |> limit(1)
       |> Repo.one()
 
     if user do
@@ -103,11 +119,8 @@ defmodule Plausible.PlainCustomerCards do
     end
   end
 
-  @doc """
-  Builds Plain card components from customer data.
-  """
   @spec build_card(map()) :: map()
-  def build_card(%{multiple_teams?: true} = details) do
+  defp build_card(%{multiple_teams?: true} = details) do
     %{
       key: "customer-details",
       timeToLiveSeconds: 60,
@@ -151,7 +164,7 @@ defmodule Plausible.PlainCustomerCards do
     }
   end
 
-  def build_card(%{multiple_teams?: false} = details) do
+  defp build_card(%{multiple_teams?: false} = details) do
     components =
       [
         %{
