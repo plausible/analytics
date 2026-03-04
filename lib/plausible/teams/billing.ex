@@ -430,7 +430,7 @@ defmodule Plausible.Teams.Billing do
       pageviews: pageviews,
       custom_events: custom_events,
       total: pageviews + custom_events,
-      sites: per_site_usage(owned_site_ids, date_range)
+      per_site: per_site_usage(owned_site_ids, date_range)
     }
   end
 
@@ -470,7 +470,7 @@ defmodule Plausible.Teams.Billing do
       pageviews: pageviews,
       custom_events: custom_events,
       total: pageviews + custom_events,
-      sites: per_site_usage(owned_site_ids, date_range)
+      per_site: per_site_usage(owned_site_ids, date_range)
     }
   end
 
