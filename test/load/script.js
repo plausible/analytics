@@ -8,10 +8,6 @@ const baseURL = "http://localhost:8000";
 const domainHeavy = "dummy.site/heavy";
 /** Domain of a site registered in the env */
 const domainLight = "dummy.site/light";
-/** Valid auth cookie of a user with access to the domains above in the env */
-const internalApiCookie = "_plausible_dev=...";
-/** Valid Stats API token of a user with access to the domains above in the env */
-const externalApiToken = "...";
 
 const endpoints = {
   track: {
@@ -46,24 +42,34 @@ const endpoints = {
       "is buffered": (res) => res.headers["X-Plausible-Dropped"] != 1,
     },
   },
-  internalApi: {
+  internalApiPages: {
     method: "GET",
     name: "/api/stats/:domain/pages",
     getUrl: ({ domain }) =>
       `${baseURL}/api/stats/${encodeURIComponent(domain)}/pages?period=all&date=${new Date().toISOString().split("T")[0]}&filters=%5B%5D`,
-    getParams: () => ({ headers: { Cookie: internalApiCookie } }),
+    getParams: () => ({ headers: { Cookie: __ENV.AUTH_COOKIE } }),
     checks: {
       "request is successful": (res) => res.status === 200,
     },
   },
-  externalApi: {
+  externalApiQuery: {
     method: "POST",
     name: "/api/v2/query",
     getUrl: () => `${baseURL}/api/v2/query`,
     getBody: ({ domain }) => {
       const { site_id, metrics, date_range, ...rest } = {
         site_id: domain,
-        metrics: ["visitors"],
+        // increase complexity / load with harder queries
+        metrics: ["visitors", "percentage"],
+        filters: [
+          [
+            "or",
+            [
+              ["contains", "event:page", ["1"]],
+              ["not", ["contains", "event:page", ["5", "6", "7", "8", "9"]]],
+            ],
+          ],
+        ],
         date_range: "all",
       };
 
@@ -71,7 +77,7 @@ const endpoints = {
     },
     getParams: () => ({
       headers: {
-        Authorization: `Bearer ${externalApiToken}`,
+        Authorization: `Bearer ${__ENV.STATS_API_TOKEN}`,
         "Content-Type": "application/json",
       },
     }),
@@ -80,10 +86,19 @@ const endpoints = {
       "request is rate limited (429)": (res) => res.status === 429,
     },
   },
-  health: {
+  healthReadiness: {
     method: "GET",
     name: "/api/system/health/ready",
     getUrl: () => `${baseURL}/api/system/health/ready`,
+    getParams: () => ({}),
+    checks: {
+      "request is successful": (res) => res.status === 200,
+    },
+  },
+  healthLiveness: {
+    method: "GET",
+    name: "/api/health",
+    getUrl: () => `${baseURL}/api/health`,
     getParams: () => ({}),
     checks: {
       "request is successful": (res) => res.status === 200,
@@ -110,89 +125,155 @@ export const trackHeavy = () =>
   makeRequest(endpoints.track, { domain: domainHeavy });
 export const trackLight = () =>
   makeRequest(endpoints.track, { domain: domainLight });
-export const healthCheck = () => makeRequest(endpoints.health);
+
+export const readinessCheck = () => makeRequest(endpoints.healthReadiness);
+export const livenessCheck = () => makeRequest(endpoints.healthLiveness);
+
 export const pagesHeavy = () =>
-  makeRequest(endpoints.internalApi, { domain: domainHeavy });
+  makeRequest(endpoints.internalApiPages, { domain: domainHeavy });
 export const pagesLight = () =>
-  makeRequest(endpoints.internalApi, { domain: domainLight });
+  makeRequest(endpoints.internalApiPages, { domain: domainLight });
+
 export const queryHeavy = () =>
-  makeRequest(endpoints.externalApi, { domain: domainHeavy });
+  makeRequest(endpoints.externalApiQuery, { domain: domainHeavy });
 export const queryLight = () =>
-  makeRequest(endpoints.externalApi, { domain: domainLight });
+  makeRequest(endpoints.externalApiQuery, { domain: domainLight });
 
 const scenarioOptions = {
   executor: "constant-arrival-rate",
   timeUnit: "1s",
-  duration: "20s",
+  duration: "120s",
 };
 
+// configuring thresholds changes what stats are shown in the summary at the end
 const selectors = [
-  `endpoint: "${endpoints.health.name}"`,
-  `endpoint: "${endpoints.track.name}", domain: "${domainHeavy}"`,
-  `endpoint: "${endpoints.track.name}", domain: "${domainLight}"`,
-  `endpoint: "${endpoints.internalApi.name}", domain: "${domainHeavy}"`,
-  `endpoint: "${endpoints.internalApi.name}", domain: "${domainLight}"`,
-  `endpoint: "${endpoints.externalApi.name}", domain: "${domainHeavy}"`,
-  `endpoint: "${endpoints.externalApi.name}", domain: "${domainLight}"`,
+  [
+    `endpoint: "${endpoints.healthLiveness.name}"`,
+    [
+      ["http_req_duration", ["p(95)<300"]],
+      ["http_req_failed", ["rate<0.01"]],
+    ],
+  ],
+  [
+    `endpoint: "${endpoints.healthReadiness.name}"`,
+    [
+      ["http_req_duration", ["p(95)<500"]],
+      ["http_req_failed", ["rate<0.01"]],
+    ],
+  ],
+  [
+    `endpoint: "${endpoints.track.name}", domain: "${domainHeavy}"`,
+    [
+      ["http_req_duration", ["p(95)<1500"]],
+      ["http_req_failed", ["rate<0.01"]],
+    ],
+  ],
+  [
+    `endpoint: "${endpoints.track.name}", domain: "${domainLight}"`,
+    [
+      ["http_req_duration", ["p(95)<1500"]],
+      ["http_req_failed", ["rate<0.01"]],
+    ],
+  ],
+  [
+    `endpoint: "${endpoints.internalApiPages.name}", domain: "${domainHeavy}"`,
+    [
+      ["http_req_duration", ["p(95)<3000"]],
+      ["http_req_failed", ["rate<0.01"]],
+    ],
+  ],
+  [
+    `endpoint: "${endpoints.internalApiPages.name}", domain: "${domainLight}"`,
+    [
+      ["http_req_duration", ["p(95)<1500"]],
+      ["http_req_failed", ["rate<0.01"]],
+    ],
+  ],
+  [
+    `endpoint: "${endpoints.externalApiQuery.name}", domain: "${domainHeavy}"`,
+    [
+      ["http_req_duration", ["p(95)<5000"]],
+      ["http_req_failed", ["rate<0.01"]],
+    ],
+  ],
+  [
+    `endpoint: "${endpoints.externalApiQuery.name}", domain: "${domainLight}"`,
+    [
+      ["http_req_duration", ["p(95)<2500"]],
+      ["http_req_failed", ["rate<0.01"]],
+    ],
+  ],
 ];
 
 export const options = {
+  // to disable specific requests, comment out those scenarios
   scenarios: {
+    [livenessCheck.name]: {
+      ...scenarioOptions,
+      rate: 1,
+      preAllocatedVUs: 100,
+      exec: livenessCheck.name,
+    },
+    [readinessCheck.name]: {
+      ...scenarioOptions,
+      rate: 1,
+      preAllocatedVUs: 100,
+      exec: readinessCheck.name,
+    },
     [trackHeavy.name]: {
       ...scenarioOptions,
       rate: 500,
-      preAllocatedVUs: 2000,
+      preAllocatedVUs: 6000,
       exec: trackHeavy.name,
     },
     [trackLight.name]: {
       ...scenarioOptions,
       rate: 50,
-      preAllocatedVUs: 200,
+      preAllocatedVUs: 600,
       exec: trackLight.name,
-    },
-    [healthCheck.name]: {
-      ...scenarioOptions,
-      rate: 1,
-      preAllocatedVUs: 10,
-      exec: healthCheck.name,
     },
     [pagesHeavy.name]: {
       ...scenarioOptions,
       rate: 6,
-      preAllocatedVUs: 50,
+      preAllocatedVUs: 400,
       exec: pagesHeavy.name,
     },
     [pagesLight.name]: {
       ...scenarioOptions,
       rate: 6,
-      preAllocatedVUs: 50,
+      preAllocatedVUs: 400,
       exec: pagesLight.name,
     },
     [queryHeavy.name]: {
       ...scenarioOptions,
-      rate: 6,
-      preAllocatedVUs: 50,
+      rate: 3,
+      preAllocatedVUs: 200,
       exec: queryHeavy.name,
     },
     [queryLight.name]: {
       ...scenarioOptions,
-      rate: 6,
-      preAllocatedVUs: 50,
+      rate: 3,
+      preAllocatedVUs: 200,
       exec: queryLight.name,
     },
   },
   thresholds: {
     ...Object.fromEntries(
-      selectors.map((selector) => [
-        `http_req_duration{${selector}}`,
-        ["p(95)<500"],
-      ]),
-    ),
-    ...Object.fromEntries(
-      selectors.map((selector) => [
-        `http_req_failed{${selector}}`,
-        ["rate<0.01"],
-      ]),
+      selectors.flatMap(([selector, thresholds]) =>
+        thresholds.map(([metricName, thresholdValues]) => [
+          `${metricName}{${selector}}`,
+          thresholdValues,
+        ]),
+      ),
     ),
   },
 };
+
+export function handleSummary(data) {
+  if (__ENV.JSON_SUMMARY) {
+    return {
+      "/tmp/summary.json": JSON.stringify(data),
+    };
+  }
+  return undefined; // built-in text summary
+}
