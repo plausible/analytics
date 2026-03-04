@@ -48,75 +48,76 @@ defmodule Plausible.PlainCustomerCards do
       teams = Teams.Users.owned_teams(user)
 
       if length(teams) > 1 do
-        teams =
-          teams
-          |> Enum.map(fn team ->
-            %{
-              name: Teams.name(team),
-              identifier: team.identifier,
-              sites_count: Teams.owned_sites_count(team)
-            }
-          end)
-
-        user_link =
-          Routes.customer_support_user_url(
-            PlausibleWeb.Endpoint,
-            :show,
-            user.id
-          )
-
-        {:ok,
-         %{
-           multiple_teams?: true,
-           email: user.email,
-           notes: notes(user, nil),
-           teams: teams,
-           user_link: user_link
-         }}
+        multiple_teams_details(user, teams)
       else
-        team = List.first(teams)
-
-        {subscription, plan} =
-          if team do
-            team = Teams.with_subscription(team)
-            plan = Billing.Plans.get_subscription_plan(team.subscription)
-            {team.subscription, plan}
-          else
-            {nil, nil}
-          end
-
-        status_link =
-          if team do
-            Routes.customer_support_team_url(
-              PlausibleWeb.Endpoint,
-              :show,
-              team.id
-            )
-          else
-            Routes.customer_support_user_url(
-              PlausibleWeb.Endpoint,
-              :show,
-              user.id
-            )
-          end
-
-        {:ok,
-         %{
-           multiple_teams?: false,
-           team_setup?: Plausible.Teams.setup?(team),
-           team_name: Plausible.Teams.name(team),
-           email: user.email,
-           notes: notes(user, team),
-           status_label: status_label(team, subscription),
-           status_link: status_link,
-           plan_label: plan_label(subscription, plan),
-           plan_link: plan_link(subscription),
-           sites_count: Teams.owned_sites_count(team)
-         }}
+        single_team_details(user, List.first(teams))
       end
     else
       {:error, {:user_not_found, email}}
     end
+  end
+
+  defp multiple_teams_details(user, teams) do
+    teams =
+      Enum.map(teams, fn team ->
+        %{
+          name: Teams.name(team),
+          identifier: team.identifier,
+          sites_count: Teams.owned_sites_count(team)
+        }
+      end)
+
+    user_link = Routes.customer_support_user_url(PlausibleWeb.Endpoint, :show, user.id)
+
+    {:ok,
+     %{
+       multiple_teams?: true,
+       email: user.email,
+       notes: notes(user, nil),
+       teams: teams,
+       user_link: user_link
+     }}
+  end
+
+  defp single_team_details(user, nil) do
+    status_link =
+      Routes.customer_support_user_url(PlausibleWeb.Endpoint, :show, user.id)
+
+    {:ok,
+     %{
+       multiple_teams?: false,
+       team_setup?: false,
+       team_name: nil,
+       email: user.email,
+       notes: notes(user, nil),
+       status_label: status_label(nil, nil),
+       status_link: status_link,
+       plan_label: plan_label(nil, nil),
+       plan_link: plan_link(nil),
+       sites_count: 0
+     }}
+  end
+
+  defp single_team_details(user, team) do
+    team = Teams.with_subscription(team)
+    plan = Billing.Plans.get_subscription_plan(team.subscription)
+
+    status_link =
+      Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
+
+    {:ok,
+     %{
+       multiple_teams?: false,
+       team_setup?: Plausible.Teams.setup?(team),
+       team_name: Plausible.Teams.name(team),
+       email: user.email,
+       notes: notes(user, team),
+       status_label: status_label(team, team.subscription),
+       status_link: status_link,
+       plan_label: plan_label(team.subscription, plan),
+       plan_link: plan_link(team.subscription),
+       sites_count: Teams.owned_sites_count(team)
+     }}
   end
 
   @spec build_card(map()) :: map()
