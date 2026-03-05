@@ -12,6 +12,9 @@ type EventTimestamp =
   | { minutesAgo: number }
   | { hoursAgo: number }
   | { daysAgo: number }
+  | string
+
+type EventDate = { daysAgo: number } | string
 
 type Event = {
   type: 'event'
@@ -46,7 +49,7 @@ type ImportedVisitors = {
   bounces?: number
   visits?: number
   visit_duration?: number
-  date?: string
+  date?: EventDate
 }
 
 type StatsEntry = Event | ImportedVisitors
