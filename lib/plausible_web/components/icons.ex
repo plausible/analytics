@@ -4,7 +4,8 @@ defmodule PlausibleWeb.Components.Icons do
   """
   use Phoenix.Component
 
-  attr :class, :any, default: []
+  attr(:rest, :global)
+  attr(:filled, :boolean, default: false)
 
   def pin_icon(assigns) do
     ~H"""
@@ -23,8 +24,7 @@ defmodule PlausibleWeb.Components.Icons do
     """
   end
 
-  attr(:rest, :global)
-  attr(:filled, :boolean, default: false)
+  attr :class, :any, default: []
 
   def external_link_icon(assigns) do
     ~H"""
