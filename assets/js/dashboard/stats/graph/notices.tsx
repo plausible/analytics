@@ -33,13 +33,3 @@ export const NoticesIcon = ({ notices }: { notices: string[] }) => {
     </Tooltip>
   )
 }
-
-export function getSamplingNotice(topStatData: { samplePercent?: number }) {
-  const samplePercent = topStatData?.samplePercent
-
-  if (samplePercent && samplePercent < 100) {
-    return `Stats based on a ${samplePercent}% sample of all visitors`
-  }
-
-  return null
-}
