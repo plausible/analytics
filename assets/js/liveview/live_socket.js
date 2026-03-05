@@ -71,6 +71,7 @@ if (csrfToken && websocketUrl) {
   })
   window.addEventListener('phx:page-loading-start', (_info) => topbar.show())
   window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
+  window.addEventListener('scroll-to-top', () => window.scrollTo(0, 0))
 
   liveSocket.connect()
   window.liveSocket = liveSocket

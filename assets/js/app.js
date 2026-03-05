@@ -1,6 +1,4 @@
 import './polyfills/closest'
-
-window.addEventListener('scroll-to-top', () => window.scrollTo(0, 0))
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import Alpine from 'alpinejs'
 import './liveview/live_socket'
