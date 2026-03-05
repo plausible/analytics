@@ -86,6 +86,7 @@ export const SegmentMenu = () => {
               )}
             >
               <ChevronDownIcon
+                data-testid="segmentmenu"
                 className="w-4 h-4 md:h-5 md:w-5 block"
                 aria-hidden="true"
               />
