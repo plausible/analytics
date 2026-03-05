@@ -17,12 +17,10 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
     team = Repo.preload(team, :owners)
     owner = List.first(team.owners)
 
-    socket =
-      assign_new(socket, :index_state, fn ->
-        Index.build(owner, team: team, sort_by: :traffic, sort_direction: :desc)
-      end)
+    index_state =
+      Index.build(owner, team: team, sort_by: :traffic, sort_direction: :desc)
 
-    page = Index.paginate(socket.assigns.index_state, tab_params["page"], @page_size)
+    page = Index.paginate(index_state, tab_params["page"], @page_size)
 
     sites = fetch_sites(page.entries)
 
@@ -37,6 +35,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
        team: team,
        sites: sites,
        hourly_stats: hourly_stats,
+       index_state: index_state,
        page_number: page.page_number,
        total_pages: page.total_pages,
        total_entries: page.total_entries,
