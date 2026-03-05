@@ -55,7 +55,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
       if current_state.sort_by == sort_by do
         flip_direction(current_state.sort_direction)
       else
-        current_state.sort_direction
+        if sort_by == :traffic do
+          :desc
+        else
+          :asc
+        end
       end
 
     new_state = Index.sort(current_state, sort_by: sort_by, sort_direction: sort_direction)

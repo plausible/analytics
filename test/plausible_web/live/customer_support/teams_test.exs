@@ -1043,11 +1043,15 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     end
 
     defp extract_domains(html) do
-      html
-      |> Floki.find("tbody tr td:first-child a")
-      |> Enum.map(&Floki.text/1)
-      |> Enum.map(&String.trim/1)
-      |> Enum.reject(&(&1 == ""))
+      domains =
+        html
+        |> find("tbody tr td:first-child a")
+        |> Enum.map(&text/1)
+        |> Enum.map(&String.trim/1)
+        |> Enum.reject(&(&1 == ""))
+
+      assert [_ | _] = domains
+      domains
     end
   end
 end
