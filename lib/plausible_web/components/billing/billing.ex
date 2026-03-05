@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Components.Billing do
       usage={@usage.last_30_days}
       limit={@limit}
       period={:last_30_days}
-      expanded={true}
+      accordion?={false}
       total_pageview_usage_domain={@total_pageview_usage_domain}
     />
     """
@@ -82,6 +82,7 @@ defmodule PlausibleWeb.Components.Billing do
         usage={@usage.current_cycle}
         limit={@limit}
         period={:current_cycle}
+        accordion?={@show_all}
         expanded={not @show_all and Enum.empty?(@usage.current_cycle.per_site)}
         total_pageview_usage_domain={@total_pageview_usage_domain}
       />
@@ -108,7 +109,8 @@ defmodule PlausibleWeb.Components.Billing do
   attr(:usage, :map, required: true)
   attr(:limit, :any, required: true)
   attr(:period, :atom, required: true)
-  attr(:expanded, :boolean, required: true)
+  attr(:accordion?, :boolean, default: true)
+  attr(:expanded, :boolean, default: false)
   attr(:total_pageview_usage_domain, :string, default: nil)
 
   defp monthly_pageview_usage_breakdown(assigns) do
@@ -123,43 +125,25 @@ defmodule PlausibleWeb.Components.Billing do
       )
 
     ~H"""
-    <div class="flex flex-col gap-3" x-data={"{ open: #{@expanded} }"}>
+    <div class="flex flex-col gap-3" x-data={@accordion? && "{ open: #{@expanded} }"}>
       <div class="flex flex-col gap-2">
         <p class="text-xs text-gray-600 dark:text-gray-400">
           {PlausibleWeb.TextHelpers.format_date_range(@usage.date_range)}
           <span :if={@period in [:current_cycle, :last_30_days]}>{cycle_label(@period)}</span>
         </p>
-        <.usage_progress_bar id={"total_pageviews_#{@period}"} usage={@usage.total} limit={@limit} />
+        <.usage_progress_bar :if={@limit != :unlimited} id={"total_pageviews_#{@period}"} usage={@usage.total} limit={@limit} />
       </div>
       <button
+        :if={@accordion?}
         class="flex justify-between items-center flex-wrap w-full text-left"
         x-on:click="open = !open"
       >
-        <span class="flex items-center gap-1 text-sm font-medium text-gray-900 dark:text-gray-100">
-          <Heroicons.chevron_right
-            mini
-            class="size-4 transition-transform"
-            x-bind:class="open ? 'rotate-90' : ''"
-          /> Total billable pageviews
-          <.tooltip :if={@total_link} centered?={true}>
-            <:tooltip_content>View billing period in dashboard</:tooltip_content>
-            <.link
-              href={@total_link}
-              class="text-indigo-500 hover:text-indigo-600"
-              data-test-id="total-pageviews-dashboard-link"
-              x-on:click.stop
-            >
-              <.external_link_icon class="ml-0.5 size-3.5 [&_path]:stroke-2" />
-            </.link>
-          </.tooltip>
-        </span>
-        <span class="ml-5 text-sm font-medium text-gray-900 dark:text-gray-100">
-          {PlausibleWeb.TextHelpers.number_format(@usage.total)}
-          {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
-          {if @limit == :unlimited, do: "/ Unlimited"}
-        </span>
+        <.breakdown_header accordion?={@accordion?} total_link={@total_link} usage={@usage} limit={@limit} />
       </button>
-      <div x-show="open" class="flex flex-col gap-3 text-sm text-gray-900 dark:text-gray-100">
+      <div :if={not @accordion?} class="flex justify-between items-center flex-wrap w-full">
+        <.breakdown_header accordion?={@accordion?} total_link={@total_link} usage={@usage} limit={@limit} />
+      </div>
+      <div x-show={@accordion? && "open"} class="flex flex-col gap-3 text-sm text-gray-900 dark:text-gray-100">
         <.pageview_usage_row
           id={"pageviews_#{@period}"}
           label={if Enum.empty?(@usage.per_site), do: "Pageviews", else: "Total pageviews"}
@@ -198,6 +182,39 @@ defmodule PlausibleWeb.Components.Billing do
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr :accordion?, :boolean, required: true
+  attr :total_link, :string, default: nil
+  attr :usage, :map, required: true
+  attr :limit, :any, required: true
+
+  defp breakdown_header(assigns) do
+    ~H"""
+    <span class="flex items-center gap-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+      <Heroicons.chevron_right
+        :if={@accordion?}
+        mini
+        class="size-4 transition-transform"
+        x-bind:class="open ? 'rotate-90' : ''"
+      /> Total billable pageviews
+      <.tooltip :if={@total_link} centered?={true}>
+        <:tooltip_content>View billing period in dashboard</:tooltip_content>
+        <.link
+          href={@total_link}
+          class="text-indigo-500 hover:text-indigo-600"
+          data-test-id="total-pageviews-dashboard-link"
+          x-on:click.stop={@accordion? && ""}
+        >
+          <.external_link_icon class="ml-0.5 size-3.5 [&_path]:stroke-2" />
+        </.link>
+      </.tooltip>
+    </span>
+    <span class="ml-5 text-sm font-medium text-gray-900 dark:text-gray-100">
+      {PlausibleWeb.TextHelpers.number_format(@usage.total)}
+      {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
+    </span>
     """
   end
 
