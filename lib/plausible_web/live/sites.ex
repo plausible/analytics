@@ -562,12 +562,12 @@ defmodule PlausibleWeb.Live.Sites do
           }
           phx-value-domain={@site.domain}
         >
-          <.icon_pin
+          <PlausibleWeb.Components.Icons.pin_icon
             :if={@site.pinned_at}
             filled={true}
             class={PrimaDropdown.dropdown_item_icon_class()}
           />
-          <.icon_pin
+          <PlausibleWeb.Components.Icons.pin_icon
             :if={!@site.pinned_at}
             class={PrimaDropdown.dropdown_item_icon_class()}
           />
@@ -584,26 +584,6 @@ defmodule PlausibleWeb.Live.Sites do
         </PrimaDropdown.dropdown_item>
       </PrimaDropdown.dropdown_menu>
     </PrimaDropdown.dropdown>
-    """
-  end
-
-  attr(:rest, :global)
-  attr(:filled, :boolean, default: false)
-
-  def icon_pin(assigns) do
-    ~H"""
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill={if @filled, do: "currentColor", else: "none"}
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="1.5"
-      {@rest}
-    >
-      <path d="m4 20 4.5-4.5-.196.196M14.314 21.005l-5.657-5.657L3 9.69l1.228-1.228a3 3 0 0 1 3.579-.501l.58.322 7.34-5.664 5.658 5.657-5.665 7.34.323.581a3 3 0 0 1-.501 3.578l-1.228 1.229Z" />
-    </svg>
     """
   end
 

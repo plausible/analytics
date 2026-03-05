@@ -131,7 +131,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
                 {site.domain}
 
                 <span :if={@index_state.pins[site.id]}>
-                  <PlausibleWeb.Live.Sites.icon_pin class="w-4 ml-2" />
+                  <PlausibleWeb.Components.Icons.pin_icon class="w-4 ml-2" />
                 </span>
               </.styled_link>
             </div>
