@@ -108,7 +108,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
           <.th invisible>Dashboard</.th>
           <th
             scope="col"
-            class="px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-semibold cursor-pointer select-none"
+            class="max-w-40 px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-semibold cursor-pointer select-none"
             phx-click="sort"
             phx-value-by="traffic"
             phx-target={@myself}
@@ -129,6 +129,10 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
                 class="cursor-pointer flex block items-center"
               >
                 {site.domain}
+
+                <span :if={@index_state.pins[site.id]}>
+                  <PlausibleWeb.Live.Sites.icon_pin class="w-4 ml-2" />
+                </span>
               </.styled_link>
             </div>
           </.td>
@@ -150,7 +154,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
               Settings
             </.styled_link>
           </.td>
-          <.td>
+          <.td max_width="max-w-40">
             <span class="h-[24px] text-indigo-500">
               <PlausibleWeb.Live.Components.Visitors.chart
                 :if={is_map(@hourly_stats[site.domain])}
