@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Components.Billing do
       usage={@usage.last_30_days}
       limit={@limit}
       period={:last_30_days}
-      expanded={true}
+      expanded={Enum.count(@usage.last_30_days.per_site) <= 1}
       total_pageview_usage_domain={@total_pageview_usage_domain}
     />
     """
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Components.Billing do
         usage={@usage.current_cycle}
         limit={@limit}
         period={:current_cycle}
-        expanded={not @show_all and Enum.empty?(@usage.current_cycle.per_site)}
+        expanded={not @show_all and Enum.count(@usage.current_cycle.per_site) <= 1}
         total_pageview_usage_domain={@total_pageview_usage_domain}
       />
       <%= if @show_all do %>
@@ -129,7 +129,7 @@ defmodule PlausibleWeb.Components.Billing do
           {PlausibleWeb.TextHelpers.format_date_range(@usage.date_range)}
           <span :if={@period in [:current_cycle, :last_30_days]}>{cycle_label(@period)}</span>
         </p>
-        <.usage_progress_bar id={"total_pageviews_#{@period}"} usage={@usage.total} limit={@limit} />
+        <.usage_progress_bar :if={@limit != :unlimited} id={"total_pageviews_#{@period}"} usage={@usage.total} limit={@limit} />
       </div>
       <button
         class="flex justify-between items-center flex-wrap w-full text-left"
@@ -156,7 +156,6 @@ defmodule PlausibleWeb.Components.Billing do
         <span class="ml-5 text-sm font-medium text-gray-900 dark:text-gray-100">
           {PlausibleWeb.TextHelpers.number_format(@usage.total)}
           {if is_number(@limit), do: "/ #{PlausibleWeb.TextHelpers.number_format(@limit)}"}
-          {if @limit == :unlimited, do: "/ Unlimited"}
         </span>
       </button>
       <div x-show="open" class="flex flex-col gap-3 text-sm text-gray-900 dark:text-gray-100">
