@@ -247,6 +247,7 @@ defmodule Plausible.Sites do
     from(g in subquery(guests),
       select: %{
         id: g.id,
+        sort_index: g.sort_index,
         inserted_at: g.inserted_at,
         email: g.email,
         role: g.role,
