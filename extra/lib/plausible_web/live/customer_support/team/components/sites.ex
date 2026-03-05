@@ -50,16 +50,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
   def handle_event("sort", %{"by" => by}, socket) do
     sort_by = parse_sort_by(by)
     current_state = socket.assigns.index_state
+    current_sort_by = current_state.sort_by
 
     sort_direction =
-      if current_state.sort_by == sort_by do
-        flip_direction(current_state.sort_direction)
-      else
-        if sort_by == :traffic do
+      case sort_by do
+        ^current_sort_by ->
+          flip_direction(current_state.sort_direction)
+
+        :traffic ->
           :desc
-        else
+
+        :alnum ->
           :asc
-        end
       end
 
     new_state = Index.sort(current_state, sort_by: sort_by, sort_direction: sort_direction)
