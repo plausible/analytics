@@ -3,51 +3,114 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
   Team sites component - handles team sites listing
   """
   use PlausibleWeb, :live_component
-  alias Plausible.Teams
 
-  def update(%{team: team}, socket) do
-    sites = Teams.owned_sites(team, 100)
-    sites_count = Teams.owned_sites_count(team)
+  import Ecto.Query, except: [update: 2, update: 3]
+  import PlausibleWeb.Live.Components.Pagination
 
-    hourly_stats =
-      if connected?(socket) do
-        Plausible.Stats.Sparkline.parallel_overview(sites)
-      else
-        sites
-        |> Enum.map(fn site ->
-          {site.domain,
-           %{
-             intervals: Plausible.Stats.Sparkline.empty_24h_intervals(),
-             visitors: 0,
-             visitors_change: 0
-           }}
-        end)
-        |> Enum.into(%{})
-      end
+  alias Plausible.Repo
+  alias Plausible.Site
+  alias Plausible.Sites.Index
+
+  @page_size 24
+
+  def update(%{team: team, tab_params: tab_params}, socket) do
+    team = Repo.preload(team, :owners)
+    owner = List.first(team.owners)
+
+    index_state =
+      Index.build(owner, team: team, sort_by: :traffic, sort_direction: :desc)
+
+    page = Index.paginate(index_state, tab_params["page"], @page_size)
+
+    sites = fetch_sites(page.entries)
+
+    hourly_stats = build_hourly_stats(sites, socket)
+
+    uri =
+      Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id, tab: "sites")
+      |> URI.parse()
 
     {:ok,
      assign(socket,
        team: team,
        sites: sites,
-       sites_count: sites_count,
-       hourly_stats: hourly_stats
+       hourly_stats: hourly_stats,
+       index_state: index_state,
+       page_number: page.page_number,
+       total_pages: page.total_pages,
+       total_entries: page.total_entries,
+       uri: uri
+     )}
+  end
+
+  def update(%{team: team}, socket) do
+    update(%{team: team, tab_params: %{}}, socket)
+  end
+
+  def handle_event("sort", %{"by" => by}, socket) do
+    sort_by = parse_sort_by(by)
+    current_state = socket.assigns.index_state
+    current_sort_by = current_state.sort_by
+
+    sort_direction =
+      case sort_by do
+        ^current_sort_by ->
+          flip_direction(current_state.sort_direction)
+
+        :traffic ->
+          :desc
+
+        :alnum ->
+          :asc
+      end
+
+    new_state = Index.sort(current_state, sort_by: sort_by, sort_direction: sort_direction)
+    page = Index.paginate(new_state, 1, @page_size)
+    sites = fetch_sites(page.entries)
+
+    {:noreply,
+     assign(socket,
+       index_state: new_state,
+       sites: sites,
+       page_number: page.page_number,
+       total_pages: page.total_pages,
+       total_entries: page.total_entries
      )}
   end
 
   def render(assigns) do
+    assigns =
+      assign(assigns,
+        sort_by: assigns.index_state.sort_by,
+        sort_direction: assigns.index_state.sort_direction
+      )
+
     ~H"""
     <div class="mt-2">
-      <.notice :if={@sites_count > 100} class="mt-4 mb-4">
-        This team owns more than 100 sites. Displaying first 100 below.
-      </.notice>
       <.table rows={@sites}>
         <:thead>
-          <.th>Domain</.th>
+          <th
+            scope="col"
+            class="px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-semibold cursor-pointer select-none"
+            phx-click="sort"
+            phx-value-by="alnum"
+            phx-target={@myself}
+          >
+            Domain <.sort_arrow active={@sort_by == :alnum} direction={@sort_direction} />
+          </th>
           <.th>Previous Domain</.th>
           <.th>Timezone</.th>
           <.th invisible>Settings</.th>
           <.th invisible>Dashboard</.th>
-          <.th invisible>24H</.th>
+          <th
+            scope="col"
+            class="px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-semibold cursor-pointer select-none"
+            phx-click="sort"
+            phx-value-by="traffic"
+            phx-target={@myself}
+          >
+            Traffic <.sort_arrow active={@sort_by == :traffic} direction={@sort_direction} />
+          </th>
         </:thead>
         <:tbody :let={site}>
           <.td>
@@ -82,19 +145,88 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
             >
               Settings
             </.styled_link>
-            <.td>
-              <span class="h-[24px] text-indigo-500">
-                <PlausibleWeb.Live.Components.Visitors.chart
-                  :if={is_map(@hourly_stats[site.domain])}
-                  intervals={@hourly_stats[site.domain].intervals}
-                  height={20}
-                />
-              </span>
-            </.td>
+          </.td>
+          <.td>
+            <span class="h-[24px] text-indigo-500">
+              <PlausibleWeb.Live.Components.Visitors.chart
+                :if={is_map(@hourly_stats[site.domain])}
+                intervals={@hourly_stats[site.domain].intervals}
+                height={20}
+              />
+            </span>
+            <span class="text-[10px]">Unique visitors: {@hourly_stats[site.domain].visitors}</span>
           </.td>
         </:tbody>
       </.table>
+      <.pagination
+        :if={@total_pages > 1}
+        id="sites-pagination"
+        uri={@uri}
+        page_number={@page_number}
+        total_pages={@total_pages}
+      >
+        Total of <span class="font-medium">{@total_entries}</span>
+        sites. Page {@page_number} of {@total_pages}
+      </.pagination>
     </div>
+    """
+  end
+
+  defp fetch_sites([]), do: []
+
+  defp fetch_sites(site_ids) do
+    by_id =
+      from(s in Site.regular(),
+        where: s.id in ^site_ids,
+        select: {s.id, s}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    Enum.map(site_ids, fn id -> Map.get(by_id, id) end)
+  end
+
+  defp build_hourly_stats(sites, socket) do
+    if connected?(socket) do
+      Plausible.Stats.Sparkline.parallel_overview(sites)
+    else
+      sites
+      |> Enum.map(fn site ->
+        {site.domain,
+         %{
+           intervals: Plausible.Stats.Sparkline.empty_24h_intervals(),
+           visitors: 0,
+           visitors_change: 0
+         }}
+      end)
+      |> Map.new()
+    end
+  end
+
+  defp parse_sort_by("alnum"), do: :alnum
+  defp parse_sort_by(_), do: :traffic
+
+  defp flip_direction(:asc), do: :desc
+  defp flip_direction(:desc), do: :asc
+
+  attr :active, :boolean, required: true
+  attr :direction, :atom, required: true
+
+  defp sort_arrow(%{active: false} = assigns) do
+    ~H"""
+    <span class="opacity-30">↕</span>
+    """
+  end
+
+  defp sort_arrow(%{direction: :asc} = assigns) do
+    ~H"""
+    <span>↑</span>
+    """
+  end
+
+  defp sort_arrow(assigns) do
+    ~H"""
+    <span>↓</span>
     """
   end
 end
