@@ -233,6 +233,9 @@ Plausible.Site.TrafficChangeNotification.html
 Plausible.Site.UserPreference.html
 Plausible.Site.WeeklyReport.html
 Plausible.Site.html
+Plausible.Sites.Index.Page.html
+Plausible.Sites.Index.State.html
+Plausible.Sites.Index.html
 Plausible.Sites.html
 Plausible.Stats.Aggregate.html
 Plausible.Stats.Base.html
@@ -563,8 +566,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-CE2052C2.js
-dist/sidebar_items-7FEAB779.js
+dist/search_data-6D9CD1F0.js
+dist/sidebar_items-964E331E.js
 index.html
 readme.html
 search.html
