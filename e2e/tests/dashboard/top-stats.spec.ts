@@ -8,6 +8,10 @@ import {
 import { Locale } from '@js-joda/locale'
 import { setupSite, populateStats } from '../fixtures.ts'
 
+function currentTime(): ZonedDateTime {
+  return ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
+}
+
 function timeToISO(ts: ZonedDateTime): string {
   return ts.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 }
@@ -142,7 +146,7 @@ test('top stats show relevant metrics', async ({ page, request }) => {
 })
 
 test('different time ranges are supported', async ({ page, request }) => {
-  const now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
+  const now = currentTime()
   const startOfDay = now.truncatedTo(ChronoUnit.DAYS)
   const startOfYesterday = startOfDay.minusDays(1)
   const startOfMonth = startOfDay.withDayOfMonth(1)
@@ -271,7 +275,7 @@ test('navigating dates previous next time periods', async ({
 }) => {
   const { domain } = await setupSite({ page, request })
 
-  const now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
+  const now = currentTime()
   const startOfDay = now.truncatedTo(ChronoUnit.DAYS)
   const startOfYesterday = startOfDay.minusDays(1)
 
@@ -359,7 +363,7 @@ test('selecting a custom date range', async ({ page, request }) => {
   // whether the day before today will be visible without switching month.
   // To make things simpler, we only test a single-day range of today.
 
-  const now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
+  const now = currentTime()
   const startOfDay = now.truncatedTo(ChronoUnit.DAYS)
 
   await populateStats({
