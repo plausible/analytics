@@ -621,9 +621,12 @@ defmodule PlausibleWeb.Email do
   end
 
   defp textify(html) do
-    Floki.parse_fragment!(html)
+    html
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.to_tree()
     |> traverse_and_textify()
-    |> Floki.text()
+    |> LazyHTML.from_tree()
+    |> LazyHTML.text()
     |> collapse_whitespace()
   end
 
@@ -640,7 +643,7 @@ defmodule PlausibleWeb.Email do
     children = traverse_and_textify(children)
 
     if href do
-      text = Floki.text(children)
+      text = children |> LazyHTML.from_tree() |> LazyHTML.text()
 
       if text == href do
         # avoids rendering "http://localhost:8000 (http://localhost:8000)" in base_email footer
@@ -651,6 +654,10 @@ defmodule PlausibleWeb.Email do
     else
       {tag, attrs, children}
     end
+  end
+
+  defp traverse_and_textify({"br", _attrs, _children}) do
+    "\n"
   end
 
   defp traverse_and_textify({tag, attrs, children}) do
