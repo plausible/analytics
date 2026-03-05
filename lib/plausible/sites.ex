@@ -204,6 +204,7 @@ defmodule Plausible.Sites do
         where: gm.site_id == ^site.id,
         select: %{
           id: gm.id,
+          sort_index: -gm.id,
           inserted_at: gm.inserted_at,
           email: u.email,
           role: gm.role,
@@ -226,6 +227,7 @@ defmodule Plausible.Sites do
         where: gi.site_id == ^site.id,
         select: %{
           id: gi.id,
+          sort_index: gi.id,
           inserted_at: gi.inserted_at,
           email: ti.email,
           role: gi.role,
@@ -250,7 +252,7 @@ defmodule Plausible.Sites do
         role: g.role,
         status: g.status
       },
-      order_by: [desc: g.inserted_at, desc: g.id]
+      order_by: [asc: g.sort_index]
     )
   end
 
