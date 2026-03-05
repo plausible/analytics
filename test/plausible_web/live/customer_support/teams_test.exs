@@ -212,6 +212,31 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ "Page 1 of 2"
       end
 
+      test "persists sort order across paginated entries", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        for i <- 1..24 do
+          new_site(owner: user, domain: "site-#{String.pad_leading("#{i}", 2, "0")}.example.com")
+        end
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+
+        # sort alphabetically ascending
+        lv |> element(~s|th[phx-value-by="alnum"]|) |> render_click()
+
+        html = render(lv)
+        page1_domains = extract_domains(html)
+        assert page1_domains == Enum.sort(page1_domains)
+
+        lv |> render_patch(open_team(team.id, tab: "sites", page: 2))
+        html = render(lv)
+        page2_domains = extract_domains(html)
+
+        # should still be alphabetically ascending on page 2
+        assert page2_domains == Enum.sort(page2_domains)
+        assert Enum.max(page1_domains) < Enum.min(page2_domains)
+      end
+
       test "shows no pagination when sites fit on one page", %{conn: conn, user: user} do
         team = team_of(user)
         new_site(owner: user, domain: "only-site.example.com")
