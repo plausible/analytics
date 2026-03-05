@@ -68,13 +68,16 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
     page = Index.paginate(new_state, 1, @page_size)
     sites = fetch_sites(page.entries)
 
+    hourly_stats = build_hourly_stats(sites, socket)
+
     {:noreply,
      assign(socket,
        index_state: new_state,
        sites: sites,
        page_number: page.page_number,
        total_pages: page.total_pages,
-       total_entries: page.total_entries
+       total_entries: page.total_entries,
+       hourly_stats: hourly_stats
      )}
   end
 
@@ -154,7 +157,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
                 height={20}
               />
             </span>
-            <span class="text-[10px]">Unique visitors: {@hourly_stats[site.domain].visitors}</span>
+            <span class="text-[10px]">
+              Unique visitors: {if is_map(@hourly_stats),
+                do: @hourly_stats[site.domain][:visitors] || 0,
+                else: 0}
+            </span>
           </.td>
         </:tbody>
       </.table>
