@@ -282,7 +282,9 @@ defmodule PlausibleWeb.StatsController do
       )
 
     if shared_link do
-      new_link_format = Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug)
+      new_link_format =
+        Routes.stats_path(conn, :shared_link, shared_link.site.domain, [], auth: slug)
+
       redirect(conn, to: new_link_format)
     else
       render_error(conn, 404)
@@ -306,6 +308,16 @@ defmodule PlausibleWeb.StatsController do
   defp render_password_protected_shared_link(conn, shared_link) do
     conn = Plug.Conn.fetch_cookies(conn)
 
+    # discard untrustworthy return_to given from query params
+    trimmed_query_string = conn.query_string |> omit_from_query_string("return_to")
+    star_path_fragment = serialize_star_path_as_query_string_fragment(conn)
+
+    # set valid return_to if star path is set
+    query_string =
+      [trimmed_query_string, star_path_fragment]
+      |> Enum.filter(fn v -> is_binary(v) and String.length(v) > 0 end)
+      |> Enum.join("&")
+
     case validate_shared_link_password(conn, shared_link) do
       {:ok, shared_link} ->
         render_shared_link(conn, shared_link)
@@ -314,7 +326,7 @@ defmodule PlausibleWeb.StatsController do
         conn
         |> render("shared_link_password.html",
           link: shared_link,
-          query_string: conn.query_string,
+          query_string: query_string,
           dogfood_page_path: "/share/:dashboard"
         )
     end
@@ -349,12 +361,29 @@ defmodule PlausibleWeb.StatsController do
       if Plausible.Auth.Password.match?(password, shared_link.password_hash) do
         token = Plausible.Auth.Token.sign_shared_link(slug)
 
+        star_path = parse_star_path(conn)
+
+        # The filter query params format used by the FE breaks when it passes through Phoenix / Plug.Conn decode/encode.
+        # This function works around that by using the original query string.
+        query_string_fragment =
+          get_rest_of_query_string(conn)
+          # omitted because return_to param was needed only for this function
+          |> omit_from_query_string("return_to")
+          # omitted because `auth: slug` query param is set definitively below
+          |> omit_from_query_string("auth")
+
         conn
         |> put_resp_cookie(shared_link_cookie_name(slug), token)
         |> redirect(
           to:
-            Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug) <>
-              qs_appendix(conn)
+            Routes.stats_path(
+              conn,
+              :shared_link,
+              shared_link.site.domain,
+              star_path,
+              auth: slug
+            ) <>
+              query_string_fragment
         )
       else
         conn
@@ -370,12 +399,44 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def qs_appendix(conn)
-      when is_nil(conn.query_string) or
-             (is_binary(conn.query_string) and byte_size(conn.query_string)) == 0,
-      do: ""
+  defp serialize_star_path_as_query_string_fragment(conn) do
+    star_path = conn.path_params["path"]
 
-  def qs_appendix(conn), do: "&#{conn.query_string}"
+    if length(star_path) > 0 do
+      # make the path start with a /
+      # to be able to reject values that don't start with a /
+      %{"return_to" => "/#{Enum.join(star_path, "/")}"} |> URI.encode_query()
+    else
+      nil
+    end
+  end
+
+  defp parse_star_path(conn) do
+    case conn.query_params["return_to"] do
+      # omit prefix added in `serialize_star_path_as_query_string_fragment`
+      "/" <> return_to ->
+        return_to
+        |> String.split("/")
+        # disallow constructing links that navigate up
+        |> Enum.filter(fn part -> part !== ".." end)
+
+      _ ->
+        []
+    end
+  end
+
+  defp get_rest_of_query_string(conn) when conn.query_string in [nil, ""], do: ""
+
+  defp get_rest_of_query_string(conn), do: "&#{conn.query_string}"
+
+  defp omit_from_query_string(query_string, key) do
+    query_string
+    |> String.split("&")
+    |> Enum.reject(fn key_and_value ->
+      key_and_value == key || String.starts_with?(key_and_value, "#{key}=")
+    end)
+    |> Enum.join("&")
+  end
 
   defp render_shared_link(conn, shared_link) do
     shared_links_feature_access? =
