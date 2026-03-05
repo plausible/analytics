@@ -411,8 +411,14 @@ defmodule PlausibleWeb.StatsController do
   defp parse_star_path(conn) do
     case conn.query_params["return_to"] do
       # omit prefix added in `serialize_star_path_as_query_string_fragment`
-      "/" <> return_to -> String.split(return_to, "/")
-      _ -> []
+      "/" <> return_to ->
+        return_to
+        |> String.split("/")
+        # disallow constructing links that navigate up
+        |> Enum.filter(fn part -> part !== ".." end)
+
+      _ ->
+        []
     end
   end
 
