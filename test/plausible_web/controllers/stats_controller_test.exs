@@ -1667,7 +1667,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         %{password: "password"}
       )
 
-    assert redirected_to(conn, 302) == "/share/#{URI.encode_www_form(site.domain)}#{deep_path}?auth=#{link.slug}&#{filters}"
+    assert redirected_to(conn, 302) ==
+             "/share/#{URI.encode_www_form(site.domain)}#{deep_path}?auth=#{link.slug}&#{filters}"
   end
 
   test "return_to from query_params is discarded", %{conn: conn} do
@@ -1697,7 +1698,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         %{password: "password"}
       )
 
-    assert redirected_to(conn, 302) == "/share/#{URI.encode_www_form(site.domain)}/pages?auth=#{link.slug}"
+    assert redirected_to(conn, 302) ==
+             "/share/#{URI.encode_www_form(site.domain)}/pages?auth=#{link.slug}"
   end
 
   test "return_to doesn't allow navigating out of dashboard context", %{conn: conn} do
@@ -1730,7 +1732,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         %{password: "password"}
       )
 
-    assert redirected_to(conn, 302) == "/share/#{URI.encode_www_form(site.domain)}#{cleaned_deep_path}?auth=#{link.slug}&theme=dark"
+    assert redirected_to(conn, 302) ==
+             "/share/#{URI.encode_www_form(site.domain)}#{cleaned_deep_path}?auth=#{link.slug}&theme=dark"
   end
 
   describe "dogfood tracking" do
