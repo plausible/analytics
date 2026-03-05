@@ -1673,6 +1673,42 @@ defmodule PlausibleWeb.StatsControllerTest do
     assert redirected_to(conn, 302) == expected_redirect
   end
 
+  test "return_to doesn't allow navigating out of dashboard context", %{conn: conn} do
+    site = new_site()
+
+    link =
+      insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+    deep_path = "/../../settings/api-keys"
+    cleaned_deep_path = "/settings/api-keys"
+
+    conn =
+      get(
+        conn,
+        "/share/#{URI.encode_www_form(site.domain)}#{deep_path}?auth=#{link.slug}&theme=dark"
+      )
+
+    assert html_response(conn, 200) =~ "Enter password"
+    html = html_response(conn, 200)
+
+    expected_action_string =
+      "/share/#{link.slug}/authenticate?auth=#{link.slug}&theme=dark&#{URI.encode_query(%{"return_to" => deep_path})}"
+
+    assert text_of_attr(html, "form", "action") == expected_action_string
+
+    conn =
+      post(
+        conn,
+        expected_action_string,
+        %{password: "password"}
+      )
+
+    expected_redirect =
+      "/share/#{URI.encode_www_form(site.domain)}#{cleaned_deep_path}?auth=#{link.slug}&theme=dark"
+
+    assert redirected_to(conn, 302) == expected_redirect
+  end
+
   describe "dogfood tracking" do
     @describetag :ee_only
 
