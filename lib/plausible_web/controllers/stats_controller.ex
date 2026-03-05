@@ -308,10 +308,13 @@ defmodule PlausibleWeb.StatsController do
   defp render_password_protected_shared_link(conn, shared_link) do
     conn = Plug.Conn.fetch_cookies(conn)
 
+    # discard untrustworthy return_to given from query params
+    trimmed_query_string = conn.query_string |> omit_from_query_string("return_to")
     star_path_fragment = serialize_star_path_as_query_string_fragment(conn)
 
+    # set valid return_to if star path is set
     query_string =
-      [conn.query_string, star_path_fragment]
+      [trimmed_query_string, star_path_fragment]
       |> Enum.filter(fn v -> is_binary(v) and String.length(v) > 0 end)
       |> Enum.join("&")
 
