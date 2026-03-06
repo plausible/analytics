@@ -35,6 +35,23 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def plain_chat_config(nil), do: nil
+
+  def plain_chat_config(user) do
+    with true <- FunWithFlags.enabled?(:plain_chat, for: user),
+         config when is_list(config) <- Application.get_env(:plausible, :plain),
+         app_id when not is_nil(app_id) <- config[:app_id],
+         secret when not is_nil(secret) <- config[:hmac_secret] do
+      email_hash =
+        :crypto.mac(:hmac, :sha256, secret, user.email)
+        |> Base.encode16(case: :lower)
+
+      %{app_id: app_id, email: user.email, email_hash: email_hash, full_name: user.name}
+    else
+      _ -> nil
+    end
+  end
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"
