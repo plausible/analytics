@@ -641,6 +641,13 @@ config :plausible, Plausible.ClickhouseRepo,
     max_execution_time: 20
   ]
 
+ingest_repo_extra_settings =
+  if config_env() in [:prod, :dev, :test, :load] do
+    [workload: "ingestion"]
+  else
+    []
+  end
+
 config :plausible, Plausible.IngestRepo,
   queue_target: 500,
   queue_interval: 2000,
@@ -649,9 +656,10 @@ config :plausible, Plausible.IngestRepo,
   flush_interval_ms: ch_flush_interval_ms,
   max_buffer_size: ch_max_buffer_size,
   pool_size: ingest_pool_size,
-  settings: [
-    materialized_views_ignore_errors: 1
-  ],
+  settings:
+    [
+      materialized_views_ignore_errors: 1
+    ] ++ ingest_repo_extra_settings,
   table_settings: [
     storage_policy: get_var_from_path_or_env(config_dir, "CLICKHOUSE_DEFAULT_STORAGE_POLICY")
   ]
