@@ -15,7 +15,7 @@ export default defineConfig({
   /* Retry on CI only */
   retries: isCI ? 2 : 0,
   /* Make test timeout shorter when running tests in local dev env. */
-  timeout: isCI ? 30_000 : 60_000,
+  timeout: isCI ? 30_000 : 10_000,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'list',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
