@@ -5,7 +5,7 @@ import {
   makeSitePublic,
   populateStats,
   createSharedLink
-} from '../fixtures.ts'
+} from '../fixtures'
 
 test('dashboard renders for logged in user', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
