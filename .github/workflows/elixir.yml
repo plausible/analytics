@@ -241,7 +241,7 @@ jobs:
         run: npm --prefix ./e2e ci
 
       - name: Download blob reports from GitHub Actions Artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: all-e2e-blob-reports
           pattern: e2e-blob-report-*
