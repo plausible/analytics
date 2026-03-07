@@ -33,10 +33,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome']
-        // launchOptions: { slowMo: 1500, headless: false }
-      }
+      use: { ...devices['Desktop Chrome'] }
     }
 
     // {
@@ -52,19 +49,22 @@ export default defineConfig({
     /* Test against mobile viewports. */
     // {
     //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'], launchOptions: {slowMo: 500} },
-    // }
+    //   use: { ...devices['Pixel 5'] },
+    // },
+    // {
+    //   name: 'Mobile Safari',
+    //   use: { ...devices['iPhone 12'] },
+    // },
+
     /* Test against branded browsers. */
     // {
     //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
     // },
     // {
     //   name: 'Google Chrome',
     //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     // },
   ],
-
   webServer: {
     cwd: '..',
     command: 'mix phx.server',
