@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, populateStats, addPageviewGoal } from '../fixtures.ts'
+import { setupSite, populateStats, addPageviewGoal } from '../fixtures'
 import {
   filterButton,
   filterItemButton,
@@ -8,7 +8,7 @@ import {
   suggestedItem,
   filterOperator,
   filterOperatorOption
-} from '../test-utils.ts'
+} from '../test-utils'
 
 test.describe('page filtering tests', () => {
   const pageFilterButton = (page) => filterItemButton(page, 'Page')

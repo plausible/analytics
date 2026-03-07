@@ -7,7 +7,7 @@ import {
   addScrollDepthGoal,
   addAllCustomProps,
   addFunnel
-} from '../fixtures.ts'
+} from '../fixtures'
 import {
   tabButton,
   expectHeaders,
@@ -19,7 +19,7 @@ import {
   modal,
   closeModalButton,
   searchInput
-} from '../test-utils.ts'
+} from '../test-utils'
 
 const getReport = (page) => page.getByTestId('report-behaviours')
 

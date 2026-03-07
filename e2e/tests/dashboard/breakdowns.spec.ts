@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, populateStats, addCustomGoal } from '../fixtures.ts'
+import { setupSite, populateStats, addCustomGoal } from '../fixtures'
 import {
   tabButton,
   expectHeaders,
@@ -12,7 +12,7 @@ import {
   closeModalButton,
   header,
   searchInput
-} from '../test-utils.ts'
+} from '../test-utils'
 
 test('sources breakdown', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })

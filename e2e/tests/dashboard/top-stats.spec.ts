@@ -6,7 +6,7 @@ import {
   DateTimeFormatter
 } from '@js-joda/core'
 import { Locale } from '@js-joda/locale'
-import { setupSite, populateStats } from '../fixtures.ts'
+import { setupSite, populateStats } from '../fixtures'
 
 function currentTime(): ZonedDateTime {
   return ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)

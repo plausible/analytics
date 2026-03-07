@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, populateStats } from '../fixtures.ts'
+import { setupSite, populateStats } from '../fixtures'
 import {
   filterButton,
   filterItemButton,
@@ -7,7 +7,7 @@ import {
   filterRow,
   suggestedItem,
   modal
-} from '../test-utils.ts'
+} from '../test-utils'
 
 const setupSiteAndStats = async ({ page, request }) => {
   const context = await setupSite({ page, request })

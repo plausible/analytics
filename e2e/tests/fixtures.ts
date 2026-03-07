@@ -1,6 +1,6 @@
-import type { Page, Request } from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test'
 import { expect } from '@playwright/test'
-import { expectLiveViewConnected, randomID } from './test-utils.ts'
+import { expectLiveViewConnected, randomID } from './test-utils'
 
 type User = {
   name: string
@@ -17,7 +17,7 @@ type EventTimestamp =
 type EventDate = { daysAgo: number } | string
 
 type Event = {
-  type: 'event'
+  type?: 'event'
   name: string
   user_id?: number
   scroll_depth?: number
@@ -60,7 +60,7 @@ export async function register({
   user
 }: {
   page: Page
-  request: Request
+  request: APIRequestContext
   user: User
 }) {
   await page.goto('/register')
@@ -86,19 +86,19 @@ export async function register({
 
   const response = await request.get('/sent-emails-api/emails.json')
 
-  const emailData = await response.json()
+  const emailData: Array<{to: string[][], subject: string}> = await response.json()
 
   const emails = emailData.filter(
     (e) =>
-      e.to[0][0] === user.name &&
+      e.to![0]![0] === user.name &&
       e.subject.indexOf('is your Plausible email verification code') > -1
   )
 
   expect(emails.length).toEqual(1)
 
-  const [code] = emails[0].subject.split(' ')
+  const [code] = emails[0]!.subject.split(' ')
 
-  await page.locator('input[name=code]').fill(code)
+  await page.locator('input[name=code]').fill(code!)
 
   await page.getByRole('button', { name: 'Activate' }).click()
 
@@ -177,7 +177,7 @@ export async function createSharedLink({
   domain: string
   name: string
   password?: string
-}): string {
+}): Promise<string> {
   const modal = page.locator('#shared-links-form-modal')
   const table = page.locator('#shared-links-table')
 
@@ -211,7 +211,7 @@ export async function populateStats({
   domain,
   events
 }: {
-  request: Request
+  request: APIRequestContext
   domain: string
   events: StatsEntry[]
 }) {
@@ -449,7 +449,7 @@ export async function addFunnel({
   name,
   steps
 }: {
-  request: Request
+  request: APIRequestContext
   domain: string
   name: string
   steps: string[]
@@ -472,8 +472,8 @@ export async function setupSite({
 }: {
   user?: User
   page: Page
-  request: Request
-}): { domain: string; user: user } {
+  request: APIRequestContext
+}): Promise<{ domain: string; user: User }> {
   const domain = `${randomID()}.example.com`
 
   if (!user) {
