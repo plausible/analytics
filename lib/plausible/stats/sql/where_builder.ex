@@ -19,6 +19,23 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   ]
 
   @doc "Builds WHERE clause for a given Query against sessions or events table"
+  def build(:events, query) do
+    base_condition = filter_site_time_range(:events, query)
+
+    engagement_condition =
+      if skip_engagement_events?(query) do
+        dynamic([e], e.name != "engagement")
+      else
+        true
+      end
+
+    query.filters
+    |> Enum.map(&add_filter(:events, query, &1))
+    |> Enum.reduce(dynamic([], ^base_condition and ^engagement_condition), fn condition, acc ->
+      dynamic([], ^acc and ^condition)
+    end)
+  end
+
   def build(table, query) do
     base_condition = filter_site_time_range(table, query)
 
@@ -26,6 +43,23 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     |> Enum.map(&add_filter(table, query, &1))
     |> Enum.reduce(base_condition, fn condition, acc -> dynamic([], ^acc and ^condition) end)
   end
+
+  # Engagement events exist solely for time_on_page and scroll_depth tracking.
+  # Because 'name' is part of the events_v2 primary key, adding WHERE name != 'engagement'
+  # lets ClickHouse skip entire index granules with only engagement rows.
+  # This is safe whenever none of the requested metrics or goal filters need engagement rows.
+  defp skip_engagement_events?(query) do
+    :time_on_page not in query.metrics and
+      :scroll_depth not in query.metrics and
+      not scroll_goal_involved?(query)
+  end
+
+  defp scroll_goal_involved?(%{preloaded_goals: %{all: goals}} = query) do
+    Enum.any?(goals, fn goal -> Plausible.Goal.type(goal) == :scroll end) or
+      "event:goal" in query.dimensions
+  end
+
+  defp scroll_goal_involved?(_query), do: false
 
   @doc """
   Builds WHERE clause condition based off of a filter and a custom column name
