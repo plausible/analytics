@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, APIRequestContext, Page } from '@playwright/test'
 import { setupSite, populateStats } from '../fixtures'
 import {
   filterButton,
@@ -9,7 +9,13 @@ import {
   modal
 } from '../test-utils'
 
-const setupSiteAndStats = async ({ page, request }) => {
+const setupSiteAndStats = async ({
+  page,
+  request
+}: {
+  page: Page
+  request: APIRequestContext
+}) => {
   const context = await setupSite({ page, request })
 
   await populateStats({
@@ -25,12 +31,12 @@ const setupSiteAndStats = async ({ page, request }) => {
   return context
 }
 
-const segmentMenu = (page) => page.getByTestId('segmentmenu')
+const segmentMenu = (page: Page) => page.getByTestId('segmentmenu')
 
-const sourceFilterButton = (page) => filterItemButton(page, 'Source')
-const utmTagsFilterButton = (page) => filterItemButton(page, 'UTM tags')
+const sourceFilterButton = (page: Page) => filterItemButton(page, 'Source')
+const utmTagsFilterButton = (page: Page) => filterItemButton(page, 'UTM tags')
 
-const addSourceFilter = async (page, sourceLabel) => {
+const addSourceFilter = async (page: Page, sourceLabel: string) => {
   const sourceFilterRow = filterRow(page, 'source')
   const sourceInput = page.getByPlaceholder('Select a Source')
 
@@ -46,7 +52,7 @@ const addSourceFilter = async (page, sourceLabel) => {
   await expect(page).toHaveURL(url)
 }
 
-const addUtmSourceFilter = async (page, utmSource) => {
+const addUtmSourceFilter = async (page: Page, utmSource: string) => {
   const utmSourceFilterRow = filterRow(page, 'utm_source')
   const utmSourceInput = page.getByPlaceholder('Select a UTM Source')
 
@@ -62,7 +68,7 @@ const addUtmSourceFilter = async (page, utmSource) => {
   await expect(page).toHaveURL(url)
 }
 
-const createPersonalSegment = async (page, name) => {
+const createPersonalSegment = async (page: Page, name: string) => {
   await page.getByRole('button', { name: 'See actions' }).click()
 
   await page.getByRole('link', { name: 'Save as segment' }).click()
@@ -368,10 +374,7 @@ test('deleting segment', async ({ page, request }) => {
   await expect(filterItemButton(page, 'Traffic from Google')).toBeHidden()
 })
 
-test('closing edited segment without saving', async ({
-  page,
-  request
-}) => {
+test('closing edited segment without saving', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
   await page.goto('/' + domain)

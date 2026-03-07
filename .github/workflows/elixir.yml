@@ -209,6 +209,12 @@ jobs:
       - name: Install E2E dependencies
         run: npm --prefix ./e2e ci
 
+      - name: Check format
+        run: npm --prefix ./e2e check-format
+
+      - name: Check types
+        run: npm --prefix ./e2e typecheck
+
       - name: Install E2E Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: ./e2e

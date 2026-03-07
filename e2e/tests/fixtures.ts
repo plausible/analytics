@@ -25,6 +25,9 @@ type Event = {
   revenue_reporting_currency?: string
   pathname?: string
   hostname?: string
+  country_code?: string
+  subdivision1_code?: string
+  city_geoname_id?: number
   referrer_source?: string
   referrer?: string
   utm_medium?: string
@@ -32,6 +35,7 @@ type Event = {
   utm_campaign?: string
   utm_term?: string
   utm_content?: string
+  click_id_param?: string
   screen_size?: string
   browser?: string
   browser_version?: string
@@ -52,7 +56,7 @@ type ImportedVisitors = {
   date?: EventDate
 }
 
-type StatsEntry = Event | ImportedVisitors
+export type StatsEntry = Event | ImportedVisitors
 
 export async function register({
   page,
@@ -86,7 +90,8 @@ export async function register({
 
   const response = await request.get('/sent-emails-api/emails.json')
 
-  const emailData: Array<{to: string[][], subject: string}> = await response.json()
+  const emailData: Array<{ to: string[][]; subject: string }> =
+    await response.json()
 
   const emails = emailData.filter(
     (e) =>

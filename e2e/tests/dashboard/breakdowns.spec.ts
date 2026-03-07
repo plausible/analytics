@@ -507,10 +507,10 @@ test('pages breakdown modal', async ({ page, request }) => {
 
   // We generate <pagesCount> unique page entries, each with a different number of visits
   const pageEvents = Array(pagesCount)
-    .fill()
+    .fill(null)
     .map((_, idx) => {
       return Array(idx + 1)
-        .fill()
+        .fill(null)
         .map(() => {
           return { name: 'pageview', pathname: `/page${idx + 1}/foo` }
         })
@@ -548,7 +548,7 @@ test('pages breakdown modal', async ({ page, request }) => {
 
   await test.step('displays 100 entries on a single page', async () => {
     const pageRows = Array(100)
-      .fill()
+      .fill(null)
       .map((_, idx) => {
         return `/page${pagesCount - idx}/foo`
       })
@@ -601,7 +601,7 @@ test('pages breakdown modal', async ({ page, request }) => {
     await header(modal(page), 'Visitors').click()
 
     const pageRows = Array(100)
-      .fill()
+      .fill(null)
       .map((_, idx) => {
         return `/page${idx + 1}/foo`
       })
@@ -641,7 +641,7 @@ test('pages breakdown modal', async ({ page, request }) => {
     await expect(searchInput(modal(page))).toHaveValue('')
 
     const pageRows = Array(100)
-      .fill()
+      .fill(null)
       .map((_, idx) => {
         return `/page${idx + 1}/foo`
       })

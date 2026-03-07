@@ -6,7 +6,7 @@ import {
   DateTimeFormatter
 } from '@js-joda/core'
 import { Locale } from '@js-joda/locale'
-import { setupSite, populateStats } from '../fixtures'
+import { setupSite, populateStats, StatsEntry } from '../fixtures'
 
 function currentTime(): ZonedDateTime {
   return ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
@@ -64,12 +64,12 @@ test('site switcher allows switching between different sites', async ({
   await expect(page).toHaveURL(`/${domain2}`)
   await expect(switcherButton).toHaveText(domain2)
 
-  await page.keyboard.press(domain3Key)
+  await page.keyboard.press(domain3Key!)
 
   await expect(page).toHaveURL(`/${domain3}`)
   await expect(switcherButton).toHaveText(domain3)
 
-  await page.keyboard.press(domain1Key)
+  await page.keyboard.press(domain1Key!)
 
   await expect(page).toHaveURL(`/${domain1}`)
   await expect(switcherButton).toHaveText(domain1)
@@ -180,7 +180,7 @@ test('different time ranges are supported', async ({ page, request }) => {
     now.minusDays(720)
   ]
 
-  const events = []
+  const events: StatsEntry[] = []
 
   eventTimes.forEach((ts, idx) => {
     expectedCounts.forEach((expected) => {
