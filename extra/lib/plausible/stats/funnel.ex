@@ -28,6 +28,10 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def funnel(_site, query, %Funnel{} = funnel) do
+    funnel_goals = Enum.map(funnel.steps, & &1.goal)
+
+    query = %{query | preloaded_goals: %{all: funnel_goals}}
+
     funnel_data =
       query
       |> Base.base_event_query()

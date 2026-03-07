@@ -54,13 +54,9 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       not scroll_goal_involved?(query)
   end
 
-  defp scroll_goal_involved?(%{preloaded_goals: %{matching_toplevel_filters: goals}} = query) do
-    Enum.any?(goals, fn goal -> Plausible.Goal.type(goal) == :scroll end) and
-      (Enum.any?(query.filters, fn
-         [_, "event:goal", _] -> true
-         _ -> false
-       end) or
-         "event:goal" in query.dimensions)
+  defp scroll_goal_involved?(%{preloaded_goals: %{all: goals}} = query) do
+    Enum.any?(goals, fn goal -> Plausible.Goal.type(goal) == :scroll end) or
+      "event:goal" in query.dimensions
   end
 
   defp scroll_goal_involved?(_query), do: false
