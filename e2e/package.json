@@ -4,8 +4,7 @@
     "lint": "eslint",
     "check-format": "prettier --check \"**/*.{js,mjs,ts,html,json,md}\"",
     "typecheck": "tsc --noEmit --pretty",
-    "test": "npx playwright test",
-    "test:ui": "npx playwright test --ui"
+    "test": "npx playwright test"
   },
   "license": "MIT",
   "devDependencies": {

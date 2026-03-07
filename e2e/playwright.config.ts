@@ -34,7 +34,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices['Desktop Chrome']
         // launchOptions: { slowMo: 1500, headless: false }
       }
     }
@@ -65,11 +65,12 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
   webServer: {
     cwd: '..',
-    command: 'MIX_ENV=e2e_test mix phx.server',
-    url: baseURL,
+    command: 'mix phx.server',
+    env: { ...(process.env as Record<string, string>), MIX_ENV: 'e2e_test' },
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 500 },
+    url: `${baseURL}/api/system/health/ready`,
     reuseExistingServer: !isCI
   }
 })
