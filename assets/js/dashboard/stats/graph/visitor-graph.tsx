@@ -52,7 +52,7 @@ export default function VisitorGraph({
       ? storedInterval
       : getDefaultInterval(dashboardState, availableIntervals)
   )
-  
+
   const onIntervalClick = useCallback(
     (interval: string) => {
       storeInterval(dashboardState.period, site.domain, interval)
@@ -187,26 +187,7 @@ export default function VisitorGraph({
       ? 'Interval is too short to graph imported data'
       : null
 
-  // store current height of top stats 
-  // to be able to loading the page from scratch with the correct height
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      if (topStatsBoundary.current) {
-        setStoredTopStatsHeight(
-          site,
-          `${Math.max(topStatsBoundary.current.clientHeight, DEFAULT_TOP_STATS_LOADING_HEIGHT_PX)}`
-        )
-      }
-    })
-
-    if (topStatsBoundary.current) {
-      resizeObserver.observe(topStatsBoundary.current)
-    }
-
-    return () => {
-      resizeObserver.disconnect()
-    }
-  }, [site])
+  const { heightPx } = useGuessTopStatsHeight(site, topStatsBoundary)
 
   const showFullLoader = topStatsQuery.isFetching && topStatsQuery.isStale
   const showGraphLoader =
@@ -231,7 +212,7 @@ export default function VisitorGraph({
             // prevent the top stats area from jumping on initial load
             <div
               style={{
-                height: `${getStoredTopStatsHeight(site) ?? DEFAULT_TOP_STATS_LOADING_HEIGHT_PX}px`
+                height: `${heightPx}px`
               }}
             ></div>
           )}
@@ -331,6 +312,35 @@ function setStoredTopStatsHeight(
   heightPx: string
 ) {
   storage.setItem(getStoredTopStatsHeightKey(site), heightPx)
+}
+
+function useGuessTopStatsHeight(
+  site: Pick<PlausibleSite, 'domain'>,
+  topStatsBoundary: React.RefObject<HTMLDivElement>
+): { heightPx: string } {
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      if (topStatsBoundary.current) {
+        setStoredTopStatsHeight(
+          site,
+          `${Math.max(topStatsBoundary.current.clientHeight, DEFAULT_TOP_STATS_LOADING_HEIGHT_PX)}`
+        )
+      }
+    })
+
+    if (topStatsBoundary.current) {
+      resizeObserver.observe(topStatsBoundary.current)
+    }
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [site, topStatsBoundary])
+
+  return {
+    heightPx:
+      getStoredTopStatsHeight(site) ?? DEFAULT_TOP_STATS_LOADING_HEIGHT_PX
+  }
 }
 
 const getStaleTime = (dashboardState: DashboardState) => {
