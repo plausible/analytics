@@ -9,6 +9,7 @@ import classNames from 'classnames'
 import { hasConversionGoalFilter } from '../../util/filters'
 import { MetricFormatterShort } from '../reports/metric-formatter'
 import { UIMode, useTheme } from '../../theme-context'
+import { Transition } from '@headlessui/react'
 
 const calculateMaximumY = function (dataset) {
   const yAxisValues = dataset
@@ -267,16 +268,23 @@ class LineGraph extends React.Component {
       'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval)
     })
 
-    return <canvas id="main-graph-canvas" className={canvasClass} />
+    return (
+      <Transition
+        show={true}
+        appear={true}
+        as={React.Fragment}
+        enter="transition ease-in duration-100"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+      >
+        <canvas id="main-graph-canvas" className={canvasClass} />
+      </Transition>
+    )
   }
 }
 
 export function LineGraphContainer(props) {
-  return (
-    <div className="relative mt-4 h-96 print:h-auto print:pb-8 w-full z-0">
-      {props.children}
-    </div>
-  )
+  return <div className="relative my-4 h-92 w-full z-0">{props.children}</div>
 }
 
 export default function LineGraphWrapped(props) {

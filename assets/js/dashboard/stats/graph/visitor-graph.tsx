@@ -238,12 +238,12 @@ export default function VisitorGraph({
           <LineGraphContainer>
             {mainGraphQuery.data && (
               <>
-                <LineGraphWithRouter
+                {!(!showFullLoader && mainGraphQuery.isFetching) && <LineGraphWithRouter
                   graphData={{
                     ...mainGraphQuery.data,
                     interval: selectedInterval
                   }}
-                />
+                />}
                 {!showFullLoader && mainGraphQuery.isFetching && <Loader />}
               </>
             )}
