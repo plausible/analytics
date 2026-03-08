@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 import {
   setupSite,
   populateStats,
@@ -7,7 +7,7 @@ import {
   addScrollDepthGoal,
   addAllCustomProps,
   addFunnel
-} from '../fixtures.ts'
+} from '../fixtures'
 import {
   tabButton,
   expectHeaders,
@@ -19,9 +19,9 @@ import {
   modal,
   closeModalButton,
   searchInput
-} from '../test-utils.ts'
+} from '../test-utils'
 
-const getReport = (page) => page.getByTestId('report-behaviours')
+const getReport = (page: Page) => page.getByTestId('report-behaviours')
 
 test('goals breakdown', async ({ page, request }) => {
   const report = getReport(page)

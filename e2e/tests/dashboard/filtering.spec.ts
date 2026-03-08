@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test'
-import { setupSite, populateStats, addPageviewGoal } from '../fixtures.ts'
+import { test, expect, Page } from '@playwright/test'
+import { setupSite, populateStats, addPageviewGoal } from '../fixtures'
 import {
   filterButton,
   filterItemButton,
@@ -8,10 +8,10 @@ import {
   suggestedItem,
   filterOperator,
   filterOperatorOption
-} from '../test-utils.ts'
+} from '../test-utils'
 
 test.describe('page filtering tests', () => {
-  const pageFilterButton = (page) => filterItemButton(page, 'Page')
+  const pageFilterButton = (page: Page) => filterItemButton(page, 'Page')
 
   test('filtering by page with detailed behavior test', async ({
     page,
@@ -258,7 +258,8 @@ test.describe('page filtering tests', () => {
 })
 
 test.describe('hostname filtering tests', () => {
-  const hostnameFilterButton = (page) => filterItemButton(page, 'Hostname')
+  const hostnameFilterButton = (page: Page) =>
+    filterItemButton(page, 'Hostname')
 
   test('filtering by hostname', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -294,7 +295,7 @@ test.describe('hostname filtering tests', () => {
 })
 
 test.describe('acquisition filtering tests', () => {
-  const sourceFilterButton = (page) => filterItemButton(page, 'Source')
+  const sourceFilterButton = (page: Page) => filterItemButton(page, 'Source')
 
   test('filtering by source information', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -397,7 +398,7 @@ test.describe('acquisition filtering tests', () => {
     })
   })
 
-  const utmTagsFilterButton = (page) => filterItemButton(page, 'UTM tags')
+  const utmTagsFilterButton = (page: Page) => filterItemButton(page, 'UTM tags')
 
   test('filtering by UTM tags', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -554,7 +555,8 @@ test.describe('acquisition filtering tests', () => {
 })
 
 test.describe('location filtering tests', () => {
-  const locationFilterButton = (page) => filterItemButton(page, 'Location')
+  const locationFilterButton = (page: Page) =>
+    filterItemButton(page, 'Location')
 
   test('filtering by location', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -641,7 +643,8 @@ test.describe('location filtering tests', () => {
 })
 
 test.describe('screen size filtering tests', () => {
-  const screenSizeFilterButton = (page) => filterItemButton(page, 'Screen size')
+  const screenSizeFilterButton = (page: Page) =>
+    filterItemButton(page, 'Screen size')
 
   test('filtering by screen size', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -681,7 +684,7 @@ test.describe('screen size filtering tests', () => {
 })
 
 test.describe('browser filtering tests', () => {
-  const browserFilterButton = (page) => filterItemButton(page, 'Browser')
+  const browserFilterButton = (page: Page) => filterItemButton(page, 'Browser')
 
   test('filtering by browser', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -743,7 +746,7 @@ test.describe('browser filtering tests', () => {
 })
 
 test.describe('operating system filtering tests', () => {
-  const operatingSystemFilterButton = (page) =>
+  const operatingSystemFilterButton = (page: Page) =>
     filterItemButton(page, 'Operating system')
 
   test('filtering by operating system', async ({ page, request }) => {
@@ -820,7 +823,7 @@ test.describe('operating system filtering tests', () => {
 })
 
 test.describe('goal filtering tests', () => {
-  const goalFilterButton = (page) => filterItemButton(page, 'Goal')
+  const goalFilterButton = (page: Page) => filterItemButton(page, 'Goal')
 
   test('filtering by goals', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -889,7 +892,7 @@ test.describe('goal filtering tests', () => {
 })
 
 test.describe('property filtering tests', () => {
-  const propFilterButton = (page) =>
+  const propFilterButton = (page: Page) =>
     page.getByTestId('filtermenu').getByRole('link', { name: 'Property' })
 
   test('filtering by properties', async ({ page, request }) => {
