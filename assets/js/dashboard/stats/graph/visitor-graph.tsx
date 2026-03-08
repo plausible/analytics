@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
 import { fetchTopStats } from './fetch-top-stats'
 import {
   IntervalPicker,
-  getCurrentInterval,
   getDefaultInterval,
+  getStoredInterval,
   storeInterval,
   validIntervals
 } from './interval-picker'
@@ -19,9 +19,15 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
 import { useQuery } from '@tanstack/react-query'
 import { Metric } from '../../../types/query-api'
+import { DashboardPeriod } from '../../dashboard-time-periods'
+import { DashboardState } from '../../dashboard-state'
+import { REALTIME_UPDATE_TIME_MS } from '../../util/realtime-update-timer'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
+
+// data cached by query client expires after 30 mins
+const RESPONSES_STALE_TIME_MS = 30 * 60 * 1000
 
 export default function VisitorGraph({
   updateImportedDataInView
@@ -31,42 +37,98 @@ export default function VisitorGraph({
   const topStatsBoundary = useRef<HTMLDivElement>(null)
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
+  const isRealtime = dashboardState.period === DashboardPeriod.realtime
+
+  const availableIntervals = validIntervals(site, dashboardState)
+
+  const storedInterval = useMemo(
+    () => getStoredInterval(dashboardState.period, site.domain),
+    [dashboardState.period, site.domain]
+  )
 
   const [selectedInterval, setSelectedInterval] = useState<string>(
-    getCurrentInterval(site, dashboardState)
+    typeof storedInterval === 'string' &&
+      availableIntervals.includes(storedInterval)
+      ? storedInterval
+      : getDefaultInterval(dashboardState, availableIntervals)
   )
+  
+  const onIntervalClick = useCallback(
+    (interval: string) => {
+      storeInterval(dashboardState.period, site.domain, interval)
+      setSelectedInterval(interval)
+    },
+    [dashboardState.period, site.domain]
+  )
+
+  // update interval to one that exists
+  useEffect(() => {
+    setSelectedInterval((currentlySelectedMetric) => {
+      // prefer stored interval
+      if (
+        typeof storedInterval === 'string' &&
+        availableIntervals.includes(storedInterval)
+      ) {
+        return storedInterval
+      }
+      // prefer currently selected interval over default
+      if (availableIntervals.includes(currentlySelectedMetric)) {
+        return currentlySelectedMetric
+      }
+
+      return getDefaultInterval(dashboardState, availableIntervals)
+    })
+  }, [storedInterval, dashboardState, site, availableIntervals])
+
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(
     getStoredMetric(site)
+  )
+  const onMetricClick = useCallback(
+    (metric: Metric) => {
+      setStoredMetric(site, metric)
+      setSelectedMetric(metric)
+    },
+    [site]
   )
 
   const topStatsQuery = useQuery({
     queryKey: ['top-stats', { dashboardState }] as const,
     queryFn: async ({ queryKey }) => {
-      const [_, { dashboardState }] = queryKey
-      return await fetchTopStats(site, dashboardState)
+      const [_, opts] = queryKey
+      return await fetchTopStats(site, opts.dashboardState)
     },
     placeholderData: (previousData) => previousData,
-    staleTime: Infinity
+    staleTime: ({ queryKey }) => {
+      const [_, opts] = queryKey
+      return getStaleTime(opts.dashboardState)
+    }
   })
 
   const mainGraphQuery = useQuery({
-    enabled: !!selectedMetric,
+    enabled: !!selectedMetric && availableIntervals.includes(selectedInterval),
     queryKey: [
       'main-graph',
       { dashboardState, metric: selectedMetric, interval: selectedInterval }
     ] as const,
     queryFn: async ({ queryKey }) => {
-      const [_, { dashboardState, metric, interval }] = queryKey
-      return await api.get(url.apiPath(site, '/main-graph'), dashboardState, {
-        metric,
-        interval
-      })
+      const [_, opts] = queryKey
+      return await api.get(
+        url.apiPath(site, '/main-graph'),
+        opts.dashboardState,
+        {
+          metric: opts.metric,
+          interval: opts.interval
+        }
+      )
     },
     placeholderData: (previousData) => previousData,
-    staleTime: Infinity
+    staleTime: ({ queryKey }) => {
+      const [_, opts] = queryKey
+      return getStaleTime(opts.dashboardState)
+    }
   })
 
-  // select metric that exists
+  // update metric to one that exists
   useEffect(() => {
     if (topStatsQuery.data) {
       const availableMetrics = topStatsQuery.data.topStats
@@ -86,24 +148,6 @@ export default function VisitorGraph({
     }
   }, [topStatsQuery.data])
 
-  // select interval that is allowed
-  useEffect(() => {
-    if (topStatsQuery.data) {
-      const availableIntervals = validIntervals(site, dashboardState)
-
-      setSelectedInterval((currentlySelectedInterval) => {
-        if (
-          currentlySelectedInterval &&
-          availableIntervals.includes(currentlySelectedInterval)
-        ) {
-          return currentlySelectedInterval
-        } else {
-          return getDefaultInterval(dashboardState, availableIntervals)
-        }
-      })
-    }
-  }, [site, dashboardState, topStatsQuery.data])
-
   // sync import related info
   useEffect(() => {
     if (topStatsQuery.data && typeof updateImportedDataInView === 'function') {
@@ -113,35 +157,24 @@ export default function VisitorGraph({
     }
   }, [topStatsQuery.data, updateImportedDataInView])
 
-  // save preferred metric for the dashboard
-  useEffect(() => {
-    if (selectedMetric) {
-      setStoredMetric(site, selectedMetric)
-    }
-  }, [site, selectedMetric])
-
-  // save preferred interval for the dashboard & period
-  useEffect(() => {
-    if (validIntervals(site, dashboardState).includes(selectedInterval)) {
-      storeInterval(dashboardState.period, site.domain, selectedInterval)
-    }
-  }, [dashboardState, site, selectedInterval])
-
-  const isRealtime = dashboardState.period === 'realtime'
+  // fetch realtime stats
   const refetchTopStats = topStatsQuery.refetch
+  const refetchMainGraph = mainGraphQuery.refetch
 
   useEffect(() => {
-    const updateTopStats = () => refetchTopStats()
+    const onTick = async () => {
+      refetchTopStats()
+      refetchMainGraph()
+    }
 
     if (isRealtime) {
-      updateTopStats()
-      document.addEventListener('tick', updateTopStats)
+      document.addEventListener('tick', onTick)
     }
 
     return () => {
-      document.removeEventListener('tick', updateTopStats)
+      document.removeEventListener('tick', onTick)
     }
-  }, [isRealtime, refetchTopStats])
+  }, [isRealtime, refetchTopStats, refetchMainGraph])
 
   const importedSwitchVisible = !['no_imported_data', 'out_of_range'].includes(
     topStatsQuery.data?.meta.imports_skip_reason as string
@@ -154,6 +187,8 @@ export default function VisitorGraph({
       ? 'Interval is too short to graph imported data'
       : null
 
+  // store current height of top stats 
+  // to be able to loading the page from scratch with the correct height
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
       if (topStatsBoundary.current) {
@@ -173,7 +208,9 @@ export default function VisitorGraph({
     }
   }, [site])
 
-  const showFullLoader = topStatsQuery.isFetching
+  const showFullLoader = topStatsQuery.isFetching && topStatsQuery.isStale
+  const showGraphLoader =
+    mainGraphQuery.isFetching && mainGraphQuery.isStale && !showFullLoader
 
   return (
     <div className="col-span-full relative w-full bg-white rounded-md shadow dark:bg-gray-900">
@@ -187,7 +224,7 @@ export default function VisitorGraph({
             <TopStats
               data={topStatsQuery.data}
               selectedMetric={selectedMetric}
-              setSelectedMetric={setSelectedMetric}
+              onMetricClick={onMetricClick}
               tooltipBoundary={topStatsBoundary.current}
             />
           ) : (
@@ -230,21 +267,23 @@ export default function VisitorGraph({
               )}
               <IntervalPicker
                 selectedInterval={selectedInterval}
-                setSelectedInterval={setSelectedInterval}
-                options={validIntervals(site, dashboardState)}
+                onIntervalClick={onIntervalClick}
+                options={availableIntervals}
               />
             </div>
           )}
           <LineGraphContainer>
             {mainGraphQuery.data && (
               <>
-                {!(!showFullLoader && mainGraphQuery.isFetching) && <LineGraphWithRouter
-                  graphData={{
-                    ...mainGraphQuery.data,
-                    interval: selectedInterval
-                  }}
-                />}
-                {!showFullLoader && mainGraphQuery.isFetching && <Loader />}
+                {!showGraphLoader && (
+                  <LineGraphWithRouter
+                    graphData={{
+                      ...mainGraphQuery.data,
+                      interval: selectedInterval
+                    }}
+                  />
+                )}
+                {showGraphLoader && <Loader />}
               </>
             )}
           </LineGraphContainer>
@@ -292,4 +331,14 @@ function setStoredTopStatsHeight(
   heightPx: string
 ) {
   storage.setItem(getStoredTopStatsHeightKey(site), heightPx)
+}
+
+const getStaleTime = (dashboardState: DashboardState) => {
+  if (dashboardState.period === DashboardPeriod.realtime) {
+    // 2x multiplier is needed because otherwise queries cached before
+    // tick N-1 would be marked as stale before tick N, which would cause loading
+    // animation to be shown during tick N's refetch
+    return 2 * REALTIME_UPDATE_TIME_MS
+  }
+  return RESPONSES_STALE_TIME_MS
 }

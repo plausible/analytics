@@ -95,7 +95,7 @@ export default function DashboardStateContextProvider({
       date:
         typeof date === 'string' && date.length
           ? dayjs.utc(date)
-          : nowForSite(site),
+          : nowForSite(site).startOf('day'),
       from:
         typeof from === 'string' && from.length
           ? dayjs.utc(from)

@@ -25,7 +25,7 @@ function topStatNumberLong(metric, value) {
 export default function TopStats({
   data,
   selectedMetric,
-  setSelectedMetric,
+  onMetricClick,
   tooltipBoundary
 }) {
   const { dashboardState } = useDashboardStateContext()
@@ -153,9 +153,7 @@ export default function TopStats({
         key={stat.name}
         info={tooltip(stat, dashboardState)}
         className={className}
-        onClick={
-          stat.graphable ? () => setSelectedMetric(stat.metric) : () => {}
-        }
+        onClick={stat.graphable ? () => onMetricClick(stat.metric) : () => {}}
         boundary={tooltipBoundary}
       >
         {renderStatName(stat)}

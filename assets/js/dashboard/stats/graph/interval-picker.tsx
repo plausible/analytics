@@ -22,8 +22,8 @@ const INTERVAL_LABELS: Record<string, string> = {
 }
 
 export function validIntervals(
-  site: PlausibleSite,
-  dashboardState: DashboardState
+  site: Pick<PlausibleSite, 'validIntervalsByPeriod'>,
+  dashboardState: Pick<DashboardState, 'period' | 'to' | 'from'>
 ): string[] {
   if (
     dashboardState.period === DashboardPeriod.custom &&
@@ -45,7 +45,7 @@ export function validIntervals(
 }
 
 export function getDefaultInterval(
-  dashboardState: DashboardState,
+  dashboardState: Pick<DashboardState, 'period' | 'to' | 'from'>,
   validIntervals: string[]
 ): string {
   const defaultByPeriod: Record<string, string> = {
@@ -78,7 +78,10 @@ function defaultForCustomPeriod(from: Dayjs, to: Dayjs): string {
   }
 }
 
-function getStoredInterval(period: string, domain: string): string | null {
+export function getStoredInterval(
+  period: string,
+  domain: string
+): string | null {
   const stored = storage.getItem(`interval__${period}__${domain}`)
 
   if (stored === 'date') {
@@ -114,11 +117,11 @@ export const getCurrentInterval = function (
 
 export function IntervalPicker({
   selectedInterval,
-  setSelectedInterval,
+  onIntervalClick,
   options
 }: {
   selectedInterval: string
-  setSelectedInterval: (interval: string) => void
+  onIntervalClick: (interval: string) => void
   options: string[]
 }): JSX.Element | null {
   const menuElement = useRef<HTMLButtonElement>(null)
@@ -175,7 +178,7 @@ export function IntervalPicker({
                   <button
                     key={option}
                     onClick={() => {
-                      setSelectedInterval(option)
+                      onIntervalClick(option)
                       closeDropdown()
                     }}
                     data-selected={option == selectedInterval}
