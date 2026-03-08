@@ -1,15 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
 import { fetchTopStats } from './fetch-top-stats'
-import {
-  IntervalPicker,
-  getDefaultInterval,
-  getStoredInterval,
-  storeInterval,
-  validIntervals
-} from './interval-picker'
+import { IntervalPicker, useStoredInterval } from './interval-picker'
 import StatsExport from './stats-export'
 import WithImportedSwitch from './with-imported-switch'
 import { NoticesIcon } from './notices'
@@ -39,46 +33,12 @@ export default function VisitorGraph({
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
 
-  const availableIntervals = validIntervals(site, dashboardState)
-
-  const storedInterval = useMemo(
-    () => getStoredInterval(dashboardState.period, site.domain),
-    [dashboardState.period, site.domain]
-  )
-
-  const [selectedInterval, setSelectedInterval] = useState<string>(
-    typeof storedInterval === 'string' &&
-      availableIntervals.includes(storedInterval)
-      ? storedInterval
-      : getDefaultInterval(dashboardState, availableIntervals)
-  )
-
-  const onIntervalClick = useCallback(
-    (interval: string) => {
-      storeInterval(dashboardState.period, site.domain, interval)
-      setSelectedInterval(interval)
-    },
-    [dashboardState.period, site.domain]
-  )
-
-  // update interval to one that exists
-  useEffect(() => {
-    setSelectedInterval((currentlySelectedMetric) => {
-      // prefer stored interval
-      if (
-        typeof storedInterval === 'string' &&
-        availableIntervals.includes(storedInterval)
-      ) {
-        return storedInterval
-      }
-      // prefer currently selected interval over default
-      if (availableIntervals.includes(currentlySelectedMetric)) {
-        return currentlySelectedMetric
-      }
-
-      return getDefaultInterval(dashboardState, availableIntervals)
+  const { selectedInterval, onIntervalClick, availableIntervals } =
+    useStoredInterval(site, {
+      to: dashboardState.to,
+      from: dashboardState.from,
+      period: dashboardState.period
     })
-  }, [storedInterval, dashboardState, site, availableIntervals])
 
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(
     getStoredMetric(site)
@@ -105,7 +65,7 @@ export default function VisitorGraph({
   })
 
   const mainGraphQuery = useQuery({
-    enabled: !!selectedMetric && availableIntervals.includes(selectedInterval),
+    enabled: !!selectedMetric,
     queryKey: [
       'main-graph',
       { dashboardState, metric: selectedMetric, interval: selectedInterval }
@@ -277,7 +237,7 @@ export default function VisitorGraph({
   )
 }
 
-function Loader() {
+const Loader = () => {
   return (
     <div className="absolute inset-0 bg-white rounded-md dark:bg-gray-900 flex items-center justify-center">
       <div className="loading">

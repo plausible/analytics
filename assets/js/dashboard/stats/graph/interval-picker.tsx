@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Popover, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -21,7 +21,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   month: 'Months'
 }
 
-export function validIntervals(
+function validIntervals(
   site: Pick<PlausibleSite, 'validIntervalsByPeriod'>,
   dashboardState: Pick<DashboardState, 'period' | 'to' | 'from'>
 ): string[] {
@@ -78,10 +78,7 @@ function defaultForCustomPeriod(from: Dayjs, to: Dayjs): string {
   }
 }
 
-export function getStoredInterval(
-  period: string,
-  domain: string
-): string | null {
+function getStoredInterval(period: string, domain: string): string | null {
   const stored = storage.getItem(`interval__${period}__${domain}`)
 
   if (stored === 'date') {
@@ -91,27 +88,43 @@ export function getStoredInterval(
   }
 }
 
-export function storeInterval(
-  period: string,
-  domain: string,
-  interval: string
-): void {
+function storeInterval(period: string, domain: string, interval: string): void {
   storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
-export const getCurrentInterval = function (
+export const useStoredInterval = (
   site: PlausibleSite,
-  dashboardState: DashboardState
-): string {
-  const options = validIntervals(site, dashboardState)
+  { to, from, period }: Pick<DashboardState, 'to' | 'from' | 'period'>
+) => {
+  const availableIntervals = validIntervals(site, { to, from, period })
 
-  const storedInterval = getStoredInterval(dashboardState.period, site.domain)
-  const defaultInterval = getDefaultInterval(dashboardState, options)
+  const isValid = (interval: string | null): interval is string =>
+    !!interval && availableIntervals.includes(interval)
 
-  if (storedInterval && options.includes(storedInterval)) {
-    return storedInterval
-  } else {
-    return defaultInterval
+  const storedInterval = getStoredInterval(period, site.domain)
+
+  const [selectedInterval, setSelectedInterval] = useState<string | null>(null)
+
+  useEffect(() => {
+    setSelectedInterval(null)
+  }, [availableIntervals])
+
+  const onIntervalClick = useCallback(
+    (interval: string) => {
+      storeInterval(period, site.domain, interval)
+      setSelectedInterval(interval)
+    },
+    [period, site.domain]
+  )
+
+  return {
+    selectedInterval: isValid(selectedInterval)
+      ? selectedInterval
+      : isValid(storedInterval)
+        ? storedInterval
+        : getDefaultInterval({ to, from, period }, availableIntervals),
+    onIntervalClick,
+    availableIntervals
   }
 }
 
