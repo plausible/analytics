@@ -72,7 +72,7 @@ export default function VisitorGraph({
     ] as const,
     queryFn: async ({ queryKey }) => {
       const [_, opts] = queryKey
-      return await api.get(
+      const data = await api.get(
         url.apiPath(site, '/main-graph'),
         opts.dashboardState,
         {
@@ -80,6 +80,7 @@ export default function VisitorGraph({
           interval: opts.interval
         }
       )
+      return { ...data, interval: opts.interval }
     },
     placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey }) => {
@@ -219,8 +220,7 @@ export default function VisitorGraph({
                 {!showGraphLoader && (
                   <LineGraphWithRouter
                     graphData={{
-                      ...mainGraphQuery.data,
-                      interval: selectedInterval
+                      ...mainGraphQuery.data
                     }}
                   />
                 )}
