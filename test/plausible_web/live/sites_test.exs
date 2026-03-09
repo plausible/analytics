@@ -639,6 +639,64 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       refute Repo.get_by(Plausible.Site.UserPreference, user_id: user.id, site_id: site.id)
     end
+
+    test "pin icon is shown on site card when site is pinned", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      assert {:ok, _} = Plausible.Sites.toggle_pin(user, site)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert element_exists?(
+               html,
+               ~s/li[data-domain="#{site.domain}"] [data-test-id="site-card-pin-icon"]/
+             )
+    end
+
+    test "pin icon is not shown on site card when site is not pinned", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute element_exists?(
+               html,
+               ~s/li[data-domain="#{site.domain}"] [data-test-id="site-card-pin-icon"]/
+             )
+    end
+
+    test "pin icon appears on site card after pinning", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      button_selector = ~s/li[data-domain="#{site.domain}"] button[phx-value-domain]/
+
+      lv |> element(button_selector) |> render_click()
+
+      html = render(lv)
+
+      assert element_exists?(
+               html,
+               ~s/li[data-domain="#{site.domain}"] [data-test-id="site-card-pin-icon"]/
+             )
+    end
+
+    test "pin icon disappears from site card after unpinning", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      assert {:ok, _} = Plausible.Sites.toggle_pin(user, site)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      button_selector = ~s/li[data-domain="#{site.domain}"] button[phx-value-domain]/
+
+      lv |> element(button_selector) |> render_click()
+
+      html = render(lv)
+
+      refute element_exists?(
+               html,
+               ~s/li[data-domain="#{site.domain}"] [data-test-id="site-card-pin-icon"]/
+             )
+    end
   end
 
   describe "sort widget" do
@@ -720,7 +778,10 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert domains == "zebra.example.com mango.example.com apple.example.com"
     end
 
-    test "Traffic, high to low sort orders sites alphabetically descending", %{conn: conn, user: user} do
+    test "Traffic, high to low sort orders sites alphabetically descending", %{
+      conn: conn,
+      user: user
+    } do
       high = new_site(domain: "low.example.com", owner: user)
       mid = new_site(domain: "mid.example.com", owner: user)
       low = new_site(domain: "high.example.com", owner: user)
@@ -735,7 +796,10 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert domains == "#{high.domain} #{mid.domain} #{low.domain}"
     end
 
-    test "Traffic, low to high sort orders sites alphabetically ascending", %{conn: conn, user: user} do
+    test "Traffic, low to high sort orders sites alphabetically ascending", %{
+      conn: conn,
+      user: user
+    } do
       high = new_site(domain: "low.example.com", owner: user)
       mid = new_site(domain: "mid.example.com", owner: user)
       low = new_site(domain: "high.example.com", owner: user)

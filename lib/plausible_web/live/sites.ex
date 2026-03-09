@@ -590,7 +590,12 @@ defmodule PlausibleWeb.Live.Sites do
         theme="icon"
       >
         <Heroicons.ellipsis_vertical :if={!@site.pinned_at} class="size-5" />
-        <Heroicons.map_pin :if={@site.pinned_at} class="size-5" />
+            <.icon_pin
+              :if={@site.pinned_at}
+              filled={true}
+              data-test-id="site-card-pin-icon"
+              class="size-4 shrink-0 text-indigo-600 dark:text-indigo-500"
+            />
       </PrimaDropdown.dropdown_trigger>
 
       <PrimaDropdown.dropdown_menu id={"#{@dropdown_id}-menu"}>
