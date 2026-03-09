@@ -41,14 +41,17 @@ const ArrowKeybind = ({
 }
 
 function ArrowIcon({
+  testId,
   direction,
   disabled = false
 }: {
+  testId?: string
   direction: 'left' | 'right'
   disabled?: boolean
 }) {
   return (
     <svg
+      data-testid={testId}
       className={classNames(
         'feather size-4',
         disabled
@@ -117,7 +120,11 @@ export function MovePeriodArrows({ className }: { className?: string }) {
             : (search) => search
         }
       >
-        <ArrowIcon direction="left" disabled={!canGoBack} />
+        <ArrowIcon
+          testId="period-move-back"
+          direction="left"
+          disabled={!canGoBack}
+        />
       </AppNavigationLink>
       <AppNavigationLink
         className={classNames(sharedClass, 'rounded-r', {
@@ -135,7 +142,11 @@ export function MovePeriodArrows({ className }: { className?: string }) {
             : (search) => search
         }
       >
-        <ArrowIcon direction="right" disabled={!canGoForward} />
+        <ArrowIcon
+          testId="period-move-forward"
+          direction="right"
+          disabled={!canGoForward}
+        />
       </AppNavigationLink>
       {!!dashboardRouteMatch && <ArrowKeybind keyboardKey="ArrowLeft" />}
       {!!dashboardRouteMatch && <ArrowKeybind keyboardKey="ArrowRight" />}

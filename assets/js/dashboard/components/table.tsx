@@ -37,6 +37,7 @@ export const TableHeaderCell = ({
 }) => {
   return (
     <th
+      data-testid="report-header"
       className={classNames(
         'p-2 text-xs font-semibold text-gray-500 dark:text-gray-400',
         className
@@ -105,6 +106,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
 
   return (
     <tr
+      data-testid="report-row"
       className="group text-sm dark:text-gray-200 md:cursor-default cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

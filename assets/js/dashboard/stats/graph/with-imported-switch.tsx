@@ -33,7 +33,7 @@ export default function WithImportedSwitch({
         }
         className="flex items-center justify-center"
       >
-        <BarsArrowUpIcon className={iconClass} />
+        <BarsArrowUpIcon data-testid="import-switch" className={iconClass} />
       </AppNavigationLink>
     </Tooltip>
   )

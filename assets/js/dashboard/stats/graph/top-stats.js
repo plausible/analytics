@@ -201,7 +201,10 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
 
           {isComparison ? (
             <div>
-              <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
+              <p
+                id={`previous-${stat.metric}`}
+                className="font-bold text-xl text-gray-500 dark:text-gray-400"
+              >
                 {topStatNumberShort(stat.metric, stat.comparisonValue)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
