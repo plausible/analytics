@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Live.Components.Pagination do
   Pagination components for LiveViews.
   """
   use Phoenix.Component
+  alias Phoenix.LiveView.JS
 
   def pagination(assigns) do
     ~H"""
@@ -59,7 +60,8 @@ defmodule PlausibleWeb.Live.Components.Pagination do
 
     ~H"""
     <.link
-      navigate={@uri}
+      patch={@uri}
+      phx-click={@active? && JS.dispatch("scroll-to-top")}
       class={[
         "pagination-link relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md",
         if @active? do

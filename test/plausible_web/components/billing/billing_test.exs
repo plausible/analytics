@@ -184,7 +184,7 @@ defmodule PlausibleWeb.Components.BillingTest do
       custom_events: 0,
       total: 0,
       date_range: Date.range(~D[2024-01-01], ~D[2024-01-31]),
-      sites: []
+      per_site: []
     }
 
     test "only shows current cycle when neither last nor current cycle is exceeded" do
@@ -257,7 +257,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     test "shows 'Total pageviews' and 'Total custom events' labels when per-site breakdown is present" do
       cycle_with_sites = %{
         @cycle
-        | sites: [
+        | per_site: [
             %{domain: "example.com", pageviews: 100, custom_events: 50, total: 150},
             %{domain: "app.example.com", pageviews: 200, custom_events: 30, total: 230}
           ]
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     test "renders per-site breakdown when sites are present" do
       cycle_with_sites = %{
         @cycle
-        | sites: [
+        | per_site: [
             %{domain: "example.com", pageviews: 100, custom_events: 50, total: 150},
             %{domain: "app.example.com", pageviews: 200, custom_events: 30, total: 230}
           ]
@@ -308,7 +308,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     test "current cycle is not expanded by default when per-site breakdown is present" do
       cycle_with_sites = %{
         @cycle
-        | sites: [
+        | per_site: [
             %{domain: "example.com", pageviews: 100, custom_events: 50, total: 150},
             %{domain: "app.example.com", pageviews: 200, custom_events: 30, total: 230}
           ]
@@ -319,6 +319,55 @@ defmodule PlausibleWeb.Components.BillingTest do
       html = render_monthly_pageview_usage(usage, 10_000)
 
       refute html =~ "{ open: true }"
+    end
+
+    test "renders a total link when total_pageview_usage_domain is provided" do
+      usage = %{current_cycle: @cycle, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html =
+        render_monthly_pageview_usage(usage, 10_000,
+          total_pageview_usage_domain: "my-site.example.com"
+        )
+
+      assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
+      assert html =~ "/my-site.example.com/?period=custom"
+    end
+
+    test "renders no total link when no domain is provided" do
+      usage = %{current_cycle: @cycle, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html = render_monthly_pageview_usage(usage, 10_000)
+
+      refute element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
+    end
+
+    test "per-site breakdown shows a dashboard link for each site" do
+      cycle_with_sites = %{
+        @cycle
+        | per_site: [
+            %{domain: "example.com", pageviews: 100, custom_events: 50, total: 150},
+            %{domain: "app.example.com", pageviews: 200, custom_events: 30, total: 230}
+          ]
+      }
+
+      usage = %{current_cycle: cycle_with_sites, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html = render_monthly_pageview_usage(usage, 10_000)
+
+      assert html =~ "/example.com/?period=custom"
+      assert html =~ "/app.example.com/?period=custom"
+    end
+
+    test "dashboard links include the billing cycle date range" do
+      usage = %{current_cycle: @cycle, last_cycle: @cycle, penultimate_cycle: @cycle}
+
+      html =
+        render_monthly_pageview_usage(usage, 10_000,
+          total_pageview_usage_domain: "my-site.example.com"
+        )
+
+      assert html =~
+               "/my-site.example.com/?period=custom&amp;from=2024-01-01&amp;to=2024-01-31"
     end
   end
 
@@ -334,13 +383,18 @@ defmodule PlausibleWeb.Components.BillingTest do
     |> rendered_to_string()
   end
 
-  defp render_monthly_pageview_usage(usage, limit) do
-    assigns = %{usage: usage, limit: limit}
+  defp render_monthly_pageview_usage(usage, limit, opts \\ []) do
+    assigns = %{
+      usage: usage,
+      limit: limit,
+      total_pageview_usage_domain: opts[:total_pageview_usage_domain]
+    }
 
     ~H"""
     <PlausibleWeb.Components.Billing.render_monthly_pageview_usage
       usage={@usage}
       limit={@limit}
+      total_pageview_usage_domain={@total_pageview_usage_domain}
     />
     """
     |> rendered_to_string()

@@ -162,6 +162,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     end
 
     describe "sites" do
+      @arrow_down "↓"
+      @arrow_up "↑"
+      @arrow_up_down "↕"
+
       test "lists sites belonging to a team", %{conn: conn, user: user} do
         team = team_of(user)
         new_site(owner: user, domain: "primary.example.com/test")
@@ -181,6 +185,156 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text =~ "secondary.example.com"
         refute text =~ "condolidated.example.com"
         refute text =~ "other.example.com"
+      end
+
+      test "paginates sites", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        for i <- 1..24 do
+          new_site(owner: user, domain: "site-#{String.pad_leading("#{i}", 2, "0")}.example.com")
+        end
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+        html = render(lv)
+
+        assert element_exists?(html, ~s|nav[aria-label="Pagination"]|)
+        assert text(html) =~ "Total of 25 sites"
+        assert text(html) =~ "Page 1 of 2"
+
+        lv |> render_patch(open_team(team.id, tab: "sites", page: 2))
+        html = render(lv)
+
+        assert text(html) =~ "Page 2 of 2"
+
+        lv |> render_patch(open_team(team.id, tab: "sites", page: 1))
+        html = render(lv)
+
+        assert text(html) =~ "Page 1 of 2"
+      end
+
+      test "persists sort order across paginated entries", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        for i <- 1..24 do
+          new_site(owner: user, domain: "site-#{String.pad_leading("#{i}", 2, "0")}.example.com")
+        end
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+
+        # sort alphabetically ascending
+        lv |> element(~s|th[phx-value-by="alnum"]|) |> render_click()
+
+        html = render(lv)
+        page1_domains = extract_domains(html)
+        assert page1_domains == Enum.sort(page1_domains)
+
+        lv |> render_patch(open_team(team.id, tab: "sites", page: 2))
+        html = render(lv)
+        page2_domains = extract_domains(html)
+
+        # should still be alphabetically ascending on page 2
+        assert page2_domains == Enum.sort(page2_domains)
+        assert Enum.max(page1_domains) < Enum.min(page2_domains)
+      end
+
+      test "shows no pagination when sites fit on one page", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(owner: user, domain: "only-site.example.com")
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+        html = render(lv)
+
+        refute element_exists?(html, ~s|nav[aria-label="Pagination"]|)
+        assert text(html) =~ "only-site.example.com"
+      end
+
+      test "sorts by domain ascending when Domain header is clicked", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(owner: user, domain: "zebra.example.com")
+        new_site(owner: user, domain: "apple.example.com")
+        new_site(owner: user, domain: "mango.example.com")
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+
+        lv
+        |> element(~s|th[phx-value-by="alnum"]|)
+        |> render_click()
+
+        html = render(lv)
+        domains = extract_domains(html)
+
+        assert domains == Enum.sort(domains)
+      end
+
+      test "flips to descending when Domain header is clicked twice", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(owner: user, domain: "zebra.example.com")
+        new_site(owner: user, domain: "apple.example.com")
+        new_site(owner: user, domain: "mango.example.com")
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+
+        lv |> element(~s|th[phx-value-by="alnum"]|) |> render_click()
+        lv |> element(~s|th[phx-value-by="alnum"]|) |> render_click()
+
+        html = render(lv)
+        domains = extract_domains(html)
+
+        assert domains == Enum.sort(domains, :desc)
+      end
+
+      test "flips direction when Traffic header is clicked twice", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(owner: user, domain: "zebra.example.com")
+        new_site(owner: user, domain: "apple.example.com")
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+
+        # default is traffic desc, click to flip
+        html_after_first = lv |> element(~s|th[phx-value-by="traffic"]|) |> render_click()
+        html_after_second = lv |> element(~s|th[phx-value-by="traffic"]|) |> render_click()
+
+        assert text(html_after_first) =~ @arrow_up
+        assert text(html_after_second) =~ @arrow_down
+      end
+
+      test "switches from traffic sort to domain sort", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(owner: user, domain: "zebra.example.com")
+        new_site(owner: user, domain: "apple.example.com")
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+
+        # default active column is traffic down
+        assert text(render(lv)) =~ @arrow_down
+
+        lv |> element(~s|th[phx-value-by="alnum"]|) |> render_click()
+
+        html = render(lv)
+        domains = extract_domains(html)
+
+        # now sorted alphabetically
+        assert domains == Enum.sort(domains)
+      end
+
+      test "shows sort arrow only on active column", %{conn: conn, user: user} do
+        team = team_of(user)
+        new_site(owner: user, domain: "apple.example.com")
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: "sites"))
+
+        html = render(lv)
+        traffic_th = text_of_element(html, ~s|th[phx-value-by="traffic"]|)
+        domain_th = text_of_element(html, ~s|th[phx-value-by="alnum"]|)
+
+        # traffic is the default active sort, has a directional arrow
+        assert traffic_th =~ @arrow_down
+        refute traffic_th =~ @arrow_up_down
+
+        # domain sort is inactive
+        assert domain_th =~ @arrow_up_down
+        refute domain_th =~ @arrow_up
+        refute domain_th =~ @arrow_down
       end
     end
 
@@ -911,6 +1065,18 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         for i <- 4..8, do: refute(text =~ "Entry (#{i})")
         for i <- 1..3, do: assert(text =~ "Entry (#{i})")
       end
+    end
+
+    defp extract_domains(html) do
+      domains =
+        html
+        |> find("tbody tr td:first-child a")
+        |> Enum.map(&text/1)
+        |> Enum.map(&String.trim/1)
+        |> Enum.reject(&(&1 == ""))
+
+      assert [_ | _] = domains
+      domains
     end
   end
 end

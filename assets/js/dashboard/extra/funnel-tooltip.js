@@ -14,7 +14,7 @@ export default function FunnelTooltip(palette, funnel) {
     }
 
     tooltipEl.className =
-      'absolute text-sm font-normal py-3 px-4 pointer-events-none rounded-md z-[100] bg-[rgb(25_30_56)]'
+      'absolute text-sm font-normal py-3 px-4 pointer-events-none rounded-md z-[100] bg-gray-950'
 
     if (tooltipEl && offset) {
       tooltipEl.style.opacity = 1
@@ -30,52 +30,27 @@ export default function FunnelTooltip(palette, funnel) {
       const previousStep = dataIndex > 0 ? funnel.steps[dataIndex - 1] : null
 
       tooltipEl.innerHTML = `
-        <aside class="text-gray-100 flex flex-col">
-          <div class="flex justify-between items-center border-b-2 border-gray-700 pb-2">
-            <span class="font-semibold mr-4 text-lg">${previousStep ? `<span class="mr-2">${previousStep.label}</span>` : ''}
-              <span class="text-gray-500 mr-2">→</span>
-              ${tooltipModel.title}
-            </span>
+        <aside class="text-gray-100 flex flex-col gap-2">
+          <div class="flex items-center gap-3 font-semibold">${previousStep ? `<span>${previousStep.label}</span>` : ''}
+            <span class="text-gray-400">→</span>
+            ${tooltipModel.title}
           </div>
+          <hr class="border-gray-750" />
+          <div class="grid grid-cols-[1fr_auto_auto] items-center gap-y-1 gap-x-4">
+            <span class="flex items-center gap-2">
+              <span class="size-2 rounded-full ${palette.visitorsLegendClass}"></span>
+              ${dataIndex == 0 ? 'Entered the funnel' : 'Visitors'}
+            </span>
+            <span class="text-right font-semibold">${dataIndex == 0 ? funnel.entering_visitors.toLocaleString() : currentStep.visitors.toLocaleString()}</span>
+            <span class="text-right text-gray-400">${dataIndex == 0 ? funnel.entering_visitors_percentage : currentStep.conversion_rate_step}%</span>
 
-          <table class="min-w-full mt-2">
-            <tr>
-              <th>
-                <span class="flex items-center mr-4">
-                  <div class="w-3 h-3 mr-1 rounded-full ${palette.visitorsLegendClass}"></div>
-                  <span>
-                    ${dataIndex == 0 ? 'Entered the funnel' : 'Visitors'}
-                  </span>
-                </span>
-              </th>
-              <td class="text-right font-bold px-4">
-                <span>
-                  ${dataIndex == 0 ? funnel.entering_visitors.toLocaleString() : currentStep.visitors.toLocaleString()}
-                </span>
-              </td>
-              <td class="text-right text-sm">
-                <span>
-                  ${dataIndex == 0 ? funnel.entering_visitors_percentage : currentStep.conversion_rate_step}%
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <th>
-                <span class="flex items-center">
-                  <div class="w-3 h-3 mr-1 rounded-full ${palette.dropoffLegendClass}"></div>
-                  <span>
-                    ${dataIndex == 0 ? 'Never entered the funnel' : 'Dropoff'}
-                  </span>
-                </span>
-              </th>
-              <td class="text-right font-bold px-4">
-                <span>${dataIndex == 0 ? funnel.never_entering_visitors.toLocaleString() : currentStep.dropoff.toLocaleString()}</span>
-              </td >
-              <td class="text-right text-sm">
-                <span>${dataIndex == 0 ? funnel.never_entering_visitors_percentage : currentStep.dropoff_percentage}%</span>
-              </td>
-            </tr >
-          </table >
+            <span class="flex items-center gap-2">
+              <span class="size-2 rounded-full ${palette.dropoffLegendClass}"></span>
+              ${dataIndex == 0 ? 'Never entered the funnel' : 'Dropoff'}
+            </span>
+            <span class="text-right font-semibold">${dataIndex == 0 ? funnel.never_entering_visitors.toLocaleString() : currentStep.dropoff.toLocaleString()}</span>
+            <span class="text-right text-gray-400">${dataIndex == 0 ? funnel.never_entering_visitors_percentage : currentStep.dropoff_percentage}%</span>
+          </div>
         </aside >
       `
     }

@@ -151,7 +151,9 @@ defmodule Plausible.Stats.Query do
     requested? = query.include.imports
 
     query =
-      if site do
+      if site && Imported.schema_supports_interval?(query) do
+        site = Plausible.Repo.preload(site, :completed_imports)
+
         struct!(query,
           imports_exist: Plausible.Imported.any_completed_imports?(site),
           imports_in_range: get_imports_in_range(site, query)
@@ -188,17 +190,17 @@ defmodule Plausible.Stats.Query do
   end
 
   @spec get_skip_imported_reason(t()) ::
-          nil | :no_imported_data | :out_of_range | :unsupported_query
+          nil | :no_imported_data | :out_of_range | :unsupported_interval | :unsupported_query
   def get_skip_imported_reason(query) do
     cond do
+      not Imported.schema_supports_interval?(query) ->
+        :unsupported_interval
+
       not query.imports_exist ->
         :no_imported_data
 
       query.imports_in_range == [] ->
         :out_of_range
-
-      "time:minute" in query.dimensions or "time:hour" in query.dimensions ->
-        :unsupported_interval
 
       not Imported.schema_supports_query?(query) ->
         :unsupported_query

@@ -25,10 +25,13 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     team = Resource.Team.get(team_id)
 
     if team do
+      tab_params = Map.drop(params, ["id", "tab"])
+
       socket =
         socket
         |> assign(:team, team)
         |> assign(:tab, tab)
+        |> assign(:tab_params, tab_params)
 
       {:noreply, go_to_tab(socket, tab, params, :team, tab_component(tab))}
     else
@@ -85,6 +88,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         module={tab_component(@tab)}
         team={@team}
         tab={@tab}
+        tab_params={@tab_params}
         id={"team-#{@team.id}-#{@tab}"}
       />
     </Layout.layout>

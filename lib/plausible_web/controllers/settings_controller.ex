@@ -152,6 +152,14 @@ defmodule PlausibleWeb.SettingsController do
 
     notification_type = Plausible.Billing.Quota.usage_notification_type(team, usage)
 
+    total_pageview_usage_domain =
+      if site_usage == 1 do
+        [site] = Plausible.Teams.owned_sites(team)
+        site.domain
+      else
+        on_ee(do: team && get_consolidated_view_domain(team), else: nil)
+      end
+
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
       subscription: subscription,
@@ -162,7 +170,8 @@ defmodule PlausibleWeb.SettingsController do
       site_limit: Teams.Billing.site_limit(team),
       team_member_limit: Teams.Billing.team_member_limit(team),
       team_member_usage: team_member_usage,
-      notification_type: notification_type
+      notification_type: notification_type,
+      total_pageview_usage_domain: total_pageview_usage_domain
     )
   end
 
@@ -458,6 +467,15 @@ defmodule PlausibleWeb.SettingsController do
       end
     else
       {:ok, user}
+    end
+  end
+
+  on_ee do
+    defp get_consolidated_view_domain(team) do
+      case Plausible.ConsolidatedView.get(team) do
+        nil -> nil
+        view -> if Plausible.ConsolidatedView.ok_to_display?(team), do: view.domain
+      end
     end
   end
 

@@ -3,12 +3,14 @@
   "scripts": {
     "lint": "eslint",
     "check-format": "prettier --check \"**/*.{js,mjs,ts,html,json,md}\"",
-    "test": "npx playwright test",
-    "test:ui": "npx playwright test --ui"
+    "typecheck": "tsc --noEmit --pretty",
+    "test": "npx playwright test"
   },
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@js-joda/core": "^5.7.0",
+    "@js-joda/locale": "^4.15.3",
     "@playwright/test": "^1.58.0",
     "@types/node": "^25.1.0",
     "eslint": "^9.39.2",

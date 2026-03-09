@@ -532,6 +532,57 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html =~ "Invoices"
       assert text(html) =~ "We couldn't retrieve your invoices"
     end
+
+    @tag :ee_only
+    test "shows dashboard link to the site when team has exactly one site", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+
+      html =
+        conn
+        |> get(Routes.settings_path(conn, :subscription))
+        |> html_response(200)
+
+      assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
+    end
+
+    @tag :ee_only
+    test "shows no total dashboard link when team has multiple sites and no consolidated view", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+      new_site(owner: user)
+
+      html =
+        conn
+        |> get(Routes.settings_path(conn, :subscription))
+        |> html_response(200)
+
+      refute element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
+    end
+
+    on_ee do
+      test "shows consolidated view dashboard link when team has a consolidated view", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+        team = team_of(user)
+        new_consolidated_view(team)
+
+        html =
+          conn
+          |> set_current_team(team)
+          |> get(Routes.settings_path(conn, :subscription))
+          |> html_response(200)
+
+        assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
+      end
+    end
   end
 
   describe "GET /security" do
@@ -1313,7 +1364,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
           :team_danger_zone,
           :danger_zone
         ])
-        |> Floki.parse_document!()
+        |> LazyHTML.from_document()
         |> assert_sidebar_menu(expected_account_menu)
         |> assert_mobile_menu(expected_account_menu)
       end
@@ -1369,7 +1420,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
           else: [:subscription, :team_general, :sso]
         )
       )
-      |> Floki.parse_document!()
+      |> LazyHTML.from_document()
       |> assert_sidebar_menu(expected_account_menu)
       |> assert_mobile_menu(expected_account_menu)
     end
@@ -1397,7 +1448,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
           else: [:subscription, :team_general, :sso]
         )
       )
-      |> Floki.parse_document!()
+      |> LazyHTML.from_document()
       |> assert_sidebar_menu(expected_account_menu)
       |> assert_mobile_menu(expected_account_menu)
     end
@@ -1428,7 +1479,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         )
 
       html
-      |> Floki.parse_document!()
+      |> LazyHTML.from_document()
       |> assert_sidebar_menu(expected_account_menu, expected_team_menu)
       |> assert_mobile_menu(expected_account_menu, expected_team_menu)
     end
@@ -1467,7 +1518,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         )
 
       html
-      |> Floki.parse_document!()
+      |> LazyHTML.from_document()
       |> assert_sidebar_menu(expected_account_menu, expected_team_menu)
       |> assert_mobile_menu(expected_account_menu, expected_team_menu)
     end
@@ -2024,18 +2075,18 @@ defmodule PlausibleWeb.SettingsControllerTest do
   end
 
   defp get_mobile_menu_options(document) do
-    Floki.find(document, "[data-testid='mobile-nav-dropdown'] option")
+    LazyHTML.query(document, "[data-testid='mobile-nav-dropdown'] option")
     |> Enum.map(&parse_option/1)
   end
 
   defp parse_option(option),
-    do: {Floki.text(option), Floki.attribute(option, "value") |> List.first()}
+    do: {LazyHTML.text(option), LazyHTML.attribute(option, "value") |> List.first()}
 
   defp get_sidebar_menu_items(document) do
-    Floki.find(document, "[data-testid='settings-sidebar'] a")
+    LazyHTML.query(document, "[data-testid='settings-sidebar'] a")
     |> Enum.map(&parse_link/1)
   end
 
   defp parse_link(link),
-    do: {Floki.text(link) |> String.trim(), Floki.attribute(link, "href") |> List.first()}
+    do: {LazyHTML.text(link) |> String.trim(), LazyHTML.attribute(link, "href") |> List.first()}
 end
