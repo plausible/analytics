@@ -9,6 +9,7 @@ defmodule PlausibleWeb.Live.Sites do
   require Logger
 
   alias Plausible.Sites
+  alias Plausible.Sites.Index, as: SitesIndex
   alias Plausible.Teams
 
   alias PlausibleWeb.Components.PrimaDropdown
@@ -21,11 +22,22 @@ defmodule PlausibleWeb.Live.Sites do
       ("/sites?" <> URI.encode_query(Map.take(params, ["filter_text"])))
       |> URI.new!()
 
+    filter_text = String.trim(params["filter_text"] || "")
+
+    index_state =
+      SitesIndex.build(user,
+        filter_by_domain: filter_text,
+        team: team,
+        sort_by: :traffic,
+        sort_direction: :desc
+      )
+
     socket =
       socket
       |> assign(:uri, uri)
       |> assign(:sparklines, %{})
-      |> assign(:filter_text, String.trim(params["filter_text"] || ""))
+      |> assign(:filter_text, filter_text)
+      |> assign(:index_state, index_state)
       |> assign(init_consolidated_view_assigns(user, team))
       |> assign(:team_invitations, [])
       |> assign(:site_invitations, [])
@@ -35,10 +47,20 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def handle_params(params, _uri, socket) do
+    new_filter = String.trim(params["filter_text"] || "")
+
     socket =
       socket
       |> assign(:params, params)
-      |> load_sites()
+      |> assign(:filter_text, new_filter)
+      |> then(fn s ->
+        assign(
+          s,
+          :index_state,
+          SitesIndex.update_state(s.assigns.index_state, :filter_by_domain, new_filter)
+        )
+      end)
+      |> load_page()
       |> load_invitations()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
         Teams.Users.has_sites?(current_user, include_pending?: true)
@@ -226,7 +248,11 @@ defmodule PlausibleWeb.Live.Sites do
           page_number={@sites.page_number}
           total_pages={@sites.total_pages}
         >
-          Total of <span class="font-medium">{@sites.total_entries}</span> sites
+          Total of
+          <span class="font-medium">
+            {PlausibleWeb.TextHelpers.number_format(@sites.total_entries)}
+          </span>
+          sites. Page {@sites.page_number} of {@sites.total_pages}
         </.pagination>
       </div>
     </div>
@@ -536,7 +562,8 @@ defmodule PlausibleWeb.Live.Sites do
         mt?={false}
         theme="icon"
       >
-        <Heroicons.ellipsis_vertical class="size-5" />
+        <Heroicons.ellipsis_vertical :if={!@site.pinned_at} class="size-5" />
+        <Heroicons.map_pin :if={@site.pinned_at} class="size-5" />
       </PrimaDropdown.dropdown_trigger>
 
       <PrimaDropdown.dropdown_menu id={"#{@dropdown_id}-menu"}>
@@ -738,7 +765,8 @@ defmodule PlausibleWeb.Live.Sites do
 
             socket
             |> put_live_flash(:success, flash_message)
-            |> load_sites()
+            |> refresh_index_pins()
+            |> load_page()
             |> push_event("js-exec", %{
               to: "#site-card-#{hash_domain(site.domain)}",
               attr: "data-pin-toggled"
@@ -831,16 +859,25 @@ defmodule PlausibleWeb.Live.Sites do
     |> assign(:site_ownership_invitations, site_transfers)
   end
 
-  defp load_sites(%{assigns: assigns} = socket) do
-    sites =
-      Sites.list(assigns.current_user, assigns.params,
-        filter_by_domain: assigns.filter_text,
-        team: assigns.current_team
-      )
+  defp load_page(%{assigns: assigns} = socket) do
+    page_number = assigns.params["page"]
+    page_size = assigns.params["page_size"]
+
+    page = SitesIndex.paginate(assigns.index_state, page_number, page_size)
+
+    index_opts = [
+      filter_by_domain: assigns.filter_text,
+      team: assigns.current_team
+    ]
+
+    site_entries =
+      Sites.get_for_user_by_ids(assigns.current_user, page.entries, index_opts)
+
+    sites = %{page | entries: site_entries}
 
     sparklines =
       if connected?(socket) do
-        Plausible.Stats.Sparkline.parallel_overview(sites.entries)
+        Plausible.Stats.Sparkline.parallel_overview(site_entries)
       else
         %{}
       end
@@ -856,6 +893,10 @@ defmodule PlausibleWeb.Live.Sites do
       sparklines: sparklines,
       consolidated_sparkline: consolidated_sparkline || Map.get(assigns, :consolidated_sparkline)
     )
+  end
+
+  defp refresh_index_pins(socket) do
+    assign(socket, :index_state, SitesIndex.refresh_pins(socket.assigns.index_state))
   end
 
   on_ee do

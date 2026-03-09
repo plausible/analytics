@@ -12,104 +12,6 @@ defmodule Plausible.Teams.Sites do
 
   @role_type Plausible.Teams.Invitation.__schema__(:type, :role)
 
-  @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
-  def list(user, pagination_params, opts \\ []) do
-    domain_filter = Keyword.get(opts, :filter_by_domain)
-    team = Keyword.get(opts, :team)
-
-    all_query =
-      if Teams.setup?(team) do
-        from(tm in Teams.Membership,
-          inner_join: t in assoc(tm, :team),
-          inner_join: s in assoc(t, :sites),
-          where: tm.user_id == ^user.id and tm.role != :guest,
-          where: tm.team_id == ^team.id,
-          select: %{site_id: s.id, entry_type: "site", role: tm.role}
-        )
-      else
-        my_team_query =
-          from(tm in Teams.Membership,
-            inner_join: t in assoc(tm, :team),
-            inner_join: s in assoc(t, :sites),
-            where: tm.user_id == ^user.id and tm.role != :guest,
-            where: tm.is_autocreated == true,
-            where: t.setup_complete == false,
-            select: %{site_id: s.id, entry_type: "site", role: tm.role}
-          )
-
-        guest_membership_query =
-          from tm in Teams.Membership,
-            inner_join: gm in assoc(tm, :guest_memberships),
-            inner_join: s in assoc(gm, :site),
-            where: tm.user_id == ^user.id and tm.role == :guest,
-            select: %{
-              site_id: s.id,
-              entry_type: "site",
-              role:
-                fragment(
-                  """
-                  CASE
-                    WHEN ? = 'editor' THEN 'admin'
-                    ELSE ?
-                  END
-                  """,
-                  gm.role,
-                  gm.role
-                )
-            }
-
-        from s in my_team_query,
-          union_all: ^guest_membership_query
-      end
-
-    from(u in subquery(all_query),
-      inner_join: s in ^Plausible.Site.regular(),
-      on: u.site_id == s.id,
-      as: :site,
-      left_join: up in Site.UserPreference,
-      on: up.site_id == s.id and up.user_id == ^user.id,
-      select: %{
-        s
-        | entry_type:
-            selected_as(
-              fragment(
-                """
-                CASE
-                  WHEN ? IS NOT NULL THEN 'pinned_site'
-                  ELSE ?
-                END
-                """,
-                up.pinned_at,
-                u.entry_type
-              ),
-              :entry_type
-            ),
-          pinned_at: selected_as(up.pinned_at, :pinned_at),
-          memberships: [
-            %{
-              role: type(u.role, ^@role_type),
-              site_id: s.id,
-              site: s
-            }
-          ]
-      },
-      order_by: [
-        asc: selected_as(:entry_type),
-        desc: selected_as(:pinned_at),
-        asc: s.domain
-      ]
-    )
-    |> maybe_filter_by_domain(domain_filter)
-    |> Repo.paginate(pagination_params)
-  end
-
-  defp maybe_filter_by_domain(query, domain)
-       when byte_size(domain) >= 1 and byte_size(domain) <= 64 do
-    where(query, [site: s], ilike(s.domain, ^"%#{domain}%"))
-  end
-
-  defp maybe_filter_by_domain(query, _), do: query
-
   @spec accessible_by(Auth.User.t(), Teams.Team.t() | nil) :: Ecto.Query.t()
   def accessible_by(user, team) do
     if Teams.setup?(team) do
@@ -154,5 +56,37 @@ defmodule Plausible.Teams.Sites do
 
       from(s in my_team_query, union_all: ^guest_membership_query)
     end
+  end
+
+  @spec get_for_user_by_ids(Auth.User.t(), [pos_integer()], [list_opt()]) :: [Site.t()]
+  def get_for_user_by_ids(_user, [], _opts), do: []
+
+  def get_for_user_by_ids(user, site_ids, opts) do
+    team = Keyword.get(opts, :team)
+
+    rows =
+      from(u in subquery(accessible_by(user, team)),
+        inner_join: s in ^Plausible.Site.regular(),
+        on: u.site_id == s.id,
+        left_join: up in Site.UserPreference,
+        on: up.site_id == s.id and up.user_id == ^user.id,
+        where: s.id in ^site_ids,
+        select: %{
+          s
+          | pinned_at: selected_as(up.pinned_at, :pinned_at),
+            memberships: [
+              %{
+                role: type(u.role, ^@role_type),
+                site_id: s.id,
+                site: s
+              }
+            ]
+        }
+      )
+      |> Repo.all()
+
+    # Restore the caller-supplied order
+    by_id = Map.new(rows, &{&1.id, &1})
+    Enum.flat_map(site_ids, fn id -> List.wrap(Map.get(by_id, id)) end)
   end
 end

@@ -134,7 +134,7 @@ defmodule Plausible.Sites do
     )
   end
 
-  defdelegate list(user, pagination_params, opts \\ []), to: Plausible.Teams.Sites
+  defdelegate get_for_user_by_ids(user, site_ids, opts \\ []), to: Plausible.Teams.Sites
 
   def list_people(site) do
     owner_memberships =

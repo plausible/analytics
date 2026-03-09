@@ -1,8 +1,10 @@
 defmodule PlausibleWeb.Api.InternalController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  import Ecto.Query
   alias Plausible.{Sites, Auth}
   alias Plausible.Auth.User
+  alias Plausible.Teams
 
   def sites(conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -56,7 +58,23 @@ defmodule PlausibleWeb.Api.InternalController do
   end
 
   defp sites_for(user, team) do
-    pagination = Sites.list(user, %{page_size: 9}, team: team)
-    Enum.map(pagination.entries, &%{domain: &1.domain})
+    from(u in subquery(Teams.Sites.accessible_by(user, team)),
+      inner_join: s in ^Plausible.Site.regular(),
+      on: u.site_id == s.id,
+      left_join: up in Plausible.Site.UserPreference,
+      on: up.site_id == s.id and up.user_id == ^user.id,
+      select: %{domain: s.domain},
+      order_by: [
+        asc:
+          fragment(
+            "CASE WHEN ? IS NOT NULL THEN 'pinned_site' ELSE 'site' END",
+            up.pinned_at
+          ),
+        desc: up.pinned_at,
+        asc: s.domain
+      ],
+      limit: 9
+    )
+    |> Repo.all()
   end
 end
