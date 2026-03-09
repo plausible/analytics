@@ -641,6 +641,132 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
   end
 
+  describe "sort widget" do
+    test "renders sort widget with default Visitors, high to low label", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Visitors, high to low"
+    end
+
+    test "sort widget shows all four options", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert html =~ "Visitors, high to low"
+      assert html =~ "Visitors, low to high"
+      assert html =~ "Name A-Z"
+      assert html =~ "Name Z-A"
+
+      assert find(html, "#sort-dropdown-item-traffic-desc")
+      assert find(html, "#sort-dropdown-item-traffic-asc")
+      assert find(html, "#sort-dropdown-item-alnum-desc")
+      assert find(html, "#sort-dropdown-item-alnum-asc")
+    end
+
+    test "clicking a sort option updates the active label", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      lv
+      |> element(~s|[id="sort-dropdown-item-alnum-asc"]|)
+      |> render_click()
+
+      html = render(lv)
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Name A-Z"
+    end
+
+    test "invalid sort_by param is sanitized to traffic", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=invalid&sort_direction=desc")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Visitors, high to low"
+    end
+
+    test "invalid sort_direction param is sanitized to desc", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=alnum&sort_direction=invalid")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Name Z-A"
+    end
+
+    test "Name A-Z sort orders sites alphabetically ascending", %{conn: conn, user: user} do
+      new_site(domain: "zebra.example.com", owner: user)
+      new_site(domain: "apple.example.com", owner: user)
+      new_site(domain: "mango.example.com", owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=alnum&sort_direction=asc")
+
+      domains = find(html, "li[data-domain] h3") |> text()
+
+      assert domains == "apple.example.com mango.example.com zebra.example.com"
+    end
+
+    test "Name Z-A sort orders sites alphabetically descending", %{conn: conn, user: user} do
+      new_site(domain: "zebra.example.com", owner: user)
+      new_site(domain: "apple.example.com", owner: user)
+      new_site(domain: "mango.example.com", owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=alnum&sort_direction=desc")
+
+      domains = find(html, "li[data-domain] h3") |> text()
+
+      assert domains == "zebra.example.com mango.example.com apple.example.com"
+    end
+
+    test "Traffic, high to low sort orders sites alphabetically descending", %{conn: conn, user: user} do
+      high = new_site(domain: "low.example.com", owner: user)
+      mid = new_site(domain: "mid.example.com", owner: user)
+      low = new_site(domain: "high.example.com", owner: user)
+
+      populate_stats(high, [build(:pageview), build(:pageview), build(:pageview)])
+      populate_stats(mid, [build(:pageview)])
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=traffic&sort_direction=desc")
+
+      domains = find(html, "li[data-domain] h3") |> text()
+
+      assert domains == "#{high.domain} #{mid.domain} #{low.domain}"
+    end
+
+    test "Traffic, low to high sort orders sites alphabetically ascending", %{conn: conn, user: user} do
+      high = new_site(domain: "low.example.com", owner: user)
+      mid = new_site(domain: "mid.example.com", owner: user)
+      low = new_site(domain: "high.example.com", owner: user)
+
+      populate_stats(high, [build(:pageview), build(:pageview), build(:pageview)])
+      populate_stats(mid, [build(:pageview)])
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=traffic&sort_direction=asc")
+
+      domains = find(html, "li[data-domain] h3") |> text()
+
+      assert domains == "#{low.domain} #{mid.domain} #{high.domain}"
+    end
+
+    test "switching sort resets to page 1", %{conn: conn, user: user} do
+      for _ <- 1..3, do: new_site(owner: user)
+
+      {:ok, lv, html} = live(conn, "/sites?page_size=2&page=2&sort_by=alnum&sort_direction=asc")
+
+      assert html =~ "page=1"
+
+      lv
+      |> element(~s|[id="sort-dropdown-item-alnum-desc"]|)
+      |> render_click()
+
+      html = render(lv)
+
+      refute html =~ "page=1"
+    end
+  end
+
   defp type_into_input(lv, id, text) do
     lv
     |> element("form")

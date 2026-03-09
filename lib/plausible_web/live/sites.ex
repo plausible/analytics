@@ -14,22 +14,33 @@ defmodule PlausibleWeb.Live.Sites do
 
   alias PlausibleWeb.Components.PrimaDropdown
 
+  defp sanitize_sort_by("traffic"), do: :traffic
+  defp sanitize_sort_by("alnum"), do: :alnum
+  defp sanitize_sort_by(_), do: :traffic
+
+  defp sanitize_sort_direction("asc"), do: :asc
+  defp sanitize_sort_direction("desc"), do: :desc
+  defp sanitize_sort_direction(_), do: :desc
+
   def mount(params, _session, socket) do
     team = socket.assigns.current_team
     user = socket.assigns.current_user
 
     uri =
-      ("/sites?" <> URI.encode_query(Map.take(params, ["filter_text"])))
+      ("/sites?" <>
+         URI.encode_query(Map.take(params, ["filter_text", "sort_by", "sort_direction"])))
       |> URI.new!()
 
     filter_text = String.trim(params["filter_text"] || "")
+    sort_by = sanitize_sort_by(params["sort_by"] || "traffic")
+    sort_direction = sanitize_sort_direction(params["sort_direction"] || "desc")
 
     index_state =
       SitesIndex.build(user,
         filter_by_domain: filter_text,
         team: team,
-        sort_by: :traffic,
-        sort_direction: :desc
+        sort_by: sort_by,
+        sort_direction: sort_direction
       )
 
     socket =
@@ -37,6 +48,8 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:uri, uri)
       |> assign(:sparklines, %{})
       |> assign(:filter_text, filter_text)
+      |> assign(:sort_by, sort_by)
+      |> assign(:sort_direction, sort_direction)
       |> assign(:index_state, index_state)
       |> assign(init_consolidated_view_assigns(user, team))
       |> assign(:team_invitations, [])
@@ -48,17 +61,22 @@ defmodule PlausibleWeb.Live.Sites do
 
   def handle_params(params, _uri, socket) do
     new_filter = String.trim(params["filter_text"] || "")
+    sort_by = sanitize_sort_by(params["sort_by"])
+    sort_direction = sanitize_sort_direction(params["sort_direction"])
 
     socket =
       socket
       |> assign(:params, params)
       |> assign(:filter_text, new_filter)
+      |> assign(:sort_by, sort_by)
+      |> assign(:sort_direction, sort_direction)
       |> then(fn s ->
-        assign(
-          s,
-          :index_state,
-          SitesIndex.update_state(s.assigns.index_state, :filter_by_domain, new_filter)
-        )
+        updated_state =
+          s.assigns.index_state
+          |> SitesIndex.update_state(:filter_by_domain, new_filter)
+          |> SitesIndex.sort(sort_by: sort_by, sort_direction: sort_direction)
+
+        assign(s, :index_state, updated_state)
       end)
       |> load_page()
       |> load_invitations()
@@ -106,7 +124,11 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, :searching?, String.trim(assigns.filter_text) != "")
+    assigns =
+      assigns
+      |> assign(:searching?, String.trim(assigns.filter_text) != "")
+      |> assign_new(:sort_by, fn -> :traffic end)
+      |> assign_new(:sort_direction, fn -> :desc end)
 
     ~H"""
     <.flash_messages flash={@flash} />
@@ -134,7 +156,12 @@ defmodule PlausibleWeb.Live.Sites do
         :if={not @is_empty_state?}
         class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2"
       >
-        <.search_form filter_text={@filter_text} uri={@uri} />
+        <.search_form
+          filter_text={@filter_text}
+          uri={@uri}
+          sort_by={@sort_by}
+          sort_direction={@sort_direction}
+        />
         <PrimaDropdown.dropdown
           :if={@consolidated_view_cta_dismissed?}
           id="add-site-dropdown"
@@ -712,10 +739,53 @@ defmodule PlausibleWeb.Live.Sites do
 
   attr(:filter_text, :string, default: "")
   attr(:uri, URI, required: true)
+  attr(:sort_by, :atom, default: :traffic)
+  attr(:sort_direction, :atom, default: :desc)
 
   def search_form(assigns) do
+    sort_options = [
+      {"Visitors, high to low", {:traffic, :desc}},
+      {"Visitors, low to high", {:traffic, :asc}},
+      {"Name A-Z", {:alnum, :asc}},
+      {"Name Z-A", {:alnum, :desc}}
+    ]
+
+    current_label =
+      Enum.find_value(sort_options, fn {label, {sort_by, direction}} ->
+        if sort_by == assigns.sort_by and
+             direction == assigns.sort_direction do
+          label
+        end
+      end)
+
+    assigns = assign(assigns, sort_options: sort_options, current_sort_label: current_label)
+
     ~H"""
-    <.filter_bar filter_text={@filter_text} placeholder="Search Sites"></.filter_bar>
+    <.filter_bar filter_text={@filter_text} placeholder="Search Sites">
+      <PrimaDropdown.dropdown id="sort-dropdown">
+        <PrimaDropdown.dropdown_trigger
+          as={&button/1}
+          id="sort-dropdown-trigger"
+          mt?={false}
+          theme="secondary"
+        >
+          {@current_sort_label}
+          <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+        </PrimaDropdown.dropdown_trigger>
+        <PrimaDropdown.dropdown_menu id="sort-dropdown-menu">
+          <%= for {label, {sort_by, direction}} <- @sort_options do %>
+            <PrimaDropdown.dropdown_item
+              id={"sort-dropdown-item-#{sort_by}-#{direction}"}
+              phx-click="set-sort"
+              phx-value-sort_by={sort_by}
+              phx-value-sort_direction={direction}
+            >
+              {label}
+            </PrimaDropdown.dropdown_item>
+          <% end %>
+        </PrimaDropdown.dropdown_menu>
+      </PrimaDropdown.dropdown>
+    </.filter_bar>
     """
   end
 
@@ -817,6 +887,19 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> reset_pagination()
       |> set_filter_text("")
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "set-sort",
+        %{"sort_by" => sort_by, "sort_direction" => sort_direction},
+        socket
+      ) do
+    socket =
+      socket
+      |> reset_pagination()
+      |> set_sort(sanitize_sort_by(sort_by), sanitize_sort_direction(sort_direction))
 
     {:noreply, socket}
   end
@@ -937,6 +1020,25 @@ defmodule PlausibleWeb.Live.Sites do
       uri: %{uri | query: uri_params},
       params: Map.drop(socket.assigns.params, pagination_fields)
     )
+  end
+
+  defp set_sort(socket, sort_by, sort_direction) do
+    uri = socket.assigns.uri
+
+    uri_params =
+      uri.query
+      |> URI.decode_query()
+      |> Map.put("sort_by", to_string(sort_by))
+      |> Map.put("sort_direction", to_string(sort_direction))
+      |> URI.encode_query()
+
+    uri = %{uri | query: uri_params}
+
+    socket
+    |> assign(:sort_by, sort_by)
+    |> assign(:sort_direction, sort_direction)
+    |> assign(:uri, uri)
+    |> push_patch(to: URI.to_string(uri), replace: true)
   end
 
   defp hash_domain(domain) do
