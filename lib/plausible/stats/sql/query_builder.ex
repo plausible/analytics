@@ -8,7 +8,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Query, QueryOptimizer, TableDecider, SQL}
+  alias Plausible.Stats.{Query, Filters, QueryOptimizer, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
   alias Plausible.Stats.Legacy.TimeOnPage
 
@@ -36,6 +36,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       from(
         e in "events_v2",
         where: ^SQL.WhereBuilder.build(:events, events_query),
+        where: ^derived_name_filter(events_query),
         select: ^select_event_metrics(events_query)
       )
 
@@ -127,6 +128,37 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     else
       q
     end
+  end
+
+  defp derived_name_filter(events_query) do
+    cond do
+      goals_involved?(events_query) ->
+        names = goal_event_names(events_query.preloaded_goals.all)
+        dynamic([e], e.name in ^names)
+
+      :time_on_page not in events_query.metrics and :scroll_depth not in events_query.metrics ->
+        dynamic([e], e.name != "engagement")
+
+      true ->
+        true
+    end
+  end
+
+  defp goals_involved?(query) do
+    "event:goal" in query.dimensions or
+      Filters.filtering_on_dimension?(query.filters, "event:goal")
+  end
+
+  defp goal_event_names(goals) do
+    goals
+    |> Enum.map(fn goal ->
+      case Plausible.Goal.type(goal) do
+        :event -> goal.event_name
+        :page -> "pageview"
+        :scroll -> "engagement"
+      end
+    end)
+    |> Enum.uniq()
   end
 
   defp select_event_metrics(query) do
