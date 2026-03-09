@@ -138,9 +138,13 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   defp derived_name_filter(events_query) do
     cond do
-      goals_involved?(events_query) ->
+      goal_breakdown?(events_query) ->
         names = goal_event_names(events_query.preloaded_goals.all)
         dynamic([e], e.name in ^names)
+
+      # Goal filters already add precise name conditions via Goals.add_filter
+      Filters.filtering_on_dimension?(events_query.filters, "event:goal") ->
+        true
 
       :time_on_page not in events_query.metrics and :scroll_depth not in events_query.metrics ->
         dynamic([e], e.name != "engagement")
@@ -150,9 +154,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
   end
 
-  defp goals_involved?(query) do
-    "event:goal" in query.dimensions or
-      Filters.filtering_on_dimension?(query.filters, "event:goal")
+  defp goal_breakdown?(query) do
+    "event:goal" in query.dimensions
   end
 
   defp goal_event_names(goals) do
