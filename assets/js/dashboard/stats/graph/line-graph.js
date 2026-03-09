@@ -10,6 +10,7 @@ import { hasConversionGoalFilter } from '../../util/filters'
 import { MetricFormatterShort } from '../reports/metric-formatter'
 import { UIMode, useTheme } from '../../theme-context'
 import { Transition } from '@headlessui/react'
+import equal from 'fast-deep-equal'
 
 const calculateMaximumY = function (dataset) {
   const yAxisValues = dataset
@@ -187,6 +188,7 @@ class LineGraph extends React.Component {
 
   componentDidMount() {
     if (this.props.graphData) {
+      console.log(this.regenerateChart.name, 'did mount')
       this.chart = this.regenerateChart()
     }
     window.addEventListener('mousemove', this.repositionTooltip)
@@ -195,15 +197,13 @@ class LineGraph extends React.Component {
   componentDidUpdate(prevProps) {
     const { graphData, theme } = this.props
     const tooltip = document.getElementById('chartjs-tooltip-main')
-
-    if (
-      graphData !== prevProps.graphData ||
-      theme.mode !== prevProps.theme.mode
-    ) {
+    const dataChanged = !equal(graphData, prevProps.graphData)
+    if (dataChanged || theme.mode !== prevProps.theme.mode) {
       if (graphData) {
         if (this.chart) {
           this.chart.destroy()
         }
+        console.log(this.regenerateChart.name, 'did update')
         this.chart = this.regenerateChart()
         this.chart.update()
       }

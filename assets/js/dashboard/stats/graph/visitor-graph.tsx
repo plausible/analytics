@@ -11,7 +11,7 @@ import * as url from '../../util/url'
 import LineGraphWithRouter, { LineGraphContainer } from './line-graph'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Metric } from '../../../types/query-api'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
@@ -32,6 +32,7 @@ export default function VisitorGraph({
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
+  const queryClient = useQueryClient()
 
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useStoredInterval(site, {
@@ -109,6 +110,35 @@ export default function VisitorGraph({
     }
   }, [topStatsQuery.data])
 
+  const [isRealtimeSilentUpdate, setIsRealtimeSilentUpdate] = useState({
+    topStats: false,
+    mainGraph: false
+  })
+  useEffect(() => {
+    setIsRealtimeSilentUpdate((current) => ({ ...current, mainGraph: false }))
+  }, [selectedMetric])
+
+  useEffect(() => {
+    if (!mainGraphQuery.isRefetching) {
+      setIsRealtimeSilentUpdate((current) => ({ ...current, mainGraph: false }))
+    }
+  }, [mainGraphQuery.isRefetching])
+
+  useEffect(() => {
+    if (!topStatsQuery.isRefetching) {
+      setIsRealtimeSilentUpdate((current) => ({ ...current, topStats: false }))
+    }
+  }, [topStatsQuery.isRefetching])
+
+  useEffect(() => {
+    if (!isRealtime) {
+      setIsRealtimeSilentUpdate({
+        topStats: false,
+        mainGraph: false
+      })
+    }
+  }, [isRealtime])
+
   // sync import related info
   useEffect(() => {
     if (topStatsQuery.data && typeof updateImportedDataInView === 'function') {
@@ -123,7 +153,19 @@ export default function VisitorGraph({
   const refetchMainGraph = mainGraphQuery.refetch
 
   useEffect(() => {
-    const onTick = async () => {
+    const onTick = () => {
+      setIsRealtimeSilentUpdate({ topStats: true, mainGraph: true })
+      queryClient.invalidateQueries({
+        predicate: ({ queryKey }) => {
+          const realtimeTopStatsOrMainGraphQuery =
+            ['top-stats', 'main-graph'].includes(queryKey[0] as string) &&
+            typeof queryKey[1] === 'object' &&
+            (queryKey[1] as { dashboardState?: DashboardState })?.dashboardState
+              ?.period === DashboardPeriod.realtime
+
+          return realtimeTopStatsOrMainGraphQuery
+        }
+      })
       refetchTopStats()
       refetchMainGraph()
     }
@@ -135,7 +177,7 @@ export default function VisitorGraph({
     return () => {
       document.removeEventListener('tick', onTick)
     }
-  }, [isRealtime, refetchTopStats, refetchMainGraph])
+  }, [queryClient, isRealtime, refetchTopStats, refetchMainGraph])
 
   const importedSwitchVisible = !['no_imported_data', 'out_of_range'].includes(
     topStatsQuery.data?.meta.imports_skip_reason as string
@@ -150,9 +192,16 @@ export default function VisitorGraph({
 
   const { heightPx } = useGuessTopStatsHeight(site, topStatsBoundary)
 
-  const showFullLoader = topStatsQuery.isFetching && topStatsQuery.isStale
+  const showFullLoader =
+    topStatsQuery.isFetching &&
+    topStatsQuery.isStale &&
+    !isRealtimeSilentUpdate.topStats
+
   const showGraphLoader =
-    mainGraphQuery.isFetching && mainGraphQuery.isStale && !showFullLoader
+    mainGraphQuery.isFetching &&
+    mainGraphQuery.isStale &&
+    !isRealtimeSilentUpdate.mainGraph &&
+    !showFullLoader
 
   return (
     <div className="col-span-full relative w-full bg-white rounded-md shadow dark:bg-gray-900">
@@ -305,10 +354,7 @@ function useGuessTopStatsHeight(
 
 const getStaleTime = (dashboardState: DashboardState) => {
   if (dashboardState.period === DashboardPeriod.realtime) {
-    // 2x multiplier is needed because otherwise queries cached before
-    // tick N-1 would be marked as stale before tick N, which would cause loading
-    // animation to be shown during tick N's refetch
-    return 2 * REALTIME_UPDATE_TIME_MS
+    return REALTIME_UPDATE_TIME_MS
   }
   return RESPONSES_STALE_TIME_MS
 }
