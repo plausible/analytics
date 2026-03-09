@@ -796,6 +796,7 @@ defmodule PlausibleWeb.Live.Sites do
         id="sort-dropdown-trigger"
         mt?={false}
         theme="secondary"
+        class="[#sort-dropdown:has(.phx-click-loading)_&]:opacity-50 [#sort-dropdown:has(.phx-click-loading)_&]:pointer-events-none"
       >
         {@current_sort_label}
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
