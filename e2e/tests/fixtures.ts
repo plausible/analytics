@@ -279,7 +279,7 @@ export async function addCustomGoal({
   }
 
   if (currency) {
-    page.locator('button[aria-labelledby="enable-revenue-tracking"]').click()
+    await page.locator('button[aria-labelledby="enable-revenue-tracking"]').click()
     const currencyInput = page.locator('input[id^=currency_input_]')
     await currencyInput.fill(currency)
     await page.locator(`a[phx-value-submit-value="${currency}"]`).click()
@@ -410,7 +410,7 @@ export async function addCustomProp({
   ).toBeVisible()
 
   const propInput = page.locator('input#prop_input')
-  propInput.fill(name)
+  await propInput.fill(name)
   await page.locator(`a[data-display-value="${name}"]`).click()
   await expect(propInput).toHaveAttribute('value', name)
 
