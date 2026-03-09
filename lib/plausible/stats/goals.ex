@@ -71,7 +71,8 @@ defmodule Plausible.Stats.Goals do
           page_regexes: [String.t()],
           scroll_thresholds: [non_neg_integer()],
           custom_props_keys: [[String.t()]],
-          custom_props_values: [[String.t()]]
+          custom_props_values: [[String.t()]],
+          has_custom_props: boolean()
         }
 
   @doc """
@@ -80,6 +81,8 @@ defmodule Plausible.Stats.Goals do
   @spec goal_join_data(Plausible.Stats.Query.t()) :: goal_join_data()
   def goal_join_data(query) do
     goals = query.preloaded_goals.matching_toplevel_filters
+
+    has_custom_props = Enum.any?(goals, &Plausible.Goal.has_custom_props?/1)
 
     goals
     |> Enum.with_index(1)
@@ -115,6 +118,7 @@ defmodule Plausible.Stats.Goals do
     )
     |> Enum.map(fn {key, list} -> {key, Enum.reverse(list)} end)
     |> Map.new()
+    |> Map.put(:has_custom_props, has_custom_props)
   end
 
   defp event_name_by_type(:event, goal), do: goal.event_name
