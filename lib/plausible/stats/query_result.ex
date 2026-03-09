@@ -8,7 +8,7 @@ defmodule Plausible.Stats.QueryResult do
   """
 
   use Plausible
-  alias Plausible.Stats.{Query, QueryRunner, Filters}
+  alias Plausible.Stats.{Query, QueryRunner, Filters, Time}
 
   defstruct results: [],
             meta: %{},
@@ -56,7 +56,7 @@ defmodule Plausible.Stats.QueryResult do
     %{}
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
-    |> add_time_labels_meta(runner.main_query)
+    |> add_time_labels_meta(runner)
     |> add_present_index_meta(runner.main_query)
     |> add_partial_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
@@ -87,9 +87,28 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_time_labels_meta(meta, query) do
+  defp add_time_labels_meta(meta, %QueryRunner{main_query: query} = runner) do
     if query.include.time_labels do
-      Map.put(meta, :time_labels, Plausible.Stats.Time.time_labels(query))
+      main_labels = Time.time_labels(query)
+
+      # When comparison results end up having more time labels than the original
+      # results, we extend the original labels to match the length of the total
+      # results list. Therefore, `time_labels` are allowed to span beyond the end
+      # of the original time range (including into the future). Without this, the
+      # labels on the graph x-axis would suddenly be cut off.
+      n_extra =
+        if query.include.compare do
+          comparison_labels = Time.time_labels(runner.comparison_query)
+          max(0, length(comparison_labels) - length(main_labels))
+        else
+          0
+        end
+
+      Map.put(
+        meta,
+        :time_labels,
+        main_labels ++ Time.extra_time_labels(query, n_extra)
+      )
     else
       meta
     end
@@ -99,7 +118,7 @@ defmodule Plausible.Stats.QueryResult do
     time_labels = meta[:time_labels]
 
     if query.include.present_index and is_list(time_labels) do
-      Map.put(meta, :present_index, Plausible.Stats.Time.present_index(time_labels, query))
+      Map.put(meta, :present_index, Time.present_index(time_labels, query))
     else
       meta
     end
@@ -112,7 +131,7 @@ defmodule Plausible.Stats.QueryResult do
       Map.put(
         meta,
         :partial_time_labels,
-        Plausible.Stats.Time.partial_time_labels(time_labels, query)
+        Time.partial_time_labels(time_labels, query)
       )
     else
       meta

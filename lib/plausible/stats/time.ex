@@ -49,6 +49,47 @@ defmodule Plausible.Stats.Time do
     time_labels_for_dimension(time_dimension(query), query)
   end
 
+  @doc """
+  Returns `n` additional time bucket labels that would follow immediately after
+  the last bucket of the given query's time range.
+
+  Used when a comparison period covers more time buckets than the main period,
+  so that `meta.time_labels` can span the full length of both.
+  """
+  def extra_time_labels(_query, 0), do: []
+
+  def extra_time_labels(query, n) do
+    case time_dimension(query) do
+      "time:day" ->
+        last = Query.date_range(query).last
+        Enum.map(1..n, fn i -> Date.add(last, i) |> format_datetime() end)
+
+      "time:week" ->
+        last = time_labels(query) |> List.last() |> Date.from_iso8601!()
+        Enum.map(1..n, fn i -> Date.add(last, i * 7) |> format_datetime() end)
+
+      "time:month" ->
+        last = Query.date_range(query).last |> Date.beginning_of_month()
+        Enum.map(1..n, fn i -> Date.shift(last, month: i) |> format_datetime() end)
+
+      "time:hour" ->
+        last =
+          time_labels(query)
+          |> List.last()
+          |> NaiveDateTime.from_iso8601!()
+
+        Enum.map(1..n, fn i -> NaiveDateTime.shift(last, hour: i) |> format_datetime() end)
+
+      "time:minute" ->
+        last =
+          time_labels(query)
+          |> List.last()
+          |> NaiveDateTime.from_iso8601!()
+
+        Enum.map(1..n, fn i -> NaiveDateTime.shift(last, minute: i) |> format_datetime() end)
+    end
+  end
+
   defp time_labels_for_dimension("time:month", query) do
     date_range = Query.date_range(query)
 
