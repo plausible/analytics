@@ -257,7 +257,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
-      {results, _, meta} = Plausible.Stats.timeseries(site, query, metrics)
+      {results, meta} = Plausible.Stats.timeseries(site, query, metrics)
 
       payload =
         case meta[:imports_warning] do
