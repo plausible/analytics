@@ -125,4 +125,83 @@ defmodule Plausible.Stats.QueryTest do
              ]
     end
   end
+
+  describe "timeseries with comparisons" do
+    test "returns more original time range buckets than comparison buckets",
+         %{site: site} do
+      populate_stats(site, [
+        # original time range
+        build(:pageview, user_id: 123, timestamp: ~N[2026-01-03 00:00:00]),
+        build(:pageview, user_id: 123, timestamp: ~N[2026-01-03 00:10:00]),
+        build(:pageview, timestamp: ~N[2026-01-05 00:00:00]),
+        # comparison time range
+        build(:pageview, timestamp: ~N[2026-01-02 00:00:00])
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors, :pageviews],
+          input_date_range: {:date_range, ~D[2026-01-03], ~D[2026-01-06]},
+          dimensions: ["time:week"],
+          include: %QueryInclude{
+            compare: :previous_period,
+            compare_match_day_of_week: false
+          }
+        })
+
+      %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+      assert results == [
+               %{
+                 dimensions: ["2026-01-03"],
+                 metrics: [1, 2],
+                 comparison: %{dimensions: ["2025-12-30"], metrics: [1, 1], change: [0, 100]}
+               },
+               %{
+                 dimensions: ["2026-01-05"],
+                 metrics: [1, 1],
+                 comparison: nil
+               }
+             ]
+    end
+
+    test "can return more comparison time buckets than original time range buckets",
+         %{site: site} do
+      populate_stats(site, [
+        # original time range
+        build(:pageview, user_id: 123, timestamp: ~N[2021-02-01 00:00:00]),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-02-01 00:10:00]),
+        build(:pageview, timestamp: ~N[2021-02-01 00:00:00]),
+        # comparison time range
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00])
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors, :pageviews],
+          input_date_range: {:date_range, ~D[2021-02-01], ~D[2021-02-01]},
+          dimensions: ["time:day"],
+          include: %QueryInclude{
+            compare: {:date_range, ~D[2021-01-01], ~D[2021-01-02]}
+          }
+        })
+
+      %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+      assert results == [
+               %{
+                 dimensions: ["2021-02-01"],
+                 metrics: [2, 3],
+                 comparison: %{dimensions: ["2021-01-01"], metrics: [2, 2], change: [0, 50]}
+               },
+               %{
+                 dimensions: nil,
+                 metrics: nil,
+                 comparison: %{dimensions: ["2021-01-02"], metrics: [1, 1], change: nil}
+               }
+             ]
+    end
+  end
 end

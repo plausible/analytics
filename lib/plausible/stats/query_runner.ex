@@ -87,27 +87,81 @@ defmodule Plausible.Stats.QueryRunner do
     end
   end
 
-  defp get_time_lookup(query, comparison_query) do
-    if Time.time_dimension(query) && comparison_query do
-      Enum.zip(
-        Time.time_labels(query),
-        Time.time_labels(comparison_query)
-      )
-      |> Map.new()
-    else
-      %{}
-    end
-  end
-
+  # Assembles the final results list, optionally attaching comparison data.
+  #
+  # Without a comparison, main results are returned as-is.
+  #
+  # With a comparison, timeseries and non-time-dimension breakdowns are handled
+  # separately because they have fundamentally different shapes:
+  #
+  #   - Non-time breakdowns (e.g. by page, source) return one row per dimension
+  #     group. The comparison query is filtered to the same set of dimension
+  #     values as the main query, so every comparison result is guaranteed to
+  #     have a matching main result. The two lists can be joined by dimension
+  #     value in a single pass.
+  #
+  #   - Timeseries (single "time:*" dimension) return one row per time bucket,
+  #     and the comparison period may cover a different number of buckets than
+  #     the main period. The two label sequences are zipped together (with nil
+  #     padding for whichever side is shorter), producing rows for every bucket
+  #     on either side regardless of whether the other side has data.
   defp build_results_list(%__MODULE__{main_query: query, main_results: main_results} = runner) do
     results =
-      case query.dimensions do
-        ["time:" <> _] -> main_results |> add_empty_timeseries_rows(runner)
-        _ -> main_results
+      case {query.include.compare, query.dimensions} do
+        {nil, _dimensions} ->
+          main_results
+
+        {_non_nil_compare, ["time:" <> _]} ->
+          build_timeseries_with_comparison(runner)
+
+        {_non_nil_compare, _dimensions} ->
+          merge_with_comparison_results(main_results, runner)
       end
-      |> merge_with_comparison_results(runner)
 
     struct!(runner, results: results)
+  end
+
+  defp build_timeseries_with_comparison(%__MODULE__{main_query: query} = runner) do
+    main_map = index_by_dimensions(runner.main_results)
+    comparison_map = index_by_dimensions(runner.comparison_results)
+
+    main_labels = Time.time_labels(query)
+    comp_labels = Time.time_labels(runner.comparison_query)
+    n = max(length(main_labels), length(comp_labels))
+
+    pairs =
+      Enum.zip(
+        main_labels ++ List.duplicate(nil, n - length(main_labels)),
+        comp_labels ++ List.duplicate(nil, n - length(comp_labels))
+      )
+
+    Enum.map(pairs, fn {main_label, comp_label} ->
+      main_metrics =
+        if main_label do
+          metrics_for_dimension_group(main_map, [main_label], query)
+        end
+
+      comparison =
+        if comp_label do
+          comp_metrics = metrics_for_dimension_group(comparison_map, [comp_label], query)
+
+          change =
+            if main_metrics do
+              Enum.zip([query.metrics, main_metrics, comp_metrics])
+              |> Enum.map(fn {metric, main_value, comp_value} ->
+                Compare.calculate_change(metric, comp_value, main_value)
+              end)
+            end
+
+          %{dimensions: [comp_label], metrics: comp_metrics, change: change}
+        end
+
+      %{
+        dimensions: if(main_label, do: [main_label]),
+        metrics: main_metrics,
+        comparison: comparison
+      }
+    end)
   end
 
   defp execute_query(query, site) do
@@ -181,66 +235,27 @@ defmodule Plausible.Stats.QueryRunner do
     |> Enum.at(goal_index - 1)
   end
 
-  # Special case: If comparison and single time dimension, add 0 rows - otherwise
-  # comparisons would not be shown for timeseries with 0 values.
-  defp add_empty_timeseries_rows(results_list, %__MODULE__{main_query: query})
-       when not is_nil(query.include.compare) do
-    indexed_results = index_by_dimensions(results_list)
-
-    empty_timeseries_rows =
-      Time.time_labels(query)
-      |> Enum.reject(fn dimension_value -> Map.has_key?(indexed_results, [dimension_value]) end)
-      |> Enum.map(fn dimension_value ->
-        %{
-          metrics: empty_metrics(query, [dimension_value]),
-          dimensions: [dimension_value]
-        }
-      end)
-
-    results_list ++ empty_timeseries_rows
-  end
-
-  defp add_empty_timeseries_rows(results_list, _), do: results_list
-
   defp merge_with_comparison_results(results_list, runner) do
-    comparison_map = (runner.comparison_results || []) |> index_by_dimensions()
-    time_lookup = get_time_lookup(runner.main_query, runner.comparison_query)
-
-    Enum.map(
-      results_list,
-      &add_comparison_results(&1, runner.main_query, comparison_map, time_lookup)
-    )
+    comparison_map = index_by_dimensions(runner.comparison_results)
+    Enum.map(results_list, &add_comparison_results(&1, runner.main_query, comparison_map))
   end
 
-  defp add_comparison_results(row, query, comparison_map, time_lookup)
-       when not is_nil(query.include.compare) do
-    dimensions = get_comparison_dimensions(row.dimensions, query, time_lookup)
-    comparison_metrics = get_comparison_metrics(comparison_map, dimensions, query)
+  defp add_comparison_results(row, query, comparison_map) do
+    comparison_metrics = metrics_for_dimension_group(comparison_map, row.dimensions, query)
 
     change =
       Enum.zip([query.metrics, row.metrics, comparison_metrics])
-      |> Enum.map(fn {metric, metric_value, comparison_value} ->
-        Compare.calculate_change(metric, comparison_value, metric_value)
+      |> Enum.map(fn {metric, main_value, comp_value} ->
+        Compare.calculate_change(metric, comp_value, main_value)
       end)
 
     Map.merge(row, %{
       comparison: %{
-        dimensions: dimensions,
+        dimensions: row.dimensions,
         metrics: comparison_metrics,
         change: change
       }
     })
-  end
-
-  defp add_comparison_results(row, _, _, _), do: row
-
-  defp get_comparison_dimensions(dimensions, query, time_lookup) do
-    query.dimensions
-    |> Enum.zip(dimensions)
-    |> Enum.map(fn
-      {"time:" <> _, value} -> time_lookup[value]
-      {_, value} -> value
-    end)
   end
 
   defp index_by_dimensions(results_list) do
@@ -248,8 +263,8 @@ defmodule Plausible.Stats.QueryRunner do
     |> Map.new(fn entry -> {entry.dimensions, entry.metrics} end)
   end
 
-  defp get_comparison_metrics(comparison_map, dimensions, query) do
-    Map.get_lazy(comparison_map, dimensions, fn -> empty_metrics(query, dimensions) end)
+  defp metrics_for_dimension_group(lookup_map, dimensions, query) do
+    Map.get_lazy(lookup_map, dimensions, fn -> empty_metrics(query, dimensions) end)
   end
 
   defp empty_metrics(query, dimensions) do
