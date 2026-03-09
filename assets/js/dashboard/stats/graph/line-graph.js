@@ -188,7 +188,6 @@ class LineGraph extends React.Component {
 
   componentDidMount() {
     if (this.props.graphData) {
-      console.log(this.regenerateChart.name, 'did mount')
       this.chart = this.regenerateChart()
     }
     window.addEventListener('mousemove', this.repositionTooltip)
@@ -203,7 +202,6 @@ class LineGraph extends React.Component {
         if (this.chart) {
           this.chart.destroy()
         }
-        console.log(this.regenerateChart.name, 'did update')
         this.chart = this.regenerateChart()
         this.chart.update()
       }
