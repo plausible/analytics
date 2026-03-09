@@ -15,13 +15,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Metric } from '../../../types/query-api'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
-import { REALTIME_UPDATE_TIME_MS } from '../../util/realtime-update-timer'
+import { nowForSite } from '../../util/date'
+import { getStaleTime } from '../../hooks/api-client'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
-
-// data cached by query client expires after 30 mins
-const RESPONSES_STALE_TIME_MS = 30 * 60 * 1000
 
 export default function VisitorGraph({
   updateImportedDataInView
@@ -33,6 +31,7 @@ export default function VisitorGraph({
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
   const queryClient = useQueryClient()
+  const startOfDay = nowForSite(site).startOf('day')
 
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useStoredInterval(site, {
@@ -59,10 +58,14 @@ export default function VisitorGraph({
       return await fetchTopStats(site, opts.dashboardState)
     },
     placeholderData: (previousData) => previousData,
-    staleTime: ({ queryKey }) => {
+    staleTime: ({ queryKey, meta }) => {
       const [_, opts] = queryKey
-      return getStaleTime(opts.dashboardState)
-    }
+      return getStaleTime(
+        meta!.startOfDay as typeof startOfDay,
+        opts.dashboardState
+      )
+    },
+    meta: { startOfDay }
   })
 
   const mainGraphQuery = useQuery({
@@ -84,10 +87,14 @@ export default function VisitorGraph({
       return { ...data, interval: opts.interval }
     },
     placeholderData: (previousData) => previousData,
-    staleTime: ({ queryKey }) => {
+    staleTime: ({ queryKey, meta }) => {
       const [_, opts] = queryKey
-      return getStaleTime(opts.dashboardState)
-    }
+      return getStaleTime(
+        meta!.startOfDay as typeof startOfDay,
+        opts.dashboardState
+      )
+    },
+    meta: { startOfDay }
   })
 
   // update metric to one that exists
@@ -350,11 +357,4 @@ function useGuessTopStatsHeight(
     heightPx:
       getStoredTopStatsHeight(site) ?? DEFAULT_TOP_STATS_LOADING_HEIGHT_PX
   }
-}
-
-const getStaleTime = (dashboardState: DashboardState) => {
-  if (dashboardState.period === DashboardPeriod.realtime) {
-    return REALTIME_UPDATE_TIME_MS
-  }
-  return RESPONSES_STALE_TIME_MS
 }
