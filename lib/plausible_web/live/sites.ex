@@ -162,40 +162,44 @@ defmodule PlausibleWeb.Live.Sites do
           sort_by={@sort_by}
           sort_direction={@sort_direction}
         />
-        <PrimaDropdown.dropdown
-          :if={@consolidated_view_cta_dismissed?}
-          id="add-site-dropdown"
-        >
-          <PrimaDropdown.dropdown_trigger as={&button/1} id="add-site-dropdown-trigger" mt?={false}>
-            <Heroicons.plus class="size-4" /> Add
-            <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-          </PrimaDropdown.dropdown_trigger>
+        <div class="flex items-center gap-x-2">
+          <.sort_dropdown sort_by={@sort_by} sort_direction={@sort_direction} />
 
-          <PrimaDropdown.dropdown_menu id="add-site-dropdown-menu">
-            <PrimaDropdown.dropdown_item
-              as={&link/1}
-              id="add-site-dropdown-menuitem-1"
-              href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
-            >
-              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
-            </PrimaDropdown.dropdown_item>
-            <PrimaDropdown.dropdown_item
-              id="add-site-dropdown-menuitem-2"
-              phx-click="consolidated-view-cta-restore"
-            >
-              <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
-              Add consolidated view
-            </PrimaDropdown.dropdown_item>
-          </PrimaDropdown.dropdown_menu>
-        </PrimaDropdown.dropdown>
+          <PrimaDropdown.dropdown
+            :if={@consolidated_view_cta_dismissed?}
+            id="add-site-dropdown"
+          >
+            <PrimaDropdown.dropdown_trigger as={&button/1} id="add-site-dropdown-trigger" mt?={false}>
+              <Heroicons.plus class="size-4" /> Add
+              <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+            </PrimaDropdown.dropdown_trigger>
 
-        <a
-          :if={!@consolidated_view_cta_dismissed?}
-          href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
-          class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
-        >
-          <Heroicons.plus class="size-4" /> Add website
-        </a>
+            <PrimaDropdown.dropdown_menu id="add-site-dropdown-menu">
+              <PrimaDropdown.dropdown_item
+                as={&link/1}
+                id="add-site-dropdown-menuitem-1"
+                href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
+              >
+                <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
+              </PrimaDropdown.dropdown_item>
+              <PrimaDropdown.dropdown_item
+                id="add-site-dropdown-menuitem-2"
+                phx-click="consolidated-view-cta-restore"
+              >
+                <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} />
+                Add consolidated view
+              </PrimaDropdown.dropdown_item>
+            </PrimaDropdown.dropdown_menu>
+          </PrimaDropdown.dropdown>
+
+          <a
+            :if={!@consolidated_view_cta_dismissed?}
+            href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
+            class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
+          >
+            <Heroicons.plus class="size-4" /> Add website
+          </a>
+        </div>
       </div>
 
       <div class="flex flex-col gap-y-4 my-4">
@@ -582,67 +586,84 @@ defmodule PlausibleWeb.Live.Sites do
     assigns = assign(assigns, %{dropdown_id: "site-#{assigns[:site].domain}-dropdown"})
 
     ~H"""
-    <PrimaDropdown.dropdown id={@dropdown_id}>
-      <PrimaDropdown.dropdown_trigger
-        id={"#{@dropdown_id}-trigger"}
-        as={&button/1}
-        mt?={false}
-        theme="icon"
+    <div class="flex items-center">
+      <button
+        :if={@site.pinned_at}
+        data-test-id="site-card-pin-icon"
+        phx-click={
+          JS.hide(
+            transition: {"duration-500", "opacity-100", "opacity-0"},
+            to: "#site-card-#{hash_domain(@site.domain)}",
+            time: 500
+          )
+          |> JS.push("pin-toggle")
+        }
+        phx-value-domain={@site.domain}
+        class="cursor-pointer p-1"
       >
-        <Heroicons.ellipsis_vertical :if={!@site.pinned_at} class="size-5" />
         <.icon_pin
-          :if={@site.pinned_at}
           filled={true}
-          data-test-id="site-card-pin-icon"
-          class="size-4 shrink-0 text-indigo-600 dark:text-indigo-500"
+          class="size-4.5 pb-px shrink-0 text-indigo-600 dark:text-indigo-500"
         />
-      </PrimaDropdown.dropdown_trigger>
+      </button>
 
-      <PrimaDropdown.dropdown_menu id={"#{@dropdown_id}-menu"}>
-        <PrimaDropdown.dropdown_item
-          :if={@can_manage?}
-          id={"#{@dropdown_id}-item-1"}
-          as={&link/1}
-          href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain)}
+      <PrimaDropdown.dropdown id={@dropdown_id}>
+        <PrimaDropdown.dropdown_trigger
+          id={"#{@dropdown_id}-trigger"}
+          as={&button/1}
+          mt?={false}
+          theme="icon"
+          class="!px-2.5"
         >
-          <Heroicons.cog_6_tooth class={PrimaDropdown.dropdown_item_icon_class()} /> Settings
-        </PrimaDropdown.dropdown_item>
+          <Heroicons.ellipsis_vertical class="size-5" />
+        </PrimaDropdown.dropdown_trigger>
 
-        <PrimaDropdown.dropdown_item
-          :if={Sites.regular?(@site)}
-          id={"#{@dropdown_id}-item-2"}
-          phx-click={
-            JS.hide(
-              transition: {"duration-500", "opacity-100", "opacity-0"},
-              to: "#site-card-#{hash_domain(@site.domain)}",
-              time: 500
-            )
-            |> JS.push("pin-toggle")
-          }
-          phx-value-domain={@site.domain}
-        >
-          <.icon_pin
-            :if={@site.pinned_at}
-            filled={true}
-            class={PrimaDropdown.dropdown_item_icon_class()}
-          />
-          <.icon_pin
-            :if={!@site.pinned_at}
-            class={PrimaDropdown.dropdown_item_icon_class()}
-          />
-          {if @site.pinned_at, do: "Unpin site", else: "Pin site"}
-        </PrimaDropdown.dropdown_item>
+        <PrimaDropdown.dropdown_menu id={"#{@dropdown_id}-menu"}>
+          <PrimaDropdown.dropdown_item
+            :if={@can_manage?}
+            id={"#{@dropdown_id}-item-1"}
+            as={&link/1}
+            href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain)}
+          >
+            <Heroicons.cog_6_tooth class={PrimaDropdown.dropdown_item_icon_class()} /> Settings
+          </PrimaDropdown.dropdown_item>
 
-        <PrimaDropdown.dropdown_item
-          :if={Application.get_env(:plausible, :environment) == "dev" and Sites.regular?(@site)}
-          id={"#{@dropdown_id}-item-3"}
-          phx-click="delete-site"
-          phx-value-domain={@site.domain}
-        >
-          <Heroicons.trash class="size-4 text-red-600" /> [DEV ONLY] Quick delete
-        </PrimaDropdown.dropdown_item>
-      </PrimaDropdown.dropdown_menu>
-    </PrimaDropdown.dropdown>
+          <PrimaDropdown.dropdown_item
+            :if={Sites.regular?(@site)}
+            id={"#{@dropdown_id}-item-2"}
+            phx-click={
+              JS.hide(
+                transition: {"duration-500", "opacity-100", "opacity-0"},
+                to: "#site-card-#{hash_domain(@site.domain)}",
+                time: 500
+              )
+              |> JS.push("pin-toggle")
+            }
+            phx-value-domain={@site.domain}
+          >
+            <.icon_pin
+              :if={@site.pinned_at}
+              filled={true}
+              class={PrimaDropdown.dropdown_item_icon_class()}
+            />
+            <.icon_pin
+              :if={!@site.pinned_at}
+              class={PrimaDropdown.dropdown_item_icon_class()}
+            />
+            {if @site.pinned_at, do: "Unpin site", else: "Pin site"}
+          </PrimaDropdown.dropdown_item>
+
+          <PrimaDropdown.dropdown_item
+            :if={Application.get_env(:plausible, :environment) == "dev" and Sites.regular?(@site)}
+            id={"#{@dropdown_id}-item-3"}
+            phx-click="delete-site"
+            phx-value-domain={@site.domain}
+          >
+            <Heroicons.trash class="size-4 text-red-600" /> [DEV ONLY] Quick delete
+          </PrimaDropdown.dropdown_item>
+        </PrimaDropdown.dropdown_menu>
+      </PrimaDropdown.dropdown>
+    </div>
     """
   end
 
@@ -747,50 +768,51 @@ defmodule PlausibleWeb.Live.Sites do
   attr(:sort_by, :atom, default: :traffic)
   attr(:sort_direction, :atom, default: :desc)
 
-  def search_form(assigns) do
-    sort_options = [
-      {"Visitors, high to low", {:traffic, :desc}},
-      {"Visitors, low to high", {:traffic, :asc}},
-      {"Name A-Z", {:alnum, :asc}},
-      {"Name Z-A", {:alnum, :desc}}
-    ]
+  @sort_options [
+    {"Visitors, high to low", {:traffic, :desc}},
+    {"Visitors, low to high", {:traffic, :asc}},
+    {"Name A-Z", {:alnum, :asc}},
+    {"Name Z-A", {:alnum, :desc}}
+  ]
 
+  def search_form(assigns) do
+    ~H"""
+    <.filter_bar filter_text={@filter_text} placeholder="Search Sites"></.filter_bar>
+    """
+  end
+
+  def sort_dropdown(assigns) do
     current_label =
-      Enum.find_value(sort_options, fn {label, {sort_by, direction}} ->
-        if sort_by == assigns.sort_by and
-             direction == assigns.sort_direction do
-          label
-        end
+      Enum.find_value(@sort_options, fn {label, {sort_by, direction}} ->
+        if sort_by == assigns.sort_by and direction == assigns.sort_direction, do: label
       end)
 
-    assigns = assign(assigns, sort_options: sort_options, current_sort_label: current_label)
+    assigns = assign(assigns, sort_options: @sort_options, current_sort_label: current_label)
 
     ~H"""
-    <.filter_bar filter_text={@filter_text} placeholder="Search Sites">
-      <PrimaDropdown.dropdown id="sort-dropdown">
-        <PrimaDropdown.dropdown_trigger
-          as={&button/1}
-          id="sort-dropdown-trigger"
-          mt?={false}
-          theme="secondary"
-        >
-          {@current_sort_label}
-          <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-        </PrimaDropdown.dropdown_trigger>
-        <PrimaDropdown.dropdown_menu id="sort-dropdown-menu">
-          <%= for {label, {sort_by, direction}} <- @sort_options do %>
-            <PrimaDropdown.dropdown_item
-              id={"sort-dropdown-item-#{sort_by}-#{direction}"}
-              phx-click="set-sort"
-              phx-value-sort_by={sort_by}
-              phx-value-sort_direction={direction}
-            >
-              {label}
-            </PrimaDropdown.dropdown_item>
-          <% end %>
-        </PrimaDropdown.dropdown_menu>
-      </PrimaDropdown.dropdown>
-    </.filter_bar>
+    <PrimaDropdown.dropdown id="sort-dropdown">
+      <PrimaDropdown.dropdown_trigger
+        as={&button/1}
+        id="sort-dropdown-trigger"
+        mt?={false}
+        theme="secondary"
+      >
+        {@current_sort_label}
+        <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+      </PrimaDropdown.dropdown_trigger>
+      <PrimaDropdown.dropdown_menu id="sort-dropdown-menu">
+        <%= for {label, {sort_by, direction}} <- @sort_options do %>
+          <PrimaDropdown.dropdown_item
+            id={"sort-dropdown-item-#{sort_by}-#{direction}"}
+            phx-click="set-sort"
+            phx-value-sort_by={sort_by}
+            phx-value-sort_direction={direction}
+          >
+            {label}
+          </PrimaDropdown.dropdown_item>
+        <% end %>
+      </PrimaDropdown.dropdown_menu>
+    </PrimaDropdown.dropdown>
     """
   end
 
