@@ -150,7 +150,6 @@ defmodule Plausible.MixProject do
       {:open_api_spex, "~> 3.22.1"},
       {:joken, "~> 2.5"},
       {:paginator, git: "https://github.com/duffelhq/paginator.git"},
-      {:scrivener_ecto, "~> 3.1"},
       {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :ce_dev]},
       {:tailwind, "~> 0.4.0", runtime: Mix.env() in [:dev, :ce_dev]},
       {:ex_json_logger, "~> 1.4.0"},
