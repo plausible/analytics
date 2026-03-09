@@ -279,7 +279,9 @@ export async function addCustomGoal({
   }
 
   if (currency) {
-    await page.locator('button[aria-labelledby="enable-revenue-tracking"]').click()
+    await page
+      .locator('button[aria-labelledby="enable-revenue-tracking"]')
+      .click()
     const currencyInput = page.locator('input[id^=currency_input_]')
     await currencyInput.fill(currency)
     await page.locator(`a[phx-value-submit-value="${currency}"]`).click()
