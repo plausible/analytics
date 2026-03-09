@@ -31,7 +31,7 @@ const setupSiteAndStats = async ({
   return context
 }
 
-const segmentMenu = (page: Page) => page.getByTestId('segmentmenu')
+const segmentMenu = (page: Page) => page.getByTestId('segment-menu')
 
 const sourceFilterButton = (page: Page) => filterItemButton(page, 'Source')
 const utmTagsFilterButton = (page: Page) => filterItemButton(page, 'UTM tags')
