@@ -14,7 +14,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   @valid_comparison_shorthand_keys Map.keys(@valid_comparison_shorthands)
 
-  def parse(params) do
+  def parse(params, opts \\ []) do
     with {:ok, input_date_range} <- parse_input_date_range(params),
          {:ok, relative_date} <- parse_relative_date(params),
          {:ok, dimensions} <- ApiQueryParser.parse_dimensions(params["dimensions"]),
@@ -29,7 +29,8 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          filters: filters,
          metrics: metrics,
          include: include,
-         skip_goal_existence_check: true
+         skip_goal_existence_check: true,
+         now: Keyword.get(opts, :now)
        })}
     end
   end
