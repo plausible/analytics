@@ -36,7 +36,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       from(
         e in "events_v2",
         where: ^SQL.WhereBuilder.build(:events, events_query),
-        where: ^derived_name_filter(events_query),
+        where: ^maybe_derived_name_filter(events_query),
         select: ^select_event_metrics(events_query)
       )
 
@@ -129,6 +129,12 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       q
     end
   end
+
+  defp maybe_derived_name_filter(%{optimize_name_filter: true} = events_query) do
+    derived_name_filter(events_query)
+  end
+
+  defp maybe_derived_name_filter(_events_query), do: true
 
   defp derived_name_filter(events_query) do
     cond do
