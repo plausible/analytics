@@ -739,7 +739,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert response["results"] == [
                %{"dimensions" => ["2021-01-01"], "metrics" => [1]},
                %{"dimensions" => ["2021-01-03"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-04"], "metrics" => [1]}
+               %{"dimensions" => ["2021-01-04"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-07"], "metrics" => [1]}
              ]
     end
 
@@ -767,7 +768,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert response["results"] == [
                %{"dimensions" => ["2021-01-01"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-04"], "metrics" => [1]}
+               %{"dimensions" => ["2021-01-04"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-25"], "metrics" => [1]}
              ]
     end
   end
