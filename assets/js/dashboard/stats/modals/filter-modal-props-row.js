@@ -16,6 +16,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 
 export default function FilterModalPropsRow({
+  testId,
   filter,
   showDelete,
   disabledOptions,
@@ -75,7 +76,10 @@ export default function FilterModalPropsRow({
   }
 
   return (
-    <div className="grid grid-cols-12 mt-6">
+    <div
+      data-testid={`filter-row-${testId}`}
+      className="grid grid-cols-12 mt-6"
+    >
       <div className="col-span-4">
         <Combobox
           className="mr-2"

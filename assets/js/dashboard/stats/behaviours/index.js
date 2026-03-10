@@ -449,7 +449,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   }
 
   return (
-    <ReportLayout className="col-span-full">
+    <ReportLayout testId="report-behaviours" className="col-span-full">
       <ReportHeader>
         <div className="flex gap-x-2">
           <TabWrapper>

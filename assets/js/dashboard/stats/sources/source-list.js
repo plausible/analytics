@@ -271,7 +271,7 @@ export default function SourceList() {
   }
 
   return (
-    <ReportLayout className="overflow-x-hidden">
+    <ReportLayout testId="report-sources" className="overflow-x-hidden">
       <ReportHeader>
         <div className="flex gap-x-3">
           <TabWrapper>

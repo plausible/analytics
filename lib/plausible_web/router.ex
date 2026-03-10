@@ -174,11 +174,14 @@ defmodule PlausibleWeb.Router do
   end
 
   # Routes for E2E testing
-  if Mix.env() in [:test, :ce_test, :e2e_test] do
-    scope "/e2e-tests", PlausibleWeb do
-      pipe_through :api
+  on_ee do
+    if Mix.env() == :e2e_test do
+      scope "/e2e-tests", PlausibleWeb do
+        pipe_through :api
 
-      post "/stats", E2EController, :populate_stats
+        post "/stats", E2EController, :populate_stats
+        post "/funnel", E2EController, :create_funnel
+      end
     end
   end
 
