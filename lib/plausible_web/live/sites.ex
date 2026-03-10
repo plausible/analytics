@@ -14,14 +14,6 @@ defmodule PlausibleWeb.Live.Sites do
 
   alias PlausibleWeb.Components.PrimaDropdown
 
-  defp sanitize_sort_by("traffic"), do: :traffic
-  defp sanitize_sort_by("alnum"), do: :alnum
-  defp sanitize_sort_by(_), do: :traffic
-
-  defp sanitize_sort_direction("asc"), do: :asc
-  defp sanitize_sort_direction("desc"), do: :desc
-  defp sanitize_sort_direction(_), do: :desc
-
   def mount(params, _session, socket) do
     team = socket.assigns.current_team
     user = socket.assigns.current_user
@@ -32,8 +24,15 @@ defmodule PlausibleWeb.Live.Sites do
       |> URI.new!()
 
     filter_text = String.trim(params["filter_text"] || "")
-    sort_by = sanitize_sort_by(params["sort_by"] || "traffic")
-    sort_direction = sanitize_sort_direction(params["sort_direction"] || "desc")
+
+    {sort_by, sort_direction} =
+      case {params["sort_by"], params["sort_direction"]} do
+        {nil, nil} ->
+          load_sort_preference(user, team)
+
+        {sort_by, sort_direction} ->
+          {sanitize_sort_by(sort_by), sanitize_sort_direction(sort_direction)}
+      end
 
     index_state =
       SitesIndex.build(user,
@@ -61,8 +60,14 @@ defmodule PlausibleWeb.Live.Sites do
 
   def handle_params(params, _uri, socket) do
     new_filter = String.trim(params["filter_text"] || "")
-    sort_by = sanitize_sort_by(params["sort_by"])
-    sort_direction = sanitize_sort_direction(params["sort_direction"])
+
+    sort_by =
+      if params["sort_by"], do: sanitize_sort_by(params["sort_by"]), else: socket.assigns.sort_by
+
+    sort_direction =
+      if params["sort_direction"],
+        do: sanitize_sort_direction(params["sort_direction"]),
+        else: socket.assigns.sort_direction
 
     socket =
       socket
@@ -768,7 +773,8 @@ defmodule PlausibleWeb.Live.Sites do
   def sort_dropdown(assigns) do
     current_label =
       Enum.find_value(@sort_options, fn {label, {sort_by, direction}} ->
-        if sort_by == assigns.sort_by and direction == assigns.sort_direction, do: label
+        if sort_by == assigns.sort_by and direction == assigns.sort_direction,
+          do: label
       end)
 
     assigns = assign(assigns, sort_options: @sort_options, current_sort_label: current_label)
@@ -903,15 +909,20 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
-  def handle_event(
-        "set-sort",
-        %{"sort_by" => sort_by, "sort_direction" => sort_direction},
-        socket
-      ) do
+  def handle_event("set-sort", params, socket) do
+    {sort_by, sort_direction} =
+      case {params["sort_by"], params["sort_direction"]} do
+        {nil, nil} ->
+          {socket.assigns[:sort_by], socket.assigns[:sort_direction]}
+
+        {sort_by, sort_direction} ->
+          {sanitize_sort_by(sort_by), sanitize_sort_direction(sort_direction)}
+      end
+
     socket =
       socket
       |> reset_pagination()
-      |> set_sort(sanitize_sort_by(sort_by), sanitize_sort_direction(sort_direction))
+      |> set_sort(sort_by, sort_direction)
 
     {:noreply, socket}
   end
@@ -1046,6 +1057,13 @@ defmodule PlausibleWeb.Live.Sites do
 
     uri = %{uri | query: uri_params}
 
+    save_sort_preference(
+      socket.assigns.current_user,
+      socket.assigns.current_team,
+      sort_by,
+      sort_direction
+    )
+
     socket
     |> assign(:sort_by, sort_by)
     |> assign(:sort_direction, sort_direction)
@@ -1109,4 +1127,45 @@ defmodule PlausibleWeb.Live.Sites do
 
     defp load_consolidated_sparkline(_consolidated_view), do: nil
   end
+
+  @default_sort @sort_options |> List.first() |> elem(1)
+  defp load_sort_preference(_user, nil), do: @default_sort
+
+  defp load_sort_preference(user, team) do
+    with {:ok, membership} <- Teams.Memberships.get_team_membership(team, user),
+         sort_by when not is_nil(sort_by) <-
+           Teams.Memberships.get_preference(membership, :sites_sort_by),
+         sort_direction <-
+           Teams.Memberships.get_preference(membership, :sites_sort_direction) do
+      {sanitize_sort_by(sort_by), sanitize_sort_direction(sort_direction)}
+    else
+      _ -> @default_sort
+    end
+  end
+
+  defp save_sort_preference(_user, nil, _sort_by, _sort_direction), do: :ok
+
+  defp save_sort_preference(user, team, sort_by, sort_direction) do
+    Plausible.Repo.transact(fn ->
+      with {:ok, membership} <- Teams.Memberships.get_team_membership(team, user) do
+        Teams.Memberships.set_preference(membership, :sites_sort_by, to_string(sort_by))
+
+        Teams.Memberships.set_preference(
+          membership,
+          :sites_sort_direction,
+          to_string(sort_direction)
+        )
+
+        {:ok, :ok}
+      end
+    end)
+  end
+
+  defp sanitize_sort_by("traffic"), do: :traffic
+  defp sanitize_sort_by("alnum"), do: :alnum
+  defp sanitize_sort_by(_), do: :traffic
+
+  defp sanitize_sort_direction("asc"), do: :asc
+  defp sanitize_sort_direction("desc"), do: :desc
+  defp sanitize_sort_direction(_), do: :desc
 end

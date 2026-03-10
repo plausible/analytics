@@ -832,6 +832,56 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       refute html =~ "page=1"
     end
+
+    test "selecting a sort option persists the preference to the database", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      lv
+      |> element(~s|[id="sort-dropdown-item-alnum-asc"]|)
+      |> render_click()
+
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+      {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
+
+      assert Plausible.Teams.Memberships.get_preference(membership, :sites_sort_by) == "alnum"
+
+      assert Plausible.Teams.Memberships.get_preference(membership, :sites_sort_direction) ==
+               "asc"
+    end
+
+    test "saved sort preference is applied on next visit when no URL params", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+      {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
+      Plausible.Teams.Memberships.set_preference(membership, :sites_sort_by, "alnum")
+      Plausible.Teams.Memberships.set_preference(membership, :sites_sort_direction, "desc")
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Name Z-A"
+    end
+
+    test "URL sort params take precedence over saved preference", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+      {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
+      Plausible.Teams.Memberships.set_preference(membership, :sites_sort_by, "alnum")
+      Plausible.Teams.Memberships.set_preference(membership, :sites_sort_direction, "asc")
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=traffic&sort_direction=desc")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Visitors, high to low"
+    end
   end
 
   defp type_into_input(lv, id, text) do
