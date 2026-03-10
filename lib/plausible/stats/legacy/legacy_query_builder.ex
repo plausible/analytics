@@ -78,8 +78,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     struct!(query,
       preloaded_goals: preloaded_goals,
       revenue_warning: revenue_warning,
-      revenue_currencies: revenue_currencies,
-      optimized_conversions: FunWithFlags.enabled?(:optimized_conversions, for: site)
+      revenue_currencies: revenue_currencies
     )
   end
 

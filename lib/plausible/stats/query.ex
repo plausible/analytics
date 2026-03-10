@@ -32,8 +32,7 @@ defmodule Plausible.Stats.Query do
             time_on_page_data: %{},
             sql_join_type: :left,
             smear_session_metrics: false,
-            optimize_name_filter?: true,
-            optimized_conversions: false
+            optimize_name_filter?: true
 
   require OpenTelemetry.Tracer, as: Tracer
 
