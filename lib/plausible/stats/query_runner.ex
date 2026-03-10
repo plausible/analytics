@@ -144,14 +144,7 @@ defmodule Plausible.Stats.QueryRunner do
       comparison =
         if comp_label do
           comp_metrics = metrics_for_dimension_group(comparison_map, [comp_label], query)
-
-          change =
-            if main_metrics do
-              Enum.zip([query.metrics, main_metrics, comp_metrics])
-              |> Enum.map(fn {metric, main_value, comp_value} ->
-                Compare.calculate_change(metric, comp_value, main_value)
-              end)
-            end
+          change = calculate_metric_changes(query, main_metrics, comp_metrics)
 
           %{dimensions: [comp_label], metrics: comp_metrics, change: change}
         end
@@ -270,6 +263,15 @@ defmodule Plausible.Stats.QueryRunner do
   defp empty_metrics(query, dimensions) do
     query.metrics
     |> Enum.map(fn metric -> Metrics.default_value(metric, query, dimensions) end)
+  end
+
+  defp calculate_metric_changes(query, main_metrics, comparison_metrics) do
+    if main_metrics do
+      Enum.zip([query.metrics, main_metrics, comparison_metrics])
+      |> Enum.map(fn {metric, main_value, comp_value} ->
+        Compare.calculate_change(metric, comp_value, main_value)
+      end)
+    end
   end
 
   defp total_rows([]), do: 0
