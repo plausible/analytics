@@ -153,9 +153,67 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([], not (^add_filter(table, query, [:has_done, filter])))
   end
 
+  defp add_filter(:sessions, query, [:sequence, steps]) do
+    completion_q = build_sequence_sessions_q(steps, query)
+    dynamic([t], t.session_id in subquery(completion_q))
+  end
+
+  defp add_filter(:events, query, [:sequence, steps]) do
+    completion_q = build_sequence_completion_q(steps, query)
+
+    if Enum.any?(query.dimensions, &String.starts_with?(&1, "event:")) do
+      next_event_cond =
+        dynamic(
+          [e, {:completion, c}],
+          ^filter_site_id(query) and ^filter_time_range(:events, query) and
+            e.timestamp > c.step_ts
+        )
+
+      next_event_q =
+        from(e in "events_v2",
+          join: seq in subquery(completion_q),
+          as: :completion,
+          on: e.session_id == seq.session_id,
+          where: ^next_event_cond,
+          group_by: e.session_id,
+          select: %{session_id: e.session_id, timestamp: min(e.timestamp)}
+        )
+
+      dynamic(
+        [t],
+        fragment("(?, ?) IN ?", t.session_id, t.timestamp, subquery(next_event_q))
+      )
+    else
+      sessions_q = build_sequence_sessions_q(steps, query)
+      dynamic([t], t.session_id in subquery(sessions_q))
+    end
+  end
+
   defp add_filter(:events, _query, [:is, "event:name" | _rest] = filter) do
     in_clause(col_value(:name), filter)
   end
+
+  defp add_filter(:events, query, [_, "event:label" | _rest] = filter) do
+    {event_names, display_names} = Plausible.Stats.Goals.event_name_display_name_arrays(query)
+
+    label_expr =
+      dynamic(
+        [t],
+        fragment(
+          "if(? = 'pageview', concat('Visit ', ?), transform(?, ?, ?, ?))",
+          t.name,
+          t.pathname,
+          t.name,
+          ^event_names,
+          ^display_names,
+          t.name
+        )
+      )
+
+    filter_field_dynamic(label_expr, filter)
+  end
+
+  defp add_filter(:sessions, _query, [_, "event:label" | _rest]), do: true
 
   defp add_filter(:events, query, [_, "event:goal" | _rest] = filter) do
     Plausible.Stats.Goals.add_filter(query, filter)
@@ -294,6 +352,81 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       has_key(t, column_name, ^prop_name) and
         not (^contains_clause(custom_prop_value(column_name, prop_name), filter))
     )
+  end
+
+  defp build_sequence_sessions_q(steps, query) do
+    completion_q = build_sequence_completion_q(steps, query)
+    from(q in subquery(completion_q), select: q.session_id)
+  end
+
+  defp build_sequence_completion_q(steps, query) do
+    Enum.reduce(steps, nil, fn step, prev_q ->
+      if prev_q == nil do
+        step_cond = build_sequence_step_cond(step, query)
+
+        from(e in "events_v2",
+          where: ^step_cond,
+          group_by: e.session_id,
+          select: %{session_id: e.session_id, step_ts: min(e.timestamp)}
+        )
+      else
+        ordering_cond = dynamic([e, {:prev_step, p}], e.timestamp > p.step_ts)
+        step_cond = build_sequence_step_cond(step, query, ordering_cond)
+
+        from(e in "events_v2",
+          join: prev in subquery(prev_q),
+          as: :prev_step,
+          on: e.session_id == prev.session_id,
+          where: ^step_cond,
+          group_by: e.session_id,
+          select: %{session_id: e.session_id, step_ts: min(e.timestamp)}
+        )
+      end
+    end)
+  end
+
+  defp build_sequence_step_cond(step, query, ordering_cond \\ nil) do
+    site_time_cond = dynamic([], ^filter_site_id(query) and ^filter_time_range(:events, query))
+    step_filter_cond = add_filter(:events, query, step)
+
+    if ordering_cond do
+      dynamic([], ^site_time_cond and ^step_filter_cond and ^ordering_cond)
+    else
+      dynamic([], ^site_time_cond and ^step_filter_cond)
+    end
+  end
+
+  defp filter_field_dynamic(value_expr, [:is | _] = filter) do
+    in_clause(value_expr, filter)
+  end
+
+  defp filter_field_dynamic(value_expr, [:is_not | rest]) do
+    dynamic([], not (^filter_field_dynamic(value_expr, [:is | rest])))
+  end
+
+  defp filter_field_dynamic(value_expr, [:matches_wildcard, dim, glob_exprs | rest]) do
+    regexes = Enum.map(glob_exprs, &page_regex/1)
+    filter_field_dynamic(value_expr, [:matches, dim, regexes | rest])
+  end
+
+  defp filter_field_dynamic(value_expr, [:matches_wildcard_not | rest]) do
+    dynamic([], not (^filter_field_dynamic(value_expr, [:matches_wildcard | rest])))
+  end
+
+  defp filter_field_dynamic(value_expr, [:contains | _] = filter) do
+    contains_clause(value_expr, filter)
+  end
+
+  defp filter_field_dynamic(value_expr, [:contains_not | rest]) do
+    dynamic([], not (^filter_field_dynamic(value_expr, [:contains | rest])))
+  end
+
+  defp filter_field_dynamic(value_expr, [:matches, _, clauses | _]) do
+    dynamic([x], fragment("multiMatchAny(?, ?)", ^value_expr, ^clauses))
+  end
+
+  defp filter_field_dynamic(value_expr, [:matches_not | rest]) do
+    dynamic([], not (^filter_field_dynamic(value_expr, [:matches | rest])))
   end
 
   defp filter_field(db_field, [:matches_wildcard, _dimension, glob_exprs | _rest]) do

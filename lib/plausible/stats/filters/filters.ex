@@ -44,7 +44,7 @@ defmodule Plausible.Stats.Filters do
                              ]
   def event_table_visit_props(), do: @event_table_visit_props |> Enum.map(&to_string/1)
 
-  @event_props [:name, :page, :goal, :hostname]
+  @event_props [:name, :page, :goal, :hostname, :label]
 
   def event_props(), do: @event_props |> Enum.map(&to_string/1)
 
@@ -98,7 +98,7 @@ defmodule Plausible.Stats.Filters do
     |> traverse(
       {0, false},
       fn {depth, is_behavioral_filter}, operator ->
-        {depth + 1, is_behavioral_filter or operator in [:has_done, :has_not_done]}
+        {depth + 1, is_behavioral_filter or operator in [:has_done, :has_not_done, :sequence]}
       end
     )
     |> Enum.filter(fn {_filter, {depth, is_behavioral_filter}} ->
@@ -180,7 +180,7 @@ defmodule Plausible.Stats.Filters do
         [transformed_child] = transform_tree(child_filter, transformer)
         [[operator, transformed_child]]
 
-      {nil, [operator, filters]} when operator in [:and, :or] ->
+      {nil, [operator, filters]} when operator in [:and, :or, :sequence] ->
         [[operator, transform_filters(filters, transformer)]]
 
       # Reached a leaf node, return existing value
@@ -207,7 +207,7 @@ defmodule Plausible.Stats.Filters do
       when operation in [:not, :ignore_in_totals_query, :has_done, :has_not_done] ->
         traverse_tree(child_filter, state_transformer.(state, operation), state_transformer)
 
-      [operation, filters] when operation in [:and, :or] ->
+      [operation, filters] when operation in [:and, :or, :sequence] ->
         traverse(filters, state_transformer.(state, operation), state_transformer)
 
       # Leaf node

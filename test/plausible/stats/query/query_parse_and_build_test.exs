@@ -641,7 +641,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                Query.parse_and_build(site, params, now: @now)
 
       assert error ==
-               "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
+               "Invalid filters. Behavioral filters (has_done, has_not_done, sequence) can only be used with event dimension filters."
     end
 
     test "fails when nesting behavioral filters", %{site: site} do
@@ -658,7 +658,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
                Query.parse_and_build(site, params, now: @now)
 
       assert error ==
-               "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
+               "Invalid filters. Behavioral filters (has_done, has_not_done, sequence) cannot be nested."
     end
 
     for operator <- ["not", "or", "has_done", "has_not_done"] do

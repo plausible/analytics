@@ -262,6 +262,7 @@
         "event:name",
         "event:page",
         "event:hostname",
+        "event:label",
         "visit:source",
         "visit:channel",
         "visit:referrer",
@@ -455,7 +456,8 @@
         { "$ref": "#/definitions/filter_entry" },
         { "$ref": "#/definitions/filter_and_or" },
         { "$ref": "#/definitions/filter_not" },
-        { "$ref": "#/definitions/filter_has_done" }
+        { "$ref": "#/definitions/filter_has_done" },
+        { "$ref": "#/definitions/filter_sequence" }
       ]
     },
     "filter_not": {
@@ -499,6 +501,23 @@
           "enum": ["has_done", "has_not_done"]
         },
         { "$ref": "#/definitions/filter_tree" }
+      ]
+    },
+    "filter_sequence": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "type": "string",
+          "enum": ["sequence"]
+        },
+        {
+          "type": "array",
+          "items": { "$ref": "#/definitions/filter_tree" },
+          "minItems": 1
+        }
       ]
     },
     "order_by_entry": {

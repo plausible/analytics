@@ -344,43 +344,85 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp validate_behavioral_filters(query) do
-    query.filters
-    |> Filters.traverse(0, fn behavioral_depth, operator ->
-      if operator in [:has_done, :has_not_done] do
-        behavioral_depth + 1
-      else
-        behavioral_depth
-      end
-    end)
-    |> Enum.reduce_while(:ok, fn {[_operator, dimension | _rest], behavioral_depth}, :ok ->
-      cond do
-        behavioral_depth == 0 ->
-          # ignore non-behavioral filters
-          {:cont, :ok}
+    with :ok <- validate_not_wrapping_sequence(query) do
+      query.filters
+      |> Filters.traverse(0, fn behavioral_depth, operator ->
+        if operator in [:has_done, :has_not_done, :sequence] do
+          behavioral_depth + 1
+        else
+          behavioral_depth
+        end
+      end)
+      |> Enum.reduce_while(:ok, fn {[_operator, dimension | _rest], behavioral_depth}, :ok ->
+        cond do
+          behavioral_depth == 0 ->
+            # ignore non-behavioral filters
+            {:cont, :ok}
 
-        behavioral_depth > 1 ->
-          {:halt,
-           {:error,
-            %QueryError{
-              code: :invalid_filters,
-              message:
-                "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
-            }}}
+          behavioral_depth > 1 ->
+            {:halt,
+             {:error,
+              %QueryError{
+                code: :invalid_filters,
+                message:
+                  "Invalid filters. Behavioral filters (has_done, has_not_done, sequence) cannot be nested."
+              }}}
 
-        not String.starts_with?(dimension, "event:") ->
-          {:halt,
-           {:error,
-            %QueryError{
-              code: :invalid_filters,
-              message:
-                "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
-            }}}
+          not String.starts_with?(dimension, "event:") ->
+            {:halt,
+             {:error,
+              %QueryError{
+                code: :invalid_filters,
+                message:
+                  "Invalid filters. Behavioral filters (has_done, has_not_done, sequence) can only be used with event dimension filters."
+              }}}
 
-        true ->
-          {:cont, :ok}
-      end
-    end)
+          true ->
+            {:cont, :ok}
+        end
+      end)
+    end
   end
+
+  defp validate_not_wrapping_sequence(query) do
+    if sequence_inside_not?(query.filters) do
+      {:error,
+       %QueryError{
+         code: :invalid_filters,
+         message: "Invalid filters. sequence filters cannot be wrapped in not."
+       }}
+    else
+      :ok
+    end
+  end
+
+  defp sequence_inside_not?(filters) when is_list(filters) do
+    Enum.any?(filters, &filter_sequence_inside_not?/1)
+  end
+
+  defp filter_sequence_inside_not?([:not, child]), do: subtree_has_sequence?(child)
+
+  defp filter_sequence_inside_not?([op, children]) when op in [:and, :or],
+    do: sequence_inside_not?(children)
+
+  defp filter_sequence_inside_not?([op, child])
+       when op in [:has_done, :has_not_done, :ignore_in_totals_query],
+       do: filter_sequence_inside_not?(child)
+
+  defp filter_sequence_inside_not?([:sequence, steps]), do: sequence_inside_not?(steps)
+  defp filter_sequence_inside_not?(_), do: false
+
+  defp subtree_has_sequence?([:sequence | _]), do: true
+
+  defp subtree_has_sequence?([op, children]) when op in [:and, :or] do
+    is_list(children) and Enum.any?(children, &subtree_has_sequence?/1)
+  end
+
+  defp subtree_has_sequence?([op, child])
+       when op in [:not, :has_done, :has_not_done, :ignore_in_totals_query],
+       do: subtree_has_sequence?(child)
+
+  defp subtree_has_sequence?(_), do: false
 
   defp validate_filtered_goals_exist(_query, %ParsedQueryParams{skip_goal_existence_check: true}),
     do: :ok

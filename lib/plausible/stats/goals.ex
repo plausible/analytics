@@ -13,7 +13,9 @@ defmodule Plausible.Stats.Goals do
   """
   def preload_needed_goals(site, dimensions, filters) do
     if Enum.member?(dimensions, "event:goal") or
-         Filters.filtering_on_dimension?(filters, "event:goal") do
+         Enum.member?(dimensions, "event:label") or
+         Filters.filtering_on_dimension?(filters, "event:goal") or
+         Filters.filtering_on_dimension?(filters, "event:label") do
       site = Plausible.Repo.preload(site, :team)
       props_available? = Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
       goals = Plausible.Goals.for_site(site, include_goals_with_custom_props?: props_available?)
@@ -274,4 +276,17 @@ defmodule Plausible.Stats.Goals do
 
   def page_path_db_field(true = _imported?), do: :page
   def page_path_db_field(false = _imported?), do: :pathname
+
+  @doc """
+  Returns two parallel lists of event names and their display names for all
+  custom event goals. Used to build the `event:label` computed dimension via
+  ClickHouse's `transform` function.
+  """
+  @spec event_name_display_name_arrays(Plausible.Stats.Query.t()) :: {[String.t()], [String.t()]}
+  def event_name_display_name_arrays(query) do
+    query.preloaded_goals.all
+    |> Enum.filter(&(&1.event_name != nil))
+    |> Enum.map(&{&1.event_name, Plausible.Goal.display_name(&1)})
+    |> Enum.unzip()
+  end
 end
