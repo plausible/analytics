@@ -103,6 +103,8 @@
   /* Set v3 default ring behavior */
   --default-ring-width: 2px;
   --default-ring-color: var(--color-indigo-500);
+
+  --animate-pulse: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @media print {

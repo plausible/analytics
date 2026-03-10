@@ -132,7 +132,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     ~H"""
     <.flash_messages flash={@flash} />
-    <div class="container pt-6">
+    <div class="group/sort container pt-6">
       <PlausibleWeb.Live.Components.Visitors.gradient_defs />
       <.upgrade_nag_screen :if={
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
@@ -542,7 +542,7 @@ defmodule PlausibleWeb.Live.Sites do
   def site(assigns) do
     ~H"""
     <li
-      class="group relative"
+      class="group relative group-has-[.phx-click-loading]/sort:opacity-75"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
       data-pin-toggled={
@@ -558,7 +558,7 @@ defmodule PlausibleWeb.Live.Sites do
         )
       }
     >
-      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"} class="block">
+      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"} class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none">
         <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
@@ -796,6 +796,7 @@ defmodule PlausibleWeb.Live.Sites do
         id="sort-dropdown-trigger"
         mt?={false}
         theme="secondary"
+        class="group-has-[.phx-click-loading]/sort:text-gray-800/50 group-has-[.phx-click-loading]/sort:hover:text-gray-800/50 group-has-[.phx-click-loading]/sort:dark:text-gray-100/50 group-has-[.phx-click-loading]/sort:dark:hover:text-gray-100/50 group-has-[.phx-click-loading]/sort:pointer-events-none"
       >
         {@current_sort_label}
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
