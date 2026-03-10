@@ -757,18 +757,18 @@ defmodule PlausibleWeb.Live.Sites do
   attr(:sort_by, :atom, default: :traffic)
   attr(:sort_direction, :atom, default: :desc)
 
-  @sort_options [
-    {"Visitors, high to low", {:traffic, :desc}},
-    {"Visitors, low to high", {:traffic, :asc}},
-    {"Name A-Z", {:alnum, :asc}},
-    {"Name Z-A", {:alnum, :desc}}
-  ]
-
   def search_form(assigns) do
     ~H"""
     <.filter_bar filter_text={@filter_text} placeholder="Search Sites"></.filter_bar>
     """
   end
+
+  @sort_options [
+    {"Visitors, high to low", {:traffic, :desc}},
+    {"Visitors, low to high", {:traffic, :asc}},
+    {"Name A-Z", {:alnum, :asc}},
+    {"Name Z-A", {:alnum, :desc}}
+    ]
 
   def sort_dropdown(assigns) do
     current_label =
