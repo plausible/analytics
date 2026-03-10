@@ -703,12 +703,12 @@ defmodule PlausibleWeb.Live.SitesTest do
   end
 
   describe "sort widget" do
-    test "renders sort widget with default Visitors, high to low label", %{conn: conn, user: user} do
+    test "renders sort widget with default 'Most visitors' label", %{conn: conn, user: user} do
       new_site(owner: user)
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      assert text(find(html, "#sort-dropdown-trigger")) =~ "Visitors, high to low"
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Most visitors"
     end
 
     test "sort widget shows all four options", %{conn: conn, user: user} do
@@ -716,8 +716,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      assert html =~ "Visitors, high to low"
-      assert html =~ "Visitors, low to high"
+      assert html =~ "Most visitors"
+      assert html =~ "Fewest visitors"
       assert html =~ "Name A-Z"
       assert html =~ "Name Z-A"
 
@@ -746,7 +746,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites?sort_by=invalid&sort_direction=desc")
 
-      assert text(find(html, "#sort-dropdown-trigger")) =~ "Visitors, high to low"
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Most visitors"
     end
 
     test "invalid sort_direction param is sanitized to desc", %{conn: conn, user: user} do
@@ -781,13 +781,13 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert domains == "zebra.example.com mango.example.com apple.example.com"
     end
 
-    test "Traffic, high to low sort orders sites alphabetically descending", %{
+    test "Most visitors sort orders sites by traffic", %{
       conn: conn,
       user: user
     } do
-      high = new_site(domain: "low.example.com", owner: user)
+      high = new_site(domain: "high.example.com", owner: user)
       mid = new_site(domain: "mid.example.com", owner: user)
-      low = new_site(domain: "high.example.com", owner: user)
+      low = new_site(domain: "low.example.com", owner: user)
 
       populate_stats(high, [build(:pageview), build(:pageview), build(:pageview)])
       populate_stats(mid, [build(:pageview)])
@@ -799,13 +799,13 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert domains == "#{high.domain} #{mid.domain} #{low.domain}"
     end
 
-    test "Traffic, low to high sort orders sites alphabetically ascending", %{
+    test "Fewest visitors sort orders by traffic", %{
       conn: conn,
       user: user
     } do
-      high = new_site(domain: "low.example.com", owner: user)
+      low = new_site(domain: "low.example.com", owner: user)
       mid = new_site(domain: "mid.example.com", owner: user)
-      low = new_site(domain: "high.example.com", owner: user)
+      high = new_site(domain: "high.example.com", owner: user)
 
       populate_stats(high, [build(:pageview), build(:pageview), build(:pageview)])
       populate_stats(mid, [build(:pageview)])
@@ -880,7 +880,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites?sort_by=traffic&sort_direction=desc")
 
-      assert text(find(html, "#sort-dropdown-trigger")) =~ "Visitors, high to low"
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Most visitors"
     end
   end
 
