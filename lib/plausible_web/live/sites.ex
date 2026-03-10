@@ -558,7 +558,10 @@ defmodule PlausibleWeb.Live.Sites do
         )
       }
     >
-      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"} class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none">
+      <.unstyled_link
+        href={"/#{URI.encode_www_form(@site.domain)}"}
+        class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none"
+      >
         <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
@@ -631,6 +634,7 @@ defmodule PlausibleWeb.Live.Sites do
           <PrimaDropdown.dropdown_item
             :if={Sites.regular?(@site)}
             id={"#{@dropdown_id}-item-2"}
+            data-test-id="ellipsis-menu-pin-item"
             phx-click={
               JS.hide(
                 transition: {"duration-500", "opacity-100", "opacity-0"},

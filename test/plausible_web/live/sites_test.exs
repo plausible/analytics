@@ -588,7 +588,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      button_selector = ~s/li[data-domain="#{site.domain}"] button[phx-value-domain]/
+      button_selector =
+        ~s/button[phx-value-domain="#{site.domain}"][data-test-id="ellipsis-menu-pin-item"]/
 
       html =
         lv
@@ -668,7 +669,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      button_selector = ~s/li[data-domain="#{site.domain}"] button[phx-value-domain]/
+      button_selector =
+        ~s/button[phx-value-domain="#{site.domain}"][data-test-id="ellipsis-menu-pin-item"]/
 
       lv |> element(button_selector) |> render_click()
 
@@ -686,7 +688,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      button_selector = ~s/li[data-domain="#{site.domain}"] button[phx-value-domain]/
+      button_selector =
+        ~s/[phx-value-domain="#{site.domain}"][data-test-id="site-card-pin-icon"]/
 
       lv |> element(button_selector) |> render_click()
 
@@ -694,7 +697,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       refute element_exists?(
                html,
-               ~s/li[data-domain="#{site.domain}"] [data-test-id="site-card-pin-icon"]/
+               button_selector
              )
     end
   end
