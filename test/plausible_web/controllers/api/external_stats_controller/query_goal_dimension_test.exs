@@ -651,4 +651,70 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
              ]
     end
   end
+
+  describe "optimized_conversions flag" do
+    test "returns same results as baseline for goals without custom props", %{
+      conn: conn,
+      site: site
+    } do
+      FunWithFlags.enable(:optimized_conversions, for_actor: site)
+
+      insert(:goal, %{site: site, event_name: "Purchase"})
+      insert(:goal, %{site: site, page_path: "/test"})
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:01], pathname: "/test"),
+        build(:event, name: "Purchase", timestamp: ~N[2021-01-01 00:00:03]),
+        build(:event, name: "Purchase", timestamp: ~N[2021-01-01 00:00:03])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Purchase"], "metrics" => [2]},
+               %{"dimensions" => ["Visit /test"], "metrics" => [1]}
+             ]
+    end
+
+    test "falls back to full query when goals have custom props", %{conn: conn, site: site} do
+      FunWithFlags.enable(:optimized_conversions, for_actor: site)
+
+      {:ok, _goal} =
+        Plausible.Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"plan" => "premium"}
+        })
+
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["plan"],
+          "meta.value": ["premium"]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["plan"],
+          "meta.value": ["free"]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Purchase"], "metrics" => [1]}
+             ]
+    end
+  end
 end

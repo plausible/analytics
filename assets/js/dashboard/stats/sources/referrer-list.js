@@ -82,7 +82,7 @@ export default function Referrers({ source }) {
   }
 
   return (
-    <ReportLayout className="overflow-x-hidden">
+    <ReportLayout testId="report-referrers" className="overflow-x-hidden">
       <ReportHeader>
         <div className="flex gap-x-3">
           <TabWrapper>

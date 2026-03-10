@@ -213,7 +213,7 @@ export default function Pages() {
   }
 
   return (
-    <ReportLayout className="overflow-x-hidden">
+    <ReportLayout testId="report-pages" className="overflow-x-hidden">
       <ReportHeader>
         <div className="flex gap-x-3">
           <TabWrapper>
