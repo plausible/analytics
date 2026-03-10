@@ -182,7 +182,8 @@ defmodule Plausible.Stats.QueryBuilder do
       preloaded_goals: preloaded_goals,
       revenue_warning: revenue_warning,
       revenue_currencies: revenue_currencies,
-      debug_metadata: debug_metadata
+      debug_metadata: debug_metadata,
+      optimized_conversions: FunWithFlags.enabled?(:optimized_conversions, for: site)
     )
   end
 
