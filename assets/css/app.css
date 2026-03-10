@@ -129,23 +129,11 @@
 }
 
 .button {
-  @apply inline-flex justify-center px-3.5 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700;
+  @apply inline-flex justify-center px-3.5 py-2.5 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700;
 }
 
 .button[disabled] {
   @apply bg-gray-400 dark:bg-gray-600;
-}
-
-.button-outline {
-  @apply text-indigo-600 bg-transparent border border-gray-300 dark:border-gray-600 dark:text-gray-100 hover:bg-transparent hover:text-indigo-700 dark:hover:text-white hover:border-gray-400/70 dark:hover:border-gray-500 transition-all duration-150;
-}
-
-.button-sm {
-  @apply px-4 py-2 text-sm;
-}
-
-.button-md {
-  @apply px-4 py-2;
 }
 
 html {
@@ -167,20 +155,6 @@ blockquote {
   .container {
     max-width: 70rem;
   }
-}
-
-.pricing-table {
-  height: 920px;
-}
-
-@media (width >= 768px) {
-  .pricing-table {
-    height: auto;
-  }
-}
-
-.light-text {
-  color: #f0f4f8;
 }
 
 .transition {
@@ -220,71 +194,6 @@ blockquote {
   border-radius: 15px;
   animation: pulse-dot 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) -0.4s infinite;
   @apply bg-green-500;
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.33);
-  }
-
-  50% {
-    transform: scale(1);
-  }
-
-  40%,
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes pulse-dot {
-  0% {
-    transform: scale(0.8);
-  }
-
-  25% {
-    transform: scale(1);
-  }
-
-  50%,
-  100% {
-    transform: scale(0.8);
-  }
-}
-
-.just-text h1,
-.just-text h2,
-.just-text h3 {
-  margin-top: 1em;
-  margin-bottom: 0.5em;
-}
-
-.just-text p {
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
-
-.dropdown-content::before {
-  top: -16px;
-  right: 8px;
-  left: auto;
-  border: 8px solid transparent;
-  border-bottom-color: rgb(27 31 35 / 15%);
-}
-
-.dropdown-content::before,
-.dropdown-content::after {
-  position: absolute;
-  display: inline-block;
-  content: '';
-}
-
-.dropdown-content::after {
-  top: -14px;
-  right: 9px;
-  left: auto;
-  border: 7px solid transparent;
-  border-bottom-color: #fff;
 }
 
 .feather {

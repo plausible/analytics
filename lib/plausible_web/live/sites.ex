@@ -174,7 +174,7 @@ defmodule PlausibleWeb.Live.Sites do
             :if={@consolidated_view_cta_dismissed?}
             id="add-site-dropdown"
           >
-            <PrimaDropdown.dropdown_trigger as={&button/1} id="add-site-dropdown-trigger" mt?={false}>
+            <PrimaDropdown.dropdown_trigger id="add-site-dropdown-trigger" theme="primary">
               <Heroicons.plus class="size-4" /> Add
               <Heroicons.chevron_down mini class="size-4 mt-0.5" />
             </PrimaDropdown.dropdown_trigger>
@@ -197,13 +197,13 @@ defmodule PlausibleWeb.Live.Sites do
             </PrimaDropdown.dropdown_menu>
           </PrimaDropdown.dropdown>
 
-          <a
+          <.button_link
             :if={!@consolidated_view_cta_dismissed?}
             href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
-            class="whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 max-w-fit font-medium rounded-md px-3.5 py-2.5 text-sm cursor-pointer disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35"
+            mt?={false}
           >
             <Heroicons.plus class="size-4" /> Add website
-          </a>
+          </.button_link>
         </div>
       </div>
 
@@ -449,7 +449,7 @@ defmodule PlausibleWeb.Live.Sites do
     >
       <.unstyled_link
         href={"/#{URI.encode_www_form(@consolidated_view.domain)}"}
-        class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-lg transition-shadow duration-150"
+        class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
           <div class="flex flex-col gap-y-2 mb-auto">
@@ -547,7 +547,7 @@ defmodule PlausibleWeb.Live.Sites do
   def site(assigns) do
     ~H"""
     <li
-      class="group relative group-has-[.phx-click-loading]/sort:opacity-75"
+      class="group relative group-has-[[data-sort-trigger].phx-click-loading]/sort:opacity-75"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
       data-pin-toggled={
@@ -618,9 +618,7 @@ defmodule PlausibleWeb.Live.Sites do
       <PrimaDropdown.dropdown id={@dropdown_id}>
         <PrimaDropdown.dropdown_trigger
           id={"#{@dropdown_id}-trigger"}
-          as={&button/1}
-          mt?={false}
-          theme="icon"
+          theme="ghost"
           class="!px-2.5"
         >
           <Heroicons.ellipsis_vertical class="size-5" />
@@ -764,11 +762,11 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   @sort_options [
-    {"Visitors, high to low", {:traffic, :desc}},
-    {"Visitors, low to high", {:traffic, :asc}},
+    {"Most visitors", {:traffic, :desc}},
+    {"Fewest visitors", {:traffic, :asc}},
     {"Name A-Z", {:alnum, :asc}},
     {"Name Z-A", {:alnum, :desc}}
-    ]
+  ]
 
   def sort_dropdown(assigns) do
     current_label =
@@ -782,11 +780,8 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <PrimaDropdown.dropdown id="sort-dropdown">
       <PrimaDropdown.dropdown_trigger
-        as={&button/1}
         id="sort-dropdown-trigger"
-        mt?={false}
-        theme="secondary"
-        class="group-has-[.phx-click-loading]/sort:text-gray-800/50 group-has-[.phx-click-loading]/sort:hover:text-gray-800/50 group-has-[.phx-click-loading]/sort:dark:text-gray-100/50 group-has-[.phx-click-loading]/sort:dark:hover:text-gray-100/50 group-has-[.phx-click-loading]/sort:pointer-events-none"
+        class="min-w-40 group-has-[[data-sort-trigger].phx-click-loading]/sort:text-gray-800/50 group-has-[[data-sort-trigger].phx-click-loading]/sort:hover:text-gray-800/50 group-has-[[data-sort-trigger].phx-click-loading]/sort:dark:text-gray-100/50 group-has-[[data-sort-trigger].phx-click-loading]/sort:dark:hover:text-gray-100/50 group-has-[[data-sort-trigger].phx-click-loading]/sort:pointer-events-none"
       >
         {@current_sort_label}
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
@@ -795,9 +790,11 @@ defmodule PlausibleWeb.Live.Sites do
         <%= for {label, {sort_by, direction}} <- @sort_options do %>
           <PrimaDropdown.dropdown_item
             id={"sort-dropdown-item-#{sort_by}-#{direction}"}
+            class="min-w-40"
             phx-click="set-sort"
             phx-value-sort_by={sort_by}
             phx-value-sort_direction={direction}
+            data-sort-trigger
           >
             {label}
           </PrimaDropdown.dropdown_item>

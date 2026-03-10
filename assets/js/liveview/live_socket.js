@@ -7,7 +7,17 @@
 import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
-import { Modal, Dropdown } from 'prima'
+import { Modal, Dropdown as PrimaDropdown } from 'prima'
+
+const Dropdown = {
+  ...PrimaDropdown,
+  positionMenu() {
+    if (this.refs.menuWrapper && this.refs.referenceElement) {
+      this.refs.menuWrapper.style.minWidth = `${this.refs.referenceElement.offsetWidth}px`
+    }
+    PrimaDropdown.positionMenu.call(this)
+  }
+}
 import topbar from 'topbar'
 /* eslint-enable import/no-unresolved */
 

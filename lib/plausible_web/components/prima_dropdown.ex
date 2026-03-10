@@ -5,8 +5,48 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
 
   @dropdown_item_icon_base_class "text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 group-data-focus/item:text-gray-900 dark:group-hover/item:text-gray-100 dark:group-data-focus/item:text-gray-100"
 
+  @trigger_button_base_class "whitespace-nowrap truncate inline-flex items-center justify-between gap-x-2 text-sm font-medium rounded-md cursor-pointer disabled:cursor-not-allowed"
+
+  @trigger_button_themes %{
+    "primary" =>
+      "border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35",
+    "secondary" =>
+      "border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:border-gray-400/60 hover:text-gray-900 dark:hover:border-gray-500 dark:hover:text-white disabled:text-gray-700/40 dark:disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:border-gray-800",
+    "ghost" =>
+      "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 disabled:text-gray-500 disabled:dark:text-gray-600"
+  }
+
+  @trigger_button_sizes %{
+    "sm" => "px-3 py-2",
+    "md" => "px-3.5 py-2.5"
+  }
+
   defdelegate dropdown(assigns), to: Prima.Dropdown
-  defdelegate dropdown_trigger(assigns), to: Prima.Dropdown
+
+  attr(:id, :string, required: true)
+  attr(:theme, :string, default: "secondary")
+  attr(:size, :string, default: "md")
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
+
+  def dropdown_trigger(assigns) do
+    assigns =
+      assign(assigns,
+        computed_class: [
+          @trigger_button_base_class,
+          @trigger_button_sizes[assigns.size],
+          @trigger_button_themes[assigns.theme],
+          assigns.class
+        ]
+      )
+
+    ~H"""
+    <Dropdown.dropdown_trigger id={@id} class={@computed_class} {@rest}>
+      {render_slot(@inner_block)}
+    </Dropdown.dropdown_trigger>
+    """
+  end
 
   attr(:id, :string, required: true)
   slot(:inner_block, required: true)
