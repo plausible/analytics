@@ -129,7 +129,12 @@ defmodule PlausibleWeb.Components.Billing do
           {PlausibleWeb.TextHelpers.format_date_range(@usage.date_range)}
           <span :if={@period in [:current_cycle, :last_30_days]}>{cycle_label(@period)}</span>
         </p>
-        <.usage_progress_bar :if={@limit != :unlimited} id={"total_pageviews_#{@period}"} usage={@usage.total} limit={@limit} />
+        <.usage_progress_bar
+          :if={@limit != :unlimited}
+          id={"total_pageviews_#{@period}"}
+          usage={@usage.total}
+          limit={@limit}
+        />
       </div>
       <button
         class="flex justify-between items-center flex-wrap w-full text-left"
