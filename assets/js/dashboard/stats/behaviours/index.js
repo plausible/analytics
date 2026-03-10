@@ -41,7 +41,17 @@ function maybeRequire() {
   }
 }
 
+function maybeRequireFunnelExploration() {
+  if (BUILD_EXTRA) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('../../extra/funnel-exploration')
+  } else {
+    return null
+  }
+}
+
 const Funnel = maybeRequire().default
+const FunnelExploration = maybeRequireFunnelExploration()?.FunnelExploration ?? null
 
 function singleGoalFilterApplied(dashboardState) {
   const goalFilter = getGoalFilter(dashboardState)
@@ -94,12 +104,21 @@ function storePropKey({ site, propKey, dashboardState }) {
   }
 }
 
+const funnelExplorationAvailable = (site) =>
+  FunnelExploration !== null && site.flags.funnel_exploration
+
 function getDefaultSelectedFunnel({ site }) {
   const stored = storage.getItem(STORAGE_KEYS.getForFunnel({ site }))
-  const storedExists = stored && site.funnels.some((f) => f.name === stored)
+  const storedExists =
+    stored === '__explore__'
+      ? funnelExplorationAvailable(site)
+      : stored && site.funnels.some((f) => f.name === stored)
 
   if (storedExists) {
     return stored
+  } else if (funnelExplorationAvailable(site)) {
+    storage.setItem(STORAGE_KEYS.getForFunnel({ site }), '__explore__')
+    return '__explore__'
   } else if (site.funnels.length > 0) {
     const firstAvailable = site.funnels[0].name
     storage.setItem(STORAGE_KEYS.getForFunnel({ site }), firstAvailable)
@@ -291,7 +310,9 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   }
 
   function renderFunnels() {
-    if (Funnel === null) {
+    if (selectedFunnel === '__explore__' && funnelExplorationAvailable(site)) {
+      return <FunnelExploration />
+    } else if (Funnel === null) {
       return featureUnavailable()
     } else if (Funnel && selectedFunnel && site.funnelsAvailable) {
       return <Funnel funnelName={selectedFunnel} />
@@ -496,16 +517,28 @@ function Behaviours({ importedDataInView, setMode, mode }) {
             {!site.isConsolidatedView &&
               isEnabled(Mode.FUNNELS) &&
               Funnel &&
-              (site.funnels.length > 0 && site.funnelsAvailable ? (
+              (site.funnels.length > 0 && site.funnelsAvailable ||
+              funnelExplorationAvailable(site) ? (
                 <DropdownTabButton
                   className="md:relative"
                   transitionClassName="md:left-auto md:w-88 md:origin-top-right"
                   active={mode === Mode.FUNNELS}
-                  options={site.funnels.map(({ name }) => ({
-                    label: name,
-                    onClick: setFunnelFactory(name),
-                    selected: mode === Mode.FUNNELS && selectedFunnel === name
-                  }))}
+                  options={[
+                    ...(funnelExplorationAvailable(site)
+                      ? [
+                          {
+                            label: 'Explore',
+                            onClick: setFunnelFactory('__explore__'),
+                            selected: mode === Mode.FUNNELS && selectedFunnel === '__explore__'
+                          }
+                        ]
+                      : []),
+                    ...site.funnels.map(({ name }) => ({
+                      label: name,
+                      onClick: setFunnelFactory(name),
+                      selected: mode === Mode.FUNNELS && selectedFunnel === name
+                    }))
+                  ]}
                   searchable={true}
                 >
                   Funnels
