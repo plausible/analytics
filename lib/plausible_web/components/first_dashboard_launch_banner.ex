@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
     href={"/#{URI.encode_www_form(@site.domain)}/settings/email-reports"}
     onclick="plausible('Weekly Email Note Click')"
   >
-    Get a weekly summary of your traffic →
+    Get weekly traffic summaries by email →
   </.styled_link>
     </div>
     """
