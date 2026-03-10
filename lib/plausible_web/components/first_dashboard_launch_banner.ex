@@ -28,9 +28,13 @@ defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
       x-bind:class="! show ? 'hidden' : ''"
       x-init={x_init(@site)}
     >
-      <.styled_link href={"/#{URI.encode_www_form(@site.domain)}/settings/email-reports"}>
-        Invite guests, enable email reports, import from GA and more →
-      </.styled_link>
+      
+  <.styled_link
+    href={"/#{URI.encode_www_form(@site.domain)}/settings/email-reports"}
+    onclick="plausible('Weekly Email Note Click')"
+  >
+    Get a weekly summary of your traffic →
+  </.styled_link>
     </div>
     """
   end
