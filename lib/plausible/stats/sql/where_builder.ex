@@ -159,9 +159,9 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp add_filter(:events, query, [:sequence, steps]) do
-    completion_q = build_sequence_completion_q(steps, query)
-
     if Enum.any?(query.dimensions, &String.starts_with?(&1, "event:")) do
+      completion_q = build_sequence_completion_q(steps, query)
+
       next_event_cond =
         dynamic(
           [e, {:completion, c}],
