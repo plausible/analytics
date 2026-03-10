@@ -1374,7 +1374,13 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "include" => %{"time_labels" => true, "partial_time_labels" => true}
         })
 
-      assert response["meta"]["time_labels"] == ["2021-10-02", "2021-10-04", "2021-10-11", "2021-10-18", "2021-10-25"]
+      assert response["meta"]["time_labels"] == [
+               "2021-10-02",
+               "2021-10-04",
+               "2021-10-11",
+               "2021-10-18",
+               "2021-10-25"
+             ]
 
       assert response["meta"]["partial_time_labels"] == ["2021-10-02", "2021-10-25"]
     end
@@ -1391,7 +1397,12 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "include" => %{"time_labels" => true, "partial_time_labels" => true}
         })
 
-      assert response["meta"]["time_labels"] == ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"]
+      assert response["meta"]["time_labels"] == [
+               "2021-09-01",
+               "2021-10-01",
+               "2021-11-01",
+               "2021-12-01"
+             ]
 
       assert response["meta"]["partial_time_labels"] == ["2021-09-01", "2021-12-01"]
     end
@@ -1449,13 +1460,16 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       ])
 
       response =
-        do_query(conn, site, %{
-          "date_range" => "day",
-          "relative_date" => "2021-01-08",
-          "metrics" => ["visitors"],
-          "dimensions" => ["time:hour"],
-          "include" => %{"time_labels" => true}
-        }, now: ~U[2021-01-08 08:05:00Z])
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => "day",
+            "relative_date" => "2021-01-08",
+            "metrics" => ["visitors"],
+            "dimensions" => ["time:hour"],
+            "include" => %{"time_labels" => true}
+          }, now: ~U[2021-01-08 08:05:00Z])
 
       assert response["meta"]["time_labels"] == [
                "2021-01-08 00:00:00",
@@ -1485,13 +1499,16 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       ])
 
       response =
-        do_query(conn, site, %{
-          "date_range" => "month",
-          "relative_date" => "2021-01-07",
-          "metrics" => ["visitors"],
-          "dimensions" => ["time:day"],
-          "include" => %{"time_labels" => true}
-        }, now: ~U[2021-01-07 12:00:00Z])
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => "month",
+            "relative_date" => "2021-01-07",
+            "metrics" => ["visitors"],
+            "dimensions" => ["time:day"],
+            "include" => %{"time_labels" => true}
+          }, now: ~U[2021-01-07 12:00:00Z])
 
       assert response["meta"]["time_labels"] == [
                "2021-01-01",
@@ -1521,13 +1538,16 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       ])
 
       response =
-        do_query(conn, site, %{
-          "date_range" => "year",
-          "relative_date" => "2021-02-07",
-          "metrics" => ["visitors"],
-          "dimensions" => ["time:month"],
-          "include" => %{"time_labels" => true}
-        }, now: ~U[2021-02-07 12:00:00Z])
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => "year",
+            "relative_date" => "2021-02-07",
+            "metrics" => ["visitors"],
+            "dimensions" => ["time:month"],
+            "include" => %{"time_labels" => true}
+          }, now: ~U[2021-02-07 12:00:00Z])
 
       assert response["meta"]["time_labels"] == ["2021-01-01", "2021-02-01"]
 
@@ -1719,7 +1739,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       results = response["results"]
       this_week_plot = Enum.map(results, fn r -> List.first(r["metrics"]) end)
-      last_week_plot = Enum.map(results, fn r ->  List.first(r["comparison"]["metrics"]) end)
+      last_week_plot = Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end)
 
       assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
       assert last_week_plot == [33.33, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -1734,13 +1754,16 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       ])
 
       response =
-        do_query(conn, site, %{
-          "date_range" => "day",
-          "relative_date" => "2021-01-08",
-          "metrics" => ["visitors"],
-          "dimensions" => ["time:hour"],
-          "include" => %{"compare" => "previous_period", "time_labels" => true}
-        }, now: ~U[2021-01-08 08:05:00Z])
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => "day",
+            "relative_date" => "2021-01-08",
+            "metrics" => ["visitors"],
+            "dimensions" => ["time:hour"],
+            "include" => %{"compare" => "previous_period", "time_labels" => true}
+          }, now: ~U[2021-01-08 08:05:00Z])
 
       results = response["results"]
 
