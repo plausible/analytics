@@ -130,7 +130,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
   end
 
-  defp maybe_derived_name_filter(%{optimize_name_filter: true} = events_query) do
+  defp maybe_derived_name_filter(%{optimize_name_filter?: true} = events_query) do
     derived_name_filter(events_query)
   end
 
