@@ -49,10 +49,7 @@ class LineGraph extends React.Component {
     return function (val, _index, _ticks) {
       if (this.getLabelForValue(val) == '__blank__') return ''
 
-      if (
-        graphData.interval === 'hour' &&
-        dashboardState.period !== 'day'
-      ) {
+      if (graphData.interval === 'hour' && dashboardState.period !== 'day') {
         const date = dateFormatter({
           interval: 'day',
           longForm: false,
