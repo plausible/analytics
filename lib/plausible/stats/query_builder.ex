@@ -183,7 +183,8 @@ defmodule Plausible.Stats.QueryBuilder do
       revenue_warning: revenue_warning,
       revenue_currencies: revenue_currencies,
       debug_metadata: debug_metadata,
-      optimize_name_filter?: FunWithFlags.enabled?(:optimize_name_filter, for: site)
+      optimize_name_filter?: FunWithFlags.enabled?(:optimize_name_filter, for: site),
+      optimized_conversions: FunWithFlags.enabled?(:optimized_conversions, for: site)
     )
   end
 
