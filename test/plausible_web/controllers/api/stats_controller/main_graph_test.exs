@@ -605,6 +605,67 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
+  describe "views_per_visit plot" do
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
+
+    test "views_per_visit for 28 days in weekly buckets (native data only)", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-04 00:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-04 00:05:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-18 00:00:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-18 00:05:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-18 00:10:00])
+      ])
+
+      response =
+        do_query(conn, site, %{
+          "date_range" => "28d",
+          "relative_date" => "2021-01-29",
+          "metrics" => ["views_per_visit"],
+          "dimensions" => ["time:week"]
+        })
+
+      assert response["results"] == [
+               %{"dimensions" => ["2021-01-04"], "metrics" => [2.0]},
+               %{"dimensions" => ["2021-01-18"], "metrics" => [3.0]}
+             ]
+    end
+
+    test "views_per_visit for a year in monthly buckets (with imported data)", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        # January 2021 - only imported
+        build(:imported_visitors, date: ~D[2021-01-01], visits: 6, pageviews: 7),
+        # March 2021 - imported + native combined
+        build(:imported_visitors, date: ~D[2021-03-01], visits: 1, pageviews: 4),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-03-15 00:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-03-15 00:05:00]),
+        # September 2021 - only native
+        build(:pageview, user_id: 2, timestamp: ~N[2021-09-01 00:00:00])
+      ])
+
+      response =
+        do_query(conn, site, %{
+          "date_range" => "year",
+          "relative_date" => "2021-01-01",
+          "metrics" => ["views_per_visit"],
+          "dimensions" => ["time:month"],
+          "include" => %{"imports" => true}
+        })
+
+      assert response["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [1.17]},
+               %{"dimensions" => ["2021-03-01"], "metrics" => [3.0]},
+               %{"dimensions" => ["2021-09-01"], "metrics" => [1.0]}
+             ]
+    end
+  end
+
   describe "visitors plot" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
@@ -1469,7 +1530,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
             "metrics" => ["visitors"],
             "dimensions" => ["time:hour"],
             "include" => %{"time_labels" => true}
-          }, now: ~U[2021-01-08 08:05:00Z])
+          },
+          now: ~U[2021-01-08 08:05:00Z]
+        )
 
       assert response["meta"]["time_labels"] == [
                "2021-01-08 00:00:00",
@@ -1508,7 +1571,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
             "metrics" => ["visitors"],
             "dimensions" => ["time:day"],
             "include" => %{"time_labels" => true}
-          }, now: ~U[2021-01-07 12:00:00Z])
+          },
+          now: ~U[2021-01-07 12:00:00Z]
+        )
 
       assert response["meta"]["time_labels"] == [
                "2021-01-01",
@@ -1547,7 +1612,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
             "metrics" => ["visitors"],
             "dimensions" => ["time:month"],
             "include" => %{"time_labels" => true}
-          }, now: ~U[2021-02-07 12:00:00Z])
+          },
+          now: ~U[2021-02-07 12:00:00Z]
+        )
 
       assert response["meta"]["time_labels"] == ["2021-01-01", "2021-02-01"]
 
@@ -1763,7 +1830,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
             "metrics" => ["visitors"],
             "dimensions" => ["time:hour"],
             "include" => %{"compare" => "previous_period", "time_labels" => true}
-          }, now: ~U[2021-01-08 08:05:00Z])
+          },
+          now: ~U[2021-01-08 08:05:00Z]
+        )
 
       results = response["results"]
 
