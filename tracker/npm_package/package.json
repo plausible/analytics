@@ -16,5 +16,11 @@
   "homepage": "https://plausible.io",
   "type": "module",
   "module": "./plausible.js",
-  "types": "./plausible.d.ts"
+  "types": "./plausible.d.ts",
+  "exports": {
+    ".": {
+      "types": "./plausible.d.ts",
+      "default": "./plausible.js"
+    }
+  }
 }
