@@ -119,7 +119,7 @@ jobs:
     timeout-minutes: 15
     env:
       MIX_ENV: e2e_test
-      BASE_URL: "http://localhost:8000"
+      BASE_URL: "http://localhost:8111"
     services:
       postgres:
         image: "postgres:18"
@@ -146,8 +146,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2]
-        shardTotal: [2]
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -208,6 +208,12 @@ jobs:
 
       - name: Install E2E dependencies
         run: npm --prefix ./e2e ci
+
+      - name: Check format
+        run: npm --prefix ./e2e run check-format
+
+      - name: Check types
+        run: npm --prefix ./e2e run typecheck
 
       - name: Install E2E Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'

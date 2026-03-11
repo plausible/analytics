@@ -396,16 +396,18 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert_usage = fn doc ->
         refute element_exists?(doc, "#total_pageviews_current_cycle")
-        assert element_exists?(doc, "#total_pageviews_last_30_days")
         assert text_of_element(doc, "#pageviews_last_30_days") =~ "Pageviews 1"
         assert text_of_element(doc, "#custom_events_last_30_days") =~ "Custom events 2"
       end
 
       # for a trial user
-      conn
-      |> get(Routes.settings_path(conn, :subscription))
-      |> html_response(200)
-      |> assert_usage.()
+      trial_html =
+        conn
+        |> get(Routes.settings_path(conn, :subscription))
+        |> html_response(200)
+
+      assert_usage.(trial_html)
+      refute element_exists?(trial_html, "#total_pageviews_last_30_days")
 
       subscribe_to_plan(user, @v4_plan_id,
         status: :deleted,

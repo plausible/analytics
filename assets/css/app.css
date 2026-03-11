@@ -136,18 +136,6 @@
   @apply bg-gray-400 dark:bg-gray-600;
 }
 
-.button-outline {
-  @apply text-indigo-600 bg-transparent border border-gray-300 dark:border-gray-600 dark:text-gray-100 hover:bg-transparent hover:text-indigo-700 dark:hover:text-white hover:border-gray-400/70 dark:hover:border-gray-500 transition-all duration-150;
-}
-
-.button-sm {
-  @apply px-4 py-2 text-sm;
-}
-
-.button-md {
-  @apply px-4 py-2;
-}
-
 html {
   @apply text-gray-800;
 }
@@ -159,28 +147,10 @@ body {
   overflow-x: hidden;
 }
 
-blockquote {
-  @apply px-4 py-2 my-4 border-l-4 border-gray-500;
-}
-
 @media (width >= 1280px) {
   .container {
     max-width: 70rem;
   }
-}
-
-.pricing-table {
-  height: 920px;
-}
-
-@media (width >= 768px) {
-  .pricing-table {
-    height: auto;
-  }
-}
-
-.light-text {
-  color: #f0f4f8;
 }
 
 .transition {
@@ -252,41 +222,6 @@ blockquote {
   }
 }
 
-.just-text h1,
-.just-text h2,
-.just-text h3 {
-  margin-top: 1em;
-  margin-bottom: 0.5em;
-}
-
-.just-text p {
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
-
-.dropdown-content::before {
-  top: -16px;
-  right: 8px;
-  left: auto;
-  border: 8px solid transparent;
-  border-bottom-color: rgb(27 31 35 / 15%);
-}
-
-.dropdown-content::before,
-.dropdown-content::after {
-  position: absolute;
-  display: inline-block;
-  content: '';
-}
-
-.dropdown-content::after {
-  top: -14px;
-  right: 9px;
-  left: auto;
-  border: 7px solid transparent;
-  border-bottom-color: #fff;
-}
-
 .feather {
   height: 1em;
   width: 1em;
@@ -318,20 +253,6 @@ blockquote {
   transition: opacity 100ms ease-in;
 }
 
-.datamaps-subunit {
-  cursor: pointer;
-}
-
-.fullwidth-shadow::before {
-  @apply absolute top-0 w-screen h-full bg-gray-50 dark:bg-gray-850;
-
-  box-shadow: 0 4px 2px -2px rgb(0 0 0 / 6%);
-  content: '';
-  z-index: -1;
-  left: calc(-1 * calc(50vw - 50%));
-  background-color: inherit;
-}
-
 iframe[hidden] {
   display: none;
 }
@@ -345,21 +266,3 @@ iframe[hidden] {
 /* prettier-ignore */
 .date-option-group { }
 /* stylelint-enable */
-
-.tooltip-arrow,
-.tooltip-arrow::before {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: inherit;
-}
-
-.tooltip-arrow {
-  visibility: hidden;
-}
-
-.tooltip-arrow::before {
-  visibility: visible;
-  content: '';
-  transform: rotate(45deg) translateY(1px);
-}

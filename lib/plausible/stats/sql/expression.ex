@@ -486,4 +486,38 @@ defmodule Plausible.Stats.SQL.Expression do
       )
     end
   end
+
+  @doc """
+  Optimized variant of `event_goal_join/1` for use when no goals have custom
+  property filters. Omits all references to `meta.key` and `meta.value`,
+  preventing ClickHouse from reading those expensive Array(String) columns at
+  scan time.
+  """
+  defmacro event_goal_join_no_props(goal_join_data) do
+    quote do
+      fragment(
+        """
+        arrayIntersect(
+          multiMatchAllIndices(?, ?),
+          arrayMap(
+            (expected_name, threshold, index) -> if(
+              expected_name = ? and ? between threshold and 100,
+              index, -1
+            ),
+            ?,
+            ?,
+            ?
+          )
+        )
+        """,
+        e.pathname,
+        type(^unquote(goal_join_data).page_regexes, {:array, :string}),
+        e.name,
+        e.scroll_depth,
+        type(^unquote(goal_join_data).event_names_by_type, {:array, :string}),
+        type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
+        type(^unquote(goal_join_data).indices, {:array, :integer})
+      )
+    end
+  end
 end

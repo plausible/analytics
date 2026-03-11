@@ -1,11 +1,11 @@
-import React, { useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Popover, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import { useSiteContext, PlausibleSite } from '../../site-context'
+import { PlausibleSite } from '../../site-context'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { BlurMenuButtonOnEscape, popover } from '../../components/popover'
@@ -22,8 +22,8 @@ const INTERVAL_LABELS: Record<string, string> = {
 }
 
 function validIntervals(
-  site: PlausibleSite,
-  dashboardState: DashboardState
+  site: Pick<PlausibleSite, 'validIntervalsByPeriod'>,
+  dashboardState: Pick<DashboardState, 'period' | 'to' | 'from'>
 ): string[] {
   if (
     dashboardState.period === DashboardPeriod.custom &&
@@ -44,8 +44,8 @@ function validIntervals(
   }
 }
 
-function getDefaultInterval(
-  dashboardState: DashboardState,
+export function getDefaultInterval(
+  dashboardState: Pick<DashboardState, 'period' | 'to' | 'from'>,
   validIntervals: string[]
 ): string {
   const defaultByPeriod: Record<string, string> = {
@@ -92,42 +92,57 @@ function storeInterval(period: string, domain: string, interval: string): void {
   storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
-export const getCurrentInterval = function (
+export const useStoredInterval = (
   site: PlausibleSite,
-  dashboardState: DashboardState
-): string {
-  const options = validIntervals(site, dashboardState)
+  { to, from, period }: Pick<DashboardState, 'to' | 'from' | 'period'>
+) => {
+  const availableIntervals = validIntervals(site, { to, from, period })
 
-  const storedInterval = getStoredInterval(dashboardState.period, site.domain)
-  const defaultInterval = getDefaultInterval(dashboardState, options)
+  const isValid = (interval: string | null): interval is string =>
+    !!interval && availableIntervals.includes(interval)
 
-  if (storedInterval && options.includes(storedInterval)) {
-    return storedInterval
-  } else {
-    return defaultInterval
+  const storedInterval = getStoredInterval(period, site.domain)
+
+  const [selectedInterval, setSelectedInterval] = useState<string | null>(null)
+
+  useEffect(() => {
+    setSelectedInterval(null)
+  }, [availableIntervals])
+
+  const onIntervalClick = useCallback(
+    (interval: string) => {
+      storeInterval(period, site.domain, interval)
+      setSelectedInterval(interval)
+    },
+    [period, site.domain]
+  )
+
+  return {
+    selectedInterval: isValid(selectedInterval)
+      ? selectedInterval
+      : isValid(storedInterval)
+        ? storedInterval
+        : getDefaultInterval({ to, from, period }, availableIntervals),
+    onIntervalClick,
+    availableIntervals
   }
 }
 
 export function IntervalPicker({
-  onIntervalUpdate
+  selectedInterval,
+  onIntervalClick,
+  options
 }: {
-  onIntervalUpdate: (interval: string) => void
+  selectedInterval: string
+  onIntervalClick: (interval: string) => void
+  options: string[]
 }): JSX.Element | null {
   const menuElement = useRef<HTMLButtonElement>(null)
   const { dashboardState } = useDashboardStateContext()
-  const site = useSiteContext()
   const dashboardRouteMatch = useMatch(rootRoute.path)
 
   if (dashboardState.period == 'realtime') {
     return null
-  }
-
-  const options = validIntervals(site, dashboardState)
-  const currentInterval = getCurrentInterval(site, dashboardState)
-
-  function updateInterval(interval: string): void {
-    storeInterval(dashboardState.period, site.domain, interval)
-    onIntervalUpdate(interval)
   }
 
   return (
@@ -154,7 +169,9 @@ export function IntervalPicker({
                 'rounded-sm text-sm flex items-center'
               )}
             >
-              {INTERVAL_LABELS[currentInterval]}
+              <span data-testid="current-graph-interval">
+                {INTERVAL_LABELS[selectedInterval]}
+              </span>
               <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
             </Popover.Button>
 
@@ -176,10 +193,10 @@ export function IntervalPicker({
                   <button
                     key={option}
                     onClick={() => {
-                      updateInterval(option)
+                      onIntervalClick(option)
                       closeDropdown()
                     }}
-                    data-selected={option == currentInterval}
+                    data-selected={option == selectedInterval}
                     className={classNames(
                       popover.items.classNames.navigationLink,
                       popover.items.classNames.selectedOption,
@@ -187,7 +204,9 @@ export function IntervalPicker({
                       'w-full text-left'
                     )}
                   >
-                    {INTERVAL_LABELS[option]}
+                    <span data-testid="graph-interval">
+                      {INTERVAL_LABELS[option]}
+                    </span>
                   </button>
                 ))}
               </Popover.Panel>

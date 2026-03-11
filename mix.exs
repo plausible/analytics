@@ -178,27 +178,20 @@ defmodule Plausible.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
+      "e2e.setup": [
+        "cmd npm install --prefix ./e2e",
+        "cmd npm exec playwright install --with-deps chromium --prefix ./e2e"
+      ],
+      # accepts Playwright CLI arguments (https://playwright.dev/docs/test-cli), for example
+      # mix test.e2e --ui
+      # mix test.e2e --debug segments.spec.ts
       "test.e2e": [
         "esbuild default",
         "ecto.create --quiet",
         "ecto.migrate",
         "clean_postgres",
         "clean_clickhouse",
-        # NOTE: This speeds up subsequent backend app
-        # startup. It's not clear why though :shrug:
-        "run -e \":noop\"",
-        "cmd npm run --prefix ./e2e test"
-      ],
-      "test.e2e.ui": [
-        "esbuild default",
-        "ecto.create --quiet",
-        "ecto.migrate",
-        "clean_postgres",
-        "clean_clickhouse",
-        # NOTE: This speeds up subsequent backend app
-        # startup. It's not clear why though :shrug:
-        "run -e \":noop\"",
-        "cmd npm run --prefix ./e2e test:ui"
+        "cmd npm run --prefix ./e2e test -- "
       ],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
