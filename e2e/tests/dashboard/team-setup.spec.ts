@@ -8,6 +8,8 @@ test('submitting team name via Enter key does not crash', async ({
   await setupSite({ page, request })
   await page.goto('/team/setup')
 
+  await expectLiveViewConnected(page)
+
   await expect(
     page.getByRole('button', { name: 'Create Team' })
   ).toBeVisible()
