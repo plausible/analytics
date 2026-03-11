@@ -8,7 +8,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Query, Filters, QueryOptimizer, TableDecider, SQL}
+  alias Plausible.Stats.{Query, QueryOptimizer, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
   alias Plausible.Stats.Legacy.TimeOnPage
 
