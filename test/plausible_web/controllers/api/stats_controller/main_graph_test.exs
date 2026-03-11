@@ -333,6 +333,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                %{"dimensions" => ["2020-12-01"], "metrics" => [2]},
                %{"dimensions" => ["2021-05-01"], "metrics" => [2]}
              ]
+
+      assert response["meta"]["time_label_result_indices"] == [0, nil, nil, nil, nil, 1]
     end
 
     test "displays visitors for 6 months with only imported data", %{conn: conn, site: site} do
@@ -415,6 +417,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                %{"dimensions" => ["2020-12-01"], "metrics" => [1]},
                %{"dimensions" => ["2021-11-01"], "metrics" => [1]}
              ]
+
+      assert response["meta"]["time_label_result_indices"] ==
+               [0] ++ List.duplicate(nil, 10) ++ [1]
     end
 
     test "displays visitors for calendar year with imported data", %{conn: conn, site: site} do
@@ -1032,7 +1037,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:event, name: "Signup", timestamp: ~N[2021-01-11 18:00:00])
       ])
 
-      response =
+      %{"results" => results, "comparison_results" => comparison_results} =
         do_query(conn, site, %{
           "date_range" => "day",
           "relative_date" => "2021-01-11",
@@ -1042,12 +1047,16 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "include" => %{"compare" => "previous_period"}
         })
 
-      results = response["results"]
-      curr = Enum.map(results, fn r -> List.first(r["metrics"]) end)
-      prev = Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end)
+      assert results == [
+               %{"dimensions" => ["2021-01-11 04:00:00"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-11 05:00:00"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-11 18:00:00"], "metrics" => [1]}
+             ]
 
-      assert prev == [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
-      assert curr == [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+      assert comparison_results == [
+               %{"dimensions" => ["2021-01-10 05:00:00"], "metrics" => [2], "change" => [-50]},
+               %{"dimensions" => ["2021-01-10 19:00:00"], "metrics" => [1], "change" => nil}
+             ]
     end
 
     test "displays conversions per month with 12mo comparison plot", %{
@@ -1067,7 +1076,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:event, name: "Signup", timestamp: ~N[2021-07-11 00:00:00])
       ])
 
-      response =
+      %{"results" => results, "comparison_results" => comparison_results} =
         do_query(conn, site, %{
           "date_range" => "12mo",
           "relative_date" => "2021-12-11",
@@ -1077,12 +1086,17 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "include" => %{"compare" => "previous_period"}
         })
 
-      results = response["results"]
-      curr = Enum.map(results, fn r -> List.first(r["metrics"]) end)
-      prev = Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end)
+      assert results == [
+               %{"dimensions" => ["2021-05-01"], "metrics" => [1]},
+               %{"dimensions" => ["2021-06-01"], "metrics" => [1]},
+               %{"dimensions" => ["2021-07-01"], "metrics" => [1]}
+             ]
 
-      assert prev == [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]
-      assert curr == [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0]
+      assert comparison_results == [
+               %{"dimensions" => ["2020-01-01"], "metrics" => [1], "change" => nil},
+               %{"dimensions" => ["2020-02-01"], "metrics" => [1], "change" => nil},
+               %{"dimensions" => ["2020-03-01"], "metrics" => [1], "change" => nil}
+             ]
     end
   end
 
@@ -1641,11 +1655,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         })
 
       labels = response["meta"]["time_labels"]
-
-      comparison_labels =
-        Enum.map(response["results"], fn r ->
-          r["comparison"] && List.first(r["comparison"]["dimensions"])
-        end)
+      comparison_labels = response["meta"]["comparison_time_labels"]
 
       first = Date.utc_today() |> Date.shift(day: -30) |> Date.to_iso8601()
       last = Date.utc_today() |> Date.shift(day: -1) |> Date.to_iso8601()
@@ -1682,22 +1692,33 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "relative_date" => "2020-01-01",
           "metrics" => ["visitors"],
           "dimensions" => ["time:day"],
-          "include" => %{"compare" => "year_over_year"}
+          "include" => %{"compare" => "year_over_year", "time_labels" => true}
         })
 
-      results = response["results"]
+      assert response["results"] == [
+               %{"dimensions" => ["2020-01-01"], "metrics" => [1]},
+               %{"dimensions" => ["2020-01-05"], "metrics" => [1]},
+               %{"dimensions" => ["2020-01-30"], "metrics" => [1]},
+               %{"dimensions" => ["2020-01-31"], "metrics" => [1]}
+             ]
 
-      assert Enum.at(results, 0)["metrics"] == [1]
-      assert Enum.at(results, 0)["comparison"]["metrics"] == [2]
+      assert response["comparison_results"] == [
+               %{"dimensions" => ["2019-01-01"], "metrics" => [2], "change" => [-50]},
+               %{"dimensions" => ["2019-01-05"], "metrics" => [2], "change" => [-50]},
+               %{"dimensions" => ["2019-01-31"], "metrics" => [1], "change" => [0]}
+             ]
 
-      assert Enum.at(results, 4)["metrics"] == [1]
-      assert Enum.at(results, 4)["comparison"]["metrics"] == [2]
+      assert length(response["meta"]["time_labels"]) == 31
+      assert length(response["meta"]["comparison_time_labels"]) == 31
 
-      assert Enum.at(results, 30)["metrics"] == [1]
-      assert Enum.at(results, 30)["comparison"]["metrics"] == [1]
+      assert response["meta"]["time_label_result_indices"] ==
+               [0, nil, nil, nil, 1] ++ List.duplicate(nil, 24) ++ [2, 3]
+
+      assert response["meta"]["comparison_time_label_result_indices"] ==
+               [0, nil, nil, nil, 1] ++ List.duplicate(nil, 25) ++ [2]
     end
 
-    test "fill in gaps when custom comparison period is larger than original query", %{
+    test "can return custom comparison period larger than original query", %{
       conn: conn,
       site: site
     } do
@@ -1719,11 +1740,15 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           }
         })
 
-      results = response["results"]
       labels = response["meta"]["time_labels"]
+      comparison_labels = response["meta"]["comparison_time_labels"]
 
-      assert length(results) == length(labels)
-      assert List.last(results)["dimensions"] == nil
+      assert length(labels) == 31
+      assert length(comparison_labels) == 152
+      assert length(response["results"]) == 3
+      assert response["comparison_results"] == []
+      assert List.first(comparison_labels) == "2022-01-01"
+      assert List.last(comparison_labels) == "2022-06-01"
     end
 
     test "compares imported data and native data together", %{conn: conn, site: site} do
@@ -1745,9 +1770,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "include" => %{"imports" => true, "compare" => "year_over_year"}
         })
 
-      results = response["results"]
-      plot = Enum.map(results, fn r -> List.first(r["metrics"]) end)
-      comparison_plot = Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end)
+      plot = Enum.map(response["results"], fn r -> List.first(r["metrics"]) end)
+
+      comparison_plot =
+        Enum.map(response["comparison_results"], fn r -> List.first(r["metrics"]) end)
 
       assert 4 == Enum.sum(plot)
       assert 2 == Enum.sum(comparison_plot)
@@ -1775,9 +1801,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "include" => %{"imports" => false, "compare" => "year_over_year"}
         })
 
-      results = response["results"]
-      plot = Enum.map(results, fn r -> List.first(r["metrics"]) end)
-      comparison_plot = Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end)
+      plot = Enum.map(response["results"], fn r -> List.first(r["metrics"]) end)
+
+      comparison_plot =
+        Enum.map(response["comparison_results"], fn r -> List.first(r["metrics"]) end)
 
       assert 4 == Enum.sum(plot)
       assert 0 == Enum.sum(comparison_plot)
@@ -1794,7 +1821,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-08 00:01:00])
       ])
 
-      response =
+      %{"results" => results, "comparison_results" => comparison_results} =
         do_query(conn, site, %{
           "date_range" => "7d",
           "relative_date" => "2021-01-15",
@@ -1804,12 +1831,13 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "include" => %{"compare" => "previous_period"}
         })
 
-      results = response["results"]
-      this_week_plot = Enum.map(results, fn r -> List.first(r["metrics"]) end)
-      last_week_plot = Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end)
+      assert results == [
+               %{"dimensions" => ["2021-01-08"], "metrics" => [50.0]}
+             ]
 
-      assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-      assert last_week_plot == [33.33, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      assert comparison_results == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [33.33], "change" => [16.7]}
+             ]
     end
 
     test "does not trim hourly relative date range when comparing", %{conn: conn, site: site} do
@@ -1834,40 +1862,29 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           now: ~U[2021-01-08 08:05:00Z]
         )
 
-      results = response["results"]
+      assert response["meta"]["time_labels"] ==
+               Enum.map(0..23, fn h ->
+                 "2021-01-08 #{String.pad_leading(to_string(h), 2, "0")}:00:00"
+               end)
 
-      assert response["meta"]["time_labels"] == [
-               "2021-01-08 00:00:00",
-               "2021-01-08 01:00:00",
-               "2021-01-08 02:00:00",
-               "2021-01-08 03:00:00",
-               "2021-01-08 04:00:00",
-               "2021-01-08 05:00:00",
-               "2021-01-08 06:00:00",
-               "2021-01-08 07:00:00",
-               "2021-01-08 08:00:00",
-               "2021-01-08 09:00:00",
-               "2021-01-08 10:00:00",
-               "2021-01-08 11:00:00",
-               "2021-01-08 12:00:00",
-               "2021-01-08 13:00:00",
-               "2021-01-08 14:00:00",
-               "2021-01-08 15:00:00",
-               "2021-01-08 16:00:00",
-               "2021-01-08 17:00:00",
-               "2021-01-08 18:00:00",
-               "2021-01-08 19:00:00",
-               "2021-01-08 20:00:00",
-               "2021-01-08 21:00:00",
-               "2021-01-08 22:00:00",
-               "2021-01-08 23:00:00"
+      assert response["results"] == [
+               %{"dimensions" => ["2021-01-08 00:00:00"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-08 06:00:00"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-08 08:00:00"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-08 23:00:00"], "metrics" => [1]}
              ]
 
-      assert Enum.map(results, fn r -> List.first(r["metrics"]) end) ==
-               [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+      assert response["meta"]["comparison_time_labels"] ==
+               Enum.map(0..23, fn h ->
+                 "2021-01-07 #{String.pad_leading(to_string(h), 2, "0")}:00:00"
+               end)
 
-      assert Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end) ==
-               List.duplicate(0, 24)
+      assert response["comparison_results"] == []
+
+      assert response["meta"]["time_label_result_indices"] ==
+               [0, nil, nil, nil, nil, nil, 1, nil, 2] ++ List.duplicate(nil, 14) ++ [3]
+
+      assert response["meta"]["comparison_time_label_result_indices"] == List.duplicate(nil, 24)
     end
   end
 
@@ -1987,7 +2004,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      response =
+      %{"results" => results, "comparison_results" => comparison_results} =
         do_query(conn, site, %{
           "date_range" => "7d",
           "relative_date" => "2021-01-15",
@@ -1997,26 +2014,46 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "include" => %{"compare" => "previous_period"}
         })
 
-      results = response["results"]
-
-      assert Enum.map(results, fn r -> List.first(r["metrics"]) end) == [
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$10.31", "short" => "$10.3", "value" => 10.31},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$30.00", "short" => "$30.0", "value" => 30.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0}
+      assert results == [
+               %{
+                 "dimensions" => ["2021-01-10"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$10.31",
+                     "short" => "$10.3",
+                     "value" => 10.31
+                   }
+                 ]
+               },
+               %{
+                 "dimensions" => ["2021-01-12"],
+                 "metrics" => [
+                   %{"currency" => "USD", "long" => "$30.00", "short" => "$30.0", "value" => 30.0}
+                 ]
+               }
              ]
 
-      assert Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end) == [
-               %{"currency" => "USD", "long" => "$13.29", "short" => "$13.3", "value" => 13.29},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0}
+      assert comparison_results == [
+               %{
+                 "dimensions" => ["2021-01-01"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$13.29",
+                     "short" => "$13.3",
+                     "value" => 13.29
+                   }
+                 ],
+                 "change" => nil
+               },
+               %{
+                 "dimensions" => ["2021-01-05"],
+                 "metrics" => [
+                   %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9}
+                 ],
+                 "change" => [51]
+               }
              ]
     end
   end
@@ -2143,36 +2180,56 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      response =
+      %{"results" => results, "comparison_results" => comparison_results} =
         do_query(conn, site, %{
           "date_range" => "7d",
           "relative_date" => "2021-01-15",
           "metrics" => ["average_revenue"],
           "dimensions" => ["time:day"],
           "filters" => [["is", "event:goal", ["PaymentUSD"]]],
-          "include" => %{"compare" => "previous_period"}
+          "include" => %{"compare" => "previous_period", "time_labels" => true}
         })
 
-      results = response["results"]
-
-      assert Enum.map(results, fn r -> List.first(r["metrics"]) end) == [
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$10.31", "short" => "$10.3", "value" => 10.31},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$15.00", "short" => "$15.0", "value" => 15.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0}
+      assert results == [
+               %{
+                 "dimensions" => ["2021-01-10"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$10.31",
+                     "short" => "$10.3",
+                     "value" => 10.31
+                   }
+                 ]
+               },
+               %{
+                 "dimensions" => ["2021-01-12"],
+                 "metrics" => [
+                   %{"currency" => "USD", "long" => "$15.00", "short" => "$15.0", "value" => 15.0}
+                 ]
+               }
              ]
 
-      assert Enum.map(results, fn r -> List.first(r["comparison"]["metrics"]) end) == [
-               %{"currency" => "USD", "long" => "$13.29", "short" => "$13.3", "value" => 13.29},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
-               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0}
+      assert comparison_results == [
+               %{
+                 "dimensions" => ["2021-01-01"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$13.29",
+                     "short" => "$13.3",
+                     "value" => 13.29
+                   }
+                 ],
+                 "change" => nil
+               },
+               %{
+                 "dimensions" => ["2021-01-05"],
+                 "metrics" => [
+                   %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9}
+                 ],
+                 "change" => [-25]
+               }
              ]
     end
   end

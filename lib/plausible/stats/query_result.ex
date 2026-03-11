@@ -11,6 +11,7 @@ defmodule Plausible.Stats.QueryResult do
   alias Plausible.Stats.{Query, QueryRunner, Filters}
 
   defstruct results: [],
+            comparison_results: [],
             meta: %{},
             query: nil
 

@@ -135,34 +135,36 @@ defmodule Plausible.Stats.QueryTest do
         build(:pageview, user_id: 123, timestamp: ~N[2026-01-03 00:10:00]),
         build(:pageview, timestamp: ~N[2026-01-05 00:00:00]),
         # comparison time range
-        build(:pageview, timestamp: ~N[2026-01-02 00:00:00])
+        build(:pageview, timestamp: ~N[2025-12-16 00:00:00])
       ])
 
       {:ok, query} =
         QueryBuilder.build(site, %ParsedQueryParams{
           metrics: [:visitors, :pageviews],
-          input_date_range: {:date_range, ~D[2026-01-03], ~D[2026-01-06]},
+          input_date_range: {:date_range, ~D[2025-12-25], ~D[2026-01-06]},
           dimensions: ["time:week"],
           include: %QueryInclude{
-            compare: :previous_period,
-            compare_match_day_of_week: false
+            compare: {:date_range, ~D[2025-12-12], ~D[2025-12-21]},
+            time_labels: true
           }
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.QueryResult{results: results, comparison_results: comparison_results, meta: meta} =
+        Stats.query(site, query)
 
       assert results == [
-               %{
-                 dimensions: ["2026-01-03"],
-                 metrics: [1, 2],
-                 comparison: %{dimensions: ["2025-12-30"], metrics: [1, 1], change: [0, 100]}
-               },
-               %{
-                 dimensions: ["2026-01-05"],
-                 metrics: [1, 1],
-                 comparison: nil
-               }
+               %{dimensions: ["2025-12-29"], metrics: [1, 2]},
+               %{dimensions: ["2026-01-05"], metrics: [1, 1]}
              ]
+
+      assert comparison_results == [
+               %{dimensions: ["2025-12-15"], metrics: [1, 1], change: [0, 100]}
+             ]
+
+      assert meta[:time_labels] == ["2025-12-25", "2025-12-29", "2026-01-05"]
+      assert meta[:time_label_result_indices] == [nil, 0, 1]
+      assert meta[:comparison_time_labels] == ["2025-12-12", "2025-12-15"]
+      assert meta[:comparison_time_label_result_indices] == [nil, 0]
     end
 
     test "can return more comparison time buckets than original time range buckets",
@@ -175,7 +177,8 @@ defmodule Plausible.Stats.QueryTest do
         # comparison time range
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-02 00:00:00])
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-04 00:00:00])
       ])
 
       {:ok, query} =
@@ -184,24 +187,36 @@ defmodule Plausible.Stats.QueryTest do
           input_date_range: {:date_range, ~D[2021-02-01], ~D[2021-02-01]},
           dimensions: ["time:day"],
           include: %QueryInclude{
-            compare: {:date_range, ~D[2021-01-01], ~D[2021-01-02]}
+            compare: {:date_range, ~D[2021-01-01], ~D[2021-01-05]},
+            time_labels: true
           }
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.QueryResult{results: results, comparison_results: comparison_results, meta: meta} =
+        Stats.query(site, query)
 
       assert results == [
-               %{
-                 dimensions: ["2021-02-01"],
-                 metrics: [2, 3],
-                 comparison: %{dimensions: ["2021-01-01"], metrics: [2, 2], change: [0, 50]}
-               },
-               %{
-                 dimensions: nil,
-                 metrics: nil,
-                 comparison: %{dimensions: ["2021-01-02"], metrics: [1, 1], change: nil}
-               }
+               %{dimensions: ["2021-02-01"], metrics: [2, 3]}
              ]
+
+      assert comparison_results == [
+               %{dimensions: ["2021-01-01"], metrics: [2, 2], change: [0, 50]},
+               %{dimensions: ["2021-01-02"], metrics: [1, 1], change: nil},
+               %{dimensions: ["2021-01-04"], metrics: [1, 1], change: nil}
+             ]
+
+      assert meta[:time_labels] == ["2021-02-01"]
+
+      assert meta[:comparison_time_labels] == [
+               "2021-01-01",
+               "2021-01-02",
+               "2021-01-03",
+               "2021-01-04",
+               "2021-01-05"
+             ]
+
+      assert meta[:time_label_result_indices] == [0]
+      assert meta[:comparison_time_label_result_indices] == [0, 1, nil, 2, nil]
     end
   end
 
