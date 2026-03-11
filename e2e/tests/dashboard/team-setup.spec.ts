@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test'
 import { setupSite } from '../fixtures'
-import { randomID } from '../test-utils'
 
 test('submitting team name via Enter key does not crash', async ({
   page,
