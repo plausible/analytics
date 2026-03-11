@@ -638,7 +638,7 @@ config :plausible, Plausible.ClickhouseRepo,
     # NB! when :timeout is overridden to be over 20s,
     # for it to have meaningful effect,
     # this must be overridden as well
-    max_execution_time: 20
+    max_execution_time: 2
   ]
 
 config :plausible, Plausible.IngestRepo,
