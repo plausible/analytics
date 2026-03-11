@@ -87,73 +87,59 @@ defmodule Plausible.Stats.QueryRunner do
     end
   end
 
-  # Assembles the final results list, optionally attaching comparison data.
+  # Assembles the final results, optionally attaching comparison data.
   #
-  # Without a comparison, main results are returned as-is.
+  # Without a comparison, main results are returned as-is and comparison_results
+  # is nil.
   #
-  # With a comparison, timeseries and non-time-dimension breakdowns are handled
+  # With comparisons, timeseries and non-time-dimension breakdowns are handled
   # separately because they have fundamentally different shapes:
   #
   #   - Non-time breakdowns (e.g. by page, source) return one row per dimension
   #     group. The comparison query is filtered to the same set of dimension
   #     values as the main query, so every comparison result is guaranteed to
-  #     have a matching main result. The two lists can be joined by dimension
-  #     value in a single pass.
+  #     have a matching main result. Comparison data is merged inline into each
+  #     result row; comparison_results is nil.
   #
-  #   - Timeseries (single "time:*" dimension) return one row per time bucket,
-  #     and the comparison period may cover a different number of buckets than
-  #     the main period. The two label sequences are zipped together (with nil
-  #     padding for whichever side is shorter), producing rows for every bucket
-  #     on either side regardless of whether the other side has data.
+  #   - Timeseries (single "time:*" dimension) keep results and comparison_results
+  #     as separate lists of only non-empty rows. Each comparison row carries a
+  #     `change` field computed against the positionally-aligned original bucket
+  #     (or nil when there is no corresponding original bucket).
   defp build_results_list(%__MODULE__{main_query: query, main_results: main_results} = runner) do
-    results =
-      case {query.include.compare, query.dimensions} do
-        {nil, _dimensions} ->
-          main_results
+    case {query.include.compare, query.dimensions} do
+      {nil, _dimensions} ->
+        struct!(runner,
+          results: main_results,
+          comparison_results: nil
+        )
 
-        {_non_nil_compare, ["time:" <> _]} ->
-          build_timeseries_with_comparison(runner)
+      {_non_nil_compare, ["time:" <> _]} ->
+        struct!(runner,
+          results: main_results,
+          comparison_results: build_comparison_results(runner)
+        )
 
-        {_non_nil_compare, _dimensions} ->
-          merge_with_comparison_results(main_results, runner)
-      end
-
-    struct!(runner, results: results)
+      {_non_nil_compare, _dimensions} ->
+        struct!(runner,
+          results: merge_with_comparison_results(main_results, runner),
+          comparison_results: nil
+        )
+    end
   end
 
-  defp build_timeseries_with_comparison(%__MODULE__{main_query: query} = runner) do
+  defp build_comparison_results(%__MODULE__{main_query: query} = runner) do
     main_map = index_by_dimensions(runner.main_results)
-    comparison_map = index_by_dimensions(runner.comparison_results)
 
-    main_labels = Time.time_labels(query)
-    comp_labels = Time.time_labels(runner.comparison_query)
-    n = max(length(main_labels), length(comp_labels))
+    comp_label_to_main_label =
+      Enum.zip(Time.time_labels(runner.comparison_query), Time.time_labels(query))
+      |> Map.new()
 
-    pairs =
-      Enum.zip(
-        main_labels ++ List.duplicate(nil, n - length(main_labels)),
-        comp_labels ++ List.duplicate(nil, n - length(comp_labels))
-      )
+    Enum.map(runner.comparison_results, fn %{dimensions: [comp_label]} = comp_row ->
+      main_label = Map.get(comp_label_to_main_label, comp_label)
+      main_metrics = main_label && Map.get(main_map, [main_label])
+      change = calculate_metric_changes(query, main_metrics, comp_row.metrics)
 
-    Enum.map(pairs, fn {main_label, comp_label} ->
-      main_metrics =
-        if main_label do
-          metrics_for_dimension_group(main_map, [main_label], query)
-        end
-
-      comparison =
-        if comp_label do
-          comp_metrics = metrics_for_dimension_group(comparison_map, [comp_label], query)
-          change = calculate_metric_changes(query, main_metrics, comp_metrics)
-
-          %{dimensions: [comp_label], metrics: comp_metrics, change: change}
-        end
-
-      %{
-        dimensions: if(main_label, do: [main_label]),
-        metrics: main_metrics,
-        comparison: comparison
-      }
+      Map.put(comp_row, :change, change)
     end)
   end
 

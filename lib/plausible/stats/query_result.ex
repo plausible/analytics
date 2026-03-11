@@ -11,7 +11,7 @@ defmodule Plausible.Stats.QueryResult do
   alias Plausible.Stats.{Query, QueryRunner, Filters}
 
   defstruct results: [],
-            comparison_results: [],
+            comparison_results: nil,
             meta: %{},
             query: nil
 
@@ -44,10 +44,11 @@ defmodule Plausible.Stats.QueryResult do
 
   `results` should already-built by Plausible.Stats.QueryRunner
   """
-  def from(%QueryRunner{results: results} = runner) do
+  def from(%QueryRunner{results: results, comparison_results: comparison_results} = runner) do
     struct!(
       __MODULE__,
       results: results,
+      comparison_results: comparison_results,
       meta: meta(runner) |> Jason.OrderedObject.new(),
       query: query(runner) |> Jason.OrderedObject.new()
     )
@@ -244,8 +245,25 @@ defmodule Plausible.Stats.QueryResult do
 end
 
 defimpl Jason.Encoder, for: Plausible.Stats.QueryResult do
-  def encode(%Plausible.Stats.QueryResult{results: results, meta: meta, query: query}, opts) do
-    Jason.OrderedObject.new(results: results, meta: meta, query: query)
+  def encode(
+        %Plausible.Stats.QueryResult{
+          results: results,
+          comparison_results: comparison_results,
+          meta: meta,
+          query: query
+        },
+        opts
+      ) do
+    if comparison_results do
+      Jason.OrderedObject.new(
+        results: results,
+        comparison_results: comparison_results,
+        meta: meta,
+        query: query
+      )
+    else
+      Jason.OrderedObject.new(results: results, meta: meta, query: query)
+    end
     |> Jason.Encoder.encode(opts)
   end
 end
