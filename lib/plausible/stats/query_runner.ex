@@ -119,7 +119,7 @@ defmodule Plausible.Stats.QueryRunner do
       |> SQL.QueryBuilder.build(site)
       |> ClickhouseRepo.all(query: query)
     rescue
-      e in [Ch.Error, DBConnection.ConnectionError] ->
+      e in [Ch.Error, DBConnection.ConnectionError, Mint.TransportError] ->
         message = Exception.message(e)
         Logger.error("ClickHouse query error: #{message}")
 
