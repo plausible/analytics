@@ -58,7 +58,8 @@ defmodule Plausible.Stats.QueryResult do
     %{}
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
-    |> add_time_labels_meta(runner.main_query)
+    |> add_time_labels_meta(runner)
+    |> add_comparison_time_labels_meta(runner)
     |> add_present_index_meta(runner.main_query)
     |> add_partial_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
@@ -89,9 +90,29 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_time_labels_meta(meta, query) do
+  defp add_time_labels_meta(meta, %QueryRunner{main_query: query} = runner) do
     if query.include.time_labels do
-      Map.put(meta, :time_labels, Plausible.Stats.Time.time_labels(query))
+      time_labels = Plausible.Stats.Time.time_labels(query)
+      result_indices = result_indices_for_time_labels(time_labels, runner.main_results)
+
+      meta
+      |> Map.put(:time_labels, time_labels)
+      |> Map.put(:time_label_result_indices, result_indices)
+    else
+      meta
+    end
+  end
+
+  defp add_comparison_time_labels_meta(meta, %QueryRunner{main_query: query} = runner) do
+    if query.include.time_labels && query.include.compare do
+      comp_time_labels = Plausible.Stats.Time.time_labels(runner.comparison_query)
+
+      comp_result_indices =
+        result_indices_for_time_labels(comp_time_labels, runner.comparison_results)
+
+      meta
+      |> Map.put(:comparison_time_labels, comp_time_labels)
+      |> Map.put(:comparison_time_label_result_indices, comp_result_indices)
     else
       meta
     end
@@ -236,6 +257,15 @@ defmodule Plausible.Stats.QueryResult do
   end
 
   defp metric_warning(_metric, _query), do: nil
+
+  defp result_indices_for_time_labels(time_labels, results_list) do
+    index_lookup_map =
+      results_list
+      |> Enum.with_index()
+      |> Map.new(fn {%{dimensions: [dim]}, idx} -> {dim, idx} end)
+
+    Enum.map(time_labels, &Map.get(index_lookup_map, &1))
+  end
 
   defp to_iso8601(datetime, timezone) do
     datetime
