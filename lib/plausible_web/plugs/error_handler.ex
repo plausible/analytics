@@ -12,9 +12,13 @@ defmodule PlausibleWeb.Plugs.ErrorHandler do
       use Plug.ErrorHandler
 
       @impl Plug.ErrorHandler
-      def handle_errors(conn, %{kind: kind, reason: reason}) do
+      def handle_errors(conn, %{kind: :error, reason: reason, stack: stack}) do
+        OpenTelemetry.Tracer.set_status(:error, Exception.message(reason))
+        Sentry.capture_exception(reason, stacktrace: stack, handled: false)
         json(conn, %{error: "internal server error"})
       end
+
+      def handle_errors(conn, _), do: json(conn, %{error: "internal server error"})
     end
   end
 end
