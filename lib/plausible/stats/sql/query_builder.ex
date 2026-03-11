@@ -36,7 +36,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       from(
         e in "events_v2",
         where: ^SQL.WhereBuilder.build(:events, events_query),
-        where: ^derived_name_filter(events_query),
+        where: ^SQL.WhereBuilder.derived_name_filter(events_query),
         select: ^select_event_metrics(events_query)
       )
 
@@ -111,7 +111,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       events_q =
         from(e in "events_v2",
           where: ^SQL.WhereBuilder.build(:events, query),
-          where: ^derived_name_filter(query),
+          where: ^SQL.WhereBuilder.derived_name_filter(query),
           select: %{
             session_id: fragment("DISTINCT ?", e.session_id),
             _sample_factor: fragment("_sample_factor")
@@ -130,8 +130,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       q
     end
   end
-
-  defp derived_name_filter(query), do: SQL.WhereBuilder.derived_name_filter(query)
 
   defp select_event_metrics(query) do
     query.metrics
