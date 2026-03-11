@@ -854,6 +854,30 @@ defmodule PlausibleWeb.Live.SitesTest do
                "asc"
     end
 
+    test "selecting a sort option for a guest won't persist the preference", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      viewer_guest = add_guest(site, role: :viewer, user: new_user())
+
+      {:ok, conn: conn} = log_in(%{user: viewer_guest, conn: conn})
+
+      {:ok, lv, html} = live(conn, "/sites")
+
+      assert html =~ site.domain
+
+      lv
+      |> element(~s|[id="sort-dropdown-item-alnum-asc"]|)
+      |> render_click()
+
+      {:ok, membership} =
+        Plausible.Teams.Memberships.get_team_membership(team_of(user), viewer_guest)
+
+      refute Plausible.Teams.Memberships.get_preference(membership, :sites_sort_by)
+      refute Plausible.Teams.Memberships.get_preference(membership, :sites_sort_direction)
+    end
+
     test "saved sort preference is applied on next visit when no URL params", %{
       conn: conn,
       user: user
