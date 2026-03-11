@@ -86,7 +86,9 @@ defmodule Plausible.Stats.Comparisons do
   """
   def add_comparison_filters(comparison_query, main_results_list) do
     comparison_filters =
-      Enum.flat_map(main_results_list, &build_comparison_filter(&1, comparison_query))
+      main_results_list
+      |> Enum.flat_map(&build_comparison_filter(&1, comparison_query))
+      |> maybe_collapse_is_filters()
 
     comparison_query
     |> add_query_filters(comparison_filters)
@@ -104,6 +106,22 @@ defmodule Plausible.Stats.Comparisons do
     query
     |> Query.add_filter([:ignore_in_totals_query, [:or, filters]])
     |> Query.set(pagination: nil)
+  end
+
+  # This function collapses the per-row filters into a single multi-value `[:is, dim, [v1, v2, ...]]` filter rather than `[:or, [:is, dim, [v1]], [:is, dim, [v2]]]`
+  # Only applies to single-dimension breakdowns
+  #
+  # For multi-dimension breakdowns each row produces an `[:and, [:is, dim1, [v1]], [:is, dim2, [v2]]]` filter (to
+  # preserve the exact (dim1, dim2) combinations), so collapsing is skipped and the
+  # OR-of-ANDs form is kept.
+  defp maybe_collapse_is_filters(filters) do
+    with [[:is, dim, _] | _] <- filters,
+         true <- Enum.all?(filters, &match?([:is, ^dim, _], &1)) do
+      values = Enum.flat_map(filters, fn [:is, _, vals] -> vals end)
+      [[:is, dim, values]]
+    else
+      _ -> filters
+    end
   end
 
   defp build_comparison_filter(%{dimensions: dimension_labels}, query) do
