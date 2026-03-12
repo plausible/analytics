@@ -142,7 +142,7 @@ defmodule PlausibleWeb.Live.CSVImport do
     <% else %>
       <.notice title="Dates Conflict" theme={:red} class="mt-4">
         The dates <.dates range={@original} />
-        overlap with dates we've already imported and cannot be used for new imports.
+        overlap with existing site data and cannot be used for a new import.
       </.notice>
     <% end %>
     """
