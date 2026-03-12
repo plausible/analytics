@@ -6,7 +6,7 @@ defmodule Plausible.Stats.QueryInclude do
             time_labels: false,
             # `time_label_result_indices` is a convenience for our main graph component. It
             # is not yet ready for a public API release because it should also account for
-            # breakdowns by mutliple dimensions (time + non-time). Also, at this point it is
+            # breakdowns by multiple dimensions (time + non-time). Also, at this point it is
             # still unclear whether `time_labels` will stay in the public API or not.
             time_label_result_indices: false,
             present_index: false,
