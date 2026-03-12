@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { UIMode, useTheme } from '../../theme-context'
 import {
@@ -8,6 +8,8 @@ import {
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import dateFormatter from './date-formatter'
 import classNames from 'classnames'
+import { ChangeArrow } from '../reports/change-arrow'
+import { Metric } from '../../../types/query-api'
 
 const height = 368
 const marginTop = 16
@@ -18,11 +20,12 @@ const marginLeft = 32
 type ResultItem = {
   dimensions: [string] // one item
   metrics: null | [number] | [{ value: number }] // one item
-  comparison: { metrics: [number]; change: [number]; dimensions: [string] }
 }
 type MainGraphResponse = {
   results: Array<ResultItem | null>
-  comparison_results: Array<ResultItem | null>
+  comparison_results: Array<
+    (ResultItem & { change: [number | null] | null }) | null
+  >
   meta: {
     time_labels: string[]
     time_label_result_indices: (number | null)[]
@@ -42,7 +45,7 @@ type GraphDatum = {
   timeLabel: string | null // null when there's no label
   comparisonValue?: number | null // null when comparison is not defined
   comparisonTimeLabel?: string | null // null when comparison is not defined
-  change?: number // null when comparison is not defined
+  change?: number | null // null when comparison is not defined
 }
 
 type XPos = number
@@ -67,26 +70,22 @@ export const MainGraph = ({
     datum: GraphDatum | null
   }>({ x: 0, y: 0, datum: null })
 
+  const interval = data.query.dimensions[0].split('time:')[1]
+  const metric = data.query.metrics[0] as FormattableMetric
+  const period = data.period
+  const { remappedData, yMax, hasMultipleYears } = useMemo(
+    () => remapToGraphData(data),
+    [data]
+  )
+
+  const showZoomToPeriod = ['month', 'day'].includes(interval)
+
   useEffect(() => {
     if (!svgRef.current) {
       return
     }
+    console.log('effect running')
 
-    const interval = data.query.dimensions[0].split('time:')[1]
-    const period = data.period
-
-    const {
-      remappedData,
-      yMax,
-      resultDefinedRange,
-      comparisonResultDefinedRange
-    } = remapToGraphData(data)
-    console.log({
-      remappedData,
-      yMax,
-      resultDefinedRange,
-      comparisonResultDefinedRange
-    })
     const yMin = 0
     const yDomain = [yMin, yMax]
     // Declare the y (vertical position) scale.
@@ -96,13 +95,7 @@ export const MainGraph = ({
     // It's a simple linear axis, one unit for every time bucket
     // because the BE returns equal length buckets
     const xDomain = [0, remappedData.length - 1]
-    console.log(xDomain)
     const x = d3.scaleLinear(xDomain, [marginLeft, width - marginRight])
-
-    const minDate = remappedData[resultDefinedRange[0]].timeLabel!
-    const maxDate = remappedData[resultDefinedRange[1]].timeLabel!
-    console.log(minDate, maxDate)
-    const hasMultipleYears = minDate.split('-')[0] !== maxDate.split('-')[0]
 
     const points: Point[] = remappedData.map((d, index) => [
       x(index),
@@ -160,9 +153,7 @@ export const MainGraph = ({
       .call(
         d3
           .axisLeft(y)
-          .tickFormat((v) =>
-            MetricFormatterShort[data.query.metrics[0] as FormattableMetric](v)
-          )
+          .tickFormat((v) => MetricFormatterShort[metric](v))
           .ticks(yTickCount)
           .tickSize(0)
       )
@@ -338,7 +329,17 @@ export const MainGraph = ({
     return () => {
       svg.selectAll('*').remove()
     }
-  }, [primaryGradient, secondaryGradient, width, data])
+  }, [
+    primaryGradient,
+    secondaryGradient,
+    width,
+    remappedData,
+    yMax,
+    hasMultipleYears,
+    period,
+    interval,
+    metric
+  ])
 
   return (
     <div
@@ -351,51 +352,120 @@ export const MainGraph = ({
         className="w-full h-auto"
       />
       {tooltip.datum !== null && (
-        <GraphTooltip x={tooltip.x} y={tooltip.y} datum={tooltip.datum} />
+        <GraphTooltip
+          width={width}
+          showZoomToPeriod={showZoomToPeriod}
+          shouldShowYear={hasMultipleYears}
+          period={period}
+          interval={interval}
+          metric={metric}
+          x={tooltip.x}
+          y={tooltip.y}
+          datum={tooltip.datum}
+        />
       )}
     </div>
   )
 }
 
 const GraphTooltip = ({
+  metric,
+  interval,
+  period,
+  shouldShowYear,
+  width,
   x,
   y,
-  datum
+  datum,
+  showZoomToPeriod
 }: {
+  metric: FormattableMetric
+  interval: string
+  period: DashboardPeriod
+  shouldShowYear: boolean
   x: number
   y: number
   datum: GraphDatum
+  showZoomToPeriod?: boolean
+  width: number
 }) => {
-  console.log({ x, y, datum })
+  const formatter = MetricFormatterShort[metric]
+  const isLeftOfCursor = width - x < 240
   return (
     <div
-      className={classNames(
-        'absolute',
-        'z-50',
-        'p-2',
-        'translate-x-2',
-        'translate-y-2',
-        'pointer-events-none',
-        'rounded-sm',
-        'bg-white',
-        'dark:bg-gray-800',
-        'shadow',
-        'dark:border-gray-850',
-        'dark:text-gray-200',
-        'dark:shadow-gray-850',
-        'shadow-gray-200'
-      )}
       style={{
         left: x,
         top: y
       }}
+      className={classNames(
+        'absolute z-200 bg-gray-800 py-3 px-4 rounded-md z-[100] min-w-[180px] pointer-events-none translate-y-2 shadow shadow-gray-200 dark:shadow-gray-850',
+        {
+          'translate-x-2': !isLeftOfCursor,
+          '-translate-x-full': isLeftOfCursor
+        }
+      )}
     >
-      <div className="text-sm font-semibold">{datum.timeLabel}</div>
-      <div className="flex items-center gap-x-1 text-sm">
-        <strong className="dark:text-indigo-400">{datum.value}</strong>
-        {datum.comparisonValue}
-        {datum.comparisonTimeLabel}
-      </div>
+      <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
+        <div className="flex justify-between items-center rounded-sm">
+          <span className="font-semibold mr-4 text-xs uppercase">
+            {METRIC_LABELS[metric as keyof typeof METRIC_LABELS]}
+          </span>
+          {datum.comparisonTimeLabel !== null &&
+            typeof datum.change === 'number' && (
+              <div className="inline-flex items-center space-x-1">
+                <ChangeArrow
+                  className=""
+                  metric={metric as Metric}
+                  change={datum.change}
+                />
+              </div>
+            )}
+        </div>
+        <div className="flex flex-col">
+          {typeof datum.timeLabel === 'string' && (
+            <div className="flex flex-row justify-between items-center">
+              <span className="flex items-center mr-4">
+                <div className="size-2 mr-2 rounded-full bg-indigo-400"></div>
+                <span>
+                  {getXLabel(datum.timeLabel, {
+                    period,
+                    interval,
+                    shouldShowYear
+                  })}
+                </span>
+              </span>
+              <span className="font-bold">{formatter(datum.value)}</span>
+            </div>
+          )}
+
+          {typeof datum.comparisonTimeLabel === 'string' && (
+            <div className="flex flex-row justify-between items-center">
+              <span className="flex items-center mr-4">
+                <div className="size-2 mr-2 rounded-full bg-gray-500"></div>
+                <span>
+                  {getXLabel(datum.comparisonTimeLabel, {
+                    period,
+                    interval,
+                    shouldShowYear
+                  })}
+                </span>
+              </span>
+              <span className="font-bold">
+                {formatter(datum.comparisonValue)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {!!showZoomToPeriod && (
+          <>
+            <hr className="border-gray-600 dark:border-gray-800 my-1" />
+            <span className="text-gray-300 dark:text-gray-400 text-xs">
+              Click to view {interval}
+            </span>
+          </>
+        )}
+      </aside>
     </div>
   )
 }
@@ -468,16 +538,11 @@ const remapToGraphData = (
 ): {
   remappedData: GraphDatum[]
   yMax: number
-  resultDefinedRange: [number, number]
-  comparisonResultDefinedRange: null | [number, number]
+  hasMultipleYears: boolean
 } => {
   let yMax: number = 1
-  const resultDefinedFromBucketIndex = 0
-  let resultDefinedToBucketIndex = 0
-
-  let comparisonDefinedFromBucketIndex: null | number = null
-  let comparisonDefinedToBucketIndex: null | number = null
-
+  let firstTimeLabel: null | string = null
+  let lastTimeLabel: null | string = null
   const remappedData: GraphDatum[] = new Array(
     Math.max(
       data.meta.comparison_time_label_result_indices?.length ?? 0,
@@ -511,7 +576,10 @@ const remapToGraphData = (
 
       let value: number | null = null
       if (mainResultDefined) {
-        resultDefinedToBucketIndex = index
+        if (firstTimeLabel === null) {
+          firstTimeLabel = timeLabel
+        }
+        lastTimeLabel = timeLabel
         if (indexOfResult !== null) {
           const row = data.results[indexOfResult]
           if (row!.metrics![0] === null) {
@@ -531,13 +599,9 @@ const remapToGraphData = (
       if (value !== null && value > yMax) {
         yMax = value
       }
-
+      let change = null
       let comparisonValue = null
       if (comparisonResultDefined) {
-        if (comparisonDefinedFromBucketIndex === null) {
-          comparisonDefinedFromBucketIndex = index
-        }
-        comparisonDefinedToBucketIndex = index
         if (indexOfComparisonResult !== null) {
           const row = data.comparison_results[indexOfComparisonResult]
           if (row!.metrics![0] === null) {
@@ -549,6 +613,7 @@ const remapToGraphData = (
             comparisonValue = row!.metrics![0].value
           } else if (typeof row!.metrics![0] === 'number') {
             comparisonValue = row!.metrics![0]
+            change = row!.change !== null ? row!.change[0] : null
           }
         } else {
           comparisonValue = 0
@@ -559,21 +624,16 @@ const remapToGraphData = (
         yMax = comparisonValue
       }
 
-      return { value, comparisonValue, timeLabel, comparisonTimeLabel }
+      return { value, comparisonValue, timeLabel, comparisonTimeLabel, change }
     })
+
+  const hasMultipleYears =
+    firstTimeLabel!.split('-')[0] !== lastTimeLabel!.split('-')[0]
 
   return {
     remappedData,
     yMax,
-    resultDefinedRange: [
-      resultDefinedFromBucketIndex,
-      resultDefinedToBucketIndex
-    ],
-    comparisonResultDefinedRange:
-      comparisonDefinedFromBucketIndex !== null &&
-      comparisonDefinedToBucketIndex !== null
-        ? [comparisonDefinedFromBucketIndex, comparisonDefinedToBucketIndex]
-        : null
+    hasMultipleYears
   }
 }
 
@@ -611,3 +671,19 @@ const comparisonDotClass = 'fill-indigo-500/20 dark:fill-indigo-400/20'
 const sharedPathClass = 'stroke-2'
 const mainPathClass = 'stroke-indigo-500 dark:stroke-indigo-400 z-2'
 const comparisonPathClass = 'stroke-indigo-500/20 dark:stroke-indigo-400/20 z-1'
+
+const METRIC_LABELS = {
+  visitors: 'Visitors',
+  pageviews: 'Pageviews',
+  events: 'Total conversions',
+  views_per_visit: 'Views per visit',
+  visits: 'Visits',
+  bounce_rate: 'Bounce rate',
+  visit_duration: 'Visit duration',
+  conversions: 'Converted visitors',
+  conversion_rate: 'Conversion rate',
+  average_revenue: 'Average revenue',
+  total_revenue: 'Total revenue',
+  scroll_depth: 'Scroll depth',
+  time_on_page: 'Time on page'
+}
