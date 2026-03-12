@@ -178,8 +178,8 @@ export const MainGraph = ({
       stopBottom
     }: {
       id: string
-      stopTop: [string, number]
-      stopBottom: [string, number]
+      stopTop: { color: string; opacity: number }
+      stopBottom: { color: string; opacity: number }
     }): string => {
       const grad = svg
         .append('defs')
@@ -193,14 +193,14 @@ export const MainGraph = ({
       grad
         .append('stop')
         .attr('offset', '0%')
-        .attr('stop-color', stopTop[0])
-        .attr('stop-opacity', stopTop[1])
+        .attr('stop-color', stopTop.color)
+        .attr('stop-opacity', stopTop.opacity)
 
       grad
         .append('stop')
         .attr('offset', '100%')
-        .attr('stop-color', stopBottom[0])
-        .attr('stop-opacity', stopBottom[1])
+        .attr('stop-color', stopBottom.color)
+        .attr('stop-opacity', stopBottom.opacity)
       return id
     }
 
@@ -254,13 +254,13 @@ export const MainGraph = ({
 
     const mainGradientId = addGradient({
       id: 'main',
-      stopTop: primaryGradient[0],
-      stopBottom: primaryGradient[1]
+      stopTop: primaryGradient.stopTop,
+      stopBottom: primaryGradient.stopBottom
     })
     const comparisonGradientId = addGradient({
       id: 'comparisonGradient',
-      stopTop: secondaryGradient[0],
-      stopBottom: secondaryGradient[1]
+      stopTop: secondaryGradient.stopTop,
+      stopBottom: secondaryGradient.stopBottom
     })
 
     paintUnderLine(
@@ -323,7 +323,7 @@ export const MainGraph = ({
     return () => {
       svg.selectAll('*').remove()
     }
-  }, [primaryGradient, width, data])
+  }, [primaryGradient, secondaryGradient, width, data])
 
   return (
     <div
@@ -518,26 +518,26 @@ const remapToGraphData = (
 
 const paletteByTheme = {
   [UIMode.dark]: {
-    primaryGradient: [
-      ['#4f46e5', 0.15],
-      ['#4f46e5', 0]
-    ],
-    secondaryGradient: [
-      ['#4f46e5', 0.05],
-      ['#4f46e5', 0]
-    ]
+    primaryGradient: {
+      stopTop: { color: '#4f46e5', opacity: 0.15 },
+      stopBottom: { color: '#4f46e5', opacity: 0 }
+    },
+    secondaryGradient: {
+      stopTop: { color: '#4f46e5', opacity: 0.05 },
+      stopBottom: { color: '#4f46e5', opacity: 0 }
+    }
   },
   [UIMode.light]: {
-    primaryGradient: [
-      ['#4f46e5', 0.15],
-      ['#4f46e5', 0]
-    ],
-    secondaryGradient: [
-      ['#4f46e5', 0.05],
-      ['#4f46e5', 0]
-    ]
+    primaryGradient: {
+      stopTop: { color: '#4f46e5', opacity: 0.15 },
+      stopBottom: { color: '#4f46e5', opacity: 0 }
+    },
+    secondaryGradient: {
+      stopTop: { color: '#4f46e5', opacity: 0.05 },
+      stopBottom: { color: '#4f46e5', opacity: 0 }
+    }
   }
-} as const
+}
 
 const tickLineClass =
   'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
