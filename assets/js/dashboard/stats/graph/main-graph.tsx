@@ -47,8 +47,7 @@ type GraphDatum = {
 
 type XPos = number
 type YPos = number
-type SeriesId = string
-type Point = [XPos, YPos, SeriesId]
+type Point = [XPos, YPos[]]
 
 type MainGraphData = MainGraphResponse & { period: DashboardPeriod }
 
@@ -102,15 +101,13 @@ export const MainGraph = ({
 
     const points: Point[] = remappedData.map((d, index) => [
       x(index),
-      y(d.value),
-      'v'
+      [
+        [d.timeLabel, d.value] as const,
+        [d.comparisonTimeLabel, d.comparisonValue] as const
+      ]
+        .filter(([label, _v]) => label !== null)
+        .map(([_label, v]) => y(v!))
     ])
-
-    const groups = d3.rollup(
-      points,
-      (point) => Object.assign(point, { z: point[0][2] }),
-      (point) => point[2]
-    )
 
     // Create the SVG container.
     const svg = d3.select(svgRef.current)
@@ -221,18 +218,24 @@ export const MainGraph = ({
         .attr('d', area)
     }
 
-    const drawLine = () => {
-      const line = d3.line<Point>()
+    const drawLine = (
+      dataset: GraphDatum[],
+      isDefined: (d: GraphDatum) => boolean,
+      yAccessor: (d: GraphDatum, index: number) => number
+    ) => {
+      const line = d3
+        .line<GraphDatum>()
+        .defined(isDefined)
+        .x((_d, index) => x(index))
+        .y(yAccessor)
 
       svg
-        .append('g')
+        .append('path')
         .attr('fill', 'none')
         .attr('class', pathClass)
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round')
-        .selectAll('path')
-        .data(groups.values())
-        .join('path')
+        .datum(dataset)
         .attr('d', line)
     }
 
@@ -248,7 +251,12 @@ export const MainGraph = ({
       ({ timeLabel }) => timeLabel !== null,
       ({ value }) => y(value!)
     )
-    drawLine()
+    drawLine(
+      remappedData,
+      (d) => d.timeLabel !== null,
+      (d) => y(d.value!)
+    )
+    
     const dot = drawDot()
 
     svg
@@ -257,8 +265,10 @@ export const MainGraph = ({
         const closestIndexToPointer = d3
           .bisector((dataPoint: Point) => dataPoint[0])
           .center(points, xPointer)
-        const [x, y, _k] = points[closestIndexToPointer]
-        dot.attr('transform', `translate(${x},${y})`).attr('display', null)
+        const [x, yValues] = points[closestIndexToPointer]
+        dot
+          .attr('transform', `translate(${x},${yValues[0]})`)
+          .attr('display', null)
       })
       .on('pointerleave', () => {
         dot.attr('display', 'none')
