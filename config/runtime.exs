@@ -626,7 +626,7 @@ ch_transport_opts =
 config :plausible, Plausible.ClickhouseRepo,
   queue_target: 500,
   queue_interval: 2000,
-  timeout: 15_000,
+  timeout: 1_000,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
   settings: [
@@ -638,7 +638,7 @@ config :plausible, Plausible.ClickhouseRepo,
     # NB! when :timeout is overridden to be over 20s,
     # for it to have meaningful effect,
     # this must be overridden as well
-    max_execution_time: 20
+    max_execution_time: 2
   ]
 
 config :plausible, Plausible.IngestRepo,

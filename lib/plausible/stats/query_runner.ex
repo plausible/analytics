@@ -12,6 +12,9 @@ defmodule Plausible.Stats.QueryRunner do
   use Plausible
   use Plausible.ClickhouseRepo
 
+  require Logger
+  require OpenTelemetry.Tracer, as: Tracer
+
   alias Plausible.Stats.{
     Comparisons,
     Compare,
@@ -111,9 +114,37 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp execute_query(query, site) do
-    query
-    |> SQL.QueryBuilder.build(site)
-    |> ClickhouseRepo.all(query: query)
+    try do
+      query
+      |> SQL.QueryBuilder.build(site)
+      |> ClickhouseRepo.all(query: query)
+    rescue
+      e in [Ch.Error, DBConnection.ConnectionError, Mint.TransportError] ->
+        message = Exception.message(e)
+        Logger.error("ClickHouse query error: #{message}")
+
+        Tracer.set_status(:error, message)
+
+        Tracer.set_attributes([
+          {"plausible.query.error", message},
+          {"plausible.query.error.kind", inspect(e.__struct__)}
+        ])
+
+        Sentry.Context.set_extra_context(%{
+          site_domain: site.domain,
+          site_id: site.id,
+          metrics: inspect(query.metrics),
+          dimensions: inspect(query.dimensions),
+          date_range: inspect(query.utc_time_range),
+          filters: inspect(query.filters)
+        })
+
+        Sentry.Context.set_tags_context(%{
+          source: "clickhouse_query_timeout"
+        })
+
+        reraise e, __STACKTRACE__
+    end
   end
 
   defp build_from_ch(ch_results, query) do
