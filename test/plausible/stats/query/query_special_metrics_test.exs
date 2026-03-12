@@ -362,27 +362,17 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
           include: %QueryInclude{compare: :previous_period}
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.QueryResult{results: results, comparison_results: comparison_results} =
+        Stats.query(site, query)
 
       assert results == [
-               %{
-                 dimensions: ["2021-01-03"],
-                 metrics: [250],
-                 comparison: %{
-                   dimensions: ["2021-01-01"],
-                   metrics: [nil],
-                   change: [nil]
-                 }
-               },
-               %{
-                 dimensions: ["2021-01-04"],
-                 metrics: [150],
-                 comparison: %{
-                   dimensions: ["2021-01-02"],
-                   metrics: [200],
-                   change: [-25]
-                 }
-               }
+               %{dimensions: ["2021-01-03"], metrics: [250]},
+               %{dimensions: ["2021-01-04"], metrics: [150]}
+             ]
+
+      assert comparison_results == [
+               %{dimensions: ["2021-01-01"], metrics: [nil], change: [nil]},
+               %{dimensions: ["2021-01-02"], metrics: [200], change: [-25]}
              ]
     end
   end
