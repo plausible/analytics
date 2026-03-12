@@ -84,6 +84,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
             for={@team_name_form}
             method="post"
             phx-change="update-team"
+            phx-submit="update-team"
             phx-blur="update-team"
             id="update-team-form"
             class="mt-4 mb-8"
