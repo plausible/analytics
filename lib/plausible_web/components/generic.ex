@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   @button_themes %{
     "primary" =>
-      "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35",
+      "border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35",
     "secondary" =>
       "border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-50 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:border-gray-600 dark:hover:text-white disabled:text-gray-700/40 dark:disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:border-gray-800",
     "yellow" =>
@@ -1188,7 +1188,7 @@ defmodule PlausibleWeb.Components.Generic do
               type="text"
               name="filter-text"
               id="filter-text"
-              class="w-full max-w-80 pl-8 text-sm dark:bg-gray-750 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-750 rounded-md dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+              class="w-full max-w-80 pl-8 pr-3.5 py-2.5 text-sm dark:bg-gray-750 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-750 rounded-md dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
               placeholder="Press / to search"
               x-ref="filter_text"
               phx-debounce={200}

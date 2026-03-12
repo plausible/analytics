@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Keybind hints are hidden on smaller screens
+- Site index is sortable alphanumerically and by traffic
 
 ### Fixed
 
