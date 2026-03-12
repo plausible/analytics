@@ -32,6 +32,7 @@ function fetchMainGraph(
     dimensions: [`time:${interval}`],
     include: {
       time_labels: true,
+      time_label_result_indices: true,
       present_index: true,
       partial_time_labels: true
     }
