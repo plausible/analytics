@@ -59,5 +59,28 @@
       <script type="text/javascript" src={Routes.static_path(@conn, "/js/dashboard.js")}>
       </script>
     <% end %>
+    <%= case plain_chat_config(assigns[:current_user]) do %>
+      <% %{app_id: app_id, email: email, email_hash: email_hash, full_name: full_name} -> %>
+        <script>
+          (function(d, script) {
+          script = d.createElement('script');
+          script.async = false;
+          script.onload = function(){
+            Plain.init({
+              appId: '<%= app_id %>',
+              hideBranding: true,
+              customerDetails: {
+                email: '<%= email %>',
+                emailHash: '<%= email_hash %>',
+                fullName: '<%= full_name %>',
+              },
+            });
+          };
+          script.src = 'https://chat.cdn-plain.com/index.js';
+          d.getElementsByTagName('head')[0].appendChild(script);
+          }(document));
+        </script>
+      <% nil -> %>
+    <% end %>
   </body>
 </html>

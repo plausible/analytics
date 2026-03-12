@@ -543,6 +543,12 @@ defmodule PlausibleWeb.Router do
       get "/helpscout/show", HelpScoutController, :show
       get "/helpscout/search", HelpScoutController, :search
     end
+
+    scope "/", PlausibleWeb do
+      pipe_through [:external_api]
+
+      post "/plain/customer-cards", PlainController, :customer_cards
+    end
   end
 
   scope "/", PlausibleWeb do
