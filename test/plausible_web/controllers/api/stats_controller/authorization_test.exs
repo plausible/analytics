@@ -24,9 +24,14 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
     test "returns stats for public site", %{conn: conn} do
       conn = init_session(conn)
       site = insert(:site, public: true)
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
-      assert %{"plot" => _any} = json_response(conn, 200)
+      conn =
+        post(conn, "/api/stats/#{site.domain}/query", %{
+          "date_range" => "day",
+          "metrics" => ["visitors"]
+        })
+
+      assert %{"results" => _} = json_response(conn, 200)
     end
   end
 
@@ -185,16 +190,26 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
 
     test "returns stats for public site", %{conn: conn} do
       site = new_site(public: true)
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
-      assert %{"plot" => _any} = json_response(conn, 200)
+      conn =
+        post(conn, "/api/stats/#{site.domain}/query", %{
+          "date_range" => "day",
+          "metrics" => ["visitors"]
+        })
+
+      assert %{"results" => _} = json_response(conn, 200)
     end
 
     test "returns stats for a private site that the user owns", %{conn: conn, user: user} do
       site = new_site(public: false, owner: user)
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
-      assert %{"plot" => _any} = json_response(conn, 200)
+      conn =
+        post(conn, "/api/stats/#{site.domain}/query", %{
+          "date_range" => "day",
+          "metrics" => ["visitors"]
+        })
+
+      assert %{"results" => _} = json_response(conn, 200)
     end
   end
 end

@@ -196,10 +196,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
              }
     end
 
-    test "validates that metric views_per_visit cannot be used together with dimensions", %{
-      conn: conn,
-      site: site
-    } do
+    test "validates that metric views_per_visit cannot be used together with non-time dimensions",
+         %{
+           conn: conn,
+           site: site
+         } do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
@@ -209,7 +210,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
         })
 
       assert json_response(conn, 400) == %{
-               "error" => "Metric `views_per_visit` cannot be queried with `dimensions`."
+               "error" => "Metric `views_per_visit` cannot be queried with non-time dimensions."
              }
     end
 

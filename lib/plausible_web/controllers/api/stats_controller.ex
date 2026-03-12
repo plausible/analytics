@@ -10,7 +10,6 @@ defmodule PlausibleWeb.Api.StatsController do
     Query,
     Comparisons,
     Filters,
-    Time,
     TableDecider,
     TimeOnPage,
     Dashboard,
@@ -31,179 +30,20 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def query(conn, params) do
     site = conn.assigns.site
+    now = conn.private[:now]
 
-    with {:ok, %ParsedQueryParams{} = params} <- Dashboard.QueryParser.parse(params),
+    with {:ok, %ParsedQueryParams{} = params} <- Dashboard.QueryParser.parse(params, now: now),
          {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)) do
+      query =
+        if query.include.time_labels do
+          Query.set_include(query, :time_label_result_indices, true)
+        else
+          query
+        end
+
       json(conn, Plausible.Stats.query(site, query))
     else
       {:error, %QueryError{message: message}} -> bad_request(conn, message)
-    end
-  end
-
-  @doc """
-  Returns a time-series based on given parameters.
-
-  ## Parameters
-
-  This API accepts the following parameters:
-
-    * `period` - x-axis of the graph, e.g. `12mo`, `day`, `custom`.
-
-    * `metric` - y-axis of the graph, e.g. `visits`, `visitors`, `pageviews`.
-      See the Stats API ["Metrics"](https://plausible.io/docs/stats-api#metrics)
-      section for more details. Defaults to `visitors`.
-
-    * `interval` - granularity of the time-series data. You can think of it as
-      a `GROUP BY` clause. Possible values are `minute`, `hour`, `date`, `week`,
-      and `month`. The default depends on the `period` parameter. Check
-      `Plausible.Query.from/2` for each default.
-
-    * `filters` - optional filters to drill down data. See the Stats API
-      ["Filtering"](https://plausible.io/docs/stats-api#filtering) section for
-      more details.
-
-    * `with_imported` - boolean indicating whether to include Google Analytics
-      imported data or not. Defaults to `false`.
-
-  Full example:
-  ```elixir
-  %{
-    "from" => "2021-09-06",
-    "interval" => "month",
-    "metric" => "visitors",
-    "period" => "custom",
-    "to" => "2021-12-13"
-  }
-  ```
-
-  ## Response
-
-  Returns a map with the following keys:
-
-    * `plot` - list of values for the requested metric representing the y-axis
-      of the graph.
-
-    * `labels` - list of date times representing the x-axis of the graph.
-
-    * `present_index` - index of the element representing the current date in
-      `labels` and `plot` lists.
-
-    * `interval` - the interval used for querying.
-
-    * `includes_imported` - boolean indicating whether imported data
-      was queried or not.
-
-    * `full_intervals` - map of dates indicating whether the interval has been
-      cut off by the requested date range or not. For example, if looking at a
-      month week-by-week, some weeks may be cut off by the month boundaries.
-      It's useful to adjust the graph display slightly in case the interval is
-      not 'full' so that the user understands why the numbers might be lower for
-      those partial periods.
-
-  Full example:
-  ```elixir
-  %{
-    "full_intervals" => %{
-      "2021-09-01" => false,
-      "2021-10-01" => true,
-      "2021-11-01" => true,
-      "2021-12-01" => false
-    },
-    "interval" => "month",
-    "labels" => ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"],
-    "plot" => [0, 0, 0, 0],
-    "present_index" => nil,
-    "includes_imported" => false
-  }
-  ```
-
-  """
-  def main_graph(conn, params) do
-    site = conn.assigns[:site]
-    now = conn.private[:now]
-
-    with {:ok, dates} <- parse_date_params(params),
-         :ok <- validate_interval(params),
-         :ok <- validate_interval_granularity(site, params, dates),
-         params <- realtime_period_to_30m(params),
-         query = Query.from(site, params, debug_metadata: debug_metadata(conn), now: now),
-         query <- Query.set_include(query, :trim_relative_date_range, true),
-         {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
-      {timeseries_result, comparison_result, _meta} = Stats.timeseries(site, query, [metric])
-
-      labels = label_timeseries(timeseries_result, comparison_result)
-      present_index = present_index_for(site, query, labels)
-      full_intervals = build_full_intervals(query, labels)
-
-      json(conn, %{
-        metric: metric,
-        plot: plot_timeseries(timeseries_result, metric),
-        labels: labels,
-        comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),
-        comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
-        present_index: present_index,
-        full_intervals: full_intervals
-      })
-    else
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
-    end
-  end
-
-  defp plot_timeseries(timeseries, metric) do
-    Enum.map(timeseries, & &1[metric])
-  end
-
-  defp label_timeseries(main_result, nil) do
-    Enum.map(main_result, & &1.date)
-  end
-
-  @blank_value "__blank__"
-  defp label_timeseries(main_result, comparison_result) do
-    blanks_to_fill = Enum.count(comparison_result) - Enum.count(main_result)
-
-    if blanks_to_fill > 0 do
-      blanks = List.duplicate(@blank_value, blanks_to_fill)
-      Enum.map(main_result, & &1.date) ++ blanks
-    else
-      Enum.map(main_result, & &1.date)
-    end
-  end
-
-  defp build_full_intervals(
-         %Query{interval: "week"} = query,
-         labels
-       ) do
-    date_range = Query.date_range(query)
-    build_intervals(labels, date_range, &Date.beginning_of_week/1, &Date.end_of_week/1)
-  end
-
-  defp build_full_intervals(
-         %Query{interval: "month"} = query,
-         labels
-       ) do
-    date_range = Query.date_range(query)
-    build_intervals(labels, date_range, &Date.beginning_of_month/1, &Date.end_of_month/1)
-  end
-
-  defp build_full_intervals(_query, _labels) do
-    nil
-  end
-
-  def build_intervals(labels, date_range, start_fn, end_fn) do
-    for label <- labels, into: %{} do
-      case Date.from_iso8601(label) do
-        {:ok, date} ->
-          interval_start = start_fn.(date)
-          interval_end = end_fn.(date)
-
-          within_interval? =
-            Enum.member?(date_range, interval_start) && Enum.member?(date_range, interval_end)
-
-          {label, within_interval?}
-
-        _ ->
-          {label, false}
-      end
     end
   end
 
@@ -254,52 +94,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
       {false, reason} when reason in [:no_imported_data, :out_of_range] ->
         %{visible: false, togglable: false, tooltip_msg: nil}
-    end
-  end
-
-  defp present_index_for(site, query, dates) do
-    case query.interval do
-      "hour" ->
-        current_date =
-          DateTime.now!(site.timezone)
-          |> Calendar.strftime("%Y-%m-%d %H:00:00")
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "day" ->
-        current_date =
-          DateTime.now!(site.timezone)
-          |> DateTime.to_date()
-          |> Date.to_string()
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "week" ->
-        date_range = Query.date_range(query)
-
-        current_date =
-          DateTime.now!(site.timezone)
-          |> DateTime.to_date()
-          |> Time.date_or_weekstart(date_range)
-          |> Date.to_string()
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "month" ->
-        current_date =
-          DateTime.now!(site.timezone)
-          |> DateTime.to_date()
-          |> Date.beginning_of_month()
-          |> Date.to_string()
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "minute" ->
-        current_date =
-          DateTime.now!(site.timezone)
-          |> Calendar.strftime("%Y-%m-%d %H:%M:00")
-
-        Enum.find_index(dates, &(&1 == current_date))
     end
   end
 
@@ -1692,75 +1486,6 @@ defmodule PlausibleWeb.Api.StatsController do
             "Failed to parse '#{key}' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}}
       end
     end)
-  end
-
-  defp validate_interval(params) do
-    with %{"interval" => interval} <- params,
-         true <- Plausible.Stats.Interval.valid?(interval) do
-      :ok
-    else
-      %{} ->
-        :ok
-
-      false ->
-        values = Enum.join(Plausible.Stats.Interval.list(), ", ")
-        {:error, "Invalid value for interval. Accepted values are: #{values}"}
-    end
-  end
-
-  defp validate_interval_granularity(site, params, dates) do
-    case params do
-      %{"interval" => interval, "period" => "custom", "from" => _, "to" => _} ->
-        if Plausible.Stats.Interval.valid_for_period?("custom", interval,
-             site: site,
-             from: dates["from"],
-             to: dates["to"]
-           ) do
-          :ok
-        else
-          {:error,
-           "Invalid combination of interval and period. Custom ranges over 12 months must come with greater granularity, e.g. `period=custom,interval=week`"}
-        end
-
-      %{"interval" => interval, "period" => period} ->
-        if Plausible.Stats.Interval.valid_for_period?(period, interval, site: site) do
-          :ok
-        else
-          {:error,
-           "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"}
-        end
-
-      _ ->
-        :ok
-    end
-  end
-
-  defp parse_and_validate_graph_metric(params, query) do
-    metric =
-      case params["metric"] do
-        nil -> :visitors
-        "conversions" -> :visitors
-        m -> Plausible.Stats.Metrics.from_string!(m)
-      end
-
-    requires_goal_filter? = metric in [:conversion_rate, :events]
-    has_goal_filter? = toplevel_goal_filter?(query)
-
-    requires_page_filter? = metric == :scroll_depth
-
-    has_page_filter? =
-      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
-
-    cond do
-      requires_goal_filter? and not has_goal_filter? ->
-        {:error, "Metric `#{metric}` can only be queried with a goal filter"}
-
-      requires_page_filter? and not has_page_filter? ->
-        {:error, "Metric `#{metric}` can only be queried with a page filter"}
-
-      true ->
-        {:ok, metric}
-    end
   end
 
   defp bad_request(conn, message, extra \\ %{}) do
