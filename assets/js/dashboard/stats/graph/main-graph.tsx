@@ -22,7 +22,13 @@ type ResultItem = {
 }
 type MainGraphResponse = {
   results: Array<ResultItem | null>
-  meta: { time_labels: string[] }
+  comparison_results: Array<ResultItem | null>
+  meta: {
+    time_labels: string[]
+    time_label_result_indices: (number | null)[]
+    comparison_time_labels: string[]
+    comparison_time_label_result_indices: (number | null)[]
+  }
   query: {
     interval: string
     date_range: [string, string]
@@ -32,11 +38,11 @@ type MainGraphResponse = {
   }
 }
 type GraphDatum = {
-  value: number
-  date: string
-  comparisonValue?: number
-  comparisonDate?: string
-  change?: number
+  value: number | null // null when graph is not defined
+  timeLabel: string | null // null when there's no label
+  comparisonValue?: number | null // null when comparison is not defined
+  comparisonTimeLabel?: string | null // null when comparison is not defined
+  change?: number // null when comparison is not defined
 }
 
 type XPos = number
@@ -65,8 +71,18 @@ export const MainGraph = ({
     const interval = data.query.dimensions[0].split('time:')[1]
     const period = data.period
 
-    const { remappedData, yMax } = remapToGraphData(data)
-    console.log(remappedData, yMax)
+    const {
+      remappedData,
+      yMax,
+      resultDefinedRange,
+      comparisonResultDefinedRange
+    } = remapToGraphData(data)
+    console.log({
+      remappedData,
+      yMax,
+      resultDefinedRange,
+      comparisonResultDefinedRange
+    })
     const yMin = 0
     const yDomain = [yMin, yMax]
     // Declare the y (vertical position) scale.
@@ -79,10 +95,11 @@ export const MainGraph = ({
     console.log(xDomain)
     const x = d3.scaleLinear(xDomain, [marginLeft, width - marginRight])
 
-    const minDate = remappedData[0].date
-    const maxDate = remappedData[remappedData.length - 1].date
-
+    const minDate = remappedData[resultDefinedRange[0]].timeLabel!
+    const maxDate = remappedData[resultDefinedRange[1]].timeLabel!
+    console.log(minDate, maxDate)
     const hasMultipleYears = minDate.split('-')[0] !== maxDate.split('-')[0]
+
     const points: Point[] = remappedData.map((d, index) => [
       x(index),
       y(d.value),
@@ -111,14 +128,16 @@ export const MainGraph = ({
           .tickSize(0)
           .tickFormat((bucketIndex) => {
             // for low tick counts, it may try to render ticks
-            // with the index 0.5, 1.5, which don't have data defined
+            // with the index 0.5, 1.5, etc which don't have data defined
             const datum = remappedData[bucketIndex.valueOf()]
             return datum
-              ? getXLabel(datum.date, {
-                  shouldShowYear: hasMultipleYears,
-                  period,
-                  interval
-                })
+              ? datum.timeLabel
+                ? getXLabel(datum.timeLabel, {
+                    shouldShowYear: hasMultipleYears,
+                    period,
+                    interval
+                  })
+                : ''
               : ''
           })
       )
@@ -184,11 +203,13 @@ export const MainGraph = ({
 
     const paintUnderLine = (
       gradientId: string,
+      isDefined: (d: GraphDatum) => boolean,
       y1Accessor: (d: GraphDatum, index: number) => number
     ) => {
       const area = d3
         .area<GraphDatum>()
         .x((_d, index) => x(index))
+        .defined(isDefined)
         .y0(height - marginBottom) // bottom edge
         .y1(y1Accessor) // top edge follows the data
 
@@ -222,7 +243,11 @@ export const MainGraph = ({
     }
 
     const gradientId = addGradient()
-    paintUnderLine(gradientId, (d) => y(d.value))
+    paintUnderLine(
+      gradientId,
+      ({ timeLabel }) => timeLabel !== null,
+      ({ value }) => y(value!)
+    )
     drawLine()
     const dot = drawDot()
 
@@ -324,39 +349,112 @@ const getXLabel = (
 
 const remapToGraphData = (
   data: MainGraphData
-): { remappedData: GraphDatum[]; yMax: number } => {
+): {
+  remappedData: GraphDatum[]
+  yMax: number
+  resultDefinedRange: [number, number]
+  comparisonResultDefinedRange: null | [number, number]
+} => {
   let yMax: number = 1
-  const remappedData: GraphDatum[] = data.meta.time_labels.map((date) => {
-    const resultRow = data.results.find((d) => d?.dimensions[0] === date)
-    // const comparison = data.query.comparison_date_range && resultRow?.comparison
+  const resultDefinedFromBucketIndex = 0
+  let resultDefinedToBucketIndex = 0
 
-    if (resultRow?.metrics && resultRow.metrics[0] === null) {
-      return { value: 0, date }
-    }
+  let comparisonDefinedFromBucketIndex: null | number = null
+  let comparisonDefinedToBucketIndex: null | number = null
 
-    if (
-      resultRow?.metrics &&
-      typeof resultRow.metrics[0] === 'object' &&
-      resultRow.metrics[0].hasOwnProperty('value')
-    ) {
-      const revenueValue = resultRow.metrics[0].value
-      if (revenueValue > yMax) {
-        yMax = revenueValue
+  const remappedData: GraphDatum[] = new Array(
+    Math.max(
+      data.meta.comparison_time_label_result_indices?.length ?? 0,
+      data.meta.time_label_result_indices.length
+    )
+  )
+    .fill(null)
+    .map((_, index) => {
+      const [
+        timeLabel,
+        indexOfResult,
+        comparisonTimeLabel,
+        indexOfComparisonResult
+      ] = [
+        // time label, null signifies that the
+        data.meta.time_labels[index] ?? null,
+        // where to get the main result - the main graph is defined only
+        data.meta.time_label_result_indices[index] ?? null,
+        // comparison label
+        data.meta.comparison_time_labels[index] ?? null,
+        // where to get the comparison result - the comparison graph is defined only where not null
+        data.meta.comparison_time_label_result_indices[index] ?? null
+      ]
+
+      const mainResultDefined = typeof timeLabel === 'string'
+      const comparisonResultDefined = typeof comparisonTimeLabel === 'string'
+
+      let value: number | null = null
+      if (mainResultDefined) {
+        resultDefinedToBucketIndex = index
+        if (indexOfResult !== null) {
+          const row = data.results[indexOfResult]
+          if (row!.metrics![0] === null) {
+            value = 0
+          } else if (
+            typeof row!.metrics![0] === 'object' &&
+            row!.metrics![0].hasOwnProperty('value')
+          ) {
+            value = row!.metrics![0].value
+          } else if (typeof row!.metrics![0] === 'number') {
+            value = row!.metrics![0]
+          }
+        } else {
+          value = 0
+        }
       }
-      return { value: revenueValue, date }
-    }
-
-    if (resultRow?.metrics && typeof resultRow.metrics[0] === 'number') {
-      const value = resultRow.metrics[0]
-      if (value > yMax) {
+      if (value !== null && value > yMax) {
         yMax = value
       }
-      return { value: value, date }
-    }
-    return { value: 0, date }
-  })
 
-  return { remappedData, yMax }
+      let comparisonValue = null
+      if (comparisonResultDefined) {
+        if (comparisonDefinedFromBucketIndex === null) {
+          comparisonDefinedFromBucketIndex = index
+        }
+        comparisonDefinedToBucketIndex = index
+        if (indexOfComparisonResult !== null) {
+          const row = data.comparison_results[indexOfComparisonResult]
+          if (row!.metrics![0] === null) {
+            comparisonValue = 0
+          } else if (
+            typeof row!.metrics![0] === 'object' &&
+            row!.metrics![0].hasOwnProperty('value')
+          ) {
+            comparisonValue = row!.metrics![0].value
+          } else if (typeof row!.metrics![0] === 'number') {
+            comparisonValue = row!.metrics![0]
+          }
+        } else {
+          comparisonValue = 0
+        }
+      }
+
+      if (comparisonValue !== null && comparisonValue > yMax) {
+        yMax = comparisonValue
+      }
+
+      return { value, comparisonValue, timeLabel, comparisonTimeLabel }
+    })
+
+  return {
+    remappedData,
+    yMax,
+    resultDefinedRange: [
+      resultDefinedFromBucketIndex,
+      resultDefinedToBucketIndex
+    ],
+    comparisonResultDefinedRange:
+      comparisonDefinedFromBucketIndex !== null &&
+      comparisonDefinedToBucketIndex !== null
+        ? [comparisonDefinedFromBucketIndex, comparisonDefinedToBucketIndex]
+        : null
+  }
 }
 
 const paletteByTheme = {
