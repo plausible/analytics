@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react'
+import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { UIMode, useTheme } from '../../theme-context'
 import {
@@ -61,6 +61,11 @@ export const MainGraph = ({
   const { mode } = useTheme()
   const { primaryGradient, secondaryGradient } = paletteByTheme[mode]
   const svgRef = useRef<SVGSVGElement | null>(null)
+  const [tooltip, setTooltip] = useState<{
+    x: number
+    y: number
+    datum: GraphDatum | null
+  }>({ x: 0, y: 0, datum: null })
 
   useEffect(() => {
     if (!svgRef.current) {
@@ -294,7 +299,7 @@ export const MainGraph = ({
 
     svg
       .on('pointermove', (event) => {
-        const [xPointer] = d3.pointer(event)
+        const [xPointer, yPointer] = d3.pointer(event)
         const closestIndexToPointer = d3
           .bisector((dataPoint: Point) => dataPoint[0])
           .center(points, xPointer)
@@ -313,10 +318,20 @@ export const MainGraph = ({
         } else {
           comparisonDot.attr('display', 'none')
         }
+        setTooltip({
+          datum: remappedData[closestIndexToPointer],
+          x: xPointer,
+          y: yPointer
+        })
       })
       .on('pointerleave', () => {
         dot.attr('display', 'none')
         comparisonDot.attr('display', 'none')
+        setTooltip({
+          datum: null,
+          x: 0,
+          y: 0
+        })
       })
       .on('touchstart', (event) => event.preventDefault())
 
@@ -335,6 +350,52 @@ export const MainGraph = ({
         viewBox={`0 0 ${width} ${height}`}
         className="w-full h-auto"
       />
+      {tooltip.datum !== null && (
+        <GraphTooltip x={tooltip.x} y={tooltip.y} datum={tooltip.datum} />
+      )}
+    </div>
+  )
+}
+
+const GraphTooltip = ({
+  x,
+  y,
+  datum
+}: {
+  x: number
+  y: number
+  datum: GraphDatum
+}) => {
+  console.log({ x, y, datum })
+  return (
+    <div
+      className={classNames(
+        'absolute',
+        'z-50',
+        'p-2',
+        'translate-x-2',
+        'translate-y-2',
+        'pointer-events-none',
+        'rounded-sm',
+        'bg-white',
+        'dark:bg-gray-800',
+        'shadow',
+        'dark:border-gray-850',
+        'dark:text-gray-200',
+        'dark:shadow-gray-850',
+        'shadow-gray-200'
+      )}
+      style={{
+        left: x,
+        top: y
+      }}
+    >
+      <div className="text-sm font-semibold">{datum.timeLabel}</div>
+      <div className="flex items-center gap-x-1 text-sm">
+        <strong className="dark:text-indigo-400">{datum.value}</strong>
+        {datum.comparisonValue}
+        {datum.comparisonTimeLabel}
+      </div>
     </div>
   )
 }
