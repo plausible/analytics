@@ -19,6 +19,8 @@ import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
 import { MainGraph, MainGraphContainer } from './main-graph'
 import { createStatsQuery } from '../../stats-query'
+import { isRealTimeDashboard } from '../../util/filters'
+
 function fetchMainGraph(
   site: PlausibleSite,
   dashboardState: DashboardState,
@@ -36,6 +38,12 @@ function fetchMainGraph(
   }
 
   const statsQuery = createStatsQuery(dashboardState, reportParams)
+
+  if (isRealTimeDashboard(dashboardState)) {
+    statsQuery.date_range = DashboardPeriod.realtime_30m
+  }
+
+  statsQuery.include.present_index = true
 
   return api.stats(site, statsQuery)
 }

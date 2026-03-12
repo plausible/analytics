@@ -7,6 +7,7 @@ import {
 } from '../reports/metric-formatter'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import dateFormatter from './date-formatter'
+import classNames from 'classnames'
 
 const height = 368
 const marginTop = 16
@@ -16,20 +17,27 @@ const marginLeft = 32
 
 type ResultItem = {
   dimensions: [string] // one item
-  metrics: null | [number] // one item
-  comparison: unknown
+  metrics: null | [number] | [{ value: number }] // one item
+  comparison: { metrics: [number]; change: [number]; dimensions: [string] }
 }
 type MainGraphResponse = {
   results: Array<ResultItem | null>
   meta: { time_labels: string[] }
   query: {
     interval: string
-    date_range: string
+    date_range: [string, string]
+    comparison_date_range?: [string, string]
     dimensions: [string] // one item
     metrics: [string] // one item
   }
 }
-type GraphDatum = { value: number; date: string }
+type GraphDatum = {
+  value: number
+  date: string
+  comparisonValue?: number
+  comparisonDate?: string
+  change?: number
+}
 
 type XPos = number
 type YPos = number
@@ -57,33 +65,24 @@ export const MainGraph = ({
     const interval = data.query.dimensions[0].split('time:')[1]
     const period = data.period
 
-    const remappedData = remapToGraphData(data)
+    const { remappedData, yMax } = remapToGraphData(data)
+    console.log(remappedData, yMax)
+    const yMin = 0
+    const yDomain = [yMin, yMax]
+    // Declare the y (vertical position) scale.
+    const y = d3.scaleLinear(yDomain, [height - marginBottom, marginTop]).nice()
+
+    // Declare the x (horizontal position) scale.
+    // It's a simple linear axis, one unit for every time bucket
+    // because the BE returns equal length buckets
+    const xDomain = [0, remappedData.length - 1]
+    console.log(xDomain)
+    const x = d3.scaleLinear(xDomain, [marginLeft, width - marginRight])
 
     const minDate = remappedData[0].date
     const maxDate = remappedData[remappedData.length - 1].date
 
     const hasMultipleYears = minDate.split('-')[0] !== maxDate.split('-')[0]
-
-    // Declare the x (horizontal position) scale.
-    // It's a simple linear axis, one unit for every time bucket
-    // because the BE is sending equal length buckets
-    const x = d3.scaleLinear(
-      [0, remappedData.length - 1],
-      [marginLeft, width - marginRight]
-    )
-
-    // Declare the y (vertical position) scale.
-    const yMin = 0
-    // TODO: find highest item during remapping
-    const yMax = remappedData.reduce(
-      (acc, current) =>
-        current.value && current.value > acc ? current.value : acc,
-      0
-    )
-
-    const yDomain = yMax > yMin ? [yMin, yMax] : [yMin, yMin + 1]
-    const y = d3.scaleLinear(yDomain, [height - marginBottom, marginTop]).nice()
-
     const points: Point[] = remappedData.map((d, index) => [
       x(index),
       y(d.value),
@@ -99,13 +98,8 @@ export const MainGraph = ({
     // Create the SVG container.
     const svg = d3.select(svgRef.current)
 
-    // TODO: make dynamic
     const maxXTicks = 8
-    const xTickCount =
-      remappedData.length % 7 === 0
-        ? Math.min(7 + 1, maxXTicks)
-        : Math.min(remappedData.length, maxXTicks)
-
+    const xTickCount = Math.min(remappedData.length, maxXTicks)
     // Add the x-axis.
     svg
       .append('g')
@@ -115,16 +109,26 @@ export const MainGraph = ({
           .axisBottom(x)
           .ticks(xTickCount)
           .tickSize(0)
-          .tickFormat((index) =>
-            getXLabel(remappedData[index.valueOf()].date, {
-              shouldShowYear: hasMultipleYears,
-              period,
-              interval
-            })
-          )
+          .tickFormat((bucketIndex) => {
+            // for low tick counts, it may try to render ticks
+            // with the index 0.5, 1.5, which don't have data defined
+            const datum = remappedData[bucketIndex.valueOf()]
+            return datum
+              ? getXLabel(datum.date, {
+                  shouldShowYear: hasMultipleYears,
+                  period,
+                  interval
+                })
+              : ''
+          })
       )
       .call((g) => g.select('.domain').remove())
-      .call((g) => g.selectAll('.tick text').attr('class', tickClass))
+      .call((g) => g.selectAll('.tick').attr('class', 'tick group'))
+      .call((g) =>
+        g
+          .selectAll('.tick text')
+          .attr('class', classNames(tickClass, 'translate-y-2'))
+      )
 
     // Add the y-axis, remove the domain line, add grid lines and a label.
     // TODO: make dynamic
@@ -143,13 +147,8 @@ export const MainGraph = ({
           .tickSize(0)
       )
       .call((g) => g.select('.domain').remove())
-      .call((g) =>
-        g
-          .selectAll('.tick')
-          .attr('class', 'tick group')
-          .selectAll('.text')
-          .attr('class', tickClass)
-      )
+      .call((g) => g.selectAll('.tick').attr('class', 'tick group'))
+      .call((g) => g.selectAll('.tick text').attr('class', tickClass))
       .call((g) =>
         g
           .selectAll('.tick line')
@@ -159,7 +158,6 @@ export const MainGraph = ({
       )
 
     const addGradient = (): string => {
-      // add gradient
       const id = 'areaGradient'
       const grad = svg
         .append('defs')
@@ -208,7 +206,7 @@ export const MainGraph = ({
       svg
         .append('g')
         .attr('fill', 'none')
-        .attr('class', 'stroke-[#6366f1] stroke-2 z-1')
+        .attr('class', pathClass)
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round')
         .selectAll('path')
@@ -219,7 +217,7 @@ export const MainGraph = ({
 
     const drawDot = () => {
       const dot = svg.append('g').attr('display', 'none')
-      dot.append('circle').attr('r', 2.5).attr('class', 'fill-[#6366f1]')
+      dot.append('circle').attr('r', 2.5).attr('class', dotClass)
       return dot
     }
 
@@ -324,27 +322,41 @@ const getXLabel = (
   })(xValue)
 }
 
-const remapToGraphData = (data: MainGraphData): GraphDatum[] =>
-  data.meta.time_labels.map((label, _i) => {
-    const dataPoint = data.results.find((d) => d?.dimensions[0] === label)
-    const value = (dataPoint?.metrics && dataPoint.metrics[0]) ?? null
-    return fillMissingValue({
-      value,
-      date: label
-    })
+const remapToGraphData = (
+  data: MainGraphData
+): { remappedData: GraphDatum[]; yMax: number } => {
+  let yMax: number = 1
+  const remappedData: GraphDatum[] = data.meta.time_labels.map((date) => {
+    const resultRow = data.results.find((d) => d?.dimensions[0] === date)
+    // const comparison = data.query.comparison_date_range && resultRow?.comparison
+
+    if (resultRow?.metrics && resultRow.metrics[0] === null) {
+      return { value: 0, date }
+    }
+
+    if (
+      resultRow?.metrics &&
+      typeof resultRow.metrics[0] === 'object' &&
+      resultRow.metrics[0].hasOwnProperty('value')
+    ) {
+      const revenueValue = resultRow.metrics[0].value
+      if (revenueValue > yMax) {
+        yMax = revenueValue
+      }
+      return { value: revenueValue, date }
+    }
+
+    if (resultRow?.metrics && typeof resultRow.metrics[0] === 'number') {
+      const value = resultRow.metrics[0]
+      if (value > yMax) {
+        yMax = value
+      }
+      return { value: value, date }
+    }
+    return { value: 0, date }
   })
 
-function fillMissingValue<
-  D extends { value: null | number | { value: number } }
->(d: D): D & { value: number } {
-  if (d.value === null) {
-    return { ...d, value: 0 }
-  }
-  // Revenue metrics are returned as objects with a `value` property
-  if (typeof d.value === 'object' && d.value.hasOwnProperty('value')) {
-    return { ...d, value: d.value.value }
-  }
-  return d as D & { value: number }
+  return { remappedData, yMax }
 }
 
 const paletteByTheme = {
@@ -371,5 +383,9 @@ const paletteByTheme = {
 } as const
 
 const tickLineClass =
-  'stroke-[#ececee] dark:stroke-[#27272a75] group-first:stroke-[#a1a1aa]'
-const tickClass = 'fill-currentColor dark:fill-[#a1a1aa]'
+  'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
+const tickClass = 'fill-gray-500 dark:fill-gray-400 text-xs'
+// const dotClass = 'fill-[#6366f1]' // custom color like indigo-400
+const dotClass = 'fill-indigo-400'
+// const pathClass = 'stroke-[#6366f1] stroke-2 z-1' // custom color like indigo-400
+const pathClass = 'stroke-indigo-500 dark:stroke-indigo-400 stroke-2 z-1'
