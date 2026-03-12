@@ -27,7 +27,11 @@ defmodule Plausible.Stats.Base do
   end
 
   defp query_events(query) do
-    q = from(e in "events_v2", where: ^SQL.WhereBuilder.build(:events, query))
+    q =
+      from(e in "events_v2",
+        where: ^SQL.WhereBuilder.build(:events, query),
+        where: ^SQL.WhereBuilder.derived_name_filter(query)
+      )
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
