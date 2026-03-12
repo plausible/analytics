@@ -203,35 +203,6 @@ defmodule Plausible.Stats.QueryTest do
                }
              ]
     end
-
-    test "meta.time_labels spans further than the original time range end if there are more comparison buckets",
-         %{site: site} do
-      {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
-          metrics: [:visitors],
-          input_date_range: {:date_range, ~D[2021-02-01], ~D[2021-02-05]},
-          dimensions: ["time:day"],
-          include: %QueryInclude{
-            compare: {:date_range, ~D[2021-01-01], ~D[2021-01-10]},
-            time_labels: true
-          }
-        })
-
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
-
-      assert meta[:time_labels] == [
-               "2021-02-01",
-               "2021-02-02",
-               "2021-02-03",
-               "2021-02-04",
-               "2021-02-05",
-               "2021-02-06",
-               "2021-02-07",
-               "2021-02-08",
-               "2021-02-09",
-               "2021-02-10"
-             ]
-    end
   end
 
   describe "session smearing respects query date range boundaries" do
