@@ -26,8 +26,8 @@ type MainGraphResponse = {
   meta: {
     time_labels: string[]
     time_label_result_indices: (number | null)[]
-    comparison_time_labels: string[]
-    comparison_time_label_result_indices: (number | null)[]
+    comparison_time_labels?: string[]
+    comparison_time_label_result_indices?: (number | null)[]
   }
   query: {
     interval: string
@@ -47,7 +47,7 @@ type GraphDatum = {
 
 type XPos = number
 type YPos = number
-type Point = [XPos, YPos[]]
+type Point = [XPos, { yMain: YPos | null; yComparison: YPos | null }]
 
 type MainGraphData = MainGraphResponse & { period: DashboardPeriod }
 
@@ -59,7 +59,7 @@ export const MainGraph = ({
   data: MainGraphData
 }) => {
   const { mode } = useTheme()
-  const { primaryGradient } = paletteByTheme[mode]
+  const { primaryGradient, secondaryGradient } = paletteByTheme[mode]
   const svgRef = useRef<SVGSVGElement | null>(null)
 
   useEffect(() => {
@@ -101,12 +101,11 @@ export const MainGraph = ({
 
     const points: Point[] = remappedData.map((d, index) => [
       x(index),
-      [
-        [d.timeLabel, d.value] as const,
-        [d.comparisonTimeLabel, d.comparisonValue] as const
-      ]
-        .filter(([label, _v]) => label !== null)
-        .map(([_label, v]) => y(v!))
+      {
+        yMain: d.timeLabel !== null ? y(d.value!) : null,
+        yComparison:
+          d.comparisonTimeLabel !== null ? y(d.comparisonValue!) : null
+      }
     ])
 
     // Create the SVG container.
@@ -173,8 +172,15 @@ export const MainGraph = ({
           .attr('class', tickLineClass)
       )
 
-    const addGradient = (): string => {
-      const id = 'areaGradient'
+    const addGradient = ({
+      id,
+      stopTop,
+      stopBottom
+    }: {
+      id: string
+      stopTop: [string, number]
+      stopBottom: [string, number]
+    }): string => {
       const grad = svg
         .append('defs')
         .append('linearGradient')
@@ -187,14 +193,14 @@ export const MainGraph = ({
       grad
         .append('stop')
         .attr('offset', '0%')
-        .attr('stop-color', primaryGradient[0][0])
-        .attr('stop-opacity', primaryGradient[0][1])
+        .attr('stop-color', stopTop[0])
+        .attr('stop-opacity', stopTop[1])
 
       grad
         .append('stop')
         .attr('offset', '100%')
-        .attr('stop-color', primaryGradient[1][0])
-        .attr('stop-opacity', primaryGradient[1][1])
+        .attr('stop-color', stopBottom[0])
+        .attr('stop-opacity', stopBottom[1])
       return id
     }
 
@@ -221,7 +227,8 @@ export const MainGraph = ({
     const drawLine = (
       dataset: GraphDatum[],
       isDefined: (d: GraphDatum) => boolean,
-      yAccessor: (d: GraphDatum, index: number) => number
+      yAccessor: (d: GraphDatum, index: number) => number,
+      className?: string
     ) => {
       const line = d3
         .line<GraphDatum>()
@@ -232,32 +239,58 @@ export const MainGraph = ({
       svg
         .append('path')
         .attr('fill', 'none')
-        .attr('class', pathClass)
+        .attr('class', classNames(sharedPathClass, className))
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round')
         .datum(dataset)
         .attr('d', line)
     }
 
-    const drawDot = () => {
+    const drawDot = (className: string) => {
       const dot = svg.append('g').attr('display', 'none')
-      dot.append('circle').attr('r', 2.5).attr('class', dotClass)
+      dot.append('circle').attr('r', 2.5).attr('class', className)
       return dot
     }
 
-    const gradientId = addGradient()
+    const mainGradientId = addGradient({
+      id: 'main',
+      stopTop: primaryGradient[0],
+      stopBottom: primaryGradient[1]
+    })
+    const comparisonGradientId = addGradient({
+      id: 'comparisonGradient',
+      stopTop: secondaryGradient[0],
+      stopBottom: secondaryGradient[1]
+    })
+
     paintUnderLine(
-      gradientId,
-      ({ timeLabel }) => timeLabel !== null,
-      ({ value }) => y(value!)
-    )
-    drawLine(
-      remappedData,
+      mainGradientId,
       (d) => d.timeLabel !== null,
       (d) => y(d.value!)
     )
-    
-    const dot = drawDot()
+
+    paintUnderLine(
+      comparisonGradientId,
+      (d) => d.comparisonTimeLabel !== null,
+      (d) => y(d.comparisonValue!)
+    )
+
+    drawLine(
+      remappedData,
+      (d) => d.timeLabel !== null,
+      (d) => y(d.value!),
+      mainPathClass
+    )
+
+    drawLine(
+      remappedData,
+      (d) => d.comparisonTimeLabel !== null,
+      (d) => y(d.comparisonValue!),
+      comparisonPathClass
+    )
+
+    const dot = drawDot(mainDotClass)
+    const comparisonDot = drawDot(comparisonDotClass)
 
     svg
       .on('pointermove', (event) => {
@@ -266,12 +299,24 @@ export const MainGraph = ({
           .bisector((dataPoint: Point) => dataPoint[0])
           .center(points, xPointer)
         const [x, yValues] = points[closestIndexToPointer]
-        dot
-          .attr('transform', `translate(${x},${yValues[0]})`)
-          .attr('display', null)
+        if (yValues.yMain) {
+          dot
+            .attr('transform', `translate(${x},${yValues.yMain})`)
+            .attr('display', null)
+        } else {
+          dot.attr('display', 'none')
+        }
+        if (yValues.yComparison) {
+          comparisonDot
+            .attr('transform', `translate(${x},${yValues.yComparison})`)
+            .attr('display', null)
+        } else {
+          comparisonDot.attr('display', 'none')
+        }
       })
       .on('pointerleave', () => {
         dot.attr('display', 'none')
+        comparisonDot.attr('display', 'none')
       })
       .on('touchstart', (event) => event.preventDefault())
 
@@ -391,9 +436,13 @@ const remapToGraphData = (
         // where to get the main result - the main graph is defined only
         data.meta.time_label_result_indices[index] ?? null,
         // comparison label
-        data.meta.comparison_time_labels[index] ?? null,
+        (data.meta.comparison_time_labels &&
+          data.meta.comparison_time_labels[index]) ??
+          null,
         // where to get the comparison result - the comparison graph is defined only where not null
-        data.meta.comparison_time_label_result_indices[index] ?? null
+        (data.meta.comparison_time_label_result_indices &&
+          data.meta.comparison_time_label_result_indices[index]) ??
+          null
       ]
 
       const mainResultDefined = typeof timeLabel === 'string'
@@ -493,7 +542,11 @@ const paletteByTheme = {
 const tickLineClass =
   'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
 const tickClass = 'fill-gray-500 dark:fill-gray-400 text-xs'
-// const dotClass = 'fill-[#6366f1]' // custom color like indigo-400
-const dotClass = 'fill-indigo-400'
+
+const mainDotClass = 'fill-indigo-500 dark:fill-indigo-400'
+const comparisonDotClass = 'fill-indigo-500/20 dark:fill-indigo-400/20'
+
 // const pathClass = 'stroke-[#6366f1] stroke-2 z-1' // custom color like indigo-400
-const pathClass = 'stroke-indigo-500 dark:stroke-indigo-400 stroke-2 z-1'
+const sharedPathClass = 'stroke-2'
+const mainPathClass = 'stroke-indigo-500 dark:stroke-indigo-400 z-2'
+const comparisonPathClass = 'stroke-indigo-500/20 dark:stroke-indigo-400/20 z-1'
