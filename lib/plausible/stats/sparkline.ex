@@ -149,27 +149,19 @@ defmodule Plausible.Stats.Sparkline do
         include: [time_labels: true]
       )
 
-    %Stats.QueryResult{
-      results: results,
-      meta: %{
-        values: [time_label_result_indices: time_label_result_indices, time_labels: time_labels]
-      }
-    } =
+    %Stats.QueryResult{results: results, meta: %{values: [time_labels: time_labels]}} =
       Stats.query(view_or_site, graph_query)
 
-    intervals =
-      for {time_label, idx} <- Enum.with_index(time_labels) do
-        result_index = Enum.at(time_label_result_indices, idx)
+    visitors_by_timestamp =
+      Map.new(results, fn %{dimensions: [timestamp], metrics: [visitors]} ->
+        {timestamp, visitors}
+      end)
 
-        visitors =
-          case result_index && Enum.at(results, result_index) do
-            nil -> 0
-            %{metrics: [visitors]} -> visitors
-          end
-
-        %{interval: time_label, visitors: visitors}
-      end
-
-    %{intervals: intervals}
+    %{
+      intervals:
+        Enum.map(time_labels, fn timestamp ->
+          %{interval: timestamp, visitors: Map.get(visitors_by_timestamp, timestamp, 0)}
+        end)
+    }
   end
 end
