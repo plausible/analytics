@@ -59,7 +59,9 @@ defmodule Plausible.Stats.QueryResult do
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
     |> add_time_labels_meta(runner)
+    |> add_time_labels_result_indices_meta(runner)
     |> add_comparison_time_labels_meta(runner)
+    |> add_comparison_time_label_result_indices_meta(runner)
     |> add_present_index_meta(runner.main_query)
     |> add_partial_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
@@ -90,14 +92,9 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_time_labels_meta(meta, %QueryRunner{main_query: query} = runner) do
+  defp add_time_labels_meta(meta, %QueryRunner{main_query: query}) do
     if query.include.time_labels do
-      time_labels = Plausible.Stats.Time.time_labels(query)
-      result_indices = result_indices_for_time_labels(time_labels, runner.main_results)
-
-      meta
-      |> Map.put(:time_labels, time_labels)
-      |> Map.put(:time_label_result_indices, result_indices)
+      Map.put(meta, :time_labels, Plausible.Stats.Time.time_labels(query))
     else
       meta
     end
@@ -105,14 +102,42 @@ defmodule Plausible.Stats.QueryResult do
 
   defp add_comparison_time_labels_meta(meta, %QueryRunner{main_query: query} = runner) do
     if query.include.time_labels && query.include.compare do
-      comp_time_labels = Plausible.Stats.Time.time_labels(runner.comparison_query)
-
-      comp_result_indices =
-        result_indices_for_time_labels(comp_time_labels, runner.comparison_results)
-
+      Map.put(
+        meta,
+        :comparison_time_labels,
+        Plausible.Stats.Time.time_labels(runner.comparison_query)
+      )
+    else
       meta
-      |> Map.put(:comparison_time_labels, comp_time_labels)
-      |> Map.put(:comparison_time_label_result_indices, comp_result_indices)
+    end
+  end
+
+  defp add_time_labels_result_indices_meta(meta, %QueryRunner{main_query: query} = runner) do
+    time_labels = meta[:time_labels]
+
+    if query.include.time_label_result_indices and is_list(time_labels) do
+      Map.put(
+        meta,
+        :time_label_result_indices,
+        result_indices_for_time_labels(time_labels, runner.main_results)
+      )
+    else
+      meta
+    end
+  end
+
+  defp add_comparison_time_label_result_indices_meta(
+         meta,
+         %QueryRunner{main_query: query} = runner
+       ) do
+    comp_time_labels = meta[:comparison_time_labels]
+
+    if query.include.time_label_result_indices and is_list(comp_time_labels) do
+      Map.put(
+        meta,
+        :comparison_time_label_result_indices,
+        result_indices_for_time_labels(comp_time_labels, runner.comparison_results)
+      )
     else
       meta
     end

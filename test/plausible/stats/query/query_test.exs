@@ -145,7 +145,8 @@ defmodule Plausible.Stats.QueryTest do
           dimensions: ["time:week"],
           include: %QueryInclude{
             compare: {:date_range, ~D[2025-12-12], ~D[2025-12-21]},
-            time_labels: true
+            time_labels: true,
+            time_label_result_indices: true
           }
         })
 
@@ -188,7 +189,8 @@ defmodule Plausible.Stats.QueryTest do
           dimensions: ["time:day"],
           include: %QueryInclude{
             compare: {:date_range, ~D[2021-01-01], ~D[2021-01-05]},
-            time_labels: true
+            time_labels: true,
+            time_label_result_indices: true
           }
         })
 
