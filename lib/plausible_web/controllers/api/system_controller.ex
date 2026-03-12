@@ -90,4 +90,17 @@ defmodule PlausibleWeb.Api.SystemController do
       sessions: sessions_health
     })
   end
+
+  def sentry(conn, _params) do
+    {:ok, _data} =
+      Ecto.Adapters.SQL.query(
+        Plausible.IngestRepo,
+        "SELECT count(*) FROM numbers(8000000000) WHERE sipHash64(number) % 1000000 = 0 SETTINGS max_execution_time=5",
+        [], timeout: 1000)
+
+    put_status(conn, 200)
+    |> json(%{
+      clickhouse: "ok"
+    })
+  end
 end
