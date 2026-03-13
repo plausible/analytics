@@ -133,5 +133,76 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
     end
+
+    test "silently ignores missing event goal in filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["MissingGoal"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [0], "dimensions" => []}]
+    end
+
+    test "silently ignores missing pageview goal in filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/register", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["Visit /missing"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [0], "dimensions" => []}]
+    end
+
+    test "silently ignores missing goal and still returns results for existing goal in filter",
+         %{conn: conn, site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "OtherEvent", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["Signup", "MissingGoal"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+    end
+
+    test "silently ignores missing goal in event:goal dimension breakdown",
+         %{conn: conn, site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:goal"],
+          "filters" => [["is", "event:goal", ["Signup", "MissingGoal"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Signup"], "metrics" => [1]}
+             ]
+    end
   end
 end
