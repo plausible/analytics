@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
         post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
           "metrics" => ["visitors"],
           "date_range" => "all",
-          "filters" => [["is", "event:goal", ["MissingGoal"]]]
+          "filters" => [["is", "event:goal", ["Missing goal"]]]
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [0], "dimensions" => []}]
@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
         post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
           "metrics" => ["visitors"],
           "date_range" => "all",
-          "filters" => [["is", "event:goal", ["Visit /missing"]]]
+          "filters" => [["is", "event:goal", ["Visit /"]]]
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [0], "dimensions" => []}]
@@ -170,14 +170,14 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
 
       populate_stats(site, [
         build(:event, name: "Signup", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "OtherEvent", user_id: 2, timestamp: ~N[2021-01-01 00:00:00])
+        build(:event, name: "Purchase", user_id: 2, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
       conn =
         post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
           "metrics" => ["visitors"],
           "date_range" => "all",
-          "filters" => [["is", "event:goal", ["Signup", "MissingGoal"]]]
+          "filters" => [["is", "event:goal", ["Signup", "Missing goal"]]]
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
@@ -194,7 +194,7 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
         post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
           "metrics" => ["visitors"],
           "date_range" => "all",
-          "filters" => [["has_done", ["is", "event:goal", ["MissingGoal"]]]]
+          "filters" => [["has_done", ["is", "event:goal", ["Missing goal"]]]]
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [0], "dimensions" => []}]
