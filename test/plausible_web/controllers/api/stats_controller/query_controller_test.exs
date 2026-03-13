@@ -105,7 +105,8 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
     test "rejects when accessing any other site", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/stats/any.other.site/query", %{
-          "site_id" => site.domain, # ignored
+          # ignored
+          "site_id" => site.domain,
           "metrics" => ["pageviews"],
           "date_range" => "all",
           "filters" => []
