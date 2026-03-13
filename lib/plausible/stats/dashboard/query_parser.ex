@@ -26,7 +26,8 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          relative_date: relative_date,
          filters: filters,
          metrics: metrics,
-         include: include
+         include: include,
+         ignore_missing_goals: true
        })}
     end
   end

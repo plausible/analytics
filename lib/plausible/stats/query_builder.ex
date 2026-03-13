@@ -35,7 +35,7 @@ defmodule Plausible.Stats.QueryBuilder do
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_behavioral_filters(query),
-         :ok <- validate_filtered_goals_exist(query),
+         :ok <- validate_filtered_goals_exist(query, parsed_query_params.ignore_missing_goals),
          :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
@@ -382,7 +382,9 @@ defmodule Plausible.Stats.QueryBuilder do
     end)
   end
 
-  defp validate_filtered_goals_exist(query) do
+  defp validate_filtered_goals_exist(_query, _ignore_missing_goals = true), do: :ok
+
+  defp validate_filtered_goals_exist(query, _ignore_missing_goals) do
     # Note: We don't check :contains goal filters since it's acceptable if they match nothing.
     goal_filter_clauses =
       query.filters

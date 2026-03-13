@@ -14,7 +14,11 @@ defmodule Plausible.Stats.ParsedQueryParams do
             order_by: nil,
             pagination: nil,
             now: nil,
-            include: %Plausible.Stats.QueryInclude{}
+            include: %Plausible.Stats.QueryInclude{},
+            # When true, filters referencing unconfigured goals are silently ignored
+            # rather than returning an error. Used by the internal dashboard API to
+            # match the behaviour of legacy endpoints like top_stats.
+            ignore_missing_goals: false
 
   def new!(params) when is_map(params) do
     struct!(__MODULE__, Map.to_list(params))

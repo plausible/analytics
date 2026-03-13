@@ -169,9 +169,8 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
       insert(:goal, %{site: site, event_name: "Signup"})
 
       populate_stats(site, [
-        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "OtherEvent", timestamp: ~N[2021-01-01 00:00:00])
+        build(:event, name: "Signup", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "OtherEvent", user_id: 2, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
       conn =
@@ -184,25 +183,21 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
     end
 
-    test "silently ignores missing goal in event:goal dimension breakdown",
+    test "silently ignores missing goal in has_done behavioral filter",
          %{conn: conn, site: site} do
-      insert(:goal, %{site: site, event_name: "Signup"})
-
       populate_stats(site, [
-        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00])
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
       conn =
         post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
           "metrics" => ["visitors"],
           "date_range" => "all",
-          "dimensions" => ["event:goal"],
-          "filters" => [["is", "event:goal", ["Signup", "MissingGoal"]]]
+          "filters" => [["has_done", ["is", "event:goal", ["MissingGoal"]]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Signup"], "metrics" => [1]}
-             ]
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [0], "dimensions" => []}]
     end
   end
 end
