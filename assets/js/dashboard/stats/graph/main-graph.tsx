@@ -175,35 +175,6 @@ export const MainGraph = ({
           .attr('class', tickLineClass)
       )
 
-    const drawLine = (
-      svg: SelectedSVG,
-      dataset: GraphDatum[],
-      isDefined: (d: GraphDatum) => boolean,
-      yAccessor: (d: GraphDatum, index: number) => number,
-      className?: string
-    ) => {
-      const line = d3
-        .line<GraphDatum>()
-        .defined(isDefined)
-        .x((_d, index) => x(index))
-        .y(yAccessor)
-
-      svg
-        .append('path')
-        .attr('fill', 'none')
-        .attr('class', classNames(sharedPathClass, className))
-        .attr('stroke-linejoin', 'round')
-        .attr('stroke-linecap', 'round')
-        .datum(dataset)
-        .attr('d', line)
-    }
-
-    const drawDot = (className: string) => {
-      const dot = svg.append('g').attr('display', 'none')
-      dot.append('circle').attr('r', 2.5).attr('class', className)
-      return dot
-    }
-
     const mainGradientId = addGradient({
       svg,
       id: 'main',
@@ -219,44 +190,46 @@ export const MainGraph = ({
 
     const yBottomEdge = height - marginBottom
 
-    paintUnderLine(
+    drawAreaUnderLine({
       svg,
-      mainGradientId,
-      (d) => d.timeLabel !== null,
-      (_d, index) => x(index),
-      yBottomEdge,
-      (d) => y(d.value!),
-      remappedData
-    )
+      gradientId: mainGradientId,
+      isDefined: (d) => d.timeLabel !== null,
+      xAccessor: (_d, index) => x(index),
+      y0Accessor: yBottomEdge,
+      y1Accessor: (d) => y(d.value!),
+      datum: remappedData
+    })
 
-    paintUnderLine(
+    drawAreaUnderLine({
       svg,
-      comparisonGradientId,
-      (d) => d.comparisonTimeLabel !== null,
-      (_d, index) => x(index),
-      yBottomEdge,
-      (d) => y(d.comparisonValue!),
-      remappedData
-    )
+      gradientId: comparisonGradientId,
+      isDefined: (d) => d.comparisonTimeLabel !== null,
+      xAccessor: (_d, index) => x(index),
+      y0Accessor: yBottomEdge,
+      y1Accessor: (d) => y(d.comparisonValue!),
+      datum: remappedData
+    })
 
-    drawLine(
+    drawLine({
       svg,
-      remappedData,
-      (d) => d.timeLabel !== null,
-      (d) => y(d.value!),
-      mainPathClass
-    )
+      datum: remappedData,
+      isDefined: (d) => d.timeLabel !== null,
+      xAccessor: (_d, index) => x(index),
+      yAccessor: (d) => y(d.value!),
+      className: mainPathClass
+    })
 
-    drawLine(
+    drawLine({
       svg,
-      remappedData,
-      (d) => d.comparisonTimeLabel !== null,
-      (d) => y(d.comparisonValue!),
-      comparisonPathClass
-    )
+      datum: remappedData,
+      isDefined: (d) => d.comparisonTimeLabel !== null,
+      xAccessor: (_d, index) => x(index),
+      yAccessor: (d) => y(d.comparisonValue!),
+      className: comparisonPathClass
+    })
 
-    const dot = drawDot(mainDotClass)
-    const comparisonDot = drawDot(comparisonDotClass)
+    const dot = drawDot({ svg, className: mainDotClass })
+    const comparisonDot = drawDot({ svg, className: comparisonDotClass })
 
     svg
       .on('pointermove', (event) => {
@@ -691,15 +664,23 @@ const addGradient = ({
   return id
 }
 
-const paintUnderLine = (
-  svg: SelectedSVG,
-  gradientId: string,
-  isDefined: (d: GraphDatum) => boolean,
-  xAccessor: (d: GraphDatum, index: number) => number,
-  y0Accessor: number,
-  y1Accessor: (d: GraphDatum, index: number) => number,
+const drawAreaUnderLine = ({
+  svg,
+  gradientId,
+  isDefined,
+  xAccessor,
+  y0Accessor,
+  y1Accessor,
+  datum
+}: {
+  svg: SelectedSVG
+  gradientId: string
+  isDefined: (d: GraphDatum) => boolean
+  xAccessor: (d: GraphDatum, index: number) => number
+  y0Accessor: number
+  y1Accessor: (d: GraphDatum, index: number) => number
   datum: GraphDatum[]
-) => {
+}) => {
   const area = d3
     .area<GraphDatum>()
     .x(xAccessor)
@@ -713,6 +694,49 @@ const paintUnderLine = (
     .datum(datum)
     .attr('fill', `url(#${gradientId})`)
     .attr('d', area)
+}
+
+const drawLine = ({
+  svg,
+  datum,
+  isDefined,
+  xAccessor,
+  yAccessor,
+  className
+}: {
+  svg: SelectedSVG
+  datum: GraphDatum[]
+  isDefined: (d: GraphDatum) => boolean
+  xAccessor: (d: GraphDatum, index: number) => number
+  yAccessor: (d: GraphDatum, index: number) => number
+  className?: string
+}) => {
+  const line = d3
+    .line<GraphDatum>()
+    .defined(isDefined)
+    .x(xAccessor)
+    .y(yAccessor)
+
+  svg
+    .append('path')
+    .attr('fill', 'none')
+    .attr('class', classNames(sharedPathClass, className))
+    .attr('stroke-linejoin', 'round')
+    .attr('stroke-linecap', 'round')
+    .datum(datum)
+    .attr('d', line)
+}
+
+const drawDot = ({
+  svg,
+  className
+}: {
+  svg: SelectedSVG
+  className: string
+}) => {
+  const dot = svg.append('g').attr('display', 'none')
+  dot.append('circle').attr('r', 2.5).attr('class', className)
+  return dot
 }
 
 type SelectedSVG = d3.Selection<SVGSVGElement, unknown, null, undefined>
