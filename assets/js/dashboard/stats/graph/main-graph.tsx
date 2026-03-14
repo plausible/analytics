@@ -240,14 +240,14 @@ export const MainGraph = ({
           .bisector((dataPoint: Point) => dataPoint[0])
           .center(points, xPointer)
         const [x, yValues] = points[closestIndexToPointer]
-        if (yValues.yMain) {
+        if (yValues.yMain !== null) {
           dot
             .attr('transform', `translate(${x},${yValues.yMain})`)
             .attr('display', null)
         } else {
           dot.attr('display', 'none')
         }
-        if (yValues.yComparison) {
+        if (yValues.yComparison !== null) {
           comparisonDot
             .attr('transform', `translate(${x},${yValues.yComparison})`)
             .attr('display', null)
@@ -355,7 +355,7 @@ const GraphTooltip = ({
   width: number
 }) => {
   const formatter = MetricFormatterShort[metric]
-  const isLeftOfCursor = width - x < 240
+  const isLeftOfCursor = width - x < 200
   return (
     <div
       style={{
@@ -363,7 +363,7 @@ const GraphTooltip = ({
         top: y
       }}
       className={classNames(
-        'absolute z-200 bg-gray-800 py-3 px-4 rounded-md z-[100] min-w-[180px] pointer-events-none translate-y-2 shadow shadow-gray-200 dark:shadow-gray-850',
+        'absolute z-200 bg-gray-800 py-3 px-4 rounded-md z-[100] min-w-[180px] pointer-events-none shadow shadow-gray-200 dark:shadow-gray-850',
         {
           'translate-x-2': !isLeftOfCursor,
           '-translate-x-full': isLeftOfCursor
