@@ -94,17 +94,22 @@ export const MainGraph = ({
       return
     }
     console.log('effect running')
+    const yBottomEdge = height - marginBottom
+    const yTopEdge = marginTop
+    const xLeftEdge = marginLeft
+    const xRightEdge = width - marginRight
+    const chartAreaWidth = width - marginLeft - marginRight
 
     const yMin = 0
     const yDomain = [yMin, yMax]
     // Declare the y (vertical position) scale.
-    const y = d3.scaleLinear(yDomain, [height - marginBottom, marginTop]).nice()
+    const y = d3.scaleLinear(yDomain, [yBottomEdge, yTopEdge]).nice()
 
     // Declare the x (horizontal position) scale.
     // It's a simple linear axis, one unit for every time bucket
     // because the BE returns equal length buckets
     const xDomain = [0, remappedData.length - 1]
-    const x = d3.scaleLinear(xDomain, [marginLeft, width - marginRight])
+    const x = d3.scaleLinear(xDomain, [xLeftEdge, xRightEdge])
 
     const points: Point[] = remappedData.map((d, index) => [
       x(index),
@@ -123,7 +128,7 @@ export const MainGraph = ({
     // Add the x-axis.
     svg
       .append('g')
-      .attr('transform', `translate(0,${height - marginBottom})`)
+      .attr('transform', `translate(0,${yBottomEdge})`)
       .call(
         d3
           .axisBottom(x)
@@ -151,14 +156,13 @@ export const MainGraph = ({
           .selectAll('.tick text')
           .attr('class', classNames(tickClass, 'translate-y-2'))
       )
-
     // Add the y-axis, remove the domain line, add grid lines and a label.
     // TODO: make dynamic
     // const maxYTicks = 8
     const yTickCount = 8
     svg
       .append('g')
-      .attr('transform', `translate(${marginLeft}, 0)`)
+      .attr('transform', `translate(${xLeftEdge}, 0)`)
       .call(
         d3
           .axisLeft(y)
@@ -173,7 +177,7 @@ export const MainGraph = ({
         g
           .selectAll('.tick line')
           .clone()
-          .attr('x2', width - marginLeft - marginRight)
+          .attr('x2', chartAreaWidth)
           .attr('class', tickLineClass)
       )
 
@@ -189,8 +193,6 @@ export const MainGraph = ({
       stopTop: secondaryGradient.stopTop,
       stopBottom: secondaryGradient.stopBottom
     })
-
-    const yBottomEdge = height - marginBottom
 
     drawAreaUnderLine({
       svg,
@@ -236,29 +238,45 @@ export const MainGraph = ({
     svg
       .on('pointermove', (event) => {
         const [xPointer, yPointer] = d3.pointer(event)
-        const closestIndexToPointer = d3
-          .bisector((dataPoint: Point) => dataPoint[0])
-          .center(points, xPointer)
-        const [x, yValues] = points[closestIndexToPointer]
-        if (yValues.yMain !== null) {
-          dot
-            .attr('transform', `translate(${x},${yValues.yMain})`)
-            .attr('display', null)
-        } else {
+        const buffer = 4 // can stray this many px off the chart and still see tooltip
+        const inHoverableArea =
+          xPointer >= xLeftEdge - buffer &&
+          xPointer <= xRightEdge + buffer &&
+          yPointer >= yTopEdge - buffer &&
+          yPointer <= yBottomEdge + buffer
+        if (!inHoverableArea) {
           dot.attr('display', 'none')
-        }
-        if (yValues.yComparison !== null) {
-          comparisonDot
-            .attr('transform', `translate(${x},${yValues.yComparison})`)
-            .attr('display', null)
-        } else {
           comparisonDot.attr('display', 'none')
+          setTooltip({
+            selectedIndex: null,
+            x: 0,
+            y: 0
+          })
+        } else {
+          const closestIndexToPointer = d3
+            .bisector((dataPoint: Point) => dataPoint[0])
+            .center(points, xPointer)
+          const [x, yValues] = points[closestIndexToPointer]
+          if (yValues.yMain !== null) {
+            dot
+              .attr('transform', `translate(${x},${yValues.yMain})`)
+              .attr('display', null)
+          } else {
+            dot.attr('display', 'none')
+          }
+          if (yValues.yComparison !== null) {
+            comparisonDot
+              .attr('transform', `translate(${x},${yValues.yComparison})`)
+              .attr('display', null)
+          } else {
+            comparisonDot.attr('display', 'none')
+          }
+          setTooltip({
+            selectedIndex: closestIndexToPointer,
+            x: xPointer,
+            y: yPointer
+          })
         }
-        setTooltip({
-          selectedIndex: closestIndexToPointer,
-          x: xPointer,
-          y: yPointer
-        })
       })
       .on('pointerleave', () => {
         dot.attr('display', 'none')
