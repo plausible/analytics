@@ -848,10 +848,10 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, team} = Plausible.Teams.get_by_owner(user)
       {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
 
-      assert Plausible.Teams.Memberships.get_preference(membership, :sites_sort_by) == "alnum"
-
-      assert Plausible.Teams.Memberships.get_preference(membership, :sites_sort_direction) ==
-               "asc"
+      assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) == %{
+               "sort_by" => "alnum",
+               "sort_direction" => "asc"
+             }
     end
 
     test "selecting a sort option for a guest won't persist the preference", %{
@@ -874,8 +874,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, membership} =
         Plausible.Teams.Memberships.get_team_membership(team_of(user), viewer_guest)
 
-      refute Plausible.Teams.Memberships.get_preference(membership, :sites_sort_by)
-      refute Plausible.Teams.Memberships.get_preference(membership, :sites_sort_direction)
+      assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) == %{}
     end
 
     test "saved sort preference is applied on next visit when no URL params", %{
@@ -886,8 +885,11 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, team} = Plausible.Teams.get_by_owner(user)
       {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
-      Plausible.Teams.Memberships.set_preference(membership, :sites_sort_by, "alnum")
-      Plausible.Teams.Memberships.set_preference(membership, :sites_sort_direction, "desc")
+
+      Plausible.Teams.Memberships.set_preference(membership, :sort_index_options, %{
+        "sort_by" => "alnum",
+        "sort_direction" => "desc"
+      })
 
       {:ok, _lv, html} = live(conn, "/sites")
 
@@ -899,8 +901,11 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, team} = Plausible.Teams.get_by_owner(user)
       {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
-      Plausible.Teams.Memberships.set_preference(membership, :sites_sort_by, "alnum")
-      Plausible.Teams.Memberships.set_preference(membership, :sites_sort_direction, "asc")
+
+      Plausible.Teams.Memberships.set_preference(membership, :sort_index_options, %{
+        "sort_by" => "alnum",
+        "sort_direction" => "asc"
+      })
 
       {:ok, _lv, html} = live(conn, "/sites?sort_by=traffic&sort_direction=desc")
 

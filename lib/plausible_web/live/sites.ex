@@ -25,21 +25,26 @@ defmodule PlausibleWeb.Live.Sites do
 
     filter_text = String.trim(params["filter_text"] || "")
 
-    {sort_by, sort_direction} =
+    index_options =
       case {params["sort_by"], params["sort_direction"]} do
         {nil, nil} ->
           load_sort_preference(user, team)
 
         {sort_by, sort_direction} ->
-          {sanitize_sort_by(sort_by), sanitize_sort_direction(sort_direction)}
+          %{
+            sort_by: sanitize_sort_by(sort_by),
+            sort_direction: sanitize_sort_direction(sort_direction)
+          }
       end
+      |> Keyword.new()
 
     index_state =
-      SitesIndex.build(user,
-        filter_by_domain: filter_text,
-        team: team,
-        sort_by: sort_by,
-        sort_direction: sort_direction
+      SitesIndex.build(
+        user,
+        Keyword.merge(
+          [filter_by_domain: filter_text, team: team],
+          index_options
+        )
       )
 
     socket =
@@ -47,8 +52,6 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:uri, uri)
       |> assign(:sparklines, %{})
       |> assign(:filter_text, filter_text)
-      |> assign(:sort_by, sort_by)
-      |> assign(:sort_direction, sort_direction)
       |> assign(:index_state, index_state)
       |> assign(init_consolidated_view_assigns(user, team))
       |> assign(:team_invitations, [])
@@ -62,19 +65,19 @@ defmodule PlausibleWeb.Live.Sites do
     new_filter = String.trim(params["filter_text"] || "")
 
     sort_by =
-      if params["sort_by"], do: sanitize_sort_by(params["sort_by"]), else: socket.assigns.sort_by
+      if params["sort_by"],
+        do: sanitize_sort_by(params["sort_by"]),
+        else: socket.assigns.index_state.sort_by
 
     sort_direction =
       if params["sort_direction"],
         do: sanitize_sort_direction(params["sort_direction"]),
-        else: socket.assigns.sort_direction
+        else: socket.assigns.index_state.sort_direction
 
     socket =
       socket
       |> assign(:params, params)
       |> assign(:filter_text, new_filter)
-      |> assign(:sort_by, sort_by)
-      |> assign(:sort_direction, sort_direction)
       |> then(fn s ->
         updated_state =
           s.assigns.index_state
@@ -129,11 +132,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    assigns =
-      assigns
-      |> assign(:searching?, String.trim(assigns.filter_text) != "")
-      |> assign_new(:sort_by, fn -> :traffic end)
-      |> assign_new(:sort_direction, fn -> :desc end)
+    assigns = assign(assigns, :searching?, String.trim(assigns.filter_text) != "")
 
     ~H"""
     <.flash_messages flash={@flash} />
@@ -164,11 +163,9 @@ defmodule PlausibleWeb.Live.Sites do
         <.search_form
           filter_text={@filter_text}
           uri={@uri}
-          sort_by={@sort_by}
-          sort_direction={@sort_direction}
         />
         <div class="flex items-center gap-x-2">
-          <.sort_dropdown sort_by={@sort_by} sort_direction={@sort_direction} />
+          <.sort_dropdown index_state={@index_state} />
 
           <PrimaDropdown.dropdown
             :if={@consolidated_view_cta_dismissed?}
@@ -761,18 +758,20 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  @sort_options [
-    {"Most visitors", {:traffic, :desc}},
-    {"Fewest visitors", {:traffic, :asc}},
-    {"Name A-Z", {:alnum, :asc}},
-    {"Name Z-A", {:alnum, :desc}}
-  ]
+  @sort_options %{
+    "Most visitors" => %{sort_by: :traffic, sort_direction: :desc},
+    "Fewest visitors" => %{sort_by: :traffic, sort_direction: :asc},
+    "Name A-Z" => %{sort_by: :alnum, sort_direction: :asc},
+    "Name Z-A" => %{sort_by: :alnum, sort_direction: :desc}
+  }
 
   def sort_dropdown(assigns) do
     current_label =
-      Enum.find_value(@sort_options, fn {label, {sort_by, direction}} ->
-        if sort_by == assigns.sort_by and direction == assigns.sort_direction,
-          do: label
+      Enum.find_value(@sort_options, fn {label,
+                                         %{sort_by: sort_by, sort_direction: sort_direction}} ->
+        if sort_by == assigns.index_state.sort_by and
+             sort_direction == assigns.index_state.sort_direction,
+           do: label
       end)
 
     assigns = assign(assigns, sort_options: @sort_options, current_sort_label: current_label)
@@ -787,7 +786,7 @@ defmodule PlausibleWeb.Live.Sites do
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
       </PrimaDropdown.dropdown_trigger>
       <PrimaDropdown.dropdown_menu id="sort-dropdown-menu">
-        <%= for {label, {sort_by, direction}} <- @sort_options do %>
+        <%= for {label, %{sort_by: sort_by, sort_direction: direction}} <- @sort_options do %>
           <PrimaDropdown.dropdown_item
             id={"sort-dropdown-item-#{sort_by}-#{direction}"}
             class="min-w-40"
@@ -1125,16 +1124,17 @@ defmodule PlausibleWeb.Live.Sites do
     defp load_consolidated_sparkline(_consolidated_view), do: nil
   end
 
-  @default_sort @sort_options |> List.first() |> elem(1)
+  @default_sort @sort_options["Most visitors"]
   defp load_sort_preference(_user, nil), do: @default_sort
 
   defp load_sort_preference(user, team) do
     with {:ok, membership} <- Teams.Memberships.get_team_membership(team, user),
-         sort_by when not is_nil(sort_by) <-
-           Teams.Memberships.get_preference(membership, :sites_sort_by),
-         sort_direction <-
-           Teams.Memberships.get_preference(membership, :sites_sort_direction) do
-      {sanitize_sort_by(sort_by), sanitize_sort_direction(sort_direction)}
+         %{"sort_by" => sort_by, "sort_direction" => sort_direction} <-
+           Teams.Memberships.get_preference(membership, :sort_index_options) do
+      %{
+        sort_by: sanitize_sort_by(sort_by),
+        sort_direction: sanitize_sort_direction(sort_direction)
+      }
     else
       _ -> @default_sort
     end
@@ -1143,19 +1143,14 @@ defmodule PlausibleWeb.Live.Sites do
   defp save_sort_preference(_user, nil, _sort_by, _sort_direction), do: :ok
 
   defp save_sort_preference(user, team, sort_by, sort_direction) do
-    Plausible.Repo.transact(fn ->
-      with {:ok, membership} <- Teams.Memberships.get_team_membership(team, user) do
-        Teams.Memberships.set_preference(membership, :sites_sort_by, to_string(sort_by))
+    with {:ok, membership} <- Teams.Memberships.get_team_membership(team, user) do
+      Teams.Memberships.set_preference(membership, :sort_index_options, %{
+        "sort_by" => to_string(sort_by),
+        "sort_direction" => to_string(sort_direction)
+      })
+    end
 
-        Teams.Memberships.set_preference(
-          membership,
-          :sites_sort_direction,
-          to_string(sort_direction)
-        )
-
-        {:ok, :ok}
-      end
-    end)
+    :ok
   end
 
   defp sanitize_sort_by("traffic"), do: :traffic

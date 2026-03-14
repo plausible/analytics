@@ -8,12 +8,11 @@ defmodule Plausible.Teams.Memberships.UserPreference do
 
   @type t() :: %__MODULE__{}
 
-  @options [:consolidated_view_cta_dismissed, :sites_sort_by, :sites_sort_direction]
+  @options [:consolidated_view_cta_dismissed, :sort_index_options]
 
   schema "team_membership_user_preferences" do
     field :consolidated_view_cta_dismissed, :boolean, default: false
-    field :sites_sort_by, :string, default: nil
-    field :sites_sort_direction, :string, default: nil
+    field :sort_index_options, :map, default: %{}
 
     belongs_to :team_membership, Plausible.Teams.Membership
 
