@@ -26,26 +26,14 @@ defmodule PlausibleWeb.Live.Sites do
     filter_text = String.trim(params["filter_text"] || "")
 
     index_options =
-      case {params["sort_by"], params["sort_direction"]} do
-        {nil, nil} ->
-          load_sort_preference(user, team)
+      params
+      |> get_index_options(user, team)
+      |> Map.merge(%{
+        filter_by_domain: filter_text,
+        team: team
+      })
 
-        {sort_by, sort_direction} ->
-          %{
-            sort_by: sanitize_sort_by(sort_by),
-            sort_direction: sanitize_sort_direction(sort_direction)
-          }
-      end
-      |> Keyword.new()
-
-    index_state =
-      SitesIndex.build(
-        user,
-        Keyword.merge(
-          [filter_by_domain: filter_text, team: team],
-          index_options
-        )
-      )
+    index_state = SitesIndex.build(user, index_options)
 
     socket =
       socket
@@ -1122,6 +1110,19 @@ defmodule PlausibleWeb.Live.Sites do
       do: no_consolidated_view(no_consolidated_view_reason: :unavailable)
 
     defp load_consolidated_sparkline(_consolidated_view), do: nil
+  end
+
+  defp get_index_options(params, user, team) do
+    case {params["sort_by"], params["sort_direction"]} do
+      {nil, nil} ->
+        load_sort_preference(user, team)
+
+      {sort_by, sort_direction} ->
+        %{
+          sort_by: sanitize_sort_by(sort_by),
+          sort_direction: sanitize_sort_direction(sort_direction)
+        }
+    end
   end
 
   @default_sort @sort_options["Most visitors"]

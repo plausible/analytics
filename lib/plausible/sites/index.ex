@@ -71,8 +71,14 @@ defmodule Plausible.Sites.Index do
   @doc """
   Builds an `Index.State` for `user` by running all necessary queries
   """
-  @spec build(Auth.User.t(), [list_opt()]) :: State.t()
-  def build(user, opts \\ []) do
+  @spec build(Auth.User.t(), [list_opt()] | Map.t()) :: State.t()
+  def build(user, opts \\ [])
+
+  def build(user, opts) when is_map(opts) do
+    build(user, Keyword.new(opts))
+  end
+
+  def build(user, opts) do
     sort_by = Keyword.get(opts, :sort_by, :alnum)
     sort_direction = Keyword.get(opts, :sort_direction, :asc)
 
