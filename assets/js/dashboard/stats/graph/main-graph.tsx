@@ -74,8 +74,8 @@ export const MainGraph = ({
   const [tooltip, setTooltip] = useState<{
     x: number
     y: number
-    datum: GraphDatum | null
-  }>({ x: 0, y: 0, datum: null })
+    selectedIndex: number | null
+  }>({ x: 0, y: 0, selectedIndex: null })
 
   const interval = data.query.dimensions[0].split('time:')[1]
   const metric = data.query.metrics[0] as FormattableMetric
@@ -253,7 +253,7 @@ export const MainGraph = ({
           comparisonDot.attr('display', 'none')
         }
         setTooltip({
-          datum: remappedData[closestIndexToPointer],
+          selectedIndex: closestIndexToPointer,
           x: xPointer,
           y: yPointer
         })
@@ -262,7 +262,7 @@ export const MainGraph = ({
         dot.attr('display', 'none')
         comparisonDot.attr('display', 'none')
         setTooltip({
-          datum: null,
+          selectedIndex: null,
           x: 0,
           y: 0
         })
@@ -292,9 +292,9 @@ export const MainGraph = ({
       <svg
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-auto"
+        className="w-full h-auto cursor-pointer"
       />
-      {tooltip.datum !== null && (
+      {tooltip.selectedIndex !== null && (
         <GraphTooltip
           width={width}
           showZoomToPeriod={showZoomToPeriod}
@@ -304,7 +304,7 @@ export const MainGraph = ({
           metric={metric}
           x={tooltip.x}
           y={tooltip.y}
-          datum={tooltip.datum}
+          datum={remappedData[tooltip.selectedIndex]}
         />
       )}
     </div>
