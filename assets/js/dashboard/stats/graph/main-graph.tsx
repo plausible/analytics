@@ -10,6 +10,7 @@ import dateFormatter from './date-formatter'
 import classNames from 'classnames'
 import { ChangeArrow } from '../reports/change-arrow'
 import { Metric } from '../../../types/query-api'
+import { useAppNavigate } from '../../navigation/use-app-navigate'
 
 const height = 368
 const marginTop = 16
@@ -69,6 +70,7 @@ export const MainGraph = ({
   data: MainGraphData
 }) => {
   const { mode } = useTheme()
+  const navigate = useAppNavigate()
   const { primaryGradient, secondaryGradient } = paletteByTheme[mode]
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [tooltip, setTooltip] = useState<{
@@ -76,7 +78,7 @@ export const MainGraph = ({
     y: number
     selectedIndex: number | null
   }>({ x: 0, y: 0, selectedIndex: null })
-
+  const { selectedIndex } = tooltip
   const interval = data.query.dimensions[0].split('time:')[1]
   const metric = data.query.metrics[0] as FormattableMetric
   const period = data.period
@@ -271,6 +273,7 @@ export const MainGraph = ({
 
     return () => {
       svg.selectAll('*').remove()
+      setTooltip({ x: 0, y: 0, selectedIndex: null })
     }
   }, [
     primaryGradient,
@@ -290,11 +293,30 @@ export const MainGraph = ({
       style={{ height: height, maxWidth: width }}
     >
       <svg
+        onClick={
+          selectedIndex !== null && showZoomToPeriod
+            ? () =>
+                navigate({
+                  search: (currentSearch) => ({
+                    ...currentSearch,
+                    date:
+                      remappedData[selectedIndex].timeLabel ??
+                      remappedData[selectedIndex].comparisonTimeLabel,
+                    period: {
+                      month: DashboardPeriod.month,
+                      day: DashboardPeriod.day
+                    }[interval]
+                  })
+                })
+            : undefined
+        }
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-auto cursor-pointer"
+        className={classNames('w-full h-auto', {
+          ['cursor-pointer']: showZoomToPeriod
+        })}
       />
-      {tooltip.selectedIndex !== null && (
+      {selectedIndex !== null && remappedData[selectedIndex] && (
         <GraphTooltip
           width={width}
           showZoomToPeriod={showZoomToPeriod}
@@ -304,7 +326,7 @@ export const MainGraph = ({
           metric={metric}
           x={tooltip.x}
           y={tooltip.y}
-          datum={remappedData[tooltip.selectedIndex]}
+          datum={remappedData[selectedIndex]}
         />
       )}
     </div>
