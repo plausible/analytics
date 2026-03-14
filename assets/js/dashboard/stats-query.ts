@@ -17,6 +17,7 @@ type QueryInclude = {
   time_labels: boolean
   compare: IncludeCompare
   compare_match_day_of_week: boolean
+  present_index?: boolean
 }
 
 export type ReportParams = {

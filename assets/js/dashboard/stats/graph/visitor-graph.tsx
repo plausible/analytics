@@ -17,7 +17,37 @@ import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
 import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
+import { MainGraph, MainGraphContainer } from './main-graph'
+import { createStatsQuery } from '../../stats-query'
+import { isRealTimeDashboard } from '../../util/filters'
 
+function fetchMainGraph(
+  site: PlausibleSite,
+  dashboardState: DashboardState,
+  metric: Metric,
+  interval: string
+) {
+  const reportParams = {
+    metrics: [metric],
+    dimensions: [`time:${interval}`],
+    include: {
+      time_labels: true,
+      time_label_result_indices: true,
+      present_index: true,
+      partial_time_labels: true
+    }
+  }
+
+  const statsQuery = createStatsQuery(dashboardState, reportParams)
+
+  if (isRealTimeDashboard(dashboardState)) {
+    statsQuery.date_range = DashboardPeriod.realtime_30m
+  }
+
+  statsQuery.include.present_index = true
+
+  return api.stats(site, statsQuery)
+}
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
 
@@ -27,6 +57,8 @@ export default function VisitorGraph({
   updateImportedDataInView?: (v: boolean) => void
 }) {
   const topStatsBoundary = useRef<HTMLDivElement>(null)
+  const mainGraphContainer = useRef<HTMLDivElement>(null)
+  const { width } = useMainGraphWidth(mainGraphContainer)
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
@@ -72,19 +104,36 @@ export default function VisitorGraph({
     enabled: !!selectedMetric,
     queryKey: [
       'main-graph',
-      { dashboardState, metric: selectedMetric, interval: selectedInterval }
+      { dashboardState, metric: selectedMetric!, interval: selectedInterval }
     ] as const,
     queryFn: async ({ queryKey }) => {
       const [_, opts] = queryKey
-      const data = await api.get(
-        url.apiPath(site, '/main-graph'),
-        opts.dashboardState,
-        {
-          metric: opts.metric,
-          interval: opts.interval
-        }
-      )
-      return { ...data, interval: opts.interval }
+      const oldDataSource =
+        window.location.hostname === 'localhost'
+          ? 'http://localhost:8000'
+          : window.location.hostname.match(/pr-\d+\.review\.plausible\.io/)
+            ? 'https://staging.plausible.io'
+            : ''
+      const [dataOld, dataNew] = await Promise.all([
+        api
+          .get(
+            `${oldDataSource}${url.apiPath(site, '/main-graph')}`,
+            opts.dashboardState,
+            {
+              metric: opts.metric,
+              interval: opts.interval
+            }
+          )
+          .then((res) => ({ ...res, interval: opts.interval }))
+          .catch(() => undefined),
+        fetchMainGraph(site, opts.dashboardState, opts.metric, opts.interval)
+          .then((res) => ({ ...res, period: opts.dashboardState.period }))
+          .catch(() => undefined)
+      ])
+      return {
+        dataOld,
+        dataNew
+      }
     },
     placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey, meta }) => {
@@ -271,19 +320,28 @@ export default function VisitorGraph({
             </div>
           )}
           <LineGraphContainer>
-            {mainGraphQuery.data && (
+            {mainGraphQuery.data?.dataNew && (
               <>
                 {!showGraphLoader && (
                   <LineGraphWithRouter
-                    graphData={{
-                      ...mainGraphQuery.data
-                    }}
+                    graphData={mainGraphQuery.data.dataOld}
                   />
                 )}
                 {showGraphLoader && <Loader />}
               </>
             )}
           </LineGraphContainer>
+
+          <MainGraphContainer ref={mainGraphContainer}>
+            {mainGraphQuery.data?.dataNew && width && (
+              <>
+                {!showGraphLoader && (
+                  <MainGraph width={width} data={mainGraphQuery.data.dataNew} />
+                )}
+                {showGraphLoader && <Loader />}
+              </>
+            )}
+          </MainGraphContainer>
         </div>
       </>
       {(!(topStatsQuery.data && mainGraphQuery.data) || showFullLoader) && (
@@ -356,5 +414,29 @@ function useGuessTopStatsHeight(
   return {
     heightPx:
       getStoredTopStatsHeight(site) ?? DEFAULT_TOP_STATS_LOADING_HEIGHT_PX
+  }
+}
+
+function useMainGraphWidth(
+  mainGraphContainer: React.RefObject<HTMLDivElement>
+): { width: number } {
+  const [width, setWidth] = useState<number>(0)
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(([e]) => {
+      setWidth(e.contentRect.width)
+    })
+
+    if (mainGraphContainer.current) {
+      resizeObserver.observe(mainGraphContainer.current)
+    }
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [mainGraphContainer])
+
+  return {
+    width
   }
 }
