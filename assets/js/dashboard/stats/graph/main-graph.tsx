@@ -17,9 +17,16 @@ const marginRight = 4
 const marginBottom = 32
 const marginLeft = 32
 
+type RevenueMetric = {
+  short: string
+  value: number
+  long: string
+  currency: string
+}
+
 type ResultItem = {
   dimensions: [string] // one item
-  metrics: null | [number] | [{ value: number }] // one item
+  metrics: null | [number] | [RevenueMetric] // one item
 }
 type MainGraphResponse = {
   results: Array<ResultItem | null>
@@ -168,59 +175,8 @@ export const MainGraph = ({
           .attr('class', tickLineClass)
       )
 
-    const addGradient = ({
-      id,
-      stopTop,
-      stopBottom
-    }: {
-      id: string
-      stopTop: { color: string; opacity: number }
-      stopBottom: { color: string; opacity: number }
-    }): string => {
-      const grad = svg
-        .append('defs')
-        .append('linearGradient')
-        .attr('id', id)
-        .attr('x1', '0%')
-        .attr('y1', '0%') // top
-        .attr('x2', '0%')
-        .attr('y2', `100%`) // bottom
-
-      grad
-        .append('stop')
-        .attr('offset', '0%')
-        .attr('stop-color', stopTop.color)
-        .attr('stop-opacity', stopTop.opacity)
-
-      grad
-        .append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', stopBottom.color)
-        .attr('stop-opacity', stopBottom.opacity)
-      return id
-    }
-
-    const paintUnderLine = (
-      gradientId: string,
-      isDefined: (d: GraphDatum) => boolean,
-      y1Accessor: (d: GraphDatum, index: number) => number
-    ) => {
-      const area = d3
-        .area<GraphDatum>()
-        .x((_d, index) => x(index))
-        .defined(isDefined)
-        .y0(height - marginBottom) // bottom edge
-        .y1(y1Accessor) // top edge follows the data
-
-      // draw the filled area with the gradient
-      svg
-        .append('path')
-        .datum(remappedData)
-        .attr('fill', `url(#${gradientId})`)
-        .attr('d', area)
-    }
-
     const drawLine = (
+      svg: SelectedSVG,
       dataset: GraphDatum[],
       isDefined: (d: GraphDatum) => boolean,
       yAccessor: (d: GraphDatum, index: number) => number,
@@ -249,29 +205,42 @@ export const MainGraph = ({
     }
 
     const mainGradientId = addGradient({
+      svg,
       id: 'main',
       stopTop: primaryGradient.stopTop,
       stopBottom: primaryGradient.stopBottom
     })
     const comparisonGradientId = addGradient({
+      svg,
       id: 'comparisonGradient',
       stopTop: secondaryGradient.stopTop,
       stopBottom: secondaryGradient.stopBottom
     })
 
+    const yBottomEdge = height - marginBottom
+
     paintUnderLine(
+      svg,
       mainGradientId,
       (d) => d.timeLabel !== null,
-      (d) => y(d.value!)
+      (_d, index) => x(index),
+      yBottomEdge,
+      (d) => y(d.value!),
+      remappedData
     )
 
     paintUnderLine(
+      svg,
       comparisonGradientId,
       (d) => d.comparisonTimeLabel !== null,
-      (d) => y(d.comparisonValue!)
+      (_d, index) => x(index),
+      yBottomEdge,
+      (d) => y(d.comparisonValue!),
+      remappedData
     )
 
     drawLine(
+      svg,
       remappedData,
       (d) => d.timeLabel !== null,
       (d) => y(d.value!),
@@ -279,6 +248,7 @@ export const MainGraph = ({
     )
 
     drawLine(
+      svg,
       remappedData,
       (d) => d.comparisonTimeLabel !== null,
       (d) => y(d.comparisonValue!),
@@ -667,7 +637,6 @@ const tickClass = 'fill-gray-500 dark:fill-gray-400 text-xs'
 const mainDotClass = 'fill-indigo-500 dark:fill-indigo-400'
 const comparisonDotClass = 'fill-indigo-500/20 dark:fill-indigo-400/20'
 
-// const pathClass = 'stroke-[#6366f1] stroke-2 z-1' // custom color like indigo-400
 const sharedPathClass = 'stroke-2'
 const mainPathClass = 'stroke-indigo-500 dark:stroke-indigo-400 z-2'
 const comparisonPathClass = 'stroke-indigo-500/20 dark:stroke-indigo-400/20 z-1'
@@ -687,3 +656,63 @@ const METRIC_LABELS = {
   scroll_depth: 'Scroll depth',
   time_on_page: 'Time on page'
 }
+
+const addGradient = ({
+  svg,
+  id,
+  stopTop,
+  stopBottom
+}: {
+  svg: SelectedSVG
+  id: string
+  stopTop: { color: string; opacity: number }
+  stopBottom: { color: string; opacity: number }
+}): string => {
+  const grad = svg
+    .append('defs')
+    .append('linearGradient')
+    .attr('id', id)
+    .attr('x1', '0%')
+    .attr('y1', '0%') // top
+    .attr('x2', '0%')
+    .attr('y2', `100%`) // bottom
+
+  grad
+    .append('stop')
+    .attr('offset', '0%')
+    .attr('stop-color', stopTop.color)
+    .attr('stop-opacity', stopTop.opacity)
+
+  grad
+    .append('stop')
+    .attr('offset', '100%')
+    .attr('stop-color', stopBottom.color)
+    .attr('stop-opacity', stopBottom.opacity)
+  return id
+}
+
+const paintUnderLine = (
+  svg: SelectedSVG,
+  gradientId: string,
+  isDefined: (d: GraphDatum) => boolean,
+  xAccessor: (d: GraphDatum, index: number) => number,
+  y0Accessor: number,
+  y1Accessor: (d: GraphDatum, index: number) => number,
+  datum: GraphDatum[]
+) => {
+  const area = d3
+    .area<GraphDatum>()
+    .x(xAccessor)
+    .defined(isDefined)
+    .y0(y0Accessor) // bottom edge
+    .y1(y1Accessor) // top edge follows the data
+
+  // draw the filled area with the gradient
+  svg
+    .append('path')
+    .datum(datum)
+    .attr('fill', `url(#${gradientId})`)
+    .attr('d', area)
+}
+
+type SelectedSVG = d3.Selection<SVGSVGElement, unknown, null, undefined>
