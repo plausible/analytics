@@ -29,7 +29,6 @@ defmodule PlausibleWeb.Live.Sites do
       params
       |> get_index_options(user, team)
       |> Map.merge(%{
-        filter_by_domain: filter_text,
         team: team
       })
 
@@ -69,7 +68,6 @@ defmodule PlausibleWeb.Live.Sites do
       |> then(fn s ->
         updated_state =
           s.assigns.index_state
-          |> SitesIndex.update_state(:filter_by_domain, new_filter)
           |> SitesIndex.sort(sort_by: sort_by, sort_direction: sort_direction)
 
         assign(s, :index_state, updated_state)
@@ -953,7 +951,7 @@ defmodule PlausibleWeb.Live.Sites do
     page_number = assigns.params["page"]
     page_size = assigns.params["page_size"]
 
-    page = SitesIndex.paginate(assigns.index_state, page_number, page_size)
+    page = SitesIndex.paginate(assigns.index_state, page_number, page_size, assigns.filter_text)
 
     index_opts = [
       filter_by_domain: assigns.filter_text,
