@@ -23,9 +23,7 @@ defmodule PlausibleWeb.Live.Sites do
     index_options =
       params
       |> get_index_options(user, team)
-      |> Map.merge(%{
-        team: team
-      })
+      |> Map.put(:team, team)
 
     index_state = SitesIndex.build(user, index_options)
 
