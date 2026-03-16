@@ -28,8 +28,11 @@ defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
       x-bind:class="! show ? 'hidden' : ''"
       x-init={x_init(@site)}
     >
-      <.styled_link href={"/#{URI.encode_www_form(@site.domain)}/settings/email-reports"}>
-        Invite guests, enable email reports, import from GA and more →
+      <.styled_link
+        href={Routes.site_path(PlausibleWeb.Endpoint, :settings_email_reports, @site.domain)}
+        onclick="plausible('Weekly Email Note Click')"
+      >
+        Get weekly traffic summaries by email →
       </.styled_link>
     </div>
     """
