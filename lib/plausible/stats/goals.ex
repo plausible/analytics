@@ -24,7 +24,7 @@ defmodule Plausible.Stats.Goals do
         # When grouping by event:goal, later pipeline needs to know which goals match filters exactly.
         # This can affect both calculations whether all goals have the same revenue currency and
         # whether we should skip imports.
-        matching_toplevel_filters: goals_matching_toplevel_filters(goals, filters),
+        matching_toplevel_filters: goals_matching_toplevel_filters(goals, dimensions, filters),
         all: goals
       }
     else
@@ -145,14 +145,19 @@ defmodule Plausible.Stats.Goals do
     Enum.filter(goals, fn goal -> matches?(goal, filter, clause) end)
   end
 
-  defp goals_matching_toplevel_filters(goals, filters) do
-    Enum.reduce(filters, goals, fn
-      [_, "event:goal" | _] = filter, goals ->
-        goals_matching_any_clause(goals, filter)
+  defp goals_matching_toplevel_filters(goals, dimensions, filters) do
+    if Enum.member?(dimensions, "event:goal") or
+         Filters.filtering_on_dimension?(filters, "event:goal") do
+      Enum.reduce(filters, goals, fn
+        [_, "event:goal" | _] = filter, goals ->
+          goals_matching_any_clause(goals, filter)
 
-      _filter, goals ->
-        goals
-    end)
+        _filter, goals ->
+          goals
+      end)
+    else
+      []
+    end
   end
 
   defp goals_matching_any_clause(goals, [_, _, clauses | _] = filter) do

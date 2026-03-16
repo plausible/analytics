@@ -651,4 +651,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
              ]
     end
   end
+
+  describe "breakdown by event:label" do
+    test "does not return engagement events even when site has scroll goals", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, %{site: site, page_path: "/blog", scroll_threshold: 50})
+
+      populate_stats(site, [
+        build(:pageview, user_id: 234, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 234,
+          pathname: "/blog",
+          scroll_depth: 60,
+          timestamp: ~N[2021-01-01 00:00:01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:label"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Visit /blog"], "metrics" => [1]}
+             ]
+    end
+  end
 end
