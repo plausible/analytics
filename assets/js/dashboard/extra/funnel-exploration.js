@@ -139,15 +139,25 @@ function ExplorationColumn({ header, steps, selected, onSelect, dashboardState }
   )
 }
 
+function columnHeader(index) {
+  if (index === 0) return 'Start'
+  return `${index} step${index === 1 ? '' : 's'} after`
+}
+
 export function FunnelExploration() {
   const { dashboardState } = useDashboardStateContext()
-  const [step1, setStep1] = useState(null)
-  const [step2, setStep2] = useState(null)
+  const [steps, setSteps] = useState([])
 
-  function handleStep1Select(label) {
-    setStep1(label)
-    setStep2(null)
+  function handleSelect(columnIndex, label) {
+    if (label === null) {
+      setSteps(steps.slice(0, columnIndex))
+    } else {
+      setSteps([...steps.slice(0, columnIndex), label])
+    }
   }
+
+  // Show 3 columns by default; add a new column each time the last column gets a selection
+  const numColumns = Math.max(3, steps.length + 1)
 
   return (
     <div className="p-4">
@@ -155,27 +165,16 @@ export function FunnelExploration() {
         Explore user journeys
       </h4>
       <div className="flex gap-3">
-        <ExplorationColumn
-          header="Start"
-          steps={[]}
-          selected={step1}
-          onSelect={handleStep1Select}
-          dashboardState={dashboardState}
-        />
-        <ExplorationColumn
-          header="1 step after"
-          steps={step1 !== null ? [step1] : null}
-          selected={step2}
-          onSelect={setStep2}
-          dashboardState={dashboardState}
-        />
-        <ExplorationColumn
-          header="2 steps after"
-          steps={step2 !== null ? [step1, step2] : null}
-          selected={null}
-          onSelect={() => {}}
-          dashboardState={dashboardState}
-        />
+        {Array.from({ length: numColumns }, (_, i) => (
+          <ExplorationColumn
+            key={i}
+            header={columnHeader(i)}
+            steps={steps.length >= i ? steps.slice(0, i) : null}
+            selected={steps[i] || null}
+            onSelect={(label) => handleSelect(i, label)}
+            dashboardState={dashboardState}
+          />
+        ))}
       </div>
     </div>
   )
