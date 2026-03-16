@@ -32,18 +32,12 @@ import { getSpecialGoal, isPageViewGoal, isSpecialGoal } from '../../util/goals'
 
 /*global BUILD_EXTRA*/
 /*global require*/
-function maybeRequire(modulePath, fallback = { default: null }) {
-  if (BUILD_EXTRA) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require(modulePath)
-  } else {
-    return fallback
-  }
-}
-
-const Funnel = maybeRequire('../../extra/funnel').default
-const FunnelExploration =
-  maybeRequire('../../extra/funnel-exploration', null)?.FunnelExploration ?? null
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Funnel = BUILD_EXTRA ? require('../../extra/funnel').default : null
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const FunnelExploration = BUILD_EXTRA
+  ? (require('../../extra/funnel-exploration').FunnelExploration ?? null)
+  : null
 
 const EXPLORE_MODE = '__explore__'
 
