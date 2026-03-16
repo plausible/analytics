@@ -13,7 +13,7 @@ defmodule Plausible.Stats.Funnel do
   import Plausible.Stats.SQL.Fragments
 
   alias Plausible.ClickhouseRepo
-  alias Plausible.Stats.Base
+  alias Plausible.Stats.{Base, Query}
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::
           {:ok, map()} | {:error, :funnel_not_found}
@@ -28,8 +28,11 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def funnel(_site, query, %Funnel{} = funnel) do
+    goals = Enum.map(funnel.steps, & &1.goal)
+
     funnel_data =
       query
+      |> Query.set(preloaded_goals: %{all: [], matching_toplevel_filters: goals})
       |> Base.base_event_query()
       |> query_funnel(funnel)
 

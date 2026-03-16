@@ -18,6 +18,43 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     :exit_page_hostname
   ]
 
+  @doc """
+  Builds a WHERE condition to restrict event name, reducing unnecessary reads of
+  engagement events when they are not needed.
+
+  - Goal filters: no restriction (Goals.add_filter already adds precise name conditions)
+  - Preloaded goals present: restrict to only the event names relevant to those goals
+  - Default: exclude engagement events unless time_on_page or scroll_depth metrics are requested
+  """
+  def derived_name_filter(query) do
+    cond do
+      Plausible.Stats.Filters.filtering_on_dimension?(query.filters, "event:goal") ->
+        true
+
+      query.preloaded_goals.matching_toplevel_filters != [] ->
+        names = goal_event_names(query.preloaded_goals.matching_toplevel_filters)
+        dynamic([e], e.name in ^names)
+
+      :time_on_page not in query.metrics and :scroll_depth not in query.metrics ->
+        dynamic([e], e.name != "engagement")
+
+      true ->
+        true
+    end
+  end
+
+  defp goal_event_names(goals) do
+    goals
+    |> Enum.map(fn goal ->
+      case Plausible.Goal.type(goal) do
+        :event -> goal.event_name
+        :page -> "pageview"
+        :scroll -> "engagement"
+      end
+    end)
+    |> Enum.uniq()
+  end
+
   @doc "Builds WHERE clause for a given Query against sessions or events table"
   def build(table, query) do
     base_condition = filter_site_time_range(table, query)
