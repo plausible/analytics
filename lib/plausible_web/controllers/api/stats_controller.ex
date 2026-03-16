@@ -34,6 +34,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
     with {:ok, %ParsedQueryParams{} = params} <- Dashboard.QueryParser.parse(params),
          {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)) do
+      query =
+        if query.include.time_labels do
+          Query.set_include(query, :time_label_result_indices, true)
+        else
+          query
+        end
+
       json(conn, Plausible.Stats.query(site, query))
     else
       {:error, %QueryError{message: message}} -> bad_request(conn, message)
