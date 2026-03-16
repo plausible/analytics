@@ -19,6 +19,7 @@ defmodule PlausibleWeb.Live.Sites do
     user = socket.assigns.current_user
 
     uri_params = sanitize_uri_params(params)
+    filter_text = uri_params["filter_text"] || ""
 
     index_options =
       params
@@ -35,6 +36,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:team_invitations, [])
       |> assign(:site_invitations, [])
       |> assign(:site_ownership_invitations, [])
+      |> assign(:filter_text, filter_text)
       |> assign(:uri_params, uri_params)
 
     {:ok, socket}
@@ -56,6 +58,7 @@ defmodule PlausibleWeb.Live.Sites do
     socket =
       socket
       |> assign(:uri_params, uri_params)
+      |> assign(:filter_text, uri_params["filter_text"] || "")
       |> assign(
         :index_state,
         socket.assigns.index_state
@@ -82,12 +85,12 @@ defmodule PlausibleWeb.Live.Sites do
           sites: sites,
           current_team: current_team,
           has_sites?: has_sites?,
-          uri_params: uri_params
+          filter_text: filter_text
         } = socket.assigns
 
         is_empty_state? =
           not (sites.entries != [] and (Teams.setup?(current_team) or has_sites?)) and
-            uri_params["filter_text"] in ["", nil]
+            filter_text == ""
 
         empty_state_title =
           if Teams.setup?(current_team) do
@@ -110,7 +113,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, :searching?, assigns.uri_params["filter_text"] not in ["", nil])
+    assigns = assign(assigns, :searching?, assigns.filter_text != "")
 
     ~H"""
     <.flash_messages flash={@flash} />
@@ -138,7 +141,7 @@ defmodule PlausibleWeb.Live.Sites do
         :if={not @is_empty_state?}
         class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2"
       >
-        <.search_form filter_text={@uri_params["filter_text"]} />
+        <.search_form filter_text={@filter_text} />
         <div class="flex items-center gap-x-2">
           <.sort_dropdown index_state={@index_state} />
 
@@ -940,7 +943,7 @@ defmodule PlausibleWeb.Live.Sites do
       SitesIndex.paginate(assigns.index_state,
         page: assigns.uri_params["page"],
         page_size: assigns.uri_params["page_size"],
-        filter_by_domain: assigns.uri_params["filter_text"]
+        filter_by_domain: assigns.filter_text
       )
 
     site_entries =
@@ -979,10 +982,12 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp set_filter_text(socket, filter_text) do
-    uri_params = Map.put(socket.assigns.uri_params, "filter_text", String.trim(filter_text))
+    trimmed = String.trim(filter_text)
+    uri_params = Map.put(socket.assigns.uri_params, "filter_text", trimmed)
 
     socket
     |> assign(:uri_params, uri_params)
+    |> assign(:filter_text, trimmed)
     |> push_patch(to: Routes.site_path(socket, :index, uri_params), replace: true)
   end
 
