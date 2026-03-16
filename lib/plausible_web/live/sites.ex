@@ -735,12 +735,12 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  @sort_options %{
-    "Most visitors" => %{sort_by: :traffic, sort_direction: :desc},
-    "Fewest visitors" => %{sort_by: :traffic, sort_direction: :asc},
-    "Name A-Z" => %{sort_by: :alnum, sort_direction: :asc},
-    "Name Z-A" => %{sort_by: :alnum, sort_direction: :desc}
-  }
+  @sort_options [
+    {"Most visitors", %{sort_by: :traffic, sort_direction: :desc}},
+    {"Fewest visitors", %{sort_by: :traffic, sort_direction: :asc}},
+    {"Name A-Z", %{sort_by: :alnum, sort_direction: :asc}},
+    {"Name Z-A", %{sort_by: :alnum, sort_direction: :desc}}
+  ]
 
   def sort_dropdown(assigns) do
     current_label =
@@ -1085,7 +1085,7 @@ defmodule PlausibleWeb.Live.Sites do
     end
   end
 
-  @default_sort @sort_options["Most visitors"]
+  @default_sort @sort_options |> List.first() |> elem(1)
   defp load_sort_preference(_user, nil), do: @default_sort
 
   defp load_sort_preference(user, team) do
