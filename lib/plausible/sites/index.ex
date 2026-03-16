@@ -21,12 +21,10 @@ defmodule Plausible.Sites.Index do
           | {:sort_by, sort_by()}
           | {:sort_direction, sort_direction()}
 
-  @type(
-    pagination_option() ::
-      {:page, pos_integer() | String.t() | nil},
-    {:page_size, pos_integer() | String.t() | nil},
-    {:filter_by_domain, String.t() | nil}
-  )
+  @type pagination_option() ::
+          {:page, pos_integer() | String.t() | nil}
+          | {:page_size, pos_integer() | String.t() | nil}
+          | {:filter_by_domain, String.t() | nil}
 
   defmodule Page do
     @moduledoc """
@@ -77,7 +75,7 @@ defmodule Plausible.Sites.Index do
   @doc """
   Builds an `Index.State` for `user` by running all necessary queries
   """
-  @spec build(Auth.User.t(), [index_option()] | Map.t()) :: State.t()
+  @spec build(Auth.User.t(), [index_option()] | map()) :: State.t()
   def build(user, opts \\ [])
 
   def build(user, opts) when is_map(opts) do
