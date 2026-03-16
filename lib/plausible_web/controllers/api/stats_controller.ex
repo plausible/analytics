@@ -1671,6 +1671,10 @@ defmodule PlausibleWeb.Api.StatsController do
     filters
   end
 
+  defp get_filters_param(_params) do
+    nil
+  end
+
   defp ensure_expected_segment_filter_present(
          filters,
          expected_segment_id
