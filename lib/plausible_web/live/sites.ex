@@ -18,12 +18,7 @@ defmodule PlausibleWeb.Live.Sites do
     team = socket.assigns.current_team
     user = socket.assigns.current_user
 
-    uri =
-      ("/sites?" <>
-         URI.encode_query(Map.take(params, ["filter_text", "sort_by", "sort_direction"])))
-      |> URI.new!()
-
-    filter_text = String.trim(params["filter_text"] || "")
+    uri_params = sanitize_uri_params(params)
 
     index_options =
       params
@@ -36,42 +31,41 @@ defmodule PlausibleWeb.Live.Sites do
 
     socket =
       socket
-      |> assign(:uri, uri)
       |> assign(:sparklines, %{})
-      |> assign(:filter_text, filter_text)
       |> assign(:index_state, index_state)
       |> assign(init_consolidated_view_assigns(user, team))
       |> assign(:team_invitations, [])
       |> assign(:site_invitations, [])
       |> assign(:site_ownership_invitations, [])
+      |> assign(:uri_params, uri_params)
 
     {:ok, socket}
   end
 
   def handle_params(params, _uri, socket) do
-    new_filter = String.trim(params["filter_text"] || "")
+    uri_params = sanitize_uri_params(params)
 
     sort_by =
-      if params["sort_by"],
+      if uri_params["sort_by"],
         do: sanitize_sort_by(params["sort_by"]),
         else: socket.assigns.index_state.sort_by
 
     sort_direction =
-      if params["sort_direction"],
+      if uri_params["sort_direction"],
         do: sanitize_sort_direction(params["sort_direction"]),
         else: socket.assigns.index_state.sort_direction
 
     socket =
       socket
-      |> assign(:params, params)
-      |> assign(:filter_text, new_filter)
-      |> then(fn s ->
-        updated_state =
-          s.assigns.index_state
-          |> SitesIndex.sort(sort_by: sort_by, sort_direction: sort_direction)
-
-        assign(s, :index_state, updated_state)
-      end)
+      |> assign(:uri_params, uri_params)
+      |> assign(
+        :index_state,
+        socket.assigns.index_state
+        |> SitesIndex.sort(
+          sort_by: sort_by,
+          sort_direction: sort_direction
+        )
+      )
       |> load_page()
       |> load_invitations()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
@@ -90,12 +84,12 @@ defmodule PlausibleWeb.Live.Sites do
           sites: sites,
           current_team: current_team,
           has_sites?: has_sites?,
-          filter_text: filter_text
+          uri_params: uri_params
         } = socket.assigns
 
         is_empty_state? =
           not (sites.entries != [] and (Teams.setup?(current_team) or has_sites?)) and
-            filter_text == ""
+            uri_params["filter_text"] in ["", nil]
 
         empty_state_title =
           if Teams.setup?(current_team) do
@@ -118,7 +112,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, :searching?, String.trim(assigns.filter_text) != "")
+    assigns = assign(assigns, :searching?, assigns.uri_params["filter_text"] not in ["", nil])
 
     ~H"""
     <.flash_messages flash={@flash} />
@@ -146,7 +140,7 @@ defmodule PlausibleWeb.Live.Sites do
         :if={not @is_empty_state?}
         class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2"
       >
-        <.search_form filter_text={@filter_text} />
+        <.search_form filter_text={@uri_params["filter_text"]} />
         <div class="flex items-center gap-x-2">
           <.sort_dropdown index_state={@index_state} />
 
@@ -260,7 +254,7 @@ defmodule PlausibleWeb.Live.Sites do
         <.pagination
           :if={@sites.total_pages > 1}
           id="sites-pagination"
-          uri={@uri}
+          uri={URI.new!(Routes.site_path(@socket, :index, @uri_params))}
           page_number={@sites.page_number}
           total_pages={@sites.total_pages}
         >
@@ -927,7 +921,7 @@ defmodule PlausibleWeb.Live.Sites do
     end
   end
 
-  defp load_invitations(%{assigns: %{params: %{"page" => page}}} = socket) when page != "1" do
+  defp load_invitations(%{assigns: %{uri_params: %{"page" => page}}} = socket) when page != "1" do
     socket
   end
 
@@ -944,23 +938,15 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp load_page(%{assigns: assigns} = socket) do
-    page_number = assigns.params["page"]
-    page_size = assigns.params["page_size"]
-
     page =
       SitesIndex.paginate(assigns.index_state,
-        page: page_number,
-        page_size: page_size,
-        filter_by_domain: assigns.filter_text
+        page: assigns.uri_params["page"],
+        page_size: assigns.uri_params["page_size"],
+        filter_by_domain: assigns.uri_params["filter_text"]
       )
 
-    index_opts = [
-      filter_by_domain: assigns.filter_text,
-      team: assigns.current_team
-    ]
-
     site_entries =
-      Sites.get_for_user_by_ids(assigns.current_user, page.entries, index_opts)
+      Sites.get_for_user_by_ids(assigns.current_user, page.entries, team: assigns.current_team)
 
     sites = %{page | entries: site_entries}
 
@@ -995,50 +981,24 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp set_filter_text(socket, filter_text) do
-    filter_text = String.trim(filter_text)
-    uri = socket.assigns.uri
-
-    uri_params =
-      uri.query
-      |> URI.decode_query()
-      |> Map.put("filter_text", filter_text)
-      |> URI.encode_query()
-
-    uri = %{uri | query: uri_params}
+    uri_params = Map.put(socket.assigns.uri_params, "filter_text", String.trim(filter_text))
 
     socket
-    |> assign(:filter_text, filter_text)
-    |> assign(:uri, uri)
-    |> push_patch(to: URI.to_string(uri), replace: true)
+    |> assign(:uri_params, uri_params)
+    |> push_patch(to: Routes.site_path(socket, :index, uri_params), replace: true)
   end
 
   defp reset_pagination(socket) do
-    pagination_fields = ["page"]
-    uri = socket.assigns.uri
-
-    uri_params =
-      uri.query
-      |> URI.decode_query()
-      |> Map.drop(pagination_fields)
-      |> URI.encode_query()
-
     assign(socket,
-      uri: %{uri | query: uri_params},
-      params: Map.drop(socket.assigns.params, pagination_fields)
+      uri_params: Map.drop(socket.assigns.uri_params, ["page"])
     )
   end
 
   defp set_sort(socket, sort_by, sort_direction) do
-    uri = socket.assigns.uri
-
     uri_params =
-      uri.query
-      |> URI.decode_query()
-      |> Map.put("sort_by", to_string(sort_by))
-      |> Map.put("sort_direction", to_string(sort_direction))
-      |> URI.encode_query()
-
-    uri = %{uri | query: uri_params}
+      socket.assigns.uri_params
+      |> Map.put("sort_by", sort_by)
+      |> Map.put("sort_direction", sort_direction)
 
     save_sort_preference(
       socket.assigns.current_user,
@@ -1050,8 +1010,8 @@ defmodule PlausibleWeb.Live.Sites do
     socket
     |> assign(:sort_by, sort_by)
     |> assign(:sort_direction, sort_direction)
-    |> assign(:uri, uri)
-    |> push_patch(to: URI.to_string(uri), replace: true)
+    |> assign(:uri_params, uri_params)
+    |> push_patch(to: Routes.site_path(socket, :index, uri_params), replace: true)
   end
 
   defp hash_domain(domain) do
@@ -1160,4 +1120,12 @@ defmodule PlausibleWeb.Live.Sites do
   defp sanitize_sort_direction("asc"), do: :asc
   defp sanitize_sort_direction("desc"), do: :desc
   defp sanitize_sort_direction(_), do: :desc
+
+  defp sanitize_uri_params(params) do
+    params
+    |> Map.take(["filter_text", "sort_by", "sort_direction", "page", "page_size"])
+    |> Enum.into(%{}, fn {param_name, param_value} ->
+      {param_name, if(is_binary(param_value), do: String.trim(param_value))}
+    end)
+  end
 end
