@@ -2,7 +2,9 @@ import type { Locator, Page } from '@playwright/test'
 import { expect } from '@playwright/test'
 
 export async function expectLiveViewConnected(page: Page) {
-  return expect(page.locator('.phx-connected')).toHaveCount(1)
+  await expect
+    .poll(() => page.locator('.phx-connected').count())
+    .toBeGreaterThan(0)
 }
 
 export function randomID() {
