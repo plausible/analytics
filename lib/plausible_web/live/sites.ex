@@ -146,10 +146,7 @@ defmodule PlausibleWeb.Live.Sites do
         :if={not @is_empty_state?}
         class="relative z-10 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2"
       >
-        <.search_form
-          filter_text={@filter_text}
-          uri={@uri}
-        />
+        <.search_form filter_text={@filter_text} />
         <div class="flex items-center gap-x-2">
           <.sort_dropdown index_state={@index_state} />
 
@@ -734,7 +731,6 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:filter_text, :string, default: "")
-  attr(:uri, URI, required: true)
   attr(:sort_by, :atom, default: :traffic)
   attr(:sort_direction, :atom, default: :desc)
 
