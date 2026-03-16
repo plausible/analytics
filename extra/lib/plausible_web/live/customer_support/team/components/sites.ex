@@ -22,7 +22,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
         Index.build(owner, team: team, sort_by: :traffic, sort_direction: :desc)
       end)
 
-    page = Index.paginate(socket.assigns.index_state, tab_params["page"], @page_size)
+    page =
+      Index.paginate(socket.assigns.index_state, page: tab_params["page"], page_size: @page_size)
 
     sites = fetch_sites(page.entries)
 
@@ -66,7 +67,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
       end
 
     new_state = Index.sort(current_state, sort_by: sort_by, sort_direction: sort_direction)
-    page = Index.paginate(new_state, 1, @page_size)
+    page = Index.paginate(new_state, page: 1, page_size: @page_size)
     sites = fetch_sites(page.entries)
 
     hourly_stats = build_hourly_stats(sites, socket)

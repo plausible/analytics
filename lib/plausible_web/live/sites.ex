@@ -951,7 +951,12 @@ defmodule PlausibleWeb.Live.Sites do
     page_number = assigns.params["page"]
     page_size = assigns.params["page_size"]
 
-    page = SitesIndex.paginate(assigns.index_state, page_number, page_size, assigns.filter_text)
+    page =
+      SitesIndex.paginate(assigns.index_state,
+        page: page_number,
+        page_size: page_size,
+        filter_by_domain: assigns.filter_text
+      )
 
     index_opts = [
       filter_by_domain: assigns.filter_text,

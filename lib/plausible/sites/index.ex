@@ -16,11 +16,17 @@ defmodule Plausible.Sites.Index do
   @type sort_by() :: :alnum | :traffic
   @type sort_direction() :: :asc | :desc
 
-  @type option() ::
-          {:filter_by_domain, String.t()}
-          | {:team, Teams.Team.t() | nil}
+  @type index_option() ::
+          {:team, Teams.Team.t() | nil}
           | {:sort_by, sort_by()}
           | {:sort_direction, sort_direction()}
+
+  @type(
+    pagination_option() ::
+      {:page, pos_integer() | String.t() | nil},
+    {:page_size, pos_integer() | String.t() | nil},
+    {:filter_by_domain, String.t() | nil}
+  )
 
   defmodule Page do
     @moduledoc """
@@ -71,7 +77,7 @@ defmodule Plausible.Sites.Index do
   @doc """
   Builds an `Index.State` for `user` by running all necessary queries
   """
-  @spec build(Auth.User.t(), [option()] | Map.t()) :: State.t()
+  @spec build(Auth.User.t(), [index_option()] | Map.t()) :: State.t()
   def build(user, opts \\ [])
 
   def build(user, opts) when is_map(opts) do
@@ -103,18 +109,20 @@ defmodule Plausible.Sites.Index do
 
   @spec paginate(
           State.t(),
-          page :: pos_integer() | String.t() | nil,
-          page_size :: pos_integer() | String.t() | nil,
-          filter_by_domain :: String.t() | nil
+          [pagination_option()]
         ) :: Page.t()
-  def paginate(
-        %State{ordered_ids: ordered_ids} = state,
-        raw_page_number,
-        raw_page_size,
-        filter_by_domain \\ nil
-      ) do
-    page_number = cast_int(raw_page_number, min: 1, max: :unlimited, default: 1)
-    page_size = cast_int(raw_page_size, min: 1, max: 100, default: 24)
+  def paginate(%State{ordered_ids: ordered_ids} = state, opts \\ []) do
+    page_number =
+      opts
+      |> Keyword.get(:page)
+      |> cast_int(min: 1, max: :unlimited, default: 1)
+
+    page_size =
+      opts
+      |> Keyword.get(:page_size)
+      |> cast_int(min: 1, max: 100, default: 24)
+
+    filter_by_domain = Keyword.get(opts, :filter_by_domain)
 
     filtered_ids = apply_domain_filter(ordered_ids, state.domains, filter_by_domain)
 
@@ -159,7 +167,7 @@ defmodule Plausible.Sites.Index do
     %State{state | pins: new_pins, ordered_ids: new_ordered_ids}
   end
 
-  @spec sort(State.t(), [option()]) :: State.t()
+  @spec sort(State.t(), [index_option()]) :: State.t()
   def sort(%State{} = state, opts) do
     sort_by = Keyword.get(opts, :sort_by, state.sort_by)
     sort_direction = Keyword.get(opts, :sort_direction, state.sort_direction)
@@ -250,7 +258,7 @@ defmodule Plausible.Sites.Index do
     pinned ++ Enum.reverse(unpinned)
   end
 
-  @spec fetch_site_ids(Auth.User.t(), [option()]) :: [pos_integer()]
+  @spec fetch_site_ids(Auth.User.t(), [index_option()]) :: [pos_integer()]
   def fetch_site_ids(user, opts \\ []) do
     team = Keyword.get(opts, :team)
 
