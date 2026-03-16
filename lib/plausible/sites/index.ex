@@ -13,6 +13,9 @@ defmodule Plausible.Sites.Index do
   alias Plausible.Teams
   alias Plausible.Teams.Sites
 
+  def sort_direction_values, do: [:asc, :desc]
+  def sort_by_values, do: [:traffic, :alnum]
+
   @type sort_by() :: :alnum | :traffic
   @type sort_direction() :: :asc | :desc
 

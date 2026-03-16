@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Sites
   alias Plausible.Sites.Index, as: SitesIndex
   alias Plausible.Teams
+  alias Plausible.Teams.Memberships.UserPreference
 
   alias PlausibleWeb.Components.PrimaDropdown
 
@@ -1090,12 +1091,10 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp load_sort_preference(user, team) do
     with {:ok, membership} <- Teams.Memberships.get_team_membership(team, user),
-         %{"sort_by" => sort_by, "sort_direction" => sort_direction} <-
+         %UserPreference.SortIndexOptions{sort_by: sort_by, sort_direction: sort_direction}
+         when not is_nil(sort_by) <-
            Teams.Memberships.get_preference(membership, :sort_index_options) do
-      %{
-        sort_by: sanitize_sort_by(sort_by),
-        sort_direction: sanitize_sort_direction(sort_direction)
-      }
+      %{sort_by: sort_by, sort_direction: sort_direction}
     else
       _ -> @default_sort
     end
@@ -1106,8 +1105,8 @@ defmodule PlausibleWeb.Live.Sites do
   defp save_sort_preference(user, team, sort_by, sort_direction) do
     with {:ok, membership} <- Teams.Memberships.get_team_membership(team, user) do
       Teams.Memberships.set_preference(membership, :sort_index_options, %{
-        "sort_by" => to_string(sort_by),
-        "sort_direction" => to_string(sort_direction)
+        sort_by: sort_by,
+        sort_direction: sort_direction
       })
     end
 

@@ -233,8 +233,7 @@ defmodule Plausible.Teams.Memberships do
     |> Teams.Memberships.UserPreference.changeset(%{option => value})
     |> Repo.insert!(
       conflict_target: [:team_membership_id],
-      on_conflict:
-        from(p in Teams.Memberships.UserPreference, update: [set: [{^option, ^value}]]),
+      on_conflict: {:replace, [option, :updated_at]},
       returning: true
     )
   end

@@ -848,10 +848,11 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, team} = Plausible.Teams.get_by_owner(user)
       {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
 
-      assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) == %{
-               "sort_by" => "alnum",
-               "sort_direction" => "asc"
-             }
+      assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) ==
+               %Plausible.Teams.Memberships.UserPreference.SortIndexOptions{
+                 sort_by: :alnum,
+                 sort_direction: :asc
+               }
     end
 
     test "selecting a sort option for a guest won't persist the preference", %{
@@ -874,7 +875,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, membership} =
         Plausible.Teams.Memberships.get_team_membership(team_of(user), viewer_guest)
 
-      assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) == %{}
+      assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) == nil
     end
 
     test "saved sort preference is applied on next visit when no URL params", %{
