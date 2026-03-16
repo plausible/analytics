@@ -1647,7 +1647,9 @@ defmodule PlausibleWeb.Api.StatsController do
          _opts
        )
        when is_integer(segment_id) do
-    case ensure_expected_segment_filter_present(conn.params, segment_id) do
+    case conn.params
+         |> get_filters_param()
+         |> ensure_expected_segment_filter_present(segment_id) do
       :ok ->
         conn
 
@@ -1661,11 +1663,24 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp validate_required_filters_plug(conn, _opts), do: conn
 
+  defp get_filters_param(%{"filters" => filters} = _params) when is_binary(filters) do
+    JSON.decode!(filters)
+  end
+
+  defp get_filters_param(%{"filters" => filters} = _params) when is_list(filters) do
+    filters
+  end
+
+  defp get_filters_param(_params) do
+    nil
+  end
+
   defp ensure_expected_segment_filter_present(
-         %{"filters" => filters} = _params,
+         filters,
          expected_segment_id
-       ) do
-    case JSON.decode!(filters) do
+       )
+       when is_list(filters) do
+    case filters do
       [["is", "segment", [segment_id]] | _other_filters] when segment_id == expected_segment_id ->
         :ok
 
@@ -1674,7 +1689,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp ensure_expected_segment_filter_present(_params, _expected_segment_id) do
+  defp ensure_expected_segment_filter_present(_filters, _expected_segment_id) do
     :error
   end
 
