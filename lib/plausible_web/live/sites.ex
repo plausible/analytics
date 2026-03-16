@@ -423,7 +423,7 @@ defmodule PlausibleWeb.Live.Sites do
       class="relative row-span-2"
     >
       <.unstyled_link
-        href={Routes.stats_path(@socket, :stats, @consolidated_view.domain, [])}
+        href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @consolidated_view.domain, [])}
         class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
@@ -539,7 +539,7 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link
-        href={Routes.stats_path(@socket, :stats, @site.domain, [])}
+        href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
         class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none"
       >
         <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
