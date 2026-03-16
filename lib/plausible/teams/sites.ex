@@ -71,22 +71,24 @@ defmodule Plausible.Teams.Sites do
         left_join: up in Site.UserPreference,
         on: up.site_id == s.id and up.user_id == ^user.id,
         where: s.id in ^site_ids,
-        select: %{
-          s
-          | pinned_at: selected_as(up.pinned_at, :pinned_at),
-            memberships: [
-              %{
-                role: type(u.role, ^@role_type),
-                site_id: s.id,
-                site: s
-              }
-            ]
-        }
+        select:
+          {s.id,
+           %{
+             s
+             | pinned_at: selected_as(up.pinned_at, :pinned_at),
+               memberships: [
+                 %{
+                   role: type(u.role, ^@role_type),
+                   site_id: s.id,
+                   site: s
+                 }
+               ]
+           }}
       )
       |> Repo.all()
+      |> Map.new()
 
     # Restore the caller-supplied order
-    by_id = Map.new(rows, &{&1.id, &1})
-    Enum.flat_map(site_ids, fn id -> List.wrap(Map.get(by_id, id)) end)
+    Enum.flat_map(site_ids, fn id -> List.wrap(Map.get(rows, id)) end)
   end
 end
