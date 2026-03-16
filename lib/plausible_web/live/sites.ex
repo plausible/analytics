@@ -1008,8 +1008,6 @@ defmodule PlausibleWeb.Live.Sites do
     )
 
     socket
-    |> assign(:sort_by, sort_by)
-    |> assign(:sort_direction, sort_direction)
     |> assign(:uri_params, uri_params)
     |> push_patch(to: Routes.site_path(socket, :index, uri_params), replace: true)
   end
