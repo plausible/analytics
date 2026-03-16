@@ -43,6 +43,7 @@ export type SimpleFilterDimensions =
   | "event:name"
   | "event:page"
   | "event:hostname"
+  | "event:label"
   | "visit:source"
   | "visit:channel"
   | "visit:referrer"
@@ -70,7 +71,7 @@ export type SimpleFilterDimensions =
 export type CustomPropertyFilterDimensions = string;
 export type GoalDimension = "event:goal";
 export type TimeDimensions = "time" | "time:month" | "time:week" | "time:day" | "time:hour";
-export type FilterTree = FilterEntry | FilterAndOr | FilterNot | FilterHasDone;
+export type FilterTree = FilterEntry | FilterAndOr | FilterNot | FilterHasDone | FilterSequence;
 export type FilterEntry = FilterWithoutGoals | FilterWithIs | FilterWithContains | FilterWithPattern;
 /**
  * @minItems 3
@@ -147,6 +148,11 @@ export type FilterNot = ["not", FilterTree];
  * @maxItems 2
  */
 export type FilterHasDone = ["has_done" | "has_not_done", FilterTree];
+/**
+ * @minItems 2
+ * @maxItems 2
+ */
+export type FilterSequence = ["sequence", [FilterTree, ...FilterTree[]]];
 /**
  * @minItems 2
  * @maxItems 2
