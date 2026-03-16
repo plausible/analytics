@@ -5,8 +5,21 @@ import { useSiteContext } from '../site-context'
 import { createStatsQuery } from '../stats-query'
 import { numberShortFormatter } from '../util/number-formatter'
 
+const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
+
 function fetchColumnData(site, dashboardState, steps) {
-  const query = createStatsQuery(dashboardState, {
+  // Page filters only apply to the first step — strip them for subsequent columns
+  const stateToUse =
+    steps.length > 0
+      ? {
+          ...dashboardState,
+          filters: dashboardState.filters.filter(
+            ([_op, key]) => !PAGE_FILTER_KEYS.includes(key)
+          )
+        }
+      : dashboardState
+
+  const query = createStatsQuery(stateToUse, {
     dimensions: ['event:label'],
     metrics: ['visitors']
   })
