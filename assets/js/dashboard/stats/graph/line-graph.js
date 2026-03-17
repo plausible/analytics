@@ -243,9 +243,11 @@ class LineGraph extends React.Component {
     const element = this.chart.getElementsAtEventForMode(e, 'index', {
       intersect: false
     })[0]
-    const date =
-      this.props.graphData.labels[element.index] ||
-      this.props.graphData.comparison_labels[element.index]
+    const date = this.props.graphData.labels[element.index]
+
+    if (date === '__blank__') {
+      return
+    }
 
     if (this.props.graphData.interval === 'month') {
       this.props.navigate({
