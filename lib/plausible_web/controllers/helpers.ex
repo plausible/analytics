@@ -4,6 +4,7 @@ defmodule PlausibleWeb.ControllerHelpers do
 
   def render_error(conn, status, message) do
     conn
+    |> put_root_layout(false)
     |> put_status(status)
     |> put_view(PlausibleWeb.ErrorView)
     |> render("#{status}.html", message: message, layout: error_layout())
@@ -11,6 +12,7 @@ defmodule PlausibleWeb.ControllerHelpers do
 
   def render_error(conn, status) do
     conn
+    |> put_root_layout(false)
     |> put_status(status)
     |> put_view(PlausibleWeb.ErrorView)
     |> render("#{status}.html", layout: error_layout())
