@@ -86,16 +86,18 @@ const buildTooltipData = function (
       true
     )
 
-  const value = graphData.plot[data.dataIndex]
+  const value = data && graphData.plot?.[data.dataIndex]
 
   const formatter = MetricFormatterShort[metric]
-  const comparisonValue = graphData.comparison_plot?.[comparisonData.dataIndex]
+  const comparisonValue =
+    comparisonData && graphData.comparison_plot?.[comparisonData.dataIndex]
   const comparisonDifference =
     label &&
     comparisonData &&
+    value &&
     calculatePercentageDifference(comparisonValue, value)
 
-  const formattedValue = formatter(value)
+  const formattedValue = value && formatter(value)
   const formattedComparisonValue = comparisonData && formatter(comparisonValue)
 
   return {
@@ -151,6 +153,11 @@ export default function GraphTooltip(graphData, metric, dashboardState, theme) {
         tooltipModel
       )
 
+      if (!tooltipData.label) {
+        tooltipEl.style.display = 'none'
+        return
+      }
+
       tooltipRoot.render(
         <aside className="text-gray-100 flex flex-col gap-1.5">
           <div className="flex justify-between items-center">
@@ -167,32 +174,30 @@ export default function GraphTooltip(graphData, metric, dashboardState, theme) {
             ) : null}
           </div>
 
-          {tooltipData.label ? (
-            <div className="flex flex-col">
+          <div className="flex flex-col">
+            <div className="flex flex-row justify-between items-center text-sm">
+              <span className="flex items-center mr-4">
+                <div
+                  className="size-2 mr-2 rounded-full"
+                  style={{ backgroundColor: 'rgba(101,116,205)' }}
+                ></div>
+                <span>{tooltipData.label}</span>
+              </span>
+              <span className="font-bold">{tooltipData.formattedValue}</span>
+            </div>
+
+            {tooltipData.comparisonLabel ? (
               <div className="flex flex-row justify-between items-center text-sm">
                 <span className="flex items-center mr-4">
-                  <div
-                    className="size-2 mr-2 rounded-full"
-                    style={{ backgroundColor: 'rgba(101,116,205)' }}
-                  ></div>
-                  <span>{tooltipData.label}</span>
+                  <div className="size-2 mr-2 rounded-full bg-gray-500"></div>
+                  <span>{tooltipData.comparisonLabel}</span>
                 </span>
-                <span className="font-bold">{tooltipData.formattedValue}</span>
+                <span className="font-bold">
+                  {tooltipData.formattedComparisonValue}
+                </span>
               </div>
-
-              {tooltipData.comparisonLabel ? (
-                <div className="flex flex-row justify-between items-center text-sm">
-                  <span className="flex items-center mr-4">
-                    <div className="size-2 mr-2 rounded-full bg-gray-500"></div>
-                    <span>{tooltipData.comparisonLabel}</span>
-                  </span>
-                  <span className="font-bold">
-                    {tooltipData.formattedComparisonValue}
-                  </span>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+            ) : null}
+          </div>
 
           {['month', 'day'].includes(graphData.interval) && (
             <>
