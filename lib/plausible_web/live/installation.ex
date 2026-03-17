@@ -84,6 +84,7 @@ defmodule PlausibleWeb.Live.Installation do
     {:ok,
      assign(socket,
        site: site,
+       site_created?: params["site_created"] == "true",
        flow: flow
      )}
   end
@@ -105,6 +106,7 @@ defmodule PlausibleWeb.Live.Installation do
   def render(assigns) do
     ~H"""
     <div>
+      <PlausibleWeb.Components.FirstDashboardLaunchBanner.set :if={@site_created?} site={@site} />
       <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Install Plausible" />
 
       <.focus_box>
