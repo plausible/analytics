@@ -14,10 +14,7 @@ defmodule Plausible.Sites.Index.UserPreference do
   end
 
   def changeset(struct \\ %__MODULE__{}, attrs) do
-    struct
-    |> cast(attrs, [:sort_by, :sort_direction])
-    |> validate_inclusion(:sort_by, Index.sort_by_values())
-    |> validate_inclusion(:sort_direction, Index.sort_direction_values())
+    cast(struct, attrs, [:sort_by, :sort_direction])
   end
 
   def new(attrs) do
