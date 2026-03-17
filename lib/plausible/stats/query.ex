@@ -24,7 +24,6 @@ defmodule Plausible.Stats.Query do
             # Revenue metric specific metadata
             revenue_currencies: %{},
             revenue_warning: nil,
-            remove_unavailable_revenue_metrics: false,
             site_id: nil,
             consolidated_site_ids: nil,
             site_native_stats_start_at: nil,
