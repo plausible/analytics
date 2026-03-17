@@ -13,14 +13,21 @@ defmodule Plausible.Sites.Index do
   alias Plausible.Teams
   alias Plausible.Teams.Sites
 
+  def sort_direction_values, do: [:asc, :desc]
+  def sort_by_values, do: [:traffic, :alnum]
+
   @type sort_by() :: :alnum | :traffic
   @type sort_direction() :: :asc | :desc
 
-  @type list_opt() ::
-          {:filter_by_domain, String.t()}
-          | {:team, Teams.Team.t() | nil}
+  @type index_option() ::
+          {:team, Teams.Team.t() | nil}
           | {:sort_by, sort_by()}
           | {:sort_direction, sort_direction()}
+
+  @type pagination_option() ::
+          {:page, pos_integer() | String.t() | nil}
+          | {:page_size, pos_integer() | String.t() | nil}
+          | {:filter_by_domain, String.t() | nil}
 
   defmodule Page do
     @moduledoc """
@@ -46,7 +53,7 @@ defmodule Plausible.Sites.Index do
 
     @type t() :: %__MODULE__{
             user: Auth.User.t(),
-            opts: %{filter_by_domain: String.t() | nil, team: Plausible.Teams.Team.t() | nil},
+            opts: %{team: Plausible.Teams.Team.t() | nil},
             ordered_ids: [pos_integer()],
             pins: %{pos_integer() => NaiveDateTime.t() | nil},
             domains: %{pos_integer() => String.t()},
@@ -71,21 +78,28 @@ defmodule Plausible.Sites.Index do
   @doc """
   Builds an `Index.State` for `user` by running all necessary queries
   """
-  @spec build(Auth.User.t(), [list_opt()]) :: State.t()
-  def build(user, opts \\ []) do
+  @spec build(Auth.User.t(), [index_option()] | map()) :: State.t()
+  def build(user, opts \\ [])
+
+  def build(user, %{__struct__: _} = opts) do
+    build(user, Map.from_struct(opts))
+  end
+
+  def build(user, opts) when is_map(opts) do
+    build(user, Keyword.new(opts))
+  end
+
+  def build(user, opts) do
     sort_by = Keyword.get(opts, :sort_by, :alnum)
     sort_direction = Keyword.get(opts, :sort_direction, :asc)
 
-    # Fetch the full unfiltered set for the team; domain filtering is applied
-    # locally from here on so filter/2 never needs to hit the database.
-    site_ids = fetch_site_ids(user, Keyword.delete(opts, :filter_by_domain))
+    site_ids = fetch_site_ids(user, opts)
     pins = fetch_pins(user, site_ids)
     domains = fetch_domains(site_ids)
 
     %State{
       user: user,
       opts: %{
-        filter_by_domain: Keyword.get(opts, :filter_by_domain),
         team: Keyword.get(opts, :team)
       },
       ordered_ids: site_ids,
@@ -100,14 +114,22 @@ defmodule Plausible.Sites.Index do
 
   @spec paginate(
           State.t(),
-          page :: pos_integer() | String.t() | nil,
-          page_size :: pos_integer() | String.t() | nil
+          [pagination_option()]
         ) :: Page.t()
-  def paginate(%State{ordered_ids: ordered_ids} = state, raw_page_number, raw_page_size) do
-    page_number = cast_int(raw_page_number, min: 1, max: :unlimited, default: 1)
-    page_size = cast_int(raw_page_size, min: 1, max: 100, default: 24)
+  def paginate(%State{ordered_ids: ordered_ids} = state, opts \\ []) do
+    page_number =
+      opts
+      |> Keyword.get(:page)
+      |> cast_int(min: 1, max: :unlimited, default: 1)
 
-    filtered_ids = apply_domain_filter(ordered_ids, state.domains, state.opts.filter_by_domain)
+    page_size =
+      opts
+      |> Keyword.get(:page_size)
+      |> cast_int(min: 1, max: 100, default: 24)
+
+    filter_by_domain = Keyword.get(opts, :filter_by_domain)
+
+    filtered_ids = apply_domain_filter(ordered_ids, state.domains, filter_by_domain)
 
     total_entries = length(filtered_ids)
     total_pages = max(1, ceil(total_entries / page_size))
@@ -150,12 +172,16 @@ defmodule Plausible.Sites.Index do
     %State{state | pins: new_pins, ordered_ids: new_ordered_ids}
   end
 
-  @spec update_state(State.t(), :filter_by_domain, String.t() | nil) :: State.t()
-  def update_state(%State{} = state, :filter_by_domain, value) do
-    %State{state | opts: %{state.opts | filter_by_domain: value}}
+  @spec sort(State.t(), [index_option()] | map()) :: State.t()
+
+  def sort(user, %{__struct__: _} = opts) do
+    sort(user, Map.from_struct(opts))
   end
 
-  @spec sort(State.t(), [list_opt()]) :: State.t()
+  def sort(user, opts) when is_map(opts) do
+    sort(user, Keyword.new(opts))
+  end
+
   def sort(%State{} = state, opts) do
     sort_by = Keyword.get(opts, :sort_by, state.sort_by)
     sort_direction = Keyword.get(opts, :sort_direction, state.sort_direction)
@@ -246,18 +272,17 @@ defmodule Plausible.Sites.Index do
     pinned ++ Enum.reverse(unpinned)
   end
 
-  @spec fetch_site_ids(Auth.User.t(), [list_opt()]) :: [pos_integer()]
+  @spec fetch_site_ids(Auth.User.t(), [index_option()]) :: [pos_integer()]
   def fetch_site_ids(user, opts \\ []) do
     team = Keyword.get(opts, :team)
-    domain_filter = Keyword.get(opts, :filter_by_domain)
 
-    from(u in subquery(Sites.accessible_by(user, team)),
-      inner_join: s in ^Site.regular(),
-      on: u.site_id == s.id,
-      select: s.id
+    Repo.all(
+      from(u in subquery(Sites.accessible_by(user, team)),
+        inner_join: s in ^Site.regular(),
+        on: u.site_id == s.id,
+        select: s.id
+      )
     )
-    |> maybe_filter_by_domain_on_site(domain_filter)
-    |> Repo.all()
   end
 
   @spec traffic_for_site_ids([pos_integer()]) :: [{pos_integer(), non_neg_integer()}]
@@ -369,13 +394,6 @@ defmodule Plausible.Sites.Index do
       String.contains?(String.downcase(Map.get(domains, id, "")), needle)
     end)
   end
-
-  defp maybe_filter_by_domain_on_site(query, domain)
-       when byte_size(domain) >= 1 and byte_size(domain) <= 64 do
-    from([_u, s] in query, where: ilike(s.domain, ^"%#{domain}%"))
-  end
-
-  defp maybe_filter_by_domain_on_site(query, _), do: query
 
   defp cast_int(value, min: min, max: max, default: default) when is_binary(value) do
     case Integer.parse(value) do

@@ -8,10 +8,11 @@ defmodule Plausible.Teams.Memberships.UserPreference do
 
   @type t() :: %__MODULE__{}
 
-  @options [:consolidated_view_cta_dismissed]
+  @options [:consolidated_view_cta_dismissed, :sort_index_options]
 
   schema "team_membership_user_preferences" do
     field :consolidated_view_cta_dismissed, :boolean, default: false
+    embeds_one :sort_index_options, Plausible.Sites.Index.UserPreference, on_replace: :update
 
     belongs_to :team_membership, Plausible.Teams.Membership
 
@@ -22,7 +23,8 @@ defmodule Plausible.Teams.Memberships.UserPreference do
 
   def changeset(team_membership, attrs \\ %{}) do
     %__MODULE__{}
-    |> cast(attrs, @options)
+    |> cast(attrs, [:consolidated_view_cta_dismissed])
+    |> cast_embed(:sort_index_options)
     |> put_assoc(:team_membership, team_membership)
   end
 end
