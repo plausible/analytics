@@ -810,5 +810,19 @@ defmodule Plausible.Sites.IndexTest do
       assert new_state.pins == state.pins
       assert new_state.ordered_ids == [site.id]
     end
+
+    test "accepts struct for opts" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      state = Index.build(user)
+
+      new_state =
+        Index.sort(state, Index.UserPreference.new(%{sort_by: :alnum, sort_direction: :asc}))
+
+      assert new_state.sort_by == :alnum
+      assert new_state.sort_direction == :asc
+      assert new_state.ordered_ids == [site.id]
+    end
   end
 end

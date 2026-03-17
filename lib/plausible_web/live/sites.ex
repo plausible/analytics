@@ -9,9 +9,8 @@ defmodule PlausibleWeb.Live.Sites do
   require Logger
 
   alias Plausible.Sites
-  alias Plausible.Sites.Index, as: SitesIndex
+  alias Plausible.Sites.Index
   alias Plausible.Teams
-  alias Plausible.Teams.Memberships.UserPreference
 
   alias PlausibleWeb.Components.PrimaDropdown
 
@@ -27,7 +26,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> get_index_options(user, team)
       |> Map.put(:team, team)
 
-    index_state = SitesIndex.build(user, index_options)
+    index_state = Index.build(user, index_options)
 
     socket =
       socket
@@ -46,15 +45,11 @@ defmodule PlausibleWeb.Live.Sites do
   def handle_params(params, _uri, socket) do
     uri_params = sanitize_uri_params(params)
 
-    sort_by =
-      if uri_params["sort_by"],
-        do: sanitize_sort_by(params["sort_by"]),
-        else: socket.assigns.index_state.sort_by
-
-    sort_direction =
-      if uri_params["sort_direction"],
-        do: sanitize_sort_direction(params["sort_direction"]),
-        else: socket.assigns.index_state.sort_direction
+    sort_opts =
+      Index.UserPreference.new(%{
+        sort_by: uri_params["sort_by"] || socket.assigns.index_state.sort_by,
+        sort_direction: uri_params["sort_direction"] || socket.assigns.index_state.sort_direction
+      })
 
     socket =
       socket
@@ -62,11 +57,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:filter_text, uri_params["filter_text"] || "")
       |> assign(
         :index_state,
-        socket.assigns.index_state
-        |> SitesIndex.sort(
-          sort_by: sort_by,
-          sort_direction: sort_direction
-        )
+        Index.sort(socket.assigns.index_state, sort_opts)
       )
       |> load_page()
       |> load_invitations()
@@ -737,16 +728,19 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   @sort_options [
-    {"Most visitors", %{sort_by: :traffic, sort_direction: :desc}},
-    {"Fewest visitors", %{sort_by: :traffic, sort_direction: :asc}},
-    {"Name A-Z", %{sort_by: :alnum, sort_direction: :asc}},
-    {"Name Z-A", %{sort_by: :alnum, sort_direction: :desc}}
+    {"Most visitors", Index.UserPreference.default()},
+    {"Fewest visitors", Index.UserPreference.new(%{sort_by: :traffic, sort_direction: :asc})},
+    {"Name A-Z", Index.UserPreference.new(%{sort_by: :alnum, sort_direction: :asc})},
+    {"Name Z-A", Index.UserPreference.new(%{sort_by: :alnum, sort_direction: :desc})}
   ]
 
   def sort_dropdown(assigns) do
     current_label =
       Enum.find_value(@sort_options, fn {label,
-                                         %{sort_by: sort_by, sort_direction: sort_direction}} ->
+                                         %Index.UserPreference{
+                                           sort_by: sort_by,
+                                           sort_direction: sort_direction
+                                         }} ->
         if sort_by == assigns.index_state.sort_by and
              sort_direction == assigns.index_state.sort_direction,
            do: label
@@ -764,7 +758,7 @@ defmodule PlausibleWeb.Live.Sites do
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
       </PrimaDropdown.dropdown_trigger>
       <PrimaDropdown.dropdown_menu id="sort-dropdown-menu">
-        <%= for {label, %{sort_by: sort_by, sort_direction: direction}} <- @sort_options do %>
+        <%= for {label, %Index.UserPreference{sort_by: sort_by, sort_direction: direction}} <- @sort_options do %>
           <PrimaDropdown.dropdown_item
             id={"sort-dropdown-item-#{sort_by}-#{direction}"}
             class="min-w-40"
@@ -884,14 +878,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def handle_event("set-sort", params, socket) do
-    {sort_by, sort_direction} =
-      case {params["sort_by"], params["sort_direction"]} do
-        {nil, nil} ->
-          {socket.assigns[:sort_by], socket.assigns[:sort_direction]}
-
-        {sort_by, sort_direction} ->
-          {sanitize_sort_by(sort_by), sanitize_sort_direction(sort_direction)}
-      end
+    {sort_by, sort_direction} = {params["sort_by"], params["sort_direction"]}
 
     socket =
       socket
@@ -941,7 +928,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp load_page(%{assigns: assigns} = socket) do
     page =
-      SitesIndex.paginate(assigns.index_state,
+      Index.paginate(assigns.index_state,
         page: assigns.uri_params["page"],
         page_size: assigns.uri_params["page_size"],
         filter_by_domain: assigns.filter_text
@@ -973,7 +960,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp refresh_index_pins(socket) do
-    assign(socket, :index_state, SitesIndex.refresh_pins(socket.assigns.index_state))
+    assign(socket, :index_state, Index.refresh_pins(socket.assigns.index_state))
   end
 
   on_ee do
@@ -1079,24 +1066,20 @@ defmodule PlausibleWeb.Live.Sites do
         load_sort_preference(user, team)
 
       {sort_by, sort_direction} ->
-        %{
-          sort_by: sanitize_sort_by(sort_by),
-          sort_direction: sanitize_sort_direction(sort_direction)
-        }
+        Index.UserPreference.new(%{sort_by: sort_by, sort_direction: sort_direction})
     end
   end
 
-  @default_sort @sort_options |> List.first() |> elem(1)
-  defp load_sort_preference(_user, nil), do: @default_sort
+  defp load_sort_preference(_user, nil), do: Index.UserPreference.default()
 
   defp load_sort_preference(user, team) do
     with {:ok, membership} <- Teams.Memberships.get_team_membership(team, user),
-         %UserPreference.SortIndexOptions{sort_by: sort_by, sort_direction: sort_direction}
+         %Index.UserPreference{sort_by: sort_by} = preference
          when not is_nil(sort_by) <-
            Teams.Memberships.get_preference(membership, :sort_index_options) do
-      %{sort_by: sort_by, sort_direction: sort_direction}
+      preference
     else
-      _ -> @default_sort
+      _ -> Index.UserPreference.default()
     end
   end
 
@@ -1112,14 +1095,6 @@ defmodule PlausibleWeb.Live.Sites do
 
     :ok
   end
-
-  defp sanitize_sort_by("traffic"), do: :traffic
-  defp sanitize_sort_by("alnum"), do: :alnum
-  defp sanitize_sort_by(_), do: :traffic
-
-  defp sanitize_sort_direction("asc"), do: :asc
-  defp sanitize_sort_direction("desc"), do: :desc
-  defp sanitize_sort_direction(_), do: :desc
 
   defp sanitize_uri_params(params) do
     params

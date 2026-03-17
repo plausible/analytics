@@ -849,7 +849,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
 
       assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) ==
-               %Plausible.Teams.Memberships.UserPreference.SortIndexOptions{
+               %Plausible.Sites.Index.UserPreference{
                  sort_by: :alnum,
                  sort_direction: :asc
                }
@@ -888,8 +888,8 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
 
       Plausible.Teams.Memberships.set_preference(membership, :sort_index_options, %{
-        "sort_by" => "alnum",
-        "sort_direction" => "desc"
+        sort_by: :alnum,
+        sort_direction: :desc
       })
 
       {:ok, _lv, html} = live(conn, "/sites")

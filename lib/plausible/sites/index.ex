@@ -81,6 +81,10 @@ defmodule Plausible.Sites.Index do
   @spec build(Auth.User.t(), [index_option()] | map()) :: State.t()
   def build(user, opts \\ [])
 
+  def build(user, %{__struct__: _} = opts) do
+    build(user, Map.from_struct(opts))
+  end
+
   def build(user, opts) when is_map(opts) do
     build(user, Keyword.new(opts))
   end
@@ -168,7 +172,16 @@ defmodule Plausible.Sites.Index do
     %State{state | pins: new_pins, ordered_ids: new_ordered_ids}
   end
 
-  @spec sort(State.t(), [index_option()]) :: State.t()
+  @spec sort(State.t(), [index_option()] | map()) :: State.t()
+
+  def sort(user, %{__struct__: _} = opts) do
+    sort(user, Map.from_struct(opts))
+  end
+
+  def sort(user, opts) when is_map(opts) do
+    sort(user, Keyword.new(opts))
+  end
+
   def sort(%State{} = state, opts) do
     sort_by = Keyword.get(opts, :sort_by, state.sort_by)
     sort_direction = Keyword.get(opts, :sort_direction, state.sort_direction)
