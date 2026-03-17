@@ -10,6 +10,27 @@ defmodule PlausibleWeb.Api.StatsController.InternalQueryApiTest do
   setup [:create_user, :log_in, :create_site]
 
   describe "aggregates (e.g. top stats)" do
+    test "drops revenue metrics when they are not allowed", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
+      subscribe_to_growth_plan(team)
+
+      params = %{
+        "date_range" => "day",
+        "filters" => [["is", "event:goal", ["Purchase"]]],
+        "metrics" => ["visitors", "events", "conversion_rate", "total_revenue", "average_revenue"]
+      }
+
+      %{"results" => results, "query" => query} = do_query_success(conn, site, params)
+
+      assert query["metrics"] == ["visitors", "events", "conversion_rate"]
+      assert results == [%{"dimensions" => [], "metrics" => [0, 0, 0.0]}]
+    end
+
     test "returns empty metrics when no data", %{conn: conn, site: site} do
       requested_metrics = [
         "visitors",
