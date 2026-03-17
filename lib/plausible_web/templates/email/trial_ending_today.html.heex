@@ -6,7 +6,7 @@ So far, your account has used {PlausibleWeb.AuthView.delimit_integer(@usage)} bi
                                                                                                     else:
                                                                                                       ""}.<br /><br />
 <%= if @suggested_volume == :enterprise do %>
-  This exceeds our standard plans. Once the trial ends, your dashboard will be locked. Please reply to this email and we’ll prepare a custom plan for your volume.
+  This exceeds our standard plans. Once the trial ends, your dashboard will be locked. Please reply to this email and we'll prepare a custom plan for your volume.
 <% else %>
   To keep your dashboard unlocked and your stats collecting without interruption, select the {@suggested_volume} pageviews/month plan.<br /><br />
   <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>

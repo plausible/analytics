@@ -44,7 +44,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
-      subject: "Check your Plausible website stats"
+      subject: "How Plausible is different"
     )
   end
 
@@ -63,7 +63,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
 
     assert_email_delivered_with(
       to: [{user2.name, user2.email}],
-      subject: "Check your Plausible website stats"
+      subject: "How Plausible is different"
     )
   end
 
