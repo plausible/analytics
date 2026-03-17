@@ -718,8 +718,6 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:filter_text, :string, default: "")
-  attr(:sort_by, :atom, default: :traffic)
-  attr(:sort_direction, :atom, default: :desc)
 
   def search_form(assigns) do
     ~H"""
