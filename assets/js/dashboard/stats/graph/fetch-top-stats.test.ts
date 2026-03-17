@@ -10,7 +10,10 @@ import { remapToApiFilters } from '../../util/filters'
 import { chooseMetrics, MetricDef, topStatsQueries } from './fetch-top-stats'
 
 const aGoalFilter = ['is', 'goal', ['any goal']] as Filter
-const aRevenueGoal = { display_name: 'a revenue goal', currency: 'USD' } as const
+const aRevenueGoal = {
+  display_name: 'a revenue goal',
+  currency: 'USD'
+} as const
 const aRevenueGoalFilter = ['is', 'goal', ['a revenue goal']] as Filter
 const aPageFilter = ['is', 'page', ['/any/page']] as Filter
 const aPeriodNotRealtime = DashboardPeriod['28d']

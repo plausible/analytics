@@ -62,13 +62,12 @@ export function chooseMetrics(
   site: Pick<PlausibleSite, 'revenueGoals'>,
   dashboardState: DashboardState
 ): MetricDef[] {
-  const revenueMetrics: MetricDef[] =
-    revenueAvailable(dashboardState, site)
-      ? [
-          { key: 'total_revenue', label: 'Total revenue' },
-          { key: 'average_revenue', label: 'Average revenue' }
-        ]
-      : []
+  const revenueMetrics: MetricDef[] = revenueAvailable(dashboardState, site)
+    ? [
+        { key: 'total_revenue', label: 'Total revenue' },
+        { key: 'average_revenue', label: 'Average revenue' }
+      ]
+    : []
 
   if (
     isRealTimeDashboard(dashboardState) &&
