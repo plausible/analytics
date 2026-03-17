@@ -1,6 +1,6 @@
 import { Metric } from '../../../types/query-api'
 import * as api from '../../api'
-import { DashboardState } from '../../dashboard-state'
+import { DashboardState, revenueAvailable } from '../../dashboard-state'
 import {
   ComparisonMode,
   DashboardPeriod,
@@ -63,7 +63,7 @@ export function chooseMetrics(
   dashboardState: DashboardState
 ): MetricDef[] {
   const revenueMetrics: MetricDef[] =
-    site.revenueGoals.length > 0
+    revenueAvailable(dashboardState, site)
       ? [
           { key: 'total_revenue', label: 'Total revenue' },
           { key: 'average_revenue', label: 'Average revenue' }

@@ -96,7 +96,7 @@ export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
 // revenue metrics in a dashboard report or not.
 export function revenueAvailable(
   dashboardState: DashboardState,
-  site: PlausibleSite
+  site: Pick<PlausibleSite, 'revenueGoals'>
 ) {
   const revenueGoalsInFilter = site.revenueGoals.filter((revenueGoal) => {
     const goalFilters: Filter[] = getFiltersByKeyPrefix(dashboardState, 'goal')

@@ -10,6 +10,8 @@ import { remapToApiFilters } from '../../util/filters'
 import { chooseMetrics, MetricDef, topStatsQueries } from './fetch-top-stats'
 
 const aGoalFilter = ['is', 'goal', ['any goal']] as Filter
+const aRevenueGoal = { display_name: 'a revenue goal', currency: 'USD' } as const
+const aRevenueGoalFilter = ['is', 'goal', ['a revenue goal']] as Filter
 const aPageFilter = ['is', 'page', ['/any/page']] as Filter
 const aPeriodNotRealtime = DashboardPeriod['28d']
 
@@ -94,9 +96,9 @@ const cases: TestCase[] = [
     'goal filter with revenue metrics',
     {
       period: aPeriodNotRealtime,
-      filters: [aGoalFilter],
+      filters: [aRevenueGoalFilter],
       site: {
-        revenueGoals: [{ display_name: 'a revenue goal', currency: 'USD' }]
+        revenueGoals: [aRevenueGoal]
       }
     },
     [
@@ -110,7 +112,7 @@ const cases: TestCase[] = [
       {
         date_range: aPeriodNotRealtime,
         dimensions: [],
-        filters: remapToApiFilters([aGoalFilter]),
+        filters: remapToApiFilters([aRevenueGoalFilter]),
         include: expectedBaseInclude,
         metrics: [
           'visitors',
@@ -119,6 +121,33 @@ const cases: TestCase[] = [
           'average_revenue',
           'conversion_rate'
         ],
+        relative_date: null
+      },
+      null
+    ]
+  ],
+
+  [
+    'goal filter with non-matching revenue goal',
+    {
+      period: aPeriodNotRealtime,
+      filters: [aGoalFilter],
+      site: {
+        revenueGoals: [aRevenueGoal]
+      }
+    },
+    [
+      { key: 'visitors', label: 'Unique conversions' },
+      { key: 'events', label: 'Total conversions' },
+      { key: 'conversion_rate', label: 'Conversion rate' }
+    ],
+    [
+      {
+        date_range: aPeriodNotRealtime,
+        dimensions: [],
+        filters: remapToApiFilters([aGoalFilter]),
+        include: expectedBaseInclude,
+        metrics: ['visitors', 'events', 'conversion_rate'],
         relative_date: null
       },
       null
