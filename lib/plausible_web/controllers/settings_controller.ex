@@ -135,43 +135,9 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def subscription(conn, _params) do
-    team = conn.assigns.current_team
-    subscription = Teams.Billing.get_subscription(team)
-
-    invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
-
-    pageview_usage = Teams.Billing.monthly_pageview_usage(team)
-    site_usage = Teams.Billing.site_usage(team)
-    team_member_usage = Teams.Billing.team_member_usage(team)
-
-    usage = %{
-      monthly_pageviews: pageview_usage,
-      sites: site_usage,
-      team_members: team_member_usage
-    }
-
-    notification_type = Plausible.Billing.Quota.usage_notification_type(team, usage)
-
-    total_pageview_usage_domain =
-      if site_usage == 1 do
-        [site] = Plausible.Teams.owned_sites(team)
-        site.domain
-      else
-        on_ee(do: team && get_consolidated_view_domain(team), else: nil)
-      end
-
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
-      subscription: subscription,
-      invoices: invoices,
-      pageview_limit: Teams.Billing.monthly_pageview_limit(subscription),
-      pageview_usage: pageview_usage,
-      site_usage: site_usage,
-      site_limit: Teams.Billing.site_limit(team),
-      team_member_limit: Teams.Billing.team_member_limit(team),
-      team_member_usage: team_member_usage,
-      notification_type: notification_type,
-      total_pageview_usage_domain: total_pageview_usage_domain
+      connect_live_socket: true
     )
   end
 
@@ -467,15 +433,6 @@ defmodule PlausibleWeb.SettingsController do
       end
     else
       {:ok, user}
-    end
-  end
-
-  on_ee do
-    defp get_consolidated_view_domain(team) do
-      case Plausible.ConsolidatedView.get(team) do
-        nil -> nil
-        view -> if Plausible.ConsolidatedView.ok_to_display?(team), do: view.domain
-      end
     end
   end
 
