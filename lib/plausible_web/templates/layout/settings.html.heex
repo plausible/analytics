@@ -1,6 +1,6 @@
 <% conn = assigns[:conn] %>
 <% current_path = if conn, do: Path.join(conn.path_info), else: @current_path %>
-<% options = account_settings_sidebar(conn || assigns) %>
+<% options = account_settings_sidebar(assigns) %>
 <div class="container pt-6">
   <.styled_link class="font-semibold text-sm" href="/sites">
     ← Back to sites
