@@ -16,7 +16,9 @@ function init(overrides) {
 
   initConfig(options)
 
-  initEngagementTracking()
+  if (!COMPILE_COMPAT) {
+    initEngagementTracking()
+  }
 
   if (!COMPILE_MANUAL || (COMPILE_CONFIG && config.autoCapturePageviews)) {
     initAutocapture(track)
