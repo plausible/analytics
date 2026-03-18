@@ -428,7 +428,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     end)
   end
 
-  attr :conn, :any, default: nil
+  attr :conn, :map, default: %{}
   attr :name, :string, required: true
   attr :options, :list, required: true
   attr :value, :any, default: nil
