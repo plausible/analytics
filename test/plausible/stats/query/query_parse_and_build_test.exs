@@ -2039,7 +2039,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       assert error == "Metric `views_per_visit` cannot be queried with a filter on `event:page`."
     end
 
-    test "fails validation with dimensions", %{site: site} do
+    test "fails validation with non-time dimensions", %{site: site} do
       params = %{
         "site_id" => site.domain,
         "metrics" => ["views_per_visit"],
@@ -2050,7 +2050,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       assert {:error, %QueryError{message: error}} =
                Query.parse_and_build(site, params, now: @now)
 
-      assert error == "Metric `views_per_visit` cannot be queried with `dimensions`."
+      assert error == "Metric `views_per_visit` cannot be queried with non-time dimensions."
     end
   end
 

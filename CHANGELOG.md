@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Allow querying `views_per_visit` with a time dimension in Stats API
 - Add `bounce_rate` to page-filtered Top Stats even when imports are included, but render a metric warning about imported data not included in `bounce_rate` tooltip.
 - Add `time_on_page` to page-filtered Top Stats even when imports are included, unless legacy time on page is in view. 
 - Adds team_id to query debug metadata (saved in system.query_log log_comment column)
@@ -21,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed Stats API timeseries returning time buckets falling outside the queried range
 - Fixed issue with all non-interactive events being counted as interactive
 - Fixed countries map countries staying highlighted on Chrome
 

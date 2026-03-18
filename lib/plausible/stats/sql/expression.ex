@@ -12,7 +12,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   import Ecto.Query
 
-  alias Plausible.Stats.{Query, Filters, SQL}
+  alias Plausible.Stats.{Query, Filters, SQL, Time}
 
   @no_ref "Direct / None"
   @no_channel "Direct"
@@ -27,22 +27,58 @@ defmodule Plausible.Stats.SQL.Expression do
     end
   end
 
-  defmacrop time_slots(query, period_in_seconds) do
+  defmacrop time_slots(query, period_in_seconds, first, last) do
     quote do
       fragment(
-        "timeSlots(toTimeZone(?, ?), toUInt32(timeDiff(?, ?)), toUInt32(?))",
+        """
+        timeSlots(
+          toTimeZone(greatest(?, ?), ?),
+          toUInt32(timeDiff(greatest(?, ?), least(?, ?))),
+          toUInt32(?)
+        )
+        """,
         s.start,
+        ^unquote(first),
         ^unquote(query).timezone,
         s.start,
+        ^unquote(first),
         s.timestamp,
+        ^unquote(last),
         ^unquote(period_in_seconds)
       )
     end
   end
 
+  def select_dimension(q, key, "time:month", :sessions, query) do
+    {_first, last_datetime} = Time.utc_boundaries(query)
+
+    select_merge_as(q, [t], %{
+      key =>
+        fragment(
+          "toStartOfMonth(toTimeZone(least(?, ?), ?))",
+          t.timestamp,
+          ^last_datetime,
+          ^query.timezone
+        )
+    })
+  end
+
   def select_dimension(q, key, "time:month", _table, query) do
     select_merge_as(q, [t], %{
       key => fragment("toStartOfMonth(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
+    })
+  end
+
+  def select_dimension(q, key, "time:week", :sessions, query) do
+    {_first, last_datetime} = Time.utc_boundaries(query)
+    date_range = Query.date_range(query)
+
+    select_merge_as(q, [t], %{
+      key =>
+        weekstart_not_before(
+          to_timezone(fragment("least(?, ?)", t.timestamp, ^last_datetime), ^query.timezone),
+          ^date_range.first
+        )
     })
   end
 
@@ -58,6 +94,20 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
+  def select_dimension(q, key, "time:day", :sessions, query) do
+    {_first, last_datetime} = Time.utc_boundaries(query)
+
+    select_merge_as(q, [t], %{
+      key =>
+        fragment(
+          "toDate(toTimeZone(least(?, ?), ?))",
+          t.timestamp,
+          ^last_datetime,
+          ^query.timezone
+        )
+    })
+  end
+
   def select_dimension(q, key, "time:day", _table, query) do
     select_merge_as(q, [t], %{
       key => fragment("toDate(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
@@ -69,8 +119,10 @@ defmodule Plausible.Stats.SQL.Expression do
     #   timezone-aware. This means that for e.g. Asia/Katmandu (GMT+5:45)
     #   to work, we divide time into 15-minute buckets and later combine these
     #   via toStartOfHour
+    {first, last} = Time.utc_boundaries(query)
+
     q
-    |> join(:inner, [s], time_slot in time_slots(query, 15 * 60),
+    |> join(:inner, [s], time_slot in time_slots(query, 15 * 60, first, last),
       as: :time_slot,
       hints: "ARRAY",
       on: true
@@ -89,8 +141,10 @@ defmodule Plausible.Stats.SQL.Expression do
   # :NOTE: This is not exposed in Query APIv2
   def select_dimension(q, key, "time:minute", :sessions, query)
       when query.smear_session_metrics do
+    {first, last} = Time.utc_boundaries(query)
+
     q
-    |> join(:inner, [s], time_slot in time_slots(query, 60),
+    |> join(:inner, [s], time_slot in time_slots(query, 60, first, last),
       as: :time_slot,
       hints: "ARRAY",
       on: true

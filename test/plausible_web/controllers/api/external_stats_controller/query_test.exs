@@ -3527,6 +3527,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["/"], "metrics" => [2, 2, 2, 2, 50, 300]}
              ]
     end
+
+    test "views_per_visit in a time:week dimension query", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-04 00:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-01-04 00:05:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-18 00:00:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-18 00:05:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-18 00:10:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["views_per_visit"],
+          "date_range" => ["2021-01-01", "2021-01-28"],
+          "dimensions" => ["time:week"]
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["2021-01-04"], "metrics" => [2.0]},
+               %{"dimensions" => ["2021-01-18"], "metrics" => [3.0]}
+             ]
+    end
   end
 
   test "filtering by custom event property", %{conn: conn, site: site} do

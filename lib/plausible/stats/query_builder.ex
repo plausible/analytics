@@ -514,11 +514,11 @@ defmodule Plausible.Stats.QueryBuilder do
            message: "Metric `#{metric}` cannot be queried with a filter on `event:page`."
          }}
 
-      length(query.dimensions) > 0 ->
+      Enum.any?(query.dimensions, &(not Time.time_dimension?(&1))) ->
         {:error,
          %QueryError{
            code: :invalid_metrics,
-           message: "Metric `#{metric}` cannot be queried with `dimensions`."
+           message: "Metric `#{metric}` cannot be queried with non-time dimensions."
          }}
 
       true ->

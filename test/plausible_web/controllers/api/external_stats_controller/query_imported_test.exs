@@ -341,6 +341,42 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
     end
   end
 
+  describe "timeseries with imported data" do
+    setup :create_site_import
+
+    test "views_per_visit breakdown by time:month", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        # January 2021 - only imported
+        build(:imported_visitors, date: ~D[2021-01-01], visits: 6, pageviews: 7),
+        # March 2021 - imported + native combined
+        build(:imported_visitors, date: ~D[2021-03-01], visits: 1, pageviews: 4),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-03-15 00:00:00]),
+        build(:pageview, user_id: 1, timestamp: ~N[2021-03-15 00:05:00]),
+        # September 2021 - only native
+        build(:pageview, user_id: 2, timestamp: ~N[2021-09-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["views_per_visit"],
+          "date_range" => ["2021-01-01", "2021-12-31"],
+          "dimensions" => ["time:month"],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [1.17]},
+               %{"dimensions" => ["2021-03-01"], "metrics" => [3.0]},
+               %{"dimensions" => ["2021-09-01"], "metrics" => [1.0]}
+             ]
+    end
+  end
+
   test "breaks down all metrics by visit:referrer with imported data", %{conn: conn, site: site} do
     site_import =
       insert(:site_import,
