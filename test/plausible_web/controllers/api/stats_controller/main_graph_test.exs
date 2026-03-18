@@ -620,7 +620,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert plot == [1, 1, 0, 0, 0]
+      assert plot == [1, 1, 0, 0, 1]
     end
   end
 

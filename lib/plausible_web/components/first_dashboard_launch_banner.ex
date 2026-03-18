@@ -29,8 +29,8 @@ defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
       x-init={x_init(@site)}
     >
       <.styled_link
+        class="plausible-event-name=Weekly+Email+Note+Click"
         href={Routes.site_path(PlausibleWeb.Endpoint, :settings_email_reports, @site.domain)}
-        onclick="plausible('Weekly Email Note Click')"
       >
         Get weekly traffic summaries by email →
       </.styled_link>

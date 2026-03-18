@@ -67,7 +67,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
     suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.total)
 
     for user <- users do
-      PlausibleWeb.Email.trial_upgrade_email(user, team, "tomorrow", usage, suggested_volume)
+      PlausibleWeb.Email.trial_ending_tomorrow_email(user, team, usage, suggested_volume)
       |> Plausible.Mailer.send()
     end
   end
@@ -77,7 +77,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
     suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.total)
 
     for user <- users do
-      PlausibleWeb.Email.trial_upgrade_email(user, team, "today", usage, suggested_volume)
+      PlausibleWeb.Email.trial_ending_today_email(user, team, usage, suggested_volume)
       |> Plausible.Mailer.send()
     end
   end

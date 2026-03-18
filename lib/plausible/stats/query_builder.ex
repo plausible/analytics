@@ -234,7 +234,8 @@ defmodule Plausible.Stats.QueryBuilder do
     end
 
     defp validate_revenue_metrics_access(site, query) do
-      if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
+      if Revenue.requested?(query.metrics) and not Revenue.available?(site) and
+           not query.include.drop_unavailable_revenue_metrics do
         {:error,
          %QueryError{
            code: :feature_access,
@@ -513,11 +514,11 @@ defmodule Plausible.Stats.QueryBuilder do
            message: "Metric `#{metric}` cannot be queried with a filter on `event:page`."
          }}
 
-      length(query.dimensions) > 0 ->
+      Enum.any?(query.dimensions, &(not Time.time_dimension?(&1))) ->
         {:error,
          %QueryError{
            code: :invalid_metrics,
-           message: "Metric `#{metric}` cannot be queried with `dimensions`."
+           message: "Metric `#{metric}` cannot be queried with non-time dimensions."
          }}
 
       true ->

@@ -45,12 +45,22 @@ defmodule PlausibleWeb.Live.Components.Pagination do
     {active?, uri} =
       case {assigns.type, assigns.page_number, assigns.total_pages} do
         {:next, n, total} when n < total ->
-          params = URI.decode_query(assigns.uri.query, %{"page" => n + 1})
-          {true, %{assigns.uri | query: URI.encode_query(params)}}
+          query =
+            (assigns.uri.query || "")
+            |> URI.decode_query()
+            |> Map.put("page", n + 1)
+            |> URI.encode_query()
+
+          {true, %{assigns.uri | query: query}}
 
         {:prev, n, _total} when n > 1 ->
-          params = URI.decode_query(assigns.uri.query, %{"page" => n - 1})
-          {true, %{assigns.uri | query: URI.encode_query(params)}}
+          query =
+            (assigns.uri.query || "")
+            |> URI.decode_query()
+            |> Map.put("page", n - 1)
+            |> URI.encode_query()
+
+          {true, %{assigns.uri | query: query}}
 
         {_, _, _} ->
           {false, nil}

@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       <%= if @searching? or Enum.count(@goals) > 0 do %>
         <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
           <PrimaDropdown.dropdown id="add-goal-dropdown">
-            <PrimaDropdown.dropdown_trigger as={&button/1} id="add-goal-dropdown-trigger" mt?={false}>
+            <PrimaDropdown.dropdown_trigger id="add-goal-dropdown-trigger" theme="primary">
               Add goal <Heroicons.chevron_down mini class="size-4 mt-0.5" />
             </PrimaDropdown.dropdown_trigger>
 
@@ -169,9 +169,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       </p>
       <PrimaDropdown.dropdown id="add-goal-dropdown-empty" class="mt-4">
         <PrimaDropdown.dropdown_trigger
-          as={&button/1}
           id="add-goal-dropdown-empty-trigger"
-          mt?={false}
+          theme="primary"
         >
           Add goal <Heroicons.chevron_down mini class="size-4 mt-0.5" />
         </PrimaDropdown.dropdown_trigger>
