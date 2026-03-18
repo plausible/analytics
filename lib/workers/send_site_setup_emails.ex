@@ -90,7 +90,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
 
   defp send_setup_success_email(site) do
     for owner <- site.owners do
-      PlausibleWeb.Email.site_setup_success(owner, site.team, site)
+      PlausibleWeb.Email.site_setup_success(owner, site)
       |> Plausible.Mailer.send()
     end
 
