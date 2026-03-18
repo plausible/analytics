@@ -5,16 +5,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
   use PlausibleWeb, :live_view
   use Plausible
 
-  import PlausibleWeb.Components.Billing,
-    only: [
-      trial_button_label: 1,
-      change_plan_button_label: 1,
-      present_plan_name: 1,
-      subscription_pill_color: 1,
-      present_subscription_status: 1,
-      present_subscription_interval: 1,
-      format_invoices: 1
-    ]
+  import PlausibleWeb.Components.Billing.Helpers
 
   alias Plausible.Teams
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -310,7 +301,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
   on_ee do
     defp consolidated_view_domain(team) do
       view = Plausible.ConsolidatedView.get(team)
-      
+
       if not is_nil(view) and Plausible.ConsolidatedView.ok_to_display?(team) do
         view.domain
       end

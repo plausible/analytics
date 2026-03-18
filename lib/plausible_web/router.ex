@@ -481,7 +481,12 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/settings", PlausibleWeb do
-    pipe_through [:browser, :csrf, PlausibleWeb.RequireAccountPlug]
+    pipe_through [
+      :browser,
+      :csrf,
+      PlausibleWeb.RequireAccountPlug,
+      PlausibleWeb.Plugs.CurrentPath
+    ]
 
     get "/", SettingsController, :index
     get "/preferences", SettingsController, :preferences
