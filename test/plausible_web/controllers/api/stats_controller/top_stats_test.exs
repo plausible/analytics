@@ -358,7 +358,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert response["results"] == [%{"dimensions" => [], "metrics" => [0]}]
     end
 
-    test "time_on_page is 0 when it can't be calculated", %{conn: conn, site: site} do
+    test "time_on_page is nil when it can't be calculated", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/")
       ])
@@ -371,7 +371,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       response = do_query_success(conn, site, params)
 
-      assert response["results"] == [%{"dimensions" => [], "metrics" => [0]}]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [nil]}]
     end
   end
 
