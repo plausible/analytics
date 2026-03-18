@@ -496,7 +496,10 @@ defmodule PlausibleWeb.Router do
     post "/security/email", SettingsController, :update_email
     post "/security/password", SettingsController, :update_password
 
-    get "/billing/subscription", SettingsController, :subscription
+    scope alias: Live, assigns: %{connect_live_socket: true} do
+      live "/billing/subscription", SubscriptionSettings, :subscription, as: :settings
+    end
+
     get "/billing/invoices", SettingsController, :redirect_invoices
     get "/api-keys", SettingsController, :api_keys
 

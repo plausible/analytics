@@ -134,13 +134,6 @@ defmodule PlausibleWeb.SettingsController do
     render_security(conn)
   end
 
-  def subscription(conn, _params) do
-    render(conn, :subscription,
-      layout: {PlausibleWeb.LayoutView, :settings},
-      connect_live_socket: true
-    )
-  end
-
   def redirect_invoices(conn, _params) do
     redirect(conn, to: Routes.settings_path(conn, :subscription))
   end

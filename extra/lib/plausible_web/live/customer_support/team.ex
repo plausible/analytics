@@ -277,7 +277,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     cond do
       team && team.subscription ->
         status_str =
-          PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
+          PlausibleWeb.Components.Billing.present_subscription_status(team.subscription.status)
 
         if team.subscription.paddle_subscription_id do
           assigns = %{status_str: status_str, subscription: team.subscription}

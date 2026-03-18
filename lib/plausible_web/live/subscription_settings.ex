@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
   use PlausibleWeb, :live_view
   use Plausible
 
-  import PlausibleWeb.SettingsView,
+  import PlausibleWeb.Components.Billing,
     only: [
       trial_button_label: 1,
       change_plan_button_label: 1,
@@ -55,8 +55,9 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
       |> assign(:team_member_usage, team_member_usage)
       |> assign(:notification_type, notification_type)
       |> assign(:total_pageview_usage_domain, total_pageview_usage_domain)
+      |> assign(:current_path, "settings/billing/subscription")
 
-    {:ok, socket}
+    {:ok, socket, layout: {PlausibleWeb.LayoutView, :settings}}
   end
 
   def render(assigns) do

@@ -95,9 +95,17 @@ defmodule PlausibleWeb.LayoutView do
     |> Enum.reject(&is_nil/1)
   end
 
-  def account_settings_sidebar(conn) do
-    current_team = conn.assigns[:current_team]
-    current_team_role = conn.assigns[:current_team_role]
+  def account_settings_sidebar(%Plug.Conn{} = conn) do
+    account_settings_sidebar(%{
+      current_team: conn.assigns[:current_team],
+      current_team_role: conn.assigns[:current_team_role],
+      current_user: conn.assigns[:current_user]
+    })
+  end
+
+  def account_settings_sidebar(assigns) do
+    current_team = assigns[:current_team]
+    current_team_role = assigns[:current_team_role]
 
     options = %{
       "Account" =>
@@ -110,7 +118,7 @@ defmodule PlausibleWeb.LayoutView do
           if(not Teams.setup?(current_team),
             do: %{key: "API keys", value: "api-keys", icon: :api_keys}
           ),
-          if(Plausible.Users.type(conn.assigns.current_user) == :standard,
+          if(Plausible.Users.type(assigns[:current_user]) == :standard,
             do: %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
           )
         ]
@@ -246,6 +254,10 @@ defmodule PlausibleWeb.LayoutView do
 
   def is_current_tab(_, nil) do
     false
+  end
+
+  def is_current_tab(path, tab) when is_binary(path) do
+    String.ends_with?(path, tab)
   end
 
   def is_current_tab(conn, tab) do

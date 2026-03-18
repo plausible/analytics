@@ -428,7 +428,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     end)
   end
 
-  attr :conn, Plug.Conn, required: true
+  attr :conn, :any, default: nil
   attr :name, :string, required: true
   attr :options, :list, required: true
   attr :value, :any, default: nil
@@ -439,7 +439,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :options, flatten_options(options))
 
     ~H"""
-    <.form for={@conn} class="lg:hidden py-4" data-testid="mobile-nav-dropdown">
+    <.form for={@conn || %{}} class="lg:hidden py-4" data-testid="mobile-nav-dropdown">
       <.input
         value={
           @options
