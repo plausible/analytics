@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Allow querying `views_per_visit` with a time dimension in Stats API
 - Add `bounce_rate` to page-filtered Top Stats even when imports are included, but render a metric warning about imported data not included in `bounce_rate` tooltip.
-- Add `time_on_page` to page-filtered Top Stats even when imports are included, unless legacy time on page is in view. 
+- Add `time_on_page` to page-filtered Top Stats even when imports are included, unless legacy time on page is in view.
 - Adds team_id to query debug metadata (saved in system.query_log log_comment column)
 - Add "Unknown" option to Countries shield, for when the country code is unrecognized
 - Add "Last 24 Hours" to dashboard time range picker and Stats API v2
@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 
 - Keybind hints are hidden on smaller screens
 - Site index is sortable alphanumerically and by traffic
+- Use ResizeObserver instead of polling in tracker for scroll depth. Removes forced reflows caused by the tracker script.
 
 ### Fixed
 
