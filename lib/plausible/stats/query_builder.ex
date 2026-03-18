@@ -234,7 +234,8 @@ defmodule Plausible.Stats.QueryBuilder do
     end
 
     defp validate_revenue_metrics_access(site, query) do
-      if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
+      if Revenue.requested?(query.metrics) and not Revenue.available?(site) and
+           not query.include.drop_unavailable_revenue_metrics do
         {:error,
          %QueryError{
            code: :feature_access,

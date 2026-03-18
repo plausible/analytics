@@ -58,16 +58,6 @@ defmodule Plausible.Sites.IndexTest do
       refute site1.id in ids
     end
 
-    test "filters by domain substring" do
-      user = new_user()
-      site_a = new_site(owner: user, domain: "alpha.example.com")
-      site_b = new_site(owner: user, domain: "beta.example.com")
-
-      ids = Index.fetch_site_ids(user, filter_by_domain: "alpha")
-      assert site_a.id in ids
-      refute site_b.id in ids
-    end
-
     test "non-setup team: own sites and guest sites both included" do
       user = new_user()
       own_site = new_site(owner: user)
@@ -390,31 +380,16 @@ defmodule Plausible.Sites.IndexTest do
       assert state.sort_direction == :asc
     end
 
-    test "stores filter_by_domain and team in opts map" do
+    test "stores team in opts map" do
       user = new_user()
       other_user = new_user()
       team_site = new_site(owner: other_user)
       team = Plausible.Teams.complete_setup(team_site.team)
       add_member(team_site.team, user: user, role: :admin)
 
-      state = Index.build(user, filter_by_domain: "example", team: team)
+      state = Index.build(user, team: team)
 
-      assert state.opts == %{filter_by_domain: "example", team: team}
-    end
-
-    test "filter_by_domain is respected at paginate time" do
-      user = new_user()
-      site_a = new_site(owner: user, domain: "alpha.example.com")
-      _site_b = new_site(owner: user, domain: "beta.example.com")
-
-      state = Index.build(user, filter_by_domain: "alpha")
-
-      assert length(state.ordered_ids) == 2
-      assert state.opts.filter_by_domain == "alpha"
-
-      page = Index.paginate(state, 1, 24)
-      assert page.entries == [site_a.id]
-      assert page.total_entries == 1
+      assert state.opts == %{team: team}
     end
 
     test "scopes to setup team" do
@@ -462,13 +437,13 @@ defmodule Plausible.Sites.IndexTest do
     end
   end
 
-  describe "paginate/3" do
+  describe "paginate/2" do
     test "returns a Page of site IDs" do
       user = new_user()
       site = new_site(owner: user)
 
       state = Index.build(user)
-      page = Index.paginate(state, 1, 24)
+      page = Index.paginate(state, page: 1, page_size: 24)
 
       assert %Index.Page{} = page
       assert page.entries == [site.id]
@@ -480,7 +455,7 @@ defmodule Plausible.Sites.IndexTest do
     test "returns empty page when user has no sites" do
       user = new_user()
       state = Index.build(user)
-      page = Index.paginate(state, 1, 24)
+      page = Index.paginate(state, page: 1, page_size: 24)
 
       assert page.entries == []
       assert page.total_entries == 0
@@ -493,10 +468,10 @@ defmodule Plausible.Sites.IndexTest do
 
       state = Index.build(user, sort_by: :alnum, sort_direction: :asc)
 
-      page1 = Index.paginate(state, 1, 3)
-      page2 = Index.paginate(state, 2, 3)
-      page3 = Index.paginate(state, 3, 3)
-      page4 = Index.paginate(state, 4, 3)
+      page1 = Index.paginate(state, page: 1, page_size: 3)
+      page2 = Index.paginate(state, page: 2, page_size: 3)
+      page3 = Index.paginate(state, page: 3, page_size: 3)
+      page4 = Index.paginate(state, page: 4, page_size: 3)
 
       assert page1.total_entries == 10
       assert page1.total_pages == 4
@@ -516,11 +491,11 @@ defmodule Plausible.Sites.IndexTest do
       site_a = new_site(owner: user, domain: "a.example.com")
 
       state_asc = Index.build(user, sort_by: :alnum, sort_direction: :asc)
-      page_asc = Index.paginate(state_asc, 1, 24)
+      page_asc = Index.paginate(state_asc, page: 1, page_size: 24)
       assert page_asc.entries == [site_a.id, site_z.id]
 
       state_desc = Index.build(user, sort_by: :alnum, sort_direction: :desc)
-      page_desc = Index.paginate(state_desc, 1, 24)
+      page_desc = Index.paginate(state_desc, page: 1, page_size: 24)
       assert page_desc.entries == [site_z.id, site_a.id]
     end
 
@@ -529,7 +504,7 @@ defmodule Plausible.Sites.IndexTest do
       _site = new_site(owner: user)
 
       state = Index.build(user)
-      page = Index.paginate(state, 999, 24)
+      page = Index.paginate(state, page: 999, page_size: 24)
 
       assert page.page_number == 1
       assert length(page.entries) == 1
@@ -541,7 +516,7 @@ defmodule Plausible.Sites.IndexTest do
       site_b = new_site(owner: user, domain: "b.example.com")
 
       state = Index.build(user, sort_by: :alnum, sort_direction: :asc)
-      page = Index.paginate(state, 1, 100)
+      page = Index.paginate(state, page: 1, page_size: 100)
 
       assert page.total_pages == 1
       assert page.entries == [site_a.id, site_b.id]
@@ -553,8 +528,8 @@ defmodule Plausible.Sites.IndexTest do
 
       state = Index.build(user)
 
-      page1 = Index.paginate(state, "1", "3")
-      page2 = Index.paginate(state, "2", "3")
+      page1 = Index.paginate(state, page: "1", page_size: "3")
+      page2 = Index.paginate(state, page: "2", page_size: "3")
 
       assert page1.total_entries == 5
       assert page1.total_pages == 2
@@ -569,9 +544,9 @@ defmodule Plausible.Sites.IndexTest do
 
       state = Index.build(user)
 
-      assert Index.paginate(state, "abc", 24).page_number == 1
-      assert Index.paginate(state, "0", 24).page_number == 1
-      assert Index.paginate(state, nil, 24).page_number == 1
+      assert Index.paginate(state, page: "abc", page_size: 24).page_number == 1
+      assert Index.paginate(state, page: "0", page_size: 24).page_number == 1
+      assert Index.paginate(state, page: nil, page_size: 24).page_number == 1
     end
 
     test "page_size out of range falls back to default of 24" do
@@ -580,8 +555,8 @@ defmodule Plausible.Sites.IndexTest do
 
       state = Index.build(user)
 
-      assert Index.paginate(state, 1, "0").page_size == 24
-      assert Index.paginate(state, 1, "101").page_size == 24
+      assert Index.paginate(state, page: 1, page_size: "0").page_size == 24
+      assert Index.paginate(state, page: 1, page_size: "101").page_size == 24
     end
 
     test "nil page and page_size fall back to defaults (page 1, page_size 24)" do
@@ -589,10 +564,24 @@ defmodule Plausible.Sites.IndexTest do
       for _ <- 1..5, do: new_site(owner: user)
 
       state = Index.build(user)
-      page = Index.paginate(state, nil, nil)
+      page = Index.paginate(state, page: nil, page_size: nil)
 
       assert page.page_number == 1
       assert page.page_size == 24
+    end
+
+    test "filter_by_domain is respected at paginate time" do
+      user = new_user()
+      site_a = new_site(owner: user, domain: "alpha.example.com")
+      _site_b = new_site(owner: user, domain: "beta.example.com")
+
+      state = Index.build(user)
+
+      assert length(state.ordered_ids) == 2
+
+      page = Index.paginate(state, page: 1, page_size: 24, filter_by_domain: "alpha")
+      assert page.entries == [site_a.id]
+      assert page.total_entries == 1
     end
   end
 
@@ -710,168 +699,6 @@ defmodule Plausible.Sites.IndexTest do
     end
   end
 
-  describe "update_state/3" do
-    test "returns a new State with updated filter_by_domain" do
-      user = new_user()
-      _site = new_site(owner: user)
-
-      state = Index.build(user)
-      new_state = Index.update_state(state, :filter_by_domain, "example")
-
-      assert %State{} = new_state
-      assert new_state.opts.filter_by_domain == "example"
-    end
-
-    test "does not hit the database - ordered_ids is unchanged" do
-      user = new_user()
-      _site_a = new_site(owner: user, domain: "alpha.example.com")
-      _site_b = new_site(owner: user, domain: "beta.example.com")
-
-      state = Index.build(user)
-      assert length(state.ordered_ids) == 2
-
-      new_state = Index.update_state(state, :filter_by_domain, "alpha")
-
-      # full list preserved in state
-      assert new_state.ordered_ids == state.ordered_ids
-    end
-
-    test "paginate/3 reflects the new filter" do
-      user = new_user()
-      site_a = new_site(owner: user, domain: "alpha.example.com")
-      _site_b = new_site(owner: user, domain: "beta.example.com")
-
-      page =
-        user
-        |> Index.build()
-        |> Index.update_state(:filter_by_domain, "alpha")
-        |> Index.paginate(1, 24)
-
-      assert page.entries == [site_a.id]
-      assert page.total_entries == 1
-    end
-
-    test "filter is case-insensitive" do
-      user = new_user()
-      site = new_site(owner: user, domain: "Alpha.example.com")
-
-      page =
-        user
-        |> Index.build()
-        |> Index.update_state(:filter_by_domain, "ALPHA")
-        |> Index.paginate(1, 24)
-
-      assert page.entries == [site.id]
-    end
-
-    test "nil filter clears the filter and returns all sites" do
-      user = new_user()
-      site_a = new_site(owner: user, domain: "alpha.example.com")
-      site_b = new_site(owner: user, domain: "beta.example.com")
-
-      page =
-        user
-        |> Index.build()
-        |> Index.update_state(:filter_by_domain, "alpha")
-        |> Index.update_state(:filter_by_domain, nil)
-        |> Index.paginate(1, 24)
-
-      assert length(page.entries) == 2
-      assert site_a.id in page.entries
-      assert site_b.id in page.entries
-    end
-
-    test "empty string filter clears the filter and returns all sites" do
-      user = new_user()
-      _site_a = new_site(owner: user, domain: "alpha.example.com")
-      _site_b = new_site(owner: user, domain: "beta.example.com")
-
-      page =
-        user
-        |> Index.build()
-        |> Index.update_state(:filter_by_domain, "alpha")
-        |> Index.update_state(:filter_by_domain, "")
-        |> Index.paginate(1, 24)
-
-      assert page.total_entries == 2
-    end
-
-    test "filter returns empty page when no sites match" do
-      user = new_user()
-      _site = new_site(owner: user, domain: "alpha.example.com")
-
-      page =
-        user
-        |> Index.build()
-        |> Index.update_state(:filter_by_domain, "zzz-no-match")
-        |> Index.paginate(1, 24)
-
-      assert page.entries == []
-      assert page.total_entries == 0
-    end
-
-    test "filter preserves sort order within results" do
-      user = new_user()
-      site_az = new_site(owner: user, domain: "az.test.com")
-      site_aa = new_site(owner: user, domain: "aa.test.com")
-      _site_b = new_site(owner: user, domain: "other.com")
-
-      page =
-        user
-        |> Index.build(sort_by: :alnum, sort_direction: :asc)
-        |> Index.update_state(:filter_by_domain, ".test.")
-        |> Index.paginate(1, 24)
-
-      assert page.entries == [site_aa.id, site_az.id]
-    end
-
-    test "changing filter does not require re-sorting - traffic map is preserved" do
-      user = new_user()
-      site_a = new_site(owner: user, domain: "alpha.example.com")
-      site_b = new_site(owner: user, domain: "beta.example.com")
-
-      now = NaiveDateTime.utc_now()
-
-      populate_stats(site_a, [
-        build(:pageview, timestamp: NaiveDateTime.add(now, -2, :hour), user_id: 1)
-      ])
-
-      state = Index.build(user, sort_by: :traffic, sort_direction: :desc)
-      original_traffic = state.traffic
-
-      populate_stats(site_a, [
-        build(:pageview, timestamp: NaiveDateTime.add(now, -1, :hour), user_id: 1)
-      ])
-
-      new_state = Index.update_state(state, :filter_by_domain, "beta")
-
-      assert new_state.traffic == original_traffic
-
-      page = Index.paginate(new_state, 1, 24)
-      assert page.entries == [site_b.id]
-    end
-
-    test "filter applied to build opts is applied consistently with update_state/3" do
-      user = new_user()
-      site_a = new_site(owner: user, domain: "alpha.example.com")
-      _site_b = new_site(owner: user, domain: "beta.example.com")
-
-      page_via_build =
-        user
-        |> Index.build(filter_by_domain: "alpha")
-        |> Index.paginate(1, 24)
-
-      page_via_update =
-        user
-        |> Index.build()
-        |> Index.update_state(:filter_by_domain, "alpha")
-        |> Index.paginate(1, 24)
-
-      assert page_via_build.entries == [site_a.id]
-      assert page_via_update.entries == [site_a.id]
-    end
-  end
-
   describe "sort/2" do
     test "alnum asc -> desc flips order, no traffic map, no extra queries" do
       user = new_user()
@@ -981,6 +808,20 @@ defmodule Plausible.Sites.IndexTest do
       new_state = Index.sort(state, sort_direction: :desc)
       assert new_state.user == state.user
       assert new_state.pins == state.pins
+      assert new_state.ordered_ids == [site.id]
+    end
+
+    test "accepts struct for opts" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      state = Index.build(user)
+
+      new_state =
+        Index.sort(state, Index.UserPreference.new(%{sort_by: :alnum, sort_direction: :asc}))
+
+      assert new_state.sort_by == :alnum
+      assert new_state.sort_direction == :asc
       assert new_state.ordered_ids == [site.id]
     end
   end

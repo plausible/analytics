@@ -588,7 +588,8 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      button_selector = ~s/li[data-domain="#{site.domain}"] button[phx-value-domain]/
+      button_selector =
+        ~s/button[phx-value-domain="#{site.domain}"][data-test-id="ellipsis-menu-pin-item"]/
 
       html =
         lv
@@ -638,6 +639,278 @@ defmodule PlausibleWeb.Live.SitesTest do
       render_click(lv, "pin-toggle", %{"domain" => site.domain})
 
       refute Repo.get_by(Plausible.Site.UserPreference, user_id: user.id, site_id: site.id)
+    end
+
+    test "pin icon is shown on site card when site is pinned", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      assert {:ok, _} = Plausible.Sites.toggle_pin(user, site)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert element_exists?(
+               html,
+               ~s/li[data-domain="#{site.domain}"] [data-test-id="site-card-pin-icon"]/
+             )
+    end
+
+    test "pin icon is not shown on site card when site is not pinned", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute element_exists?(
+               html,
+               ~s/li[data-domain="#{site.domain}"] [data-test-id="site-card-pin-icon"]/
+             )
+    end
+
+    test "pin icon appears on site card after pinning", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      button_selector =
+        ~s/button[phx-value-domain="#{site.domain}"][data-test-id="ellipsis-menu-pin-item"]/
+
+      lv |> element(button_selector) |> render_click()
+
+      html = render(lv)
+
+      assert element_exists?(
+               html,
+               ~s/li[data-domain="#{site.domain}"] [data-test-id="site-card-pin-icon"]/
+             )
+    end
+
+    test "pin icon disappears from site card after unpinning", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      assert {:ok, _} = Plausible.Sites.toggle_pin(user, site)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      button_selector =
+        ~s/[phx-value-domain="#{site.domain}"][data-test-id="site-card-pin-icon"]/
+
+      lv |> element(button_selector) |> render_click()
+
+      html = render(lv)
+
+      refute element_exists?(
+               html,
+               button_selector
+             )
+    end
+  end
+
+  describe "sort widget" do
+    test "renders sort widget with default 'Most visitors' label", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Most visitors"
+    end
+
+    test "sort widget shows all four options", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert html =~ "Most visitors"
+      assert html =~ "Fewest visitors"
+      assert html =~ "Name A-Z"
+      assert html =~ "Name Z-A"
+
+      assert find(html, "#sort-dropdown-item-traffic-desc")
+      assert find(html, "#sort-dropdown-item-traffic-asc")
+      assert find(html, "#sort-dropdown-item-alnum-desc")
+      assert find(html, "#sort-dropdown-item-alnum-asc")
+    end
+
+    test "clicking a sort option updates the active label", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      lv
+      |> element(~s|[id="sort-dropdown-item-alnum-asc"]|)
+      |> render_click()
+
+      html = render(lv)
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Name A-Z"
+    end
+
+    test "invalid sort_by param is sanitized to traffic", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=invalid&sort_direction=desc")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Most visitors"
+    end
+
+    test "invalid sort_direction param is sanitized to desc", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=alnum&sort_direction=invalid")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Name Z-A"
+    end
+
+    test "Name A-Z sort orders sites alphabetically ascending", %{conn: conn, user: user} do
+      new_site(domain: "zebra.example.com", owner: user)
+      new_site(domain: "apple.example.com", owner: user)
+      new_site(domain: "mango.example.com", owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=alnum&sort_direction=asc")
+
+      domains = find(html, "li[data-domain] h3") |> text()
+
+      assert domains == "apple.example.com mango.example.com zebra.example.com"
+    end
+
+    test "Name Z-A sort orders sites alphabetically descending", %{conn: conn, user: user} do
+      new_site(domain: "zebra.example.com", owner: user)
+      new_site(domain: "apple.example.com", owner: user)
+      new_site(domain: "mango.example.com", owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=alnum&sort_direction=desc")
+
+      domains = find(html, "li[data-domain] h3") |> text()
+
+      assert domains == "zebra.example.com mango.example.com apple.example.com"
+    end
+
+    test "Most visitors sort orders sites by traffic", %{
+      conn: conn,
+      user: user
+    } do
+      high = new_site(domain: "high.example.com", owner: user)
+      mid = new_site(domain: "mid.example.com", owner: user)
+      low = new_site(domain: "low.example.com", owner: user)
+
+      populate_stats(high, [build(:pageview), build(:pageview), build(:pageview)])
+      populate_stats(mid, [build(:pageview)])
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=traffic&sort_direction=desc")
+
+      domains = find(html, "li[data-domain] h3") |> text()
+
+      assert domains == "#{high.domain} #{mid.domain} #{low.domain}"
+    end
+
+    test "Fewest visitors sort orders by traffic", %{
+      conn: conn,
+      user: user
+    } do
+      low = new_site(domain: "low.example.com", owner: user)
+      mid = new_site(domain: "mid.example.com", owner: user)
+      high = new_site(domain: "high.example.com", owner: user)
+
+      populate_stats(high, [build(:pageview), build(:pageview), build(:pageview)])
+      populate_stats(mid, [build(:pageview)])
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=traffic&sort_direction=asc")
+
+      domains = find(html, "li[data-domain] h3") |> text()
+
+      assert domains == "#{low.domain} #{mid.domain} #{high.domain}"
+    end
+
+    test "switching sort resets to page 1", %{conn: conn, user: user} do
+      for _ <- 1..3, do: new_site(owner: user)
+
+      {:ok, lv, html} = live(conn, "/sites?page_size=2&page=2&sort_by=alnum&sort_direction=asc")
+
+      assert html =~ "page=1"
+
+      lv
+      |> element(~s|[id="sort-dropdown-item-alnum-desc"]|)
+      |> render_click()
+
+      html = render(lv)
+
+      refute html =~ "page=1"
+    end
+
+    test "selecting a sort option persists the preference to the database", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      lv
+      |> element(~s|[id="sort-dropdown-item-alnum-asc"]|)
+      |> render_click()
+
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+      {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
+
+      assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) ==
+               %Plausible.Sites.Index.UserPreference{
+                 sort_by: :alnum,
+                 sort_direction: :asc
+               }
+    end
+
+    test "selecting a sort option for a guest won't persist the preference", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      viewer_guest = add_guest(site, role: :viewer, user: new_user())
+
+      {:ok, conn: conn} = log_in(%{user: viewer_guest, conn: conn})
+
+      {:ok, lv, html} = live(conn, "/sites")
+
+      assert html =~ site.domain
+
+      lv
+      |> element(~s|[id="sort-dropdown-item-alnum-asc"]|)
+      |> render_click()
+
+      {:ok, membership} =
+        Plausible.Teams.Memberships.get_team_membership(team_of(user), viewer_guest)
+
+      assert Plausible.Teams.Memberships.get_preference(membership, :sort_index_options) == nil
+    end
+
+    test "saved sort preference is applied on next visit when no URL params", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+      {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
+
+      Plausible.Teams.Memberships.set_preference(membership, :sort_index_options, %{
+        sort_by: :alnum,
+        sort_direction: :desc
+      })
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Name Z-A"
+    end
+
+    test "URL sort params take precedence over saved preference", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+      {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user)
+
+      Plausible.Teams.Memberships.set_preference(membership, :sort_index_options, %{
+        "sort_by" => "alnum",
+        "sort_direction" => "asc"
+      })
+
+      {:ok, _lv, html} = live(conn, "/sites?sort_by=traffic&sort_direction=desc")
+
+      assert text(find(html, "#sort-dropdown-trigger")) =~ "Most visitors"
     end
   end
 

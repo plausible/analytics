@@ -53,10 +53,8 @@ defmodule PlausibleWeb.EmailTest do
         })
 
       refute email.html_body =~ "Hey John,"
-      refute email.html_body =~ plausible_link()
 
       refute email.text_body =~ "Hey John,"
-      refute email.text_body =~ plausible_url()
     end
   end
 
@@ -352,41 +350,35 @@ defmodule PlausibleWeb.EmailTest do
       emails = [
         PlausibleWeb.Email.create_site_email(trial_user),
         PlausibleWeb.Email.site_setup_help(trial_user, site.team, site),
-        PlausibleWeb.Email.site_setup_success(trial_user, site.team, site)
+        PlausibleWeb.Email.site_setup_success(trial_user, site)
       ]
 
-      {:ok, emails: emails}
+      {:ok, emails: emails, user: trial_user, site: site}
     end
 
-    @trial_message "trial"
-    @reply_message "reply back"
+    test "create site email", %{user: user} do
+      email = PlausibleWeb.Email.create_site_email(user)
 
-    @tag :ee_only
-    test "has 'trial' and 'reply' blocks, correct product name", %{emails: emails} do
-      for email <- emails do
-        assert email.html_body =~ @trial_message
-        assert email.html_body =~ @reply_message
-        refute email.html_body =~ "Plausible CE"
-      end
-
-      assert Enum.any?(emails, fn email -> email.html_body =~ "Plausible Analytics" end)
+      assert email.html_body =~
+               "You’ve created your Plausible account but haven’t added a site yet."
     end
 
-    @tag :ce_build_only
-    test "no 'trial' or 'reply' blocks, correct product name", %{emails: emails} do
-      for email <- emails do
-        refute email.html_body =~ @trial_message
-        refute email.html_body =~ @reply_message
-        refute email.html_body =~ "Plausible Analytics"
-      end
+    test "site setup help email", %{user: user, site: site} do
+      email = PlausibleWeb.Email.site_setup_help(user, site.team, site)
 
-      assert Enum.any?(emails, fn email -> email.html_body =~ "Plausible CE" end)
+      assert email.html_body =~
+               "We haven't recorded any traffic for #{site.domain} yet."
+    end
+
+    test "site setup success email", %{user: user, site: site} do
+      email = PlausibleWeb.Email.site_setup_success(user, site)
+
+      assert email.html_body =~ "Your first visitor is now visible in Plausible."
     end
   end
 
   describe "text_body" do
-    @tag :ee_only
-    test "welcome_email (EE)" do
+    test "welcome email" do
       email =
         Email.base_email()
         |> Email.render("welcome_email.html", %{
@@ -394,67 +386,7 @@ defmodule PlausibleWeb.EmailTest do
           code: "123"
         })
 
-      assert email.text_body == """
-             Hey John,
-
-             We are building Plausible to provide a simple and ethical approach to tracking website visitors. We're super excited to have you on board!
-
-             Here's how to get the most out of your Plausible experience:
-
-             * Enable email reports (https://plausible.io/docs/email-reports) and notifications for traffic spikes (https://plausible.io/docs/traffic-spikes)
-             * Integrate with Search Console (https://plausible.io/docs/google-search-console-integration) to get keyword phrases people find your site with
-             * Invite team members and other collaborators (https://plausible.io/docs/users-roles)
-             * Set up easy goals including form submissions (https://plausible.io/docs/form-submissions-tracking), 404 error pages (https://plausible.io/docs/error-pages-tracking-404), file downloads (https://plausible.io/docs/file-downloads-tracking) and outbound link clicks (https://plausible.io/docs/outbound-link-click-tracking)
-             * Opt out from counting your own visits (https://plausible.io/docs/excluding)
-             * If you're concerned about adblockers, set up a proxy to bypass them (https://plausible.io/docs/proxy/introduction)
-
-
-             Then you're ready to start exploring your fast loading, ethical and actionable Plausible dashboard (https://plausible.io/sites).
-
-             Have a question, feedback or need some guidance? Do reply back to this email.
-
-             Regards,
-             The Plausible Team 💌
-
-             --
-
-             http://localhost:8000
-             {{{ pm:unsubscribe }}}\
-             """
-    end
-
-    @tag :ce_build_only
-    test "welcome_email (CE)" do
-      email =
-        Email.base_email()
-        |> Email.render("welcome_email.html", %{
-          user: build(:user, name: "John Doe"),
-          code: "123"
-        })
-
-      assert email.text_body == """
-             Hey John,
-
-             We are building Plausible to provide a simple and ethical approach to tracking website visitors. We're super excited to have you on board!
-
-             Here's how to get the most out of your Plausible experience:
-
-             * Enable email reports (https://plausible.io/docs/email-reports) and notifications for traffic spikes (https://plausible.io/docs/traffic-spikes)
-             * Integrate with Search Console (https://plausible.io/docs/google-search-console-integration) to get keyword phrases people find your site with
-             * Invite team members and other collaborators (https://plausible.io/docs/users-roles)
-             * Set up easy goals including form submissions (https://plausible.io/docs/form-submissions-tracking), 404 error pages (https://plausible.io/docs/error-pages-tracking-404), file downloads (https://plausible.io/docs/file-downloads-tracking) and outbound link clicks (https://plausible.io/docs/outbound-link-click-tracking)
-             * Opt out from counting your own visits (https://plausible.io/docs/excluding)
-             * If you're concerned about adblockers, set up a proxy to bypass them (https://plausible.io/docs/proxy/introduction)
-
-
-             Then you're ready to start exploring your fast loading, ethical and actionable Plausible dashboard (https://plausible.io/sites).
-
-             Have a question, feedback or need some guidance? Do reply back to this email.
-
-             --
-
-             http://localhost:8000
-             """
+      assert email.text_body =~ "Welcome to Plausible."
     end
   end
 

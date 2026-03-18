@@ -22,7 +22,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
         Index.build(owner, team: team, sort_by: :traffic, sort_direction: :desc)
       end)
 
-    page = Index.paginate(socket.assigns.index_state, tab_params["page"], @page_size)
+    page =
+      Index.paginate(socket.assigns.index_state, page: tab_params["page"], page_size: @page_size)
 
     sites = fetch_sites(page.entries)
 
@@ -66,7 +67,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
       end
 
     new_state = Index.sort(current_state, sort_by: sort_by, sort_direction: sort_direction)
-    page = Index.paginate(new_state, 1, @page_size)
+    page = Index.paginate(new_state, page: 1, page_size: @page_size)
     sites = fetch_sites(page.entries)
 
     hourly_stats = build_hourly_stats(sites, socket)
@@ -108,7 +109,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
           <.th invisible>Dashboard</.th>
           <th
             scope="col"
-            class="px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-semibold cursor-pointer select-none"
+            class="max-w-40 px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-semibold cursor-pointer select-none"
             phx-click="sort"
             phx-value-by="traffic"
             phx-target={@myself}
@@ -129,6 +130,10 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
                 class="cursor-pointer flex block items-center"
               >
                 {site.domain}
+
+                <span :if={@index_state.pins[site.id]}>
+                  <PlausibleWeb.Components.Icons.pin_icon class="w-4 ml-2" filled={true} />
+                </span>
               </.styled_link>
             </div>
           </.td>
@@ -150,7 +155,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
               Settings
             </.styled_link>
           </.td>
-          <.td>
+          <.td max_width="max-w-40">
             <span class="h-[24px] text-indigo-500">
               <PlausibleWeb.Live.Components.Visitors.chart
                 :if={is_map(@hourly_stats[site.domain])}

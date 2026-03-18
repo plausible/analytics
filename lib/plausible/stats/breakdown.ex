@@ -32,9 +32,9 @@ defmodule Plausible.Stats.Breakdown do
         filters: query.filters ++ dimension_filters(dimension),
         pagination: %{limit: limit, offset: (page - 1) * limit},
         # Allow pageview and event metrics to be queried off of sessions table
-        legacy_breakdown: true,
-        remove_unavailable_revenue_metrics: true
+        legacy_breakdown: true
       )
+      |> Query.set_include(:drop_unavailable_revenue_metrics, true)
 
     %QueryResult{results: results, meta: meta} = QueryRunner.run(site, query_with_metrics)
 
