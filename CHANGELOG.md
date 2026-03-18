@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Moved graph interval picker, export button, imported data toggle and notices out of the graph and into a new options menu in the top bar
 - Standardised and improved segment and filter modals styling
 - Changed graph tooltip positioning logic: it now aligns to the top of the chart, to the right of the hovered data point
+- Use ResizeObserver instead of polling in tracker for scroll depth. Removes forced reflows caused by the tracker script.
 
 ### Fixed
 
