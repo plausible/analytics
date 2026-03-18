@@ -309,9 +309,10 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
 
   on_ee do
     defp consolidated_view_domain(team) do
-      case Plausible.ConsolidatedView.get(team) do
-        nil -> nil
-        view -> if Plausible.ConsolidatedView.ok_to_display?(team), do: view.domain
+      view = Plausible.ConsolidatedView.get(team)
+      
+      if not is_nil(view) and Plausible.ConsolidatedView.ok_to_display?(team) do
+        view.domain
       end
     end
   end
