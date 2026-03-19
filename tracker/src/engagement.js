@@ -137,10 +137,8 @@ function getDocumentHeight() {
 }
 
 function getCurrentScrollDepthPx() {
-  var body = document.body || {}
-  var el = document.documentElement || {}
-  var viewportHeight = window.innerHeight || el.clientHeight || 0
-  var scrollTop = window.scrollY || el.scrollTop || body.scrollTop || 0
+  var viewportHeight = window.innerHeight
+  var scrollTop = window.scrollY
 
   return currentDocumentHeight <= viewportHeight
     ? currentDocumentHeight
@@ -151,23 +149,11 @@ export function init() {
   currentDocumentHeight = getDocumentHeight()
   maxScrollDepthPx = getCurrentScrollDepthPx()
 
-  window.addEventListener('load', function () {
+  new ResizeObserver(function () {
     currentDocumentHeight = getDocumentHeight()
-
-    // Update the document height again after every 200ms during the
-    // next 3 seconds. This makes sure dynamically loaded content is
-    // also accounted for.
-    var count = 0
-    var interval = setInterval(function () {
-      currentDocumentHeight = getDocumentHeight()
-      if (++count === 15) {
-        clearInterval(interval)
-      }
-    }, 200)
-  })
+  }).observe(document.documentElement)
 
   document.addEventListener('scroll', function () {
-    currentDocumentHeight = getDocumentHeight()
     var currentScrollDepthPx = getCurrentScrollDepthPx()
 
     if (currentScrollDepthPx > maxScrollDepthPx) {
