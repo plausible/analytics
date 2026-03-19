@@ -46,9 +46,8 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
       |> assign(:team_member_usage, team_member_usage)
       |> assign(:notification_type, notification_type)
       |> assign(:total_pageview_usage_domain, total_pageview_usage_domain)
-      |> assign(:current_path, "/settings/billing/subscription")
 
-    {:ok, socket, layout: {PlausibleWeb.LayoutView, :settings}}
+    {:ok, socket}
   end
 
   def render(assigns) do

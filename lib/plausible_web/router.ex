@@ -501,8 +501,10 @@ defmodule PlausibleWeb.Router do
     post "/security/email", SettingsController, :update_email
     post "/security/password", SettingsController, :update_password
 
-    scope alias: Live, assigns: %{connect_live_socket: true} do
-      live "/billing/subscription", SubscriptionSettings, :subscription, as: :settings
+    live_session :settings, on_mount: PlausibleWeb.Live.SettingsContext do
+      scope alias: Live, assigns: %{connect_live_socket: true} do
+        live "/billing/subscription", SubscriptionSettings, :subscription, as: :settings
+      end
     end
 
     get "/billing/invoices", SettingsController, :redirect_invoices
