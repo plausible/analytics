@@ -3,76 +3,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
   @user_id Enum.random(1000..9999)
 
-  describe "GET /api/stats/top-stats - default" do
+  defp do_query_success(conn, site, params) do
+    conn
+    |> post("/api/stats/#{site.domain}/query", params)
+    |> json_response(200)
+  end
+
+  describe "default" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns graph_metric key for graphable top stats", %{conn: conn, site: site} do
-      [visitors, visits, pageviews, views_per_visit, bounce_rate, visit_duration] =
-        conn
-        |> get("/api/stats/#{site.domain}/top-stats")
-        |> json_response(200)
-        |> Map.get("top_stats")
-
-      assert %{"graph_metric" => "visitors"} = visitors
-      assert %{"graph_metric" => "visits"} = visits
-      assert %{"graph_metric" => "pageviews"} = pageviews
-      assert %{"graph_metric" => "views_per_visit"} = views_per_visit
-      assert %{"graph_metric" => "bounce_rate"} = bounce_rate
-      assert %{"graph_metric" => "visit_duration"} = visit_duration
-    end
-
-    test "returns graph_metric key for top stats in realtime mode", %{
-      conn: conn,
-      site: site
-    } do
-      [current_visitors, unique_visitors, pageviews] =
-        conn
-        |> get("/api/stats/#{site.domain}/top-stats?period=realtime")
-        |> json_response(200)
-        |> Map.get("top_stats")
-
-      assert %{"graph_metric" => "current_visitors"} = current_visitors
-      assert %{"graph_metric" => "visitors"} = unique_visitors
-      assert %{"graph_metric" => "pageviews"} = pageviews
-    end
-
-    test "counts distinct user ids", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id),
-        build(:pageview, user_id: @user_id),
-        build(:pageview)
-      ])
-
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day")
-
-      res = json_response(conn, 200)
-
-      assert %{
-               "name" => "Unique visitors",
-               "value" => 2,
-               "graph_metric" => "visitors"
-             } in res["top_stats"]
-    end
-
-    test "counts total pageviews", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id),
-        build(:pageview, user_id: @user_id),
-        build(:pageview)
-      ])
-
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day")
-
-      res = json_response(conn, 200)
-
-      assert %{
-               "name" => "Total pageviews",
-               "value" => 3,
-               "graph_metric" => "pageviews"
-             } in res["top_stats"]
-    end
-
-    test "experimental session count", %{conn: conn, site: site} do
+    test "returns all top stats metrics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 3421, timestamp: ~N[2020-12-31 23:30:00]),
         build(:pageview, user_id: @user_id, timestamp: ~N[2020-12-31 23:59:00]),
@@ -82,86 +22,26 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, user_id: 617_235, timestamp: ~N[2021-01-03 00:00:00])
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01"
-        )
+      params = %{
+        "date_range" => "day",
+        "relative_date" => "2021-01-01",
+        "filters" => [],
+        "metrics" => [
+          "visitors",
+          "visits",
+          "pageviews",
+          "views_per_visit",
+          "bounce_rate",
+          "visit_duration"
+        ]
+      }
 
-      res = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      assert res["top_stats"] == [
-               %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"},
-               %{"name" => "Total visits", "value" => 2, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 2, "graph_metric" => "pageviews"},
-               %{
-                 "name" => "Views per visit",
-                 "value" => 2.0,
-                 "graph_metric" => "views_per_visit"
-               },
-               %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"},
-               %{"name" => "Visit duration", "value" => 120, "graph_metric" => "visit_duration"}
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2, 2, 2, 2.0, 0, 120]}]
     end
 
-    test "counts pages per visit", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:01:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:02:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 15:00:00])
-      ])
-
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01")
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Views per visit", "value" => 1.33, "graph_metric" => "views_per_visit"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "calculates bounce rate", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id),
-        build(:pageview, user_id: @user_id),
-        build(:pageview)
-      ])
-
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day")
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Bounce rate", "value" => 50, "graph_metric" => "bounce_rate"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "calculates average visit duration", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:15:00]
-        ),
-        build(:pageview,
-          timestamp: ~N[2021-01-01 00:15:00]
-        )
-      ])
-
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01")
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Visit duration", "value" => 450, "graph_metric" => "visit_duration"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "calculates time on page instead when filtered for page", %{conn: conn, site: site} do
+    test "returns all page-filtered top stats metrics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           pathname: "/pageA",
@@ -191,18 +71,24 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/pageA"]]])
+      params = %{
+        "date_range" => "day",
+        "relative_date" => "2021-01-01",
+        "filters" => [["is", "event:page", ["/pageA"]]],
+        "metrics" => [
+          "visitors",
+          "visits",
+          "pageviews",
+          "bounce_rate",
+          "scroll_depth",
+          "time_on_page"
+        ]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Time on page", "value" => 200, "graph_metric" => "time_on_page"} in res[
-               "top_stats"
+      assert response["results"] == [
+               %{"dimensions" => [], "metrics" => [2, 2, 2, 50, 0, 200]}
              ]
     end
 
@@ -256,19 +142,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/pageA", "/pageB"]]])
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/pageA", "/pageB"]]],
+        "metrics" => ["time_on_page"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Time on page", "value" => 220, "graph_metric" => "time_on_page"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [220]}]
     end
 
     test "calculates time on page when filtered for multiple negated pages", %{
@@ -321,22 +203,18 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([["is_not", "event:page", ["/pageA", "/pageC"]]])
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is_not", "event:page", ["/pageA", "/pageC"]]],
+        "metrics" => ["time_on_page"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Time on page", "value" => 20, "graph_metric" => "time_on_page"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [20]}]
     end
 
-    test "calculates time on page when filtered for multiple contains pages", %{
+    test "calculates time_on_page when filtered for multiple contains pages", %{
       conn: conn,
       site: site
     } do
@@ -387,19 +265,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:contains, "event:page", ["/blog/", "/articles/"]]])
+      params = %{
+        "date_range" => "all",
+        "filters" => [["contains", "event:page", ["/blog/", "/articles/"]]],
+        "metrics" => ["time_on_page"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Time on page", "value" => 130, "graph_metric" => "time_on_page"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [130]}]
     end
 
     test "calculates time on page when filtered for multiple negated contains pages", %{
@@ -453,19 +327,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([["contains_not", "event:page", ["/blog/", "/articles/"]]])
+      params = %{
+        "date_range" => "all",
+        "filters" => [["contains_not", "event:page", ["/blog/", "/articles/"]]],
+        "metrics" => ["time_on_page"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Time on page", "value" => 23, "graph_metric" => "time_on_page"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [23]}]
     end
 
     test "bounce_rate is 0 when the page in filter was never a landing page", %{
@@ -477,35 +347,35 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]],
+        "metrics" => ["bounce_rate"]
+      }
 
-      assert %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"} ==
-               conn
-               |> get(path)
-               |> json_response(200)
-               |> Map.fetch!("top_stats")
-               |> Enum.find(&(&1["name"] == "Bounce rate"))
+      response = do_query_success(conn, site, params)
+
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [0]}]
     end
 
-    test "time_on_page is 0 when it can't be calculated", %{conn: conn, site: site} do
+    test "time_on_page is nil when it can't be calculated", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/")
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-      path = "/api/stats/#{site.domain}/top-stats?&filters=#{filters}"
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]],
+        "metrics" => ["time_on_page"]
+      }
 
-      assert %{"name" => "Time on page", "value" => 0, "graph_metric" => "time_on_page"} ==
-               conn
-               |> get(path)
-               |> json_response(200)
-               |> Map.fetch!("top_stats")
-               |> Enum.find(&(&1["name"] == "Time on page"))
+      response = do_query_success(conn, site, params)
+
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [nil]}]
     end
   end
 
-  describe "GET /api/stats/top-stats - with imported data" do
+  describe "imported data" do
     setup [
       :create_user,
       :log_in,
@@ -513,49 +383,35 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       :create_legacy_site_import
     ]
 
-    test "puts scroll depth warning code", %{conn: conn, site: site} do
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
+    test "returns scroll depth warning", %{conn: conn, site: site} do
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]],
+        "metrics" => ["visitors", "scroll_depth"],
+        "include" => %{"imports" => true}
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}&with_imported=true"
-        )
+      assert %{"results" => results, "meta" => meta} =
+               do_query_success(conn, site, params)
 
-      %{"top_stats" => top_stats, "meta" => meta} = json_response(conn, 200)
-
+      assert results == [%{"dimensions" => [], "metrics" => [0, nil]}]
       assert meta["metric_warnings"]["scroll_depth"]["code"] == "no_imported_scroll_depth"
-
-      assert %{
-               "graph_metric" => "scroll_depth",
-               "name" => "Scroll depth",
-               "value" => nil
-             } in top_stats
     end
 
     test "returns divisible metrics as 0 when no stats exist", %{
       site: site,
       conn: conn
     } do
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&with_imported=true"
-        )
+      params = %{
+        "date_range" => "all",
+        "filters" => [],
+        "metrics" => ["bounce_rate", "views_per_visit", "visit_duration"],
+        "include" => %{"imports" => true}
+      }
 
-      res = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      assert %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"} in res[
-               "top_stats"
-             ]
-
-      assert %{"name" => "Views per visit", "value" => 0.0, "graph_metric" => "views_per_visit"} in res[
-               "top_stats"
-             ]
-
-      assert %{"name" => "Visit duration", "value" => 0, "graph_metric" => "visit_duration"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [0, 0, 0]}]
     end
 
     test "merges imported data into all top stat metrics", %{
@@ -577,25 +433,24 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:imported_visitors, date: ~D[2021-01-01])
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&with_imported=true"
-        )
+      params = %{
+        "date_range" => "all",
+        "filters" => [],
+        "metrics" => [
+          "visitors",
+          "visits",
+          "pageviews",
+          "views_per_visit",
+          "bounce_rate",
+          "visit_duration"
+        ],
+        "include" => %{"imports" => true}
+      }
 
-      res = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      assert res["top_stats"] == [
-               %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "visitors"},
-               %{"name" => "Total visits", "value" => 3, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 4, "graph_metric" => "pageviews"},
-               %{
-                 "name" => "Views per visit",
-                 "value" => 1.33,
-                 "graph_metric" => "views_per_visit"
-               },
-               %{"name" => "Bounce rate", "value" => 33, "graph_metric" => "bounce_rate"},
-               %{"name" => "Visit duration", "value" => 303, "graph_metric" => "visit_duration"}
+      assert response["results"] == [
+               %{"dimensions" => [], "metrics" => [3, 3, 4, 1.33, 33, 303]}
              ]
     end
 
@@ -635,24 +490,24 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:imported_locations, country: "US", date: ~D[2021-01-01], visitors: 999)
       ])
 
-      filters = Jason.encode!([[:is, "visit:country", ["EE", "FR"]]])
-      q = "?period=day&date=2021-01-01&with_imported=true&filters=#{filters}"
+      params = %{
+        "date_range" => ["2021-01-01", "2021-01-01"],
+        "filters" => [["is", "visit:country", ["EE", "FR"]]],
+        "metrics" => [
+          "visitors",
+          "visits",
+          "pageviews",
+          "views_per_visit",
+          "bounce_rate",
+          "visit_duration"
+        ],
+        "include" => %{"imports" => true}
+      }
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert res["top_stats"] == [
-               %{"name" => "Unique visitors", "value" => 5, "graph_metric" => "visitors"},
-               %{"name" => "Total visits", "value" => 11, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 101, "graph_metric" => "pageviews"},
-               %{
-                 "name" => "Views per visit",
-                 "value" => 9.18,
-                 "graph_metric" => "views_per_visit"
-               },
-               %{"name" => "Bounce rate", "value" => 9, "graph_metric" => "bounce_rate"},
-               %{"name" => "Visit duration", "value" => 71, "graph_metric" => "visit_duration"}
+      assert response["results"] == [
+               %{"dimensions" => [], "metrics" => [5, 11, 101, 9.18, 9, 71]}
              ]
     end
 
@@ -678,6 +533,8 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:imported_pages,
           page: "/",
           date: ~D[2021-01-01],
+          total_time_on_page: 120,
+          total_time_on_page_visits: 3,
           visitors: 1,
           visits: 3,
           pageviews: 34
@@ -685,24 +542,29 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:imported_pages, page: "/ignored", date: ~D[2021-01-01], visitors: 999)
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-      q = "?period=day&date=2021-01-01&with_imported=true&filters=#{filters}"
+      params = %{
+        "date_range" => ["2021-01-01", "2021-01-01"],
+        "filters" => [["is", "event:page", ["/"]]],
+        "metrics" => [
+          "visitors",
+          "visits",
+          "pageviews",
+          "bounce_rate",
+          "time_on_page",
+          "scroll_depth"
+        ],
+        "include" => %{"imports" => true}
+      }
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert res["top_stats"] == [
-               %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"},
-               %{"name" => "Total visits", "value" => 4, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"},
-               %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"},
-               %{"name" => "Scroll depth", "value" => nil, "graph_metric" => "scroll_depth"}
+      assert response["results"] == [
+               %{"dimensions" => [], "metrics" => [2, 4, 36, 0, 40, nil]}
              ]
     end
   end
 
-  describe "GET /api/stats/top-stats - with_imported_switch info" do
+  describe "imports_meta" do
     setup [:create_user, :log_in, :create_site]
 
     setup context do
@@ -715,77 +577,82 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       context
     end
 
-    test "visible is false in realtime", %{conn: conn, site: site} do
-      q = "?period=realtime"
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+    test "in realtime", %{conn: conn, site: site} do
+      params = %{
+        "date_range" => ["2021-01-01", "2021-01-01"],
+        "filters" => [],
+        "metrics" => ["visitors"],
+        "include" => %{"imports_meta" => true}
+      }
 
-      res = json_response(conn, 200)
+      assert %{"meta" => meta} = do_query_success(conn, site, params)
 
-      assert res["with_imported_switch"] == %{
-               "visible" => false,
-               "togglable" => false,
-               "tooltip_msg" => nil
-             }
+      assert meta["imports_skip_reason"] == "out_of_range"
+      assert meta["imports_included"] == false
     end
 
     test "when the site has no imported data", %{conn: conn, site: site} do
       Plausible.Imported.delete_imports_for_site(site)
 
-      q = "?period=day&date=2021-01-01&with_imported=true"
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+      params = %{
+        "date_range" => ["2021-01-01", "2021-01-01"],
+        "filters" => [],
+        "metrics" => ["visitors"],
+        "include" => %{"imports_meta" => true}
+      }
 
-      res = json_response(conn, 200)
+      assert %{"meta" => meta} = do_query_success(conn, site, params)
 
-      assert res["with_imported_switch"] == %{
-               "visible" => false,
-               "togglable" => false,
-               "tooltip_msg" => nil
-             }
+      assert meta["imports_skip_reason"] == "no_imported_data"
+      assert meta["imports_included"] == false
     end
 
     test "when imported data does not exist in the queried period", %{conn: conn, site: site} do
-      q = "?period=day&date=2022-05-05&with_imported=true"
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+      params = %{
+        "date_range" => ["2022-05-05", "2022-05-05"],
+        "filters" => [],
+        "metrics" => ["visitors"],
+        "include" => %{"imports_meta" => true}
+      }
 
-      res = json_response(conn, 200)
+      assert %{"meta" => meta} = do_query_success(conn, site, params)
 
-      assert res["with_imported_switch"] == %{
-               "visible" => false,
-               "togglable" => false,
-               "tooltip_msg" => nil
-             }
+      assert meta["imports_skip_reason"] == "out_of_range"
+      assert meta["imports_included"] == false
     end
 
     test "when imported data is requested, in range, and can be included", %{
       conn: conn,
       site: site
     } do
-      q = "?period=day&date=2021-03-15&with_imported=true"
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+      params = %{
+        "date_range" => ["2021-03-15", "2021-03-15"],
+        "filters" => [],
+        "metrics" => ["visitors"],
+        "include" => %{"imports" => true, "imports_meta" => true}
+      }
 
-      res = json_response(conn, 200)
+      assert %{"meta" => meta} = do_query_success(conn, site, params)
 
-      assert res["with_imported_switch"] == %{
-               "visible" => true,
-               "togglable" => true,
-               "tooltip_msg" => "Click to exclude imported data"
-             }
+      assert meta["imports_skip_reason"] == nil
+      assert meta["imports_included"] == true
     end
 
     test "when imported data is not requested, but in range and can be included", %{
       conn: conn,
       site: site
     } do
-      q = "?period=day&date=2021-03-15&with_imported=false"
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+      params = %{
+        "date_range" => ["2021-03-15", "2021-03-15"],
+        "filters" => [],
+        "metrics" => ["visitors"],
+        "include" => %{"imports" => false, "imports_meta" => true}
+      }
 
-      res = json_response(conn, 200)
+      assert %{"meta" => meta} = do_query_success(conn, site, params)
 
-      assert res["with_imported_switch"] == %{
-               "visible" => true,
-               "togglable" => true,
-               "tooltip_msg" => "Click to include imported data"
-             }
+      assert meta["imports_skip_reason"] == nil
+      assert meta["imports_included"] == false
     end
 
     test "when imported data is requested and in range, but cannot be included", %{
@@ -794,89 +661,81 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     } do
       insert(:goal, site: site, event_name: "Signup")
 
-      filters =
-        Jason.encode!([[:is, "event:goal", ["Signup"]], [:is, "event:page", ["/register"]]])
+      params = %{
+        "date_range" => ["2021-03-15", "2021-03-15"],
+        "filters" => [
+          ["is", "event:goal", ["Signup"]],
+          ["is", "event:page", ["/register"]]
+        ],
+        "metrics" => ["visitors"],
+        "include" => %{"imports" => true, "imports_meta" => true}
+      }
 
-      q = "?period=day&date=2021-03-15&with_imported=true&filters=#{filters}"
+      assert %{"meta" => meta} = do_query_success(conn, site, params)
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
-
-      res = json_response(conn, 200)
-
-      assert res["with_imported_switch"] == %{
-               "visible" => true,
-               "togglable" => false,
-               "tooltip_msg" => "Imported data cannot be included"
-             }
+      assert meta["imports_skip_reason"] == "unsupported_query"
+      assert meta["imports_included"] == false
     end
 
     test "when imported data is requested and in comparison range", %{conn: conn, site: site} do
-      q = "?period=day&date=2022-03-15&with_imported=true&comparison=year_over_year"
+      params = %{
+        "date_range" => ["2022-03-15", "2022-03-15"],
+        "filters" => [],
+        "metrics" => ["visitors"],
+        "include" => %{
+          "imports" => true,
+          "imports_meta" => true,
+          "compare" => "year_over_year"
+        }
+      }
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+      assert %{"meta" => meta} = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert res["with_imported_switch"] == %{
-               "visible" => true,
-               "togglable" => true,
-               "tooltip_msg" => "Click to exclude imported data"
-             }
+      assert meta["imports_skip_reason"] == nil
+      assert meta["imports_included"] == true
     end
 
     test "when imported data is not requested and in comparison range", %{conn: conn, site: site} do
-      q = "?period=day&date=2022-03-15&with_imported=false&comparison=year_over_year"
+      params = %{
+        "date_range" => ["2022-03-15", "2022-03-15"],
+        "filters" => [],
+        "metrics" => ["visitors"],
+        "include" => %{
+          "imports" => false,
+          "imports_meta" => true,
+          "compare" => "year_over_year"
+        }
+      }
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+      assert %{"meta" => meta} = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert res["with_imported_switch"] == %{
-               "visible" => true,
-               "togglable" => true,
-               "tooltip_msg" => "Click to include imported data"
-             }
+      assert meta["imports_skip_reason"] == nil
+      assert meta["imports_included"] == false
     end
   end
 
-  describe "GET /api/stats/top-stats - realtime" do
+  describe "realtime" do
     setup [:create_user, :log_in, :create_site]
 
-    test "shows current visitors (last 5 minutes)", %{conn: conn, site: site} do
+    test "current visitors (last 5 minutes)", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: relative_time(minute: -10)),
         build(:pageview, timestamp: relative_time(minute: -4)),
         build(:pageview, timestamp: relative_time(minute: -1))
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime")
+      params = %{
+        "date_range" => "realtime",
+        "filters" => [],
+        "metrics" => ["visitors"]
+      }
 
-      res = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      assert %{"name" => "Current visitors", "value" => 2, "graph_metric" => "current_visitors"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2]}]
     end
 
-    test "shows unique visitors (last 30 minutes)", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minute: -45)),
-        build(:pageview, timestamp: relative_time(minute: -25)),
-        build(:pageview, timestamp: relative_time(minute: -1))
-      ])
-
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime")
-
-      res = json_response(conn, 200)
-
-      assert %{
-               "name" => "Unique visitors (last 30 min)",
-               "value" => 2,
-               "graph_metric" => "visitors"
-             } in res["top_stats"]
-    end
-
-    test "shows pageviews (last 30 minutes)", %{conn: conn, site: site} do
+    test "visitors and pageviews (last 30 minutes)", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, timestamp: relative_time(minute: -45)),
         build(:pageview, user_id: @user_id, timestamp: relative_time(minute: -25)),
@@ -884,35 +743,18 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: relative_time(minute: -1))
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime")
+      params = %{
+        "date_range" => "realtime_30m",
+        "filters" => [],
+        "metrics" => ["visitors", "pageviews"]
+      }
 
-      res = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      assert %{"name" => "Pageviews (last 30 min)", "value" => 3, "graph_metric" => "pageviews"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2, 3]}]
     end
 
-    test "shows current visitors (last 5 min) with goal filter", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: relative_time(minute: -10)),
-        build(:pageview, timestamp: relative_time(minute: -3)),
-        build(:event, name: "Signup", timestamp: relative_time(minute: -2)),
-        build(:event, name: "Signup", timestamp: relative_time(minute: -1))
-      ])
-
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Current visitors", "value" => 3, "graph_metric" => "current_visitors"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "shows unique/total conversions (last 30 min) with goal filter", %{
+    test "visitors, events, and CR with goal filter (last 30 min)", %{
       conn: conn,
       site: site
     } do
@@ -921,84 +763,26 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup", timestamp: relative_time(minute: -25)),
         build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minute: -22)),
         build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minute: -21)),
-        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minute: -20))
+        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minute: -20)),
+        build(:pageview, timestamp: relative_time(minute: -20))
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
+      params = %{
+        "date_range" => "realtime_30m",
+        "filters" => [["is", "event:goal", ["Signup"]]],
+        "metrics" => ["visitors", "events", "conversion_rate"]
+      }
 
-      res = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      assert %{
-               "name" => "Unique conversions (last 30 min)",
-               "value" => 2,
-               "graph_metric" => "visitors"
-             } in res["top_stats"]
-
-      assert %{
-               "name" => "Total conversions (last 30 min)",
-               "value" => 4,
-               "graph_metric" => "events"
-             } in res["top_stats"]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2, 4, 66.67]}]
     end
   end
 
-  describe "GET /api/stats/top-stats - filters" do
+  describe "filters" do
     setup [:create_user, :log_in, :create_site]
-
-    test "returns graph_metric key for top stats with a page filter", %{
-      conn: conn,
-      site: site
-    } do
-      filters = Jason.encode!([[:is, "event:page", ["/A"]]])
-
-      [visitors, visits, pageviews, bounce_rate, time_on_page, scroll_depth] =
-        conn
-        |> get("/api/stats/#{site.domain}/top-stats?filters=#{filters}")
-        |> json_response(200)
-        |> Map.get("top_stats")
-
-      assert %{"graph_metric" => "visitors"} = visitors
-      assert %{"graph_metric" => "visits"} = visits
-      assert %{"graph_metric" => "pageviews"} = pageviews
-      assert %{"graph_metric" => "bounce_rate"} = bounce_rate
-      assert %{"graph_metric" => "time_on_page"} = time_on_page
-      assert %{"graph_metric" => "scroll_depth"} = scroll_depth
-    end
-
-    test "returns graph_metric key for top stats with a goal filter", %{
-      conn: conn,
-      site: site
-    } do
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
-      [unique_conversions, total_conversions, cr] =
-        conn
-        |> get("/api/stats/#{site.domain}/top-stats?filters=#{filters}")
-        |> json_response(200)
-        |> Map.get("top_stats")
-
-      assert %{"graph_metric" => "visitors"} = unique_conversions
-      assert %{"graph_metric" => "events"} = total_conversions
-      assert %{"graph_metric" => "conversion_rate"} = cr
-    end
-
-    test "returns graph_metric key for top stats with a goal filter in realtime mode",
-         %{conn: conn, site: site} do
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
-      [current_visitors, unique_conversions, total_conversions] =
-        conn
-        |> get("/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
-        |> json_response(200)
-        |> Map.get("top_stats")
-
-      assert %{"graph_metric" => "current_visitors"} = current_visitors
-      assert %{"graph_metric" => "visitors"} = unique_conversions
-      assert %{"graph_metric" => "events"} = total_conversions
-    end
 
     test "returns only visitors from a country based on alpha2 code", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1007,19 +791,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, country_code: "EE")
       ])
 
-      filters = Jason.encode!([[:is, "visit:country", ["US"]]])
+      params = %{
+        "date_range" => "month",
+        "filters" => [["is", "visit:country", ["US"]]],
+        "metrics" => ["visitors"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2]}]
     end
 
     test "returns scroll_depth with a page filter", %{conn: conn, site: site} do
@@ -1032,19 +812,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:engagement, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
+      params = %{
+        "date_range" => "day",
+        "relative_date" => "2021-01-01",
+        "filters" => [["is", "event:page", ["/"]]],
+        "metrics" => ["scroll_depth"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Scroll depth", "value" => 70, "graph_metric" => "scroll_depth"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [70]}]
     end
 
     test "returns scroll_depth with a page filter with imported data", %{conn: conn, site: site} do
@@ -1068,25 +845,17 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:imported_pages, page: "/", date: ~D[2021-01-02], visitors: 100)
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
+      params = %{
+        "date_range" => "7d",
+        "relative_date" => "2021-01-07",
+        "filters" => [["is", "event:page", ["/"]]],
+        "metrics" => ["visitors", "scroll_depth"],
+        "include" => %{"imports" => true}
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=7d&date=2021-01-07&filters=#{filters}&with_imported=true"
-        )
+      response = do_query_success(conn, site, params)
 
-      scroll_depth_stat =
-        conn
-        |> json_response(200)
-        |> Map.get("top_stats")
-        |> Enum.find(&(&1["name"] == "Scroll depth"))
-
-      assert scroll_depth_stat == %{
-               "name" => "Scroll depth",
-               "value" => 55,
-               "graph_metric" => "scroll_depth"
-             }
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [110, 55]}]
     end
 
     test "contains filter", %{conn: conn, site: site} do
@@ -1096,19 +865,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/another/post")
       ])
 
-      filters = Jason.encode!([[:contains, "event:page", ["blog"]]])
+      params = %{
+        "date_range" => "month",
+        "filters" => [["contains", "event:page", ["blog"]]],
+        "metrics" => ["visitors"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2]}]
     end
 
     test "returns only visitors with specific screen size", %{conn: conn, site: site} do
@@ -1118,19 +883,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, screen_size: "Mobile")
       ])
 
-      filters = Jason.encode!([[:is, "visit:screen", ["Desktop"]]])
+      params = %{
+        "date_range" => "month",
+        "filters" => [["is", "visit:screen", ["Desktop"]]],
+        "metrics" => ["visitors"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2]}]
     end
 
     test "returns only visitors with specific screen size for a given hostname", %{
@@ -1150,28 +911,18 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, screen_size: "Mobile", hostname: "blog.example.com")
       ])
 
-      filters =
-        Jason.encode!([
-          [:is, "visit:screen", ["Desktop"]],
-          [:is, "event:hostname", ["blog.example.com"]]
-        ])
+      params = %{
+        "date_range" => "month",
+        "filters" => [
+          ["is", "visit:screen", ["Desktop"]],
+          ["is", "event:hostname", ["blog.example.com"]]
+        ],
+        "metrics" => ["visitors", "visits"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res =
-        json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
-
-      assert %{"name" => "Total visits", "value" => 3, "graph_metric" => "visits"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [3, 3]}]
     end
 
     test "returns only visitors with specific browser", %{conn: conn, site: site} do
@@ -1181,19 +932,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, browser: "Safari")
       ])
 
-      filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
+      params = %{
+        "date_range" => "month",
+        "filters" => [["is", "visit:browser", ["Chrome"]]],
+        "metrics" => ["visitors"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2]}]
     end
 
     test "returns only visitors with specific operating system", %{conn: conn, site: site} do
@@ -1203,19 +950,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, operating_system: "Windows")
       ])
 
-      filters = Jason.encode!([[:is, "visit:os", ["Mac"]]])
+      params = %{
+        "date_range" => "month",
+        "filters" => [["is", "visit:os", ["Mac"]]],
+        "metrics" => ["visitors"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2]}]
     end
 
     test "returns number of visits from one specific referral source", %{conn: conn, site: site} do
@@ -1238,43 +981,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:10:00])
       ])
 
-      filters = Jason.encode!([[:is, "visit:source", ["Google"]]])
+      params = %{
+        "date_range" => "day",
+        "relative_date" => "2021-01-01",
+        "filters" => [["is", "visit:source", ["Google"]]],
+        "metrics" => ["visits"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Total visits", "value" => 2, "graph_metric" => "visits"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "does not return the views_per_visit metric when a page filter is applied", %{
-      conn: conn,
-      site: site
-    } do
-      populate_stats(site, [
-        build(:pageview, pathname: "/")
-      ])
-
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}"
-        )
-
-      res = json_response(conn, 200)
-
-      refute Enum.any?(res["top_stats"], fn
-               %{"name" => "Views per visit"} -> true
-               _ -> false
-             end)
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2]}]
     end
 
     test "hostname exact filter", %{conn: conn, site: site} do
@@ -1289,23 +1005,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com")
       ])
 
-      filters = Jason.encode!([[:is, "event:hostname", ["example.com"]]])
+      params = %{
+        "date_range" => "month",
+        "filters" => [["is", "event:hostname", ["example.com"]]],
+        "metrics" => ["visitors", "pageviews"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
-
-      assert %{"name" => "Total pageviews", "value" => 2, "graph_metric" => "pageviews"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2, 2]}]
     end
 
     test "hostname contains filter", %{conn: conn, site: site} do
@@ -1326,24 +1034,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/blog/post2", hostname: "about.example.com")
       ])
 
-      filters = Jason.encode!([[:contains, "event:hostname", ["example.com"]]])
+      params = %{
+        "date_range" => "month",
+        "filters" => [["contains", "event:hostname", ["example.com"]]],
+        "metrics" => ["visitors", "pageviews"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res =
-        json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 4, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
-
-      assert %{"name" => "Total pageviews", "value" => 6, "graph_metric" => "pageviews"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [4, 6]}]
     end
 
     test "hostname contains subdomain filter", %{conn: conn, site: site} do
@@ -1368,30 +1067,22 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:contains, "event:hostname", [".example.com"]]])
+      params = %{
+        "date_range" => "month",
+        "filters" => [["contains", "event:hostname", [".example.com"]]],
+        "metrics" => ["visitors", "pageviews"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
-
-      assert %{"name" => "Total pageviews", "value" => 4, "graph_metric" => "pageviews"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [3, 4]}]
     end
   end
 
-  describe "GET /api/stats/top-stats - filtered for goal" do
+  describe "goal filter" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns total and unique conversions", %{conn: conn, site: site} do
+    test "returns unique and total conversions and conversion rate", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Signup")
 
       populate_stats(site, [
@@ -1403,98 +1094,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, user_id: 2, name: "Signup")
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
+      params = %{
+        "date_range" => "day",
+        "filters" => [["is", "event:goal", ["Signup"]]],
+        "metrics" => ["visitors", "events", "conversion_rate"]
+      }
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}"
-        )
+      response = do_query_success(conn, site, params)
 
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique conversions", "value" => 2, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
-
-      assert %{"name" => "Total conversions", "value" => 3, "graph_metric" => "events"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "returns converted visitors", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id),
-        build(:pageview, user_id: @user_id),
-        build(:pageview),
-        build(:event, name: "Signup")
-      ])
-
-      insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique conversions", "value" => 1, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "returns conversion rate", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id),
-        build(:pageview, user_id: @user_id),
-        build(:pageview),
-        build(:event, name: "Signup")
-      ])
-
-      insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}"
-        )
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Conversion rate", "value" => 33.33, "graph_metric" => "conversion_rate"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "returns conversion rate without change when comparison mode disallowed", %{
-      conn: conn,
-      site: site
-    } do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id),
-        build(:pageview, user_id: @user_id),
-        build(:pageview),
-        build(:event, name: "Signup")
-      ])
-
-      insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}&comparison_mode=year_over_year"
-        )
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Conversion rate", "value" => 33.33, "graph_metric" => "conversion_rate"} in res[
-               "top_stats"
-             ]
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2, 3, 50.0]}]
     end
 
     @tag :ee_only
@@ -1536,31 +1144,33 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["PaymentUSD"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["PaymentUSD"]]],
+        "metrics" => ["average_revenue", "total_revenue"]
+      }
 
-      assert %{
-               "name" => "Average revenue",
-               "value" => %{
-                 "long" => "$1,659.50",
-                 "short" => "$1.7K",
-                 "value" => 1659.5,
-                 "currency" => "USD"
-               },
-               "graph_metric" => "average_revenue"
-             } in top_stats
+      response = do_query_success(conn, site, params)
 
-      assert %{
-               "name" => "Total revenue",
-               "value" => %{
-                 "long" => "$3,319.00",
-                 "short" => "$3.3K",
-                 "value" => 3319.0,
-                 "currency" => "USD"
-               },
-               "graph_metric" => "total_revenue"
-             } in top_stats
+      assert response["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [
+                   %{
+                     "long" => "$1,659.50",
+                     "short" => "$1.7K",
+                     "value" => 1659.5,
+                     "currency" => "USD"
+                   },
+                   %{
+                     "long" => "$3,319.00",
+                     "short" => "$3.3K",
+                     "value" => 3319.0,
+                     "currency" => "USD"
+                   }
+                 ]
+               }
+             ]
     end
 
     @tag :ee_only
@@ -1605,31 +1215,33 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment", "Payment2"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Payment", "Payment2"]]],
+        "metrics" => ["average_revenue", "total_revenue"]
+      }
 
-      assert %{
-               "name" => "Average revenue",
-               "value" => %{
-                 "long" => "$1,659.50",
-                 "short" => "$1.7K",
-                 "value" => 1659.5,
-                 "currency" => "USD"
-               },
-               "graph_metric" => "average_revenue"
-             } in top_stats
+      response = do_query_success(conn, site, params)
 
-      assert %{
-               "name" => "Total revenue",
-               "value" => %{
-                 "long" => "$6,638.00",
-                 "short" => "$6.6K",
-                 "value" => 6638.0,
-                 "currency" => "USD"
-               },
-               "graph_metric" => "total_revenue"
-             } in top_stats
+      assert response["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [
+                   %{
+                     "long" => "$1,659.50",
+                     "short" => "$1.7K",
+                     "value" => 1659.5,
+                     "currency" => "USD"
+                   },
+                   %{
+                     "long" => "$6,638.00",
+                     "short" => "$6.6K",
+                     "value" => 6638.0,
+                     "currency" => "USD"
+                   }
+                 ]
+               }
+             ]
     end
 
     @tag :ee_only
@@ -1661,13 +1273,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment", "AddToCart"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Payment", "AddToCart"]]],
+        "metrics" => ["visitors", "events", "conversion_rate", "total_revenue", "average_revenue"]
+      }
 
-      metrics = Enum.map(top_stats, & &1["name"])
-      refute "Average revenue" in metrics
-      refute "Total revenue" in metrics
+      %{"results" => results, "query" => query} = do_query_success(conn, site, params)
+
+      assert query["metrics"] == ["visitors", "events", "conversion_rate"]
+      assert results == [%{"dimensions" => [], "metrics" => [4, 4, 100.0]}]
     end
 
     @tag :ee_only
@@ -1691,31 +1306,33 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup")
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment", "Signup"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Payment", "Signup"]]],
+        "metrics" => ["average_revenue", "total_revenue"]
+      }
 
-      assert %{
-               "name" => "Average revenue",
-               "value" => %{
-                 "long" => "$1,000.00",
-                 "short" => "$1.0K",
-                 "value" => 1000.0,
-                 "currency" => "USD"
-               },
-               "graph_metric" => "average_revenue"
-             } in top_stats
+      response = do_query_success(conn, site, params)
 
-      assert %{
-               "name" => "Total revenue",
-               "value" => %{
-                 "long" => "$2,000.00",
-                 "short" => "$2.0K",
-                 "value" => 2000.0,
-                 "currency" => "USD"
-               },
-               "graph_metric" => "total_revenue"
-             } in top_stats
+      assert response["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [
+                   %{
+                     "long" => "$1,000.00",
+                     "short" => "$1.0K",
+                     "value" => 1000.0,
+                     "currency" => "USD"
+                   },
+                   %{
+                     "long" => "$2,000.00",
+                     "short" => "$2.0K",
+                     "value" => 2000.0,
+                     "currency" => "USD"
+                   }
+                 ]
+               }
+             ]
     end
 
     @tag :ee_only
@@ -1723,31 +1340,23 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
          %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment", "Signup"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Payment", "Signup"]]],
+        "metrics" => ["average_revenue", "total_revenue"]
+      }
 
-      assert %{
-               "name" => "Average revenue",
-               "value" => %{
-                 "long" => "$0.00",
-                 "short" => "$0.0",
-                 "value" => 0.0,
-                 "currency" => "USD"
-               },
-               "graph_metric" => "average_revenue"
-             } in top_stats
+      response = do_query_success(conn, site, params)
 
-      assert %{
-               "name" => "Total revenue",
-               "value" => %{
-                 "long" => "$0.00",
-                 "short" => "$0.0",
-                 "value" => 0.0,
-                 "currency" => "USD"
-               },
-               "graph_metric" => "total_revenue"
-             } in top_stats
+      assert response["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [
+                   %{"long" => "$0.00", "short" => "$0.0", "value" => 0.0, "currency" => "USD"},
+                   %{"long" => "$0.00", "short" => "$0.0", "value" => 0.0, "currency" => "USD"}
+                 ]
+               }
+             ]
     end
 
     @tag :ee_only
@@ -1768,15 +1377,19 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["PaymentWithoutCurrency"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["PaymentWithoutCurrency"]]],
+        "metrics" => ["visitors", "events", "conversion_rate", "total_revenue", "average_revenue"]
+      }
 
-      metrics = Enum.map(top_stats, & &1["name"])
-      refute "Average revenue" in metrics
-      refute "Total revenue" in metrics
+      %{"results" => results, "query" => query} = do_query_success(conn, site, params)
+
+      assert query["metrics"] == ["visitors", "events", "conversion_rate"]
+      assert results == [%{"dimensions" => [], "metrics" => [2, 2, 100.0]}]
     end
 
+    @tag :ee_only
     test "does not return average and total when site owner is on a growth plan",
          %{conn: conn, site: site, user: user} do
       subscribe_to_growth_plan(user)
@@ -1790,13 +1403,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Payment"]]],
+        "metrics" => ["visitors", "events", "conversion_rate", "total_revenue", "average_revenue"]
+      }
 
-      metrics = Enum.map(top_stats, & &1["name"])
-      refute "Average revenue" in metrics
-      refute "Total revenue" in metrics
+      %{"results" => results, "query" => query} = do_query_success(conn, site, params)
+
+      assert query["metrics"] == ["visitors", "events", "conversion_rate"]
+      assert results == [%{"dimensions" => [], "metrics" => [1, 1, 100.0]}]
     end
 
     test "page scroll goal filter", %{conn: conn, site: site} do
@@ -1819,15 +1435,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Visit /blog"]]],
+        "metrics" => ["visitors", "events", "conversion_rate"]
+      }
 
-      assert [unique_conversions, total_conversions, conversion_rate] = top_stats
+      response = do_query_success(conn, site, params)
 
-      assert %{"name" => "Unique conversions", "value" => 1} = unique_conversions
-      assert %{"name" => "Total conversions", "value" => nil} = total_conversions
-      assert %{"name" => "Conversion rate", "value" => 50.0} = conversion_rate
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [1, nil, 50.0]}]
     end
 
     test "goal is page scroll OR custom event", %{conn: conn, site: site} do
@@ -1866,15 +1482,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:01:00])
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog", "Signup"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Visit /blog", "Signup"]]],
+        "metrics" => ["visitors", "events", "conversion_rate"]
+      }
 
-      assert [unique_conversions, total_conversions, conversion_rate] = top_stats
+      response = do_query_success(conn, site, params)
 
-      assert %{"name" => "Unique conversions", "value" => 3} = unique_conversions
-      assert %{"name" => "Total conversions", "value" => nil} = total_conversions
-      assert %{"name" => "Conversion rate", "value" => 60.0} = conversion_rate
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [3, nil, 60.0]}]
     end
 
     test "goal is page scroll OR pageview goal", %{conn: conn, site: site} do
@@ -1905,38 +1521,20 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:01:00])
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog", "Scroll 50 /blog**"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
-      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+      params = %{
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Visit /blog", "Scroll 50 /blog**"]]],
+        "metrics" => ["visitors", "events", "conversion_rate"]
+      }
 
-      assert [unique_conversions, total_conversions, conversion_rate] = top_stats
+      response = do_query_success(conn, site, params)
 
-      assert %{"name" => "Unique conversions", "value" => 2} = unique_conversions
-      assert %{"name" => "Total conversions", "value" => nil} = total_conversions
-      assert %{"name" => "Conversion rate", "value" => 66.67} = conversion_rate
+      assert response["results"] == [%{"dimensions" => [], "metrics" => [2, nil, 66.67]}]
     end
   end
 
-  describe "GET /api/stats/top-stats - with comparisons" do
+  describe "comparisons" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
-
-    test "does not return comparisons by default", %{site: site, conn: conn} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2020-12-31 00:00:00]),
-        build(:pageview, timestamp: ~N[2020-12-31 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:01:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 10:00:00])
-      ])
-
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01")
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Total visits", "value" => 3, "graph_metric" => "visits"} in res[
-               "top_stats"
-             ]
-    end
 
     test "returns comparison data when mode is custom", %{site: site, conn: conn} do
       populate_stats(site, [
@@ -1949,22 +1547,22 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 10:00:00])
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&comparison=custom&compare_from=2020-01-01&compare_to=2020-01-20"
-        )
+      params = %{
+        "date_range" => "day",
+        "relative_date" => "2021-01-01",
+        "filters" => [],
+        "metrics" => ["visits"],
+        "include" => %{"compare" => ["2020-01-01", "2020-01-20"]}
+      }
 
-      res = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      assert %{
-               "change" => 0,
-               "comparison_value" => 3,
-               "name" => "Total visits",
-               "value" => 3,
-               "graph_metric" => "visits"
-             } in res[
-               "top_stats"
+      assert response["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [3],
+                 "comparison" => %{"dimensions" => [], "metrics" => [3], "change" => [0]}
+               }
              ]
     end
 
@@ -1979,18 +1577,18 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 10:00:00])
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&comparison=previous_period"
-        )
+      params = %{
+        "date_range" => "month",
+        "relative_date" => "2021-01-01",
+        "filters" => [],
+        "metrics" => ["visitors"],
+        "include" => %{"compare" => "previous_period"}
+      }
 
-      assert %{
-               "comparing_from" => "2020-12-01",
-               "comparing_to" => "2020-12-31",
-               "from" => "2021-01-01",
-               "to" => "2021-01-31"
-             } = json_response(conn, 200)
+      assert %{"query" => query} = do_query_success(conn, site, params)
+
+      assert query["date_range"] == ["2021-01-01T00:00:00Z", "2021-01-31T23:59:59Z"]
+      assert query["comparison_date_range"] == ["2020-12-01T00:00:00Z", "2020-12-31T23:59:59Z"]
     end
 
     test "compares native and imported data", %{site: site, conn: conn} do
@@ -2003,24 +1601,28 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true&comparison=year_over_year"
-        )
+      params = %{
+        "date_range" => "month",
+        "relative_date" => "2021-01-01",
+        "filters" => [],
+        "metrics" => ["visits"],
+        "include" => %{"imports" => true, "imports_meta" => true, "compare" => "year_over_year"}
+      }
 
-      assert %{"top_stats" => top_stats, "includes_imported" => true} = json_response(conn, 200)
+      %{"results" => results, "meta" => meta} = do_query_success(conn, site, params)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 2,
-               "name" => "Total visits",
-               "value" => 4,
-               "graph_metric" => "visits"
-             } in top_stats
+      assert meta["imports_included"] == true
+
+      assert results == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [4],
+                 "comparison" => %{"dimensions" => [], "metrics" => [2], "change" => [100]}
+               }
+             ]
     end
 
-    test "does not compare imported data when with_imported is set to false", %{
+    test "does not compare imported data when include.imports is false", %{
       site: site,
       conn: conn
     } do
@@ -2033,21 +1635,23 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=false&comparison=year_over_year"
-        )
+      params = %{
+        "date_range" => "month",
+        "relative_date" => "2021-01-01",
+        "filters" => [],
+        "metrics" => ["visits"],
+        "include" => %{"imports" => false, "compare" => "year_over_year"}
+      }
 
-      assert %{"top_stats" => top_stats, "includes_imported" => false} = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Total visits",
-               "value" => 4,
-               "graph_metric" => "visits"
-             } in top_stats
+      assert response["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [4],
+                 "comparison" => %{"dimensions" => [], "metrics" => [0], "change" => [100]}
+               }
+             ]
     end
 
     test "compares conversion rates", %{conn: conn, site: site} do
@@ -2062,19 +1666,24 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2023-01-03&comparison=previous_period&filters=#{filters}"
-        )
+      params = %{
+        "date_range" => "day",
+        "relative_date" => "2023-01-03",
+        "filters" => [["is", "event:goal", ["Signup"]]],
+        "metrics" => ["conversion_rate"],
+        "include" => %{"compare" => "previous_period"}
+      }
 
-      res = json_response(conn, 200)
+      response = do_query_success(conn, site, params)
 
-      cr = Enum.find(res["top_stats"], &(&1["name"] == "Conversion rate"))
-
-      assert %{"change" => -33.3, "comparison_value" => 66.67, "value" => 33.33} = cr
+      assert response["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [33.33],
+                 "comparison" => %{"dimensions" => [], "metrics" => [66.67], "change" => [-33.3]}
+               }
+             ]
     end
   end
 end

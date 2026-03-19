@@ -1,6 +1,16 @@
 defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
   use PlausibleWeb.ConnCase, async: true
 
+  defp call_internal_query_endpoint(conn, site, q, opts \\ []) do
+    params = %{
+      "date_range" => "day",
+      "metrics" => ["visitors"],
+      "filters" => Keyword.get(opts, :filters, [])
+    }
+
+    post(conn, "/api/stats/#{site.domain}/query?#{q}", params)
+  end
+
   describe "API authorization - as anonymous user" do
     test "returns 404 for a site that doesn't exist", %{conn: conn} do
       conn = init_session(conn)
@@ -34,7 +44,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
     test "returns 404 for non-existent shared link", %{conn: conn} do
       site = new_site()
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?auth=does-not-exist")
+      conn = call_internal_query_endpoint(conn, site, "auth=does-not-exist")
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -45,9 +55,9 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       site = new_site()
       link = insert(:shared_link, site: site)
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?auth=#{link.slug}")
+      conn = call_internal_query_endpoint(conn, site, "auth=#{link.slug}")
 
-      assert %{"top_stats" => _any} = json_response(conn, 200)
+      assert %{"results" => _any} = json_response(conn, 200)
     end
 
     test "returns 200 for password-protected link with valid cookie", %{conn: conn} do
@@ -62,9 +72,9 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       conn =
         conn
         |> put_req_cookie(cookie_name, token)
-        |> get("/api/stats/#{site.domain}/top-stats?auth=#{link.slug}")
+        |> call_internal_query_endpoint(site, "auth=#{link.slug}")
 
-      assert %{"top_stats" => _any} = json_response(conn, 200)
+      assert %{"results" => _any} = json_response(conn, 200)
     end
 
     test "returns 404 for password-protected link with invalid cookie value", %{conn: conn} do
@@ -86,7 +96,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       conn =
         conn
         |> put_req_cookie(cookie_name, other_link_token)
-        |> get("/api/stats/#{site.domain}/top-stats?auth=#{link.slug}")
+        |> call_internal_query_endpoint(site, "auth=#{link.slug}")
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -99,7 +109,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?auth=#{link.slug}")
+      conn = call_internal_query_endpoint(conn, site, "auth=#{link.slug}")
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -116,7 +126,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       link =
         insert(:shared_link, site: site, segment: segment)
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?auth=#{link.slug}")
+      conn = call_internal_query_endpoint(conn, site, "auth=#{link.slug}")
 
       assert json_response(conn, 400) == %{
                "error" => "The first filter must be for the segment with id #{segment.id}"
@@ -133,9 +143,8 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
         insert(:shared_link, site: site, segment: segment)
 
       conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?auth=#{link.slug}&filters=#{JSON.encode!([["is", "segment", [segment.id + 1]]])}"
+        call_internal_query_endpoint(conn, site, "auth=#{link.slug}",
+          filters: [["is", "segment", [segment.id + 1]]]
         )
 
       assert json_response(conn, 400) == %{
@@ -153,9 +162,11 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
         insert(:shared_link, site: site, segment: segment)
 
       conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?auth=#{link.slug}&filters=#{JSON.encode!([["is", "segment", [segment.id]], ["is", "event:page", ["/docs"]]])}"
+        call_internal_query_endpoint(conn, site, "auth=#{link.slug}",
+          filters: [
+            ["is", "segment", [segment.id]],
+            ["is", "event:page", ["/docs"]]
+          ]
         )
 
       assert json_response(conn, 200)

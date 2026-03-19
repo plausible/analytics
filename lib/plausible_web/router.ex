@@ -285,7 +285,6 @@ defmodule PlausibleWeb.Router do
         post "/:domain/query", StatsController, :query
         get "/:domain/current-visitors", StatsController, :current_visitors
         get "/:domain/main-graph", StatsController, :main_graph
-        get "/:domain/top-stats", StatsController, :top_stats
         get "/:domain/sources", StatsController, :sources
         get "/:domain/channels", StatsController, :channels
         get "/:domain/utm_mediums", StatsController, :utm_mediums
