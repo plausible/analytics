@@ -6,6 +6,260 @@
 ###############
 
 ##########
+# Contiki (https://www.contiki-os.org/ | https://github.com/contiki-os/contiki)
+##########
+- regex: 'Contiki/(\d+[.\d]+)'
+  name: 'Contiki'
+  version: '$1'
+
+##########
+# MINIX (https://www.minix3.org/)
+##########
+- regex: 'Minix (\d+[.\d]+)'
+  name: 'MINIX'
+  version: '$1'
+
+##########
+# Plan 9 (https://9p.io/plan9/)
+##########
+- regex: 'Plan 9 (\d+[.\d]+)'
+  name: 'Plan 9'
+  version: '$1'
+
+##########
+# Linpus (https://www.linpus.com/)
+##########
+- regex: 'Linpus/(\d+[.\d]+)'
+  name: 'Linpus'
+  version: '$1'
+
+##########
+# ArcaOS (https://www.arcanoae.com/)
+##########
+- regex: 'ArcaOS(?: (\d+[.\d]+))?'
+  name: 'ArcaOS'
+  version: '$1'
+
+##########
+# GhostBSD (https://www.ghostbsd.org/)
+##########
+- regex: 'GhostBSD/(\d+[.\d]+)'
+  name: 'GhostBSD'
+  version: '$1'
+
+##########
+# elementary OS (https://elementary.io/)
+##########
+- regex: 'elementary OS/(\d+[.\d]+)'
+  name: 'elementary OS'
+  version: '$1'
+
+##########
+# Mocor OS
+##########
+- regex: 'SpreadTrum'
+  name: 'Mocor OS'
+  version: ''
+
+##########
+# Titan OS (https://www.titanos.tv/)
+##########
+- regex: 'TitanOS/(\d+[.\d]+)'
+  name: 'Titan OS'
+  version: '$1'
+
+##########
+# KolibriOS (https://www.kolibrios.org/en/)
+##########
+- regex: 'KolibriOS'
+  name: 'KolibriOS'
+  version: ''
+
+##########
+# Coolita OS (http://www.coolitaos.com/)
+##########
+- regex: 'Coolita OS QJY/.+LiteOS(\d+[.\d]+)'
+  name: 'Coolita OS'
+  version: '$1'
+- regex: 'Coolita OS QJY/(\d+[.\d]+)'
+  name: 'Coolita OS'
+  version: '$1'
+
+##########
+# RTOS & Next
+##########
+- regex: '^NEXT '
+  name: 'RTOS & Next'
+  version: ''
+
+##########
+# Meta Horizon (https://developers.meta.com/horizon)
+##########
+- regex: '(?:Pacific|(?<!like )Quest).+OculusBrowser|Standalone HMD|PortalGo'
+  name: 'Meta Horizon'
+  version: ''
+
+##########
+# LeafOS (https://www.leafos.org/)
+##########
+- regex: 'LeafOS'
+  name: 'LeafOS'
+  version: ''
+
+##########
+# Puffin OS (https://www.puffin.com/os/help/faq/)
+##########
+- regex: 'Cloud Phone'
+  name: 'Puffin OS'
+  version: ''
+
+##########
+# risingOS (https://github.com/RisingTechOSS/android)
+##########
+- regex: 'RisingOS'
+  name: 'risingOS'
+  version: ''
+
+##########
+# Azure Linux (https://github.com/microsoft/azurelinux)
+##########
+- regex: '.+.cm(\d).x86_64'
+  name: 'Azure Linux'
+  version: '$1'
+
+- regex: 'Linux[/-].+-(azure|Microsoft)'
+  name: 'Azure Linux'
+  version: ''
+
+# ViziOS
+##########
+- regex: 'ViziOS/(\d+[.\d]+)'
+  name: 'ViziOS'
+  version: '$1'
+- regex: 'VIZIO(?: SmartCast|-DTV)'
+  name: 'ViziOS'
+  version: ''
+
+##########
+# blackPanther OS (https://blackpantheros.eu/)
+##########
+- regex: 'blackPanther OS'
+  name: 'blackPanther OS'
+  version: ''
+
+##########
+# WoPhone
+##########
+- regex: 'WoPhone(?:/(\d+[.\d]+))?'
+  name: 'WoPhone'
+  version: '$1'
+
+##########
+# KIN OS (https://en.wikipedia.org/wiki/Microsoft_Kin)
+##########
+- regex: 'KIN\.(?:One|Two) (\d+[.\d]+)'
+  name: 'KIN OS'
+  version: '$1'
+
+##########
+# Star-Blade OS
+##########
+- regex: 'Star-Blade OS'
+  name: 'Star-Blade OS'
+  version: ''
+
+##########
+# Qtopia (https://en.wikipedia.org/wiki/Qt_Extended)
+##########
+- regex: 'Qtopia/(\d+[.\d]+)'
+  name: 'Qtopia'
+  version: '$1'
+
+##########
+# OpenVMS (https://vmssoftware.com/)
+##########
+- regex: 'OpenVMS(?: V(\d+[.\d]+))?'
+  name: 'OpenVMS'
+  version: '$1'
+
+##########
+# AROS (https://aros.sourceforge.io/)
+##########
+- regex: 'AROS'
+  name: 'AROS'
+  version: ''
+
+##########
+# NeXTSTEP
+##########
+- regex: '\(NEXT\)'
+  name: 'NeXTSTEP'
+  version: ''
+
+##########
+# NEWS-OS (https://en.wikipedia.org/wiki/Sony_NEWS)
+##########
+- regex: 'NEWS-OS (\d+[.\d]+)'
+  name: 'NEWS-OS'
+  version: '$1'
+
+##########
+# ULTRIX (https://en.wikipedia.org/wiki/Ultrix)
+##########
+- regex: 'ULTRIX (\d+[.\d]+)'
+  name: 'ULTRIX'
+  version: '$1'
+
+##########
+# Turbolinux (http://www.turbolinux.com/)
+##########
+- regex: 'Turbolinux/(\d+[.\d]+)'
+  name: 'Turbolinux'
+  version: '$1'
+
+##########
+# Joli OS (https://www.jolicloud.com/products/)
+##########
+- regex: 'Joli OS/(\d+[.\d]+)'
+  name: 'Joli OS'
+  version: '$1'
+
+##########
+# GENIX
+##########
+- regex: 'GENIX (\d+[.\d]+)'
+  name: 'GENIX'
+  version: '$1'
+
+##########
+# gNewSense (http://www.gnewsense.org)
+##########
+- regex: 'gNewSense/.*\((\d+[.\d]+)'
+  name: 'gNewSense'
+  version: '$1'
+
+##########
+# GEOS
+##########
+- regex: 'Geos (\d+[.\d]+)'
+  name: 'GEOS'
+  version: '$1'
+
+##########
+# Motorola EZX
+##########
+- regex: 'MOT-.*LinuxOS/'
+  name: 'Motorola EZX'
+  version: ''
+
+##########
+# Baidu Yi (https://en.wikipedia.org/wiki/Baidu_Yi)
+##########
+- regex: 'Baidu Yi'
+  name: 'Baidu Yi'
+  version: ''
+
+##########
 # Red Star (https://en.wikipedia.org/wiki/Red_Star_OS)
 ##########
 - regex: '붉은별|Fedora/(?:\d+\.[\d.-]+)\.rs(\d+(?:[_.]\d+)*)'
@@ -22,34 +276,34 @@
 ##########
 # OpenVZ (https://openvz.org/)
 ##########
-- regex: 'Linux/(?:\d+\.[\d.-]+)-(?:\d+[\.\d]+)stab(?:\d+[\.\d]+)'
+- regex: 'Linux/(?:\d+\.[\d.-]+)-(?:\d+[.\d]+)stab(?:\d+[.\d]+)'
   name: 'OpenVZ'
   version: ''
 
 # Rocky Linux (https://rockylinux.org/)
 ##########
-- regex: 'rocky/(\d+[\.\d]+)'
+- regex: 'rocky/(\d+[.\d]+)'
   name: 'Rocky Linux'
   version: '$1'
 
 ##########
 # Clear Linux OS (https://www.clearlinux.org/)
 ##########
-- regex: 'clear-linux-os/(\d+[\.\d]+)'
+- regex: 'clear-linux-os/(\d+[.\d]+)'
   name: 'Clear Linux OS'
   version: '$1'
 
 ##########
 # Alpine Linux (https://www.alpinelinux.org/)
 ##########
-- regex: 'alpine/(\d+[\.\d]+)'
+- regex: 'alpine/(\d+[.\d]+)'
   name: 'Alpine Linux'
   version: '$1'
 
 ##########
 # Scientific Linux (https://scientificlinux.org/)
 ##########
-- regex: 'scientific/(\d+[\.\d]+)'
+- regex: 'scientific/(\d+[.\d]+)'
   name: 'Scientific Linux'
   version: '$1'
 
@@ -63,7 +317,7 @@
 ##########
 # Loongnix (https://www.loongson.cn/EN/system/loongnix)
 ##########
-- regex: 'loongnix-server/(\d+[\.\d]+)'
+- regex: 'loongnix-server/(\d+[.\d]+)'
   name: 'Loongnix'
   version: '$1'
 
@@ -115,7 +369,7 @@
 ##########
 # FRITZ!OS (https://en.avm.de/products/fritzos/)
 ##########
-- regex: 'FRITZ!OS(?:/0(\d+[\.\d]+))?'
+- regex: 'FRITZ!OS(?:/0(\d+[.\d]+))?'
   name: 'FRITZ!OS'
   version: '$1'
 
@@ -129,7 +383,7 @@
 ##########
 # Raspbian (https://www.raspbian.org/)
 ##########
-- regex: 'Raspbian/(\d+[\.\d]+)'
+- regex: 'Raspbian/(\d+[.\d]+)'
   name: 'Raspbian'
   version: '$1'
 
@@ -143,10 +397,10 @@
 ##########
 # BrightSignOS (https://www.brightsign.biz/ecosystem/brightsign-os/)
 ##########
-- regex: 'BrightSign/(?:[A-Z0-9]+)/(\d+[\.\d]+)'
+- regex: 'BrightSign/(?:[A-Z0-9]+)/(\d+[.\d]+)'
   name: 'BrightSignOS'
   version: '$1'
-- regex: 'BrightSign/(\d+[\.\d]+)'
+- regex: 'BrightSign/(\d+[.\d]+)'
   name: 'BrightSignOS'
   version: '$1'
 
@@ -173,21 +427,21 @@
 
 # TiVo OS (https://business.tivo.com/products-solutions/tivo-os)
 ##########
-- regex: 'TiVoOS/(\d+[\.\d]+)'
+- regex: 'TiVoOS/(\d+[.\d]+)'
   name: 'TiVo OS'
   version: '$1'
 
 ##########
 # VIDAA (https://www.vidaa.com/vidaa-os/)
 ##########
-- regex: 'VIDAA/(\d+[\.\d]+)'
+- regex: 'VIDAA/(\d+[.\d]+)'
   name: 'VIDAA'
   version: '$1'
 
 ##########
 # PICO OS (https://www.picoxr.com/global/software/pico-os)
 ##########
-- regex: 'PICO.+OS(\d+[\.\d]*)'
+- regex: 'PICO.+OS(\d+[.\d]*)'
   name: 'PICO OS'
   version: '$1'
 
@@ -236,9 +490,13 @@
 ##########
 # Amazon Linux (https://docs.aws.amazon.com/AL2/latest/relnotes/relnotes-al2.html)
 ##########
-- regex: '.+.amzn(\d)(?:int)?.x86_64'
+- regex: '.+.amzn(\d)(?:int)?.x86_64|Linux/.+aws'
   name: 'Amazon Linux'
   version: '$1'
+
+- regex: 'Linux/.+-c9$'
+  name: 'Amazon Linux'
+  version: '2023' # https://aws.amazon.com/about-aws/whats-new/2023/12/aws-cloud9-amazon-linux-2023/
 
 ##########
 # COS (China Operating System - https://web.archive.org/web/20170825001023/http://www.china-cos.com/)
@@ -250,7 +508,7 @@
 ##########
 # ClearOS Mobile (https://www.clearos.com/products/clearos-editions/clearos-mobile)
 ##########
-- regex: 'Android (\d+[\.\d]*); ClearPHONE'
+- regex: 'Android (\d+[.\d]*); ClearPHONE'
   name: 'ClearOS Mobile'
   version: '$1'
 
@@ -268,7 +526,7 @@
   name: 'KreaTV'
   version: ''
 
-- regex: 'KreaTV/(\d+[\.\d]+)'
+- regex: 'KreaTV/(\d+[.\d]+)'
   name: 'KreaTV'
   version: '$1'
 
@@ -278,14 +536,14 @@
 - regex: 'Linux (?:[^;]+); Opera TV(?: Store)?/|^Opera/\d+\.\d+ \(Linux mips'
   name: 'Opera TV'
   version: ''
-- regex: 'OPR/.+TV Store/(\d+[\.\d]+)'
+- regex: 'OPR/.+TV Store/(\d+[.\d]+)'
   name: 'Opera TV'
   version: '$1'
 
 ##########
 # GridOS (https://web.archive.org/web/20111123141630/http://fusiongarage.com/grid-os/about)
 ##########
-- regex: 'Grid OS (\d+[\.\d]+)'
+- regex: 'Grid OS (\d+[.\d]+)'
   name: 'GridOS'
   version: '$1'
 
@@ -306,7 +564,7 @@
 ##########
 # Whale OS (https://www.zeasn.com/)
 ##########
-- regex: '(?:WH|WhaleTV/)(\d+[\.\d]+)'
+- regex: '(?:WH|WhaleTV)/?(\d+[.\d]+)'
   name: 'Whale OS'
   version: '$1'
 
@@ -319,27 +577,42 @@
   version: ''
 
 ##########
-# Tizen
+# Orsay (https://news.samsung.com/global/interview-transition-to-tizen-how-a-talented-team-of-developers-laid-the-foundation-for-ai-tv)
 ##########
-- regex: 'Tizen[ /]?(\d+[\.\d]+)?'
+- regex: 'SmartHub; ?SMART-TV|HbbTV/.+Maple|Samsung;SmartTV201[2-5]'
+  name: 'Orsay'
+  version: ''
+
+##########
+# Tizen (https://www.tizen.org/)
+##########
+- regex: 'Tizen[ /]?(\d+[.\d]+)?'
   name: 'Tizen'
   version: '$1'
+
+- regex: 'HbbTV/.+Samsung'
+  name: 'Tizen'
+  version: ''
 
 ##########
 # YunOS (Android based)
 ##########
-- regex: '(?:Ali)?YunOS[ /]?(\d+[\.\d]+)?'
+- regex: 'Android (\d+[.\d]+)-RT'
+  name: 'YunOS'
+  version: '$1'
+
+- regex: '(?:Ali)?YunOS[ /]?(\d+[.\d]+)?'
   name: 'YunOS'
   version: '$1'
 
 ##########
 # Windows Mobile
 ##########
-- regex: 'Windows Phone;FBSV/(\d+[\.\d]+)'
+- regex: 'Windows Phone;FBSV/(\d+[.\d]+)'
   name: 'Windows Phone'
   version: '$1'
 
-- regex: '(?:Windows Phone (?:OS)?|wds)[ /]?(\d+[\.\d]+)'
+- regex: '(?:Windows Phone (?:OS)?|wds)[ /]?(\d+[.\d]+)'
   name: 'Windows Phone'
   version: '$1'
 
@@ -347,11 +620,11 @@
   name: 'Windows Phone'
   version: ''
 
-- regex: 'Windows CE(?: (\d+[\.\d]+))?'
+- regex: 'Windows CE(?: (\d+[.\d]+))?'
   name: 'Windows CE'
   version: '$1'
 
-- regex: '(?:IEMobile|Windows ?Mobile)(?: (\d+[\.\d]+))?'
+- regex: '(?:IEMobile|Windows ?Mobile)(?: (\d+[.\d]+))?'
   name: 'Windows Mobile'
   version: '$1'
 
@@ -371,35 +644,39 @@
   version: '10'
 
 ##########
-# KaiOS
+# KaiOS (https://www.kaiostech.com/)
 ##########
-- regex: 'KAIOS(?:/(\d+[\.\d]+))?'
+- regex: 'KAIOS(?:/(\d+[.\d]+))?'
   name: 'KaiOS'
   version: '$1'
 
 ##########
 # Custom Android Roms
 ##########
-- regex: 'HarmonyOS(?:[/ ](\d+[\.\d]+))?'
+- regex: 'OpenHarmony(?:[/ ](\d+[.\d]+))?'
+  name: 'OpenHarmony'
+  version: '$1'
+
+- regex: 'HarmonyOS(?:[/ ](\d+[.\d]+))?'
   name: 'HarmonyOS'
   version: '$1'
 - regex: 'Hmos/1'
   name: 'HarmonyOS'
   version: '1.0.0'
 
-- regex: 'RazoDroiD(?: v(\d+[\.\d]*))?'
+- regex: 'RazoDroiD(?: v(\d+[.\d]*))?'
   name: 'RazoDroiD'
   version: '$1'
 
-- regex: 'MildWild(?: CM-(\d+[\.\d]*))?'
+- regex: 'MildWild(?: CM-(\d+[.\d]*))?'
   name: 'MildWild'
   version: '$1'
 
-- regex: 'CyanogenMod(?:[\-/](?:CM)?(\d+[\.\d]*))?'
+- regex: 'CyanogenMod(?:[\-/](?:CM)?(\d+[.\d]*))?'
   name: 'CyanogenMod'
   version: '$1'
 
-- regex: '(?:.*_)?MocorDroid(?:(\d+[\.\d]*))?'
+- regex: '(?:.*_)?MocorDroid(?:(\d+[.\d]*))?'
   name: 'MocorDroid'
   version: '$1'
 
@@ -408,18 +685,47 @@
   version: ''
 
 ##########
+# Smartisan OS (https://www.smartisan.com/os/)
+##########
+- regex: 'Smartisan[_ ]|(SM(?:70[15]|801|919)|YQ60[1357]|DT2002C|DE106|DT190[12]A|O[CE]106|OC105)[ /;\)]'
+  name: 'Smartisan OS'
+  versions:
+    - regex: 'SM70[15]'
+      version: '1.5'
+    - regex: 'SM801'
+      version: '2.5'
+    - regex: 'SM919'
+      version: '3.0'
+    - regex: 'YQ60[1357]'
+      version: '2.0'
+    - regex: 'DE106[ /;\)]'
+      version: '6.0'
+    - regex: 'OE106[ /;\)]'
+      version: '6.0'
+    - regex: 'OC10[56][ /;\)]'
+      version: '6.0'
+    - regex: 'DT2002C[ /;\)]'
+      version: '6.0'
+    - regex: 'DT190[12]A[ /;\)]'
+      version: '6.0'
+    - regex: 'Smartisan U3 Pro'
+      version: '3.0'
+
+##########
 # Fire OS (https://developer.amazon.com/docs/fire-tv/fire-os-overview.html)
 ##########
-- regex: 'Fire OS(?:/(\d+[\.\d]*))?'
+- regex: 'Fire OS(?:[ /](\d+[.\d]*))?'
   name: 'Fire OS'
   version: '$1'
 
-- regex: '(?:Andr[o0]id (\d([\d.])*);? |Amazon;|smarttv_)AFT|AEO[ACBHKT]|KF[ADFGJKMORSTQ]|.*FIRETVSTICK2018'
+- regex: '(?:Andr[o0]id (\d([\d.])*);? |Amazon;|smarttv_)AFT|AEO[ACBHKT]| KF[ADFGJKMORSTQ]|.+FIRETVSTICK2018'
   name: 'Fire OS'
   versions:
-    - regex: 'Andr[o0]id 1[01].+ (?:AFT|KF[ADFGJKMORSTQ])'
+    - regex: 'Andr[o0]id 1[234]'
+      version: '14'
+    - regex: 'Andr[o0]id 1[01]'
       version: '8'
-    - regex: 'Andr[o0]id 9.+ (?:AEO[AHT]|AFT|KF[ADFGJKMORSTQ])|AFTSO001'
+    - regex: 'Andr[o0]id 9|AFTSO001'
       version: '7'
     - regex: 'Andr[o0]id 7|.+FIRETVSTICK2018'
       version: '6'
@@ -452,13 +758,17 @@
 ##########
 # Lineage OS
 ##########
-- regex: 'Lineage_(\d+[\.\d]*)'
+- regex: 'Lineage_(\d+[.\d]*)'
   name: 'Lineage OS'
   version: '$1'
 
 - regex: '(?:Android (\d([\d.])*);? )?lineage_\w+'
   name: 'Lineage OS'
   versions:
+    - regex: 'Android 16'
+      version: '23'
+    - regex: 'Android 15'
+      version: '22'
     - regex: 'Android 14'
       version: '21'
     - regex: 'Android 13'
@@ -533,25 +843,30 @@
 ##########
 # SeewoOS
 ##########
-- regex: 'SeewoOS x86_64 (\d+[\.\d]+)'
+- regex: 'SeewoOS x86_64 (\d+[.\d]+)'
   name: 'SeewoOS'
   version: '$1'
 
 ##########
 # ChromeOS
 ##########
-- regex: 'CrOS [a-z0-9_]+ (\d+[\.\d]+)|Chromebook'
+- regex: '(?:CrOS [a-z0-9_]+ |.*Build/R\d+-)(\d+[.\d]+)|Chromebook'
   name: 'Chrome OS'
   version: '$1'
+
+# https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS
+- regex: '(?:Android (?:9|1[0-6])[.\d]*|Linux x86_64); (?:asurada|atlas|brask|brox|brya|cherry|coral|corsola|dedede|drallion|elm|eve|fizz|geralt|grunt|guybrush|hana|hatch|jacuzzi|kalista|kukui|nami|nautilus|nirva|nissa|nocturne|octopus|ovis|puff|pyro|rammus|rauru|reef|rex|sand|sarien|skyrim|snappy|soraka|staryu|strongbad|trogdor|volteer|zork)\)'
+  name: 'Chrome OS'
+  version: ''
 
 ##########
 # Android TV (https://android.com/tv/)
 ##########
-- regex: 'Linux; Andr0id[; ](\d+[\.\d]*)'
+- regex: 'Linux; Andr0id[; ](\d+[.\d]*)'
   name: 'Android TV'
   version: '$1'
 
-- regex: 'Android[; ](\d+[\.\d]*).+(?:(?:Android(?: UHD)?|AT&T|Google|Smart)[ _]?TV|AOSP on r33a0|BRAVIA|wv-atv)'
+- regex: 'Android[; ](\d+[.\d]*).+(?:(?:Android(?: UHD)?|AT&T|Google|Smart)[ _]?TV|AOSP on r33a0|BRAVIA|wv-atv)'
   name: 'Android TV'
   version: '$1'
 
@@ -562,53 +877,53 @@
 ##########
 # Android SDK Level Api
 ##########
-- regex: '(?:Android API \d+|\d+/tclwebkit(?:\d+[\.\d]*)|(?:(?<!\d )Android/\d{2}|(?<!; |\d{4}/)Android (?!1[0-5])\d{2})(?![^ ]))'
+- regex: '(?:Android API \d+|\d+/tclwebkit(?:\d+[.\d]*)|(?:(?<!\d )Android/\d{2}|Android (?!1[0-6])\d{2})(?![^; ]))'
   name: 'Android'
   versions:
-    - regex: '(?:Android API 34|34/tclwebkit|Android[ /]34)'
+    - regex: 'Android API 36|36/tclwebkit|Android[ /]36'
+      version: '16'
+    - regex: 'Android API 35|35/tclwebkit|Android[ /]35'
+      version: '15'
+    - regex: 'Android API 34|34/tclwebkit|Android[ /]34'
       version: '14'
-    - regex: '(?:Android API 33|33/tclwebkit|Android[ /]33)'
+    - regex: 'Android API 33|33/tclwebkit|Android[ /]33'
       version: '13'
-    - regex: '(?:Android API 32|32/tclwebkit|Android[ /]32)'
+    - regex: 'Android API 32|32/tclwebkit|Android[ /]32'
       version: '12.1'
-    - regex: '(?:Android API 31|31/tclwebkit|Android[ /]31)'
+    - regex: 'Android API 31|31/tclwebkit|Android[ /]31'
       version: '12'
-    - regex: '(?:Android API 30|30/tclwebkit|Android[ /]30)'
+    - regex: 'Android API 30|30/tclwebkit|Android[ /]30'
       version: '11'
-    - regex: '(?:Android API 29|29/tclwebkit|Android[ /]29)'
+    - regex: 'Android API 29|29/tclwebkit|Android[ /]29'
       version: '10'
-    - regex: '(?:Android API 28|28/tclwebkit|Android[ /]28)'
+    - regex: 'Android API 28|28/tclwebkit|Android[ /]28'
       version: '9'
-    - regex: '(?:Android API 27|27/tclwebkit|Android[ /]27)'
+    - regex: 'Android API 27|27/tclwebkit|Android[ /]27'
       version: '8.1'
-    - regex: '(?:Android API 26|26/tclwebkit|Android[ /]26)'
+    - regex: 'Android API 26|26/tclwebkit|Android[ /]26'
       version: '8'
-    - regex: '(?:Android API 25|25/tclwebkit|Android[ /]25)'
+    - regex: 'Android API 25|25/tclwebkit|Android[ /]25'
       version: '7.1'
-    - regex: '(?:Android API 24|24/tclwebkit|Android[ /]24)'
+    - regex: 'Android API 24|24/tclwebkit|Android[ /]24'
       version: '7'
-    - regex: '(?:Android API 23|23/tclwebkit|Android[ /]23)'
+    - regex: 'Android API 23|23/tclwebkit|Android[ /]23'
       version: '6'
-    - regex: '(?:Android API 22|22/tclwebkit|Android[ /]22)'
+    - regex: 'Android API 22|22/tclwebkit|Android[ /]22'
       version: '5.1'
-    - regex: '(?:21/tclwebkit|Android[ /]21)'
+    - regex: 'Android API 21|21/tclwebkit|Android[ /]21'
       version: '5'
-    - regex: '(?:20|19)/tclwebkit'
+    - regex: 'Android API (?:20|19)|(?:20|19)/tclwebkit|Android[ /](?:20|19)'
       version: '4.4'
-    - regex: 'Android[ /](?:20|19)'
-      version: '4.4'
-    - regex: '(?:18/tclwebkit|Android[ /]18)'
+    - regex: 'Android API 18|18/tclwebkit|Android[ /]18'
       version: '4.3'
-    - regex: '(?:17/tclwebkit|Android[ /]17)'
+    - regex: 'Android API 17|17/tclwebkit|Android[ /]17'
       version: '4.2'
-    - regex: '(?:16/tclwebkit|Android[ /]16)'
-      version: '4.2'
-    - regex: '15/tclwebkit'
+    - regex: 'Android API 16|16/tclwebkit|Android[ /]16'
+      version: '4.1'
+    - regex: 'Android API 15|15/tclwebkit|Android[ /]15'
       version: '4.0.3'
-    - regex: '15/tclwebkit'
+    - regex: 'Android API 14|14/tclwebkit|Android[ /]14'
       version: '4.0.1'
-    - regex: 'Android[ /]15'
-      version: '4'
 
 ##########
 # Android
@@ -621,43 +936,55 @@
   name: 'Android'
   version: ''
 
-- regex: '(?:Android OS|OMDroid|sdk_gphone64_arm64-userdebug)[ /](\d+[\.\d]*)'
+- regex: '(?:Android OS|OMDroid|sdk_gphone64_arm64-userdebug|StarOS)[ /](\d+[.\d]*)'
   name: 'Android'
   version: '$1'
 
-- regex: 'Pinterest for Android(?: Tablet)?/.*; (\d(?:[\d\.]*))\)$'
+- regex: 'Pinterest for Android(?: Tablet)?/.*; (\d(?:[\d.]*))\)$'
   name: 'Android'
   version: '$1'
 
-- regex: 'Android; (\d+[\.\d]*); Mobile;'
+- regex: 'Android; (\d+[.\d]*); Mobile;'
   name: 'Android'
   version: '$1'
 
-- regex: '[ ]([\d\.]+)\) AppleWebKit.*ROBLOX Android App'
+- regex: 'Android;(\d+[.\d]*);API'
   name: 'Android'
   version: '$1'
 
-- regex: '(?:(?:Orca-)?(?<!like |/|RadioPublic |Anghami |Callpod Keeper for )Android|Adr|AOSP)[ /]?(?:[a-z]+ )?(\d+[\.\d]*)'
+- regex: 'Android \(\d{2}/(\d+[.\d]*);'
   name: 'Android'
   version: '$1'
 
-- regex: '(?:Allview_TX1_Quasar|Cosmote_My_mini_Tab) (\d+[\.\d]*)'
+- regex: '[ ]([\d.]+)\) AppleWebKit.*ROBLOX Android App'
   name: 'Android'
   version: '$1'
 
-- regex: 'Android ?(?:jelly bean|Kit Kat|S\.O\. Ginger Bread|The FireCyano|:) (\d+[\.\d]*)'
+- regex: '(?:(?:Orca-)?(?<!like |/|RadioPublic |Anghami |Callpod Keeper for |com\.linkedin\.)Android|Adr|AOSP)[ /]?(?:[a-z]+ )?(\d+[.\d]*)'
   name: 'Android'
   version: '$1'
 
-- regex: '(?:Orca-Android|FB4A).*FBSV/(\d+[\.\d]*);'
+- regex: '(?:Allview_TX1_Quasar|Cosmote_My_mini_Tab) (\d+[.\d]*)'
   name: 'Android'
   version: '$1'
 
-- regex: '(?:TwitterAndroid).*[ /](?:[a-z]+ )?(\d+[\.\d]*)'
+- regex: 'Android ?(?:jelly bean|Kit Kat|S\.O\. Ginger Bread|The FireCyano|:) (\d+[.\d]*)'
   name: 'Android'
   version: '$1'
 
-- regex: '\(Android:.*\); API (\d+[\.\d]*)'
+- regex: '(?:Orca-Android|FB4A).*FBSV/(\d+[.\d]*);'
+  name: 'Android'
+  version: '$1'
+
+- regex: '(?:TwitterAndroid).*[ /](?:[a-z]+ )?(\d+[.\d]*)'
+  name: 'Android'
+  version: '$1'
+
+- regex: '\(Android:.*\); API (\d+[.\d]*)'
+  name: 'Android'
+  version: '$1'
+
+- regex: 'Android-(\d+[.\d]*);'
   name: 'Android'
   version: '$1'
 
@@ -665,16 +992,16 @@
   name: 'Android'
   version: ''
 
-- regex: 'BeyondPod|AntennaPod|Podkicker|DoggCatcher|okhttp|Podcatcher Deluxe|Sonos/.+\(ACR_|Linux x86_64; Quest|.*WhatsApp/.*A$'
+- regex: 'BeyondPod|AntennaPod|Podkicker|DoggCatcher|okhttp|Podcatcher Deluxe|Sonos/.+\(ACR_|.*WhatsApp/.*A$'
   name: 'Android'
   version: ''
 
 # Inverted Android
-- regex: 'Linux; diordnA[; ](\d+[\.\d]*)'
+- regex: 'Linux; diordnA[; ](\d+[.\d]*)'
   name: 'Android'
   version: '$1'
 
-- regex: '^A/(\d+[\.\d]*)/'
+- regex: '^A/(\d+[.\d]*)/'
   name: 'Android'
   version: '$1'
 
@@ -688,7 +1015,7 @@
 ##########
 # AmigaOS
 ##########
-- regex: 'AmigaOS[ ]?(\d+[\.\d]+)'
+- regex: 'AmigaOS[ ]?(\d+[.\d]+)'
   name: 'AmigaOS'
   version: '$1'
 
@@ -699,17 +1026,17 @@
 ##########
 # ThreadX
 ##########
-- regex: 'ThreadX(?:/(\d+[\.\d]*))?'
+- regex: 'ThreadX(?:_OS)?(?:/(\d+[.\d]*))?'
   name: 'ThreadX'
   version: '$1'
 
 ##########
 # MTK / Nucleus
 ##########
-- regex: 'Nucleus(?:(?: |/v?)(\d+[\.\d]*))?'
+- regex: 'Nucleus(?:(?: |/v?)(\d+[.\d]*))?'
   name: 'MTK / Nucleus'
   version: '$1'
-- regex: 'MTK(?:(?: |/v?)(\d+[\.\d]*))?'
+- regex: 'MTK(?:(?: |/v?)(\d+[.\d]*))?'
   name: 'MTK / Nucleus'
   version: '$1'
 
@@ -719,6 +1046,12 @@
 - regex: 'MRE/(\d+)\.(\d+).*;MAUI'
   name: 'MRE'
   version: '$1.$2'
+- regex: 'MRE\\\\(\d+[.\d]+)'
+  name: 'MRE'
+  version: '$1'
+- regex: '.+MRE|MAUI Runtime'
+  name: 'MRE'
+  version: ''
 
 ##########
 # Linux
@@ -744,7 +1077,7 @@
   version: ''
 
 # moonOS (https://www.moonos.org/)
-- regex: 'moonOS/(\d+.[\d.]+)'
+- regex: 'moonOS/(\d+[.\d]+)'
   name: 'moonOS'
   version: '$1'
 
@@ -754,7 +1087,7 @@
   version: ''
 
 # Pardus (https://www.pardus.org.tr/)
-- regex: 'Pardus/(\d+.[\d.]+)'
+- regex: 'Pardus/(\d+[.\d]+)'
   name: 'Pardus'
   version: '$1'
 
@@ -769,19 +1102,19 @@
   version: ''
 
 # Roku OS (https://www.roku.com/how-it-works/roku-os)
-- regex: 'RokuOS/.+RokuOS (\d+.[\d.]+)'
+- regex: 'RokuOS/.+RokuOS (\d+[.\d]+)'
   name: 'Roku OS'
   version: '$1'
 
-- regex: 'Roku(?:OS|4640X)?/(?:DVP|Pluto)?-?(\d+[\.\d]+)?'
+- regex: 'Roku(?:OS|4640X)?/(?:DVP|Pluto)?-?(\d+[.\d]+)?'
   name: 'Roku OS'
   version: '$1'
 
-- regex: 'Roku; (?:AP|UI); (\d+[\.\d]+)'
+- regex: 'Roku; (?:AP|UI); (\d+[.\d]+)'
   name: 'Roku OS'
   version: '$1'
 
-- regex: 'RokuBrowser/.+\(TV-([a-z0-9]+)-(\d+.[\d.]+)\)'
+- regex: 'RokuBrowser/.+\(TV-([a-z0-9]+)-(\d+[.\d]+)\)'
   name: 'Roku OS'
   version: '$2'
 
@@ -791,17 +1124,17 @@
   version: ''
 
 # Lumin OS (https://developer.magicleap.com/en-us/learn/guides/lumin-os-release-notes-summary)
-- regex: 'Helio/(\d+[\.\d]+)'
+- regex: 'Helio/(\d+[.\d]+)'
   name: 'Lumin OS'
   version: '$1'
 
 # HasCodingOS (https://forum.hascoding.com/HasCodingOS)
-- regex: 'HasCodingOs (\d+[\.\d]+)'
+- regex: 'HasCodingOs (\d+[.\d]+)'
   name: 'HasCodingOS'
   version: '$1'
 
 # PCLinuxOS (https://www.pclinuxos.com/)
-- regex: 'PCLinuxOS/(\d+[\.\d]+)'
+- regex: 'PCLinuxOS/(\d+[.\d]+)'
   name: 'PCLinuxOS'
   version: '$1'
 
@@ -822,19 +1155,19 @@
   name: 'Maemo'
   version: ''
 
-- regex: 'Arch ?Linux(?:[ /\-](\d+[\.\d]+))?'
+- regex: 'Arch ?Linux(?:[ /\-](\d+[.\d]+))?'
   name: 'Arch Linux'
   version: '$1'
 
-- regex: 'VectorLinux(?: package)?(?:[ /\-](\d+[\.\d]+))?'
+- regex: 'VectorLinux(?: package)?(?:[ /\-](\d+[.\d]+))?'
   name: 'VectorLinux'
   version: '$1'
 
-- regex: 'sles/(\d+[\.\d]+)'
+- regex: 'sles/(\d+[.\d]+)'
   name: 'SUSE'
   version: '$1'
 
-- regex: '(?:rhel|Red Hat Enterprise Linux Server)/(\d+[\.\d]+)'
+- regex: '(?:rhel|Red ?Hat(?: Enterprise)? Linux(?: Server)?)[ /](\d+[.\d]+)'
   name: 'Red Hat'
   version: '$1'
 
@@ -846,11 +1179,11 @@
   name: 'CentOS Stream'
   version: '$1'
 
-- regex: 'centos(?: Linux)?/(\d+[\.\d]+) '
+- regex: 'centos(?: Linux)?/(\d+[.\d]+) '
   name: 'CentOS'
   version: '$1'
 
-- regex: '.+.el(\d+(?:[_\.]\d+)*).(?:centos|x86_64)'
+- regex: '.+.el(\d+(?:[_.]\d+)*).(?:centos|x86_64)'
   name: 'CentOS'
   version: '$1'
 
@@ -862,7 +1195,7 @@
   name: 'Fedora'
   version: '$1'
 
-- regex: 'Mandriva(?: Linux)?/.+mdv(\d+[\.\d]+)'
+- regex: 'Mandriva(?: Linux)?/.+mdv(\d+[.\d]+)'
   name: 'Mandriva'
   version: '$1'
 
@@ -898,19 +1231,19 @@
   name: 'Ubuntu'
   version: '5.10'
 
-- regex: 'Ubuntu[ /](\d+[\.\d]+)'
+- regex: 'Ubuntu[ /](\d+[.\d]+)'
   name: 'Ubuntu'
   version: '$1'
 
-- regex: 'Linux; .*((?:Debian|Knoppix|Mint|Ubuntu|Kubuntu|Xubuntu|Lubuntu|Fedora|Red Hat|Mandriva|Gentoo|Sabayon|Slackware|SUSE|CentOS|BackTrack))[ /](\d+[\.\d]+)'
+- regex: 'Linux; .*((?:Debian|Knoppix|Mint|Ubuntu|Kubuntu|Xubuntu|Lubuntu|Fedora|Red Hat|Mandriva|Gentoo|Sabayon|Slackware|SUSE|CentOS|BackTrack))[ /](\d+[.\d]+)'
   name: '$1'
   version: '$2'
 
-- regex: 'Deepin[ /](\d+[\.\d]+)'
+- regex: 'Deepin[ /](\d+[.\d]+)'
   name: 'Deepin'
   version: '$1'
 
-- regex: '(Debian|Knoppix|Mint(?! Browser)|Ubuntu|Kubuntu|Xubuntu|Lubuntu|Fedora|Red Hat|Mandriva|Gentoo|Sabayon|Slackware|SUSE|CentOS|BackTrack|Freebox|ASPLinux)(?:(?: Enterprise)? Linux)?(?:[ /\-](\d+[\.\d]+))?'
+- regex: '(Debian|Knoppix|Mint(?! Browser)|Ubuntu|Kubuntu|Xubuntu|Lubuntu|Fedora|Red Hat|Mandriva|Gentoo|Sabayon|Slackware|openSUSE|SUSE|CentOS|BackTrack|Freebox|ASPLinux)(?:(?: Enterprise)? Linux)?(?:[ /\-](\d+[.\d]+))?'
   name: '$1'
   version: '$2'
 
@@ -918,15 +1251,27 @@
   name: 'Rosa'
   version: ''
 
+- regex: '.+gentoo'
+  name: 'Gentoo'
+  version: ''
+
 ##########
 # webOS
 ##########
-- regex: '(?:Web0S; .*WEBOS|webOS|web0S|Palm webOS|hpwOS)(?:[/]?(\d+[\.\d]+))?'
+- regex: '(?:Web0S; .*WEBOS|webOS|web0S|Palm webOS|hpwOS)(?:[/]?(\d+[.\d]+))?'
   name: 'webOS'
   version: '$1'
   versions:
-    - regex: 'WEBOS(\d+[\.\d]+)'
+    - regex: 'WEBOS(\d+[.\d]+)'
       version: '$1'
+    - regex: 'Web0S; Linux/SmartTV.+Chr[o0]me/120'
+      version: '25'
+    - regex: 'Web0S; Linux/SmartTV.+Chr[o0]me/108'
+      version: '24'
+    - regex: 'Web0S; Linux/SmartTV.+Chr[o0]me/94'
+      version: '23'
+    - regex: 'Web0S; Linux/SmartTV.+Chr[o0]me/87'
+      version: '22'
     - regex: 'Web0S; Linux/SmartTV.+Chr[o0]me/79'
       version: '6'
     - regex: 'Web0S; Linux/SmartTV.+Chr[o0]me/68'
@@ -942,30 +1287,30 @@
     - regex: 'Web0S; Linux/SmartTV.+Safari/537'
       version: '1'
 
-- regex: '(?:PalmOS|Palm OS)(?:[/ ](\d+[\.\d]+))?|Palm'
+- regex: '(?:PalmOS|Palm OS)(?:[/ ](\d+[.\d]+))?|Palm'
   name: 'palmOS'
   version: '$1'
 
-- regex: 'Xiino(?:.*v\. (\d+[\.\d]+))?'  # palmOS only browser
+- regex: 'Xiino(?:.*v\. (\d+[.\d]+))?'  # palmOS only browser
   name: 'palmOS'
   version: '$1'
 
-- regex: 'MorphOS(?:[ /](\d+[\.\d]+))?'
+- regex: 'MorphOS(?:[ /](\d+[.\d]+))?'
   name: 'MorphOS'
   version: '$1'
 
 ##########
 # Windows
 ##########
-- regex: 'FBW.+FBSV/(\d+[\.\d]*);'
+- regex: 'FBW.+FBSV/(\d+[.\d]*);'
   name: 'Windows'
   version: '$1'
 
-- regex: 'Windows.+OS: (\d+[\.\d]*)'
+- regex: 'Windows.+OS: (\d+[.\d]*)'
   name: 'Windows'
   version: '$1'
 
-- regex: 'Windows; ?(\d+[\.\d]*);'
+- regex: 'Windows; ?(\d+[.\d]*);'
   name: 'Windows'
   version: '$1'
 
@@ -977,13 +1322,21 @@
   name: 'Windows'
   version: '$1'
 
-- regex: 'CYGWIN_NT-10\.0|Windows NT 10\.0|Windows[ /]10'
+- regex: 'Windows-(1[01])-'
+  name: 'Windows'
+  version: '$1'
+
+- regex: 'CYGWIN_NT-10\.0|Win(?:dows )?NT 10\.0|Windows[ /]10'
   name: 'Windows'
   version: '10'
 
 - regex: 'CYGWIN_NT-6\.4|Windows NT 6\.4|Windows 10|win10'
   name: 'Windows'
   version: '10'
+
+- regex: 'Windows[/-](2016|2019|2022|2025)Server'
+  name: 'Windows'
+  version: 'Server $1'
 
 - regex: 'Windows/2012ServerR2'
   name: 'Windows'
@@ -1017,7 +1370,7 @@
   name: 'Windows'
   version: 'Server 2003'
 
-- regex: 'CYGWIN_NT-5\.1|Windows NT 5\.1|Windows XP'
+- regex: 'CYGWIN_NT-5\.1|Windows NT 5\.1|(?:Microsoft-)?Windows[ -]XP'
   name: 'Windows'
   version: 'XP'
 
@@ -1025,7 +1378,7 @@
   name: 'Windows'
   version: '2000'
 
-- regex: 'CYGWIN_NT-4\.0|Windows NT 4\.0|WinNT|Windows NT'
+- regex: 'CYGWIN_NT-4\.0|Windows NT 4\.0|WinNT(?! 10)|Windows NT'
   name: 'Windows'
   version: 'NT'
 
@@ -1063,30 +1416,30 @@
 ##########
 # tvOS (https://developer.apple.com/tvos/)
 ##########
-- regex: 'Apple ?TV.*CPU (?:iPhone )?OS ((?:9|1[0-7])[_\.]\d+(?:[_.]\d+)*)'
+- regex: 'Apple ?TV.*CPU (?:iPhone )?OS ((?:9|1[0-9]|26)[_.]\d+(?:[_.]\d+)*)'
   name: 'tvOS'
   version: '$1'
 
-- regex: 'Apple TV; iOS ((?:9|1[0-7])[_\.]\d+(?:[_.]\d+)*)'
+- regex: 'Apple TV; iOS ((?:9|1[0-9]|26)[_.]\d+(?:[_.]\d+)*)'
   name: 'tvOS'
   version: '$1'
 
-- regex: 'iOS(?:; |/)((?:9|1[0-7])\.\d+(?:[_\.]\d+)*) (?:model/)?AppleTV'
+- regex: 'iOS(?:; |/)((?:9|1[0-9]|26)\.\d+(?:[_.]\d+)*) (?:model/)?AppleTV'
   name: 'tvOS'
   version: '$1'
 
-- regex: 'tvOS[ /]?((?:9|1[0-7])\.\d+(?:[_\.]\d+)*);?'
+- regex: 'tvOS[ /]?((?:9|1[0-9]|26)\.\d+(?:[_.]\d+)*);?'
   name: 'tvOS'
   version: '$1'
 
-- regex: 'AppleTV(?:/?(\d+[\.\d]+))?'
+- regex: 'AppleTV(?:/?(\d+[.\d]+))?'
   name: 'tvOS'
   version: '$1'
 
 ##########
 # watchOS (https://developer.apple.com/watchos/)
 ##########
-- regex: '(?:Watch1,[12]/|Watch OS,|watchOS[ /])(\d+[\.\d]*)'
+- regex: '(?:Watch1,[12]/|Watch OS,|watchOS[ /]?)(\d+[.\d]*)?'
   name: 'watchOS'
   version: '$1'
 - regex: 'Apple Watch(?!;)'
@@ -1096,50 +1449,58 @@
 ##########
 # iPadOS (https://www.apple.com/ipados/)
 ##########
-- regex: 'FBMD/iPad;.*FBSV/ ?(1[3-7]).(\d+[\.\d]*);'
+- regex: 'FBMD/iPad;.*FBSV/ ?(1[3-9]|26).(\d+[.\d]*);'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: 'iPad(?:OS)?[ /](1[3-7])\.(\d+[\.\d]*)'
+- regex: 'iPad(?:OS)?[ /](1[3-9]|26)\.(\d+[.\d]*)'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: '^iPad(?:\d+[\,\d]*)/(1[3-7])\.(\d+[\.\d]*)'
+- regex: '^iPad(?:\d+[\,\d]*)/(1[3-9]|26)\.(\d+[.\d]*)'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: 'iPad(?:; (?:iOS|iPadOS|iPhone OS)|.+CPU (?:iPad |iPhone )?OS) ((1[3-7])+(?:[_\.]\d+)*)'
+- regex: 'iPad(?:; (?:iOS|iPadOS|iPhone OS)|.+CPU (?:iPad ?|iPhone )?OS) ((1[3-9]|26)+(?:[_.]\d+)*)'
   name: 'iPadOS'
   version: '$1'
 
-- regex: 'iOS/(1[3-7])\.(\d+[\.\d]*).+Apple/iPad'
+- regex: 'iOS[ /](1[3-9]|26)\.(\d+[.\d]*).+iPad'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: 'iPhone OS,(1[3-7])\.(\d+[\.\d]*).+iPad'
+- regex: 'iPhone OS,(1[3-9]|26)\.(\d+[.\d]*).+iPad'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: 'Pinterest for iOS/.*iPad.*; (\d(?:[\d\.]*))[)]$'
+- regex: 'iphoneos(1[3-9]|26)\.(\d+[.\d]*); iPad'
+  name: 'iPadOS'
+  version: '$1.$2'
+
+- regex: 'Pinterest for iOS/.*iPad.*; (\d(?:[\d.]*))[)]$'
   name: 'iPadOS'
   version: '$1'
 
 ##########
 # iOS
 ##########
-- regex: 'iPad/([89]|1[012])\.(\d+[\.\d]*)'
+- regex: 'iPad/([89]|1[012])\.(\d+[.\d]*)'
   name: 'iOS'
   version: '$1.$2'
 
-- regex: '^(?:iPad|iPhone)(?:\d+[\,\d]*)[/_](\d+[\.\d]+)'
+- regex: '^(?:iPad|iPhone)(?:\d+[\,\d]*)[/_](\d+[.\d]+)'
   name: 'iOS'
   version: '$1'
 
-- regex: 'Pinterest for iOS/.*iPhone.*; (\d(?:[\d\.]*))[)]$'
+- regex: 'iphoneos(1[3-9]|26)\.(\d+[.\d]*); iPhone'
+  name: 'iOS'
+  version: '$1.$2'
+
+- regex: 'Pinterest for iOS/.*iPhone.*; (\d(?:[\d.]*))[)]$'
   name: 'iOS'
   version: '$1'
 
-- regex: 'iOS (\d+[\.\d]+)\)'
+- regex: 'iOS (\d+[.\d]+)\)'
   name: 'iOS'
   version: '$1'
 
@@ -1147,57 +1508,31 @@
   name: 'iOS'
   version: '$1.$2.$3'
 
-- regex: '(?:CPU OS|iPh(?:one)?[ _]OS|iPhone.+ OS|PodMN.+iPhone|iOS)[ _/](\d+(?:[_\.]\d+)*)'
+- regex: '(?:CPU OS|iPh(?:one)?[ _]OS|iPhone.+ OS|PodMN.+iPhone|iOS)[ _/]19(?:[_.])?(\d+(?:[._]\d+)*)'
+  name: 'iOS'
+  version: '26.$1'
+
+- regex: '(?:CPU OS|iPh(?:one)?[ _]OS|iPhone.+ OS|PodMN.+iPhone|iOS)[ _/](\d+(?:[_.]\d+)*)'
   name: 'iOS'
   version: '$1'
 
-- regex: '(?:iPhone ?OS|iOS(?: Version)?)(?:/|; |,)(\d+[\.\d]+)'
+- regex: '(?:iPhone ?OS|iOS(?: Version)?)(?:/|; |,)(\d+[.\d]+)'
   name: 'iOS'
   version: '$1'
 
-- regex: '^(?!com\.apple\.Safari\.SearchHelper|Safari).*(?:CFNetwork|Mana)/.+ Darwin/(\d+[\.\d]+)(?!.*(?:x86_64|i386|PowerMac|Power%20Macintosh))'
+- regex: '^(?!com\.apple\.Safari\.SearchHelper|Safari|com\.apple\.WebKit\.Networking|NetworkingExtension).*(?:CFNetwork|Mana)/.+ Darwin/(\d+[.\d]+)(?!.*(?:x86_64|i386|PowerMac|Power%20Macintosh))'
   name: 'iOS'
   versions:
-    - regex: 'Darwin/23\.5\.0'
-      version: '17.5'
-    - regex: 'Darwin/23\.4\.0'
-      version: '17.4'
-    - regex: 'Darwin/23\.3\.0'
-      version: '17.3'
-    - regex: 'Darwin/23\.2\.0'
-      version: '17.2'
-    - regex: 'Darwin/23\.1\.0'
-      version: '17.1'
-    - regex: 'Darwin/23\.0\.0'
-      version: '17.0'
-    - regex: 'Darwin/22\.6\.0'
-      version: '16.6'
-    - regex: 'Darwin/22\.5\.0'
-      version: '16.5'
-    - regex: 'Darwin/22\.4\.0'
-      version: '16.4'
-    - regex: 'Darwin/22\.3\.0'
-      version: '16.3'
-    - regex: 'Darwin/22\.2\.0'
-      version: '16.2'
-    - regex: 'Darwin/22\.1\.0'
-      version: '16.1'
-    - regex: 'Darwin/22\.0\.0'
-      version: '16.0'
-    - regex: 'Darwin/21\.6\.0'
-      version: '15.6'
-    - regex: 'Darwin/21\.5\.0'
-      version: '15.5'
-    - regex: 'Darwin/21\.4\.0'
-      version: '15.4'
-    - regex: 'Darwin/21\.3\.0'
-      version: '15.3'
-    - regex: 'Darwin/21\.2\.0'
-      version: '15.2'
-    - regex: 'Darwin/21\.1\.0'
-      version: '15.1'
-    - regex: 'Darwin/21\.0\.0'
-      version: '15.0'
+    - regex: 'Darwin/25\.([0-3])\.0'
+      version: '26.$1'
+    - regex: 'Darwin/24\.([0-6])\.0'
+      version: '18.$1'
+    - regex: 'Darwin/23\.([0-6])\.0'
+      version: '17.$1'
+    - regex: 'Darwin/22\.([0-6])\.0'
+      version: '16.$1'
+    - regex: 'Darwin/21\.([0-6])\.0'
+      version: '15.$1'
     - regex: 'Darwin/20\.6\.0'
       version: '14.7'
     - regex: 'Darwin/20\.5\.0'
@@ -1212,12 +1547,8 @@
       version: '14.2'
     - regex: 'Darwin/20\.0\.0'
       version: '14.0'
-    - regex: 'Darwin/19\.6\.0'
-      version: '13.6'
-    - regex: 'Darwin/19\.5\.0'
-      version: '13.5'
-    - regex: 'Darwin/19\.4\.0'
-      version: '13.4'
+    - regex: 'Darwin/19\.([456])\.0'
+      version: '13.$1'
     - regex: 'Darwin/19\.3\.0'
       version: '13.3.1'
     - regex: 'Darwin/19\.2\.0'
@@ -1309,7 +1640,7 @@
     - regex: 'CFNetwork/459'
       version: '3.1'
 
-- regex: '(?:iPhone|iPod_touch)/(\d+[\.\d]*) hw/'
+- regex: '(?:iPhone|iPod_touch)/(\d+[.\d]*)(?: hw)?/'
   name: 'iOS'
   version: '$1'
 
@@ -1321,31 +1652,31 @@
   name: 'iOS'
   version: '$1.$2'
 
-- regex: 'FBMD/iPhone;.*FBSV/ ?(\d+[\.\d]+);'
+- regex: 'FBMD/iPhone;.*FBSV/ ?(\d+[.\d]+);'
   name: 'iOS'
   version: '$1'
 
-- regex: '(?:FBIOS|Messenger(?:Lite)?ForiOS).*FBSV/ ?(\d+[\.\d]*);'
+- regex: '(?:FBIOS|Messenger(?:Lite)?ForiOS).*FBSV/ ?(\d+[.\d]*);'
   name: 'iOS'
   version: '$1'
 
-- regex: 'iPhone OS,([\d\.]+).+(?:iPhone|iPod)'
+- regex: 'iPhone OS,([\d.]+).+(?:iPhone|iPod)'
   name: 'iOS'
   version: '$1'
 
-- regex: 'iPad.+; (\d+[\.\d]+);'
+- regex: 'iPad.+; (\d+[.\d]+);'
   name: 'iOS'
   version: '$1'
 
-- regex: 'iPhone.+; Version (\d+[\.\d]+)'
+- regex: 'iPhone.+; Version (\d+[.\d]+)'
   name: 'iOS'
   version: '$1'
 
-- regex: 'OS=iOS;OSVer=(\d+[\.\d]+);'
+- regex: 'OS=iOS;OSVer=(\d+[.\d]+);'
   name: 'iOS'
   version: '$1'
 
-- regex: 'os=Apple-iOS.+osversion=(\d+[\.\d]+)/'
+- regex: 'os=Apple-iOS.+osversion=(\d+[.\d]+)/'
   name: 'iOS'
   version: '$1'
 
@@ -1353,19 +1684,19 @@
   name: 'iOS'
   version: '$1'
 
-- regex: 'dv\(iPh.+ov\((\d+(?:[_\.]\d+)*)\);'
+- regex: 'dv\(iPh.+ov\((\d+(?:[_.]\d+)*)\);'
   name: 'iOS'
   version: '$1'
 
-- regex: '(?:Podcasts/(?:[\d\.]+)|Instacast(?:HD)?/(?:\d\.[\d\.abc]+)|Pocket Casts, iOS|\(iOS\)|iOS; Opera|Overcast|Castro|Podcat|iCatcher|RSSRadio/|MobileSafari/|WhatsApp/.*i$)(?!.*x86_64)'
+- regex: '(?:Podcasts/(?:[\d.]+)|Instacast(?:HD)?/(?:\d\.[\d\.abc]+)|Pocket Casts, iOS|\(iOS\)|iOS; Opera|Overcast|Castro|Podcat|iCatcher|RSSRadio/|MobileSafari/|WhatsApp/.*i$)(?!.*x86_64)'
   name: 'iOS'
   version: ''
 
-- regex: 'iTunes-(AppleTV|iPod|iPad|iPhone)/(?:[\d\.]+)'
+- regex: 'iTunes-(AppleTV|iPod|iPad|iPhone)/(?:[\d.]+)'
   name: 'iOS'
   version: ''
 
-- regex: 'iOS[ /]Version ([\d\.]+)'
+- regex: 'iOS[ /]Version ([\d.]+)'
   name: 'iOS'
   version: '$1'
 
@@ -1373,28 +1704,22 @@
   name: 'iOS'
   version: ''
 
-- regex: 'CaptiveNetworkSupport|AirPlay|.*[ \.\-/]iOS'
+- regex: 'CaptiveNetworkSupport|AirPlay|.*[ \.\-/]iOS(?!@)'
   name: 'iOS'
   version: ''
 
 ##########
 # Mac
 ##########
-- regex: '(?:CFNetwork|Mana|StudioDisplay)/.+Darwin(?:/|; )(?:[\d\.]+).+(?:x86_64|i386|Power%20Macintosh)|(?:x86_64-apple-)?darwin(?:[\d\.]+)|C?Python.*Darwin|PowerMac|com\.apple\.Safari\.SearchHelper|^Safari'
+- regex: '(?:CFNetwork|Mana|StudioDisplay)/.+Darwin(?:/|; )(?:[\d.]+).+(?:x86_64|i386|Power%20Macintosh)|(?:x86_64-apple-)?darwin(?:[\d.]+)|C?Python.*Darwin|PowerMac|com\.apple\.Safari\.SearchHelper|^(?:com\.apple\.WebKit\.Networking|NetworkingExtension|Safari)'
   name: 'Mac'
   versions:
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23\.5\.0'
-      version: '14.5'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23\.4\.0'
-      version: '14.4'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23\.3\.0'
-      version: '14.3'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23\.2\.0'
-      version: '14.2'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23\.1\.0'
-      version: '14.1'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23\.0\.0'
-      version: '14.0'
+    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?25\.([0-3])\.0'
+      version: '26.$1'
+    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?24\.([0-6])\.0'
+      version: '15.$1'
+    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23\.([0-6])\.0'
+      version: '14.$1'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?22\.6\.0'
       version: '13.5'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?22\.5\.0'
@@ -1435,16 +1760,8 @@
       version: '11.1'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?20\.[01]\.0'
       version: '11.0'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?19\.6\.0'
-      version: '10.15.6'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?19\.5\.0'
-      version: '10.15.5'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?19\.4\.0'
-      version: '10.15.4'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?19\.3\.0'
-      version: '10.15.3'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?19\.2\.0'
-      version: '10.15.2'
+    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?19\.([2-6])\.0'
+      version: '10.15.$1'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?19\.0\.0'
       version: '10.15'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?18\.7\.0'
@@ -1487,24 +1804,12 @@
       version: '10.12.1'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?16\.0\.0'
       version: '10.12'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?15\.6\.0'
-      version: '10.11.6'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?15\.5\.0'
-      version: '10.11.5'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?15\.4\.0'
-      version: '10.11.4'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?15\.3\.0'
-      version: '10.11.3'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?15\.2\.0'
-      version: '10.11.2'
+    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?15\.([2-6])\.0'
+      version: '10.11.$1'
     - regex: 'CFNetwork/760'
       version: '10.11'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?14\.5\.0'
-      version: '10.10.5'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?14\.4\.0'
-      version: '10.10.4'
-    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?14\.3\.0'
-      version: '10.10.3'
+    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?14\.([3-5])\.0'
+      version: '10.10.$1'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?14\.1\.0'
       version: '10.10.2'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?14\.0\.0'
@@ -1560,31 +1865,31 @@
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?9\.5\.[05]'
       version: '10.5.5'
 
-- regex: 'Macintosh;Mac OS X \((\d+[\.\d]+)\);'
+- regex: 'Macintosh;Mac OS X \((\d+[.\d]+)\);'
   name: 'Mac'
   version: '$1'
 
-- regex: 'Mac[ +]OS[ +]?X(?:[ /,](?:Version )?(\d+(?:[_\.]\d+)+))?'
+- regex: 'Mac[ +]OS[ +]?X(?:[ /,](?:Version )?(\d+(?:[_.]\d+)+))?'
   name: 'Mac'
   version: '$1'
 
-- regex: 'Mac (?:OS/)?(\d+(?:[_\.]\d+)+)'
+- regex: 'Mac (?:OS/)?(\d+(?:[_.]\d+)+)'
   name: 'Mac'
   version: '$1'
 
-- regex: '(?:macOS(?:\(Catalyst\))?[ /,]|Mac-)(\d+[\.\d]+)'
+- regex: '(?:macOS(?:\(Catalyst\))?[ /,]|Mac(?:os)?-)(\d+[.\d]+)'
   name: 'Mac'
   version: '$1'
 
-- regex: 'Macintosh; OS X (\d+[\.\d]+)'
+- regex: 'Macintosh; OS X (\d+[.\d]+)'
   name: 'Mac'
   version: '$1'
 
-- regex: 'OSX/(\d+[\.\d]+)'
+- regex: 'OSX/(\d+[.\d]+)'
   name: 'Mac'
   version: '$1'
 
-- regex: 'Darwin|Macintosh|Mac[ _]PowerPC|PPC|iMac|MacBook|.*macOS|AppleExchangeWebServices|com\.apple\.trustd|Sonos/.+\(MDCR_|WhatsApp/.*N$'
+- regex: 'Darwin|Macintosh|Mac[ _]PowerPC|PPC|iMac|MacBook|.*macOS|AppleExchangeWebServices|com\.apple\.trustd|Sonos/.+\(MDCR_|WhatsApp/.*N$|nook browser'
   name: 'Mac'
   version: ''
 
@@ -1598,11 +1903,11 @@
 ##########
 # BlackBerry
 ##########
-- regex: '(?:BB10;.+Version|Black[Bb]erry[0-9a-z]+|Black[Bb]erry.+Version)/(\d+[\.\d]+)'
+- regex: '(?:BB10;.+Version|Black[Bb]erry[0-9a-z]+|Black[Bb]erry.+Version)/(\d+[.\d]+)'
   name: 'BlackBerry OS'
   version: '$1'
 
-- regex: 'RIM Tablet OS (\d+[\.\d]+)'
+- regex: 'RIM Tablet OS (\d+[.\d]+)'
   name: 'BlackBerry Tablet OS'
   version: '$1'
 
@@ -1640,7 +1945,7 @@
   name: 'Symbian^3'
   version: ''
 
-- regex: '(?:Series ?60|SymbOS|S60)(?:[ /]?(\d+[\.\d]+|V\d+))?'
+- regex: '(?:Series ?60|SymbOS|S60)(?:[ /]?(\d+[.\d]+|V\d+))?'
   name: 'Symbian OS Series 60'
   version: '$1'
 
@@ -1648,7 +1953,7 @@
   name: 'Symbian OS Series 40'
   version: ''
 
-- regex: 'SymbianOS/(\d+[\.\d]+)'
+- regex: 'SymbianOS/(\d+[.\d]+)'
   name: 'Symbian OS'
   version: '$1'
 
@@ -1674,21 +1979,21 @@
 ##########
 # RISC OS
 ##########
-- regex: 'RISC OS(?:-NC)?(?:[ /](\d+[\.\d]+))?'
+- regex: 'RISC OS(?:-NC)?(?:[ /](\d+[.\d]+))?'
   name: 'RISC OS'
   version: '$1'
 
 ##########
 # Inferno
 ##########
-- regex: 'Inferno(?:[ /](\d+[\.\d]+))?'
+- regex: 'Inferno(?:[ /](\d+[.\d]+))?'
   name: 'Inferno'
   version: '$1'
 
 ##########
 # Bada
 ##########
-- regex: 'bada(?:[ /](\d+[\.\d]+))?'
+- regex: 'bada(?:[ /](\d+[.\d]+))?'
   name: 'Bada'
   version: '$1'
 
@@ -1702,66 +2007,70 @@
 ##########
 # Brew
 ##########
-- regex: '(?:Brew(?!-Applet)(?: MP)?|BMP)(?:[ /](\d+[\.\d]+))?'
+- regex: '(?:Brew(?!-Applet)(?: MP)?|BMP)(?:[ /](\d+[.\d]+))?'
   name: 'Brew'
   version: '$1'
 
 ##########
 # Web TV
 ##########
-- regex: 'GoogleTV(?:[ /](\d+[\.\d]+))?'
+- regex: 'GoogleTV(?:[ /](\d+[.\d]+))?'
   name: 'Google TV'
   version: '$1'
 
-- regex: 'WebTV/(\d+[\.\d]+)'
+- regex: 'WebTV/(\d+[.\d]+)'
   name: 'WebTV'
   version: '$1'
 
 ##########
 # Unix
 ##########
-- regex: '(?:SunOS|Solaris)(?:[/ ](\d+[\.\d]+))?'
+- regex: '(?:SunOS|Solaris)(?:[/ ](\d+[.\d]+))?'
   name: 'Solaris'
   version: '$1'
 
-- regex: 'AIX(?:[/ ]?(\d+[\.\d]+))?'
+- regex: 'AIX(?:[/ ]?(\d+[.\d]+))?'
   name: 'AIX'
   version: '$1'
 
-- regex: 'HP-UX(?:[/ ]?(\d+[\.\d]+))?'
+- regex: 'HP-UX(?:[/ ]?(\d+[.\d]+))?'
   name: 'HP-UX'
   version: '$1'
 
+- regex: 'BSD Four'
+  name: 'BSD'
+  version: '4'
+
 # ElectroBSD (https://www.fabiankeil.de/gehacktes/electrobsd/)
-- regex: 'ElectroBSD(?:[/ ]?(\d+[\.\d]+))?'
+- regex: 'ElectroBSD(?:[/ ]?(\d+[.\d]+))?'
   name: 'ElectroBSD'
   version: '$1'
 
-- regex: 'FreeBSD(?:[/ ]?(\d+[\.\d]+))?'
+- regex: 'FreeBSD(?:[/ ]?(\d+[.\d]+))?'
   name: 'FreeBSD'
   version: '$1'
 
-- regex: 'NetBSD(?:[/ ]?(\d+[\.\d]+))?'
+- regex: 'NetBSD(?:[/ ]?(\d+[.\d]+))?'
   name: 'NetBSD'
   version: '$1'
 
-- regex: 'OpenBSD(?:[/ ]?(\d+[\.\d]+))?'
+- regex: 'OpenBSD(?:[/ ]?(\d+[.\d]+))?'
   name: 'OpenBSD'
   version: '$1'
 
-- regex: 'DragonFly(?:[/ ]?(\d+[\.\d]+))?'
+- regex: 'DragonFly(?:[/ ]?(\d+[.\d]+))?'
   name: 'DragonFly'
   version: '$1'
 
-- regex: 'Syllable(?:[/ ]?(\d+[\.\d]+))?'
+- regex: 'Syllable(?:[/ ]?(\d+[.\d]+))?'
   name: 'Syllable'
   version: '$1'
 
-- regex: 'IRIX(?:;64)?(?:[/ ]?(\d+[\.\d]+))'
+- regex: 'IRIX(?:;?64)?(?:[/ ]?(\d+[.\d]+))?'
   name: 'IRIX'
   version: '$1'
 
-- regex: 'OSF1(?:[/ ]?v?(\d+[\.\d]+))?'
+- regex: 'OSF1(?:[/ ]?v?(\d+[.\d]+))?'
   name: 'OSF1'
   version: '$1'
 
@@ -1772,11 +2081,11 @@
   name: 'Nintendo'
   version: '$1'
 
-- regex: 'PlayStation.+; Linux (\d+[\.\d]+)'
+- regex: 'PlayStation.+; Linux (\d+[.\d]+)'
   name: 'PlayStation'
   version: '$1'
 
-- regex: 'PlayStation ?(\d)(?:[/ ](?:Pro )?(\d+[\.\d]+))?'
+- regex: 'PlayStation ?(\d)(?:[/ ](?:Pro )?(\d+[.\d]+))?'
   name: 'PlayStation'
   version: '$1.$2'
 
@@ -1798,7 +2107,7 @@
 ##########
 # IBM
 ##########
-- regex: 'OS/2; Warp (\d+[\.\d]+)'
+- regex: 'OS/2; Warp (\d+[.\d]+)'
   name: 'OS/2'
   version: '$1'
 
@@ -1809,17 +2118,17 @@
 ###########
 # Linux (Generic)
 ###########
-- regex: 'Linux/(\d+[\.\d]+)'
+- regex: 'Linux/(\d+[.\d]+)'
   name: 'GNU/Linux'
   version: '$1'
 
-- regex: 'Linux(?:OS)?[^a-z]|Cinnamon/(?:\d+[\.\d]+)|.+(?:pc|unknown)-linux-gnu|X11'
+- regex: 'Linux[^a-z]|Cinnamon/(?:\d+[.\d]+)|.+(?:pc|unknown)-linux-gnu|X11'
   name: 'GNU/Linux'
   version: ''
 
 ##########
 # Java ME (Java Platform, Micro Edition)
 ##########
-- regex: 'Java ME|(J2ME|Profile)/MIDP|MIDP-(?:\d+[\.\d]+)/CLDC|Configuration/CLDC|Java; U; MIDP|MMP/\d\.\d'
+- regex: 'Java ME|J2ME|Profile/MIDP|CLDC|Java; U; MIDP|MMP/\d\.\d'
   name: 'Java ME'
   version: ''
