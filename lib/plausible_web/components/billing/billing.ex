@@ -6,7 +6,6 @@ defmodule PlausibleWeb.Components.Billing do
 
   import PlausibleWeb.Components.Icons
 
-  require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Plan, Plans, EnterprisePlan}
 
   attr :site, Plausible.Site, required: false, default: nil
