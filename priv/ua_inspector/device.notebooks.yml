@@ -39,6 +39,19 @@ Asus:
     - regex: 'FBMD/X556UQK;'
       model: 'X556UQK'
 
+Alienware:
+  regex: 'FBMD/(?:Alienware [0-9]{2,3}R[0-9]{1,2}|Area-51m|R3|R4|Alienware Aurora R[0-9]+(:? [0-9]+)?);'
+  device: 'desktop'
+  models:
+    - regex: 'Alienware 15R3;'
+      model: 'Alienware 15 R3'
+    - regex: 'Alienware 17R4;'
+      model: 'Alienware 17 R4'
+    - regex: 'Area-51m;'
+      model: 'Area-51m'
+    - regex: 'Aurora (R[0-9]+)'
+      model: 'Aurora $1'
+
 Dell:
   regex: 'FBMD/(?:Latitude E4300|Inspiron 3541|XPS 15 95[35]0);'
   device: 'desktop'

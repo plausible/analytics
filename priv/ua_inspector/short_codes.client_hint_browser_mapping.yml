@@ -6,9 +6,18 @@
   - "DuckDuckGo"
 - "Edge WebView":
   - "Microsoft Edge WebView2"
+- "Mi Browser":
+  - "Miui Browser"
+  - "XiaoMiBrowser"
 - "Microsoft Edge":
   - "Edge"
 - "Norton Private Browser":
   - "Norton Secure Browser"
+- "Opera GX":
+  - "Opera GX Android"
+- "Opera Mini":
+  - "Opera Mini Android"
 - "Vewd Browser":
   - "Vewd Core"
+- "Yandex Browser":
+  - "YaSearchBrowser"
