@@ -1389,6 +1389,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert results == [%{"dimensions" => [], "metrics" => [2, 2, 100.0]}]
     end
 
+    @tag :ee_only
     test "does not return average and total when site owner is on a growth plan",
          %{conn: conn, site: site, user: user} do
       subscribe_to_growth_plan(user)
