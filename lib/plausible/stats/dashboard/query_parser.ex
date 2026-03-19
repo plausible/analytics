@@ -20,6 +20,8 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          {:ok, dimensions} <- ApiQueryParser.parse_dimensions(params["dimensions"]),
          {:ok, filters} <- ApiQueryParser.parse_filters(params["filters"]),
          {:ok, metrics} <- parse_metrics(params),
+         {:ok, order_by} <- ApiQueryParser.parse_order_by(params["order_by"]),
+         {:ok, pagination} <- ApiQueryParser.parse_pagination(params["pagination"]),
          {:ok, include} <- parse_include(params) do
       {:ok,
        ParsedQueryParams.new!(%{
@@ -28,6 +30,8 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          dimensions: dimensions,
          filters: filters,
          metrics: metrics,
+         order_by: order_by,
+         pagination: pagination,
          include: include,
          skip_goal_existence_check: true,
          now: Keyword.get(opts, :now)
