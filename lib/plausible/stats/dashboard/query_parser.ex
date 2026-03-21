@@ -18,6 +18,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
     with {:ok, input_date_range} <- parse_input_date_range(params),
          {:ok, relative_date} <- parse_relative_date(params),
          {:ok, filters} <- parse_filters(params),
+         {:ok, dimensions} <- ApiQueryParser.parse_dimensions(params["dimensions"]),
          {:ok, metrics} <- parse_metrics(params),
          {:ok, include} <- parse_include(params) do
       {:ok,
@@ -25,6 +26,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          input_date_range: input_date_range,
          relative_date: relative_date,
          filters: filters,
+         dimensions: dimensions,
          metrics: metrics,
          include: include,
          skip_goal_existence_check: true

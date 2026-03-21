@@ -161,6 +161,26 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
+  def select_dimension(q, key, "event:label", :events, query) do
+    {event_names, display_names} = Plausible.Stats.Goals.event_name_display_name_arrays(query)
+
+    select_merge_as(q, [t], %{
+      key =>
+        fragment(
+          "if(? = 'pageview', concat('Visit ', ?), transform(?, ?, ?, ?))",
+          t.name,
+          t.pathname,
+          t.name,
+          ^event_names,
+          ^display_names,
+          t.name
+        )
+    })
+  end
+
+  def select_dimension(q, key, "event:label", :sessions, _query),
+    do: select_merge_as(q, [t], %{key => fragment("''")})
+
   def select_dimension(q, key, "event:name", _table, _query),
     do: select_merge_as(q, [t], %{key => t.name})
 

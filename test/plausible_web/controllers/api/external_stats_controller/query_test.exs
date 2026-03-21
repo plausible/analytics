@@ -5112,7 +5112,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert %{"error" => error} = json_response(conn, 400)
 
       assert error =~
-               "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
+               "Invalid filters. Behavioral filters (has_done, has_not_done, sequence) can only be used with event dimension filters."
     end
   end
 

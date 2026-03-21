@@ -87,13 +87,14 @@ defmodule Plausible.Stats.ApiQueryParser do
   defp parse_operator(["not" | _rest]), do: {:ok, :not}
   defp parse_operator(["has_done" | _rest]), do: {:ok, :has_done}
   defp parse_operator(["has_not_done" | _rest]), do: {:ok, :has_not_done}
+  defp parse_operator(["sequence" | _rest]), do: {:ok, :sequence}
 
   defp parse_operator(filter),
     do:
       {:error,
        %QueryError{code: :invalid_filters, message: "Unknown operator for filter '#{i(filter)}'."}}
 
-  def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
+  def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or, :sequence],
     do: parse_filters(filters)
 
   def parse_filter_second(operator, [_, filter | _rest])
@@ -127,7 +128,7 @@ defmodule Plausible.Stats.ApiQueryParser do
   end
 
   defp parse_filter_rest(operator, _filter)
-       when operator in [:not, :and, :or, :has_done, :has_not_done],
+       when operator in [:not, :and, :or, :has_done, :has_not_done, :sequence],
        do: {:ok, []}
 
   defp parse_clauses_list([operator, dimension, list | _rest] = filter) when is_list(list) do
@@ -221,14 +222,14 @@ defmodule Plausible.Stats.ApiQueryParser do
     end
   end
 
-  defp parse_dimensions(dimensions) when is_list(dimensions) do
+  def parse_dimensions(dimensions) when is_list(dimensions) do
     parse_list(
       dimensions,
       &parse_dimension_entry(&1, "Invalid dimensions '#{i(dimensions)}'")
     )
   end
 
-  defp parse_dimensions(nil), do: {:ok, []}
+  def parse_dimensions(nil), do: {:ok, []}
 
   def parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)

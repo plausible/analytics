@@ -1,0 +1,183 @@
+import React, { useState, useEffect } from 'react'
+import * as api from '../api'
+import { useDashboardStateContext } from '../dashboard-state-context'
+import { useSiteContext } from '../site-context'
+import { createStatsQuery } from '../stats-query'
+import { numberShortFormatter } from '../util/number-formatter'
+
+const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
+
+function fetchColumnData(site, dashboardState, steps) {
+  // Page filters only apply to the first step — strip them for subsequent columns
+  const stateToUse =
+    steps.length > 0
+      ? {
+          ...dashboardState,
+          filters: dashboardState.filters.filter(
+            ([_op, key]) => !PAGE_FILTER_KEYS.includes(key)
+          )
+        }
+      : dashboardState
+
+  const query = createStatsQuery(stateToUse, {
+    dimensions: ['event:label'],
+    metrics: ['visitors']
+  })
+
+  if (steps.length > 0) {
+    const seqFilter = ['sequence', steps.map((s) => ['is', 'event:label', [s]])]
+    query.filters = [...query.filters, seqFilter]
+  }
+
+  return api.stats(site, query)
+}
+
+function ExplorationColumn({ header, steps, selected, onSelect, dashboardState }) {
+  const site = useSiteContext()
+  const [loading, setLoading] = useState(steps !== null)
+  const [results, setResults] = useState([])
+
+  useEffect(() => {
+    if (steps === null) {
+      setResults([])
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setResults([])
+
+    fetchColumnData(site, dashboardState, steps)
+      .then((response) => {
+        setResults(response.results || [])
+      })
+      .catch(() => {
+        setResults([])
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dashboardState, steps === null ? null : steps.join('|||')])
+
+  const maxVisitors = results.length > 0 ? results[0].metrics[0] : 1
+
+  return (
+    <div className="flex-1 min-w-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <span className="text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400 uppercase">
+          {header}
+        </span>
+        {selected && (
+          <button
+            onClick={() => onSelect(null)}
+            className="text-xs text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="mx-auto loading pt-4">
+            <div></div>
+          </div>
+        </div>
+      ) : results.length === 0 ? (
+        <div className="flex items-center justify-center h-48 text-sm text-gray-400 dark:text-gray-500">
+          {steps === null ? 'Select an event to continue' : 'No data'}
+        </div>
+      ) : (
+        <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+          {(selected ? results.filter(({ dimensions }) => dimensions[0] === selected) : results.slice(0, 10)).map(({ dimensions, metrics }) => {
+            const label = dimensions[0]
+            const visitors = metrics[0]
+            const pct = Math.round((visitors / maxVisitors) * 100)
+            const isSelected = selected === label
+
+            return (
+              <li key={label}>
+                <button
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors focus:outline-none ${
+                    isSelected
+                      ? 'bg-indigo-50 dark:bg-indigo-900/30'
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
+                  onClick={() => onSelect(isSelected ? null : label)}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span
+                      className={`truncate font-medium ${
+                        isSelected
+                          ? 'text-indigo-700 dark:text-indigo-300'
+                          : 'text-gray-800 dark:text-gray-200'
+                      }`}
+                      title={label}
+                    >
+                      {label}
+                    </span>
+                    <span className="ml-2 shrink-0 text-gray-500 dark:text-gray-400 tabular-nums">
+                      {numberShortFormatter(visitors)}
+                    </span>
+                  </div>
+                  <div className="h-1 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${
+                        isSelected ? 'bg-indigo-500' : 'bg-indigo-300 dark:bg-indigo-600'
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function columnHeader(index) {
+  if (index === 0) return 'Start'
+  return `${index} step${index === 1 ? '' : 's'} after`
+}
+
+export function FunnelExploration() {
+  const { dashboardState } = useDashboardStateContext()
+  const [steps, setSteps] = useState([])
+
+  function handleSelect(columnIndex, label) {
+    if (label === null) {
+      setSteps(steps.slice(0, columnIndex))
+    } else {
+      setSteps([...steps.slice(0, columnIndex), label])
+    }
+  }
+
+  // Show 3 columns by default; add a new column each time the last column gets a selection
+  const numColumns = Math.max(3, steps.length + 1)
+
+  return (
+    <div className="p-4">
+      <h4 className="mt-2 mb-4 text-base font-semibold dark:text-gray-100">
+        Explore user journeys
+      </h4>
+      <div className="flex gap-3">
+        {Array.from({ length: numColumns }, (_, i) => (
+          <ExplorationColumn
+            key={i}
+            header={columnHeader(i)}
+            steps={steps.length >= i ? steps.slice(0, i) : null}
+            selected={steps[i] || null}
+            onSelect={(label) => handleSelect(i, label)}
+            dashboardState={dashboardState}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default FunnelExploration
