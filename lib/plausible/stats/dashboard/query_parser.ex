@@ -14,20 +14,23 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   @valid_comparison_shorthand_keys Map.keys(@valid_comparison_shorthands)
 
-  def parse(params) do
+  def parse(params, opts \\ []) do
     with {:ok, input_date_range} <- parse_input_date_range(params),
          {:ok, relative_date} <- parse_relative_date(params),
-         {:ok, filters} <- parse_filters(params),
+         {:ok, dimensions} <- ApiQueryParser.parse_dimensions(params["dimensions"]),
+         {:ok, filters} <- ApiQueryParser.parse_filters(params["filters"]),
          {:ok, metrics} <- parse_metrics(params),
          {:ok, include} <- parse_include(params) do
       {:ok,
        ParsedQueryParams.new!(%{
          input_date_range: input_date_range,
          relative_date: relative_date,
+         dimensions: dimensions,
          filters: filters,
          metrics: metrics,
          include: include,
-         skip_goal_existence_check: true
+         skip_goal_existence_check: true,
+         now: Keyword.get(opts, :now)
        })}
     end
   end
@@ -79,6 +82,8 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          compare: compare,
          compare_match_day_of_week: params["include"]["compare_match_day_of_week"] == true,
          time_labels: params["include"]["time_labels"] == true,
+         partial_time_labels: params["include"]["partial_time_labels"] == true,
+         present_index: params["include"]["present_index"] == true,
          trim_relative_date_range: true,
          drop_unavailable_time_on_page: true,
          drop_unavailable_revenue_metrics: true
@@ -113,9 +118,5 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   defp parse_include_compare(_) do
     {:ok, nil}
-  end
-
-  defp parse_filters(%{"filters" => filters}) when is_list(filters) do
-    Plausible.Stats.ApiQueryParser.parse_filters(filters)
   end
 end
