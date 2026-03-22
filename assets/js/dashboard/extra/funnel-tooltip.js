@@ -1,3 +1,9 @@
+function escapeHTML(str) {
+  const div = document.createElement('div')
+  div.appendChild(document.createTextNode(str))
+  return div.innerHTML
+}
+
 export default function FunnelTooltip(palette, funnel) {
   return (context) => {
     const tooltipModel = context.tooltip
@@ -31,9 +37,9 @@ export default function FunnelTooltip(palette, funnel) {
 
       tooltipEl.innerHTML = `
         <aside class="text-gray-100 flex flex-col gap-2">
-          <div class="flex items-center gap-3 font-semibold">${previousStep ? `<span>${previousStep.label}</span>` : ''}
+          <div class="flex items-center gap-3 font-semibold">${previousStep ? `<span>${escapeHTML(previousStep.label)}</span>` : ''}
             <span class="text-gray-400">→</span>
-            ${tooltipModel.title}
+            ${escapeHTML(String(tooltipModel.title))}
           </div>
           <hr class="border-gray-750" />
           <div class="grid grid-cols-[1fr_auto_auto] items-center gap-y-1 gap-x-4">
