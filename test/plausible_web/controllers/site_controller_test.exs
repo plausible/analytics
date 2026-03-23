@@ -154,7 +154,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         )
       end
 
-      conn = get(initial_conn, "/sites")
+      conn = get(initial_conn, "/sites?sort_by=alnum&sort_direction=asc")
       resp = html_response(conn, 200)
 
       for i <- 1..24 do
