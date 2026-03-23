@@ -62,10 +62,10 @@ defmodule Plausible.OpenTelemetry.BeamMetrics do
   Returns named observations for all three gauge instruments.
   """
   def observe_top_processes(_callback_args) do
-    Enum.flat_map(@metrics, fn metric ->
+    Enum.map(@metrics, fn metric ->
       {gauge_name, _opts} = Map.fetch!(@instruments, metric)
       observations = collect_observations(metric)
-      [{gauge_name, observations}]
+      {gauge_name, observations}
     end)
   end
 
