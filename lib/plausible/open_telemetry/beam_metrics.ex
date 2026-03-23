@@ -64,22 +64,19 @@ defmodule Plausible.OpenTelemetry.BeamMetrics do
   def observe_top_processes(_callback_args) do
     Enum.flat_map(@metrics, fn metric ->
       {gauge_name, _opts} = Map.fetch!(@instruments, metric)
-
-      observations =
-        metric
-        |> :recon.proc_count(@top_n)
-        |> Enum.flat_map(fn {pid, value, _info} ->
-          case Process.info(pid, @process_info_keys) do
-            nil ->
-              []
-
-            info ->
-              attrs = build_attributes(pid, info)
-              [{value, attrs}]
-          end
-        end)
-
+      observations = collect_observations(metric)
       [{gauge_name, observations}]
+    end)
+  end
+
+  defp collect_observations(metric) do
+    metric
+    |> :recon.proc_count(@top_n)
+    |> Enum.flat_map(fn {pid, value, _info} ->
+      case Process.info(pid, @process_info_keys) do
+        nil -> []
+        info -> [{value, build_attributes(pid, info)}]
+      end
     end)
   end
 
