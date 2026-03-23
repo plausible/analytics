@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       _site2 = new_site(domain: "second.example.com", owner: user)
       _site3 = new_site(domain: "third.another.example.com", owner: user)
 
-      {:ok, lv, html} = live(conn, "/sites?page_size=2")
+      {:ok, lv, html} = live(conn, "/sites?sory_by=alnum&sort_direction=asc&page_size=2")
 
       assert html =~ "first.another.example.com"
       assert html =~ "second.example.com"
