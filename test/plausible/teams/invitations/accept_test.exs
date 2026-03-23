@@ -691,6 +691,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
                Accept.accept_transfer_no_members(invitation.invitation_id, new_owner)
     end
 
+    @tag :ee_only
     test "returns an error if accepting user is not subscribed to a proper plan" do
       existing_owner = new_user()
       site = new_site(owner: existing_owner)
