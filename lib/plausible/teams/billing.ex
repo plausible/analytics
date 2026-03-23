@@ -51,7 +51,7 @@ defmodule Plausible.Teams.Billing do
 
     limit_checking_opts =
       if team.allow_next_upgrade_override do
-        [ignore_pageview_limit: true]
+        [skip_pageview_limit_check?: true]
       else
         []
       end

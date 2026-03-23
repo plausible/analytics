@@ -26,8 +26,9 @@ defmodule Plausible.Billing.Quota do
   which bypasses the pageview limit check and returns `:ok` as long as
   the other limits are not exceeded.
 
-  There's also `skip_team_member_limit_check?` option which behaves the
-  same way but applies to team member limit.
+  There are also `skip_site_limit_check?` and `skip_team_member_limit_check?` 
+  options which behave the same way but applies to site and team member 
+  limits, respectively.
   """
   @spec ensure_within_plan_limits(map(), struct() | atom() | nil, Keyword.t()) ::
           :ok | {:error, Limits.over_limits_error()}
@@ -109,11 +110,17 @@ defmodule Plausible.Billing.Quota do
         not within_limit?(usage.team_members, plan.team_member_limit)
       end
 
+    pageview_limit_exceeded? =
+      if opts[:skip_pageview_limit_check?] do
+        false
+      else
+        exceeds_monthly_pageview_limit?(usage.monthly_pageviews, plan, opts)
+      end
+
     for {limit, exceeded?} <- [
           {:team_member_limit, team_member_limit_exceeded?},
           {:site_limit, site_limit_exceeded?},
-          {:monthly_pageview_limit,
-           exceeds_monthly_pageview_limit?(usage.monthly_pageviews, plan, opts)}
+          {:monthly_pageview_limit, pageview_limit_exceeded?}
         ],
         exceeded? do
       limit
@@ -121,16 +128,12 @@ defmodule Plausible.Billing.Quota do
   end
 
   defp exceeds_monthly_pageview_limit?(usage, plan, opts) do
-    if Keyword.get(opts, :ignore_pageview_limit) do
-      false
+    if has_billing_cycles?(usage) do
+      exceeds_last_two_usage_cycles?(usage, plan.monthly_pageview_limit)
     else
-      if has_billing_cycles?(usage) do
-        exceeds_last_two_usage_cycles?(usage, plan.monthly_pageview_limit)
-      else
-        margin = Keyword.get(opts, :pageview_allowance_margin)
-        limit = Limits.pageview_limit_with_margin(plan.monthly_pageview_limit, margin)
-        !within_limit?(usage.last_30_days.total, limit)
-      end
+      margin = Keyword.get(opts, :pageview_allowance_margin)
+      limit = Limits.pageview_limit_with_margin(plan.monthly_pageview_limit, margin)
+      !within_limit?(usage.last_30_days.total, limit)
     end
   end
 

@@ -331,7 +331,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     limit_checking_opts =
       cond do
         current_team && current_team.allow_next_upgrade_override ->
-          [ignore_pageview_limit: true]
+          [skip_pageview_limit_check?: true]
 
         trial_active_or_ended_recently? && plan.volume == "10k" ->
           [pageview_allowance_margin: 0.3]
