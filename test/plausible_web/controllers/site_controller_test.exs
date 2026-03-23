@@ -463,7 +463,21 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ "only letters, numbers, slashes and period allowed"
+      assert html_response(conn, 200) =~
+               "only letters, numbers, slashes, underscores and period allowed"
+    end
+
+    test "underscores are allowed in the domain", %{conn: conn} do
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "timezone" => "Europe/London",
+            "domain" => "example.com/some_blog_site"
+          }
+        })
+
+      assert redirected_to(conn) ==
+               "/example.com%2Fsome_blog_site/installation?site_created=true&flow="
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
