@@ -27,7 +27,7 @@ defmodule Plausible.Billing.Quota do
   the other limits are not exceeded.
 
   There are also `skip_site_limit_check?` and `skip_team_member_limit_check?` 
-  options which behave the same way but applies to site and team member 
+  options which behave the same way but apply to site and team member 
   limits, respectively.
   """
   @spec ensure_within_plan_limits(map(), struct() | atom() | nil, Keyword.t()) ::
