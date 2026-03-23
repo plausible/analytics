@@ -39,7 +39,7 @@ export default function FunnelTooltip(palette, funnel) {
         <aside class="text-gray-100 flex flex-col gap-2">
           <div class="flex items-center gap-3 font-semibold">${previousStep ? `<span>${escapeHTML(previousStep.label)}</span>` : ''}
             <span class="text-gray-400">→</span>
-            ${escapeHTML(String(tooltipModel.title))}
+            ${escapeHTML(tooltipModel.title)}
           </div>
           <hr class="border-gray-750" />
           <div class="grid grid-cols-[1fr_auto_auto] items-center gap-y-1 gap-x-4">
