@@ -42,4 +42,19 @@ defmodule Plausible.Teams.Invitations.Accept do
       end
     end
   end
+
+  @spec accept_transfer_no_members(String.t(), Auth.User.t(), Teams.Team.t() | nil) ::
+          {:ok, map()} | {:error, accept_error()}
+  def accept_transfer_no_members(transfer_id, user, team \\ nil) do
+    case Teams.Invitations.find_for_user(transfer_id, user) do
+      {:ok, %Teams.SiteTransfer{} = site_transfer} ->
+        Teams.Sites.Transfer.accept(site_transfer, user, team, skip_site_members_transfer?: true)
+
+      {:ok, _} ->
+        {:error, :permission_denied}
+
+      {:error, _} = error ->
+        error
+    end
+  end
 end

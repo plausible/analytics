@@ -8,11 +8,18 @@ defmodule PlausibleWeb.InvitationController do
   plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
        [:owner, :admin] when action in [:remove_invitation]
 
-  def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
+  def accept_invitation(conn, %{"invitation_id" => invitation_id} = params) do
     current_user = conn.assigns.current_user
     team = conn.assigns.current_team
 
-    case Teams.Invitations.Accept.accept(invitation_id, current_user, team) do
+    result =
+      if params["skip_site_members_transfer"] == "true" do
+        Teams.Invitations.Accept.accept_transfer_no_members(invitation_id, current_user, team)
+      else
+        Teams.Invitations.Accept.accept(invitation_id, current_user, team)
+      end
+
+    case result do
       {:ok, result} ->
         team = result.team
 

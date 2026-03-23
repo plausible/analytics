@@ -22,9 +22,12 @@ defmodule Plausible.Billing.Quota do
   Ensures that the given usage map is within the limits
   of the given plan.
 
-  An `opts` argument can be passed with `ignore_pageview_limit: true`
+  An `opts` argument can be passed with `skip_pageview_limit_check?: true`
   which bypasses the pageview limit check and returns `:ok` as long as
   the other limits are not exceeded.
+
+  There's also `skip_team_member_limit_check?` option which behaves the
+  same way but applies to team member limit.
   """
   @spec ensure_within_plan_limits(map(), struct() | atom() | nil, Keyword.t()) ::
           :ok | {:error, Limits.over_limits_error()}
@@ -99,8 +102,15 @@ defmodule Plausible.Billing.Quota do
         not within_limit?(usage.sites, plan.site_limit)
       end
 
+    team_member_limit_exceeded? =
+      if opts[:skip_team_member_limit_check?] do
+        false
+      else
+        not within_limit?(usage.team_members, plan.team_member_limit)
+      end
+
     for {limit, exceeded?} <- [
-          {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
+          {:team_member_limit, team_member_limit_exceeded?},
           {:site_limit, site_limit_exceeded?},
           {:monthly_pageview_limit,
            exceeds_monthly_pageview_limit?(usage.monthly_pageviews, plan, opts)}
