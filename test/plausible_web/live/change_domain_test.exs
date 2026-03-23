@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: "invalid domain with spaces"}})
 
-      assert html =~ "only letters, numbers, slashes and period allowed"
+      assert html =~ "only letters, numbers, slashes, underscores and period allowed"
     end
 
     test "renders back to settings link with correct path", %{conn: conn, site: site} do
