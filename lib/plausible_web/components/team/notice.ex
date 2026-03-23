@@ -202,8 +202,7 @@ defmodule PlausibleWeb.Team.Notice do
             theme="secondary"
             size="sm"
           >
-            Accept
-            <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+            Accept <Heroicons.chevron_down mini class="size-4 mt-0.5" />
           </PrimaDropdown.dropdown_trigger>
           <PrimaDropdown.dropdown_menu id={"ownership-accept-menu-#{@invitation.transfer_id}"}>
             <PrimaDropdown.dropdown_item
@@ -216,12 +215,14 @@ defmodule PlausibleWeb.Team.Notice do
             <PrimaDropdown.dropdown_item
               as={fn a -> link(Map.put(a, :method, "post")) end}
               id={"ownership-accept-item-members-#{@invitation.transfer_id}"}
-              href={Routes.invitation_path(
-                PlausibleWeb.Endpoint,
-                :accept_invitation,
-                @invitation.transfer_id,
-                skip_site_members_transfer: "true"
-              )}
+              href={
+                Routes.invitation_path(
+                  PlausibleWeb.Endpoint,
+                  :accept_invitation,
+                  @invitation.transfer_id,
+                  skip_site_members_transfer: "true"
+                )
+              }
             >
               Accept without members
             </PrimaDropdown.dropdown_item>
