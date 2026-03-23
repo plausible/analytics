@@ -69,6 +69,12 @@ Sony:
 
 # Retroid Pocket (www.goretroid.com)
 Retroid Pocket:
-  regex: 'Retroid Pocket 2(?:Plus|\+)'
+  regex: 'Retroid Pocket'
   device: 'console'
-  model: '2 Plus'
+  models:
+    - regex: 'Pocket ([23]) ?(?:Plus|\+)'
+      model: '$1 Plus'
+    - regex: 'Pocket 4 Pro'
+      model: '4 Pro'
+    - regex: 'Pocket ([235])'
+      model: '$1'

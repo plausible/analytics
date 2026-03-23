@@ -5,17 +5,27 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
-- regex: 'kiwi-tcms/(\d+[\.\d]+)'
+- regex: 'PhantomJS(?:/(\d+[.\d]+))?'
+  name: 'PhantomJS'
+  version: '$1'
+  url: 'https://phantomjs.org/'
+
+- regex: 'IPinfoClient/.*/(\d+[.\d]+)'
+  name: 'IPinfo'
+  version: '$1'
+  url: 'https://github.com/ipinfo'
+
+- regex: 'kiwi-tcms/(\d+[.\d]+)'
   name: 'Kiwi TCMS'
   version: '$1'
   url: 'https://kiwitcms.org'
 
-- regex: 'tcms-api/(\d+[\.\d]+)'
+- regex: 'tcms-api/(\d+[.\d]+)'
   name: 'Kiwi TCMS API'
   version: '$1'
   url: 'https://kiwitcms.org'
 
-- regex: 'Fuzz Faster U Fool v(\d+[\.\d]+)'
+- regex: 'Fuzz Faster U Fool v(\d+[.\d]+)'
   name: 'FFUF'
   version: '$1'
   url: 'https://github.com/ffuf/ffuf'
@@ -30,7 +40,7 @@
   version: ''
   url: 'https://github.com/super-l/msray'
 
-- regex: 'HTMLParser(?:/(\d+[\.\d]+))?'
+- regex: 'HTMLParser(?:/(\d+[.\d]+))?'
   name: 'HTML Parser'
   version: '$1'
   url: 'https://htmlparser.sourceforge.net/'
@@ -48,82 +58,94 @@
   url: 'https://github.com/typhoeus/typhoeus'
 
 # req
-- regex: 'req/v([\.\d]+)'
+- regex: 'req/v([.\d]+)'
   name: 'req'
   version: '$1'
   url: 'https://github.com/imroc/req'
 
 # quic-go
-- regex: 'quic-go-HTTP/3'
+- regex: 'quic-go[ -]HTTP/3'
   name: 'quic-go'
   version: ''
   url: 'https://github.com/lucas-clemente/quic-go'
 
 # Azure Data Factory
-- regex: 'azure-data-factory(?:/(\d+[\.\d]+))?'
+- regex: 'azure-data-factory(?:/(\d+[.\d]+))?'
   name: 'Azure Data Factory'
   version: '$1'
   url: 'https://azure.microsoft.com/en-us/products/data-factory/'
 
 # Dart
-- regex: 'Dart(?:/(\d+[\.\d]+))?'
+- regex: 'Dart/(\d+[.\d]+)'
   name: 'Dart'
   version: '$1'
   url: 'https://dart.dev/'
 
 # r-curl
-- regex: 'r-curl(?:/(\d+[\.\d]+))?'
+- regex: 'r-curl(?:/(\d+[.\d]+))?'
   name: 'r-curl'
   version: '$1'
   url: 'https://github.com/jeroen/curl'
 
 # HTTPX
-- regex: 'python-httpx(?:/(\d+[\.\d]+))?'
+- regex: 'python-httpx(?:/(\d+[.\d]+))?'
   name: 'HTTPX'
   version: '$1'
   url: 'https://www.python-httpx.org/'
 
 # fasthttp
-- regex: 'fasthttp(?:/(\d+[\.\d]+))?'
+- regex: 'fasthttp(?:/(\d+[.\d]+))?'
   name: 'fasthttp'
   version: '$1'
   url: 'https://github.com/valyala/fasthttp'
 
 # GeoIP Update
-- regex: 'geoipupdate(?:/(\d+[\.\d]+))?'
+- regex: 'geoipupdate(?:/(\d+[.\d]+))?'
   name: 'GeoIP Update'
   version: '$1'
   url: 'https://github.com/maxmind/geoipupdate'
 
 # PHP cURL Class
-- regex: 'PHP-Curl-Class(?:/(\d+[\.\d]+))?'
+- regex: 'PHP-Curl-Class(?:/(\d+[.\d]+))?'
   name: 'PHP cURL Class'
   version: '$1'
   url: 'https://github.com/php-curl-class/php-curl-class'
 
 # cPanel HTTP Client
-- regex: 'Cpanel-HTTP-Client(?:/(\d+[\.\d]+))?'
+- regex: 'Cpanel-HTTP-Client(?:/(\d+[.\d]+))?'
   name: 'cPanel HTTP Client'
   version: '$1'
   url: 'https://www.cpanel.net/'
 
 # AnyEvent HTTP
-- regex: 'AnyEvent-HTTP(?:/(\d+[\.\d]+))?'
+- regex: 'AnyEvent-HTTP(?:/(\d+[.\d]+))?'
   name: 'AnyEvent HTTP'
   version: '$1'
   url: 'http://software.schmorp.de/pkg/AnyEvent'
 
 # SlimerJS
-- regex: 'SlimerJS/(\d+[\.\d]+)'
+- regex: 'SlimerJS/(\d+[.\d]+)'
   name: 'SlimerJS'
   version: '$1'
   url: 'https://www.slimerjs.org/'
 
-- regex: 'Wget(?:/(\d+[\.\d]+))?'
+# Jaunt
+- regex: 'Jaunt/(\d+[.\d]+)'
+  name: 'Jaunt'
+  version: '$1'
+  url: 'https://jaunt-api.com/'
+
+# Cypress
+- regex: 'Cypress/(\d+[.\d]+)'
+  name: 'Cypress'
+  version: '$1'
+  url: 'https://github.com/cypress-io/cypress'
+
+- regex: 'Wget(?:/(\d+[.\d]+))?'
   name: 'Wget'
   version: '$1'
 
-- regex: 'Guzzle(?:Http)?(?:/(\d+[\.\d]+))?'
+- regex: 'Guzzle(?:Http)?(?:/(\d+[.\d]+))?'
   name: 'Guzzle (PHP HTTP Client)'
   version: '$1'
 
@@ -132,68 +154,64 @@
   name: 'Symfony'
   version: '$1'
 
-- regex: '(?:lib)?curl(?:/(\d+[\.\d]+))?'
+- regex: '(?:lib)?curl(?:/(\d+[.\d]+))?'
   name: 'curl'
   version: '$1'
 
-- regex: 'python-requests(?:/(\d+[\.\d]+))?'
+- regex: 'python-requests(?:/(\d+[.\d]+))?'
   name: 'Python Requests'
   version: '$1'
 
-- regex: 'Python-httplib2(?:/(\d+[\.\d]+))?'
+- regex: 'Python-httplib2(?:/(\d+[.\d]+))?'
   name: 'httplib2'
   version: '$1'
   url: 'https://pypi.org/project/httplib2/'
 
-- regex: 'Python-urllib3?(?:/?(\d+[\.\d]+))?'
+- regex: 'Python-urllib3?(?:/?(\d+[.\d]+))?'
   name: 'Python urllib'
   version: '$1'
 
-- regex: 'Apache-HttpClient(?:/?(\d+[\.\d]+))?'
+- regex: 'Apache-HttpClient(?:/?(\d+[.\d]+))?'
   name: 'Apache HTTP Client'
   version: '$1'
 
-- regex: 'Java-http-client(?:/?(\d+[\.\d]+))?'
+- regex: 'Java-http-client(?:/?(\d+[.\d]+))?'
   name: 'Java HTTP Client'
   version: '$1'
 
-- regex: 'Java(?:/?(\d+[\.\d]+))?'
+- regex: 'Java/?(\d+[.\d]+)'
   name: 'Java'
   version: '$1'
 
-- regex: '(?:perlclient|libwww-perl)(?:/?(\d+[\.\d]+))?'
+- regex: '(?:perlclient|libwww-perl)(?:/?(\d+[.\d]+))?'
   name: 'Perl'
   version: '$1'
 
-- regex: 'grpc-java-okhttp/([\d\.]+)'
+- regex: 'grpc-java-okhttp/([\d.]+)'
   name: 'gRPC-Java'
   version: '$1'
   url: 'https://github.com/grpc/grpc-java'
 
 # java library
-- regex: '(?:okhttp|network-okhttp3)/([\d\.]+)'
+- regex: '(?:okhttp|network-okhttp3)/([\d.]+)'
   name: 'OkHttp'
   version: '$1'
 
-- regex: 'okhttp3-([\d\.]+)'
+- regex: 'okhttp3-([\d.]+)'
   name: 'OkHttp'
   version: '$1'
 
-- regex: 'HTTP_Request2(?:/(\d+[\.\d]+))?'
-  name: 'HTTP_Request2'
-  version: '$1'
-
-- regex: 'HTTP_Request2(?:/(\d+[\.\d]+))?'
+- regex: 'HTTP_Request2(?:/(\d+[.\d]+))?'
   name: 'HTTP_Request2'
   version: '$1'
   url: 'https://pear.php.net/package/http_request2'
 
-- regex: 'Mechanize(?:/(\d+[\.\d]+))?'
+- regex: 'Mechanize(?:/(\d+[.\d]+))?'
   name: 'Mechanize'
   version: '$1'
   url: 'https://github.com/sparklemotion/mechanize'
 
-- regex: 'aiohttp(?:/(\d+[\.\d]+))?'
+- regex: 'aiohttp(?:/(\d+[.\d]+))?'
   name: 'aiohttp'
   version: '$1'
 
@@ -201,41 +219,41 @@
   name: 'Google HTTP Java Client'
   version: '$1'
 
-- regex: 'WWW-Mechanize(?:/(\d+[\.\d]+))?'
+- regex: 'WWW-Mechanize(?:/(\d+[.\d]+))?'
   name: 'WWW-Mechanize'
   version: '$1'
 
-- regex: 'Faraday(?: v(\d+[\.\d]+))?'
+- regex: 'Faraday(?: v(\d+[.\d]+))?'
   name: 'Faraday'
   version: '$1'
   url: 'https://github.com/lostisland/faraday'
 
-- regex: '(?:Go-http-client|Go )/?(?:(\d+[\.\d]+))?(?: package http)?'
+- regex: '(?:Go-http-client|^Go )/?(?:(\d+[.\d]+))?(?: package http)?'
   name: 'Go-http-client'
   version: '$1'
 
-- regex: 'urlgrabber(?:/(\d+[\.\d]+))?'
+- regex: 'urlgrabber(?:/(\d+[.\d]+))?'
   name: 'urlgrabber (yum)'
   version: '$1'
 
-- regex: 'libdnf(?:/(\d+[\.\d]+))?'
+- regex: 'libdnf(?:/(\d+[.\d]+))?'
   name: 'libdnf'
   version: '$1'
 
-- regex: 'HTTPie(?:/(\d+[\.\d]+))?'
+- regex: 'HTTPie(?:/(\d+[.\d]+))?'
   name: 'HTTPie'
   version: '$1'
 
-- regex: 'rest-client/(\d+\.[\.\d]+) .*ruby'
+- regex: 'rest-client/(\d+\.[.\d]+) .*ruby'
   name: 'REST Client for Ruby'
   version: '$1'
 
-- regex: 'RestSharp/(\d+[\.\d]+)'
+- regex: 'RestSharp/(\d+[.\d]+)'
   name: 'RestSharp'
   version: '$1'
   url: 'https://github.com/restsharp/RestSharp'
 
-- regex: 'scalaj-http/(\d+[\.\d]+)'
+- regex: 'scalaj-http/(\d+[.\d]+)'
   name: 'ScalaJ HTTP'
   version: '$1'
   url: 'https://github.com/scalaj/scalaj-http'
@@ -245,37 +263,37 @@
   version: '$1'
   url: 'https://metacpan.org/pod/REST::Client'
 
-- regex: 'node-fetch/?(\d+[\.\d]+)?'
+- regex: 'node-fetch/?(\d+[.\d]+)?'
   name: 'Node Fetch'
   version: '$1'
   url: 'https://github.com/node-fetch/node-fetch'
 
-- regex: 'electron-fetch/?(\d+[\.\d]+)?'
+- regex: 'electron-fetch/?(\d+[.\d]+)?'
   name: 'Electron Fetch'
   version: '$1'
   url: 'https://github.com/arantes555/electron-fetch'
 
-- regex: 'ReactorNetty/(\d+[\.\d]+)'
+- regex: 'ReactorNetty/(\d+[.\d]+)'
   name: 'ReactorNetty'
   version: '$1'
   url: 'https://github.com/reactor/reactor-netty'
 
-- regex: 'PostmanRuntime(?:/(\d+[\.\d]+))?'
+- regex: 'PostmanRuntime(?:/(\d+[.\d]+))?'
   name: 'Postman Desktop'
   version: '$1'
   url: 'https://github.com/postmanlabs/postman-runtime'
 
-- regex: 'insomnia(?:/(\d+[\.\d]+))?'
+- regex: 'insomnia(?:/(\d+[.\d]+))?'
   name: 'Insomnia REST Client'
   version: '$1'
   url: 'https://insomnia.rest'
 
-- regex: 'Jakarta Commons-HttpClient/([\.\d]+)'
+- regex: 'Jakarta Commons-HttpClient/([.\d]+)'
   name: 'Jakarta Commons HttpClient'
   version: '$1'
   url: 'https://hc.apache.org/httpclient-3.x'
 
-- regex: 'WinHttp\.WinHttpRequest.+([\.\d]+)'
+- regex: 'WinHttp\.WinHttpRequest.+([.\d]+)'
   name: 'WinHttp WinHttpRequest'
   version: '$1'
 
@@ -284,25 +302,25 @@
   version: ''
 
 # THTTPClient in delphi 10+ default useragent
-- regex: 'Embarcadero URI Client/([\.\d]+)'
+- regex: 'Embarcadero URI Client/([.\d]+)'
   name: 'Embarcadero URI Client'
   version: '$1'
 
-- regex: 'Mikrotik/([\.\d]+)'
+- regex: 'Mikrotik/([.\d]+)'
   name: 'Mikrotik Fetch'
   version: '$1'
 
-- regex: 'GRequests(?:/(\d+[\.\d]+))?'
+- regex: 'GRequests(?:/(\d+[.\d]+))?'
   name: 'GRequests'
   version: '$1'
 
 # https://doc.akka.io/
-- regex: 'akka-http/([\.\d]+)'
+- regex: 'akka-http/([.\d]+)'
   name: 'Akka HTTP'
   version: '$1'
 
 # this added need added tests
-- regex: 'aria2(?:/(\d+[\.\d]+))?'
+- regex: 'aria2(?:/(\d+[.\d]+))?'
   name: 'Aria2'
   version: '$1'
 
@@ -310,7 +328,7 @@
   name: 'uTorrent'
   version: ''
 
-- regex: 'gvfs/(?:(\d+[\.\d]+))?'
+- regex: 'gvfs/(?:(\d+[.\d]+))?'
   name: 'gvfs'
   version: '$1'
 
@@ -320,103 +338,103 @@
   version: ''
 
 # https://github.com/microsoft/cpprestsdk
-- regex: 'cpprestsdk/([\.\d]+)'
+- regex: 'cpprestsdk/([.\d]+)'
   name: 'C++ REST SDK'
   version: '$1'
 
-- regex: 'lua-resty-http/([\.\d]+).+ngx_'
+- regex: 'lua-resty-http/([.\d]+).+ngx_'
   name: 'LUA OpenResty NGINX'
   version: '$1'
 
 # https://github.com/Kong/unirest-java
-- regex: 'unirest-java/([\.\d]+)'
+- regex: 'unirest-java/([.\d]+)'
   name: 'Unirest for Java'
   version: '$1'
 
 # jsdom (https://github.com/jsdom/jsdom)
-- regex: 'jsdom/([\.\d]+)'
+- regex: 'jsdom/([.\d]+)'
   name: 'jsdom'
   version: '$1'
 
 # hackney (https://github.com/benoitc/hackney) (elixir)
-- regex: 'hackney/([\.\d]+)'
+- regex: 'hackney/([.\d]+)'
   name: 'hackney'
   version: '$1'
 
 # Resty (https://github.com/go-resty/resty)
-- regex: 'go-resty/([\.\d]+)'
+- regex: 'go-resty/([.\d]+)'
   name: 'Resty'
   version: '$1'
 
 # Pa11y (https://pa11y.org/)
-- regex: 'pa11y/([\.\d]+)'
+- regex: 'pa11y/([.\d]+)'
   name: 'Pa11y'
   version: '$1'
 
 # Ultimate Sitemap Parser (https://github.com/mediacloud/ultimate-sitemap-parser)
-- regex: 'ultimate_sitemap_parser/([\.\d]+)'
+- regex: 'ultimate_sitemap_parser/([.\d]+)'
   name: 'Ultimate Sitemap Parser'
   version: '$1'
 
 # Container-related useragents
 
 # Artifactory (https://jfrog.com/de/artifactory/)
-- regex: 'Artifactory/([\.\d]+)'
+- regex: 'Artifactory/([.\d]+)'
   name: 'Artifactory'
   version: '$1'
 
 # Open build service (https://build.opensuse.org/)
-- regex: 'BSRPC ([\.\d]+)'
+- regex: 'BSRPC ([.\d]+)'
   name: 'Open Build Service'
   version: '$1'
 
 # Buildah (https://github.com/containers/buildah)
-- regex: 'Buildah/([\.\d]+)'
+- regex: 'Buildah/([.\d]+)'
   name: 'Buildah'
   version: '$1'
 
 # Buildkit (https://github.com/moby/buildkit)
-- regex: 'buildkit/v?([\.\d]+)'
+- regex: 'buildkit/v?([.\d]+)'
   name: 'BuildKit'
   version: '$1'
 
 # containerd (https://github.com/containerd/containerd)
-- regex: 'containerd/v?([\.\d]+)'
+- regex: 'containerd/v?([.\d]+)'
   name: 'Containerd'
   version: '$1'
 
 # containers (https://github.com/containers/image)
-- regex: 'containers/([\.\d]+)'
+- regex: 'containers/([.\d]+)'
   name: 'containers'
   version: '$1'
 
 # cri-o (https://github.com/cri-o/cri-)o
-- regex: 'cri-o/([\.\d]+)'
+- regex: 'cri-o/([.\d]+)'
   name: 'cri-o'
   version: '$1'
 
 # docker (https://github.com/moby/moby)
-- regex: 'docker/([\.\d]+)'
+- regex: 'docker/([.\d]+)'
   name: 'docker'
   version: '$1'
 
 # gcr (https://github.com/google/go-containerregistry)
-- regex: 'go-containerregistry/v([\.\d]+)'
+- regex: 'go-containerregistry/v([.\d]+)'
   name: 'go-container registry'
   version: '$1'
 
 # libpod (https://github.com/dankohn/libpod)
-- regex: 'libpod/([\.\d]+)'
+- regex: 'libpod/([.\d]+)'
   name: 'libpod'
   version: '$1'
 
 # skopeo (https://github.com/containers/skopeo)
-- regex: 'skopeo/([\.\d]+)'
+- regex: 'skopeo/([.\d]+)'
   name: 'Skopeo'
   version: '$1'
 
 # helm (https://github.com/helm/helm)
-- regex: 'Helm/([\.\d]+)'
+- regex: 'Helm/([.\d]+)'
   name: 'Helm'
   version: '$1'
 
@@ -426,7 +444,7 @@
   version: ''
 
 # axios http (https://axios-http.com/)
-- regex: 'axios(?:/?(\d+[\.\d]+))?'
+- regex: 'axios(?:/?(\d+[.\d]+))?'
   name: Axios
   version: '$1'
 
@@ -515,12 +533,12 @@
   name: 'Emacs'
   version: '$1'
 
-- regex: '^FDM[ /]([\d\.]+)'
+- regex: '^FDM[ /]([\d.]+)'
   name: 'Free Download Manager'
   version: '$1'
 
 # 'https://github.com/lingochamp/okdownload'
-- regex: 'OkDownload/([\d\.]+)'
+- regex: 'OkDownload/([\d.]+)'
   name: 'OKDownload Library'
   version: '$1'
 
@@ -537,7 +555,7 @@
   name: 'iOS Application'
   version: ''
 
-- regex: 'cpp-httplib(?:/(\d+[\.\d]+))?'
+- regex: 'cpp-httplib(?:/(\d+[.\d]+))?'
   name: 'cpp-httplib'
   version: '$1'
   url: 'https://github.com/yhirose/cpp-httplib'
@@ -547,12 +565,12 @@
   version: ''
   url: 'https://github.com/psf/requests'
 
-- regex: 'Stealer ([\d\.]+)'
+- regex: 'Stealer ([\d.]+)'
   name: 'Stealer'
   version: '$1'
   url: 'https://github.com/hotrush/stealer/'
 
-- regex: 'Mandrill-PHP(?:/(\d+[\.\d]+))?'
+- regex: 'Mandrill-PHP(?:/(\d+[.\d]+))?'
   name: 'Mandrill PHP'
   version: '$1'
   url: 'https://bitbucket.org/mailchimp/mandrill-api-php/src/master/'
@@ -562,27 +580,27 @@
   version: ''
   url: 'https://github.com/akhilrex/podgrab'
 
-- regex: '^Podcast Provider.*?Radio Downloader ([\d\.]+)'
+- regex: '^Podcast Provider.*?Radio Downloader ([\d.]+)'
   name: 'Radio Downloader'
   version: '$1'
   url: 'https://nerdoftheherd.com/tools/radiodld/'
 
-- regex: '^ESP32 HTTP Client/([\d\.]+)'
+- regex: '^ESP32 HTTP Client/([\d.]+)'
   name: 'ESP32 HTTP Client'
   version: '$1'
   url: 'https://github.com/espressif/arduino-esp32'
 
-- regex: 'babashka\.http-client(?:/(\d+[\.\d]+))?'
+- regex: 'babashka\.http-client(?:/(\d+[.\d]+))?'
   name: 'Babashka HTTP Client'
   version: '$1'
   url: 'https://github.com/babashka/http-client'
 
-- regex: 'http\.rb(?:/(\d+[\.\d]+))?'
+- regex: 'http\.rb(?:/(\d+[.\d]+))?'
   name: 'http.rb'
   version: '$1'
   url: 'https://github.com/httprb/http'
 
-- regex: 'node-superagent(?:/(\d+[\.\d]+))?'
+- regex: 'node-superagent(?:/(\d+[.\d]+))?'
   name: 'superagent'
   version: '$1'
   url: 'https://github.com/ladjs/superagent'
@@ -597,17 +615,102 @@
   version: ''
   url: 'https://github.com/request/request'
 
-- regex: 'qbhttp(?:/(\d+[\.\d]+))?'
+- regex: 'qbhttp(?:/(\d+[.\d]+))?'
   name: 'QbHttp'
   version: '$1'
   url: 'https://github.com/OpenQb/QbHttp'
 
-- regex: 'httprs(?:/(\d+[\.\d]+))?'
+- regex: 'httprs(?:/(\d+[.\d]+))?'
   name: 'httprs'
   version: '$1'
   url: 'https://github.com/http-server-rs/http-server'
 
-- regex: 'Boto3(?:/(\d+[\.\d]+))?'
+- regex: 'Boto3(?:/(\d+[.\d]+))?'
   name: 'Boto3'
   version: '$1'
   url: 'https://github.com/boto/boto3'
+
+- regex: 'Python-xmlrpc(?:/(\d+[.\d]+))?'
+  name: 'XML-RPC'
+  version: '$1'
+  url: 'https://docs.python.org/3/library/xmlrpc.html'
+
+- regex: 'ICAP-Client-Library(?:/(\d+[.\d]+))?'
+  name: 'ICAP Client'
+  version: '$1'
+  url: 'https://github.com/Peoplecantfly/icapserver'
+
+- regex: 'Cygwin-Setup(?:/(\d+[.\d]+))?'
+  name: 'Cygwin'
+  version: '$1'
+  url: 'https://www.cygwin.com/'
+
+- regex: 'azsdk-python-storage-blob(?:/(\d+[.\d]+))?'
+  name: 'Azure Blob Storage'
+  version: '$1'
+  url: 'https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python'
+
+- regex: 'trafilatura(?:/(\d+[.\d]+))?'
+  name: 'trafilatura'
+  version: '$1'
+  url: 'https://github.com/adbar/trafilatura'
+
+- regex: 'sqlmap(?:/(\d+[.\d]+))?'
+  name: 'sqlmap'
+  version: '$1'
+  url: 'https://sqlmap.org/'
+
+- regex: 'vimeo\.php(?: (\d+[.\d]+))?'
+  name: 'vimeo.php'
+  version: '$1'
+  url: 'https://github.com/vimeo/vimeo.php'
+
+- regex: '^PHP/?(\d+[.\d]+)'
+  name: 'PHP'
+  version: '$1'
+  url: ''
+
+- regex: 'go-network-v(\d+[.\d]+)'
+  name: 'go-network'
+  version: '$1'
+  url: ''
+
+- regex: 'Bun/(\d+\.[.\d]+)'
+  name: 'Bun'
+  version: '$1'
+  url: 'https://bun.sh/'
+
+- regex: 'Apidog/(\d+\.[.\d]+)'
+  name: 'Apidog'
+  version: '$1'
+  url: 'https://apidog.com/'
+
+- regex: 'webchk v(\d+\.[.\d]+)'
+  name: 'webchk'
+  version: '$1'
+  url: 'https://github.com/amgedr/webchk'
+
+- regex: 'MatomoTrackerSDK/(\d+[.\d]+)'
+  name: 'MatomoTracker'
+  version: '$1'
+  url: 'https://github.com/matomo-org/matomo-sdk-ios'
+
+- regex: 'libHTTP/(\d+[.\d]+)'
+  name: 'LibHTTP'
+  version: '$1'
+  url: 'https://www.libhttp.org/'
+
+- regex: 'BIC Tracker'
+  name: 'BIC Tracker'
+  version: ''
+  url: 'https://github.com/Simbiat/BIC-Tracker'
+
+- regex: 'Lodestone PHP Parser'
+  name: 'Lodestone PHP Parser'
+  version: ''
+  url: 'https://github.com/Simbiat/lodestone-parser'
+
+- regex: '^Hubot/(\d+[.\d]+)'
+  name: 'Hubot'
+  version: '$1'
+  url: 'https://github.com/hubotio/hubot'
