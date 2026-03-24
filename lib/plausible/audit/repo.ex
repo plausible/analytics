@@ -108,23 +108,23 @@ defmodule Plausible.Audit.Repo do
       quote do
         @behaviour Plausible.Audit.Repo
 
-        def update_with_audit(changeset, _, _) do
+        def update_with_audit(changeset, _, _ \\ %{}) do
           update(changeset)
         end
 
-        def update_with_audit!(changeset, _, _) do
+        def update_with_audit!(changeset, _, _ \\ %{}) do
           update!(changeset)
         end
 
-        def insert_with_audit(changeset, _, _) do
+        def insert_with_audit(changeset, _, _ \\ %{}) do
           insert(changeset)
         end
 
-        def insert_with_audit!(changeset, _, _, _) do
+        def insert_with_audit!(changeset, _, _ \\ %{}, _ \\ []) do
           insert!(changeset)
         end
 
-        def delete_with_audit!(resource, _, _) do
+        def delete_with_audit!(resource, _, _ \\ %{}) do
           delete!(resource)
         end
       end
