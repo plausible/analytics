@@ -462,5 +462,9 @@ defmodule Plausible.Teams.Test do
           raise "Expected audited entry #{inspect(attrs)} but only found #{inspect(Plausible.Audit.list_entries([]), pretty: true)}."
       end
     end
+  else
+    def audited_entry(_, _ \\ []), do: true
+
+    def audited_entries(_, _, _ \\ []), do: true
   end
 end
