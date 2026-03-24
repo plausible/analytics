@@ -225,6 +225,11 @@ defmodule Plausible.BillingTest do
       assert subscription.last_bill_date == ~D[2019-05-01]
       assert subscription.next_bill_amount == "6.00"
       assert subscription.currency_code == "EUR"
+
+      assert audited_entry("subscription_created",
+               team_id: team.id,
+               entity_id: "#{subscription.id}"
+             )
     end
 
     test "supports user without a team case" do
@@ -233,14 +238,21 @@ defmodule Plausible.BillingTest do
       %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id}"}
       |> Billing.subscription_created()
 
+      team = team_of(user)
+
       subscription =
-        user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
+        team |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
 
       assert subscription.paddle_subscription_id == @subscription_id
       assert subscription.next_bill_date == ~D[2019-06-01]
       assert subscription.last_bill_date == ~D[2019-05-01]
       assert subscription.next_bill_amount == "6.00"
       assert subscription.currency_code == "EUR"
+
+      assert audited_entry("subscription_created",
+               team_id: team.id,
+               entity_id: "#{subscription.id}"
+             )
     end
 
     test "unlocks sites if user has any locked sites" do
@@ -317,6 +329,11 @@ defmodule Plausible.BillingTest do
       subscription = subscription_of(user)
       assert subscription.paddle_plan_id == @plan_id_10k
       assert subscription.next_bill_amount == "12.00"
+
+      assert audited_entry("subscription_updated",
+               team_id: team.id,
+               entity_id: "#{subscription.id}"
+             )
     end
 
     test "updates subscription with user/team passthrough" do
@@ -485,7 +502,10 @@ defmodule Plausible.BillingTest do
       user = new_user()
       subscribe_to_growth_plan(user, status: Subscription.Status.active())
 
-      subscription_id = subscription_of(user).paddle_subscription_id
+      subscription = subscription_of(user)
+      team = team_of(user)
+
+      subscription_id = subscription.paddle_subscription_id
 
       Billing.subscription_cancelled(%{
         "alert_name" => "subscription_cancelled",
@@ -499,6 +519,11 @@ defmodule Plausible.BillingTest do
              |> Plausible.Teams.with_subscription()
              |> Map.fetch!(:subscription)
              |> Subscription.Status.deleted?()
+
+      assert audited_entry("subscription_cancelled",
+               team_id: team.id,
+               entity_id: "#{subscription.id}"
+             )
     end
 
     test "ignores if the subscription cannot be found" do
@@ -543,7 +568,8 @@ defmodule Plausible.BillingTest do
     test "updates accept_traffic_until" do
       user = new_user() |> subscribe_to_growth_plan()
 
-      subscription_id = subscription_of(user).paddle_subscription_id
+      subscription = subscription_of(user)
+      subscription_id = subscription.paddle_subscription_id
 
       Billing.subscription_payment_succeeded(%{
         "alert_name" => "subscription_payment_succeeded",
@@ -552,6 +578,11 @@ defmodule Plausible.BillingTest do
 
       team = user |> team_of() |> Repo.reload!() |> Plausible.Teams.with_subscription()
       assert team.accept_traffic_until == Date.add(team.subscription.next_bill_date, 30)
+
+      assert audited_entry("subscription_payment_succeeded",
+               team_id: team.id,
+               entity_id: "#{subscription.id}"
+             )
     end
 
     test "sets the next bill amount and date, last bill date" do
@@ -591,6 +622,11 @@ defmodule Plausible.BillingTest do
       assert subscription.paddle_plan_id == "123123"
       assert subscription.next_bill_date == ~D[2019-07-10]
       assert subscription.next_bill_amount == "6.00"
+
+      assert audited_entry("subscription_plan_changed",
+               team_id: team.id,
+               entity_id: "#{subscription.id}"
+             )
     end
   end
 

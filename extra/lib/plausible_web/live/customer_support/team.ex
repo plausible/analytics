@@ -55,8 +55,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         yesterday = Date.shift(Date.utc_today(), day: -1)
         Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
 
-        Plausible.Repo.update!(
-          Plausible.Billing.Subscription.changeset(team.subscription, %{next_bill_date: yesterday})
+        Plausible.Repo.update_with_audit!(
+          Plausible.Billing.Subscription.changeset(team.subscription, %{next_bill_date: yesterday}),
+          "subscription_refund_locked",
+          %{team_id: team.id}
         )
 
         Resource.Team.get(team.id)

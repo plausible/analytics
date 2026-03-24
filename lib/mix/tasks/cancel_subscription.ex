@@ -15,9 +15,11 @@ defmodule Mix.Tasks.CancelSubscription do
   def run([paddle_subscription_id]) do
     Mix.Task.run("app.start")
 
-    Repo.get_by!(Subscription, paddle_subscription_id: paddle_subscription_id)
+    subscription = Repo.get_by!(Subscription, paddle_subscription_id: paddle_subscription_id)
+
+    subscription
     |> Subscription.changeset(%{status: Subscription.Status.deleted()})
-    |> Repo.update!()
+    |> Repo.update_with_audit!("subscription_cancelled", %{team_id: subscription.team_id})
 
     Logger.notice("Successfully set the subscription status to #{Subscription.Status.deleted()}")
   end

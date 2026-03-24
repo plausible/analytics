@@ -56,7 +56,7 @@ defmodule Mix.Tasks.PullSandboxSubscription do
           }
 
           Subscription.changeset(%Subscription{}, subscription)
-          |> Repo.insert!()
+          |> Repo.insert_with_audit!("subscription_created", %{team_id: team.id})
 
           Logger.notice("Subscription created for user #{user.id} (#{user.email})")
         else

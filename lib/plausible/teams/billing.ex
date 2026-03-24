@@ -78,7 +78,7 @@ defmodule Plausible.Teams.Billing do
           next_bill_amount: amount,
           next_bill_date: response["next_payment"]["date"]
         })
-        |> Repo.update()
+        |> Repo.update_with_audit("subscription_plan_changed", %{team_id: subscription.team_id})
 
       e ->
         e

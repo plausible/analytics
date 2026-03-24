@@ -127,10 +127,17 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert team.locked
         refute team.grace_period
 
+        subscription = Plausible.Teams.with_subscription(team).subscription
+
         assert Date.diff(
-                 Plausible.Teams.with_subscription(team).subscription.next_bill_date,
+                 subscription.next_bill_date,
                  Date.utc_today()
                ) == -1
+
+        assert audited_entry("subscription_refund_locked",
+                 team_id: team.id,
+                 entity_id: "#{subscription.id}"
+               )
 
         # make sure this team doesn't unlock automatically
         Plausible.Workers.LockSites.perform(nil)
