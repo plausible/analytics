@@ -41,7 +41,11 @@ defmodule Plausible.Sites.IndexTest do
 
         team = Plausible.Teams.complete_setup(team)
 
-        assert Index.fetch_site_ids(user, team: team) == [regular1.id, regular2.id]
+        assert ids = Index.fetch_site_ids(user, team: team)
+
+        assert length(ids) == 2
+        assert regular1.id in ids
+        assert regular2.id in ids
       end
     end
 
