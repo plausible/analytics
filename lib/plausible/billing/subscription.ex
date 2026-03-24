@@ -2,6 +2,7 @@ defmodule Plausible.Billing.Subscription do
   @moduledoc false
 
   use Ecto.Schema
+  use Plausible
   import Ecto.Changeset
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
@@ -20,6 +21,22 @@ defmodule Plausible.Billing.Subscription do
   ]
 
   @optional_fields [:last_bill_date]
+
+  on_ee do
+    @derive {Plausible.Audit.Encoder,
+             only: [
+               :id,
+               :paddle_subscription_id,
+               :paddle_plan_id,
+               :update_url,
+               :cancel_url,
+               :status,
+               :next_bill_amount,
+               :next_bill_date,
+               :last_bill_date,
+               :currency_code
+             ]}
+  end
 
   schema "subscriptions" do
     field :paddle_subscription_id, :string

@@ -53,7 +53,7 @@ defmodule Plausible.Billing do
 
     team
     |> Subscription.create_changeset(subscription_params)
-    |> Repo.insert!()
+    |> Repo.insert_with_audit!("subscription_created", %{team_id: team.id})
     |> after_subscription_update()
   end
 
@@ -80,7 +80,7 @@ defmodule Plausible.Billing do
 
       subscription
       |> Subscription.changeset(params)
-      |> Repo.update!()
+      |> Repo.update_with_audit!("subscription_updated", %{team_id: subscription.team_id})
       |> after_subscription_update()
     end
   end
@@ -97,7 +97,10 @@ defmodule Plausible.Billing do
           status: params["status"]
         })
 
-      updated = Repo.update!(changeset)
+      updated =
+        Repo.update_with_audit!(changeset, "subscription_cancelled", %{
+          team_id: subscription.team_id
+        })
 
       for recipient <- subscription.team.owners ++ subscription.team.billing_members do
         recipient
@@ -125,7 +128,9 @@ defmodule Plausible.Billing do
           next_bill_date: api_subscription["next_payment"]["date"],
           last_bill_date: api_subscription["last_payment"]["date"]
         })
-        |> Repo.update!()
+        |> Repo.update_with_audit!("subscription_payment_succeeded", %{
+          team_id: subscription.team_id
+        })
         |> Repo.preload(:team)
 
       Plausible.Teams.update_accept_traffic_until(subscription.team)
