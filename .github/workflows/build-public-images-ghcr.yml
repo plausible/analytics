@@ -85,7 +85,7 @@ jobs:
           data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images-ghcr.yml\">Build failed</a>"}'
 
   push:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs:
       - build
 

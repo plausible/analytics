@@ -9,7 +9,7 @@ on:
 
 jobs:
   tracker-script-update:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       pull-requests: write
       contents: read

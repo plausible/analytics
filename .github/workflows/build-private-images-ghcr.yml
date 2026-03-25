@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build:
     if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'preview') }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     permissions:
       contents: read
