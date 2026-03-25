@@ -7,12 +7,6 @@ import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
-import { ReportLayout } from '../reports/report-layout'
-import { ReportHeader } from '../reports/report-header'
-import { TabButton, TabWrapper } from '../../components/tabs'
-import MoreLink from '../more-link'
-import { MoreLinkState } from '../more-link-state'
-import { referrersGoogleRoute } from '../../router'
 
 interface SearchTerm {
   name: string
@@ -75,14 +69,16 @@ function ConfigureSearchTermsCTA({
   )
 }
 
-export function SearchTerms() {
+interface SearchTermsProps {
+  loading: boolean
+  afterFetchData: (res: object | null) => void,
+  onLoadStart: () => void
+}
+
+export function SearchTerms({ loading, afterFetchData, onLoadStart }: SearchTermsProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
-  const [moreLinkState, setMoreLinkState] = React.useState(
-    MoreLinkState.LOADING
-  )
 
-  const [loading, setLoading] = React.useState(true)
   const [errorPayload, setErrorPayload] = React.useState<null | ErrorPayload>(
     null
   )
@@ -98,31 +94,24 @@ export function SearchTerms() {
         dashboardState
       )
       .then((res) => {
-        setLoading(false)
         setSearchTerms(res.results)
         setErrorPayload(null)
-        if (res.results && res.results.length > 0) {
-          setMoreLinkState(MoreLinkState.READY)
-        } else {
-          setMoreLinkState(MoreLinkState.HIDDEN)
-        }
+        afterFetchData(res)
       })
       .catch((error) => {
-        setLoading(false)
         setSearchTerms(null)
         setErrorPayload(error.payload)
-        setMoreLinkState(MoreLinkState.HIDDEN)
+        afterFetchData(null)
       })
-  }, [dashboardState, site.domain])
+  }, [dashboardState, afterFetchData, site.domain])
 
   useEffect(() => {
     if (visible) {
-      setLoading(true)
+      onLoadStart()
       setSearchTerms([])
-      setMoreLinkState(MoreLinkState.LOADING)
       fetchSearchTerms()
     }
-  }, [dashboardState, fetchSearchTerms, visible])
+  }, [dashboardState, fetchSearchTerms, onLoadStart, visible])
 
   const onVisible = () => {
     setVisible(true)
@@ -191,39 +180,21 @@ export function SearchTerms() {
   }
 
   return (
-    <ReportLayout>
-      <ReportHeader>
-        <div className="flex gap-x-3">
-          <TabWrapper>
-            <TabButton active={true} onClick={() => {}}>
-              Search terms
-            </TabButton>
-          </TabWrapper>
-        </div>
-        <MoreLink
-          state={moreLinkState}
-          linkProps={{
-            path: referrersGoogleRoute.path,
-            search: (search: URLSearchParams) => search
-          }}
-        />
-      </ReportHeader>
-      <div className="relative grow">
-        {loading && (
-          <div className="absolute inset-0 flex justify-center items-center">
-            <div className="loading">
-              <div />
-            </div>
+    <div className="relative grow">
+      {loading && (
+        <div className="absolute inset-0 flex justify-center items-center">
+          <div className="loading">
+            <div />
           </div>
-        )}
-        <FadeIn show={!loading} className="grow">
-          <LazyLoader onVisible={onVisible}>
-            {searchTerms && searchTerms.length > 0 && renderList()}
-            {searchTerms && searchTerms.length === 0 && renderNoDataYet()}
-            {errorPayload && renderError()}
-          </LazyLoader>
-        </FadeIn>
-      </div>
-    </ReportLayout>
+        </div>
+      )}
+      <FadeIn show={!loading} className="grow">
+        <LazyLoader onVisible={onVisible}>
+          {searchTerms && searchTerms.length > 0 && renderList()}
+          {searchTerms && searchTerms.length === 0 && renderNoDataYet()}
+          {errorPayload && renderError()}
+        </LazyLoader>
+      </FadeIn>
+    </div>
   )
 }
