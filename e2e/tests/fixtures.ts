@@ -150,9 +150,7 @@ export async function addSite({
 
   await page.getByRole('button', { name: 'Install Plausible' }).click()
 
-  await expect(
-    page.getByRole('button', { name: 'Verify Script installation' })
-  ).toBeVisible()
+  await expect(page).toHaveURL(/\/installation/)
 }
 
 export async function makeSitePublic({
