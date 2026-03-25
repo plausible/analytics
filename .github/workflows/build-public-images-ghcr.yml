@@ -18,9 +18,9 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-22.04
+            runner: ubuntu-latest
           - platform: linux/arm64
-            runner: blacksmith-4vcpu-ubuntu-2204-arm
+            runner: ubuntu-latest
 
     runs-on: ${{ matrix.runner || 'ubuntu-22.04' }}
 
