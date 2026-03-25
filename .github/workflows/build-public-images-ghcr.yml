@@ -20,7 +20,7 @@ jobs:
           - platform: linux/amd64
             runner: ubuntu-22.04
           - platform: linux/arm64
-            runner: ubuntu-22.04-arm
+            runner: blacksmith-4vcpu-ubuntu-2204-arm
 
     runs-on: ${{ matrix.runner || 'ubuntu-22.04' }}
 
@@ -36,8 +36,8 @@ jobs:
         with:
           images: ${{ env.GHCR_REPO }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Setup Blacksmith Builder
+        uses: useblacksmith/setup-docker-builder@v1
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
@@ -48,12 +48,10 @@ jobs:
 
       - name: Build
         id: docker_build
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: useblacksmith/build-push-action@v2
         with:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.GHCR_REPO }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           build-args: |
             MIX_ENV=ce
             BUILD_METADATA=${{ steps.meta.outputs.json }}
@@ -85,7 +83,7 @@ jobs:
           data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images-ghcr.yml\">Build failed</a>"}'
 
   push:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     needs:
       - build
 
@@ -103,7 +101,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Setup Blacksmith Builder
+        uses: useblacksmith/setup-docker-builder@v1
 
       - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         id: meta
