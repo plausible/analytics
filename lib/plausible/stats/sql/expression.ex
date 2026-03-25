@@ -115,10 +115,10 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def select_dimension(q, key, "time:hour", :sessions, query) when query.smear_session_metrics do
-    # :TRICKY: ClickHouse timeSlots works off of unix epoch and is not
-    #   timezone-aware. This means that for e.g. Asia/Katmandu (GMT+5:45)
-    #   to work, we divide time into 15-minute buckets and later combine these
-    #   via toStartOfHour
+    # ClickHouse timeSlots works off of unix epoch and is not
+    # timezone-aware. This means that for e.g. Asia/Katmandu (GMT+5:45)
+    # to work, we divide time into 15-minute buckets and later combine these
+    # via toStartOfHour
     {first, last} = Time.utc_boundaries(query)
 
     q
@@ -411,14 +411,14 @@ defmodule Plausible.Stats.SQL.Expression do
   def event_metric(unknown, _query), do: raise("Unknown metric: #{unknown}")
 
   def session_metric(:bounce_rate, query) do
-    # :TRICKY: If page is passed to query, we only count bounce rate where users _entered_ at page.
+    # If page is passed to query, we only count bounce rate where users _entered_ at page.
     event_page_filter = Filters.get_toplevel_filter(query, "event:page")
     condition = SQL.WhereBuilder.build_condition(:entry_page, event_page_filter)
 
     wrap_alias([], %{
       bounce_rate:
         fragment(
-          # :TRICKY: Before PR #4493, we could have sessions where `sum(is_bounce * sign)`
+          # Before PR #4493, we could have sessions where `sum(is_bounce * sign)`
           # is negative, leading to an underflow and >100% bounce rate. This works around
           # that issue.
           "toUInt32(greatest(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0), 0))",

@@ -106,10 +106,10 @@ defmodule Plausible.Stats.TableDecider do
     |> Enum.reject(fn {_table_type, metrics} -> empty?(metrics) end)
   end
 
-  # :TRICKY: When counting session metrics, we want to count each visit/visitor across
-  #   the length of the session, not just when events occurred or when session started.
-  #   For this reason, we smear the session metrics across the length of the session.
-  #   See `time_slots` usage in `Plausible.Stats.SQL.Expression` to understand how this is done.
+  # When counting session metrics, we want to count each visit/visitor across
+  # the length of the session, not just when events occurred or when session started.
+  # For this reason, we smear the session metrics across the length of the session.
+  # See `time_slots` usage in `Plausible.Stats.SQL.Expression` to understand how this is done.
   @smearable_metrics [:visitors, :visits]
   defp smear_session_metrics({:sessions, metrics} = value, query) do
     if "time:minute" in query.dimensions or "time:hour" in query.dimensions do
@@ -131,7 +131,7 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(%Query{legacy_breakdown: true}, :pageviews), do: :either
   defp metric_partitioner(%Query{legacy_breakdown: true}, :events), do: :either
 
-  # :TRICKY: For time:minute dimension we prefer sessions over events as there
+  # For time:minute dimension we prefer sessions over events as there
   # might be minutes where no events occurred but the session was active.
   defp metric_partitioner(query, metric) when metric in [:visitors, :visits] do
     if "time:minute" in query.dimensions, do: :session, else: :either

@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Tracker do
       |> plausible_main_config()
       |> Enum.flat_map(fn
         {key, value} when is_binary(value) -> ["#{key}:#{JSON.encode!(value)}"]
-        # :TRICKY: Save bytes by using short-hand for true
+        # Save bytes by using short-hand for true
         {key, true} -> ["#{key}:!0"]
         # Not enabled values can be omitted
         {_key, false} -> []
@@ -238,7 +238,7 @@ defmodule PlausibleWeb.Tracker do
   end
 
   defp tracker_ingestion_endpoint() do
-    # :TRICKY: Normally we would use PlausibleWeb.Endpoint.url() here, but
+    # Normally we would use PlausibleWeb.Endpoint.url() here, but
     # that requires the endpoint to be started. We start the TrackerScriptCache
     # before the endpoint is started, so we need to use the base_url directly.
 

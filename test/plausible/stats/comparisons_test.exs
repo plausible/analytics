@@ -189,7 +189,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       comparison_query = Comparisons.get_comparison_query(query)
 
       assert comparison_query.utc_time_range.first == ~U[2020-02-25 00:00:00Z]
-      # :TRICKY: Since dates of the two months don't match precisely we cut off earlier
+      # Since dates of the two months don't match precisely we cut off earlier
       assert comparison_query.utc_time_range.last == ~U[2020-03-02 23:59:59Z]
       assert date_range_length(comparison_query) == 7
     end
