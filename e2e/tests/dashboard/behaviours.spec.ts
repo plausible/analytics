@@ -23,6 +23,47 @@ import {
 
 const getReport = (page: Page) => page.getByTestId('report-behaviours')
 
+test.only('special goals', async ({ page, request }) => {
+  const report = getReport(page)
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'Form: Submission', pathname: '/form-action/path' },
+      { name: 'Form: Submission', pathname: '/custom-from-action/path' }
+    ]
+  })
+
+  await addCustomGoal({ page, domain, name: 'Form: Submission' })
+
+  await page.goto('/' + domain)
+
+  const goalsTabButton = tabButton(report, 'Goals')
+
+  await test.step('Form: Submission goal is treated as special goal', async () => {
+    await goalsTabButton.scrollIntoViewIfNeeded()
+    await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['Goal', 'Uniques', 'Total', 'CR'])
+    await expectRows(report, ['Form: Submission'])
+
+    await expectMetricValues(report, 'Form: Submission', ['2', '2', '100%'])
+
+    await rowLink(report, 'Form: Submission').click()
+
+    await expect(tabButton(report, 'Form actions')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    await expectHeaders(report, ['path', 'Visitors', 'Events', 'CR'])
+
+    await expectMetricValues(report, '(none)', ['2', '2', '100%'])
+  })
+})
+
 test('goals breakdown', async ({ page, request }) => {
   const report = getReport(page)
   const { domain } = await setupSite({ page, request })
