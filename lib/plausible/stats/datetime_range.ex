@@ -20,7 +20,7 @@ defmodule Plausible.Stats.DateTimeRange do
   will become the last date at 23:59:59. Both dates will be turned into `%DateTime{}`
   structs in the given timezone.
   """
-  def new!(%Date{} = first, %Date{} = last, timezone) do
+  def new!(%Date{} = first, last, timezone) do
     first =
       case DateTime.new(first, ~T[00:00:00], timezone) do
         {:ok, datetime} -> datetime
@@ -28,6 +28,10 @@ defmodule Plausible.Stats.DateTimeRange do
         {:ambiguous, _first_datetime, second_datetime} -> second_datetime
       end
 
+    new!(first, last, timezone)
+  end
+
+  def new!(first, %Date{} = last, timezone) do
     last =
       case DateTime.new(last, ~T[23:59:59], timezone) do
         {:ok, datetime} -> datetime
@@ -35,7 +39,7 @@ defmodule Plausible.Stats.DateTimeRange do
         {:ambiguous, first_datetime, _second_datetime} -> first_datetime
       end
 
-    new!(first, last)
+    new!(first, last, timezone)
   end
 
   def new!(%DateTime{} = first, %DateTime{} = last, _timezone) do
