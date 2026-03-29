@@ -83,7 +83,7 @@ const createPersonalSegment = async (page: Page, name: string) => {
 test('saving a segment', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await test.step('creating personal segment using defaults', async () => {
     await addSourceFilter(page, 'Facebook')
@@ -220,7 +220,7 @@ test('creating a segment from a combination of segment and a filter is not allow
 }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
@@ -249,7 +249,7 @@ test('creating a segment from a combination of segment and a filter is not allow
 test('editing an existing segment', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
@@ -294,7 +294,7 @@ test('editing an existing segment', async ({ page, request }) => {
 test('saving edited segment as new', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
@@ -348,7 +348,7 @@ test('saving edited segment as new', async ({ page, request }) => {
 test('deleting segment', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
@@ -377,7 +377,7 @@ test('deleting segment', async ({ page, request }) => {
 test('closing edited segment without saving', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')

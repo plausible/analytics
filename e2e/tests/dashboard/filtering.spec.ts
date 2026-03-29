@@ -30,7 +30,7 @@ test.describe('page filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     const pageFilterRow = filterRow(page, 'page')
     const pageInput = page.getByPlaceholder('Select a Page')
@@ -84,7 +84,7 @@ test.describe('page filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     const pageFilterRow = filterRow(page, 'page')
     const pageInput = page.getByPlaceholder('Select a Page')
@@ -199,7 +199,7 @@ test.describe('page filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     const entryPageFilterRow = filterRow(page, 'entry_page')
     const entryPageInput = page.getByPlaceholder('Select an Entry Page')
@@ -236,7 +236,7 @@ test.describe('page filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     const exitPageFilterRow = filterRow(page, 'exit_page')
     const exitPageInput = page.getByPlaceholder('Select an Exit Page')
@@ -273,7 +273,7 @@ test.describe('hostname filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     const hostnameFilterRow = filterRow(page, 'hostname')
     const hostnameInput = page.getByPlaceholder('Select a Hostname')
@@ -310,7 +310,7 @@ test.describe('acquisition filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     await test.step('filtering by source', async () => {
       const sourceFilterRow = filterRow(page, 'source')
@@ -415,7 +415,7 @@ test.describe('acquisition filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     await test.step('filtering by UTM medium', async () => {
       const utmMediumFilterRow = filterRow(page, 'utm_medium')
@@ -574,7 +574,7 @@ test.describe('location filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     await test.step('filtering by country', async () => {
       const countryFilterRow = filterRow(page, 'country')
@@ -658,7 +658,7 @@ test.describe('screen size filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     const screenSizeFilterRow = filterRow(page, 'screen')
     const screenSizeInput = page.getByPlaceholder('Select a Screen size')
@@ -698,7 +698,7 @@ test.describe('browser filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     await test.step('filtering by browser type', async () => {
       const browserFilterRow = filterRow(page, 'browser')
@@ -769,7 +769,7 @@ test.describe('operating system filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     await test.step('filtering by operating system type', async () => {
       const operatingSystemFilterRow = filterRow(page, 'os')
@@ -840,7 +840,7 @@ test.describe('goal filtering tests', () => {
     await addPageviewGoal({ page, domain, pathname: '/page1' })
     await addPageviewGoal({ page, domain, pathname: '/page2' })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     const goalFilterRow = filterRow(page, 'goal')
     const goalInput = goalFilterRow.getByPlaceholder('Select a Goal')
@@ -915,7 +915,7 @@ test.describe('property filtering tests', () => {
       ]
     })
 
-    await page.goto('/' + domain)
+    await page.goto('/' + domain, { waitUntil: 'commit' })
 
     const propFilterRow = filterRow(page, 'props')
     const propNameInput = propFilterRow.getByPlaceholder('Property')
