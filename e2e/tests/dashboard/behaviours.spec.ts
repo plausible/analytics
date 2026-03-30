@@ -2,6 +2,7 @@ import { test, expect, Page } from '@playwright/test'
 import {
   setupSite,
   populateStats,
+  addGoal,
   addCustomGoal,
   addPageviewGoal,
   addScrollDepthGoal,
@@ -36,7 +37,7 @@ test.only('special goals', async ({ page, request }) => {
     ]
   })
 
-  await addCustomGoal({ page, domain, name: 'Form: Submission' })
+  await addGoal({ request, domain, params: { event_name: 'Form: Submission' } })
 
   await page.goto('/' + domain)
 
