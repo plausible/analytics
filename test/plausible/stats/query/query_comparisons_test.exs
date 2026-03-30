@@ -48,72 +48,17 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                include: %QueryInclude{compare: :previous_period}
              })
 
-    assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+    assert %Stats.QueryResult{results: results, comparison_results: comparison_results} =
+             Stats.query(site, query)
 
     assert results == [
-             %{
-               dimensions: ["2021-01-07"],
-               metrics: [1],
-               comparison: %{
-                 dimensions: ["2020-12-31"],
-                 metrics: [0],
-                 change: [100]
-               }
-             },
-             %{
-               dimensions: ["2021-01-08"],
-               metrics: [1],
-               comparison: %{
-                 dimensions: ["2021-01-01"],
-                 metrics: [2],
-                 change: [-50]
-               }
-             },
-             %{
-               dimensions: ["2021-01-09"],
-               metrics: [0],
-               comparison: %{
-                 dimensions: ["2021-01-02"],
-                 metrics: [0],
-                 change: [0]
-               }
-             },
-             %{
-               dimensions: ["2021-01-10"],
-               metrics: [0],
-               comparison: %{
-                 dimensions: ["2021-01-03"],
-                 metrics: [0],
-                 change: [0]
-               }
-             },
-             %{
-               dimensions: ["2021-01-11"],
-               metrics: [0],
-               comparison: %{
-                 dimensions: ["2021-01-04"],
-                 metrics: [0],
-                 change: [0]
-               }
-             },
-             %{
-               dimensions: ["2021-01-12"],
-               metrics: [0],
-               comparison: %{
-                 dimensions: ["2021-01-05"],
-                 metrics: [0],
-                 change: [0]
-               }
-             },
-             %{
-               dimensions: ["2021-01-13"],
-               metrics: [0],
-               comparison: %{
-                 dimensions: ["2021-01-06"],
-                 metrics: [1],
-                 change: [-100]
-               }
-             }
+             %{dimensions: ["2021-01-07"], metrics: [1]},
+             %{dimensions: ["2021-01-08"], metrics: [1]}
+           ]
+
+    assert comparison_results == [
+             %{dimensions: ["2021-01-01"], metrics: [2], change: [-50]},
+             %{dimensions: ["2021-01-06"], metrics: [1], change: nil}
            ]
   end
 
@@ -135,29 +80,21 @@ defmodule Plausible.Stats.QueryComparisonsTest do
 
     query2 = Stats.Query.set_include(query1, :compare_match_day_of_week, true)
 
-    assert %Stats.QueryResult{results: results1} = Stats.query(site, query1)
-    assert %Stats.QueryResult{results: results2} = Stats.query(site, query2)
+    assert %Stats.QueryResult{meta: meta1} = Stats.query(site, query1)
+    assert %Stats.QueryResult{meta: meta2} = Stats.query(site, query2)
 
-    assert results1 == results2
+    assert meta1[:time_labels] == meta2[:time_labels]
+    assert meta1[:comparison_time_labels] == meta2[:comparison_time_labels]
 
     expected_first_date = today |> Date.shift(day: -28) |> Date.to_iso8601()
     expected_last_date = today |> Date.shift(day: -1) |> Date.to_iso8601()
     expected_comparison_first_date = today |> Date.shift(day: -56) |> Date.to_iso8601()
     expected_comparison_last_date = today |> Date.shift(day: -29) |> Date.to_iso8601()
 
-    assert %{
-             dimensions: [actual_first_date],
-             comparison: %{
-               dimensions: [actual_comparison_first_date]
-             }
-           } = List.first(results1)
-
-    assert %{
-             dimensions: [actual_last_date],
-             comparison: %{
-               dimensions: [actual_comparison_last_date]
-             }
-           } = List.last(results1)
+    actual_first_date = List.first(meta1[:time_labels])
+    actual_comparison_first_date = List.first(meta1[:comparison_time_labels])
+    actual_last_date = List.last(meta1[:time_labels])
+    actual_comparison_last_date = List.last(meta1[:comparison_time_labels])
 
     assert actual_first_date == expected_first_date
     assert actual_last_date == expected_last_date
@@ -189,7 +126,11 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                now: ~U[2022-07-01 14:00:00Z]
              })
 
-    assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
+    assert %Stats.QueryResult{
+             results: results,
+             comparison_results: comparison_results,
+             meta: meta
+           } = Stats.query(site, query)
 
     time_labels = meta[:time_labels]
 
@@ -197,32 +138,17 @@ defmodule Plausible.Stats.QueryComparisonsTest do
     assert "2022-04-05" = Enum.at(time_labels, 4)
     assert "2022-06-30" = List.last(time_labels)
 
-    assert %{
-             dimensions: ["2022-04-01"],
-             metrics: [1],
-             comparison: %{
-               dimensions: ["2021-04-01"],
-               metrics: [2]
-             }
-           } = Enum.find(results, &(&1[:dimensions] == ["2022-04-01"]))
+    assert results == [
+             %{dimensions: ["2022-04-01"], metrics: [1]},
+             %{dimensions: ["2022-04-05"], metrics: [1]},
+             %{dimensions: ["2022-06-30"], metrics: [1]}
+           ]
 
-    assert %{
-             dimensions: ["2022-04-05"],
-             metrics: [1],
-             comparison: %{
-               dimensions: ["2021-04-05"],
-               metrics: [2]
-             }
-           } = Enum.find(results, &(&1[:dimensions] == ["2022-04-05"]))
-
-    assert %{
-             dimensions: ["2022-06-30"],
-             metrics: [1],
-             comparison: %{
-               dimensions: ["2021-06-30"],
-               metrics: [1]
-             }
-           } = Enum.find(results, &(&1[:dimensions] == ["2022-06-30"]))
+    assert comparison_results == [
+             %{dimensions: ["2021-04-01"], metrics: [2], change: [-50]},
+             %{dimensions: ["2021-04-05"], metrics: [2], change: [-50]},
+             %{dimensions: ["2021-06-30"], metrics: [1], change: [0]}
+           ]
   end
 
   test "dimensional comparison with low limit", %{site: site} do
