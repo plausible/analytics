@@ -251,7 +251,7 @@ export async function addGoal({
       'Content-Type': 'application/json',
       Accept: 'application/json'
     },
-    data: { domain: domain,  ...params }
+    data: { domain: domain, ...params }
   })
 
   expect(response.ok()).toBeTruthy()
