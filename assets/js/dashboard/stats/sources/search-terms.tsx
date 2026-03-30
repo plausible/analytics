@@ -94,7 +94,7 @@ export function SearchTerms({
   const fetchSearchTerms = useCallback(() => {
     api
       .get(
-        `/api/stats/${encodeURIComponent(site.domain)}/referrers/Google`,
+        `/api/stats/${encodeURIComponent(site.domain)}/google-search-terms`,
         dashboardState
       )
       .then((res) => {

@@ -50,7 +50,7 @@ const metrics = [
 function GoogleKeywordsModal() {
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
-  const endpoint = apiPath(site, '/referrers/Google')
+  const endpoint = apiPath(site, '/google-search-terms')
 
   const [search, setSearch] = useState('')
 
