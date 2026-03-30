@@ -58,6 +58,14 @@ defmodule PlausibleWeb.E2EController do
       send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
     end
 
+    def create_goal(conn, %{"domain" => domain} = params) do
+      site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
+
+      {:ok, _} = Plausible.Goals.create(site, params)
+
+      send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+    end
+
     def create_funnel(conn, %{"domain" => domain, "name" => name, "steps" => steps}) do
       site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
 
