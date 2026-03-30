@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimezoneTest do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2024-01-01 10:00:00]),
         build(:pageview, timestamp: ~N[2024-01-01 12:00:00]),
-        build(:pageview, timestamp: ~N[2024-01-02 12:00:00])
+        build(:pageview, timestamp: ~N[2024-01-01 15:30:00])
       ])
 
       conn =

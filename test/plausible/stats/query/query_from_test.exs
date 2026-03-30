@@ -47,7 +47,7 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     q = Query.from(site, %{"period" => "day"}, now: @now)
 
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
-    assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
+    assert q.utc_time_range.last == @now
     assert q.interval == "hour"
   end
 
