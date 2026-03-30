@@ -24,7 +24,7 @@ import {
 
 const getReport = (page: Page) => page.getByTestId('report-behaviours')
 
-test.only('special goals', async ({ page, request }) => {
+test('special goals', async ({ page, request }) => {
   const report = getReport(page)
   const { domain } = await setupSite({ page, request })
 
@@ -32,8 +32,32 @@ test.only('special goals', async ({ page, request }) => {
     request,
     domain,
     events: [
-      { name: 'Form: Submission', pathname: '/form-action/path' },
-      { name: 'Form: Submission', pathname: '/custom-from-action/path' }
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/page1',
+        timestamp: { minutesAgo: 60 }
+      },
+      {
+        user_id: 123,
+        name: 'Form: Submission',
+        'meta.key': ['path'],
+        'meta.value': ['/form-action/path'],
+        timestamp: { minutesAgo: 50 }
+      },
+      {
+        user_id: 124,
+        name: 'pageview',
+        pathname: '/page1',
+        timestamp: { minutesAgo: 60 }
+      },
+      {
+        user_id: 124,
+        name: 'Form: Submission',
+        'meta.key': ['path'],
+        'meta.value': ['/form-action/another-path'],
+        timestamp: { minutesAgo: 50 }
+      }
     ]
   })
 
@@ -61,7 +85,8 @@ test.only('special goals', async ({ page, request }) => {
 
     await expectHeaders(report, ['path', 'Visitors', 'Events', 'CR'])
 
-    await expectMetricValues(report, '(none)', ['2', '2', '100%'])
+    await expectMetricValues(report, '/form-action/path', ['1', '1', '50%'])
+    await expectMetricValues(report, '/form-action/another-path', ['1', '1', '50%'])
   })
 })
 
