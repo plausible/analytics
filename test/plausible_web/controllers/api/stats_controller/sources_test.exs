@@ -3,6 +3,23 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
   @user_id Enum.random(1000..9999)
 
+  defp query_sources(conn, site, opts) do
+    params = %{
+      "dimensions" => Keyword.get(opts, :dimensions, ["visit:source"]),
+      "date_range" => Keyword.get(opts, :date_range, "all"),
+      "relative_date" => Keyword.get(opts, :relative_date, nil),
+      "filters" => Keyword.get(opts, :filters, []),
+      "metrics" => Keyword.get(opts, :metrics, ["visitors", "percentage"]),
+      "include" => Keyword.get(opts, :include, nil),
+      "pagination" => Keyword.get(opts, :pagination, nil),
+      "order_by" => Keyword.get(opts, :order_by, nil)
+    }
+
+    conn
+    |> post("/api/stats/#{site.domain}/query", params)
+    |> json_response(200)
+  end
+
   describe "GET /api/stats/:domain/sources" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
@@ -31,12 +48,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day")
+      response = query_sources(conn, site, date_range: "day")
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 3, "percentage" => 50.0},
-               %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 33.33},
-               %{"name" => "Direct / None", "visitors" => 1, "percentage" => 16.67}
+      assert response["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [3, 50.0]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [2, 33.33]},
+               %{"dimensions" => ["Direct / None"], "metrics" => [1, 16.67]}
              ]
     end
 
@@ -75,22 +92,21 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          filters: [["is", "event:props:author", ["John Doe"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 33.33]}
              ]
 
-      assert json_response(conn, 200)["meta"] == %{
-               "date_range_label" => "1 Jan 2021"
-             }
+      assert response["query"]["date_range"] == [
+               "2021-01-01T00:00:00Z",
+               "2021-01-01T23:59:59Z"
+             ]
     end
 
     test "returns top sources with :is_not filter on custom pageview props", %{
@@ -133,17 +149,15 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          filters: [["is_not", "event:props:author", ["John Doe"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -183,17 +197,15 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:props:author", ["(none)"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          filters: [["is", "event:props:author", ["(none)"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Facebook", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["Facebook"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -237,17 +249,15 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          filters: [["is_not", "event:props:author", ["(none)"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -275,18 +285,18 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/sources?period=day")
+      response1 = query_sources(conn, site, date_range: "day")
 
-      assert json_response(conn1, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
+      assert response1["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 33.33]}
              ]
 
-      conn2 = get(conn, "/api/stats/#{site.domain}/sources?period=day&with_imported=true")
+      response2 = query_sources(conn, site, date_range: "day", include: %{"imports" => true})
 
-      assert json_response(conn2, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 4, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 33.33}
+      assert response2["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [4, 66.67]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [2, 33.33]}
              ]
     end
 
@@ -311,27 +321,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          order_by: [["visit_duration", "asc"]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "DuckDuckGo",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 50.0
-               },
-               %{
-                 "name" => "Google",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 50.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 100, 0, 50.0]},
+               %{"dimensions" => ["Google"], "metrics" => [1, 0, 900, 50.0]}
              ]
     end
 
@@ -381,50 +380,28 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true"
+      response1 =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          order_by: [["visit_duration", "asc"]]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "DuckDuckGo",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 50.0
-               },
-               %{
-                 "name" => "Google",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 50.0
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 100, 0, 50.0]},
+               %{"dimensions" => ["Google"], "metrics" => [1, 0, 900, 50.0]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "Google",
-                 "visitors" => 3,
-                 "bounce_rate" => 25.0,
-                 "visit_duration" => 450.0,
-                 "percentage" => 60.0
-               },
-               %{
-                 "name" => "DuckDuckGo",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 50.0,
-                 "percentage" => 40.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [3, 25.0, 450.0, 60.0]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [2, 50.0, 50.0, 40.0]}
              ]
     end
 
@@ -447,11 +424,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/sources?period=realtime")
+      response = query_sources(conn, site, date_range: "realtime")
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -477,24 +454,26 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/sources?period=day&limit=1&page=2")
+      response1 =
+        query_sources(conn, site, date_range: "day", pagination: %{"limit" => 1, "offset" => 1})
 
-      assert json_response(conn1, 200)["results"] == [
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
+      assert response1["results"] == [
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 33.33]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&limit=1&page=2&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          date_range: "day",
+          pagination: %{"limit" => 1, "offset" => 1},
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2, "percentage" => 66.67}
+      assert response2["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [2, 66.67]}
              ]
     end
 
-    test "shows sources for a page (using old page filter)", %{conn: conn, site: site} do
+    test "shows sources for a page", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
@@ -510,37 +489,15 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/page1"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}")
-
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
-             ]
-    end
-
-    test "shows sources for a page (using new filters)", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/page1", referrer_source: "Google"),
-        build(:pageview, pathname: "/page1", referrer_source: "Google"),
-        build(:pageview,
-          user_id: 1,
-          pathname: "/page2",
-          referrer_source: "DuckDuckGo"
-        ),
-        build(:pageview,
-          user_id: 1,
-          pathname: "/page1",
-          referrer_source: "DuckDuckGo"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          filters: [["is", "event:page", ["/page1"]]]
         )
-      ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/page1"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}")
-
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "DuckDuckGo", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -551,13 +508,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview, referrer_source: "B")
       ])
 
-      order_by = Jason.encode!([["visit:source", "desc"]])
-      conn = get(conn, "/api/stats/#{site.domain}/sources?order_by=#{order_by}&period=day")
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          order_by: [["visit:source", "desc"]]
+        )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "C", "visitors" => 1, "percentage" => 33.33},
-               %{"name" => "B", "visitors" => 1, "percentage" => 33.33},
-               %{"name" => "A", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["C"], "metrics" => [1, 33.33]},
+               %{"dimensions" => ["B"], "metrics" => [1, 33.33]},
+               %{"dimensions" => ["A"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -596,82 +556,32 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview, referrer_source: "Z", timestamp: ~N[2024-08-10 10:00:30])
       ])
 
-      order_by_asc = Jason.encode!([["visit_duration", "asc"], ["visit:source", "desc"]])
-
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2024-08-10&detailed=true&order_by=#{order_by_asc}"
+      response1 =
+        query_sources(conn, site,
+          date_range: ["2024-08-10", "2024-08-10"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          order_by: [["visit_duration", "asc"], ["visit:source", "desc"]]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "Z",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 25.0
-               },
-               %{
-                 "name" => "A",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 50.0
-               },
-               %{
-                 "name" => "C",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 30,
-                 "percentage" => 25.0
-               },
-               %{
-                 "name" => "B",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 45,
-                 "percentage" => 25.0
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["Z"], "metrics" => [1, 100, 0, 25.0]},
+               %{"dimensions" => ["A"], "metrics" => [2, 100, 0, 50.0]},
+               %{"dimensions" => ["C"], "metrics" => [1, 0, 30, 25.0]},
+               %{"dimensions" => ["B"], "metrics" => [1, 0, 45, 25.0]}
              ]
 
-      order_by_flipped = Jason.encode!([["visit_duration", "desc"], ["visit:source", "asc"]])
-
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2024-08-10&detailed=true&order_by=#{order_by_flipped}"
+      response2 =
+        query_sources(conn, site,
+          date_range: ["2024-08-10", "2024-08-10"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          order_by: [["visit_duration", "desc"], ["visit:source", "asc"]]
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "B",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 45,
-                 "percentage" => 25.0
-               },
-               %{
-                 "name" => "C",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 30,
-                 "percentage" => 25.0
-               },
-               %{
-                 "name" => "A",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 50.0
-               },
-               %{
-                 "name" => "Z",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 25.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["B"], "metrics" => [1, 0, 45, 25.0]},
+               %{"dimensions" => ["C"], "metrics" => [1, 0, 30, 25.0]},
+               %{"dimensions" => ["A"], "metrics" => [2, 100, 0, 50.0]},
+               %{"dimensions" => ["Z"], "metrics" => [1, 100, 0, 25.0]}
              ]
     end
 
@@ -699,57 +609,43 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-02&comparison=previous_period&detailed=true"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-02", "2021-01-02"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          include: %{"compare" => "previous_period"}
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "name" => "Google",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 66.67,
+                 "dimensions" => ["Google"],
+                 "metrics" => [2, 100, 0, 66.67],
                  "comparison" => %{
-                   "visitors" => 0,
-                   "bounce_rate" => 0,
-                   "visit_duration" => nil,
-                   "percentage" => 0.0,
-                   "change" => %{
-                     "visitors" => 100,
-                     "bounce_rate" => nil,
-                     "visit_duration" => nil,
-                     "percentage" => 100
-                   }
+                   "dimensions" => ["Google"],
+                   "metrics" => [0, 0, nil, 0.0],
+                   "change" => [100, nil, nil, 100]
                  }
                },
                %{
-                 "name" => "DuckDuckGo",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 33.33,
+                 "dimensions" => ["DuckDuckGo"],
+                 "metrics" => [1, 100, 0, 33.33],
                  "comparison" => %{
-                   "visitors" => 1,
-                   "bounce_rate" => 100,
-                   "visit_duration" => 0,
-                   "percentage" => 100.0,
-                   "change" => %{
-                     "visitors" => 0,
-                     "bounce_rate" => 0,
-                     "visit_duration" => 0,
-                     "percentage" => -67
-                   }
+                   "dimensions" => ["DuckDuckGo"],
+                   "metrics" => [1, 100, 0, 100.0],
+                   "change" => [0, 0, 0, -67]
                  }
                }
              ]
 
-      assert json_response(conn, 200)["meta"] == %{
-               "date_range_label" => "2 Jan 2021",
-               "comparison_date_range_label" => "1 Jan 2021"
-             }
+      assert response["query"]["date_range"] == [
+               "2021-01-02T00:00:00Z",
+               "2021-01-02T23:59:59Z"
+             ]
+
+      assert response["query"]["comparison_date_range"] == [
+               "2021-01-01T00:00:00Z",
+               "2021-01-01T23:59:59Z"
+             ]
     end
 
     @tag :ee_only
@@ -820,67 +716,80 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          metrics: [
+            "visitors",
+            "group_conversion_rate",
+            "total_visitors",
+            "average_revenue",
+            "total_revenue"
+          ],
+          filters: [["is", "event:goal", ["Payment"]]],
+          order_by: [["visitors", "desc"], ["visit:source", "asc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/sources#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "name" => "Direct / None",
-                 "visitors" => 2,
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$600.00",
-                   "short" => "$600.0",
-                   "value" => 600.0
-                 },
-                 "conversion_rate" => 100.0,
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$600.00",
-                   "short" => "$600.0",
-                   "value" => 600.0
-                 },
-                 "total_visitors" => 2
+                 "dimensions" => ["Direct / None"],
+                 "metrics" => [
+                   2,
+                   100.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$600.00",
+                     "short" => "$600.0",
+                     "value" => 600.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$600.00",
+                     "short" => "$600.0",
+                     "value" => 600.0
+                   }
+                 ]
                },
                %{
-                 "name" => "Google",
-                 "visitors" => 2,
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 66.67,
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 3
+                 "dimensions" => ["Google"],
+                 "metrics" => [
+                   2,
+                   66.67,
+                   3,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "name" => "DuckDuckGo",
-                 "visitors" => 1,
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 50.0,
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 2
+                 "dimensions" => ["DuckDuckGo"],
+                 "metrics" => [
+                   1,
+                   50.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end
@@ -889,11 +798,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   describe "UTM parameters with hostname filter" do
     setup [:create_user, :log_in, :create_site]
 
-    for {resource, attr} <- [
-          utm_campaigns: :utm_campaign,
-          utm_sources: :utm_source,
-          utm_terms: :utm_term,
-          utm_contents: :utm_content
+    for {resource, attr, dimension} <- [
+          {:utm_campaigns, :utm_campaign, "visit:utm_campaign"},
+          {:utm_sources, :utm_source, "visit:utm_source"},
+          {:utm_terms, :utm_term, "visit:utm_term"},
+          {:utm_contents, :utm_content, "visit:utm_content"}
         ] do
       test "returns #{resource} when filtered by hostname", %{conn: conn, site: site} do
         populate_stats(site, [
@@ -918,16 +827,15 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           )
         ])
 
-        filters = Jason.encode!([[:is, "event:hostname", ["one.example.com"]]])
-
-        conn =
-          get(
-            conn,
-            "/api/stats/#{site.domain}/#{unquote(resource)}?period=day&date=2021-01-01&filters=#{filters}"
+        response =
+          query_sources(conn, site,
+            dimensions: [unquote(dimension)],
+            date_range: ["2021-01-01", "2021-01-01"],
+            filters: [["is", "event:hostname", ["one.example.com"]]]
           )
 
         # nobody landed on one.example.com from utm_param=ad
-        assert json_response(conn, 200)["results"] == []
+        assert response["results"] == []
       end
     end
   end
@@ -959,27 +867,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/channels?period=day&&detailed=true&date=2021-01-01"
+      response =
+        query_sources(conn, site,
+          dimensions: ["visit:channel"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "Paid Social",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 66.67
-               },
-               %{
-                 "name" => "Organic Search",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 33.33
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["Paid Social"], "metrics" => [2, 100, 0, 66.67]},
+               %{"dimensions" => ["Organic Search"], "metrics" => [1, 0, 900, 33.33]}
              ]
     end
 
@@ -1046,67 +943,81 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_sources(conn, site,
+          dimensions: ["visit:channel"],
+          date_range: "day",
+          metrics: [
+            "visitors",
+            "group_conversion_rate",
+            "total_visitors",
+            "average_revenue",
+            "total_revenue"
+          ],
+          filters: [["is", "event:goal", ["Payment"]]],
+          order_by: [["visitors", "desc"], ["visit:channel", "asc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/channels#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "name" => "Direct",
-                 "visitors" => 2,
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$600.00",
-                   "short" => "$600.0",
-                   "value" => 600.0
-                 },
-                 "conversion_rate" => 100.0,
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$600.00",
-                   "short" => "$600.0",
-                   "value" => 600.0
-                 },
-                 "total_visitors" => 2
+                 "dimensions" => ["Direct"],
+                 "metrics" => [
+                   2,
+                   100.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$600.00",
+                     "short" => "$600.0",
+                     "value" => 600.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$600.00",
+                     "short" => "$600.0",
+                     "value" => 600.0
+                   }
+                 ]
                },
                %{
-                 "name" => "Organic Search",
-                 "visitors" => 2,
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 66.67,
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 3
+                 "dimensions" => ["Organic Search"],
+                 "metrics" => [
+                   2,
+                   66.67,
+                   3,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "name" => "Paid Social",
-                 "visitors" => 1,
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 50.0,
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 2
+                 "dimensions" => ["Paid Social"],
+                 "metrics" => [
+                   1,
+                   50.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end
@@ -1134,6 +1045,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
+        build(:imported_visitors,
+          date: ~D[2021-01-01],
+          visit_duration: 800,
+          bounces: 1,
+          visits: 2,
+          visitors: 2
+        ),
         build(:imported_sources,
           utm_medium: "social",
           date: ~D[2021-01-01],
@@ -1152,50 +1070,31 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01"
+      response1 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_medium"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"],
+          order_by: [["visit:utm_medium", "asc"]]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "email",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 50.0
-               },
-               %{
-                 "name" => "social",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 50.0
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["email"], "metrics" => [1, 100, 0, 50.0]},
+               %{"dimensions" => ["social"], "metrics" => [1, 0, 900, 50.0]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_medium"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"],
+          order_by: [["visit:utm_medium", "asc"]],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "email",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 50,
-                 "percentage" => 50.0
-               },
-               %{
-                 "name" => "social",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 800.0,
-                 "percentage" => 50.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["email"], "metrics" => [2, 50, 50, 50.0]},
+               %{"dimensions" => ["social"], "metrics" => [2, 50, 800.0, 50.0]}
              ]
     end
 
@@ -1218,6 +1117,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
+        build(:imported_visitors,
+          date: ~D[2021-01-01],
+          visit_duration: 800,
+          bounces: 1,
+          visits: 2,
+          visitors: 2
+        ),
         build(:imported_sources,
           utm_medium: "social",
           date: ~D[2021-01-01],
@@ -1236,36 +1142,29 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01"
+      response1 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_medium"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          filters: [["is_not", "visit:utm_medium", [""]]],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "social",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 100.0
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["social"], "metrics" => [1, 0, 900, 100.0]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_medium"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          filters: [["is_not", "visit:utm_medium", [""]]],
+          date_range: ["2021-01-01", "2021-01-01"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "social",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 800.0,
-                 "percentage" => 100.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["social"], "metrics" => [2, 50.0, 800.0, 100.0]}
              ]
     end
 
@@ -1327,49 +1226,61 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_medium"],
+          date_range: "day",
+          metrics: [
+            "visitors",
+            "group_conversion_rate",
+            "total_visitors",
+            "average_revenue",
+            "total_revenue"
+          ],
+          filters: [["is", "event:goal", ["Payment"]], ["is_not", "visit:utm_medium", [""]]],
+          order_by: [["visitors", "desc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/utm_mediums#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 66.67,
-                 "name" => "social",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 3,
-                 "visitors" => 2
+                 "dimensions" => ["social"],
+                 "metrics" => [
+                   2,
+                   66.67,
+                   3,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 50.0,
-                 "name" => "email",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 2,
-                 "visitors" => 1
+                 "dimensions" => ["email"],
+                 "metrics" => [
+                   1,
+                   50.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end
@@ -1401,6 +1312,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
+        build(:imported_visitors,
+          date: ~D[2021-01-01],
+          visit_duration: 1600,
+          bounces: 1,
+          visits: 2,
+          visitors: 2
+        ),
         build(:imported_sources,
           utm_campaign: "profile",
           date: ~D[2021-01-01],
@@ -1419,50 +1337,29 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01"
+      response1 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_campaign"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "august",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 66.67
-               },
-               %{
-                 "name" => "profile",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 33.33
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["august"], "metrics" => [2, 100, 0, 66.67]},
+               %{"dimensions" => ["profile"], "metrics" => [1, 0, 900, 33.33]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_campaign"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "august",
-                 "visitors" => 3,
-                 "bounce_rate" => 67,
-                 "visit_duration" => 300,
-                 "percentage" => 60.0
-               },
-               %{
-                 "name" => "profile",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 800.0,
-                 "percentage" => 40.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["august"], "metrics" => [3, 67, 300, 60.0]},
+               %{"dimensions" => ["profile"], "metrics" => [2, 50, 800.0, 40.0]}
              ]
     end
 
@@ -1489,6 +1386,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
+        build(:imported_visitors,
+          date: ~D[2021-01-01],
+          visit_duration: 1600,
+          bounces: 1,
+          visits: 2,
+          visitors: 2
+        ),
         build(:imported_sources,
           utm_campaign: "profile",
           date: ~D[2021-01-01],
@@ -1507,36 +1411,29 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01"
+      response1 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_campaign"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          filters: [["is_not", "visit:utm_campaign", [""]]],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "profile",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 100.0
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["profile"], "metrics" => [1, 0, 900, 100.0]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_campaign"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          filters: [["is_not", "visit:utm_campaign", [""]]],
+          date_range: ["2021-01-01", "2021-01-01"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "profile",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 800.0,
-                 "percentage" => 100.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["profile"], "metrics" => [2, 50.0, 800.0, 100.0]}
              ]
     end
 
@@ -1598,49 +1495,61 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_campaign"],
+          date_range: "day",
+          metrics: [
+            "visitors",
+            "group_conversion_rate",
+            "total_visitors",
+            "average_revenue",
+            "total_revenue"
+          ],
+          filters: [["is", "event:goal", ["Payment"]], ["is_not", "visit:utm_campaign", [""]]],
+          order_by: [["visitors", "desc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/utm_campaigns#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 66.67,
-                 "name" => "profile",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 3,
-                 "visitors" => 2
+                 "dimensions" => ["profile"],
+                 "metrics" => [
+                   2,
+                   66.67,
+                   3,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 50.0,
-                 "name" => "august",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 2,
-                 "visitors" => 1
+                 "dimensions" => ["august"],
+                 "metrics" => [
+                   1,
+                   50.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end
@@ -1671,27 +1580,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_sources?period=day&date=2021-01-01"
+      response =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_source"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "newsletter",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 66.67
-               },
-               %{
-                 "name" => "Twitter",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 33.33
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["newsletter"], "metrics" => [2, 100, 0, 66.67]},
+               %{"dimensions" => ["Twitter"], "metrics" => [1, 0, 900, 33.33]}
              ]
     end
 
@@ -1753,49 +1651,61 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_source"],
+          date_range: "day",
+          metrics: [
+            "visitors",
+            "group_conversion_rate",
+            "total_visitors",
+            "average_revenue",
+            "total_revenue"
+          ],
+          filters: [["is", "event:goal", ["Payment"]], ["is_not", "visit:utm_source", [""]]],
+          order_by: [["visitors", "desc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/utm_sources#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 66.67,
-                 "name" => "Twitter",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 3,
-                 "visitors" => 2
+                 "dimensions" => ["Twitter"],
+                 "metrics" => [
+                   2,
+                   66.67,
+                   3,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 50.0,
-                 "name" => "newsletter",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 2,
-                 "visitors" => 1
+                 "dimensions" => ["newsletter"],
+                 "metrics" => [
+                   1,
+                   50.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end
@@ -1827,6 +1737,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
+        build(:imported_visitors,
+          date: ~D[2021-01-01],
+          visit_duration: 1600,
+          bounces: 1,
+          visits: 2,
+          visitors: 2
+        ),
         build(:imported_sources,
           utm_term: "oat milk",
           date: ~D[2021-01-01],
@@ -1845,50 +1762,29 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01"
+      response1 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_term"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "Sweden",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 66.67
-               },
-               %{
-                 "name" => "oat milk",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 33.33
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["Sweden"], "metrics" => [2, 100, 0, 66.67]},
+               %{"dimensions" => ["oat milk"], "metrics" => [1, 0, 900, 33.33]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_term"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "Sweden",
-                 "visitors" => 3,
-                 "bounce_rate" => 67.0,
-                 "visit_duration" => 300.0,
-                 "percentage" => 60.0
-               },
-               %{
-                 "name" => "oat milk",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 800.0,
-                 "percentage" => 40.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["Sweden"], "metrics" => [3, 67.0, 300.0, 60.0]},
+               %{"dimensions" => ["oat milk"], "metrics" => [2, 50.0, 800.0, 40.0]}
              ]
     end
 
@@ -1915,6 +1811,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
+        build(:imported_visitors,
+          date: ~D[2021-01-01],
+          visit_duration: 1600,
+          bounces: 1,
+          visits: 2,
+          visitors: 2
+        ),
         build(:imported_sources,
           utm_term: "oat milk",
           date: ~D[2021-01-01],
@@ -1933,36 +1836,29 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01"
+      response1 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_term"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          filters: [["is_not", "visit:utm_term", [""]]],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "oat milk",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 100.0
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["oat milk"], "metrics" => [1, 0, 900, 100.0]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_term"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          filters: [["is_not", "visit:utm_term", [""]]],
+          date_range: ["2021-01-01", "2021-01-01"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "oat milk",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 800.0,
-                 "percentage" => 100.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["oat milk"], "metrics" => [2, 50.0, 800.0, 100.0]}
              ]
     end
 
@@ -2024,49 +1920,61 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_term"],
+          date_range: "day",
+          metrics: [
+            "visitors",
+            "group_conversion_rate",
+            "total_visitors",
+            "average_revenue",
+            "total_revenue"
+          ],
+          filters: [["is", "event:goal", ["Payment"]], ["is_not", "visit:utm_term", [""]]],
+          order_by: [["visitors", "desc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/utm_terms#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 66.67,
-                 "name" => "oat milk",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 3,
-                 "visitors" => 2
+                 "dimensions" => ["oat milk"],
+                 "metrics" => [
+                   2,
+                   66.67,
+                   3,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 50.0,
-                 "name" => "Sweden",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 2,
-                 "visitors" => 1
+                 "dimensions" => ["Sweden"],
+                 "metrics" => [
+                   1,
+                   50.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end
@@ -2098,6 +2006,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
+        build(:imported_visitors,
+          date: ~D[2021-01-01],
+          visit_duration: 1600,
+          bounces: 1,
+          visits: 2,
+          visitors: 2
+        ),
         build(:imported_sources,
           utm_content: "ad",
           date: ~D[2021-01-01],
@@ -2116,50 +2031,29 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
+      response1 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_content"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "blog",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 66.67
-               },
-               %{
-                 "name" => "ad",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 33.33
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["blog"], "metrics" => [2, 100, 0, 66.67]},
+               %{"dimensions" => ["ad"], "metrics" => [1, 0, 900, 33.33]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_content"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          date_range: ["2021-01-01", "2021-01-01"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "blog",
-                 "visitors" => 3,
-                 "bounce_rate" => 67.0,
-                 "visit_duration" => 300.0,
-                 "percentage" => 60.0
-               },
-               %{
-                 "name" => "ad",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 800.0,
-                 "percentage" => 40.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["blog"], "metrics" => [3, 67.0, 300.0, 60.0]},
+               %{"dimensions" => ["ad"], "metrics" => [2, 50.0, 800.0, 40.0]}
              ]
     end
 
@@ -2186,6 +2080,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
+        build(:imported_visitors,
+          date: ~D[2021-01-01],
+          visit_duration: 1600,
+          bounces: 1,
+          visits: 2,
+          visitors: 2
+        ),
         build(:imported_sources,
           utm_content: "ad",
           date: ~D[2021-01-01],
@@ -2204,36 +2105,29 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
+      response1 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_content"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          filters: [["is_not", "visit:utm_content", [""]]],
+          date_range: ["2021-01-01", "2021-01-01"]
         )
 
-      assert json_response(conn1, 200)["results"] == [
-               %{
-                 "name" => "ad",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900,
-                 "percentage" => 100.0
-               }
+      assert response1["results"] == [
+               %{"dimensions" => ["ad"], "metrics" => [1, 0, 900, 100.0]}
              ]
 
-      conn2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
+      response2 =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_content"],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"],
+          filters: [["is_not", "visit:utm_content", [""]]],
+          date_range: ["2021-01-01", "2021-01-01"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn2, 200)["results"] == [
-               %{
-                 "name" => "ad",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 800.0,
-                 "percentage" => 100.0
-               }
+      assert response2["results"] == [
+               %{"dimensions" => ["ad"], "metrics" => [2, 50.0, 800.0, 100.0]}
              ]
     end
 
@@ -2295,49 +2189,61 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_sources(conn, site,
+          dimensions: ["visit:utm_content"],
+          date_range: "day",
+          metrics: [
+            "visitors",
+            "group_conversion_rate",
+            "total_visitors",
+            "average_revenue",
+            "total_revenue"
+          ],
+          filters: [["is", "event:goal", ["Payment"]], ["is_not", "visit:utm_content", [""]]],
+          order_by: [["visitors", "desc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/utm_contents#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 66.67,
-                 "name" => "ad",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 3,
-                 "visitors" => 2
+                 "dimensions" => ["ad"],
+                 "metrics" => [
+                   2,
+                   66.67,
+                   3,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 50.0,
-                 "name" => "blog",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 2,
-                 "visitors" => 1
+                 "dimensions" => ["blog"],
+                 "metrics" => [
+                   1,
+                   50.0,
+                   2,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end
@@ -2370,21 +2276,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          metrics: ["visitors", "group_conversion_rate", "total_visitors"],
+          filters: [["is", "event:goal", ["Signup"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "Twitter",
-                 "total_visitors" => 2,
-                 "visitors" => 1,
-                 "conversion_rate" => 50.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["Twitter"], "metrics" => [1, 50.0, 2]}
              ]
     end
 
@@ -2412,19 +2313,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters =
-        Jason.encode!([
-          [:is, "event:goal", ["Signup"]],
-          [:is, "event:hostname", ["app.example.com"]]
-        ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          metrics: ["visitors", "group_conversion_rate", "total_visitors"],
+          filters: [
+            ["is", "event:goal", ["Signup"]],
+            ["is", "event:hostname", ["app.example.com"]]
+          ]
         )
 
-      assert json_response(conn, 200)["results"] == []
+      assert response["results"] == []
     end
 
     test "returns top referrers for a custom goal and filtered by hostname (2)",
@@ -2449,25 +2348,18 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, site: site, event_name: "Signup")
 
-      filters =
-        Jason.encode!([
-          [:is, "event:goal", ["Signup"]],
-          [:is, "event:hostname", ["app.example.com"]]
-        ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          metrics: ["visitors", "group_conversion_rate", "total_visitors"],
+          filters: [
+            ["is", "event:goal", ["Signup"]],
+            ["is", "event:hostname", ["app.example.com"]]
+          ]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "conversion_rate" => 100.0,
-                 "name" => "Facebook",
-                 "total_visitors" => 1,
-                 "visitors" => 1
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["Facebook"], "metrics" => [1, 100.0, 1]}
              ]
     end
 
@@ -2505,25 +2397,18 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, site: site, event_name: "Download")
 
-      filters =
-        Jason.encode!([
-          [:is, "event:goal", ["Download"]],
-          [:is, "event:props:logged_in", ["true"]]
-        ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          metrics: ["visitors", "group_conversion_rate", "total_visitors"],
+          filters: [
+            ["is", "event:goal", ["Download"]],
+            ["is", "event:props:logged_in", ["true"]]
+          ]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "DuckDuckGo",
-                 "visitors" => 1,
-                 "conversion_rate" => 50.0,
-                 "total_visitors" => 2
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 50.0, 2]}
              ]
     end
 
@@ -2562,31 +2447,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, site: site, event_name: "Download")
 
-      filters =
-        Jason.encode!([
-          [:is, "event:goal", ["Download"]],
-          [:is_not, "event:props:logged_in", ["true"]]
-        ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          metrics: ["visitors", "group_conversion_rate", "total_visitors"],
+          filters: [
+            ["is", "event:goal", ["Download"]],
+            ["is_not", "event:props:logged_in", ["true"]]
+          ],
+          order_by: [["visit:source", "asc"]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "DuckDuckGo",
-                 "visitors" => 1,
-                 "conversion_rate" => 100.0,
-                 "total_visitors" => 1
-               },
-               %{
-                 "name" => "Google",
-                 "visitors" => 1,
-                 "conversion_rate" => 50.0,
-                 "total_visitors" => 2
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["DuckDuckGo"], "metrics" => [1, 100.0, 1]},
+               %{"dimensions" => ["Google"], "metrics" => [1, 50.0, 2]}
              ]
     end
 
@@ -2609,21 +2483,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, page_path: "/register")
-      filters = Jason.encode!([[:is, "event:goal", ["Visit /register"]]])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          metrics: ["visitors", "group_conversion_rate", "total_visitors"],
+          filters: [["is", "event:goal", ["Visit /register"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "Twitter",
-                 "total_visitors" => 2,
-                 "visitors" => 1,
-                 "conversion_rate" => 50.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["Twitter"], "metrics" => [1, 50.0, 2]}
              ]
     end
   end
@@ -2744,15 +2613,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          dimensions: ["visit:referrer"],
+          filters: [["is", "visit:source", ["10words"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "10words.com", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "10words.com/page1", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["10words.com"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["10words.com/page1"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -2788,16 +2658,18 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:hostname", ["one.example.com"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/referrers/example?period=day&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          dimensions: ["visit:referrer"],
+          filters: [
+            ["is", "visit:source", ["example"]],
+            ["is", "event:hostname", ["one.example.com"]]
+          ]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "example.com/page1", "visitors" => 1, "percentage" => 100.0}
+      assert response["results"] == [
+               %{"dimensions" => ["example.com/page1"], "metrics" => [1, 100.0]}
              ]
     end
 
@@ -2827,20 +2699,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2021-01-01&detailed=true"
+      response =
+        query_sources(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          dimensions: ["visit:referrer"],
+          filters: [["is", "visit:source", ["10words"]]],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "10words.com",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 450,
-                 "percentage" => 100.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["10words.com"], "metrics" => [2, 50.0, 450, 100.0]}
              ]
     end
 
@@ -2865,21 +2733,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          dimensions: ["visit:referrer"],
+          filters: [
+            ["is", "visit:source", ["10words"]],
+            ["is", "event:goal", ["Signup"]]
+          ],
+          metrics: ["visitors", "total_visitors", "group_conversion_rate"]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "10words.com",
-                 "total_visitors" => 2,
-                 "conversion_rate" => 50.0,
-                 "visitors" => 1
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["10words.com"], "metrics" => [1, 2, 50.0]}
              ]
     end
 
@@ -2905,21 +2772,19 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, site: site, page_path: "/register")
 
-      filters = Jason.encode!([[:is, "event:goal", ["Visit /register"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&filters=#{filters}"
+      response =
+        query_sources(conn, site,
+          date_range: "day",
+          dimensions: ["visit:referrer"],
+          filters: [
+            ["is", "visit:source", ["10words"]],
+            ["is", "event:goal", ["Visit /register"]]
+          ],
+          metrics: ["visitors", "total_visitors", "group_conversion_rate"]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "10words.com",
-                 "total_visitors" => 2,
-                 "conversion_rate" => 50.0,
-                 "visitors" => 1
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["10words.com"], "metrics" => [1, 2, 50.0]}
              ]
     end
   end
