@@ -173,7 +173,7 @@ test('special goals', async ({ page, request }) => {
     params: { event_name: 'WP Form Completions' }
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const goalsTabButton = tabButton(report, 'Goals')
 
