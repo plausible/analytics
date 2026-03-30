@@ -101,30 +101,28 @@ test('sources breakdown', async ({ page, request }) => {
     await closeModalButton(page).click()
   })
 
-  const referrersReport = page.getByTestId('report-referrers')
-
   await test.step('clicking sources entry shows referrers', async () => {
     await rowLink(report, 'DuckDuckGo').click()
     await expect(page).toHaveURL(/f=is,source,DuckDuckGo/)
 
-    await expect(tabButton(referrersReport, 'Top referrers')).toHaveAttribute(
+    await expect(tabButton(report, 'Top referrers')).toHaveAttribute(
       'data-active',
       'true'
     )
 
     // Move mouse away from report rows
-    await tabButton(referrersReport, 'Top referrers').hover()
+    await tabButton(report, 'Top referrers').hover()
 
-    await expectHeaders(referrersReport, ['Referrer', 'Visitors'])
+    await expectHeaders(report, ['Referrer', 'Visitors'])
 
-    await expectRows(referrersReport, [
+    await expectRows(report, [
       'https://duckduckgo.com/a1',
       'https://duckduckgo.com/a2'
     ])
   })
 
   await test.step('referrers modal', async () => {
-    await detailsLink(referrersReport).click()
+    await detailsLink(report).click()
 
     await expect(
       modal(page).getByRole('heading', { name: 'Referrer drilldown' })
