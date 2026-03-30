@@ -71,11 +71,15 @@ function ConfigureSearchTermsCTA({
 
 interface SearchTermsProps {
   loading: boolean
-  afterFetchData: (res: object | null) => void,
+  afterFetchData: (res: object | null) => void
   onLoadStart: () => void
 }
 
-export function SearchTerms({ loading, afterFetchData, onLoadStart }: SearchTermsProps) {
+export function SearchTerms({
+  loading,
+  afterFetchData,
+  onLoadStart
+}: SearchTermsProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
 

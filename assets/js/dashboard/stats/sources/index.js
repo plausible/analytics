@@ -303,7 +303,13 @@ export default function Sources() {
 
   function renderSourceContent() {
     if (isFilteringOnFixedValue(dashboardState, 'source', 'Google')) {
-      return <SearchTerms loading={loading} afterFetchData={afterFetchData} onLoadStart={onLoadStart} />
+      return (
+        <SearchTerms
+          loading={loading}
+          afterFetchData={afterFetchData}
+          onLoadStart={onLoadStart}
+        />
+      )
     } else if (isFilteringOnFixedValue(dashboardState, 'source')) {
       const [[_operation, _filterKey, clauses]] = getFiltersByKeyPrefix(
         dashboardState,
