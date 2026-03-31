@@ -152,7 +152,7 @@ defmodule Plausible.Teams.GracePeriodTest do
       now = ~N[2021-01-01 00:00:01]
 
       grace_period = %Plausible.Teams.GracePeriod{
-        end_date: ~D[2021-01-03],
+        end_date: ~D[2021-01-02],
         is_over: false
       }
 
@@ -165,7 +165,7 @@ defmodule Plausible.Teams.GracePeriodTest do
       now = ~N[2021-01-01 23:00:01]
 
       grace_period = %Plausible.Teams.GracePeriod{
-        end_date: ~D[2021-01-02],
+        end_date: ~D[2021-01-01],
         is_over: false
       }
 
@@ -178,7 +178,7 @@ defmodule Plausible.Teams.GracePeriodTest do
       now = ~N[2021-01-01 10:00:00]
 
       grace_period = %Plausible.Teams.GracePeriod{
-        end_date: ~D[2021-01-01],
+        end_date: ~D[2020-12-31],
         is_over: false
       }
 

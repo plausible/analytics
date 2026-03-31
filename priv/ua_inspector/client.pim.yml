@@ -5,63 +5,68 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
-- regex: 'Outlook-Express(?:/(\d+[\.\d]+))?'
+- regex: 'Outlook-Express(?:/(\d+[.\d]+))?'
   name: 'Outlook Express'
   version: '$1'
 
 # Outlook https://apps.apple.com/ru/app/microsoft-outlook/id951937596
-- regex: '^Outlook-iOS/(?:.+\((\d+[\.\d]+)\)$)?'
+- regex: '^Outlook-iOS/(?:.+\((\d+[.\d]+)\)$)?'
   name: 'Microsoft Outlook'
   version: '$1'
 
-- regex: '(?:(?:Microsoft )?Outlook|MacOutlook)(?:[/ ](\d+[\.\d]+))?'
+- regex: '(?:(?:Microsoft )?Outlook|MacOutlook)(?:[/ ](\d+[.\d]+))?'
   name: 'Microsoft Outlook'
   version: '$1'
 
 # Default Mail Client for Windows
-- regex: 'WindowsMail(?:/(\d+[\.\d]+))'
+- regex: 'WindowsMail(?:/(\d+[.\d]+))'
   name: 'Windows Mail'
   version: '$1'
 
-- regex: '(?:Thunderbird|Icedove|Shredder)(?:/(\d+[\.\d]+))?'
+- regex: '(?:Thunderbird|Icedove|Shredder)(?:/(\d+[.\d]+))?'
   name: 'Thunderbird'
   version: '$1'
 
-- regex: 'Airmail(?: (\d+[\.\d]+))?'
+# Spicebird (http://www.spicebird.org/)
+- regex: 'Spicebird/(\d+\.[.\d]+)'
+  name: 'Spicebird'
+  version: '$1'
+
+- regex: 'Airmail(?: (\d+[.\d]+))?'
   name: 'Airmail'
   version: '$1'
 
-- regex: 'Lotus-Notes(?:/(\d+[\.\d]+))?'
+- regex: 'Lotus-Notes(?:/(\d+[.\d]+))?'
   name: 'Lotus Notes'
   version: '$1'
 
-- regex: 'Barca(?:Pro)?(?:[/ ](\d+[\.\d]+))?'
+- regex: 'Barca(?:Pro)?(?:[/ ](\d+[.\d]+))?'
   name: 'Barca'
   version: '$1'
 
-- regex: 'Postbox(?:[/ ](\d+[\.\d]+))?'
+- regex: 'Postbox(?:[/ ](\d+[.\d]+))?'
   name: 'Postbox'
   version: '$1'
 
-- regex: 'MailBar(?:[/ ](\d+[\.\d]+))?'
+- regex: 'MailBar(?:[/ ](\d+[.\d]+))?'
   name: 'MailBar'
   version: '$1'
 
-- regex: 'The Bat!(?: Voyager)?(?:[/ ](\d+[\.\d]+))?'
+- regex: 'The Bat!(?: Voyager)?(?:[/ ](\d+[.\d]+))?'
   name: 'The Bat!'
   version: '$1'
 
-- regex: 'DAVdroid(?:/(\d+[\.\d]+))?'
+- regex: 'DAVdroid(?:/(\d+[.\d]+))?'
   name: 'DAVdroid'
   version: '$1'
 
 # SeaMonkey
-- regex: '(?:SeaMonkey|Iceape)(?:/(\d+[\.\d]+))?'
+- regex: '(?:SeaMonkey|Iceape)(?:/(\d+[.\d]+))?'
   name: 'SeaMonkey'
   version: '$1'
 
 # Live5ch
-- regex: 'Live5ch/(\d+[\.\d]+)'
+- regex: 'Live5ch/(\d+[.\d]+)'
   name: 'Live5ch'
   version: '$1'
 
@@ -74,42 +79,42 @@
   version: ''
 
 # Raindrop.io (https://raindrop.io/)
-- regex: 'Raindrop\.io/(\d+[\.\d]+)'
+- regex: 'Raindrop\.io/(\d+[.\d]+)'
   name: 'Raindrop.io'
   version: '$1'
 
 # Franz (https://meetfranz.com/)
-- regex: 'Franz/(\d+[\.\d]+)'
+- regex: 'Franz/(\d+[.\d]+)'
   name: 'Franz'
   version: '$1'
 
 # Mailspring (https://www.electronjs.org/apps/mailspring)
-- regex: 'Mailspring/(\d+[\.\d]+)'
+- regex: 'Mailspring/(\d+[.\d]+)'
   name: 'Mailspring'
   version: '$1'
 
 # Notion (https://www.notion.so/)
-- regex: 'Notion/(\d+[\.\d]+)'
+- regex: 'Notion/(\d+[.\d]+)'
   name: 'Notion'
   version: '$1'
 
 # Basecamp (https://basecamp.com/)
-- regex: 'Basecamp[0-9]/?(\d+[\.\d]+)'
+- regex: 'Basecamp[0-9]/?(\d+[.\d]+)'
   name: 'Basecamp'
   version: '$1'
 
 # Evernote (https://evernote.com/)
-- regex: 'Evernote/?(\d+[\.\d]+)'
+- regex: 'Evernote/?(\d+[.\d]+)'
   name: 'Evernote'
   version: '$1'
 
 # Rambox Pro (https://rambox.app/)
-- regex: 'ramboxpro/(\d+\.[\.\d]+)?'
+- regex: 'ramboxpro/(\d+\.[.\d]+)?'
   name: 'Rambox Pro'
   version: '$1'
 
 # Mailbird (https://www.getmailbird.com/)
-- regex: 'Mailbird/(\d+\.[\.\d]+)/'
+- regex: 'Mailbird/(\d+\.[.\d]+)/'
   name: 'Mailbird'
   version: '$1'
 
@@ -119,39 +124,44 @@
   version: ''
 
 # Yahoo! Mail (https://play.google.com/store/apps/details?id=jp.co.yahoo.android.ymail | https://apps.apple.com/jp/app/yahoo-%E3%83%A1%E3%83%BC%E3%83%AB/id669931877)
-- regex: 'jp.co.yahoo.ymail/([\d\.]+)'
+- regex: 'jp.co.yahoo.ymail/([\d.]+)'
   name: 'Yahoo! Mail'
   version: '$1'
 
 # eM Client (https://emclient.com/)
-- regex: 'eM ?Client/(\d+\.[\.\d]+)'
+- regex: 'eM ?Client/(\d+\.[.\d]+)'
   name: 'eM Client'
   version: '$1'
 
 # NAVER Mail (https://play.google.com/store/apps/details?id=com.nhn.android.mail)
-- regex: 'NaverMailApp/(\d+\.[\.\d]+)'
+- regex: 'NaverMailApp/(\d+\.[.\d]+)'
   name: 'NAVER Mail'
   version: '$1'
 
-- regex: '^Mail/([\d\.]+)'
+- regex: '^Mail/([\d.]+)'
   name: 'Apple Mail'
   version: '$1'
 
 # Foxmail (https://www.foxmail.com/)
-- regex: 'Foxmail/(\d+[\.\d]+)'
+- regex: 'Foxmail/(\d+[.\d]+)'
   name: 'Foxmail'
   version: '$1'
 
 # Mail Master (https://apps.apple.com/mw/app/mail-master-by-netease/id897003024)
-- regex: 'MailMaster(?:PC)?/(\d+[\.\d]+)'
+- regex: 'MailMaster(?:PC|_Android_Mobile)?/(\d+[.\d]+)'
   name: 'Mail Master'
   version: '$1'
 
 # BlueMail (https://bluemail.me/)
-- regex: 'BlueMail/(\d+[\.\d]+)'
+- regex: 'BlueMail/(\d+[.\d]+)'
   name: 'BlueMail'
   version: '$1'
 
-- regex: 'mailapp/(\d+\.[\.\d]+)'
-  name: 'mailapp'
+- regex: 'mailapp/(\d+\.[.\d]+)'
+  name: 'MailApp'
   version: '$1'
+
+# Gmail
+- regex: 'Android-Gmail'
+  name: 'Gmail'
+  version: ''

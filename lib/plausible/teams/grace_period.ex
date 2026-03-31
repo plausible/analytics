@@ -141,7 +141,7 @@ defmodule Plausible.Teams.GracePeriod do
   end
 
   defp full_hours_left(%Date{} = end_date, now) do
-    end_date
+    Date.add(end_date, 1)
     |> NaiveDateTime.new!(~T[00:00:00])
     |> NaiveDateTime.diff(now, :second)
     |> max(0)

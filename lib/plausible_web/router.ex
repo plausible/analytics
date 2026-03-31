@@ -481,7 +481,12 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/settings", PlausibleWeb do
-    pipe_through [:browser, :csrf, PlausibleWeb.RequireAccountPlug]
+    pipe_through [
+      :browser,
+      :csrf,
+      PlausibleWeb.RequireAccountPlug,
+      PlausibleWeb.Plugs.CurrentPath
+    ]
 
     get "/", SettingsController, :index
     get "/preferences", SettingsController, :preferences
@@ -496,7 +501,12 @@ defmodule PlausibleWeb.Router do
     post "/security/email", SettingsController, :update_email
     post "/security/password", SettingsController, :update_password
 
-    get "/billing/subscription", SettingsController, :subscription
+    live_session :settings, on_mount: PlausibleWeb.Live.SettingsContext do
+      scope alias: Live, assigns: %{connect_live_socket: true} do
+        live "/billing/subscription", SubscriptionSettings, :subscription, as: :settings
+      end
+    end
+
     get "/billing/invoices", SettingsController, :redirect_invoices
     get "/api-keys", SettingsController, :api_keys
 

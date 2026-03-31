@@ -50,18 +50,18 @@ jobs:
             --health-timeout 5s
             --health-retries 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
-      - uses: marocchino/tool-versions-action@v1
+      - uses: marocchino/tool-versions-action@18a164fa2b0db1cc1edf7305fcb17ace36d1c306 # v1.2.0
         id: versions
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@ee09b1e59bb240681c382eb1f0abc6a04af72764 # v1.23.0
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
           otp-version: ${{ steps.versions.outputs.erlang }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             deps
@@ -76,7 +76,7 @@ jobs:
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
 
       - name: Check for changes in tracker/**
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: changes
         with:
           filters: |
@@ -149,19 +149,19 @@ jobs:
         shardIndex: [1, 2, 3, 4]
         shardTotal: [4]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
-      - uses: marocchino/tool-versions-action@v1
+      - uses: marocchino/tool-versions-action@18a164fa2b0db1cc1edf7305fcb17ace36d1c306 # v1.2.0
         id: versions
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@ee09b1e59bb240681c382eb1f0abc6a04af72764 # v1.23.0
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
           otp-version: ${{ steps.versions.outputs.erlang }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             deps
@@ -177,7 +177,7 @@ jobs:
             e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
 
       - name: Cache E2E dependencies and Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         id: playwright-cache
         with:
           path: |
@@ -189,7 +189,7 @@ jobs:
             playwright-${{ runner.os }}-
 
       - name: Check for changes in tracker/**
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: changes
         with:
           filters: |
@@ -225,7 +225,7 @@ jobs:
 
       - name: Upload E2E blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: e2e-blob-report-${{ matrix.shardIndex }}
           path: e2e/blob-report
@@ -237,8 +237,8 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 23.2.0
           cache: 'npm'
@@ -247,7 +247,7 @@ jobs:
         run: npm --prefix ./e2e ci
 
       - name: Download blob reports from GitHub Actions Artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           path: all-e2e-blob-reports
           pattern: e2e-blob-report-*
@@ -263,19 +263,19 @@ jobs:
       MIX_ENV: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
-      - uses: marocchino/tool-versions-action@v1
+      - uses: marocchino/tool-versions-action@18a164fa2b0db1cc1edf7305fcb17ace36d1c306 # v1.2.0
         id: versions
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@ee09b1e59bb240681c382eb1f0abc6a04af72764 # v1.23.0
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
           otp-version: ${{ steps.versions.outputs.erlang }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             deps

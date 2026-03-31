@@ -960,6 +960,30 @@ else
     traces_exporter: :none
 end
 
+beam_metrics_enabled? = get_bool_from_path_or_env(config_dir, "BEAM_METRICS_ENABLED", false)
+
+if beam_metrics_enabled? do
+  beam_metrics_interval = get_int_from_path_or_env(config_dir, "BEAM_METRICS_INTERVAL_MS", 5_000)
+
+  beam_metrics_otlp_endpoint =
+    get_var_from_path_or_env(config_dir, "OTEL_EXPORTER_OTLP_ENDPOINT") || otlp_endpoint
+
+  config :opentelemetry_experimental,
+    readers: [
+      %{
+        module: :otel_metric_reader,
+        config: %{
+          export_interval_ms: beam_metrics_interval,
+          exporter:
+            {:otel_exporter_metrics_otlp,
+             %{
+               endpoints: [beam_metrics_otlp_endpoint]
+             }}
+        }
+      }
+    ]
+end
+
 config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
 
 promex_disabled? = get_bool_from_path_or_env(config_dir, "PROMEX_DISABLED", true)

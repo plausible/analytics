@@ -19,11 +19,11 @@ jobs:
 
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 23.2.0
           registry-url: 'https://registry.npmjs.org'
@@ -64,7 +64,7 @@ jobs:
 
       - name: Notify team on success
         if: ${{ success() }}
-        uses: fjogeleit/http-request-action@v2
+        uses: fjogeleit/http-request-action@551353b829c3646756b2ec2b3694f819d7957495 # v2.0.0
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'
@@ -73,7 +73,7 @@ jobs:
 
       - name: Notify team on failure
         if: ${{ failure() }}
-        uses: fjogeleit/http-request-action@v2
+        uses: fjogeleit/http-request-action@551353b829c3646756b2ec2b3694f819d7957495 # v2.0.0
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'

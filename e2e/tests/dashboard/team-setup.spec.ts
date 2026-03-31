@@ -7,7 +7,7 @@ test('submitting team name via Enter key does not crash', async ({
   request
 }) => {
   await setupSite({ page, request })
-  await page.goto('/team/setup')
+  await page.goto('/team/setup', { waitUntil: 'commit' })
 
   await expectLiveViewConnected(page)
 
