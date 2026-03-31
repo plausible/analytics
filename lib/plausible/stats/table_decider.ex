@@ -14,15 +14,15 @@ defmodule Plausible.Stats.TableDecider do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   def events_join_sessions?(query) do
-    filter_session_dims =
+    session_dims_in_filters? =
       query.filters
       |> dimensions_used_in_filters()
       |> Enum.any?(&(dimension_partitioner(query, &1) == :session))
 
-    group_session_dims =
+    session_dims? =
       Enum.any?(query.dimensions, &(dimension_partitioner(query, &1) == :session))
 
-    filter_session_dims or group_session_dims
+    session_dims? or session_dims_in_filters?
   end
 
   def sessions_join_events?(query) do
