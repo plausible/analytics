@@ -216,7 +216,25 @@ defmodule Plausible.Stats.TableDeciderTest do
               message:
                 "Event metric(s) `scroll_depth` cannot be queried along with session dimension(s) `visit:exit_page`"
             }}},
-          {[:bounce_rate, :scroll_depth], ["event:page"], :ok}
+          {[:bounce_rate, :scroll_depth], ["event:page"], :ok},
+          {[:total_revenue], ["visit:entry_page"], :ok},
+          {[:average_revenue], ["visit:exit_page"], :ok},
+          {[:total_revenue], ["visit:entry_page_hostname"], :ok},
+          {[:average_revenue], ["visit:exit_page_hostname"], :ok},
+          {[:scroll_depth], ["visit:entry_page"],
+           {:error,
+            %QueryError{
+              code: :invalid_metrics,
+              message:
+                "Event metric(s) `scroll_depth` cannot be queried along with session dimension(s) `visit:entry_page`"
+            }}},
+          {[:time_on_page], ["visit:exit_page"],
+           {:error,
+            %QueryError{
+              code: :invalid_metrics,
+              message:
+                "Event metric(s) `time_on_page` cannot be queried along with session dimension(s) `visit:exit_page`"
+            }}}
         ] do
       test "metrics #{inspect(metrics)} and dimensions #{inspect(dimensions)}" do
         query =
