@@ -61,14 +61,24 @@ defmodule PlausibleWeb.E2EController do
     def create_goal(conn, %{"domain" => domain} = params) do
       site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
 
-      {:ok, _} = Plausible.Goals.create(site, params)
-
       case Plausible.Goals.create(site, params) do
         {:ok, _} ->
           send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
 
-        {:error, error} ->
-          send_resp(conn, 422, Jason.encode!(%{"error" => inspect(error)}))
+        {:error, changeset} ->
+          unique_errors =
+            Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
+              opts[:constraint] == :unique
+            end)
+
+          # Ignore duplicate goal errors because site installation might
+          # create goals before this is called via tracker script configuration
+          # update.
+          if unique_errors[:display_name] || unique_errors[:event_name] do
+            send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+          else
+            send_resp(conn, 422, Jason.encode!(%{"error" => inspect(changeset)}))
+          end
       end
     end
 
