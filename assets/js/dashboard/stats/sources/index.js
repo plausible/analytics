@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import * as storage from '../../util/storage'
 import * as url from '../../util/url'
@@ -227,12 +227,12 @@ export default function Sources() {
     setTab('all')()
   }
 
-  function onLoadStart() {
+  const onLoadStart = useCallback(() => {
     setLoading(true)
     setMoreLinkState(MoreLinkState.LOADING)
-  }
+  }, [])
 
-  function afterFetchData(apiResponse) {
+  const afterFetchData = useCallback((apiResponse) => {
     setLoading(false)
     if (apiResponse) {
       setSkipImportedReason(apiResponse.skip_imported_reason)
@@ -245,7 +245,7 @@ export default function Sources() {
       setLoading(false)
       setMoreLinkState(MoreLinkState.HIDDEN)
     }
-  }
+  }, [])
 
   function sourceMoreLinkProps() {
     if (isFilteringOnFixedValue(dashboardState, 'source', 'Google')) {
