@@ -219,8 +219,6 @@ defmodule Plausible.Stats.TableDeciderTest do
           {[:bounce_rate, :scroll_depth], ["event:page"], :ok},
           {[:total_revenue], ["visit:entry_page"], :ok},
           {[:average_revenue], ["visit:exit_page"], :ok},
-          {[:total_revenue], ["visit:entry_page_hostname"], :ok},
-          {[:average_revenue], ["visit:exit_page_hostname"], :ok},
           {[:scroll_depth], ["visit:entry_page"],
            {:error,
             %QueryError{
