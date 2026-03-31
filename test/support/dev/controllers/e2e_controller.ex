@@ -63,7 +63,13 @@ defmodule PlausibleWeb.E2EController do
 
       {:ok, _} = Plausible.Goals.create(site, params)
 
-      send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+      case Plausible.Goals.create(site, params) do
+        {:ok, _} ->
+          send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+
+        {:error, error} ->
+          send_resp(conn, 422, Jason.encode!(%{"error" => inspect(error)}))
+      end
     end
 
     def create_funnel(conn, %{"domain" => domain, "name" => name, "steps" => steps}) do
