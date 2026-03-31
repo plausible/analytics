@@ -254,10 +254,6 @@ export async function addGoal({
     data: { domain: domain, ...params }
   })
 
-  if (!response.ok()) {
-    console.error(await response.text())
-  }
-
   expect(response.ok()).toBeTruthy()
 }
 
