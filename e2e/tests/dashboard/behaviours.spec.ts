@@ -104,7 +104,7 @@ test('goals breakdown', async ({ page, request }) => {
     scrollPercentage: 75
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const goalsTabButton = tabButton(report, 'Goals')
 
@@ -186,7 +186,9 @@ test('goals breakdown', async ({ page, request }) => {
   })
 
   await test.step('listing goals without revenue', async () => {
-    await page.goto('/' + domain + '?f=has_not_done,goal,purchase')
+    await page.goto('/' + domain + '?f=has_not_done,goal,purchase', {
+      waitUntil: 'commit'
+    })
 
     await goalsTabButton.scrollIntoViewIfNeeded()
     await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
@@ -286,7 +288,7 @@ test('props breakdown', async ({ page, request }) => {
 
   await addAllCustomProps({ page, domain })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const propsTabButton = tabButton(report, 'Properties')
 
@@ -427,7 +429,7 @@ test('funnels', async ({ page, request }) => {
     })
   }
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const funnelsTabButton = tabButton(report, 'Funnels')
 
