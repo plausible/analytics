@@ -1,6 +1,22 @@
 defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   use PlausibleWeb.ConnCase
 
+  defp query_browsers(conn, site, opts) do
+    params = %{
+      "dimensions" => Keyword.get(opts, :dimensions, ["visit:browser"]),
+      "date_range" => Keyword.get(opts, :date_range, "all"),
+      "filters" => Keyword.get(opts, :filters, []),
+      "metrics" => Keyword.get(opts, :metrics, ["visitors", "percentage"]),
+      "include" => Keyword.get(opts, :include, nil),
+      "pagination" => Keyword.get(opts, :pagination, nil),
+      "order_by" => Keyword.get(opts, :order_by, nil)
+    }
+
+    conn
+    |> post("/api/stats/#{site.domain}/query", params)
+    |> json_response(200)
+  end
+
   describe "GET /api/stats/:domain/browsers" do
     setup [:create_user, :log_in, :create_site, :create_site_import]
 
@@ -11,11 +27,11 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:pageview, browser: "Firefox")
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
+      response = query_browsers(conn, site, date_range: "day")
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.33}
+      assert response["results"] == [
+               %{"dimensions" => ["Chrome"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["Firefox"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -44,11 +60,14 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
+      response =
+        query_browsers(conn, site,
+          date_range: "day",
+          filters: [["is", "event:props:author", ["John Doe"]]]
+        )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
+      assert response["results"] == [
+               %{"dimensions" => ["Chrome"], "metrics" => [1, 100.0]}
              ]
     end
 
@@ -79,12 +98,16 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
       ])
 
-      filters = Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
+      response =
+        query_browsers(conn, site,
+          date_range: "day",
+          filters: [["is_not", "event:props:author", ["John Doe"]]],
+          order_by: [["visit:browser", "asc"]]
+        )
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "Firefox", "visitors" => 1, "percentage" => 50},
-               %{"name" => "Safari", "visitors" => 1, "percentage" => 50}
+      assert response["results"] == [
+               %{"dimensions" => ["Firefox"], "metrics" => [1, 50.0]},
+               %{"dimensions" => ["Safari"], "metrics" => [1, 50.0]}
              ]
     end
 
@@ -97,17 +120,15 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:event, user_id: 1, name: "Signup")
       ])
 
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
+      response =
+        query_browsers(conn, site,
+          date_range: "day",
+          filters: [["is", "event:goal", ["Signup"]]],
+          metrics: ["visitors", "total_visitors", "group_conversion_rate"]
+        )
 
-      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
-
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "Chrome",
-                 "total_visitors" => 2,
-                 "visitors" => 1,
-                 "conversion_rate" => 50.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["Chrome"], "metrics" => [1, 2, 50.0]}
              ]
     end
 
@@ -123,17 +144,18 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:imported_visitors, visitors: 2)
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
+      response1 = query_browsers(conn, site, date_range: "day")
 
-      assert json_response(conn1, 200)["results"] == [
-               %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
+      assert response1["results"] == [
+               %{"dimensions" => ["Chrome"], "metrics" => [1, 100.0]}
              ]
 
-      conn2 = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+      response2 =
+        query_browsers(conn, site, date_range: "day", include: %{"imports" => true})
 
-      assert json_response(conn2, 200)["results"] == [
-               %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.67},
-               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.33}
+      assert response2["results"] == [
+               %{"dimensions" => ["Chrome"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["Firefox"], "metrics" => [1, 33.33]}
              ]
     end
 
@@ -154,9 +176,10 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+      response =
+        query_browsers(conn, site, date_range: "day", include: %{"imports" => true})
 
-      assert json_response(conn, 200)["results"] == []
+      assert response["results"] == []
     end
 
     test "returns (not set) when appropriate", %{conn: conn, site: site} do
@@ -167,10 +190,10 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
+      response = query_browsers(conn, site, date_range: "day")
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "(not set)", "visitors" => 1, "percentage" => 100.0}
+      assert response["results"] == [
+               %{"dimensions" => ["(not set)"], "metrics" => [1, 100.0]}
              ]
     end
 
@@ -185,10 +208,11 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:imported_visitors, visitors: 1)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+      response =
+        query_browsers(conn, site, date_range: "day", include: %{"imports" => true})
 
-      assert json_response(conn, 200)["results"] == [
-               %{"name" => "(not set)", "visitors" => 2, "percentage" => 100.0}
+      assert response["results"] == [
+               %{"dimensions" => ["(not set)"], "metrics" => [2, 100.0]}
              ]
     end
 
@@ -201,39 +225,42 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00])
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/browsers?period=7d&date=2021-01-14&comparison=previous_period"
+      response =
+        query_browsers(conn, site,
+          date_range: ["2021-01-07", "2021-01-13"],
+          include: %{"compare" => "previous_period"}
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "name" => "Chrome",
-                 "visitors" => 2,
-                 "percentage" => 66.67,
+                 "dimensions" => ["Chrome"],
+                 "metrics" => [2, 66.67],
                  "comparison" => %{
-                   "visitors" => 0,
-                   "percentage" => 0.0,
-                   "change" => %{"percentage" => 100, "visitors" => 100}
+                   "dimensions" => ["Chrome"],
+                   "metrics" => [0, 0.0],
+                   "change" => [100, 100]
                  }
                },
                %{
-                 "name" => "Firefox",
-                 "visitors" => 1,
-                 "percentage" => 33.33,
+                 "dimensions" => ["Firefox"],
+                 "metrics" => [1, 33.33],
                  "comparison" => %{
-                   "visitors" => 1,
-                   "percentage" => 50.0,
-                   "change" => %{"percentage" => -33, "visitors" => 0}
+                   "dimensions" => ["Firefox"],
+                   "metrics" => [1, 50.0],
+                   "change" => [0, -33]
                  }
                }
              ]
 
-      assert json_response(conn, 200)["meta"] == %{
-               "date_range_label" => "7 Jan - 13 Jan 2021",
-               "comparison_date_range_label" => "31 Dec 2020 - 6 Jan 2021"
-             }
+      assert response["query"]["date_range"] == [
+               "2021-01-07T00:00:00Z",
+               "2021-01-13T23:59:59Z"
+             ]
+
+      assert response["query"]["comparison_date_range"] == [
+               "2020-12-31T00:00:00Z",
+               "2021-01-06T23:59:59Z"
+             ]
     end
 
     test "returns comparisons with limit", %{conn: conn, site: site} do
@@ -247,29 +274,34 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00])
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/browsers?period=7d&date=2021-01-13&comparison=previous_period&limit=1"
+      response =
+        query_browsers(conn, site,
+          date_range: ["2021-01-06", "2021-01-12"],
+          include: %{"compare" => "previous_period"},
+          pagination: %{"limit" => 1}
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "name" => "Chrome",
-                 "visitors" => 2,
-                 "percentage" => 66.67,
+                 "dimensions" => ["Chrome"],
+                 "metrics" => [2, 66.67],
                  "comparison" => %{
-                   "visitors" => 1,
-                   "percentage" => 25.0,
-                   "change" => %{"percentage" => 167, "visitors" => 100}
+                   "dimensions" => ["Chrome"],
+                   "metrics" => [1, 25.0],
+                   "change" => [100, 167]
                  }
                }
              ]
 
-      assert json_response(conn, 200)["meta"] == %{
-               "date_range_label" => "6 Jan - 12 Jan 2021",
-               "comparison_date_range_label" => "30 Dec 2020 - 5 Jan 2021"
-             }
+      assert response["query"]["date_range"] == [
+               "2021-01-06T00:00:00Z",
+               "2021-01-12T23:59:59Z"
+             ]
+
+      assert response["query"]["comparison_date_range"] == [
+               "2020-12-30T00:00:00Z",
+               "2021-01-05T23:59:59Z"
+             ]
     end
 
     @tag :ee_only
@@ -315,67 +347,80 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_browsers(conn, site,
+          date_range: "day",
+          filters: [["is", "event:goal", ["Payment"]]],
+          metrics: [
+            "visitors",
+            "total_visitors",
+            "group_conversion_rate",
+            "average_revenue",
+            "total_revenue"
+          ],
+          order_by: [["visitors", "desc"], ["visit:browser", "asc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/browsers#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$600.00",
-                   "short" => "$600.0",
-                   "value" => 600.0
-                 },
-                 "conversion_rate" => 100.0,
-                 "name" => "(not set)",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$600.00",
-                   "short" => "$600.0",
-                   "value" => 600.0
-                 },
-                 "total_visitors" => 2,
-                 "visitors" => 2
+                 "dimensions" => ["(not set)"],
+                 "metrics" => [
+                   2,
+                   2,
+                   100.0,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$600.00",
+                     "short" => "$600.0",
+                     "value" => 600.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$600.00",
+                     "short" => "$600.0",
+                     "value" => 600.0
+                   }
+                 ]
                },
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 66.67,
-                 "name" => "Firefox",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 3,
-                 "visitors" => 2
+                 "dimensions" => ["Firefox"],
+                 "metrics" => [
+                   2,
+                   3,
+                   66.67,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 50.0,
-                 "name" => "Safari",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 2,
-                 "visitors" => 1
+                 "dimensions" => ["Safari"],
+                 "metrics" => [
+                   1,
+                   2,
+                   50.0,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end
@@ -402,33 +447,24 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
-      json_response =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/browser-versions?period=day&filters=#{filters}"
+      response =
+        query_browsers(conn, site,
+          date_range: "day",
+          dimensions: ["visit:browser", "visit:browser_version"],
+          filters: [["is", "event:goal", ["Signup"]]],
+          metrics: ["visitors", "total_visitors", "group_conversion_rate"]
         )
-        |> json_response(200)
-        |> Map.get("results")
 
-      assert %{
-               "name" => "Chrome 110",
-               "browser" => "Chrome",
-               "conversion_rate" => 66.67,
-               "version" => "110",
-               "total_visitors" => 3,
-               "visitors" => 2
-             } == List.first(json_response)
+      assert List.first(response["results"]) == %{
+               "dimensions" => ["Chrome", "110"],
+               "metrics" => [2, 3, 66.67]
+             }
 
-      assert %{
-               "name" => "Firefox 121",
-               "browser" => "Firefox",
-               "conversion_rate" => 100.0,
-               "version" => "121",
-               "total_visitors" => 1,
-               "visitors" => 1
-             } == List.last(json_response)
+      assert List.last(response["results"]) == %{
+               "dimensions" => ["Firefox", "121"],
+               "metrics" => [1, 1, 100.0]
+             }
     end
 
     test "returns top browser versions by unique visitors", %{conn: conn, site: site} do
@@ -439,56 +475,32 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:pageview, browser: "Firefox", browser_version: "88.0")
       ])
 
-      filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/browser-versions?period=day&filters=#{filters}"
+      response =
+        query_browsers(conn, site,
+          date_range: "day",
+          dimensions: ["visit:browser", "visit:browser_version"],
+          filters: [["is", "visit:browser", ["Chrome"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "Chrome 78.0",
-                 "version" => "78.0",
-                 "visitors" => 2,
-                 "percentage" => 66.67,
-                 "browser" => "Chrome"
-               },
-               %{
-                 "name" => "Chrome 77.0",
-                 "version" => "77.0",
-                 "visitors" => 1,
-                 "percentage" => 33.33,
-                 "browser" => "Chrome"
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["Chrome", "78.0"], "metrics" => [2, 66.67]},
+               %{"dimensions" => ["Chrome", "77.0"], "metrics" => [1, 33.33]}
              ]
     end
 
-    test "returns only version under the name key (+ additional metrics) when 'detailed' is true in params",
-         %{
-           conn: conn,
-           site: site
-         } do
+    test "returns browser and version with additional metrics", %{conn: conn, site: site} do
       populate_stats(site, [build(:pageview, browser: "Chrome", browser_version: "78.0")])
 
-      filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/browser-versions?filters=#{filters}&detailed=true&period=day"
+      response =
+        query_browsers(conn, site,
+          date_range: "day",
+          dimensions: ["visit:browser", "visit:browser_version"],
+          filters: [["is", "visit:browser", ["Chrome"]]],
+          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "78.0",
-                 "browser" => "Chrome",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "percentage" => 100.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["Chrome", "78.0"], "metrics" => [1, 100, 0, 100.0]}
              ]
     end
 
@@ -497,22 +509,15 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:pageview, browser: "", browser_version: "")
       ])
 
-      filters = Jason.encode!([[:is, "visit:browser", ["(not set)"]]])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/browser-versions?period=day&filters=#{filters}"
+      response =
+        query_browsers(conn, site,
+          date_range: "day",
+          dimensions: ["visit:browser", "visit:browser_version"],
+          filters: [["is", "visit:browser", ["(not set)"]]]
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "(not set)",
-                 "visitors" => 1,
-                 "percentage" => 100,
-                 "browser" => "(not set)",
-                 "version" => "(not set)"
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["(not set)", "(not set)"], "metrics" => [1, 100.0]}
              ]
     end
 
@@ -544,41 +549,18 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:imported_visitors, date: ~D[2021-01-01], visitors: 18)
       ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/browser-versions?period=day&date=2021-01-01&with_imported=true"
+      response =
+        query_browsers(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          dimensions: ["visit:browser", "visit:browser_version"],
+          include: %{"imports" => true}
         )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "browser" => "(not set)",
-                 "version" => "(not set)",
-                 "name" => "(not set)",
-                 "visitors" => 10,
-                 "percentage" => 50.0
-               },
-               %{
-                 "browser" => "Chrome",
-                 "version" => "121",
-                 "name" => "Chrome 121",
-                 "visitors" => 6,
-                 "percentage" => 30.0
-               },
-               %{
-                 "browser" => "Firefox",
-                 "version" => "121",
-                 "name" => "Firefox 121",
-                 "visitors" => 3,
-                 "percentage" => 15.0
-               },
-               %{
-                 "browser" => "Chrome",
-                 "version" => "110",
-                 "name" => "Chrome 110",
-                 "visitors" => 1,
-                 "percentage" => 5.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["(not set)", "(not set)"], "metrics" => [10, 50.0]},
+               %{"dimensions" => ["Chrome", "121"], "metrics" => [6, 30.0]},
+               %{"dimensions" => ["Firefox", "121"], "metrics" => [3, 15.0]},
+               %{"dimensions" => ["Chrome", "110"], "metrics" => [1, 5.0]}
              ]
     end
   end
