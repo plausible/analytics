@@ -8,17 +8,17 @@ defmodule Plausible.Google.API.Mock do
   parameter into StatsController) as a hack to mock different responses.
   """
   def fetch_stats(_auth, query, _pagination, _search) do
-    case query.filters do
-      [[:is, "event:page", ["/empty"]]] ->
+    case page_filter_value(query) do
+      ["/empty"] ->
         {:ok, []}
 
-      [[:is, "event:page", ["/unsupported-filters"]]] ->
+      ["/unsupported-filters"] ->
         {:error, :unsupported_filters}
 
-      [[:is, "event:page", ["/not-configured"]]] ->
+      ["/not-configured"] ->
         {:error, :google_property_not_configured}
 
-      [[:is, "event:page", ["/unexpected-error"]]] ->
+      ["/unexpected-error"] ->
         {:error, :some_unexpected_error}
 
       _ ->
@@ -40,5 +40,12 @@ defmodule Plausible.Google.API.Mock do
            }
          ]}
     end
+  end
+
+  defp page_filter_value(query) do
+    Enum.find_value(query.filters, fn
+      [:is, "event:page", value] -> value
+      _ -> nil
+    end)
   end
 end
