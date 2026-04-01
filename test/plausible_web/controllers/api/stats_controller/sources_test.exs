@@ -2636,8 +2636,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert %{
                "results" => [
-                 %{"name" => "simple web analytics", "count" => 6},
-                 %{"name" => "open-source analytics", "count" => 2}
+                 %{
+                   "name" => "simple web analytics",
+                   "visitors" => 25,
+                   "impressions" => 50,
+                   "position" => 2.0,
+                   "ctr" => 37.0
+                 },
+                 %{
+                   "name" => "open-source analytics",
+                   "visitors" => 15,
+                   "impressions" => 25,
+                   "position" => 4.0,
+                   "ctr" => 50.0
+                 }
                ]
              } = json_response(conn, 200)
     end

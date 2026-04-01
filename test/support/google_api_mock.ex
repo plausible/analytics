@@ -24,8 +24,20 @@ defmodule Plausible.Google.API.Mock do
       _ ->
         {:ok,
          [
-           %{"name" => "simple web analytics", "count" => 6},
-           %{"name" => "open-source analytics", "count" => 2}
+           %{
+             name: "simple web analytics",
+             visitors: 25,
+             impressions: 50,
+             ctr: 37.0,
+             position: 2.0
+           },
+           %{
+             name: "open-source analytics",
+             visitors: 15,
+             impressions: 25,
+             ctr: 50.0,
+             position: 4.0
+           }
          ]}
     end
   end
