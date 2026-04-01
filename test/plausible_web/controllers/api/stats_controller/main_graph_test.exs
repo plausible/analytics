@@ -1500,6 +1500,22 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert response["meta"]["partial_time_labels"] == []
     end
 
+    test "partial_time_labels is an empty list when interval is not week nor month", %{
+      conn: conn,
+      site: site
+    } do
+      response =
+        do_query(conn, site, %{
+          "date_range" => "28d",
+          "metrics" => ["visitors"],
+          "dimensions" => ["time:day"],
+          "include" => %{"time_labels" => true, "partial_time_labels" => true}
+        })
+
+      assert length(response["meta"]["time_labels"]) == 28
+      assert response["meta"]["partial_time_labels"] == []
+    end
+
     test "returns stats for a day with a minute interval", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2023-03-01 12:00:00])

@@ -131,7 +131,7 @@ defmodule Plausible.Stats.Time do
         partial_labels(time_labels, date_range, &Date.beginning_of_month/1, &Date.end_of_month/1)
 
       _ ->
-        nil
+        []
     end
   end
 
