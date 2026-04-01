@@ -136,26 +136,19 @@ defmodule Plausible.Stats.Comparisons do
   defp get_comparison_datetime_range(
          %Query{
            input_date_range: input_range,
-           include: %{compare: :previous_period, compare_match_day_of_week: true}
+           include: %{compare: :previous_period} = include
          } = source_query
        )
        when input_range in [:"24h", :day] do
-    days_back = 7
-    comparison_start = DateTime.shift(source_query.utc_time_range.first, day: -days_back)
-    comparison_end = DateTime.shift(source_query.utc_time_range.last, day: -days_back)
+    offset =
+      if include.compare_match_day_of_week do
+        [day: -7]
+      else
+        [hour: -24]
+      end
 
-    DateTimeRange.new!(comparison_start, comparison_end)
-  end
-
-  defp get_comparison_datetime_range(
-         %Query{
-           input_date_range: input_range,
-           include: %{compare: :previous_period}
-         } = source_query
-       )
-       when input_range in [:"24h", :day] do
-    comparison_start = DateTime.shift(source_query.utc_time_range.first, hour: -24)
-    comparison_end = DateTime.shift(source_query.utc_time_range.last, hour: -24)
+    comparison_start = DateTime.shift(source_query.utc_time_range.first, offset)
+    comparison_end = DateTime.shift(source_query.utc_time_range.last, offset)
 
     DateTimeRange.new!(comparison_start, comparison_end)
   end
