@@ -429,6 +429,82 @@ test('sources breakdown', async ({ page, request }) => {
   })
 })
 
+// Tests against values from Plausible.Google.API.Mock
+test('sources breakdown - search terms failure modes', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'pageview', referrer_source: 'Google', pathname: '/empty' },
+      {
+        name: 'pageview',
+        referrer_source: 'Google',
+        pathname: '/unsupported-filters'
+      },
+      {
+        name: 'pageview',
+        referrer_source: 'Google',
+        pathname: '/not-configured'
+      }
+    ]
+  })
+
+  const report = page.getByTestId('report-sources')
+  const searchTermsTabButton = tabButton(report, 'Search terms')
+
+  await test.step('empty', async () => {
+    await page.goto('/' + domain + '?f=is,source,Google&f=is,page,%2Fempty', {
+      waitUntil: 'commit'
+    })
+
+    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
+
+    await expect(report.getByText('No data yet')).toBeVisible()
+  })
+
+  await test.step('unsupported filters', async () => {
+    await page.goto(
+      '/' + domain + '?f=is,source,Google&f=is,page,%2Funsupported-filters',
+      {
+        waitUntil: 'commit'
+      }
+    )
+
+    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
+
+    await expect(
+      report.getByText('Unable to fetch keyword data from Search Console')
+    ).toBeVisible()
+
+    await expect(
+      report.getByText('does not support the current set of filters')
+    ).toBeVisible()
+  })
+
+  await test.step('not configured', async () => {
+    await page.goto(
+      '/' + domain + '?f=is,source,Google&f=is,page,%2Fnot-configured',
+      {
+        waitUntil: 'commit'
+      }
+    )
+
+    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
+
+    await expect(
+      report.getByText('The site is not connected to Google Search Keywords')
+    ).toBeVisible()
+  })
+})
+
 test('pages breakdown', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
 
