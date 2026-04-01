@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 - Keybind hints are hidden on smaller screens
 - Site index is sortable alphanumerically and by traffic
+- "Top referrers" and "Search terms" breakdowns are rendered side by side with other "Sources" tabs instead of replacing them
 
 ### Fixed
 
