@@ -38,7 +38,7 @@ FiiO:
   models:
     - regex: 'M11 Plus LTD'
       model: 'M11 Plus LTD'
-    - regex: 'FiiO M(1[157]|6)'
+    - regex: 'FiiO M(11S|1[157]|6)'
       model: 'M$1'
 
 Microsoft:
@@ -75,28 +75,6 @@ Wizz:
   device: 'portable media player'
   model: '$1'
 
-# Sonos (sonos.com)
-SONOS:
-  regex: '(?:Sonos/.+\((?:ZP.+)\)|Sonos;)'
-  device: 'portable media player'
-  models:
-    - regex: '\((ZPS(?:[13569]|1[1-578]|2[03])|ZP90)\)'
-      model: '$1'
-    - regex: 'Sonos;Beam;'
-      model: 'Beam'
-    - regex: 'Sonos;Roam;'
-      model: 'Roam'
-    - regex: 'Sonos;Bookshelf;'
-      model: 'Bookshelf'
-    - regex: 'Sonos;Move;'
-      model: 'Move'
-    - regex: 'Sonos;Play(\d);'
-      model: 'Play:$1'
-    - regex: 'Sonos;One;'
-      model: 'One'
-    - regex: 'Sonos;OneSL'
-      model: 'OneSL'
-
 # Shanling
 Shanling:
   regex: 'Shanling M6'
@@ -116,3 +94,43 @@ KuGou:
   regex: 'KuGou[_ -](P5)'
   device: 'portable media player'
   model: '$1'
+
+# Surfans
+Surfans:
+  regex: '(Y57A)(?:[);/ ]|$)'
+  device: 'portable media player'
+  model: '$1'
+
+# Oilsky (oilsky.com.cn)
+Oilsky:
+  regex: 'Oilsky (M501|M303)(?:-Pro)?(?:[);/ ]|$)'
+  device: 'portable media player'
+  models:
+    - regex: 'M303-Pro'
+      model: 'M303 Pro'
+    - regex: '(M501|M303)'
+      model: '$1'
+
+# Diofox
+Diofox:
+  regex: 'Diofox[ _](M8|M10|M508)(?:[);/ ]|$)'
+  device: 'portable media player'
+  model: '$1'
+
+# MECHEN (mechen.com.cn)
+MECHEN:
+  regex: 'MECHEN'
+  device: 'portable media player'
+  models:
+    - regex: 'MECHEN[- _]([^;/)]+)[- _]Pro(?: Build|[);])'
+      model: '$1 Pro'
+    - regex: 'MECHEN[- _]([^;/)]+)(?: Build|[);])'
+      model: '$1'
+
+# Fanvace
+Fanvace:
+  regex: 'Fanvace'
+  device: 'portable media player'
+  models:
+    - regex: 'Fanvace[- _]([^;/)]+)(?: Build|[);])'
+      model: '$1'

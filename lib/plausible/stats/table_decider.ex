@@ -4,15 +4,25 @@ defmodule Plausible.Stats.TableDecider do
   and metrics, with the purpose of reducing the number of queries and JOINs needed to perform.
   """
 
+  use Plausible
+
   import Enum, only: [empty?: 1]
   import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
 
   alias Plausible.Stats.{Query, QueryError}
 
+  @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+
   def events_join_sessions?(query) do
-    query.filters
-    |> dimensions_used_in_filters()
-    |> Enum.any?(&(dimension_partitioner(query, &1) == :session))
+    session_dims_in_filters? =
+      query.filters
+      |> dimensions_used_in_filters()
+      |> Enum.any?(&(dimension_partitioner(query, &1) == :session))
+
+    session_dims? =
+      Enum.any?(query.dimensions, &(dimension_partitioner(query, &1) == :session))
+
+    session_dims? or session_dims_in_filters?
   end
 
   def sessions_join_events?(query) do
@@ -36,6 +46,8 @@ defmodule Plausible.Stats.TableDecider do
     %{event: event_only_dimensions, session: session_only_dimensions} =
       partition(query.dimensions, query, &dimension_partitioner/2)
 
+    conflicting_event_metrics = event_only_metrics -- @revenue_metrics
+
     cond do
       # event:page is a special case handled in QueryOptimizer.split_sessions_query
       event_only_dimensions == ["event:page"] ->
@@ -49,12 +61,12 @@ defmodule Plausible.Stats.TableDecider do
              "Session metric(s) #{i(session_only_metrics)} cannot be queried along with event dimension(s) #{i(event_only_dimensions)}"
          }}
 
-      not empty?(event_only_metrics) and not empty?(session_only_dimensions) ->
+      not empty?(conflicting_event_metrics) and not empty?(session_only_dimensions) ->
         {:error,
          %QueryError{
            code: :invalid_metrics,
            message:
-             "Event metric(s) #{i(event_only_metrics)} cannot be queried along with session dimension(s) #{i(session_only_dimensions)}"
+             "Event metric(s) #{i(conflicting_event_metrics)} cannot be queried along with session dimension(s) #{i(session_only_dimensions)}"
          }}
 
       true ->

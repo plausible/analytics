@@ -208,8 +208,8 @@ defmodule Plausible.Site do
   end
 
   defp validate_domain_format(changeset) do
-    validate_format(changeset, :domain, ~r/^[-\.\\\/:\p{L}\d]*$/u,
-      message: "only letters, numbers, slashes and period allowed"
+    validate_format(changeset, :domain, ~r/^[-\.\\\/_:\p{L}\d]*$/u,
+      message: "only letters, numbers, slashes, underscores and period allowed"
     )
   end
 

@@ -40,7 +40,7 @@ test('site switcher allows switching between different sites', async ({
     events: [{ name: 'pageview' }]
   })
 
-  await page.goto('/' + domain1)
+  await page.goto('/' + domain1, { waitUntil: 'commit' })
 
   const switcherButton = page.getByTestId('site-switcher-current-site')
 
@@ -93,7 +93,7 @@ test('current visitors counter shows number of active visitors', async ({
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await expect(page.getByText('4 current visitors')).toBeVisible()
 })
@@ -131,7 +131,7 @@ test('top stats show relevant metrics', async ({ page, request }) => {
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await expect(page).toHaveTitle(/Plausible/)
 
@@ -200,7 +200,7 @@ test('different time ranges are supported', async ({ page, request }) => {
 
   await populateStats({ request, domain, events })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
   await expect(page.getByRole('button', { name: domain })).toBeVisible()
 
   await expect(page.getByTestId('current-query-period')).toHaveText(
@@ -238,7 +238,7 @@ test('different graph time intervals are available', async ({
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await expect(page.getByTestId('current-query-period')).toHaveText(
     'Last 28 days'
@@ -301,7 +301,7 @@ test('navigating dates previous next time periods', async ({
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const currentQueryPeriod = page.getByTestId('current-query-period')
   const queryPeriodPicker = page.getByTestId('query-period-picker')
@@ -375,7 +375,7 @@ test('selecting a custom date range', async ({ page, request }) => {
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const currentQueryPeriod = page.getByTestId('current-query-period')
   const queryPeriodPicker = page.getByTestId('query-period-picker')
@@ -411,7 +411,7 @@ test('comparing stats over time is supported', async ({ page, request }) => {
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await expect(page.getByTestId('current-query-period')).toHaveText(
     'Last 28 days'

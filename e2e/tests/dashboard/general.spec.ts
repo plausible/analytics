@@ -11,7 +11,7 @@ test('dashboard renders for logged in user', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
   await populateStats({ request, domain, events: [{ name: 'pageview' }] })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await expect(page).toHaveTitle(/Plausible/)
 
@@ -24,7 +24,7 @@ test('dashboard renders for anonymous viewer', async ({ page, request }) => {
   await populateStats({ request, domain, events: [{ name: 'pageview' }] })
   await logout(page)
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await expect(page).toHaveTitle(/Plausible/)
 
@@ -44,7 +44,7 @@ test('dashboard renders via shared link', async ({ page, request }) => {
   await logout(page)
 
   await test.step('public link', async () => {
-    await page.goto(link)
+    await page.goto(link, { waitUntil: 'commit' })
 
     await expect(page.getByRole('button', { name: domain })).toBeVisible()
 
@@ -52,7 +52,7 @@ test('dashboard renders via shared link', async ({ page, request }) => {
   })
 
   await test.step('password protected link', async () => {
-    await page.goto(passwordLink)
+    await page.goto(passwordLink, { waitUntil: 'commit' })
 
     await page.locator('input#password').fill('secret')
 
@@ -81,7 +81,7 @@ test('dashboard renders with imported data', async ({ page, request }) => {
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await test.step('with imported data included', async () => {
     await expect(page.locator('#visitors')).toHaveText('4')
@@ -109,11 +109,11 @@ test('tab selection user preferences are preserved across reloads', async ({
   const { domain } = await setupSite({ page, request })
   await populateStats({ request, domain, events: [{ name: 'pageview' }] })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await page.getByRole('button', { name: 'Entry pages' }).click()
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   let currentTab = await page.evaluate(
     (domain) => localStorage.getItem('pageTab__' + domain),
@@ -124,7 +124,7 @@ test('tab selection user preferences are preserved across reloads', async ({
 
   await page.getByRole('button', { name: 'Exit pages' }).click()
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   currentTab = await page.evaluate(
     (domain) => localStorage.getItem('pageTab__' + domain),
@@ -142,7 +142,7 @@ test('back navigation closes the modal', async ({ page, request, baseURL }) => {
     events: [{ name: 'pageview' }]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await page.getByRole('button', { name: 'Filter' }).click()
 

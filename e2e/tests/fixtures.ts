@@ -46,6 +46,14 @@ type Event = {
   timestamp?: EventTimestamp
 }
 
+type Goal = {
+  event_name?: string
+  page_path?: string
+  scroll_threshold?: number
+  display_name?: string
+  currency?: string
+}
+
 type ImportedVisitors = {
   type: 'imported_visitors'
   visitors?: number
@@ -67,7 +75,7 @@ export async function register({
   request: APIRequestContext
   user: User
 }) {
-  await page.goto('/register')
+  await page.goto('/register', { waitUntil: 'commit' })
 
   await expectLiveViewConnected(page)
 
@@ -113,7 +121,7 @@ export async function register({
 }
 
 export async function login({ page, user }: { page: Page; user: User }) {
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'commit' })
 
   await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()
 
@@ -125,7 +133,7 @@ export async function login({ page, user }: { page: Page; user: User }) {
 }
 
 export async function logout(page: Page) {
-  await page.goto('/logout')
+  await page.goto('/logout', { waitUntil: 'commit' })
 
   await expect(
     page.getByRole('heading', { name: 'Welcome to Plausible!' })
@@ -139,7 +147,7 @@ export async function addSite({
   page: Page
   domain: string
 }) {
-  await page.goto('/sites/new')
+  await page.goto('/sites/new', { waitUntil: 'commit' })
 
   await expect(
     page.getByRole('button', { name: 'Install Plausible' })
@@ -150,9 +158,7 @@ export async function addSite({
 
   await page.getByRole('button', { name: 'Install Plausible' }).click()
 
-  await expect(
-    page.getByRole('button', { name: 'Verify Script installation' })
-  ).toBeVisible()
+  await expect(page).toHaveURL(/\/installation/)
 }
 
 export async function makeSitePublic({
@@ -162,7 +168,7 @@ export async function makeSitePublic({
   page: Page
   domain: string
 }) {
-  await page.goto(`/${domain}/settings/visibility`)
+  await page.goto(`/${domain}/settings/visibility`, { waitUntil: 'commit' })
 
   await page
     .getByRole('form', { name: 'Make stats publicly available' })
@@ -186,7 +192,7 @@ export async function createSharedLink({
   const modal = page.locator('#shared-links-form-modal')
   const table = page.locator('#shared-links-table')
 
-  await page.goto(`/${domain}/settings/visibility`)
+  await page.goto(`/${domain}/settings/visibility`, { waitUntil: 'commit' })
 
   await page.getByRole('button', { name: 'Add shared link' }).click()
 
@@ -231,6 +237,26 @@ export async function populateStats({
   expect(response.ok()).toBeTruthy()
 }
 
+export async function addGoal({
+  request,
+  domain,
+  params
+}: {
+  request: APIRequestContext
+  domain: string
+  params: Goal
+}) {
+  const response = await request.post('/e2e-tests/goal', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    data: { domain: domain, ...params }
+  })
+
+  expect(response.ok()).toBeTruthy()
+}
+
 export async function addCustomGoal({
   page,
   domain,
@@ -247,7 +273,7 @@ export async function addCustomGoal({
   currency?: string
   clickManually?: boolean
 }) {
-  await page.goto(`/${domain}/settings/goals`)
+  await page.goto(`/${domain}/settings/goals`, { waitUntil: 'commit' })
 
   await expectLiveViewConnected(page)
 
@@ -310,7 +336,7 @@ export async function addPageviewGoal({
   pathname: string
   displayName?: string
 }) {
-  await page.goto(`/${domain}/settings/goals`)
+  await page.goto(`/${domain}/settings/goals`, { waitUntil: 'commit' })
 
   await expectLiveViewConnected(page)
 
@@ -354,7 +380,7 @@ export async function addScrollDepthGoal({
   displayName?: string
   scrollPercentage?: number
 }) {
-  await page.goto(`/${domain}/settings/goals`)
+  await page.goto(`/${domain}/settings/goals`, { waitUntil: 'commit' })
 
   await expectLiveViewConnected(page)
 
@@ -401,7 +427,7 @@ export async function addCustomProp({
   domain: string
   name: string
 }) {
-  await page.goto(`/${domain}/settings/properties`)
+  await page.goto(`/${domain}/settings/properties`, { waitUntil: 'commit' })
 
   await expectLiveViewConnected(page)
 
@@ -433,7 +459,7 @@ export async function addAllCustomProps({
   page: Page
   domain: string
 }) {
-  await page.goto(`/${domain}/settings/properties`)
+  await page.goto(`/${domain}/settings/properties`, { waitUntil: 'commit' })
 
   await expectLiveViewConnected(page)
 

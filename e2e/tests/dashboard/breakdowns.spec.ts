@@ -48,7 +48,7 @@ test('sources breakdown', async ({ page, request }) => {
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const report = page.getByTestId('report-sources')
 
@@ -409,7 +409,7 @@ test('pages breakdown', async ({ page, request }) => {
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const report = page.getByTestId('report-pages')
 
@@ -523,7 +523,7 @@ test('pages breakdown modal', async ({ page, request }) => {
     events: pageEvents
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const report = page.getByTestId('report-pages')
 
@@ -683,7 +683,9 @@ test('pages breakdown with a pageview goal filter applied', async ({
   const report = page.getByTestId('report-pages')
 
   await test.step('custom goal filter applied', async () => {
-    await page.goto('/' + domain + '?f=is,goal,create_site')
+    await page.goto('/' + domain + '?f=is,goal,create_site', {
+      waitUntil: 'commit'
+    })
 
     const pagesTabButton = tabButton(report, 'Conversion pages')
     await pagesTabButton.scrollIntoViewIfNeeded()
@@ -718,7 +720,9 @@ test('pages breakdown with a pageview goal filter applied', async ({
   })
 
   await test.step('revenue goal filter applied', async () => {
-    await page.goto('/' + domain + '?f=is,goal,purchase')
+    await page.goto('/' + domain + '?f=is,goal,purchase', {
+      waitUntil: 'commit'
+    })
 
     const pagesTabButton = tabButton(report, 'Conversion pages')
     await pagesTabButton.scrollIntoViewIfNeeded()
@@ -789,7 +793,7 @@ test('locations breakdown', async ({ page, request }) => {
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const report = page.getByTestId('report-locations')
 
@@ -950,7 +954,7 @@ test('devices breakdown', async ({ page, request }) => {
     ]
   })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   const report = page.getByTestId('report-devices')
 
