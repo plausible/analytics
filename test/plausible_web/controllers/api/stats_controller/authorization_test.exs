@@ -1,14 +1,9 @@
 defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
   use PlausibleWeb.ConnCase, async: true
 
-  defp call_internal_query_endpoint(conn, site, q, opts \\ []) do
-    params = %{
-      "date_range" => "day",
-      "metrics" => ["visitors"],
-      "filters" => Keyword.get(opts, :filters, [])
-    }
-
-    post(conn, "/api/stats/#{site.domain}/query?#{q}", params)
+  defp query_visitors(conn, site, q, opts \\ []) do
+    params = Keyword.merge([date_range: "day", metrics: ["visitors"]], params)
+    post(conn, Routes.stats_path(conn, :query, site.domain), params)
   end
 
   describe "API authorization - as anonymous user" do
@@ -44,7 +39,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
     test "returns 404 for non-existent shared link", %{conn: conn} do
       site = new_site()
 
-      conn = call_internal_query_endpoint(conn, site, "auth=does-not-exist")
+      conn = query_visitors(conn, site, auth: "does-not-exist")
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -55,7 +50,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       site = new_site()
       link = insert(:shared_link, site: site)
 
-      conn = call_internal_query_endpoint(conn, site, "auth=#{link.slug}")
+      conn = query_visitors(conn, site, auth: link.slug)
 
       assert %{"results" => _any} = json_response(conn, 200)
     end
@@ -72,7 +67,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       conn =
         conn
         |> put_req_cookie(cookie_name, token)
-        |> call_internal_query_endpoint(site, "auth=#{link.slug}")
+        |> query_visitors(site, auth: link.slug)
 
       assert %{"results" => _any} = json_response(conn, 200)
     end
@@ -96,7 +91,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       conn =
         conn
         |> put_req_cookie(cookie_name, other_link_token)
-        |> call_internal_query_endpoint(site, "auth=#{link.slug}")
+        |> query_visitors(site, auth: link.slug)
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -109,7 +104,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
-      conn = call_internal_query_endpoint(conn, site, "auth=#{link.slug}")
+      conn = query_visitors(conn, site, auth: link.slug)
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -126,7 +121,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       link =
         insert(:shared_link, site: site, segment: segment)
 
-      conn = call_internal_query_endpoint(conn, site, "auth=#{link.slug}")
+      conn = query_visitors(conn, site, auth: link.slug)
 
       assert json_response(conn, 400) == %{
                "error" => "The first filter must be for the segment with id #{segment.id}"
@@ -143,9 +138,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
         insert(:shared_link, site: site, segment: segment)
 
       conn =
-        call_internal_query_endpoint(conn, site, "auth=#{link.slug}",
-          filters: [["is", "segment", [segment.id + 1]]]
-        )
+        query_visitors(conn, site, auth: link.slug, filters: [["is", "segment", [segment.id + 1]]])
 
       assert json_response(conn, 400) == %{
                "error" => "The first filter must be for the segment with id #{segment.id}"
@@ -162,7 +155,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
         insert(:shared_link, site: site, segment: segment)
 
       conn =
-        call_internal_query_endpoint(conn, site, "auth=#{link.slug}",
+        query_visitors(conn, site, auth: link.slug,
           filters: [
             ["is", "segment", [segment.id]],
             ["is", "event:page", ["/docs"]]
