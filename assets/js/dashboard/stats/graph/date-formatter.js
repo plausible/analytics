@@ -1,12 +1,4 @@
-import { parseUTCDate, formatMonthYYYY, formatDayShort } from '../../util/date'
-
-const browserDateFormat = Intl.DateTimeFormat(navigator.language, {
-  hour: 'numeric'
-})
-
-const is12HourClock = function () {
-  return browserDateFormat.resolvedOptions().hour12
-}
+import { parseUTCDate, formatMonthYYYY, formatDayShort, is12HourClock } from '../../util/date'
 
 const monthIntervalFormatter = {
   long(isoDate, options) {
