@@ -2,7 +2,10 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
   use PlausibleWeb.ConnCase, async: true
 
   defp query_visitors(conn, site, params) do
-    params = Keyword.merge([date_range: "day", metrics: ["visitors"]], params)
+    params =
+      [date_range: "day", metrics: ["visitors"], filters: []]
+      |> Keyword.merge(params)
+
     post(conn, Routes.stats_path(conn, :query, site.domain), params)
   end
 
