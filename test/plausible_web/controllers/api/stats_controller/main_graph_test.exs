@@ -1840,12 +1840,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
              ]
     end
 
-    test "does not trim hourly relative date range when comparing", %{conn: conn, site: site} do
+    test "does trim hourly relative date range when comparing", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-08 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-08 06:05:00]),
-        build(:pageview, timestamp: ~N[2021-01-08 08:59:00]),
-        build(:pageview, timestamp: ~N[2021-01-08 23:59:00])
+        build(:pageview, timestamp: ~N[2021-01-08 08:04:00])
       ])
 
       response =
@@ -1862,29 +1861,42 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           now: ~U[2021-01-08 08:05:00Z]
         )
 
-      assert response["meta"]["time_labels"] ==
-               Enum.map(0..23, fn h ->
-                 "2021-01-08 #{String.pad_leading(to_string(h), 2, "0")}:00:00"
-               end)
+      assert response["meta"]["time_labels"] == [
+               "2021-01-08 00:00:00",
+               "2021-01-08 01:00:00",
+               "2021-01-08 02:00:00",
+               "2021-01-08 03:00:00",
+               "2021-01-08 04:00:00",
+               "2021-01-08 05:00:00",
+               "2021-01-08 06:00:00",
+               "2021-01-08 07:00:00",
+               "2021-01-08 08:00:00"
+             ]
 
       assert response["results"] == [
                %{"dimensions" => ["2021-01-08 00:00:00"], "metrics" => [1]},
                %{"dimensions" => ["2021-01-08 06:00:00"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-08 08:00:00"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-08 23:00:00"], "metrics" => [1]}
+               %{"dimensions" => ["2021-01-08 08:00:00"], "metrics" => [1]}
              ]
 
-      assert response["meta"]["comparison_time_labels"] ==
-               Enum.map(0..23, fn h ->
-                 "2021-01-07 #{String.pad_leading(to_string(h), 2, "0")}:00:00"
-               end)
+      assert response["meta"]["comparison_time_labels"] == [
+               "2021-01-07 00:00:00",
+               "2021-01-07 01:00:00",
+               "2021-01-07 02:00:00",
+               "2021-01-07 03:00:00",
+               "2021-01-07 04:00:00",
+               "2021-01-07 05:00:00",
+               "2021-01-07 06:00:00",
+               "2021-01-07 07:00:00",
+               "2021-01-07 08:00:00"
+             ]
 
       assert response["comparison_results"] == []
 
       assert response["meta"]["time_label_result_indices"] ==
-               [0, nil, nil, nil, nil, nil, 1, nil, 2] ++ List.duplicate(nil, 14) ++ [3]
+               [0, nil, nil, nil, nil, nil, 1, nil, 2]
 
-      assert response["meta"]["comparison_time_label_result_indices"] == List.duplicate(nil, 24)
+      assert response["meta"]["comparison_time_label_result_indices"] == List.duplicate(nil, 9)
     end
   end
 

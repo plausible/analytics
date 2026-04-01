@@ -46,6 +46,14 @@ type Event = {
   timestamp?: EventTimestamp
 }
 
+type Goal = {
+  event_name?: string
+  page_path?: string
+  scroll_threshold?: number
+  display_name?: string
+  currency?: string
+}
+
 type ImportedVisitors = {
   type: 'imported_visitors'
   visitors?: number
@@ -150,9 +158,7 @@ export async function addSite({
 
   await page.getByRole('button', { name: 'Install Plausible' }).click()
 
-  await expect(
-    page.getByRole('button', { name: 'Verify Script installation' })
-  ).toBeVisible()
+  await expect(page).toHaveURL(/\/installation/)
 }
 
 export async function makeSitePublic({
@@ -226,6 +232,26 @@ export async function populateStats({
       Accept: 'application/json'
     },
     data: { domain: domain, events: events }
+  })
+
+  expect(response.ok()).toBeTruthy()
+}
+
+export async function addGoal({
+  request,
+  domain,
+  params
+}: {
+  request: APIRequestContext
+  domain: string
+  params: Goal
+}) {
+  const response = await request.post('/e2e-tests/goal', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    data: { domain: domain, ...params }
   })
 
   expect(response.ok()).toBeTruthy()

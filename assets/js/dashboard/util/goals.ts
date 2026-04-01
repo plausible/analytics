@@ -10,6 +10,7 @@ export const SPECIAL_GOALS = {
   'Outbound Link: Click': { title: 'Outbound Links', prop: 'url' },
   'Cloaked Link: Click': { title: 'Cloaked Links', prop: 'url' },
   'File Download': { title: 'File Downloads', prop: 'url' },
+  'Form: Submission': { title: 'Form Actions', prop: 'path' },
   'WP Search Queries': {
     title: 'WordPress Search Queries',
     prop: 'search_query'

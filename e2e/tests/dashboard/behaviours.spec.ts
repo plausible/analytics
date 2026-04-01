@@ -2,6 +2,7 @@ import { test, expect, Page } from '@playwright/test'
 import {
   setupSite,
   populateStats,
+  addGoal,
   addCustomGoal,
   addPageviewGoal,
   addScrollDepthGoal,
@@ -22,6 +23,346 @@ import {
 } from '../test-utils'
 
 const getReport = (page: Page) => page.getByTestId('report-behaviours')
+
+test('special goals', async ({ page, request }) => {
+  const report = getReport(page)
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/page1',
+        timestamp: { minutesAgo: 60 }
+      },
+      {
+        user_id: 123,
+        name: 'Form: Submission',
+        'meta.key': ['path'],
+        'meta.value': ['/form-action/path'],
+        timestamp: { minutesAgo: 50 }
+      },
+      {
+        user_id: 123,
+        name: '404',
+        'meta.key': ['path'],
+        'meta.value': ['/wrong-path'],
+        timestamp: { minutesAgo: 45 }
+      },
+      {
+        user_id: 123,
+        name: 'Outbound Link: Click',
+        'meta.key': ['url'],
+        'meta.value': ['https://example.com/link'],
+        timestamp: { minutesAgo: 40 }
+      },
+      {
+        user_id: 123,
+        name: 'Cloaked Link: Click',
+        'meta.key': ['url'],
+        'meta.value': ['https://example.com/cloaked-link'],
+        timestamp: { minutesAgo: 35 }
+      },
+      {
+        user_id: 123,
+        name: 'File Download',
+        'meta.key': ['url'],
+        'meta.value': ['https://example.com/file.zip'],
+        timestamp: { minutesAgo: 30 }
+      },
+      {
+        user_id: 123,
+        name: 'WP Search Queries',
+        'meta.key': ['search_query'],
+        'meta.value': ['some query'],
+        timestamp: { minutesAgo: 25 }
+      },
+      {
+        user_id: 123,
+        name: 'WP Form Completions',
+        'meta.key': ['path'],
+        'meta.value': ['/some/path'],
+        timestamp: { minutesAgo: 20 }
+      },
+      {
+        user_id: 124,
+        name: 'pageview',
+        pathname: '/page1',
+        timestamp: { minutesAgo: 60 }
+      },
+      {
+        user_id: 124,
+        name: 'Form: Submission',
+        'meta.key': ['path'],
+        'meta.value': ['/form-action/another-path'],
+        timestamp: { minutesAgo: 50 }
+      },
+      {
+        user_id: 124,
+        name: '404',
+        'meta.key': ['path'],
+        'meta.value': ['/another-wrong-path'],
+        timestamp: { minutesAgo: 45 }
+      },
+      {
+        user_id: 124,
+        name: 'Outbound Link: Click',
+        'meta.key': ['url'],
+        'meta.value': ['https://example.com/another-link'],
+        timestamp: { minutesAgo: 40 }
+      },
+      {
+        user_id: 124,
+        name: 'Cloaked Link: Click',
+        'meta.key': ['url'],
+        'meta.value': ['https://example.com/another-cloaked-link'],
+        timestamp: { minutesAgo: 35 }
+      },
+      {
+        user_id: 124,
+        name: 'File Download',
+        'meta.key': ['url'],
+        'meta.value': ['https://example.com/another-file.zip'],
+        timestamp: { minutesAgo: 30 }
+      },
+      {
+        user_id: 124,
+        name: 'WP Search Queries',
+        'meta.key': ['search_query'],
+        'meta.value': ['another query'],
+        timestamp: { minutesAgo: 25 }
+      },
+      {
+        user_id: 124,
+        name: 'WP Form Completions',
+        'meta.key': ['path'],
+        'meta.value': ['/another/path'],
+        timestamp: { minutesAgo: 20 }
+      }
+    ]
+  })
+
+  await addGoal({ request, domain, params: { event_name: 'Form: Submission' } })
+  await addGoal({ request, domain, params: { event_name: '404' } })
+  await addGoal({
+    request,
+    domain,
+    params: { event_name: 'Outbound Link: Click' }
+  })
+  await addGoal({
+    request,
+    domain,
+    params: { event_name: 'Cloaked Link: Click' }
+  })
+  await addGoal({
+    request,
+    domain,
+    params: { event_name: 'File Download' }
+  })
+  await addGoal({
+    request,
+    domain,
+    params: { event_name: 'WP Search Queries' }
+  })
+  await addGoal({
+    request,
+    domain,
+    params: { event_name: 'WP Form Completions' }
+  })
+
+  await page.goto('/' + domain, { waitUntil: 'commit' })
+
+  const goalsTabButton = tabButton(report, 'Goals')
+
+  await goalsTabButton.scrollIntoViewIfNeeded()
+  await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
+
+  await expectHeaders(report, ['Goal', 'Uniques', 'Total', 'CR'])
+
+  await expectMetricValues(report, 'Form: Submission', ['2', '2', '100%'])
+  await expectMetricValues(report, '404', ['2', '2', '100%'])
+  await expectMetricValues(report, 'Outbound Link: Click', ['2', '2', '100%'])
+  await expectMetricValues(report, 'Cloaked Link: Click', ['2', '2', '100%'])
+  await expectMetricValues(report, 'File Download', ['2', '2', '100%'])
+  await expectMetricValues(report, 'WP Search Queries', ['2', '2', '100%'])
+  await expectMetricValues(report, 'WP Form Completions', ['2', '2', '100%'])
+
+  await test.step('Form: Submission goal is treated as a special goal', async () => {
+    await rowLink(report, 'Form: Submission').click()
+
+    await expect(tabButton(report, 'Form actions')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    await expectHeaders(report, ['path', 'Visitors', 'Events', 'CR'])
+
+    await expectMetricValues(report, '/form-action/path', ['1', '1', '50%'])
+    await expectMetricValues(report, '/form-action/another-path', [
+      '1',
+      '1',
+      '50%'
+    ])
+  })
+
+  await page
+    .getByRole('button', {
+      name: 'Remove filter: Goal is Form: Submission'
+    })
+    .click()
+
+  await goalsTabButton.click()
+
+  await test.step('404 goal is treated as a special goal', async () => {
+    await rowLink(report, '404').click()
+
+    await expect(tabButton(report, '404 Pages')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    await expectHeaders(report, ['path', 'Visitors', 'Events', 'CR'])
+
+    await expectMetricValues(report, '/wrong-path', ['1', '1', '50%'])
+    await expectMetricValues(report, '/another-wrong-path', ['1', '1', '50%'])
+  })
+
+  await page
+    .getByRole('button', {
+      name: 'Remove filter: Goal is 404'
+    })
+    .click()
+
+  await goalsTabButton.click()
+
+  await test.step('Outbound Link: Click goal is treated as a special goal', async () => {
+    await rowLink(report, 'Outbound Link: Click').click()
+
+    await expect(tabButton(report, 'Outbound Links')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    await expectHeaders(report, ['url', 'Visitors', 'Events', 'CR'])
+
+    await expectMetricValues(report, 'https://example.com/link', [
+      '1',
+      '1',
+      '50%'
+    ])
+    await expectMetricValues(report, 'https://example.com/another-link', [
+      '1',
+      '1',
+      '50%'
+    ])
+  })
+
+  await page
+    .getByRole('button', {
+      name: 'Remove filter: Goal is Outbound Link: Click'
+    })
+    .click()
+
+  await goalsTabButton.click()
+
+  await test.step('Cloaked Link: Click goal is treated as a special goal', async () => {
+    await rowLink(report, 'Cloaked Link: Click').click()
+
+    await expect(tabButton(report, 'Cloaked Links')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    await expectHeaders(report, ['url', 'Visitors', 'Events', 'CR'])
+
+    await expectMetricValues(report, 'https://example.com/cloaked-link', [
+      '1',
+      '1',
+      '50%'
+    ])
+    await expectMetricValues(
+      report,
+      'https://example.com/another-cloaked-link',
+      ['1', '1', '50%']
+    )
+  })
+
+  await page
+    .getByRole('button', {
+      name: 'Remove filter: Goal is Cloaked Link: Click'
+    })
+    .click()
+
+  await goalsTabButton.click()
+
+  await test.step('File Download goal is treated as a special goal', async () => {
+    await rowLink(report, 'File Download').click()
+
+    await expect(tabButton(report, 'File Downloads')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    await expectHeaders(report, ['url', 'Visitors', 'Events', 'CR'])
+
+    await expectMetricValues(report, 'https://example.com/file.zip', [
+      '1',
+      '1',
+      '50%'
+    ])
+    await expectMetricValues(report, 'https://example.com/another-file.zip', [
+      '1',
+      '1',
+      '50%'
+    ])
+  })
+
+  await page
+    .getByRole('button', {
+      name: 'Remove filter: Goal is File Download'
+    })
+    .click()
+
+  await goalsTabButton.click()
+
+  await test.step('WP Search Queries goal is treated as a special goal', async () => {
+    await rowLink(report, 'WP Search Queries').click()
+
+    await expect(tabButton(report, 'WordPress Search Queries')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    await expectHeaders(report, ['search_query', 'Visitors', 'Events', 'CR'])
+
+    await expectMetricValues(report, 'some query', ['1', '1', '50%'])
+    await expectMetricValues(report, 'another query', ['1', '1', '50%'])
+  })
+
+  await page
+    .getByRole('button', {
+      name: 'Remove filter: Goal is WP Search Queries'
+    })
+    .click()
+
+  await goalsTabButton.click()
+
+  await test.step('WP Form Completions goal is treated as a special goal', async () => {
+    await rowLink(report, 'WP Form Completions').click()
+
+    await expect(
+      tabButton(report, 'WordPress Form Completions')
+    ).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['path', 'Visitors', 'Events', 'CR'])
+
+    await expectMetricValues(report, '/some/path', ['1', '1', '50%'])
+    await expectMetricValues(report, '/another/path', ['1', '1', '50%'])
+  })
+})
 
 test('goals breakdown', async ({ page, request }) => {
   const report = getReport(page)

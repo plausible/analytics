@@ -8,7 +8,8 @@ defmodule Plausible.Stats.Comparisons do
   """
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, DateTimeRange, Time}
+  alias Plausible.Stats.{DateTimeRange, Query, Time}
+  alias Plausible.Times
 
   @spec get_comparison_utc_time_range(Stats.Query.t()) :: DateTimeRange.t()
   @doc """
@@ -53,8 +54,8 @@ defmodule Plausible.Stats.Comparisons do
           DateTimeRange.new!(from, to)
 
         _ ->
-          # For 24h period, work directly with datetime ranges to preserve time precision
-          if source_query.input_date_range == :"24h" do
+          # For 24h period and today, work directly with datetime ranges to preserve time precision
+          if use_datetime_for_comparison?(source_query) do
             get_comparison_datetime_range(source_query)
           else
             comparison_date_range = get_comparison_date_range(source_query)
@@ -68,6 +69,17 @@ defmodule Plausible.Stats.Comparisons do
       end
 
     DateTimeRange.to_timezone(datetime_range, "Etc/UTC")
+  end
+
+  defp use_datetime_for_comparison?(query) do
+    if query.input_date_range == :day do
+      today_from_now = Times.to_date(query.now, query.timezone)
+      day_from_range = Times.to_date(query.utc_time_range.first, query.timezone)
+
+      Date.compare(today_from_now, day_from_range) == :eq
+    else
+      query.input_date_range == :"24h"
+    end
   end
 
   def get_comparison_query(
@@ -120,38 +132,34 @@ defmodule Plausible.Stats.Comparisons do
     end
   end
 
-  # For 24h period, shift the datetime range directly to preserve time precision
+  # For 24h and today periods, shift the datetime range directly to preserve time precision
   defp get_comparison_datetime_range(
          %Query{
-           input_date_range: :"24h",
-           include: %{compare: :previous_period, compare_match_day_of_week: true}
+           input_date_range: input_range,
+           include: %{compare: :previous_period} = include
          } = source_query
-       ) do
-    days_back = 7
-    comparison_start = DateTime.shift(source_query.utc_time_range.first, day: -days_back)
-    comparison_end = DateTime.shift(source_query.utc_time_range.last, day: -days_back)
+       )
+       when input_range in [:"24h", :day] do
+    offset =
+      if include.compare_match_day_of_week do
+        [day: -7]
+      else
+        [hour: -24]
+      end
+
+    comparison_start = DateTime.shift(source_query.utc_time_range.first, offset)
+    comparison_end = DateTime.shift(source_query.utc_time_range.last, offset)
 
     DateTimeRange.new!(comparison_start, comparison_end)
   end
 
   defp get_comparison_datetime_range(
          %Query{
-           input_date_range: :"24h",
-           include: %{compare: :previous_period}
-         } = source_query
-       ) do
-    comparison_start = DateTime.shift(source_query.utc_time_range.first, hour: -24)
-    comparison_end = DateTime.shift(source_query.utc_time_range.last, hour: -24)
-
-    DateTimeRange.new!(comparison_start, comparison_end)
-  end
-
-  defp get_comparison_datetime_range(
-         %Query{
-           input_date_range: :"24h",
+           input_date_range: input_range,
            include: %{compare: :year_over_year}
          } = source_query
-       ) do
+       )
+       when input_range in [:"24h", :day] do
     comparison_start = DateTime.shift(source_query.utc_time_range.first, year: -1)
     comparison_end = DateTime.shift(source_query.utc_time_range.last, year: -1)
 
