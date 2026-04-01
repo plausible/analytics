@@ -166,6 +166,16 @@ defmodule Plausible.Stats.Comparisons do
     DateTimeRange.new!(comparison_start, comparison_end)
   end
 
+  defp get_comparison_datetime_range(
+         %Query{
+           input_date_range: input_range,
+           include: %{compare: {:date_range, from_date, to_date}}
+         } = source_query
+       )
+       when input_range in [:"24h", :day] do
+    DateTimeRange.new!(from_date, to_date, source_query.timezone)
+  end
+
   defp get_comparison_date_range(%Query{include: %{compare: :year_over_year}} = source_query) do
     source_date_range = Query.date_range(source_query, trim_trailing: true)
 

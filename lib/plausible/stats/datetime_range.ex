@@ -46,6 +46,28 @@ defmodule Plausible.Stats.DateTimeRange do
     new!(first, last)
   end
 
+  def new!(%Date{} = first, last) do
+    first =
+      case DateTime.new(first, ~T[00:00:00]) do
+        {:ok, datetime} -> datetime
+        {:gap, _just_before, just_after} -> just_after
+        {:ambiguous, _first_datetime, second_datetime} -> second_datetime
+      end
+
+    new!(first, last)
+  end
+
+  def new!(first, %Date{} = last) do
+    last =
+      case DateTime.new(last, ~T[23:59:59]) do
+        {:ok, datetime} -> datetime
+        {:gap, just_before, _just_after} -> just_before
+        {:ambiguous, first_datetime, _second_datetime} -> first_datetime
+      end
+
+    new!(first, last)
+  end
+
   def new!(%DateTime{} = first, %DateTime{} = last) do
     first = DateTime.truncate(first, :second)
     last = DateTime.truncate(last, :second)
