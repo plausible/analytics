@@ -138,7 +138,10 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
         insert(:shared_link, site: site, segment: segment)
 
       conn =
-        query_visitors(conn, site, auth: link.slug, filters: [["is", "segment", [segment.id + 1]]])
+        query_visitors(conn, site,
+          auth: link.slug,
+          filters: [["is", "segment", [segment.id + 1]]]
+        )
 
       assert json_response(conn, 400) == %{
                "error" => "The first filter must be for the segment with id #{segment.id}"
@@ -155,7 +158,8 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
         insert(:shared_link, site: site, segment: segment)
 
       conn =
-        query_visitors(conn, site, auth: link.slug,
+        query_visitors(conn, site,
+          auth: link.slug,
           filters: [
             ["is", "segment", [segment.id]],
             ["is", "event:page", ["/docs"]]
