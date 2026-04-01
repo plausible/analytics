@@ -289,15 +289,13 @@ export default function Sources() {
         : null
     }
 
-    switch (currentTab) {
-      case 'channels':
-        return {
-          path: channelsRoute.path,
-          search: (search) => search
-        }
-      case 'all':
-      default:
-        return sourceMoreLinkProps()
+    if (currentTab === 'channels') {
+      return {
+        path: channelsRoute.path,
+        search: (search) => search
+      }
+    } else {
+      return sourceMoreLinkProps()
     }
   }
 
@@ -326,14 +324,12 @@ export default function Sources() {
       return <UTMSources tab={currentTab} afterFetchData={afterFetchData} />
     }
 
-    switch (currentTab) {
-      case 'channels':
-        return (
-          <Channels onClick={onChannelClick} afterFetchData={afterFetchData} />
-        )
-      case 'all':
-      default:
-        return renderSourceContent()
+    if (currentTab === 'channels') {
+      return (
+        <Channels onClick={onChannelClick} afterFetchData={afterFetchData} />
+      )
+    } else {
+      return renderSourceContent()
     }
   }
 
