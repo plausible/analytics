@@ -126,12 +126,13 @@ export function SearchTerms({
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
-            <span>Search term</span>
-            <span>Visitors</span>
+            <span data-testid="report-header">Search term</span>
+            <span data-testid="report-header">Visitors</span>
           </div>
           {searchTerms &&
             searchTerms.map((term: SearchTerm) => (
               <div
+                data-testid="report-row"
                 className="flex items-center justify-between my-1 text-sm"
                 key={term.name}
               >
@@ -145,7 +146,10 @@ export function SearchTerms({
                     <span className="md:truncate block">{term.name}</span>
                   </span>
                 </Bar>
-                <span className="font-medium dark:text-gray-200">
+                <span
+                  className="font-medium dark:text-gray-200"
+                  data-testid="metric-value"
+                >
                   {numberShortFormatter(term.visitors)}
                 </span>
               </div>
