@@ -4,7 +4,9 @@ config :plausible, PlausibleWeb.Endpoint,
   server: true,
   check_origin: false
 
-config :plausible, paddle_api: Plausible.Billing.DevPaddleApiMock
+config :plausible,
+  paddle_api: Plausible.Billing.DevPaddleApiMock,
+  google_api: Plausible.Google.API.Mock
 
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
