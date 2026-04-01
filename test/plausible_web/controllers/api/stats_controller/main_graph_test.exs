@@ -1583,12 +1583,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert last_week_plot == [33.33, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     end
 
-    test "does not trim hourly relative date range when comparing", %{conn: conn, site: site} do
+    test "does trim hourly relative date range when comparing", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-08 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-08 06:05:00]),
-        build(:pageview, timestamp: ~N[2021-01-08 08:59:00]),
-        build(:pageview, timestamp: ~N[2021-01-08 23:59:00])
+        build(:pageview, timestamp: ~N[2021-01-08 08:04:00])
       ])
 
       conn =
@@ -1608,22 +1607,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                          "2021-01-08 05:00:00",
                          "2021-01-08 06:00:00",
                          "2021-01-08 07:00:00",
-                         "2021-01-08 08:00:00",
-                         "2021-01-08 09:00:00",
-                         "2021-01-08 10:00:00",
-                         "2021-01-08 11:00:00",
-                         "2021-01-08 12:00:00",
-                         "2021-01-08 13:00:00",
-                         "2021-01-08 14:00:00",
-                         "2021-01-08 15:00:00",
-                         "2021-01-08 16:00:00",
-                         "2021-01-08 17:00:00",
-                         "2021-01-08 18:00:00",
-                         "2021-01-08 19:00:00",
-                         "2021-01-08 20:00:00",
-                         "2021-01-08 21:00:00",
-                         "2021-01-08 22:00:00",
-                         "2021-01-08 23:00:00"
+                         "2021-01-08 08:00:00"
                        ],
                        "plot" => [
                          1,
@@ -1634,39 +1618,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                          0,
                          1,
                          0,
-                         1,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
                          1
                        ],
                        "comparison_plot" => [
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
-                         0,
                          0,
                          0,
                          0,

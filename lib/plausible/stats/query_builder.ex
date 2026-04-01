@@ -18,6 +18,8 @@ defmodule Plausible.Stats.QueryBuilder do
     QueryInclude
   }
 
+  alias Plausible.Times
+
   @doc """
   Runs various validations and builds a `%Query{}` from already parsed params.
 
@@ -96,8 +98,12 @@ defmodule Plausible.Stats.QueryBuilder do
     DateTimeRange.new!(first_datetime, last_datetime)
   end
 
-  defp build_datetime_range(:day, site, relative_date, _now) do
-    DateTimeRange.new!(relative_date, relative_date, site.timezone)
+  defp build_datetime_range(:day, site, relative_date, now) do
+    if Date.compare(Times.to_date(now, site.timezone), relative_date) == :eq do
+      DateTimeRange.new!(relative_date, now, site.timezone)
+    else
+      DateTimeRange.new!(relative_date, relative_date, site.timezone)
+    end
   end
 
   defp build_datetime_range(:"24h", _site, _relative_date, now) do
@@ -153,7 +159,7 @@ defmodule Plausible.Stats.QueryBuilder do
       dimensions: dimensions
     } = parsed_query_params
 
-    relative_date = relative_date || today_from_now(site, now)
+    relative_date = relative_date || Times.to_date(now, site.timezone)
 
     utc_time_range =
       input_date_range
@@ -558,10 +564,6 @@ defmodule Plausible.Stats.QueryBuilder do
     else
       :ok
     end
-  end
-
-  defp today_from_now(site, now) do
-    now |> DateTime.shift_zone!(site.timezone) |> DateTime.to_date()
   end
 
   defp i(value), do: inspect(value, charlists: :as_lists)

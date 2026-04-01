@@ -216,13 +216,40 @@ defmodule Plausible.Stats.TableDeciderTest do
               message:
                 "Event metric(s) `scroll_depth` cannot be queried along with session dimension(s) `visit:exit_page`"
             }}},
-          {[:bounce_rate, :scroll_depth], ["event:page"], :ok}
+          {[:bounce_rate, :scroll_depth], ["event:page"], :ok},
+          {[:scroll_depth], ["visit:entry_page"],
+           {:error,
+            %QueryError{
+              code: :invalid_metrics,
+              message:
+                "Event metric(s) `scroll_depth` cannot be queried along with session dimension(s) `visit:entry_page`"
+            }}},
+          {[:time_on_page], ["visit:exit_page"],
+           {:error,
+            %QueryError{
+              code: :invalid_metrics,
+              message:
+                "Event metric(s) `time_on_page` cannot be queried along with session dimension(s) `visit:exit_page`"
+            }}}
         ] do
       test "metrics #{inspect(metrics)} and dimensions #{inspect(dimensions)}" do
         query =
           make_query() |> Query.set(metrics: unquote(metrics), dimensions: unquote(dimensions))
 
         assert validate_no_metrics_dimensions_conflict(query) == unquote(Macro.escape(expected))
+      end
+    end
+
+    for {metrics, dimensions} <- [
+          {[:total_revenue], ["visit:entry_page"]},
+          {[:average_revenue], ["visit:exit_page"]}
+        ] do
+      @tag :ee_only
+      test "revenue metrics #{inspect(metrics)} and dimensions #{inspect(dimensions)} are allowed with session dimensions" do
+        query =
+          make_query() |> Query.set(metrics: unquote(metrics), dimensions: unquote(dimensions))
+
+        assert validate_no_metrics_dimensions_conflict(query) == :ok
       end
     end
   end

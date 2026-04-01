@@ -496,6 +496,40 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2023-03-14 18:30:00Z]
     end
 
+    test "custom time zone works with 24h comparison and a custom date range" do
+      site = insert(:site, timezone: "US/Eastern")
+
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :"24h",
+          include: [compare: {:date_range, ~D[2023-02-15], ~D[2023-02-18]}],
+          now: ~U[2023-03-15 18:30:00Z]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      assert comparison_query.utc_time_range.first == ~U[2023-02-15 05:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2023-02-19 04:59:59Z]
+    end
+
+    test "custom time zone works with day/today comparison and a custom date range" do
+      site = insert(:site, timezone: "US/Eastern")
+
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :day,
+          include: [compare: {:date_range, ~D[2023-02-15], ~D[2023-02-18]}],
+          now: ~U[2023-03-15 18:30:00Z]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      assert comparison_query.utc_time_range.first == ~U[2023-02-15 05:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2023-02-19 04:59:59Z]
+    end
+
     test "shifts back 24h period to match day of week when mode is previous_period with match_day_of_week",
          %{site: site} do
       query =
@@ -515,6 +549,40 @@ defmodule Plausible.Stats.ComparisonsTest do
       # Result: Tuesday 2023-03-07 18:30:00 to Wednesday 2023-03-08 18:30:00
       assert comparison_query.utc_time_range.first == ~U[2023-03-07 18:30:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-03-08 18:30:00Z]
+    end
+
+    test "handles custom date range comparison against 24h period", %{site: site} do
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :"24h",
+          include: [compare: {:date_range, ~D[2023-02-15], ~D[2023-02-18]}],
+
+          # Wednesday
+          now: ~U[2023-03-15 18:30:00Z]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      assert comparison_query.utc_time_range.first == ~U[2023-02-15 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2023-02-18 23:59:59Z]
+    end
+
+    test "handles custom date range comparison day (today) period", %{site: site} do
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :day,
+          include: [compare: {:date_range, ~D[2023-02-15], ~D[2023-02-18]}],
+
+          # Wednesday
+          now: ~U[2023-03-15 18:30:00Z]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      assert comparison_query.utc_time_range.first == ~U[2023-02-15 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2023-02-18 23:59:59Z]
     end
   end
 end
