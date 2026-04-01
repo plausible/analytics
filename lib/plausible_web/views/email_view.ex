@@ -6,6 +6,11 @@ defmodule PlausibleWeb.EmailView do
     PlausibleWeb.Endpoint.url()
   end
 
+  def choose_plan_url(team) do
+    PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <>
+      "?__team=#{team.identifier}"
+  end
+
   def greet_recipient(%{user: %{name: name}}) when is_binary(name) do
     "Hey #{String.split(name) |> List.first()},"
   end
