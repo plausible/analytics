@@ -13,7 +13,7 @@ concurrency:
 jobs:
   test:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       fail-fast: false
       matrix:
@@ -58,7 +58,7 @@ jobs:
     if: ${{ !cancelled() }}
     needs: [test]
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0

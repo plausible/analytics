@@ -4824,6 +4824,70 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       assert "metric_warnings" not in json_response(conn, 200)["meta"]
     end
+
+    test "breakdown by session dimension (entry page)", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/blog"),
+        build(:event,
+          name: "Purchase",
+          user_id: 1,
+          revenue_reporting_amount: Decimal.new("100.00"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 2, pathname: "/blog"),
+        build(:event,
+          name: "Purchase",
+          user_id: 2,
+          revenue_reporting_amount: Decimal.new("50.00"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:pageview, user_id: 3, pathname: "/home"),
+        build(:event,
+          name: "Purchase",
+          user_id: 3,
+          revenue_reporting_amount: Decimal.new("20.00"),
+          revenue_reporting_currency: "USD"
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["total_revenue", "average_revenue"],
+          "dimensions" => ["visit:entry_page"],
+          "filters" => [["is", "event:goal", ["Purchase"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "dimensions" => ["/blog"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$150.00",
+                     "short" => "$150.0",
+                     "value" => 150.0
+                   },
+                   %{"currency" => "USD", "long" => "$75.00", "short" => "$75.0", "value" => 75.0}
+                 ]
+               },
+               %{
+                 "dimensions" => ["/home"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$20.00",
+                     "short" => "$20.0",
+                     "value" => 20.0
+                   },
+                   %{"currency" => "USD", "long" => "$20.00", "short" => "$20.0", "value" => 20.0}
+                 ]
+               }
+             ]
+    end
   end
 
   describe "behavioral (has_done/has_not_done) filters" do

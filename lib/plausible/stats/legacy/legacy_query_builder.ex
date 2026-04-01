@@ -9,6 +9,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   use Plausible
 
   alias Plausible.Stats.{Filters, Interval, Query, ApiQueryParser, QueryBuilder, DateTimeRange}
+  alias Plausible.Times
 
   def from(site, params, debug_metadata, now \\ nil) do
     now = now || DateTime.utc_now(:second)
@@ -99,11 +100,16 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     struct!(query, input_date_range: input_date_range_atom, utc_time_range: datetime_range)
   end
 
-  defp put_input_date_range(query, site, %{"period" => "day"} = params) do
+  defp put_input_date_range(%Query{now: now} = query, site, %{"period" => "day"} = params) do
     date = parse_single_date(query, params)
 
     datetime_range =
-      DateTimeRange.new!(date, date, site.timezone) |> DateTimeRange.to_timezone("Etc/UTC")
+      if Date.compare(Times.to_date(now, site.timezone), date) == :eq do
+        DateTimeRange.new!(date, now, site.timezone)
+      else
+        DateTimeRange.new!(date, date, site.timezone)
+      end
+      |> DateTimeRange.to_timezone("Etc/UTC")
 
     struct!(query, input_date_range: :day, utc_time_range: datetime_range)
   end

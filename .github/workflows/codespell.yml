@@ -15,4 +15,4 @@ jobs:
       with:
         check_filenames: true
         ignore_words_file: .codespellignore
-        path: lib test extra 
+        path: lib test extra

@@ -46,6 +46,26 @@ defmodule Plausible.Stats.DateTimeRangeTest do
       assert range.last == DateTime.new!(last_date, ~T[23:59:59], "UTC")
     end
 
+    test "creates a range from a mix of date and datetime" do
+      first = DateTime.new!(~D[2023-02-15], ~T[12:30:00], "UTC")
+      last = ~D[2023-02-18]
+
+      range = DateTimeRange.new!(first, last, "UTC")
+
+      assert range.first == first
+      assert range.last == DateTime.new!(last, ~T[23:59:59], "UTC")
+    end
+
+    test "creates a range from a mix of datetime and date" do
+      first = ~D[2023-02-15]
+      last = DateTime.new!(~D[2023-02-18], ~T[12:30:00], "UTC")
+
+      range = DateTimeRange.new!(first, last, "UTC")
+
+      assert range.first == DateTime.new!(first, ~T[00:00:00], "UTC")
+      assert range.last == last
+    end
+
     test "handles timezone gaps (spring forward)" do
       # https://stackoverflow.com/questions/18489927/a-day-without-midnight
       range = DateTimeRange.new!(~D[2020-03-29], ~D[2020-03-29], "Asia/Beirut")
