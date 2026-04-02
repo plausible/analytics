@@ -187,7 +187,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
                "Plan limits exceeded: site limit."
     end
 
-    test "succeeds despite exceedeing members limit if parameter provided", %{
+    test "succeeds despite exceeding members limit if parameter provided", %{
       conn: conn,
       user: user
     } do
