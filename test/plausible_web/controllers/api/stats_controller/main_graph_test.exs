@@ -762,6 +762,30 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.at(plot, 10) == 0.0
       assert List.last(plot) == 50.0
     end
+
+    test "displays conversion_rate when a combination of goal an entry page filters is applied",
+         %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-31 00:00:00])
+      ])
+
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]], [:is, "visit:entry_page", ["/"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=conversion_rate&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+      assert Enum.count(plot) == 24
+    end
   end
 
   describe "GET /api/stats/main-graph - events (total conversions) plot" do
