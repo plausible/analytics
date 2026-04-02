@@ -252,7 +252,7 @@ defmodule PlausibleWeb.Components.Generic do
               </div>
             </div>
           </div>
-          <div :if={@actions != []} class="relative shrink-0 flex gap-2 z-10">
+          <div :if={@actions != []} class="shrink-0 flex gap-2">
             {render_slot(@actions)}
           </div>
         </div>
