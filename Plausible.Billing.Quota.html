@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-476B8EAA.js"></script>
+    <script src="dist/sidebar_items-6A300162.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -396,7 +396,7 @@ Returns true if usage is equal to the limit.</p></div>
     </a>
     <h1 class="signature" translate="no">below_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L157" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L170" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -423,7 +423,7 @@ Returns false if usage is equal to the limit.</p>
     </a>
     <h1 class="signature" translate="no">eligible_for_upgrade?(usage)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L44" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L48" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -443,7 +443,7 @@ Returns false if usage is equal to the limit.</p>
     </a>
     <h1 class="signature" translate="no">ensure_feature_access(usage, plan)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L46" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L50" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -465,7 +465,7 @@ Returns false if usage is equal to the limit.</p>
     </a>
     <h1 class="signature" translate="no">ensure_within_plan_limits(usage, plan_mod, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L32" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L36" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -482,9 +482,11 @@ Returns false if usage is equal to the limit.</p>
       </div>
 
 <p>Ensures that the given usage map is within the limits
-of the given plan.</p><p>An <code class="inline">opts</code> argument can be passed with <code class="inline">ignore_pageview_limit: true</code>
+of the given plan.</p><p>An <code class="inline">opts</code> argument can be passed with <code class="inline">skip_pageview_limit_check?: true</code>
 which bypasses the pageview limit check and returns <code class="inline">:ok</code> as long as
-the other limits are not exceeded.</p>
+the other limits are not exceeded.</p><p>There are also <code class="inline">skip_site_limit_check?</code> and <code class="inline">skip_team_member_limit_check?</code> 
+options which behave the same way but apply to site and team member 
+limits, respectively.</p>
   </section>
 </section>
 <section class="detail" id="exceeded_cycles/3">
@@ -497,7 +499,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">exceeded_cycles(cycles_usage, allowed_volume, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L135" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L148" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -523,7 +525,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">exceeds_last_two_usage_cycles?(cycles_usage, allowed_volume)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L129" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L142" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -549,7 +551,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">has_billing_cycles?(usage)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L173" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L186" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -569,7 +571,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">suggest_tier(usage, highest_starter, highest_growth, highest_business, owned_tier)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L65" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L69" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -592,7 +594,7 @@ are already on a higher tier (even if their usage is low enough).</p><p><code cl
     </a>
     <h1 class="signature" translate="no">usage_notification_type(team, usage)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L213" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L226" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -627,7 +629,7 @@ the grace period expires, dashboard access is locked.</li></ul><p>Example for 10
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L166" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L179" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
