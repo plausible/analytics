@@ -248,9 +248,8 @@ test('different graph time intervals are available', async ({
   const intervalOptions = page.getByTestId('graph-interval')
   await expect(intervalButton).toHaveText('Days')
   await intervalButton.click()
+  await expect(intervalOptions).toHaveCount(2)
   const intervalOptions28Days = await intervalOptions.allTextContents()
-
-  console.info('Interval Options 28 dyas', intervalOptions28Days)
 
   expect(intervalOptions28Days.indexOf('Days') > -1).toBeTruthy()
   expect(intervalOptions28Days.indexOf('Weeks') > -1).toBeTruthy()
