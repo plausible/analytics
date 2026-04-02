@@ -250,6 +250,8 @@ test('different graph time intervals are available', async ({
   await intervalButton.click()
   const intervalOptions28Days = await intervalOptions.allTextContents()
 
+  console.info('Interval Options 28 dyas', intervalOptions28Days)
+
   expect(intervalOptions28Days.indexOf('Days') > -1).toBeTruthy()
   expect(intervalOptions28Days.indexOf('Weeks') > -1).toBeTruthy()
 
