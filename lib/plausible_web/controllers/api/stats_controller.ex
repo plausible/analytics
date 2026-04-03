@@ -723,7 +723,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: pages,
-        meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
+        meta: Map.new(meta.values) |> Map.merge(Stats.Breakdown.formatted_date_ranges(query)),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
