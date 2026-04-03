@@ -130,6 +130,14 @@ defmodule Plausible.Stats.ApiQueryParser do
        when operator in [:not, :and, :or, :has_done, :has_not_done],
        do: {:ok, []}
 
+  defp parse_clauses_list([_operator, _dimension, [] | _rest] = filter) do
+    {:error,
+     %QueryError{
+       code: :invalid_filters,
+       message: "Invalid filter '#{i(filter)}': filter clauses cannot be empty."
+     }}
+  end
+
   defp parse_clauses_list([operator, dimension, list | _rest] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
     all_integers? = Enum.all?(list, &is_integer/1)
