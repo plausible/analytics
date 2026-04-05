@@ -319,8 +319,6 @@ const MainGraphTooltip = ({
       y={y}
       minWidth={200}
       maxX={maxX}
-      bucketIndex={bucketIndex}
-      totalBuckets={totalBuckets}
       isTouchDevice={isTouchDevice}
       className={
         'absolute select-none pointer-events-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md z-[100] shadow shadow-gray-200 dark:shadow-gray-850'
