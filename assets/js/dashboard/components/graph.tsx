@@ -266,7 +266,8 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
         xPointer >= xLeftEdge - hoverBuffer &&
         xPointer <= xRightEdge + hoverBuffer &&
         yPointer >= yTopEdge - hoverBuffer &&
-        yPointer <= yBottomEdge + hoverBuffer
+        // chart is interactive even over x-axis labels
+        yPointer <= height
       return { xPointer, yPointer, inHoverableArea }
     }
     const getClosestIndexToPointer = (xPointer: number): number =>

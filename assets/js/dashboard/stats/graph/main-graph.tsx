@@ -321,7 +321,7 @@ const MainGraphTooltip = ({
       maxX={maxX}
       isTouchDevice={isTouchDevice}
       className={
-        'absolute select-none pointer-events-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md z-[100] shadow shadow-gray-200 dark:shadow-gray-850'
+        'absolute z-10 select-none pointer-events-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850'
       }
     >
       <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
@@ -407,7 +407,7 @@ export const MainGraphContainer = React.forwardRef<
   { children: ReactNode }
 >((props, ref) => {
   return (
-    <div className="relative my-4 h-92 w-full z-0" ref={ref}>
+    <div className="relative my-4 h-92 w-full" ref={ref}>
       {props.children}
     </div>
   )

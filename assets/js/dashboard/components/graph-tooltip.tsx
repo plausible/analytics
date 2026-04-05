@@ -21,11 +21,12 @@ export const GraphTooltipWrapper = ({
   isTouchDevice?: boolean
 }) => {
   const ref = useRef<HTMLDivElement>(null)
-  // distance from cursor to tooltip edge
-  const offsetFromCursor = 32
+  // bigger on mobile to have room between thumb and tooltip
+  const xOffsetFromCursor = isTouchDevice ? 24 : 12
+  const yOffsetFromCursor = isTouchDevice ? 48 : 24
   const [measuredWidth, setMeasuredWidth] = useState(minWidth)
   // center tooltip above the cursor, clamped to prevent left/right overflow
-  const rawLeft = x - measuredWidth / 2
+  const rawLeft = x + xOffsetFromCursor
   const tooltipLeft = Math.max(0, Math.min(rawLeft, maxX - measuredWidth))
 
   useLayoutEffect(() => {
@@ -54,7 +55,7 @@ export const GraphTooltipWrapper = ({
           minWidth,
           left: tooltipLeft,
           top: y,
-          transform: `translateY(-100%) translateY(-${offsetFromCursor}px)`
+          transform: `translateY(-100%) translateY(-${yOffsetFromCursor}px)`
         }}
       >
         {children}
