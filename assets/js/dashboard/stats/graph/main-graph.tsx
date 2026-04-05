@@ -1,4 +1,10 @@
-import React, { ReactNode, useCallback, useMemo, useState } from 'react'
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState
+} from 'react'
 import { UIMode, useTheme } from '../../theme-context'
 import {
   FormattableMetric,
@@ -759,4 +765,28 @@ const METRIC_LABELS = {
   total_revenue: 'Total revenue',
   scroll_depth: 'Scroll depth',
   time_on_page: 'Time on page'
+}
+
+export function useMainGraphWidth(
+  mainGraphContainer: React.RefObject<HTMLDivElement>
+): { width: number } {
+  const [width, setWidth] = useState<number>(0)
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(([e]) => {
+      setWidth(e.contentRect.width)
+    })
+
+    if (mainGraphContainer.current) {
+      resizeObserver.observe(mainGraphContainer.current)
+    }
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [mainGraphContainer])
+
+  return {
+    width
+  }
 }

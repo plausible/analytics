@@ -17,7 +17,7 @@ import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
 import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
-import { MainGraph, MainGraphContainer } from './main-graph'
+import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
 import { createStatsQuery } from '../../stats-query'
 import { isRealTimeDashboard } from '../../util/filters'
 
@@ -449,29 +449,5 @@ function useGuessTopStatsHeight(
   return {
     heightPx:
       getStoredTopStatsHeight(site) ?? DEFAULT_TOP_STATS_LOADING_HEIGHT_PX
-  }
-}
-
-function useMainGraphWidth(
-  mainGraphContainer: React.RefObject<HTMLDivElement>
-): { width: number } {
-  const [width, setWidth] = useState<number>(0)
-
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver(([e]) => {
-      setWidth(e.contentRect.width)
-    })
-
-    if (mainGraphContainer.current) {
-      resizeObserver.observe(mainGraphContainer.current)
-    }
-
-    return () => {
-      resizeObserver.disconnect()
-    }
-  }, [mainGraphContainer])
-
-  return {
-    width
   }
 }
