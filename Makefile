@@ -112,4 +112,26 @@ loadtest-server:
 loadtest-client:
 	@echo "Set your limits for file descriptors/ephemeral ports high... Test begins shortly"
 	@sleep 5
-	k6 run test/load/script.js  
+	k6 run test/load/script.js
+
+# ── Docker dev environment ─────────────────────────────────────────────────
+
+.PHONY: docker-dev-build docker-dev-setup docker-dev docker-dev-down
+
+docker-dev-build: ## Build the dev Docker image
+	docker compose -f docker-compose.dev.yml build
+
+docker-dev-setup: ## First-time setup: create/migrate DBs, run seeds, download geodata
+	@mkdir -p .clickhouse_config
+	docker compose -f docker-compose.dev.yml run --rm app sh -c "\
+	  mix ecto.create && \
+	  mix ecto.migrate && \
+	  mix run priv/repo/seeds.exs && \
+	  mix download_country_database"
+
+docker-dev: ## Start the full development stack with hot reloading
+	@mkdir -p .clickhouse_config
+	docker compose -f docker-compose.dev.yml up
+
+docker-dev-down: ## Stop all dev containers (volumes preserved)
+	docker compose -f docker-compose.dev.yml down
