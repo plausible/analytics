@@ -1,4 +1,5 @@
 import React, { ReactNode, useLayoutEffect, useRef, useState } from 'react'
+import { Transition } from '@headlessui/react'
 
 export const GraphTooltipWrapper = ({
   x,
@@ -9,7 +10,8 @@ export const GraphTooltipWrapper = ({
   totalBuckets,
   children,
   className,
-  onClick
+  onClick,
+  isTouchDevice
 }: {
   x: number
   y: number
@@ -20,6 +22,7 @@ export const GraphTooltipWrapper = ({
   children: ReactNode
   className?: string
   onClick?: () => void
+  isTouchDevice?: boolean
 }) => {
   const ref = useRef<HTMLDivElement>(null)
   // distance from cursor to tooltip edge
@@ -65,18 +68,29 @@ export const GraphTooltipWrapper = ({
   }, [x, maxX, bucketIndex])
 
   return (
-    <div
-      ref={ref}
-      className={className}
-      onClick={onClick}
-      style={{
-        minWidth,
-        left: tooltipLeft,
-        top: y,
-        transform: `translateY(-100%) translateY(-${offsetFromCursor}px)`
-      }}
+    <Transition
+      as={React.Fragment}
+      appear
+      show
+      // enter delay on mobile is needed to prevent the tooltip from entering when the user starts to y-pan
+      // but the y-pan is not yet certain
+      enter={isTouchDevice ? 'transition-opacity duration-0 delay-150' : ''}
+      enterFrom={isTouchDevice ? 'opacity-0' : ''}
+      enterTo={isTouchDevice ? 'opacity-100' : ''}
     >
-      {children}
-    </div>
+      <div
+        ref={ref}
+        className={className}
+        onClick={onClick}
+        style={{
+          minWidth,
+          left: tooltipLeft,
+          top: y,
+          transform: `translateY(-100%) translateY(-${offsetFromCursor}px)`
+        }}
+      >
+        {children}
+      </div>
+    </Transition>
   )
 }

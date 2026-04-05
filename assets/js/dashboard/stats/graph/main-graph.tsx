@@ -62,6 +62,7 @@ export const MainGraph = ({
   const { mode } = useTheme()
   const navigate = useAppNavigate()
   const { primaryGradient, secondaryGradient } = paletteByTheme[mode]
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
   const [tooltip, setTooltip] = useState<{
     x: number
     y: number
@@ -190,7 +191,10 @@ export const MainGraph = ({
   )
 
   const onPointerMove = useCallback<PointerHandler>(
-    ({ inHoverableArea, closestIndex, x, y }) => {
+    ({ inHoverableArea, closestIndex, x, y, event }) => {
+      if (event instanceof PointerEvent) {
+        setIsTouchDevice(event.pointerType === 'touch')
+      }
       if (!inHoverableArea) {
         setTooltip({ selectedIndex: null, x: 0, y: 0 })
       } else {
@@ -265,6 +269,7 @@ export const MainGraph = ({
           datum={remappedData[selectedIndex]}
           bucketIndex={selectedIndex}
           totalBuckets={remappedData.length}
+          isTouchDevice={isTouchDevice}
         />
       )}
     </Graph>
@@ -283,7 +288,8 @@ const MainGraphTooltip = ({
   datum,
   showZoomToPeriod,
   bucketIndex,
-  totalBuckets
+  totalBuckets,
+  isTouchDevice
 }: {
   metric: FormattableMetric
   interval: string
@@ -297,8 +303,10 @@ const MainGraphTooltip = ({
   bucketIndex: number
   totalBuckets: number
   maxX: number
+  isTouchDevice: boolean
 }) => {
   const formatter = MetricFormatterShort[metric]
+
   return (
     <GraphTooltipWrapper
       x={x}
@@ -307,6 +315,7 @@ const MainGraphTooltip = ({
       maxX={maxX}
       bucketIndex={bucketIndex}
       totalBuckets={totalBuckets}
+      isTouchDevice={isTouchDevice}
       className={
         'absolute select-none pointer-events-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md z-[100] shadow shadow-gray-200 dark:shadow-gray-850'
       }
@@ -378,7 +387,9 @@ const MainGraphTooltip = ({
           <>
             <hr className="border-gray-600 dark:border-gray-800 my-1" />
             <span className="text-gray-300 dark:text-gray-400 text-xs">
-              Click to view {interval}
+              {isTouchDevice
+                ? `Release to view ${interval}`
+                : `Click to view ${interval}`}
             </span>
           </>
         )}
@@ -610,7 +621,7 @@ const remapAndFillData = (
         if (isPartial) {
           startOfLastPartialSlice = index
         } else {
-          // if there is a full period after a partial slice, 
+          // if there is a full period after a partial slice,
           // it's not a partial slice anchored at the end of the series
           startOfLastPartialSlice = null
         }

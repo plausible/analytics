@@ -140,12 +140,11 @@ export default function VisitorGraph({
     ] as const,
     queryFn: async ({ queryKey }) => {
       const [_, opts] = queryKey
-      const oldDataSource =
-        window.location.hostname === 'localhost'
-          ? 'http://localhost:8000'
-          : window.location.hostname.match(/pr-\d+\.review\.plausible\.io/)
-            ? 'https://staging.plausible.io'
-            : ''
+      const oldDataSource = window.location.hostname.match(
+        /pr-\d+\.review\.plausible\.io/
+      )
+        ? 'https://staging.plausible.io'
+        : `http://${window.location.hostname}:8000`
       const [dataOld, dataNew] = await Promise.all([
         api
           .get(
@@ -157,7 +156,7 @@ export default function VisitorGraph({
             }
           )
           .then((res) => ({ ...res, interval: opts.interval }))
-          .catch(() => undefined),
+          .catch(console.error),
         fetchMainGraph(site, opts.dashboardState, opts.metric, opts.interval)
           .then((res) => ({
             ...res,
