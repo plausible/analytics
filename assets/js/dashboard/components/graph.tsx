@@ -338,7 +338,11 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
   return (
     <svg
       onClick={onClick}
-      onPointerUp={onClick}
+      onPointerUp={(e) => {
+        if (e.pointerType === 'touch' && typeof onClick === 'function') {
+          onClick()
+        }
+      }}
       ref={svgRef}
       viewBox={`0 0 ${width} ${height}`}
       className={classNames('w-full h-auto [touch-action:pan-y]', className)}
