@@ -282,9 +282,6 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
         )
       )
 
-    let isMaybePanning = true
-    let pendingPointerMove: ReturnType<typeof setTimeout> | null = null
-    const pendingTimeMs = 60
     svg
       .on(
         'pointermove',
@@ -296,42 +293,20 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
           const closestIndexToPointer = inHoverableArea
             ? getClosestIndexToPointer(xPointer)
             : null
-          const commit = () => {
-            isMaybePanning = false
-            handleDotsForClosestIndex(closestIndexToPointer)
-            onPointerMove({
-              inHoverableArea: true,
-              closestIndex: closestIndexToPointer,
-              x: xPointer,
-              y: yPointer,
-              event
-            })
-          }
-          if (pendingPointerMove) {
-            clearTimeout(pendingPointerMove)
-          }
-          const { movementX, movementY, pointerType } = event as PointerEvent
-          if (
-            isMaybePanning &&
-            pointerType === 'touch' &&
-            Math.abs(movementY) >= Math.abs(movementX) &&
-            inHoverableArea
-          ) {
-            pendingPointerMove = setTimeout(commit, pendingTimeMs)
-          } else {
-            commit()
-          }
+          handleDotsForClosestIndex(closestIndexToPointer)
+          onPointerMove({
+            inHoverableArea: true,
+            closestIndex: closestIndexToPointer,
+            x: xPointer,
+            y: yPointer,
+            event
+          })
         },
         { passive: true }
       )
       .on(
-        'pointerleave',
+        'lostpointercapture pointerleave',
         () => {
-          if (pendingPointerMove) {
-            clearTimeout(pendingPointerMove)
-            pendingPointerMove = null
-          }
-          isMaybePanning = true
           handleDotsForClosestIndex(null)
           onPointerLeave()
         },
@@ -340,9 +315,6 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
       .attr('opacity', 1)
 
     return () => {
-      if (pendingPointerMove) {
-        clearTimeout(pendingPointerMove)
-      }
       svg.selectAll('*').remove()
     }
   }, [
@@ -365,6 +337,7 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
   return (
     <svg
       onClick={onClick}
+      onPointerUp={onClick}
       ref={svgRef}
       viewBox={`0 0 ${width} ${height}`}
       className={classNames('w-full h-auto [touch-action:pan-y]', className)}
