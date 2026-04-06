@@ -21,6 +21,7 @@ defmodule Plausible.Auth do
   else
     @ip_rate_limit 5
     @user_rate_limit 5
+    @activation_request_limit if(Mix.env() == :test, do: 100_000, else: 5)
   end
 
   @rate_limits %{
@@ -43,6 +44,36 @@ defmodule Plausible.Auth do
       prefix: "password-change:user",
       limit: 5,
       interval: :timer.minutes(20)
+    },
+    activation_ip: %{
+      prefix: "activation:ip",
+      limit: 10,
+      interval: :timer.minutes(5)
+    },
+    activation_user: %{
+      prefix: "activation:user",
+      limit: 10,
+      interval: :timer.minutes(5)
+    },
+    activation_request_ip: %{
+      prefix: "activation-request:ip",
+      limit: @activation_request_limit,
+      interval: :timer.minutes(10)
+    },
+    activation_request_user: %{
+      prefix: "activation-request:user",
+      limit: @activation_request_limit,
+      interval: :timer.minutes(10)
+    },
+    totp_setup_ip: %{
+      prefix: "totp-setup:ip",
+      limit: 10,
+      interval: :timer.minutes(5)
+    },
+    totp_setup_user: %{
+      prefix: "totp-setup:user",
+      limit: 10,
+      interval: :timer.minutes(5)
     }
   }
 
