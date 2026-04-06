@@ -270,8 +270,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
         })
 
       assert json_response(conn, 400) == %{
-               "error" =>
-                 ~s|Invalid filter '["contains", "event:page", []]': filter clauses cannot be empty.|
+               "error" => ~s|#/filters/0: Invalid filter ["contains", "event:page", []]|
+             }
+    end
+
+    test "returns 400 for is with empty list", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews"],
+          "filters" => [["is", "event:page", []]]
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => ~s|#/filters/0: Invalid filter ["is", "event:page", []]|
              }
     end
   end
