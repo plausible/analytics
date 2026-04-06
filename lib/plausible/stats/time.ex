@@ -121,32 +121,77 @@ defmodule Plausible.Stats.Time do
   end
 
   def partial_time_labels(time_labels, query) do
-    case time_dimension(query) do
-      "time:week" ->
-        date_range = Query.date_range(query)
-        partial_labels(time_labels, date_range, &Date.beginning_of_week/1, &Date.end_of_week/1)
+    time_dimension = time_dimension(query)
 
-      "time:month" ->
-        date_range = Query.date_range(query)
-        partial_labels(time_labels, date_range, &Date.beginning_of_month/1, &Date.end_of_month/1)
+    range_start = to_naive_in_tz!(query.utc_time_range.first, query.timezone)
+    range_end = to_naive_in_tz!(query.utc_time_range.last, query.timezone)
+    now = to_naive_in_tz!(query.now, query.timezone)
 
-      _ ->
-        []
+    cutoff = if NaiveDateTime.before?(now, range_end), do: now, else: range_end
+
+    first_bucket = List.first(time_labels)
+    last_bucket = List.last(time_labels)
+
+    first_partial? =
+      case bucket_start(first_bucket, time_dimension) do
+        nil -> false
+        start -> NaiveDateTime.after?(range_start, start)
+      end
+
+    last_partial? =
+      case bucket_end(last_bucket, time_dimension) do
+        nil -> false
+        bucket_end -> NaiveDateTime.after?(bucket_end, cutoff)
+      end
+
+    [
+      if(first_partial?, do: first_bucket),
+      if(last_partial?, do: last_bucket)
+    ]
+    |> Enum.uniq()
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp bucket_start(label, "time:week") do
+    case Date.from_iso8601(label) do
+      {:ok, date} -> NaiveDateTime.new!(Date.beginning_of_week(date), ~T[00:00:00])
+      _ -> nil
     end
   end
 
-  defp partial_labels(time_labels, date_range, start_fn, end_fn) do
-    Enum.filter(time_labels, fn label ->
-      case Date.from_iso8601(label) do
-        {:ok, date} ->
-          start_in_range = Enum.member?(date_range, start_fn.(date))
-          end_in_range = Enum.member?(date_range, end_fn.(date))
-          not start_in_range or not end_in_range
+  defp bucket_start(label, _time_dimension) do
+    case Date.from_iso8601(label) do
+      {:ok, date} ->
+        NaiveDateTime.new!(date, ~T[00:00:00])
 
-        _ ->
-          false
+      _ ->
+        case NaiveDateTime.from_iso8601(label) do
+          {:ok, naive_datetime} -> naive_datetime
+          _ -> nil
+        end
+    end
+  end
+
+  defp bucket_end(label, time_dimension) do
+    shift_unit =
+      case time_dimension do
+        "time:month" -> :month
+        "time:week" -> :week
+        "time:day" -> :day
+        "time:hour" -> :hour
+        "time:minute" -> :minute
       end
-    end)
+
+    case bucket_start(label, time_dimension) do
+      nil -> nil
+      start -> NaiveDateTime.shift(start, [{shift_unit, 1}, {:second, -1}])
+    end
+  end
+
+  defp to_naive_in_tz!(utc_datetime, timezone) do
+    utc_datetime
+    |> DateTime.shift_zone!(timezone)
+    |> DateTime.to_naive()
   end
 
   def present_index(time_labels, query) do
