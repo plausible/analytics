@@ -5,16 +5,16 @@ import { MainGraphResponse } from './fetch-main-graph'
  * Fills gaps in @see MainGraphResponse the series of `results` and `comparisonResults`.
  * The BE doesn't return buckets in the series where the value is 0:
  * these need to filled by the FE to have a consistent plot.
- * 
+ *
  * The assumption is that the two series each are continuously defined.
- * 
+ *
  * Extracts the numeric values for the series when they are wrapped.
- * 
- * In the same single loop, for the sake of efficiency, it determines 
+ *
+ * In the same single loop, for the sake of efficiency, it determines
  * - the maximum y value (used for scaling the graph),
  * - the start and end labels of both series (used for generating appropriate X axis labels),
  * - whether there's a slice at the very end of main series that is partial (used for explaining the drop at the end of the graph).
- * 
+ *
  */
 export const remapAndFillData = ({
   data,
@@ -173,8 +173,8 @@ export const remapAndFillData = ({
 const METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS = [
   'bounce_rate',
   'exit_rate',
-  'conversion_rate',
-  'group_conversion_rate'
+  'conversion_rate'
+  // 'group_conversion_rate'
 ]
 
 const getChangeInPercentagePoints = (
