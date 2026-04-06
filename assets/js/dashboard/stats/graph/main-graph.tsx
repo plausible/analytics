@@ -335,13 +335,11 @@ const MainGraphTooltip = ({
           </div>
           {datum.comparisonTimeLabel !== null &&
             typeof datum.change === 'number' && (
-              <div className="inline-flex items-center space-x-1">
-                <ChangeArrow
-                  className=""
-                  metric={metric as Metric}
-                  change={datum.change}
-                />
-              </div>
+              <ChangeArrow
+                className="text-xs/6 font-medium text-white whitespace-nowrap"
+                metric={metric as Metric}
+                change={datum.change}
+              />
             )}
         </div>
         <div className="flex flex-col">
