@@ -3,6 +3,7 @@ import * as api from '../../api'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
 import { fetchTopStats } from './fetch-top-stats'
+import { fetchMainGraph } from './fetch-main-graph'
 import { IntervalPicker, useStoredInterval } from './interval-picker'
 import StatsExport from './stats-export'
 import WithImportedSwitch from './with-imported-switch'
@@ -18,68 +19,7 @@ import { DashboardState } from '../../dashboard-state'
 import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
 import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
-import { createStatsQuery } from '../../stats-query'
-import { isRealTimeDashboard } from '../../util/filters'
 
-type RevenueMetric = {
-  short: string
-  value: number
-  long: string
-  currency: string
-}
-
-type ResultItem = {
-  dimensions: [string] // one item
-  metrics: null | [number] | [RevenueMetric] // one item
-}
-export type MainGraphResponse = {
-  results: Array<ResultItem | null>
-  comparison_results: Array<
-    (ResultItem & { change: [number | null] | null }) | null
-  >
-  meta: {
-    partial_time_labels: string[] | null
-    time_labels: string[]
-    time_label_result_indices: (number | null)[]
-    comparison_time_labels?: string[]
-    comparison_time_label_result_indices?: (number | null)[]
-  }
-  query: {
-    interval: string
-    date_range: [string, string]
-    comparison_date_range?: [string, string]
-    dimensions: [string] // one item
-    metrics: [string] // one item
-  }
-}
-
-function fetchMainGraph(
-  site: PlausibleSite,
-  dashboardState: DashboardState,
-  metric: Metric,
-  interval: string
-): Promise<MainGraphResponse> {
-  const reportParams = {
-    metrics: [metric],
-    dimensions: [`time:${interval}`],
-    include: {
-      time_labels: true,
-      time_label_result_indices: true,
-      present_index: true,
-      partial_time_labels: true
-    }
-  }
-
-  const statsQuery = createStatsQuery(dashboardState, reportParams)
-
-  if (isRealTimeDashboard(dashboardState)) {
-    statsQuery.date_range = DashboardPeriod.realtime_30m
-  }
-
-  statsQuery.include.present_index = true
-
-  return api.stats(site, statsQuery)
-}
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
 

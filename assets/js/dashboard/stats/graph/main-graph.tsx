@@ -27,7 +27,8 @@ import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { Graph, PointerHandler, SeriesConfig } from '../../components/graph'
 import { useSiteContext, PlausibleSite } from '../../site-context'
 import { GraphTooltipWrapper } from '../../components/graph-tooltip'
-import { MainGraphResponse } from './visitor-graph'
+import { MainGraphResponse } from './fetch-main-graph'
+import { remapAndFillData } from './main-graph-data'
 
 const height = 368
 const marginTop = 16
@@ -75,7 +76,7 @@ export const MainGraph = ({
     selectedIndex: number | null
   }>({ x: 0, y: 0, selectedIndex: null })
   const { selectedIndex } = tooltip
-  const metric = data.query.metrics[0] as FormattableMetric
+  const metric = data.query.metrics[0] as Metric
   const interval = data.interval
   const period = data.period
   const {
@@ -93,7 +94,10 @@ export const MainGraph = ({
       startOfLastPartialSlice,
       mainSeriesStartEndLabels,
       comparisonSeriesStartEndLabels
-    } = remapAndFillData(data)
+    } = remapAndFillData({
+      data,
+      metric
+    })
 
     const gradients = [primaryGradient, secondaryGradient]
 
@@ -189,7 +193,7 @@ export const MainGraph = ({
       settings,
       gradients
     }
-  }, [site, data, interval, period, primaryGradient, secondaryGradient])
+  }, [site, data, interval, period, primaryGradient, secondaryGradient, metric])
 
   const yFormat = useCallback(
     (v: { valueOf(): number }) => MetricFormatterShort[metric](v),
@@ -565,150 +569,6 @@ function isDateUnambiguous({
     .every((item, _index, items) =>
       parseNaiveDate(items[0]).isSame(parseNaiveDate(item), 'day')
     )
-}
-
-const remapAndFillData = (
-  data: MainGraphData
-): {
-  remappedData: GraphDatum[]
-  yMax: number
-  mainSeriesStartEndLabels: [string | null, string | null]
-  comparisonSeriesStartEndLabels: [string | null, string | null]
-  startOfLastPartialSlice: null | number
-} => {
-  let yMax: number = 1
-  let firstTimeLabel: null | string = null
-  let lastTimeLabel: null | string = null
-
-  let firstComparisonTimeLabel: null | string = null
-  let lastComparisonTimeLabel: null | string = null
-
-  let startOfLastPartialSlice: null | number = null
-
-  const totalBucketCount = Math.max(
-    data.meta.comparison_time_label_result_indices?.length ?? 0,
-    data.meta.time_label_result_indices.length
-  )
-
-  const remappedData: GraphDatum[] = new Array(totalBucketCount)
-    .fill(null)
-    .map((_, index) => {
-      const [
-        timeLabel,
-        indexOfResult,
-        comparisonTimeLabel,
-        indexOfComparisonResult
-      ] = [
-        data.meta.time_labels[index] ?? null,
-        data.meta.time_label_result_indices[index] ?? null,
-        (data.meta.comparison_time_labels &&
-          data.meta.comparison_time_labels[index]) ??
-          null,
-        (data.meta.comparison_time_label_result_indices &&
-          data.meta.comparison_time_label_result_indices[index]) ??
-          null
-      ]
-
-      const mainSeriesDefined = typeof timeLabel === 'string'
-      const comparisonSeriesDefined = typeof comparisonTimeLabel === 'string'
-
-      let isPartial: boolean | null = null
-      let value: number | null = null
-
-      if (mainSeriesDefined) {
-        isPartial = (data.meta.partial_time_labels ?? []).find(
-          (l) => l === timeLabel
-        )
-          ? true
-          : false
-
-        if (isPartial) {
-          startOfLastPartialSlice = index
-        } else {
-          // if there is a full period after a partial slice,
-          // it's not a partial slice anchored at the end of the series
-          startOfLastPartialSlice = null
-        }
-
-        if (firstTimeLabel === null) {
-          firstTimeLabel = timeLabel
-        }
-
-        lastTimeLabel = timeLabel
-
-        if (indexOfResult !== null) {
-          const row = data.results[indexOfResult]
-          const [unparsedValue] = row!.metrics!
-          if (unparsedValue === null) {
-            value = 0
-          } else if (
-            typeof unparsedValue === 'object' &&
-            unparsedValue.hasOwnProperty('value')
-          ) {
-            value = unparsedValue.value
-          } else if (typeof unparsedValue === 'number') {
-            value = unparsedValue
-          }
-        } else {
-          value = 0
-        }
-      }
-      if (value !== null && value > yMax) {
-        yMax = value
-      }
-      let change = null
-      let comparisonValue = null
-      if (comparisonSeriesDefined) {
-        if (firstComparisonTimeLabel === null) {
-          firstComparisonTimeLabel = comparisonTimeLabel
-        }
-
-        lastComparisonTimeLabel = comparisonTimeLabel
-
-        if (indexOfComparisonResult !== null) {
-          const row = data.comparison_results[indexOfComparisonResult]
-          const [unparsedValue] = row!.metrics!
-
-          if (unparsedValue === null) {
-            comparisonValue = 0
-          } else if (
-            typeof unparsedValue === 'object' &&
-            unparsedValue.hasOwnProperty('value')
-          ) {
-            comparisonValue = unparsedValue.value
-          } else if (typeof unparsedValue === 'number') {
-            comparisonValue = unparsedValue
-            change = row!.change !== null ? row!.change[0] : null
-          }
-        } else {
-          comparisonValue = 0
-        }
-      }
-
-      if (comparisonValue !== null && comparisonValue > yMax) {
-        yMax = comparisonValue
-      }
-
-      return {
-        value,
-        comparisonValue,
-        timeLabel,
-        comparisonTimeLabel,
-        change,
-        isPartial
-      }
-    })
-
-  return {
-    startOfLastPartialSlice,
-    remappedData,
-    yMax,
-    mainSeriesStartEndLabels: [firstTimeLabel, lastTimeLabel],
-    comparisonSeriesStartEndLabels: [
-      firstComparisonTimeLabel,
-      lastComparisonTimeLabel
-    ]
-  }
 }
 
 const paletteByTheme = {
