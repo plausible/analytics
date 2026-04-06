@@ -37,7 +37,7 @@ export function fetchMainGraph(
   return api.stats(site, statsQuery)
 }
 
-type RevenueMetric = {
+export type RevenueMetricValue = {
   short: string
   value: number
   long: string
@@ -46,7 +46,7 @@ type RevenueMetric = {
 
 type ResultItem = {
   dimensions: [string] // one item
-  metrics: null | [number] | [RevenueMetric] // one item
+  metrics: null | [number] | [RevenueMetricValue] // one item
 }
 
 export type MainGraphResponse = {

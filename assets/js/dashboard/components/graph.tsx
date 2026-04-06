@@ -2,7 +2,7 @@ import React, { ReactNode, useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
 
-type Datum<T extends ReadonlyArray<number | null>> = {
+export type Datum<T extends ReadonlyArray<number | null>> = {
   values: T
   xLabel: string
 }
