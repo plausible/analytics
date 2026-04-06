@@ -90,7 +90,10 @@ export type FilterWithoutGoals =
  * filter operation
  */
 export type FilterOperationWithoutGoals = "is_not" | "contains_not";
-export type Clauses = (string | number)[];
+/**
+ * @minItems 1
+ */
+export type Clauses = [string | number, ...(string | number)[]];
 /**
  * @minItems 3
  * @maxItems 4
