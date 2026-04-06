@@ -116,22 +116,26 @@ loadtest-client:
 
 # ── Docker dev environment ─────────────────────────────────────────────────
 
-.PHONY: docker-dev-build docker-dev-setup docker-dev docker-dev-down
+.PHONY: docker-dev-build docker-dev docker-dev-down
 
-docker-dev-build: ## Build the dev Docker image
-	docker compose -f docker-compose.dev.yml build
+# Optionally set INSTANCE and port vars to run multiple dev stacks side by side:
+#   make docker-dev INSTANCE=plausible2 DEV_APP_PORT=8001 DEV_PG_PORT=5433 DEV_CH_HTTP_PORT=8124 DEV_CH_PORT=9001
 
-docker-dev-setup: ## First-time setup: create/migrate DBs, run seeds, download geodata
-	@mkdir -p .clickhouse_config
-	docker compose -f docker-compose.dev.yml run --rm app sh -c "\
-	  mix ecto.create && \
-	  mix ecto.migrate && \
-	  mix run priv/repo/seeds.exs && \
-	  mix download_country_database"
+ENV_FILE ?= .env.dev-network
+_docker_compose = docker compose --env-file $(ENV_FILE) -f docker-compose.dev.yml
 
-docker-dev: ## Start the full development stack with hot reloading
-	@mkdir -p .clickhouse_config
-	docker compose -f docker-compose.dev.yml up
+# Examples
+# make docker-dev build
+# make docker-dev -p plausible2 up -d
+# make docker-dev
+docker-dev-build: ## Build the dev environment images
+	$(_docker_compose) build
 
-docker-dev-down: ## Stop all dev containers (volumes preserved)
-	docker compose -f docker-compose.dev.yml down
+docker-dev: ## Start the dev environment containers
+	$(_docker_compose) up -d
+
+docker-dev-down: ## Stop and remove the dev environment containers
+	$(_docker_compose) down
+
+docker-dev-down-volumes: ## Stop and remove the dev environment containers and volumes
+	$(_docker_compose) down -v

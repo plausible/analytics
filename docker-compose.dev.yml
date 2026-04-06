@@ -8,13 +8,8 @@ services:
     environment:
       MIX_ENV: dev
     ports:
-      - "8000:8000"
+      - "${DEV_APP_PORT:-8000}:8000"
     volumes:
-      # Bind mount: source code for hot reloading
-      - .:/app
-      # Mount Docker-specific env file over .env.dev so Envy.load reads service hostnames
-      # (postgres/clickhouse) instead of localhost URLs from the host's .env.dev
-      - ./config/.env.docker-dev:/app/config/.env.dev:ro
       # Named volumes shadow the bind mount for compiled artifacts.
       # These are populated from the image layers during docker build,
       # ensuring Linux-compiled deps are used rather than the macOS host.
@@ -22,6 +17,8 @@ services:
       - build:/app/_build
       - assets_node_modules:/app/assets/node_modules
       - tracker_node_modules:/app/tracker/node_modules
+      - geodb:/app/priv/geodb
+    command: sh -c "mix ecto.create && mix ecto.migrate && mix phx.server"
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,7 +36,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${DEV_PG_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -51,16 +48,23 @@ services:
     image: clickhouse/clickhouse-server:latest-alpine
     environment:
       CLICKHOUSE_SKIP_USER_SETUP: "1"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p /etc/clickhouse-server/config.d &&
+        printf '<clickhouse><listen_host>0.0.0.0</listen_host></clickhouse>' \
+          > /etc/clickhouse-server/config.d/listen.xml &&
+        exec /entrypoint.sh
     ulimits:
       nofile:
         soft: 262144
         hard: 262144
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ./.clickhouse_config:/etc/clickhouse-server/config.d
     ports:
-      - "8123:8123"
-      - "9000:9000"
+      - "${DEV_CH_HTTP_PORT:-8123}:8123"
+      - "${DEV_CH_PORT:-9000}:9000"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8123/ping | grep -q Ok"]
       interval: 5s
@@ -80,8 +84,8 @@ services:
   #   volumes:
   #     - minio_data:/data
   #   ports:
-  #     - "10000:10000"
-  #     - "10001:10001"
+  #     - "${DEV_MINIO_PORT:-10000}:10000"
+  #     - "${DEV_MINIO_CONSOLE_PORT:-10001}:10001"
   #   healthcheck:
   #     test: ["CMD-SHELL", "curl -f http://localhost:10000/minio/health/live"]
   #     interval: 5s
@@ -109,6 +113,7 @@ volumes:
   build:
   assets_node_modules:
   tracker_node_modules:
+  geodb:
   postgres_data:
   clickhouse_data:
   # minio_data:

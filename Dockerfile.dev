@@ -30,10 +30,10 @@ RUN npm install --prefix ./assets && \
     npm install --prefix ./tracker && \
     mix assets.setup
 
-# ── Step 2: source files last ─────────────────────────────────────────────
-# At runtime these are shadowed by the bind mount in docker-compose.dev.yml,
-# enabling hot reloading. This COPY is a fallback for non-compose usage.
 COPY . .
+COPY config/.env.docker-dev ./config/.env.dev
+RUN mkdir -p priv/tracker/installation_support priv/tracker/js && \
+    mix download_country_database
 
 EXPOSE 8000
 CMD ["mix", "phx.server"]
