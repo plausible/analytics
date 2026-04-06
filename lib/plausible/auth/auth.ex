@@ -23,7 +23,7 @@ defmodule Plausible.Auth do
     @user_rate_limit 5
   end
 
-  if Mix.env() in [:test, :e2e_test] do
+  if Mix.env() in [:test, :ce_test, :e2e_test] do
     @activation_request_limit 100_000
   else
     @activation_request_limit 5
