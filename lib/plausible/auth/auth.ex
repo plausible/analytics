@@ -18,6 +18,7 @@ defmodule Plausible.Auth do
   if Mix.env() == :e2e_test do
     @ip_rate_limit 100_000
     @user_rate_limit 100_000
+    @activation_request_limit 100_000
   else
     @ip_rate_limit 5
     @user_rate_limit 5
