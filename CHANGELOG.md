@@ -21,12 +21,14 @@ All notable changes to this project will be documented in this file.
 
 - Keybind hints are hidden on smaller screens
 - Site index is sortable alphanumerically and by traffic
+- "Top referrers" and "Search terms" breakdowns are rendered side by side with other "Sources" tabs instead of replacing them
 
 ### Fixed
 
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
 - Fixed issue with all non-interactive events being counted as interactive
 - Fixed countries map countries staying highlighted on Chrome
+- Fixed comparison tooltip in the top pages report missing date labels
 
 ## v3.2.0 - 2026-01-16
 

@@ -25,14 +25,33 @@ function plottable(dataArray) {
   })
 }
 
-const buildComparisonDataset = function (comparisonPlot) {
+const buildComparisonDataset = function (comparisonPlot, presentIndex) {
   if (!comparisonPlot) return []
+
+  const data = presentIndex
+    ? comparisonPlot.slice(0, presentIndex)
+    : comparisonPlot
 
   return [
     {
-      data: plottable(comparisonPlot),
+      data: plottable(data),
       borderColor: 'rgba(99, 102, 241, 0.3)',
       pointBackgroundColor: 'rgba(99, 102, 241, 0.2)',
+      pointHoverBackgroundColor: 'rgba(99, 102, 241, 0.5)',
+      yAxisID: 'yComparison'
+    }
+  ]
+}
+
+const buildDashedComparisonDataset = function (comparisonPlot, presentIndex) {
+  if (!comparisonPlot || !presentIndex) return []
+  const dashedPart = comparisonPlot.slice(presentIndex - 1, presentIndex + 1)
+  const dashedPlot = new Array(presentIndex - 1).concat(dashedPart)
+  return [
+    {
+      data: plottable(dashedPlot),
+      borderDash: [3, 3],
+      borderColor: 'rgba(99, 102, 241, 0.3)',
       pointHoverBackgroundColor: 'rgba(99, 102, 241, 0.5)',
       yAxisID: 'yComparison'
     }
@@ -90,7 +109,8 @@ export const buildDataSet = (
   const dataset = [
     ...buildMainPlotDataset(plot, present_index),
     ...buildDashedDataset(plot, present_index),
-    ...buildComparisonDataset(comparisonPlot)
+    ...buildComparisonDataset(comparisonPlot, present_index),
+    ...buildDashedComparisonDataset(comparisonPlot, present_index)
   ]
 
   return dataset.map((item) => Object.assign(item, defaultOptions))

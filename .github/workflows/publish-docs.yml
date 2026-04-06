@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        
+
       - name: Read .tool-versions
         uses: marocchino/tool-versions-action@18a164fa2b0db1cc1edf7305fcb17ace36d1c306 # v1.2.0
         id: versions
@@ -46,7 +46,7 @@ jobs:
 
       - name: Install Mix dependencies
         run: mix deps.get
-        
+
       - name: Build documentation
         run: mix docs
 

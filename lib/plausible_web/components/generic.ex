@@ -210,6 +210,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:dismissable_id, :any, default: nil)
   attr(:show_icon, :boolean, default: true)
   attr(:class, :string, default: "")
+  attr(:icon_class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
   slot(:actions)
@@ -233,7 +234,7 @@ defmodule PlausibleWeb.Components.Generic do
           @actions != [] && "items-start flex-col md:items-center md:flex-row"
         ]}>
           <div class="flex gap-x-3 flex-1">
-            <div :if={@show_icon && @title} class="shrink-0 mt-px">
+            <div :if={@show_icon && @title} class={["shrink-0 mt-px", @icon_class]}>
               <%= if @icon != [] do %>
                 {render_slot(@icon)}
               <% else %>

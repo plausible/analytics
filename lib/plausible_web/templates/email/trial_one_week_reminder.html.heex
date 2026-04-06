@@ -1,8 +1,5 @@
 Your Plausible trial ends in a week.<br /><br />
 If Plausible has become part of how you check traffic and measure results, you can continue without interruption by choosing a subscription plan.<br /><br />
 Everything you've set up will remain exactly as it is. No migration. No changes needed.<br /><br />
-You can
-<a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>
-  upgrade your account
-</a>
+You can <a href={choose_plan_url(@team)}>upgrade your account</a>
 at any time.

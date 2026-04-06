@@ -186,6 +186,15 @@ export function resolveFilters(
   })
 }
 
+export const canSeeSaveAsSegmentAction = ({
+  user
+}: {
+  user: UserContextValue
+}) =>
+  user.loggedIn &&
+  (ROLES_WITH_MAYBE_SITE_SEGMENTS.includes(user.role) ||
+    ROLES_WITH_PERSONAL_SEGMENTS.includes(user.role))
+
 export function canExpandSegment({
   segment,
   user

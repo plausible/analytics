@@ -39,6 +39,7 @@ test('sources breakdown', async ({ page, request }) => {
       { name: 'pageview', referrer_source: 'ablog.example.com' },
       {
         name: 'pageview',
+        referrer_source: 'Google',
         utm_medium: 'SomeUTMMedium',
         utm_source: 'SomeUTMSource',
         utm_campaign: 'SomeUTMCampaign',
@@ -61,15 +62,15 @@ test('sources breakdown', async ({ page, request }) => {
 
     await expectRows(report, [
       'DuckDuckGo',
-      'Direct / None',
       'Facebook',
+      'Google',
       'ablog.example.com',
       'theguardian.com'
     ])
 
     await expectMetricValues(report, 'DuckDuckGo', ['2', '33.3%'])
-    await expectMetricValues(report, 'Direct / None', ['1', '16.7%'])
     await expectMetricValues(report, 'Facebook', ['1', '16.7%'])
+    await expectMetricValues(report, 'Google', ['1', '16.7%'])
     await expectMetricValues(report, 'ablog.example.com', ['1', '16.7%'])
     await expectMetricValues(report, 'theguardian.com', ['1', '16.7%'])
   })
@@ -90,8 +91,8 @@ test('sources breakdown', async ({ page, request }) => {
 
     await expectRows(modal(page), [
       'DuckDuckGo',
-      'Direct / None',
       'Facebook',
+      'Google',
       'ablog.example.com',
       'theguardian.com'
     ])
@@ -101,30 +102,28 @@ test('sources breakdown', async ({ page, request }) => {
     await closeModalButton(page).click()
   })
 
-  const referrersReport = page.getByTestId('report-referrers')
-
   await test.step('clicking sources entry shows referrers', async () => {
     await rowLink(report, 'DuckDuckGo').click()
     await expect(page).toHaveURL(/f=is,source,DuckDuckGo/)
 
-    await expect(tabButton(referrersReport, 'Top referrers')).toHaveAttribute(
+    await expect(tabButton(report, 'Top referrers')).toHaveAttribute(
       'data-active',
       'true'
     )
 
     // Move mouse away from report rows
-    await tabButton(referrersReport, 'Top referrers').hover()
+    await tabButton(report, 'Top referrers').hover()
 
-    await expectHeaders(referrersReport, ['Referrer', 'Visitors'])
+    await expectHeaders(report, ['Referrer', 'Visitors'])
 
-    await expectRows(referrersReport, [
+    await expectRows(report, [
       'https://duckduckgo.com/a1',
       'https://duckduckgo.com/a2'
     ])
   })
 
   await test.step('referrers modal', async () => {
-    await detailsLink(referrersReport).click()
+    await detailsLink(report).click()
 
     await expect(
       modal(page).getByRole('heading', { name: 'Referrer drilldown' })
@@ -149,6 +148,47 @@ test('sources breakdown', async ({ page, request }) => {
       .click()
   })
 
+  // Tests against values from Plausible.Google.API.Mock
+  await test.step('clicking Google source entry opens search terms', async () => {
+    await rowLink(report, 'Google').click()
+    await expect(page).toHaveURL(/f=is,source,Google/)
+
+    await expect(tabButton(report, 'Search terms')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    // Move mouse away from report rows
+    await tabButton(report, 'Search terms').hover()
+
+    await expectHeaders(report, ['Search term', 'Visitors'])
+
+    await expectMetricValues(report, 'simple web analytics', ['25'])
+    await expectMetricValues(report, 'open-source analytics', ['15'])
+  })
+
+  await test.step('search-terms modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Google search terms' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Search term',
+      'Visitors',
+      'Impressions',
+      'CTR',
+      'Position'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
+  await page
+    .getByRole('button', { name: 'Remove filter: Source is Google' })
+    .click()
+
   await test.step('channels tab', async () => {
     const channelsTabButton = tabButton(report, 'Channels')
     await channelsTabButton.click()
@@ -157,16 +197,14 @@ test('sources breakdown', async ({ page, request }) => {
     await expectHeaders(report, ['Channel', 'Visitors'])
 
     await expectRows(report, [
-      'Referral',
-      'Direct',
       'Organic Search',
+      'Referral',
       'Organic Social',
       'Paid Search'
     ])
 
+    await expectMetricValues(report, 'Organic Search', ['2', '33.3%'])
     await expectMetricValues(report, 'Referral', ['2', '33.3%'])
-    await expectMetricValues(report, 'Direct', ['1', '16.7%'])
-    await expectMetricValues(report, 'Organic Search', ['1', '16.7%'])
     await expectMetricValues(report, 'Organic Social', ['1', '16.7%'])
     await expectMetricValues(report, 'Paid Search', ['1', '16.7%'])
   })
@@ -186,9 +224,8 @@ test('sources breakdown', async ({ page, request }) => {
     ])
 
     await expectRows(modal(page), [
-      'Referral',
-      'Direct',
       'Organic Search',
+      'Referral',
       'Organic Social',
       'Paid Search'
     ])
@@ -389,6 +426,82 @@ test('sources breakdown', async ({ page, request }) => {
     await expectMetricValues(modal(page), 'SomeUTMTerm', ['1', '100%', '0s'])
 
     await closeModalButton(page).click()
+  })
+})
+
+// Tests against values from Plausible.Google.API.Mock
+test('sources breakdown - search terms failure modes', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { name: 'pageview', referrer_source: 'Google', pathname: '/empty' },
+      {
+        name: 'pageview',
+        referrer_source: 'Google',
+        pathname: '/unsupported-filters'
+      },
+      {
+        name: 'pageview',
+        referrer_source: 'Google',
+        pathname: '/not-configured'
+      }
+    ]
+  })
+
+  const report = page.getByTestId('report-sources')
+  const searchTermsTabButton = tabButton(report, 'Search terms')
+
+  await test.step('empty', async () => {
+    await page.goto('/' + domain + '?f=is,source,Google&f=is,page,%2Fempty', {
+      waitUntil: 'commit'
+    })
+
+    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
+
+    await expect(report.getByText('No data yet')).toBeVisible()
+  })
+
+  await test.step('unsupported filters', async () => {
+    await page.goto(
+      '/' + domain + '?f=is,source,Google&f=is,page,%2Funsupported-filters',
+      {
+        waitUntil: 'commit'
+      }
+    )
+
+    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
+
+    await expect(
+      report.getByText('Unable to fetch keyword data from Search Console')
+    ).toBeVisible()
+
+    await expect(
+      report.getByText('does not support the current set of filters')
+    ).toBeVisible()
+  })
+
+  await test.step('not configured', async () => {
+    await page.goto(
+      '/' + domain + '?f=is,source,Google&f=is,page,%2Fnot-configured',
+      {
+        waitUntil: 'commit'
+      }
+    )
+
+    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
+
+    await expect(
+      report.getByText('The site is not connected to Google Search Keywords')
+    ).toBeVisible()
   })
 })
 

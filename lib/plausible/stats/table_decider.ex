@@ -7,7 +7,9 @@ defmodule Plausible.Stats.TableDecider do
   use Plausible
 
   import Enum, only: [empty?: 1]
-  import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
+
+  import Plausible.Stats.Filters,
+    only: [dimensions_used_in_filters: 1, filtering_on_dimension?: 2]
 
   alias Plausible.Stats.{Query, QueryError}
 
@@ -146,7 +148,11 @@ defmodule Plausible.Stats.TableDecider do
   # :TRICKY: For time:minute dimension we prefer sessions over events as there
   # might be minutes where no events occurred but the session was active.
   defp metric_partitioner(query, metric) when metric in [:visitors, :visits] do
-    if "time:minute" in query.dimensions, do: :session, else: :either
+    if "time:minute" in query.dimensions and not filtering_on_dimension?(query, "event:goal") do
+      :session
+    else
+      :either
+    end
   end
 
   defp metric_partitioner(_, :conversion_rate), do: :either

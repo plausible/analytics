@@ -6,9 +6,13 @@ import { useDashboardStateContext } from '../dashboard-state-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
-import { isSegmentFilter } from '../filtering/segments'
+import {
+  canSeeSaveAsSegmentAction,
+  isSegmentFilter
+} from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardState } from '../dashboard-state'
+import { useUserContext } from '../user-context'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -121,14 +125,16 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { dashboardState, expandedSegment } = useDashboardStateContext()
+  const user = useUserContext()
 
   const showingClearAll = canShowClearAllAction({
     filters: dashboardState.filters
   })
-  const showingSaveAsSegment = canShowSaveAsSegmentAction({
-    filters: dashboardState.filters,
-    isEditingSegment: !!expandedSegment
-  })
+  const showingSaveAsSegment =
+    canShowSaveAsSegmentAction({
+      filters: dashboardState.filters,
+      isEditingSegment: !!expandedSegment
+    }) && canSeeSaveAsSegmentAction({ user })
 
   const actionsInSeeMoreMenu = [
     showingSaveAsSegment && ('save as segment' as const),

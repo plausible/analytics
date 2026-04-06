@@ -609,4 +609,99 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
                )
     end
   end
+
+  describe "accept_invitation/3 - ownership transfers _without_ members" do
+    test "transfers ownership without carrying over existing owner as an editor, existing site guests and invitations" do
+      existing_owner = new_user()
+      site = new_site(owner: existing_owner)
+
+      prior_team = team_of(existing_owner)
+
+      new_owner = new_user() |> subscribe_to_growth_plan()
+      new_team = team_of(new_owner)
+
+      invite_guest(site, "some@example.com", role: :viewer, inviter: existing_owner)
+
+      add_guest(site, role: :viewer)
+      add_guest(site, role: :editor)
+
+      transfer = invite_transfer(site, new_owner, inviter: existing_owner)
+
+      assert {:ok, _new_membership} =
+               Accept.accept_transfer_no_members(transfer.transfer_id, new_owner)
+
+      assert_team_attached(site, new_team.id)
+
+      refute Repo.reload(transfer)
+
+      site = Repo.reload!(site)
+
+      assert Repo.preload(site, :guest_memberships).guest_memberships == []
+      assert Repo.preload(site, :guest_invitations).guest_invitations == []
+
+      prior_team = Repo.reload!(prior_team)
+
+      assert Repo.preload(prior_team, :team_invitations).team_invitations == []
+      assert [%{role: :owner}] = Repo.preload(prior_team, :team_memberships).team_memberships
+
+      assert_email_delivered_with(
+        to: [nil: existing_owner.email],
+        subject:
+          @subject_prefix <>
+            "#{new_owner.email} accepted the ownership transfer of #{site.domain}"
+      )
+    end
+
+    @tag :ee_only
+    test "allows transfer of a site which normally would make accepting user exceed team member limit" do
+      old_owner = new_user() |> subscribe_to_business_plan()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+
+      site = new_site(owner: old_owner)
+
+      for _ <- 1..3, do: add_guest(site, role: :editor)
+
+      transfer = invite_transfer(site, new_owner, inviter: old_owner)
+
+      assert {:ok, _} = Accept.accept_transfer_no_members(transfer.transfer_id, new_owner)
+    end
+
+    test "returns error if provided ID resolves to a site invitation instead of transfer" do
+      existing_owner = new_user()
+      site = new_site(owner: existing_owner)
+
+      new_owner = new_user() |> subscribe_to_growth_plan()
+
+      invitation = invite_guest(site, new_owner.email, role: :viewer, inviter: existing_owner)
+
+      assert {:error, :permission_denied} =
+               Accept.accept_transfer_no_members(invitation.invitation_id, new_owner)
+    end
+
+    test "returns error if provided ID resolves to a team invitation instead of transfer" do
+      existing_owner = new_user()
+      _site = new_site(owner: existing_owner)
+      team = team_of(existing_owner)
+
+      new_owner = new_user() |> subscribe_to_growth_plan()
+
+      invitation = invite_member(team, new_owner, role: :editor, inviter: existing_owner)
+
+      assert {:error, :permission_denied} =
+               Accept.accept_transfer_no_members(invitation.invitation_id, new_owner)
+    end
+
+    @tag :ee_only
+    test "returns an error if accepting user is not subscribed to a proper plan" do
+      existing_owner = new_user()
+      site = new_site(owner: existing_owner)
+
+      new_owner = new_user()
+
+      transfer = invite_transfer(site, new_owner, inviter: existing_owner)
+
+      assert {:error, :no_plan} =
+               Accept.accept_transfer_no_members(transfer.transfer_id, new_owner)
+    end
+  end
 end

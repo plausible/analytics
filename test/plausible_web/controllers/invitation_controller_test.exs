@@ -186,6 +186,37 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Plan limits exceeded: site limit."
     end
+
+    test "succeeds despite exceeding members limit if parameter provided", %{
+      conn: conn,
+      user: user
+    } do
+      current_owner = new_user()
+      site = new_site(owner: current_owner)
+
+      subscribe_to_growth_plan(user)
+      new_team = team_of(user)
+
+      # fill site limit quota
+      for _ <- 1..3, do: add_guest(site, role: :editor)
+
+      transfer = invite_transfer(site, user, inviter: current_owner)
+
+      conn =
+        post(
+          conn,
+          "/sites/invitations/#{transfer.transfer_id}/accept?skip_site_members_transfer=true"
+        )
+
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
+               "You now have access to"
+
+      refute Repo.reload(transfer)
+
+      assert_team_attached(site, new_team.id)
+    end
   end
 
   describe "POST /sites/invitations/:invitation_id/reject" do
