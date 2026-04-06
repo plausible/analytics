@@ -657,6 +657,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "percentage" => 100.0
                }
              ]
+
+      assert json_response(conn, 200)["meta"] == %{"date_range_label" => "1 Jan 2021"}
     end
 
     test "returns top pages with :not_member filter on custom pageview props including (none) value",
@@ -2212,6 +2214,11 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  }
                }
              ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "2 Jan 2021",
+               "comparison_date_range_label" => "1 Jan 2021"
+             }
     end
 
     on_ee do
