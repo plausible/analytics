@@ -63,7 +63,7 @@ defmodule Plausible.Auth do
     activation_request_ip: %{
       prefix: "activation-request:ip",
       limit: @activation_request_limit,
-      interval: :timer.minutes(10)
+      interval: :timer.minutes(1)
     },
     activation_request_user: %{
       prefix: "activation-request:user",
