@@ -367,5 +367,32 @@ defmodule Plausible.Stats.QueryTest do
 
       assert [%{dimensions: ["2021-01-01 00:05:00"], metrics: [1, 50.0]}] = results
     end
+
+    test "conversion_rate with time:hour and session filter does not crash",
+         %{site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", user_id: 1, timestamp: ~N[2021-01-01 00:05:00]),
+        build(:pageview, user_id: 2, pathname: "/blog", timestamp: ~N[2021-01-01 00:10:00])
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors, :conversion_rate],
+          input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 23:59:59Z]},
+          dimensions: ["time:hour"],
+          filters: [
+            [:is, "event:goal", ["Signup"]],
+            [:is, "visit:entry_page", ["/blog"]]
+          ],
+          skip_goal_existence_check: true
+        })
+
+      %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+      assert [%{dimensions: ["2021-01-01 00:00:00"], metrics: [1, 50.0]}] = results
+    end
   end
 end
