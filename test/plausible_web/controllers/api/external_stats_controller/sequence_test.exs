@@ -385,6 +385,75 @@ defmodule PlausibleWeb.Api.ExternalStatsController.SequenceTest do
       assert %{"dimensions" => ["/other-next"], "metrics" => [1]} in results
     end
 
+    test "intervening events between steps do not count as a sequence match", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        # User 1: /a -> /b -> /c
+        build(:event,
+          name: "pageview",
+          pathname: "/a",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "pageview",
+          pathname: "/b",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:event,
+          name: "pageview",
+          pathname: "/c",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        # User 2: /a -> /x -> /b -> /c
+        build(:event,
+          name: "pageview",
+          pathname: "/a",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "pageview",
+          pathname: "/x",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:event,
+          name: "pageview",
+          pathname: "/b",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        build(:event,
+          name: "pageview",
+          pathname: "/c",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:03:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "filters" => [
+            ["sequence", [["is", "event:page", ["/a"]], ["is", "event:page", ["/b"]]]]
+          ]
+        })
+
+      # Only user 1 should match
+      # User 2 should not match because /x intervened between /a and /b.
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["/c"], "metrics" => [1]}
+             ]
+    end
+
     test "step matching on event:name works", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "AddToCart", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),

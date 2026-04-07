@@ -370,13 +370,28 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
           select: %{session_id: e.session_id, step_ts: min(e.timestamp)}
         )
       else
-        ordering_cond = dynamic([e, {:prev_step, p}], e.timestamp > p.step_ts)
-        step_cond = build_sequence_step_cond(step, query, ordering_cond)
+        first_after_cond =
+          dynamic(
+            [e, {:prev_step, p}],
+            ^filter_site_id(query) and ^filter_time_range(:events, query) and
+              e.timestamp > p.step_ts
+          )
+
+        first_after_prev_q =
+          from(e in "events_v2",
+            join: prev in subquery(prev_q),
+            as: :prev_step,
+            on: e.session_id == prev.session_id,
+            where: ^first_after_cond,
+            group_by: e.session_id,
+            select: %{session_id: e.session_id, first_ts: min(e.timestamp)}
+          )
+
+        step_cond = build_sequence_step_cond(step, query)
 
         from(e in "events_v2",
-          join: prev in subquery(prev_q),
-          as: :prev_step,
-          on: e.session_id == prev.session_id,
+          join: first in subquery(first_after_prev_q),
+          on: e.session_id == first.session_id and e.timestamp == first.first_ts,
           where: ^step_cond,
           group_by: e.session_id,
           select: %{session_id: e.session_id, step_ts: min(e.timestamp)}
