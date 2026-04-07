@@ -15,18 +15,33 @@ defmodule Plausible.Auth do
 
   require Logger
 
-  if Mix.env() == :e2e_test do
-    @ip_rate_limit 100_000
-    @user_rate_limit 100_000
-    @activation_limit 100_000
-    @activation_request_limit 100_000
-    @totp_setup_limit 100_000
-  else
-    @ip_rate_limit 5
-    @user_rate_limit 5
-    @activation_limit 10
-    @totp_setup_limit 10
-    @activation_request_limit if(Mix.env() in [:test, :ce_test], do: 100_000, else: 5)
+  case Mix.env() do
+    :e2e_test ->
+      @ip_rate_limit 100_000
+      @user_rate_limit 100_000
+      @activation_limit 100_000
+      @activation_ip_limit 100_000
+      @activation_request_limit 100_000
+      @totp_setup_limit 100_000
+      @totp_setup_ip_limit 100_000
+
+    env when env in [:test, :ce_test] ->
+      @ip_rate_limit 5
+      @user_rate_limit 5
+      @activation_limit 10
+      @totp_setup_limit 10
+      @activation_ip_limit 100_000
+      @totp_setup_ip_limit 100_000
+      @activation_request_limit 100_000
+
+    _ ->
+      @ip_rate_limit 5
+      @user_rate_limit 5
+      @activation_limit 10
+      @totp_setup_limit 10
+      @activation_ip_limit 2
+      @totp_setup_ip_limit 2
+      @activation_request_limit 5
   end
 
   @rate_limits %{
@@ -52,8 +67,8 @@ defmodule Plausible.Auth do
     },
     activation_ip: %{
       prefix: "activation:ip",
-      limit: @activation_limit,
-      interval: :timer.minutes(5)
+      limit: @activation_ip_limit,
+      interval: :timer.minutes(1)
     },
     activation_user: %{
       prefix: "activation:user",
@@ -72,8 +87,8 @@ defmodule Plausible.Auth do
     },
     totp_setup_ip: %{
       prefix: "totp-setup:ip",
-      limit: @totp_setup_limit,
-      interval: :timer.minutes(5)
+      limit: @totp_setup_ip_limit,
+      interval: :timer.minutes(1)
     },
     totp_setup_user: %{
       prefix: "totp-setup:user",
