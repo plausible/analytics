@@ -235,6 +235,7 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
                 line.stopIndexExclusive !== undefined
                   ? i < line.stopIndexExclusive
                   : true
+              console.log(i, line.lineType, [line.startIndexInclusive,line.stopIndexExclusive],{valueDefined, atOrOverStart, beforeEnd})
               return valueDefined && atOrOverStart && beforeEnd
             },
             xAccessor: (_d, index) => x(index),

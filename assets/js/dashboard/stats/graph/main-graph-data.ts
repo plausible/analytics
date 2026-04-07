@@ -27,7 +27,6 @@ export const remapAndFillData = ({
   yMax: number
   mainSeriesStartEndLabels: [string | null, string | null]
   comparisonSeriesStartEndLabels: [string | null, string | null]
-  startOfLastPartialSlice: null | number
 } => {
   const totalBucketCount = Math.max(
     data.meta.comparison_time_label_result_indices?.length ?? 0,
@@ -40,8 +39,6 @@ export const remapAndFillData = ({
 
   let firstComparisonTimeLabel: null | string = null
   let lastComparisonTimeLabel: null | string = null
-
-  let startOfLastPartialSlice: null | number = null
 
   const remappedData: GraphDatum[] = new Array(totalBucketCount)
     .fill(null)
@@ -74,14 +71,6 @@ export const remapAndFillData = ({
         )
           ? true
           : false
-
-        if (isPartial) {
-          startOfLastPartialSlice = index
-        } else {
-          // if there is a full period after a partial slice,
-          // it's not a partial slice anchored at the end of the series
-          startOfLastPartialSlice = null
-        }
 
         if (firstTimeLabel === null) {
           firstTimeLabel = timeLabel
@@ -159,7 +148,6 @@ export const remapAndFillData = ({
     })
 
   return {
-    startOfLastPartialSlice,
     remappedData,
     yMax,
     mainSeriesStartEndLabels: [firstTimeLabel, lastTimeLabel],
@@ -170,21 +158,24 @@ export const remapAndFillData = ({
   }
 }
 
-const METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS = [
+export const METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS = [
   'bounce_rate',
   'exit_rate',
   'conversion_rate'
   // 'group_conversion_rate'
 ]
 
-const getChangeInPercentagePoints = (
+export const getChangeInPercentagePoints = (
   value: number,
   comparisonValue: number
 ): number => {
   return value - comparisonValue
 }
 
-const getRelativeChange = (value: number, comparisonValue: number): number => {
+export const getRelativeChange = (
+  value: number,
+  comparisonValue: number
+): number => {
   if (comparisonValue === 0 && value > 0) {
     return 100
   }
@@ -193,6 +184,49 @@ const getRelativeChange = (value: number, comparisonValue: number): number => {
   }
 
   return Math.round(((value - comparisonValue) / comparisonValue) * 100)
+}
+
+type Slice = {
+  startIndexInclusive: number
+  endIndexExclusive: number
+  isPartialLine: boolean
+}
+
+// slices [B, A, A, A, A, B, B, B] to [0, 1], [1, 5], [5, 8]
+export function getSlices(
+  data: { value: number | null; isPartial: boolean | null }[]
+): Slice[] {
+  const slices: Slice[] = []
+  let currentSlice: Slice | null = null
+
+  data.forEach((datum, index) => {
+    if (datum.value !== null) {
+      if (!currentSlice) {
+        currentSlice = {
+          startIndexInclusive: index,
+          endIndexExclusive: index + 1,
+          isPartialLine: datum.isPartial ?? false
+        }
+      } else {
+        if (datum.isPartial === currentSlice.isPartialLine) {
+          currentSlice.endIndexExclusive = index + 1
+        } else {
+          slices.push(currentSlice)
+          currentSlice = {
+            startIndexInclusive: index,
+            endIndexExclusive: index + 1,
+            isPartialLine: datum.isPartial ?? false
+          }
+        }
+      }
+    }
+  })
+
+  if (currentSlice) {
+    slices.push(currentSlice)
+  }
+
+  return slices
 }
 
 /**

@@ -91,7 +91,6 @@ export const MainGraph = ({
     const {
       remappedData,
       yMax,
-      startOfLastPartialSlice,
       mainSeriesStartEndLabels,
       comparisonSeriesStartEndLabels
     } = remapAndFillData({
@@ -101,39 +100,86 @@ export const MainGraph = ({
 
     const gradients = [primaryGradient, secondaryGradient]
 
+    const slices: {
+      startIndexInclusive: number
+      stopIndexExclusive: number
+      lineType: 'solid' | 'dashed' | 'gap'
+    }[] = []
+    let slice: {
+      startIndexInclusive: number
+      stopIndexExclusive: number
+      lineType: 'solid' | 'dashed' | 'gap'
+    } | null = null
+    // can't be done in a single pass with remapAndFillData
+    // because we need the xLabels formatting parameters to be known
+    const remappedDataInGraphFormat = remappedData.map((d, bucketIndex) => {
+      const lineType =
+        d.value === null ? 'gap' : d.isPartial ? 'dashed' : 'solid'
+      console.log(lineType)
+
+      if (slice && slice.lineType !== lineType) {
+        slice.stopIndexExclusive = bucketIndex
+        slices.push(slice)
+        slice = null
+      }
+
+      if (slice) {
+        slice.stopIndexExclusive = bucketIndex + 1
+      } else {
+        slice = {
+          startIndexInclusive: bucketIndex,
+          stopIndexExclusive: bucketIndex + 1,
+          lineType
+        }
+      }
+
+      const dataPoint = {
+        values: [d.value ?? null, d.comparisonValue ?? null] as const,
+        xLabel:
+          d.timeLabel !== null
+            ? getBucketLabel(d.timeLabel, {
+                shouldShowDate: !isDateUnambiguous({
+                  startEndLabels: mainSeriesStartEndLabels
+                }),
+                shouldShowYear: !isYearUnambiguous({
+                  site,
+                  startEndLabels: mainSeriesStartEndLabels
+                }),
+                interval,
+                period,
+                bucketIndex,
+                totalBuckets: remappedData.length
+              })
+            : ''
+      }
+
+      return dataPoint
+    })
+    if (slice !== null) {
+      slices.push(slice)
+    }
+
+    console.log(slices)
     const mainSeries: SeriesConfig = {
-      lines:
-        startOfLastPartialSlice !== null && startOfLastPartialSlice > 0
-          ? [
-              {
-                lineClassName: classNames(
-                  sharedPathClass,
-                  mainPathClass,
-                  roundedPathClass
-                ),
-                stopIndexExclusive: startOfLastPartialSlice
-              },
-              {
-                lineClassName: classNames(
-                  sharedPathClass,
-                  mainPathClass,
-                  dashedPathClass
-                ),
-                startIndexInclusive: startOfLastPartialSlice - 1
-              }
+      lines: slices
+        .filter((s) => s.lineType === 'solid' || s.lineType === 'dashed')
+        .map((s) => ({
+          startIndexInclusive: s.startIndexInclusive,
+          stopIndexExclusive: s.stopIndexExclusive + 1,
+          lineClassName: classNames(
+            sharedPathClass,
+            mainPathClass,
+            { dashed: dashedPathClass, solid: roundedPathClass }[
+              s.lineType as 'solid' | 'dashed'
             ]
-          : [
-              {
-                lineClassName: classNames(
-                  sharedPathClass,
-                  mainPathClass,
-                  roundedPathClass
-                )
-              }
-            ],
+          ),
+          lineType: s.lineType
+        })),
       underline: { gradientId: primaryGradient.id },
       dot: { dotClassName: classNames(sharedDotClass, mainDotClass) }
     }
+    console.log(mainSeries.lines)
+
     const comparisonSeries: SeriesConfig = {
       lines: [
         {
@@ -145,31 +191,10 @@ export const MainGraph = ({
     }
 
     const settings: [SeriesConfig, SeriesConfig] = [
-      mainSeries,
-      comparisonSeries
+      mainSeries
+      // comparisonSeries
     ]
 
-    // can't be done in a single pass with remapAndFillData
-    // because we need the xLabels formatting parameters to be known
-    const remappedDataInGraphFormat = remappedData.map((d, bucketIndex) => ({
-      values: [d.value ?? null, d.comparisonValue ?? null] as const,
-      xLabel:
-        d.timeLabel !== null
-          ? getBucketLabel(d.timeLabel, {
-              shouldShowDate: !isDateUnambiguous({
-                startEndLabels: mainSeriesStartEndLabels
-              }),
-              shouldShowYear: !isYearUnambiguous({
-                site,
-                startEndLabels: mainSeriesStartEndLabels
-              }),
-              interval,
-              period,
-              bucketIndex,
-              totalBuckets: remappedData.length
-            })
-          : ''
-    }))
     const yearIsUnambiguous = isYearUnambiguous({
       site,
       startEndLabels: [
