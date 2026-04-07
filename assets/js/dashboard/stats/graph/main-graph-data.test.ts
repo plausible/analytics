@@ -1,6 +1,7 @@
 import {
   getChangeInPercentagePoints,
-  getRelativeChange
+  getRelativeChange,
+  getLineSegments
 } from './main-graph-data'
 
 describe(`${getChangeInPercentagePoints.name}`, () => {
@@ -36,5 +37,77 @@ describe(`${getRelativeChange.name}`, () => {
 
   it('returns a negative value for a decrease', () => {
     expect(getRelativeChange(50, 100)).toBe(-50)
+  })
+})
+
+const np = (value = 0) => ({ value, isPartial: false, timeLabel: '' })
+const p = (value = 0) => ({ value, isPartial: true, timeLabel: '' })
+const gap = () => ({ value: null, isPartial: null, timeLabel: null })
+
+describe(`${getLineSegments.name}`, () => {
+  it('returns empty for empty input', () => {
+    expect(getLineSegments([])).toEqual([])
+  })
+
+  it('returns empty for a single point (no edge to draw)', () => {
+    expect(getLineSegments([np()])).toEqual([])
+  })
+
+  it('returns empty for a single gap', () => {
+    expect(getLineSegments([gap()])).toEqual([])
+  })
+
+  it('returns a full segment for two non-partial points', () => {
+    expect(getLineSegments([np(), np()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'full' }
+    ])
+  })
+
+  it('returns a partial segment for two partial points', () => {
+    expect(getLineSegments([p(), p()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'partial' }
+    ])
+  })
+
+  it('returns partial when connecting non-partial to partial', () => {
+    expect(getLineSegments([np(), p()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'partial' }
+    ])
+  })
+
+  it('returns partial when connecting partial to non-partial', () => {
+    expect(getLineSegments([p(), np()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'partial' }
+    ])
+  })
+
+  it('handles single full period in the middle of two partial periods', () => {
+    expect(getLineSegments([p(), np(), p()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 3, type: 'partial' }
+    ])
+  })
+
+  it('handles partial periods on both ends', () => {
+    expect(getLineSegments([p(), np(), np(), p()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'partial' },
+      { startIndexInclusive: 1, stopIndexExclusive: 3, type: 'full' },
+      { startIndexInclusive: 2, stopIndexExclusive: 4, type: 'partial' }
+    ])
+  })
+
+  it('handles leading gaps', () => {
+    expect(
+      getLineSegments([gap(), gap(), np(), np(), np(), np(), p()])
+    ).toEqual([
+      { startIndexInclusive: 2, stopIndexExclusive: 6, type: 'full' },
+      { startIndexInclusive: 5, stopIndexExclusive: 7, type: 'partial' }
+    ])
+  })
+
+  it('handles trailing gaps', () => {
+    expect(getLineSegments([np(), np(), p(), gap(), gap()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'full' },
+      { startIndexInclusive: 1, stopIndexExclusive: 3, type: 'partial' }
+    ])
   })
 })

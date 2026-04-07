@@ -144,7 +144,7 @@ export const remapAndFillData = ({
         comparisonTimeLabel,
         change,
         isPartial
-      }
+      } as GraphDatum
     })
 
   return {
@@ -186,47 +186,41 @@ export const getRelativeChange = (
   return Math.round(((value - comparisonValue) / comparisonValue) * 100)
 }
 
-type Slice = {
+export type LineSegment = {
   startIndexInclusive: number
-  endIndexExclusive: number
-  isPartialLine: boolean
+  stopIndexExclusive: number
+  type: 'full' | 'partial'
 }
 
-// slices [B, A, A, A, A, B, B, B] to [0, 1], [1, 5], [5, 8]
-export function getSlices(
-  data: { value: number | null; isPartial: boolean | null }[]
-): Slice[] {
-  const slices: Slice[] = []
-  let currentSlice: Slice | null = null
-
-  data.forEach((datum, index) => {
-    if (datum.value !== null) {
-      if (!currentSlice) {
-        currentSlice = {
-          startIndexInclusive: index,
-          endIndexExclusive: index + 1,
-          isPartialLine: datum.isPartial ?? false
-        }
-      } else {
-        if (datum.isPartial === currentSlice.isPartialLine) {
-          currentSlice.endIndexExclusive = index + 1
-        } else {
-          slices.push(currentSlice)
-          currentSlice = {
-            startIndexInclusive: index,
-            endIndexExclusive: index + 1,
-            isPartialLine: datum.isPartial ?? false
-          }
-        }
-      }
+// Computes drawable line segments from a series of points.
+// A segment's dash style is determined by its edges: dashed if either endpoint
+// is partial, solid if both are non-partial. Boundary points between a solid
+// and a dashed segment are shared (appear as the end of one and start of the next).
+export function getLineSegments(data: MainSeriesValue[]): LineSegment[] {
+  return data.reduce((segments: LineSegment[], point, i) => {
+    if (i === 0) {
+      return segments
     }
-  })
+    const prev = data[i - 1]
+    if (prev.value === null || point.value === null) {
+      return segments
+    }
 
-  if (currentSlice) {
-    slices.push(currentSlice)
-  }
+    const type = prev.isPartial || point.isPartial ? 'partial' : 'full'
+    const lastSegment = segments[segments.length - 1]
 
-  return slices
+    if (lastSegment?.type === type && lastSegment.stopIndexExclusive === i) {
+      return [
+        ...segments.slice(0, -1),
+        { ...lastSegment, stopIndexExclusive: i + 1 }
+      ]
+    }
+
+    return [
+      ...segments,
+      { startIndexInclusive: i - 1, stopIndexExclusive: i + 1, type }
+    ]
+  }, [])
 }
 
 /**
@@ -234,13 +228,22 @@ export function getSlices(
  * It's x position is its index in `GraphDatum[]` array.
  * The values for `value`, `comparisonValue` should be plotted on the y axis, when they are defined for the x position.
  */
-type GraphDatum = {
-  /** When `value` is null, it means the main series isn't defined in this x position */
-  value: number | null
-  timeLabel: string | null
-  isPartial: boolean | null
-  /** When `comparisonValue` is null, it means the comparison series isn't defined in this x position */
-  comparisonValue?: number | null
-  comparisonTimeLabel?: string | null
+export type GraphDatum = {
   change?: number | null
+} & MainSeriesValue &
+  ComparisonSeriesValue
+
+type NotDefinedValue = { value: null; isPartial: null; timeLabel: null }
+type DefinedValue = { value: number; isPartial: boolean; timeLabel: string }
+type MainSeriesValue = NotDefinedValue | DefinedValue
+
+type NotDefinedComparisonValue = {
+  comparisonValue: null
+  isPartial: null
+  comparisonTimeLabel: null
 }
+type DefinedComparisonValue = {
+  comparisonValue: number
+  comparisonTimeLabel: string
+}
+type ComparisonSeriesValue = NotDefinedComparisonValue | DefinedComparisonValue

@@ -28,7 +28,7 @@ import { Graph, PointerHandler, SeriesConfig } from '../../components/graph'
 import { useSiteContext, PlausibleSite } from '../../site-context'
 import { GraphTooltipWrapper } from '../../components/graph-tooltip'
 import { MainGraphResponse } from './fetch-main-graph'
-import { remapAndFillData } from './main-graph-data'
+import { remapAndFillData, getLineSegments, GraphDatum } from './main-graph-data'
 
 const height = 368
 const marginTop = 16
@@ -36,22 +36,6 @@ const marginRight = 4
 const marginBottom = 32
 const defaultMarginLeft = 16 // this is adjusted by the Graph component based on y-axis label width
 const hoverBuffer = 4
-
-/**
- * A data point for the graph and tooltip:
- * it's x position is its index in GraphDatum[] array,
- * y positions are value, comparisonValue.
- * Remapped from @see MainGraphResponse to fill empty buckets that BE
- * doesn't return.
- */
-type GraphDatum = {
-  value: number | null
-  isPartial: boolean | null
-  timeLabel: string | null
-  comparisonValue?: number | null
-  comparisonTimeLabel?: string | null
-  change?: number | null
-}
 
 type MainGraphData = MainGraphResponse & {
   period: DashboardPeriod
@@ -100,39 +84,11 @@ export const MainGraph = ({
 
     const gradients = [primaryGradient, secondaryGradient]
 
-    const slices: {
-      startIndexInclusive: number
-      stopIndexExclusive: number
-      lineType: 'solid' | 'dashed' | 'gap'
-    }[] = []
-    let slice: {
-      startIndexInclusive: number
-      stopIndexExclusive: number
-      lineType: 'solid' | 'dashed' | 'gap'
-    } | null = null
+    const lineSegments = getLineSegments(remappedData)
+
     // can't be done in a single pass with remapAndFillData
     // because we need the xLabels formatting parameters to be known
     const remappedDataInGraphFormat = remappedData.map((d, bucketIndex) => {
-      const lineType =
-        d.value === null ? 'gap' : d.isPartial ? 'dashed' : 'solid'
-      console.log(lineType)
-
-      if (slice && slice.lineType !== lineType) {
-        slice.stopIndexExclusive = bucketIndex
-        slices.push(slice)
-        slice = null
-      }
-
-      if (slice) {
-        slice.stopIndexExclusive = bucketIndex + 1
-      } else {
-        slice = {
-          startIndexInclusive: bucketIndex,
-          stopIndexExclusive: bucketIndex + 1,
-          lineType
-        }
-      }
-
       const dataPoint = {
         values: [d.value ?? null, d.comparisonValue ?? null] as const,
         xLabel:
@@ -155,30 +111,20 @@ export const MainGraph = ({
 
       return dataPoint
     })
-    if (slice !== null) {
-      slices.push(slice)
-    }
 
-    console.log(slices)
     const mainSeries: SeriesConfig = {
-      lines: slices
-        .filter((s) => s.lineType === 'solid' || s.lineType === 'dashed')
-        .map((s) => ({
-          startIndexInclusive: s.startIndexInclusive,
-          stopIndexExclusive: s.stopIndexExclusive + 1,
-          lineClassName: classNames(
-            sharedPathClass,
-            mainPathClass,
-            { dashed: dashedPathClass, solid: roundedPathClass }[
-              s.lineType as 'solid' | 'dashed'
-            ]
-          ),
-          lineType: s.lineType
-        })),
+      lines: lineSegments.map((s) => ({
+        startIndexInclusive: s.startIndexInclusive,
+        stopIndexExclusive: s.stopIndexExclusive,
+        lineClassName: classNames(
+          sharedPathClass,
+          mainPathClass,
+          s.type === 'partial' ? dashedPathClass : roundedPathClass
+        )
+      })),
       underline: { gradientId: primaryGradient.id },
       dot: { dotClassName: classNames(sharedDotClass, mainDotClass) }
     }
-    console.log(mainSeries.lines)
 
     const comparisonSeries: SeriesConfig = {
       lines: [
@@ -191,8 +137,8 @@ export const MainGraph = ({
     }
 
     const settings: [SeriesConfig, SeriesConfig] = [
-      mainSeries
-      // comparisonSeries
+      mainSeries,
+      comparisonSeries
     ]
 
     const yearIsUnambiguous = isYearUnambiguous({
