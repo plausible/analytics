@@ -1,8 +1,35 @@
 import {
+  getDefaultRevenueMetricValue,
   getChangeInPercentagePoints,
   getRelativeChange,
   getLineSegments
 } from './main-graph-data'
+
+describe(`${getDefaultRevenueMetricValue.name}`, () => {
+  it('makes a unitless guess for situation with no sample revenue item', () => {
+    expect(getDefaultRevenueMetricValue()).toEqual({
+      short: '0.0',
+      value: 0.0,
+      long: '0.00',
+      currency: ''
+    })
+  })
+
+  it('handles sample dollar item', () => {
+    const sample = {
+      short: '$1.1K',
+      value: 1076.0,
+      long: '$1,076.00',
+      currency: 'USD'
+    }
+    expect(getDefaultRevenueMetricValue(sample)).toEqual({
+      short: '$0.0',
+      value: 0.0,
+      long: '$0.00',
+      currency: 'USD'
+    })
+  })
+})
 
 describe(`${getChangeInPercentagePoints.name}`, () => {
   it('returns the difference', () => {
@@ -40,9 +67,19 @@ describe(`${getRelativeChange.name}`, () => {
   })
 })
 
-const np = (value = 0) => ({ value, isPartial: false, timeLabel: '' })
-const p = (value = 0) => ({ value, isPartial: true, timeLabel: '' })
-const gap = () => ({ value: null, isPartial: null, timeLabel: null })
+const np = (value = 0) => ({
+  mainSeriesDefined: true,
+  value,
+  isPartial: false,
+  timeLabel: ''
+})
+const p = (value = 0) => ({
+  mainSeriesDefined: true,
+  value,
+  isPartial: true,
+  timeLabel: ''
+})
+const gap = () => ({ mainSeriesDefined: false }) as const
 
 describe(`${getLineSegments.name}`, () => {
   it('returns empty for empty input', () => {

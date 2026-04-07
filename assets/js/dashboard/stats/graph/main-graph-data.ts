@@ -1,6 +1,29 @@
 import { Metric } from '../../../types/query-api'
-import { MainGraphResponse } from './fetch-main-graph'
+import { MainGraphResponse, RevenueMetricValue } from './fetch-main-graph'
 
+const DEFAULT_VALUE = 0
+const DEFAULT_COMPARISON_VALUE = 0
+export const getDefaultRevenueMetricValue = (
+  sampleValue?: RevenueMetricValue
+): RevenueMetricValue => {
+  if (!sampleValue) {
+    return {
+      short: '0.0',
+      value: 0.0,
+      long: '0.00',
+      currency: ''
+    }
+  }
+
+  const short = sampleValue.long.replace(/[\d,.]+/i, '0.0')
+  const long = sampleValue.long.replace(/[\d,.]+/i, '0.00')
+  return {
+    short,
+    value: 0.0,
+    long,
+    currency: sampleValue.currency
+  }
+}
 /**
  * Fills gaps in @see MainGraphResponse the series of `results` and `comparisonResults`.
  * The BE doesn't return buckets in the series where the value is 0:
@@ -13,7 +36,6 @@ import { MainGraphResponse } from './fetch-main-graph'
  * In the same single loop, for the sake of efficiency, it determines
  * - the maximum y value (used for scaling the graph),
  * - the start and end labels of both series (used for generating appropriate X axis labels),
- * - whether there's a slice at the very end of main series that is partial (used for explaining the drop at the end of the graph).
  *
  */
 export const remapAndFillData = ({
@@ -57,11 +79,13 @@ export const remapAndFillData = ({
       const mainSeriesDefined = typeof timeLabel === 'string'
       const comparisonSeriesDefined = typeof comparisonTimeLabel === 'string'
 
-      let isPartial: boolean | null = null
-      let value: number | null = null
+      let mainSeries: MainSeriesValue
+      let comparisonSeries: ComparisonSeriesValue
+      let change = null
 
       if (mainSeriesDefined) {
-        isPartial = (data.meta.partial_time_labels ?? []).find(
+        let value = DEFAULT_VALUE
+        const isPartial = (data.meta.partial_time_labels ?? []).find(
           (l) => l === timeLabel
         )
           ? true
@@ -76,26 +100,28 @@ export const remapAndFillData = ({
         if (indexOfResult !== null) {
           const row = data.results[indexOfResult]
           const [unparsedValue] = row!.metrics!
-          if (unparsedValue === null) {
-            value = 0
+
+          if (typeof unparsedValue === 'number') {
+            value = unparsedValue
           } else if (
+            unparsedValue !== null &&
             typeof unparsedValue === 'object' &&
             unparsedValue.hasOwnProperty('value')
           ) {
             value = unparsedValue.value
-          } else if (typeof unparsedValue === 'number') {
-            value = unparsedValue
           }
-        } else {
-          value = 0
         }
+        if (value > yMax) {
+          yMax = value
+        }
+        mainSeries = { mainSeriesDefined, value, isPartial, timeLabel }
+      } else {
+        mainSeries = { mainSeriesDefined }
       }
-      if (value !== null && value > yMax) {
-        yMax = value
-      }
-      let change = null
-      let comparisonValue = null
+
       if (comparisonSeriesDefined) {
+        let comparisonValue = DEFAULT_COMPARISON_VALUE
+
         if (firstComparisonTimeLabel === null) {
           firstComparisonTimeLabel = comparisonTimeLabel
         }
@@ -106,40 +132,52 @@ export const remapAndFillData = ({
           const row = data.comparison_results[indexOfComparisonResult]
           const [unparsedValue] = row!.metrics!
 
-          if (unparsedValue === null) {
-            comparisonValue = 0
+          if (typeof unparsedValue === 'number') {
+            comparisonValue = unparsedValue
+            change = row!.change !== null ? row!.change[0] : null
           } else if (
+            unparsedValue !== null &&
             typeof unparsedValue === 'object' &&
             unparsedValue.hasOwnProperty('value')
           ) {
             comparisonValue = unparsedValue.value
-          } else if (typeof unparsedValue === 'number') {
-            comparisonValue = unparsedValue
-            change = row!.change !== null ? row!.change[0] : null
           }
-        } else {
-          comparisonValue = 0
         }
+
+        if (comparisonValue > yMax) {
+          yMax = comparisonValue
+        }
+
+        comparisonSeries = {
+          comparisonSeriesDefined,
+          comparisonValue,
+          comparisonTimeLabel
+        }
+      } else {
+        comparisonSeries = { comparisonSeriesDefined }
       }
 
-      if (comparisonValue !== null && comparisonValue > yMax) {
-        yMax = comparisonValue
-      }
-
-      if (mainSeriesDefined && comparisonSeriesDefined && change === null) {
+      if (
+        mainSeries.mainSeriesDefined &&
+        comparisonSeries.comparisonSeriesDefined &&
+        change === null
+      ) {
         change = METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS.includes(metric)
-          ? getChangeInPercentagePoints(value!, comparisonValue!)
-          : getRelativeChange(value!, comparisonValue!)
+          ? getChangeInPercentagePoints(
+              mainSeries.value,
+              comparisonSeries.comparisonValue
+            )
+          : getRelativeChange(
+              mainSeries.value,
+              comparisonSeries.comparisonValue
+            )
       }
 
       return {
-        value,
-        comparisonValue,
-        timeLabel,
-        comparisonTimeLabel,
-        change,
-        isPartial
-      } as GraphDatum
+        ...mainSeries,
+        ...comparisonSeries,
+        change
+      }
     })
 
   return {
@@ -195,16 +233,16 @@ export type LineSegment = {
  * No line is drawn from or to gaps in the data.
  */
 export function getLineSegments(data: MainSeriesValue[]): LineSegment[] {
-  return data.reduce((segments: LineSegment[], point, i) => {
+  return data.reduce((segments: LineSegment[], curr, i) => {
     if (i === 0) {
       return segments
     }
     const prev = data[i - 1]
-    if (prev.value === null || point.value === null) {
+    if (!prev.mainSeriesDefined || !curr.mainSeriesDefined) {
       return segments
     }
 
-    const type = prev.isPartial || point.isPartial ? 'partial' : 'full'
+    const type = prev.isPartial || curr.isPartial ? 'partial' : 'full'
     const lastSegment = segments[segments.length - 1]
 
     if (lastSegment?.type === type && lastSegment.stopIndexExclusive === i) {
@@ -231,16 +269,21 @@ export type GraphDatum = {
 } & MainSeriesValue &
   ComparisonSeriesValue
 
-type NotDefinedValue = { value: null; isPartial: null; timeLabel: null }
-type DefinedValue = { value: number; isPartial: boolean; timeLabel: string }
+type NotDefinedValue = { mainSeriesDefined: false }
+type DefinedValue = {
+  mainSeriesDefined: true
+  value: number
+  isPartial: boolean
+  timeLabel: string
+}
 
 type MainSeriesValue = NotDefinedValue | DefinedValue
 
 type NotDefinedComparisonValue = {
-  comparisonValue: null
-  comparisonTimeLabel: null
+  comparisonSeriesDefined: false
 }
 type DefinedComparisonValue = {
+  comparisonSeriesDefined: true
   comparisonValue: number
   comparisonTimeLabel: string
 }

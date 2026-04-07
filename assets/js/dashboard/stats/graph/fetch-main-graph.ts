@@ -44,7 +44,7 @@ export type RevenueMetricValue = {
   currency: string
 }
 
-type ResultItem = {
+export type ResultItem = {
   dimensions: [string] // one item
   metrics: null | [number] | [RevenueMetricValue] // one item
 }

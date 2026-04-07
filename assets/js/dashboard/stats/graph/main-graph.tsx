@@ -94,23 +94,25 @@ export const MainGraph = ({
     // because we need the xLabels formatting parameters to be known
     const remappedDataInGraphFormat = remappedData.map((d, bucketIndex) => {
       const dataPoint = {
-        values: [d.value ?? null, d.comparisonValue ?? null] as const,
-        xLabel:
-          d.timeLabel !== null
-            ? getBucketLabel(d.timeLabel, {
-                shouldShowDate: !isDateUnambiguous({
-                  startEndLabels: mainSeriesStartEndLabels
-                }),
-                shouldShowYear: !isYearUnambiguous({
-                  site,
-                  startEndLabels: mainSeriesStartEndLabels
-                }),
-                interval,
-                period,
-                bucketIndex,
-                totalBuckets: remappedData.length
-              })
-            : ''
+        values: [
+          d.mainSeriesDefined ? d.value : null,
+          d.comparisonSeriesDefined ? d.comparisonValue : null
+        ] as const,
+        xLabel: d.mainSeriesDefined
+          ? getBucketLabel(d.timeLabel, {
+              shouldShowDate: !isDateUnambiguous({
+                startEndLabels: mainSeriesStartEndLabels
+              }),
+              shouldShowYear: !isYearUnambiguous({
+                site,
+                startEndLabels: mainSeriesStartEndLabels
+              }),
+              interval,
+              period,
+              bucketIndex,
+              totalBuckets: remappedData.length
+            })
+          : ''
       }
 
       return dataPoint
@@ -200,6 +202,10 @@ export const MainGraph = ({
   }, [])
 
   const showZoomToPeriod = ['month', 'day'].includes(interval)
+  const zoomDate =
+    selectedIndex !== null && remappedData[selectedIndex].mainSeriesDefined
+      ? remappedData[selectedIndex].timeLabel
+      : null
 
   return (
     <Graph<Readonly<[number | null, number | null]>>
@@ -223,14 +229,14 @@ export const MainGraph = ({
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
       onClick={
-        selectedIndex !== null && showZoomToPeriod
+        selectedIndex !== null &&
+        showZoomToPeriod &&
+        typeof zoomDate === 'string'
           ? () =>
               navigate({
                 search: (currentSearch) => ({
                   ...currentSearch,
-                  date:
-                    remappedData[selectedIndex].timeLabel ??
-                    remappedData[selectedIndex].comparisonTimeLabel,
+                  date: zoomDate,
                   period: {
                     month: DashboardPeriod.month,
                     day: DashboardPeriod.day
@@ -310,7 +316,7 @@ const MainGraphTooltip = ({
           <div className="font-semibold mr-4 text-xs uppercase whitespace-nowrap">
             {METRIC_LABELS[metric as keyof typeof METRIC_LABELS]}
           </div>
-          {datum.comparisonTimeLabel !== null &&
+          {datum.comparisonSeriesDefined &&
             typeof datum.change === 'number' && (
               <ChangeArrow
                 className="text-xs/6 font-medium text-white whitespace-nowrap"
@@ -320,7 +326,7 @@ const MainGraphTooltip = ({
             )}
         </div>
         <div className="flex flex-col">
-          {typeof datum.timeLabel === 'string' && (
+          {datum.mainSeriesDefined && (
             <div className="flex flex-row justify-between items-center">
               <div className="flex items-center mr-4">
                 <div className="size-2 flex-none mr-2 rounded-full bg-indigo-400" />
@@ -342,7 +348,7 @@ const MainGraphTooltip = ({
             </div>
           )}
 
-          {typeof datum.comparisonTimeLabel === 'string' && (
+          {datum.comparisonSeriesDefined && (
             <div className="flex flex-row justify-between items-center">
               <div className="flex items-center mr-4">
                 <div className="size-2 flex-none mr-2 rounded-full bg-gray-500"></div>
