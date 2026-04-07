@@ -43,21 +43,16 @@ export const remapAndFillData = ({
   const remappedData: GraphDatum[] = new Array(totalBucketCount)
     .fill(null)
     .map((_, index) => {
-      const [
-        timeLabel,
-        indexOfResult,
-        comparisonTimeLabel,
-        indexOfComparisonResult
-      ] = [
-        data.meta.time_labels[index] ?? null,
-        data.meta.time_label_result_indices[index] ?? null,
+      const timeLabel = data.meta.time_labels[index] ?? null
+      const indexOfResult = data.meta.time_label_result_indices[index] ?? null
+      const comparisonTimeLabel =
         (data.meta.comparison_time_labels &&
           data.meta.comparison_time_labels[index]) ??
-          null,
+        null
+      const indexOfComparisonResult =
         (data.meta.comparison_time_label_result_indices &&
           data.meta.comparison_time_label_result_indices[index]) ??
-          null
-      ]
+        null
 
       const mainSeriesDefined = typeof timeLabel === 'string'
       const comparisonSeriesDefined = typeof comparisonTimeLabel === 'string'
@@ -192,10 +187,13 @@ export type LineSegment = {
   type: 'full' | 'partial'
 }
 
-// Computes drawable line segments from a series of points.
-// A segment's dash style is determined by its edges: dashed if either endpoint
-// is partial, solid if both are non-partial. Boundary points between a solid
-// and a dashed segment are shared (appear as the end of one and start of the next).
+/**
+ * Creates segments from points of main series.
+ * When a point of data is partial, all lines to and from it must be partial lines.
+ * (If that partial point moves, the lines to and from it move.)
+ * A full line is drawn only between two or more continuous full periods.
+ * No line is drawn from or to gaps in the data.
+ */
 export function getLineSegments(data: MainSeriesValue[]): LineSegment[] {
   return data.reduce((segments: LineSegment[], point, i) => {
     if (i === 0) {
@@ -235,11 +233,11 @@ export type GraphDatum = {
 
 type NotDefinedValue = { value: null; isPartial: null; timeLabel: null }
 type DefinedValue = { value: number; isPartial: boolean; timeLabel: string }
+
 type MainSeriesValue = NotDefinedValue | DefinedValue
 
 type NotDefinedComparisonValue = {
   comparisonValue: null
-  isPartial: null
   comparisonTimeLabel: null
 }
 type DefinedComparisonValue = {

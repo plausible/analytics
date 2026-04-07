@@ -28,7 +28,11 @@ import { Graph, PointerHandler, SeriesConfig } from '../../components/graph'
 import { useSiteContext, PlausibleSite } from '../../site-context'
 import { GraphTooltipWrapper } from '../../components/graph-tooltip'
 import { MainGraphResponse } from './fetch-main-graph'
-import { remapAndFillData, getLineSegments, GraphDatum } from './main-graph-data'
+import {
+  remapAndFillData,
+  getLineSegments,
+  GraphDatum
+} from './main-graph-data'
 
 const height = 368
 const marginTop = 16
@@ -113,15 +117,17 @@ export const MainGraph = ({
     })
 
     const mainSeries: SeriesConfig = {
-      lines: lineSegments.map((s) => ({
-        startIndexInclusive: s.startIndexInclusive,
-        stopIndexExclusive: s.stopIndexExclusive,
-        lineClassName: classNames(
-          sharedPathClass,
-          mainPathClass,
-          s.type === 'partial' ? dashedPathClass : roundedPathClass
-        )
-      })),
+      lines: lineSegments.map(
+        ({ startIndexInclusive, stopIndexExclusive, type }) => ({
+          startIndexInclusive,
+          stopIndexExclusive,
+          lineClassName: classNames(
+            sharedPathClass,
+            mainPathClass,
+            { partial: dashedPathClass, full: roundedPathClass }[type]
+          )
+        })
+      ),
       underline: { gradientId: primaryGradient.id },
       dot: { dotClassName: classNames(sharedDotClass, mainDotClass) }
     }
