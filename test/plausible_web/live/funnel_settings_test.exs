@@ -334,32 +334,37 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn: conn,
         site: site
       } do
-        setup_goals(site)
+        {:ok, [g1, g2]} = setup_goals(site)
+
+        {:ok, %Plausible.Funnel{strict_order: false} = funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Strict funnel",
+            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}],
+            false
+          )
+
         lv = get_liveview(conn, site)
-        lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
+
+        lv
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{funnel.id}"]/)
+        |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")
 
-        lv
-        |> element("li#dropdown-step-1-option-1 a")
-        |> render_click()
+        assert element_exists?(
+                 render(lv),
+                 ~s/button#allow-other-steps-switch[aria-checked="true"]/
+               )
 
         lv
-        |> element("li#dropdown-step-2-option-1 a")
+        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-allow-other-steps"]/)
         |> render_click()
 
-        lv
-        |> element("form")
-        |> render_change(%{
-          funnel: %{
-            name: "Strict funnel",
-            strict_order: "true",
-            steps: [
-              %{goal_id: 1},
-              %{goal_id: 2}
-            ]
-          }
-        })
+        assert element_exists?(
+                 render(lv),
+                 ~s/button#allow-other-steps-switch[aria-checked="false"]/
+               )
 
         lv
         |> element(~s/form/)
