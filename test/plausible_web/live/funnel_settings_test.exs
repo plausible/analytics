@@ -430,13 +430,8 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 100%"
 
         lv
-        |> element("form")
-        |> render_change(%{
-          funnel: %{
-            name: "Strict-order switch",
-            strict_order: "true"
-          }
-        })
+        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-allow-other-steps"]/)
+        |> render_click()
 
         assert text_of_element(render(lv), ~s/#step-eval-1/) =~ "Dropoff: 100%"
         assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 0%"

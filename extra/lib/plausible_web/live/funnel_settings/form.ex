@@ -80,12 +80,20 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               label="Funnel name"
             />
 
-            <.input
-              field={f[:strict_order]}
-              type="checkbox"
-              mt?={true}
-              label="Only count visitors who go directly from one step to the next"
-            />
+            <div class="mt-6 flex items-center justify-between gap-4">
+              <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                Allow other steps between funnel steps
+              </span>
+              <div class="flex items-center gap-3">
+                <input type="hidden" name="funnel[strict_order]" value={to_string(@strict_order)} />
+                <.toggle_switch
+                  id="allow-other-steps"
+                  id_suffix="switch"
+                  checked={!@strict_order}
+                  phx-click="toggle-allow-other-steps"
+                />
+              </div>
+            </div>
 
             <div id="steps-builder" class="mt-6">
               <.label>
@@ -239,8 +247,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
      assign(socket, step_ids: step_ids, selections_made: selections_made, funnel_modified?: true)}
   end
 
+  def handle_event("toggle-allow-other-steps", _params, socket) do
+    strict_order = !socket.assigns.strict_order
+    send(self(), :evaluate_funnel)
+
+    {:noreply, assign(socket, strict_order: strict_order)}
+  end
+
   def handle_event("validate", %{"funnel" => params}, socket) do
-    previous_strict_order = socket.assigns.strict_order
     strict_order = params["strict_order"] == "true"
 
     steps_from_assigns =
@@ -260,13 +274,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       )
       |> Map.put(:action, :validate)
 
-    socket = assign(socket, form: to_form(changeset), strict_order: strict_order)
-
-    if strict_order != previous_strict_order do
-      send(self(), :evaluate_funnel)
-    end
-
-    {:noreply, socket}
+    {:noreply, assign(socket, form: to_form(changeset), strict_order: strict_order)}
   end
 
   def handle_event(
