@@ -77,15 +77,15 @@ export const SearchInput = ({
           ref={searchRef}
           type="text"
           placeholder=" "
-          className="peer w-full text-base sm:text-sm dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+          className="peer w-full text-base dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
           onChange={handleInputChange}
         />
         {!hasValue && (
           <>
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base sm:text-sm text-gray-400 dark:text-gray-400 md:peer-[:not(:focus)]:hidden">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-gray-400 dark:text-gray-400 md:peer-[:not(:focus)]:hidden">
               {placeholderFocusedOrMobile}
             </span>
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base sm:text-sm text-gray-400 dark:text-gray-400 hidden md:peer-[:not(:focus)]:block peer-focus:hidden">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-gray-400 dark:text-gray-400 hidden md:peer-[:not(:focus)]:block peer-focus:hidden">
               {placeholderUnfocusedOnlyDesktop}
             </span>
           </>

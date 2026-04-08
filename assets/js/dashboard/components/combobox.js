@@ -220,7 +220,7 @@ export default function PlausibleCombobox({
   }, [isEmpty, singleOption, autoFocus])
 
   const searchBoxClass =
-    'border-none py-1 px-0 w-full inline-block rounded-md focus:outline-hidden focus:ring-0 text-base sm:text-sm'
+    'border-none py-1 px-0 w-full inline-block rounded-md focus:outline-hidden focus:ring-0 text-base'
 
   const containerClass = classNames('relative w-full', {
     [className]: !!className,
