@@ -80,6 +80,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               label="Funnel name"
             />
 
+            <.input
+              field={f[:strict_order]}
+              type="checkbox"
+              mt?={true}
+              label="Only count visitors who go directly from one step to the next"
+            />
+
             <div id="steps-builder" class="mt-6">
               <.label>
                 Funnel steps
@@ -233,6 +240,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   def handle_event("validate", %{"funnel" => params}, socket) do
+    previous_strict_order = socket.assigns.strict_order
+    strict_order = params["strict_order"] == "true"
+
     steps_from_assigns =
       socket.assigns.step_ids
       |> Enum.reduce([], fn step_id, acc ->
@@ -245,11 +255,18 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       socket.assigns.site
       |> Funnels.create_changeset(
         params["name"],
-        steps_from_assigns
+        steps_from_assigns,
+        strict_order
       )
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, form: to_form(changeset))}
+    socket = assign(socket, form: to_form(changeset), strict_order: strict_order)
+
+    if strict_order != previous_strict_order do
+      send(self(), :evaluate_funnel)
+    end
+
+    {:noreply, socket}
   end
 
   def handle_event(
@@ -258,14 +275,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         %{assigns: %{site: site, funnel: funnel}} = socket
       ) do
     steps = Enum.map(params["steps"], fn {_idx, payload} -> payload end)
+    strict_order? = params["strict_order"] == "true"
 
     save_fn =
       case funnel do
         %Plausible.Funnel{} ->
-          fn -> Funnels.update(funnel, params["name"], steps) end
+          fn -> Funnels.update(funnel, params["name"], steps, strict_order?) end
 
         nil ->
-          fn -> Funnels.create(site, params["name"], steps) end
+          fn -> Funnels.create(site, params["name"], steps, strict_order?) end
       end
 
     case save_fn.() do
@@ -314,11 +332,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
          %{
            assigns: %{
              site: site,
-             selections_made: selections_made
+             selections_made: selections_made,
+             strict_order: strict_order
            }
          } = socket
        ) do
-    with {:ok, {definition, query}} <- build_ephemeral_funnel(site, selections_made),
+    with {:ok, {definition, query}} <- build_ephemeral_funnel(site, selections_made, strict_order),
          {:ok, funnel} <- Plausible.Stats.funnel(site, query, definition) do
       assign(socket, evaluation_result: funnel)
     else
@@ -327,7 +346,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     end
   end
 
-  defp build_ephemeral_funnel(site, selections_made) do
+  defp build_ephemeral_funnel(site, selections_made, strict_order) do
     steps =
       selections_made
       |> Enum.sort_by(&elem(&1, 0))
@@ -346,7 +365,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       Funnels.ephemeral_definition(
         site,
         "Test funnel",
-        steps
+        steps,
+        strict_order
       )
 
     query =
@@ -417,7 +437,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       funnel
       |> Funnels.edit_changeset(
         funnel.name,
-        Enum.map(funnel.steps, &%{goal_id: &1.goal.id})
+        Enum.map(funnel.steps, &%{goal_id: &1.goal.id}),
+        funnel.strict_order
       )
       |> to_form()
 
@@ -431,6 +452,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         socket,
         form: form,
         funnel: funnel,
+        strict_order: funnel.strict_order,
         funnel_modified?: false,
         selections_made: selections_made,
         step_ids: Enum.to_list(1..Enum.count(funnel.steps))
@@ -440,12 +462,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   defp prepare_socket(socket, site, nil) do
-    form = to_form(Funnels.create_changeset(site, "", []))
+    form = to_form(Funnels.create_changeset(site, "", [], false))
 
     assign(
       socket,
       form: form,
       funnel: nil,
+      strict_order: false,
       funnel_modified?: false,
       selections_made: Map.new(),
       step_ids: Enum.to_list(1..Funnel.min_steps())

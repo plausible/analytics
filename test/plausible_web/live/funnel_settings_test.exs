@@ -326,7 +326,47 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         |> element(~s/form/)
         |> render_submit()
 
-        assert %Plausible.Funnel{steps: [_, _]} = Plausible.Funnels.get(site, "My test funnel")
+        assert %Plausible.Funnel{steps: [_, _], strict_order: false} =
+                 Plausible.Funnels.get(site, "My test funnel")
+      end
+
+      test "save button saves strict-order setting", %{
+        conn: conn,
+        site: site
+      } do
+        setup_goals(site)
+        lv = get_liveview(conn, site)
+        lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
+
+        assert lv = find_live_child(lv, "funnels-form")
+
+        lv
+        |> element("li#dropdown-step-1-option-1 a")
+        |> render_click()
+
+        lv
+        |> element("li#dropdown-step-2-option-1 a")
+        |> render_click()
+
+        lv
+        |> element("form")
+        |> render_change(%{
+          funnel: %{
+            name: "Strict funnel",
+            strict_order: "true",
+            steps: [
+              %{goal_id: 1},
+              %{goal_id: 2}
+            ]
+          }
+        })
+
+        lv
+        |> element(~s/form/)
+        |> render_submit()
+
+        assert %Plausible.Funnel{strict_order: true} =
+                 Plausible.Funnels.get(site, "Strict funnel")
       end
 
       test "editing a funnel pre-renders it", %{
@@ -346,6 +386,60 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
                  "Visit /go/to/blog/**"
 
         assert lv |> element("#step-2") |> render() |> text_of_attr("value") == "Signup"
+      end
+
+      test "funnel is re-evaluated when strict-order is changed", %{
+        conn: conn,
+        site: site
+      } do
+        {:ok, [g1, g2]} = setup_goals(site)
+
+        {:ok, funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Strict-order switch",
+            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}],
+            false
+          )
+
+        ts = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/go/to/blog/foo", user_id: 123, timestamp: ts),
+          build(:pageview,
+            pathname: "/intervention",
+            user_id: 123,
+            timestamp: NaiveDateTime.add(ts, 1, :second)
+          ),
+          build(:event,
+            name: "Signup",
+            user_id: 123,
+            timestamp: NaiveDateTime.add(ts, 2, :second)
+          )
+        ])
+
+        lv = get_liveview(conn, site)
+
+        lv
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{funnel.id}"]/)
+        |> render_click()
+
+        assert lv = find_live_child(lv, "funnels-form")
+
+        assert text_of_element(render(lv), ~s/#step-eval-1/) =~ "Dropoff: 0%"
+        assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 100%"
+
+        lv
+        |> element("form")
+        |> render_change(%{
+          funnel: %{
+            name: "Strict-order switch",
+            strict_order: "true"
+          }
+        })
+
+        assert text_of_element(render(lv), ~s/#step-eval-1/) =~ "Dropoff: 100%"
+        assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 0%"
       end
 
       test "clicking save after editing the funnel, updates it", %{
@@ -385,6 +479,49 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert %Plausible.Funnel{steps: [_, %Plausible.Funnel.Step{goal_id: ^goal_id}]} =
                  Plausible.Funnels.get(site, "Updated funnel")
+      end
+
+      test "clicking save after editing the funnel, updates strict-order setting", %{
+        conn: conn,
+        site: site
+      } do
+        {:ok, [g1, g2]} = setup_goals(site)
+
+        {:ok, funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Editable strict funnel",
+            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}],
+            false
+          )
+
+        lv = get_liveview(conn, site)
+
+        lv
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{funnel.id}"]/)
+        |> render_click()
+
+        assert lv = find_live_child(lv, "funnels-form")
+
+        lv
+        |> element("form")
+        |> render_change(%{
+          funnel: %{
+            name: "Editable strict funnel",
+            strict_order: "true",
+            steps: [
+              %{goal_id: g1.id},
+              %{goal_id: g2.id}
+            ]
+          }
+        })
+
+        lv
+        |> element(~s/form/)
+        |> render_submit()
+
+        assert %Plausible.Funnel{strict_order: true} =
+                 Plausible.Funnels.get(site, "Editable strict funnel")
       end
 
       test "funnel gets evaluated on every select, assuming a second has passed between selections",
