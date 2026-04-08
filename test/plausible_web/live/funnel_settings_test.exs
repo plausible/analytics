@@ -358,7 +358,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
                )
 
         lv
-        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-allow-other-steps"]/)
+        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-strict-order"]/)
         |> render_click()
 
         assert element_exists?(
@@ -435,7 +435,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 100%"
 
         lv
-        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-allow-other-steps"]/)
+        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-strict-order"]/)
         |> render_click()
 
         assert text_of_element(render(lv), ~s/#step-eval-1/) =~ "Dropoff: 100%"
@@ -504,7 +504,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert lv = find_live_child(lv, "funnels-form")
 
         lv
-        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-allow-other-steps"]/)
+        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-strict-order"]/)
         |> render_click()
 
         lv

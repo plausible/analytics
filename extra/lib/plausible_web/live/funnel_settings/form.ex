@@ -85,12 +85,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 Allow other steps between funnel steps
               </span>
               <div class="flex items-center gap-3">
-                <input type="hidden" name="funnel[strict_order]" value={to_string(@strict_order)} />
                 <.toggle_switch
-                  id="allow-other-steps"
+                  id="toggle-strict-order"
                   id_suffix="switch"
                   checked={!@strict_order}
-                  phx-click="toggle-allow-other-steps"
+                  phx-click="toggle-strict-order"
                 />
               </div>
             </div>
@@ -247,7 +246,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
      assign(socket, step_ids: step_ids, selections_made: selections_made, funnel_modified?: true)}
   end
 
-  def handle_event("toggle-allow-other-steps", _params, socket) do
+  def handle_event("toggle-strict-order", _params, socket) do
     strict_order = !socket.assigns.strict_order
     send(self(), :evaluate_funnel)
 
@@ -255,7 +254,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   def handle_event("validate", %{"funnel" => params}, socket) do
-    strict_order = params["strict_order"] == "true"
+    strict_order = socket.assigns.strict_order
 
     steps_from_assigns =
       socket.assigns.step_ids
@@ -274,24 +273,23 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       )
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, form: to_form(changeset), strict_order: strict_order)}
+    {:noreply, assign(socket, form: to_form(changeset))}
   end
 
   def handle_event(
         "save",
         %{"funnel" => params},
-        %{assigns: %{site: site, funnel: funnel}} = socket
+        %{assigns: %{site: site, funnel: funnel, strict_order: strict_order}} = socket
       ) do
     steps = Enum.map(params["steps"], fn {_idx, payload} -> payload end)
-    strict_order? = params["strict_order"] == "true"
 
     save_fn =
       case funnel do
         %Plausible.Funnel{} ->
-          fn -> Funnels.update(funnel, params["name"], steps, strict_order?) end
+          fn -> Funnels.update(funnel, params["name"], steps, strict_order) end
 
         nil ->
-          fn -> Funnels.create(site, params["name"], steps, strict_order?) end
+          fn -> Funnels.create(site, params["name"], steps, strict_order) end
       end
 
     case save_fn.() do
