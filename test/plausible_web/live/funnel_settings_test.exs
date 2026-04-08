@@ -504,17 +504,8 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert lv = find_live_child(lv, "funnels-form")
 
         lv
-        |> element("form")
-        |> render_change(%{
-          funnel: %{
-            name: "Editable strict funnel",
-            strict_order: "true",
-            steps: [
-              %{goal_id: g1.id},
-              %{goal_id: g2.id}
-            ]
-          }
-        })
+        |> element(~s/button#allow-other-steps-switch[phx-click="toggle-allow-other-steps"]/)
+        |> render_click()
 
         lv
         |> element(~s/form/)
