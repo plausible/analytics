@@ -56,6 +56,10 @@ defmodule Plausible.Stats.Goal.Revenue do
       query.revenue_currencies[:default] ||
         get_goal_dimension_revenue_currency(query, dimension_values)
 
+    format_revenue_metric(value, currency)
+  end
+
+  def format_revenue_metric(value, currency) do
     if currency do
       money = Money.new!(value || 0, currency)
 

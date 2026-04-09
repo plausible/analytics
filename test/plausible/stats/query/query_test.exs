@@ -464,4 +464,68 @@ defmodule Plausible.Stats.QueryTest do
       assert [%{dimensions: ["2021-01-01 00:05:00"], metrics: [1, 50.0]}] = results
     end
   end
+
+  describe "include.empty_metrics" do
+    test "if not asked for, no empty_metrics are returned under meta", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors],
+          input_date_range: :all
+        })
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert is_nil(meta[:empty_metrics])
+    end
+
+    test "for regular metrics", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors, :bounce_rate, :scroll_depth],
+          input_date_range: :all,
+          include: %QueryInclude{empty_metrics: true},
+          filters: [[:is, "event:page", ["/"]]]
+        })
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert meta[:empty_metrics] == [0, 0.0, nil]
+    end
+
+    @tag :ee_only
+    test "for revenue metrics", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:average_revenue, :total_revenue],
+          input_date_range: :all,
+          include: %QueryInclude{empty_metrics: true},
+          filters: [[:is, "event:goal", ["Purchase"]]]
+        })
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert meta[:empty_metrics] == [
+               %{currency: :EUR, long: "€0.00", short: "€0.0", value: 0.0},
+               %{currency: :EUR, long: "€0.00", short: "€0.0", value: 0.0}
+             ]
+    end
+
+    test "is ignored when event:goal dimension used", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors, :average_revenue],
+          input_date_range: :all,
+          include: %QueryInclude{empty_metrics: true},
+          dimensions: ["event:goal"]
+        })
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert is_nil(meta[:empty_metrics])
+    end
+  end
 end

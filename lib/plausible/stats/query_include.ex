@@ -9,6 +9,9 @@ defmodule Plausible.Stats.QueryInclude do
             # breakdowns by multiple dimensions (time + non-time). Also, at this point it is
             # still unclear whether `time_labels` will stay in the public API or not.
             time_label_result_indices: false,
+            # Another flag to simplify frontend code by not having to repeat the logic defining
+            # default values for metrics (especially revenue metrics).
+            empty_metrics: false,
             present_index: false,
             partial_time_labels: false,
             total_rows: false,
@@ -27,6 +30,7 @@ defmodule Plausible.Stats.QueryInclude do
           imports_meta: boolean(),
           time_labels: boolean(),
           time_label_result_indices: boolean(),
+          empty_metrics: boolean(),
           present_index: boolean(),
           partial_time_labels: boolean(),
           total_rows: boolean(),

@@ -58,6 +58,7 @@ defmodule Plausible.Stats.QueryResult do
     %{}
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
+    |> add_empty_metrics_meta(runner.main_query)
     |> add_time_labels_meta(runner)
     |> add_time_labels_result_indices_meta(runner)
     |> add_comparison_time_labels_meta(runner)
@@ -87,6 +88,18 @@ defmodule Plausible.Stats.QueryResult do
 
     if map_size(warnings) > 0 do
       Map.put(meta, :metric_warnings, warnings)
+    else
+      meta
+    end
+  end
+
+  defp add_empty_metrics_meta(meta, query) do
+    if query.include.empty_metrics and "event:goal" not in query.dimensions do
+      Map.put(
+        meta,
+        :empty_metrics,
+        Enum.map(query.metrics, &Plausible.Stats.Metrics.default_value(&1, query))
+      )
     else
       meta
     end
