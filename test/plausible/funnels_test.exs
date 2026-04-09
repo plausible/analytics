@@ -92,7 +92,7 @@ defmodule Plausible.FunnelsTest do
             funnel,
             "Sample funnel",
             [g1, g2, g3],
-            true
+            strict_order?: true
           )
 
         assert strict_funnel.strict_order == true
@@ -346,7 +346,7 @@ defmodule Plausible.FunnelsTest do
             site,
             "Strict from blog to signup and purchase",
             [g1, g2, g3],
-            true
+            strict_order?: true
           )
 
         populate_stats(site, [
