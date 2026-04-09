@@ -540,8 +540,6 @@ defmodule Plausible.Stats.QueryTest do
     end
 
     test "is ignored when event:goal dimension used", %{site: site} do
-      insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
-
       {:ok, query} =
         QueryBuilder.build(site, %ParsedQueryParams{
           metrics: [:visitors, :average_revenue],
