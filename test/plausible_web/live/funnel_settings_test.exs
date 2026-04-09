@@ -341,7 +341,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
             site,
             "Strict funnel",
             [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}],
-            false
+            strict_order?: false
           )
 
         lv = get_liveview(conn, site)
@@ -403,8 +403,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
           Plausible.Funnels.create(
             site,
             "Strict-order switch",
-            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}],
-            false
+            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}]
           )
 
         ts = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
@@ -492,7 +491,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
             site,
             "Editable strict funnel",
             [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}],
-            false
+            strict_order?: false
           )
 
         lv = get_liveview(conn, site)
