@@ -97,5 +97,19 @@ defmodule Plausible.Stats.ExplorationTest do
       assert next_step2.step.pathname == "/logout"
       assert next_step2.visitors == 1
     end
+
+    test "it filters", %{site: site} do
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+        %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+      ]
+
+      assert {:ok, [next_step]} = Exploration.next_steps(query, journey, "doc")
+
+      assert next_step.step.pathname == "/docs"
+      assert next_step.visitors == 1
+    end
   end
 end

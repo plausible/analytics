@@ -25,14 +25,14 @@ defmodule Plausible.Stats.Exploration do
           visitors: pos_integer()
         }
 
-  @spec next_steps(Query.t(), journey()) ::
+  @spec next_steps(Query.t(), journey(), String.t()) ::
           {:ok, [funnel_step()]} | {:error, :empty_journey}
   def next_steps(_query, []), do: {:error, :empty_journey}
 
-  def next_steps(query, journey) do
+  def next_steps(query, journey, search_term \\ "") do
     query
     |> Base.base_event_query()
-    |> next_steps_query(journey)
+    |> next_steps_query(journey, search_term)
     |> ClickhouseRepo.all()
     |> then(&{:ok, &1})
   end
@@ -50,7 +50,7 @@ defmodule Plausible.Stats.Exploration do
     |> then(&{:ok, &1})
   end
 
-  defp next_steps_query(query, steps) do
+  defp next_steps_query(query, steps, search_term) do
     next_step_idx = length(steps) + 1
     q_steps = steps_query(query, next_step_idx)
 
@@ -59,10 +59,10 @@ defmodule Plausible.Stats.Exploration do
 
     q_next =
       from(s in subquery(q_steps),
+        # avoid cycling back to the beginning of the exploration
         where:
-          field(s, ^next_name) != "" and
-            # avoid cycling back to the beginning of the exploration
-            (field(s, ^next_name) != s.name1 or field(s, ^next_pathname) != s.pathname1),
+          selected_as(:next_name) != "" and
+            (selected_as(:next_name) != s.name1 or selected_as(:next_pathname) != s.pathname1),
         select: %{
           step: %Journey.Step{
             name: selected_as(field(s, ^next_name), :next_name),
@@ -78,6 +78,19 @@ defmodule Plausible.Stats.Exploration do
         ],
         limit: 10
       )
+
+    q_next =
+      case String.trim(search_term) do
+        term when byte_size(term) > 2 ->
+          from(s in q_next,
+            where:
+              ilike(selected_as(:next_name), ^"%#{term}%") or
+                ilike(selected_as(:next_pathname), ^"%#{term}%")
+          )
+
+        _ ->
+          q_next
+      end
 
     steps
     |> Enum.with_index()
