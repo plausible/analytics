@@ -93,10 +93,21 @@ defmodule Plausible.Stats.Funnel do
       end)
 
     dynamic_window_funnel =
-      dynamic(
-        [q],
-        fragment("windowFunnel(?)(timestamp, ?)", @funnel_window_duration, ^window_funnel_steps)
-      )
+      if funnel_definition.strict_order do
+        dynamic(
+          [q],
+          fragment(
+            "windowFunnel(?, 'strict_order')(timestamp, ?)",
+            @funnel_window_duration,
+            ^window_funnel_steps
+          )
+        )
+      else
+        dynamic(
+          [q],
+          fragment("windowFunnel(?)(timestamp, ?)", @funnel_window_duration, ^window_funnel_steps)
+        )
+      end
 
     from(q in db_query,
       select_merge:

@@ -1,6 +1,7 @@
 import { Metric } from '../../../types/query-api'
 import * as api from '../../api'
 import { DashboardState } from '../../dashboard-state'
+import { getMetricLabel } from '../metrics'
 import {
   ComparisonMode,
   DashboardPeriod,
@@ -17,7 +18,7 @@ import {
 
 export function topStatsQueries(
   dashboardState: DashboardState,
-  metrics: MetricDef[]
+  metrics: Metric[]
 ): [StatsQuery, StatsQuery | null] {
   let currentVisitorsQuery = null
 
@@ -53,7 +54,22 @@ export async function fetchTopStats(
     currentVisitorsPromise
   ])
 
-  return formatTopStatsData(topStatsResponse, currentVisitorsResponse, metrics)
+  const metricLabelSuffix = isRealTimeDashboard(dashboardState)
+    ? ' (last 30 min)'
+    : ''
+
+  const formattedMetrics = metrics.map((key) => ({
+    key,
+    label: `${getMetricLabel(key, {
+      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+    })}${metricLabelSuffix}`
+  }))
+
+  return formatTopStatsData(
+    topStatsResponse,
+    currentVisitorsResponse,
+    formattedMetrics
+  )
 }
 
 export type MetricDef = { key: Metric; label: string }
@@ -61,62 +77,46 @@ export type MetricDef = { key: Metric; label: string }
 export function chooseMetrics(
   site: Pick<PlausibleSite, 'revenueGoals'>,
   dashboardState: DashboardState
-): MetricDef[] {
-  const revenueMetrics: MetricDef[] =
-    site.revenueGoals.length > 0
-      ? [
-          { key: 'total_revenue', label: 'Total revenue' },
-          { key: 'average_revenue', label: 'Average revenue' }
-        ]
-      : []
+): Metric[] {
+  const revenueMetrics: Metric[] =
+    site.revenueGoals.length > 0 ? ['total_revenue', 'average_revenue'] : []
 
   if (
     isRealTimeDashboard(dashboardState) &&
     hasConversionGoalFilter(dashboardState)
   ) {
-    return [
-      { key: 'visitors', label: 'Unique conversions (last 30 min)' },
-      { key: 'events', label: 'Total conversions (last 30 min)' }
-    ]
+    return ['visitors', 'events']
   } else if (isRealTimeDashboard(dashboardState)) {
-    return [
-      { key: 'visitors', label: 'Unique visitors (last 30 min)' },
-      { key: 'pageviews', label: 'Pageviews (last 30 min)' }
-    ]
+    return ['visitors', 'pageviews']
   } else if (hasConversionGoalFilter(dashboardState)) {
-    return [
-      { key: 'visitors', label: 'Unique conversions' },
-      { key: 'events', label: 'Total conversions' },
-      ...revenueMetrics,
-      { key: 'conversion_rate', label: 'Conversion rate' }
-    ]
+    return ['visitors', 'events', ...revenueMetrics, 'conversion_rate']
   } else if (hasPageFilter(dashboardState)) {
     return [
-      { key: 'visitors', label: 'Unique visitors' },
-      { key: 'visits', label: 'Total visits' },
-      { key: 'pageviews', label: 'Total pageviews' },
-      { key: 'bounce_rate', label: 'Bounce rate' },
-      { key: 'scroll_depth', label: 'Scroll depth' },
-      { key: 'time_on_page', label: 'Time on page' }
+      'visitors',
+      'visits',
+      'pageviews',
+      'bounce_rate',
+      'scroll_depth',
+      'time_on_page'
     ]
   } else {
     return [
-      { key: 'visitors', label: 'Unique visitors' },
-      { key: 'visits', label: 'Total visits' },
-      { key: 'pageviews', label: 'Total pageviews' },
-      { key: 'views_per_visit', label: 'Views per visit' },
-      { key: 'bounce_rate', label: 'Bounce rate' },
-      { key: 'visit_duration', label: 'Visit duration' }
+      'visitors',
+      'visits',
+      'pageviews',
+      'views_per_visit',
+      'bounce_rate',
+      'visit_duration'
     ]
   }
 }
 
 function constructTopStatsQuery(
   dashboardState: DashboardState,
-  metrics: MetricDef[]
+  metrics: Metric[]
 ): StatsQuery {
   const reportParams: ReportParams = {
-    metrics: metrics.map((m) => m.key),
+    metrics,
     include: { imports_meta: true }
   }
 
