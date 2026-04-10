@@ -1,3 +1,4 @@
+import { Metric } from '../../../types/query-api'
 import {
   DashboardState,
   dashboardStateDefaultValue,
@@ -7,7 +8,7 @@ import { ComparisonMode, DashboardPeriod } from '../../dashboard-time-periods'
 import { PlausibleSite, siteContextDefaultValue } from '../../site-context'
 import { StatsQuery } from '../../stats-query'
 import { remapToApiFilters } from '../../util/filters'
-import { chooseMetrics, MetricDef, topStatsQueries } from './fetch-top-stats'
+import { chooseMetrics, topStatsQueries } from './fetch-top-stats'
 
 const aGoalFilter = ['is', 'goal', ['any goal']] as Filter
 const aPageFilter = ['is', 'page', ['/any/page']] as Filter
@@ -41,7 +42,7 @@ type TestCase = [
   Pick<DashboardState, 'filters' | 'period'> &
     Partial<{ site?: Pick<PlausibleSite, 'revenueGoals'> }>,
   /** expected metrics */
-  MetricDef[],
+  Metric[],
   /** expected queries */
   [StatsQuery, null | StatsQuery]
 ]
@@ -50,10 +51,7 @@ const cases: TestCase[] = [
   [
     'realtime and goal filter',
     { period: DashboardPeriod.realtime, filters: [aGoalFilter] },
-    [
-      { key: 'visitors', label: 'Unique conversions (last 30 min)' },
-      { key: 'events', label: 'Total conversions (last 30 min)' }
-    ],
+    ['visitors', 'events'],
     [
       {
         date_range: DashboardPeriod.realtime_30m,
@@ -70,10 +68,7 @@ const cases: TestCase[] = [
   [
     'realtime',
     { period: DashboardPeriod.realtime, filters: [] },
-    [
-      { key: 'visitors', label: 'Unique visitors (last 30 min)' },
-      { key: 'pageviews', label: 'Pageviews (last 30 min)' }
-    ],
+    ['visitors', 'pageviews'],
     [
       {
         date_range: DashboardPeriod.realtime_30m,
@@ -100,11 +95,11 @@ const cases: TestCase[] = [
       }
     },
     [
-      { key: 'visitors', label: 'Unique conversions' },
-      { key: 'events', label: 'Total conversions' },
-      { key: 'total_revenue', label: 'Total revenue' },
-      { key: 'average_revenue', label: 'Average revenue' },
-      { key: 'conversion_rate', label: 'Conversion rate' }
+      'visitors',
+      'events',
+      'total_revenue',
+      'average_revenue',
+      'conversion_rate'
     ],
     [
       {
@@ -128,11 +123,7 @@ const cases: TestCase[] = [
   [
     'goal filter',
     { period: aPeriodNotRealtime, filters: [aGoalFilter] },
-    [
-      { key: 'visitors', label: 'Unique conversions' },
-      { key: 'events', label: 'Total conversions' },
-      { key: 'conversion_rate', label: 'Conversion rate' }
-    ],
+    ['visitors', 'events', 'conversion_rate'],
     [
       {
         date_range: aPeriodNotRealtime,
@@ -153,12 +144,12 @@ const cases: TestCase[] = [
       filters: [aPageFilter]
     },
     [
-      { key: 'visitors', label: 'Unique visitors' },
-      { key: 'visits', label: 'Total visits' },
-      { key: 'pageviews', label: 'Total pageviews' },
-      { key: 'bounce_rate', label: 'Bounce rate' },
-      { key: 'scroll_depth', label: 'Scroll depth' },
-      { key: 'time_on_page', label: 'Time on page' }
+      'visitors',
+      'visits',
+      'pageviews',
+      'bounce_rate',
+      'scroll_depth',
+      'time_on_page'
     ],
 
     [
@@ -185,12 +176,12 @@ const cases: TestCase[] = [
     'default',
     { period: aPeriodNotRealtime, filters: [] },
     [
-      { key: 'visitors', label: 'Unique visitors' },
-      { key: 'visits', label: 'Total visits' },
-      { key: 'pageviews', label: 'Total pageviews' },
-      { key: 'views_per_visit', label: 'Views per visit' },
-      { key: 'bounce_rate', label: 'Bounce rate' },
-      { key: 'visit_duration', label: 'Visit duration' }
+      'visitors',
+      'visits',
+      'pageviews',
+      'views_per_visit',
+      'bounce_rate',
+      'visit_duration'
     ],
     [
       {
