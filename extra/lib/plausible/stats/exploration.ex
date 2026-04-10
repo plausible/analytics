@@ -8,6 +8,7 @@ defmodule Plausible.Stats.Exploration do
 
     @type t() :: %__MODULE__{}
 
+    @derive {Jason.Encoder, only: [:name, :pathname]}
     defstruct [:name, :pathname]
   end
 
