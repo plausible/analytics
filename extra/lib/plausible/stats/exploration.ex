@@ -33,10 +33,18 @@ defmodule Plausible.Stats.Exploration do
         }
 
   @spec next_steps(Query.t(), journey(), String.t()) ::
-          {:ok, [next_step()]} | {:error, :empty_journey}
-  def next_steps(_query, []), do: {:error, :empty_journey}
+          {:ok, [next_step()]}
+  def next_steps(query, journey, search_term \\ "")
 
-  def next_steps(query, journey, search_term \\ "") do
+  def next_steps(query, [], search_term) do
+    query
+    |> Base.base_event_query()
+    |> next_steps_first_query(search_term)
+    |> ClickhouseRepo.all()
+    |> then(&{:ok, &1})
+  end
+
+  def next_steps(query, journey, search_term) do
     query
     |> Base.base_event_query()
     |> next_steps_query(journey, search_term)
@@ -55,6 +63,29 @@ defmodule Plausible.Stats.Exploration do
     |> ClickhouseRepo.all()
     |> to_funnel(journey)
     |> then(&{:ok, &1})
+  end
+
+  defp next_steps_first_query(query, search_term) do
+    q_steps = steps_query(query, 1)
+
+    from(s in subquery(q_steps),
+      where: selected_as(:next_name) != "",
+      select: %{
+        step: %Journey.Step{
+          name: selected_as(s.name1, :next_name),
+          pathname: selected_as(s.pathname1, :next_pathname)
+        },
+        visitors: selected_as(scale_sample(fragment("uniq(?)", s.user_id)), :count)
+      },
+      group_by: [selected_as(:next_name), selected_as(:next_pathname)],
+      order_by: [
+        desc: selected_as(:count),
+        asc: selected_as(:next_pathname),
+        asc: selected_as(:next_name)
+      ],
+      limit: 10
+    )
+    |> maybe_search(search_term)
   end
 
   defp next_steps_query(query, steps, search_term) do
@@ -85,19 +116,7 @@ defmodule Plausible.Stats.Exploration do
         ],
         limit: 10
       )
-
-    q_next =
-      case String.trim(search_term) do
-        term when byte_size(term) > 2 ->
-          from(s in q_next,
-            where:
-              ilike(selected_as(:next_name), ^"%#{term}%") or
-                ilike(selected_as(:next_pathname), ^"%#{term}%")
-          )
-
-        _ ->
-          q_next
-      end
+      |> maybe_search(search_term)
 
     steps
     |> Enum.with_index()
@@ -158,14 +177,18 @@ defmodule Plausible.Stats.Exploration do
         order_by: e.timestamp
       )
 
-    Enum.reduce(1..(steps - 1), q_steps, fn idx, q ->
-      from(e in q,
-        select_merge: %{
-          ^:"name#{idx + 1}" => lead(e.name, ^idx) |> over(:step_window),
-          ^:"pathname#{idx + 1}" => lead(e.pathname, ^idx) |> over(:step_window)
-        }
-      )
-    end)
+    if steps > 1 do
+      Enum.reduce(1..(steps - 1), q_steps, fn idx, q ->
+        from(e in q,
+          select_merge: %{
+            ^:"name#{idx + 1}" => lead(e.name, ^idx) |> over(:step_window),
+            ^:"pathname#{idx + 1}" => lead(e.pathname, ^idx) |> over(:step_window)
+          }
+        )
+      end)
+    else
+      q_steps
+    end
   end
 
   defp step_condition(step, count) do
@@ -174,6 +197,20 @@ defmodule Plausible.Stats.Exploration do
       field(s, ^:"name#{count}") == ^step.name and
         field(s, ^:"pathname#{count}") == ^step.pathname
     )
+  end
+
+  defp maybe_search(query, search_term) do
+    case String.trim(search_term) do
+      term when byte_size(term) > 2 ->
+        from(s in query,
+          where:
+            ilike(selected_as(:next_name), ^"%#{term}%") or
+              ilike(selected_as(:next_pathname), ^"%#{term}%")
+        )
+
+      _ ->
+        query
+    end
   end
 
   defp to_funnel([result], journey) do
