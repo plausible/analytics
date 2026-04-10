@@ -1,9 +1,11 @@
 defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase, async: false
 
   setup [:create_user, :log_in, :create_site]
 
-  setup %{site: site} do
+  setup %{user: user, site: site} do
+    patch_env(:super_admin_user_ids, [user.id])
+
     now = DateTime.utc_now()
 
     populate_stats(site, [

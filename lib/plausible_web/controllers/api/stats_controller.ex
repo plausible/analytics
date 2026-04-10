@@ -26,6 +26,8 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
 
+  plug PlausibleWeb.SuperAdminOnlyPlug when action in [:exploration_next, :exploration_funnel]
+
   plug(:date_validation_plug when action not in [:query])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
 
