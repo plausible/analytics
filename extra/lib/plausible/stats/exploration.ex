@@ -20,13 +20,20 @@ defmodule Plausible.Stats.Exploration do
 
   @type journey() :: [Journey.Step.t()]
 
-  @type funnel_step() :: %{
+  @type next_step() :: %{
           step: Journey.Step.t(),
           visitors: pos_integer()
         }
 
+  @type funnel_step() :: %{
+          step: Journey.Step.t(),
+          visitors: non_neg_integer(),
+          dropoff: non_neg_integer(),
+          dropoff_percentage: String.t()
+        }
+
   @spec next_steps(Query.t(), journey(), String.t()) ::
-          {:ok, [funnel_step()]} | {:error, :empty_journey}
+          {:ok, [next_step()]} | {:error, :empty_journey}
   def next_steps(_query, []), do: {:error, :empty_journey}
 
   def next_steps(query, journey, search_term \\ "") do
@@ -46,7 +53,7 @@ defmodule Plausible.Stats.Exploration do
     |> Base.base_event_query()
     |> journey_funnel_query(journey)
     |> ClickhouseRepo.all()
-    |> to_steps(journey)
+    |> to_funnel(journey)
     |> then(&{:ok, &1})
   end
 
@@ -169,14 +176,50 @@ defmodule Plausible.Stats.Exploration do
     )
   end
 
-  defp to_steps([result], journey) do
+  defp to_funnel([result], journey) do
     journey
     |> Enum.with_index()
-    |> Enum.map(fn {step, idx} ->
-      %{
-        step: step,
-        visitors: Map.get(result, idx + 1, 0)
-      }
+    |> Enum.reduce(%{funnel: [], visitors_at_previous: nil}, fn {step, idx}, acc ->
+      current_visitors = Map.get(result, idx + 1, 0)
+
+      dropoff =
+        if acc.visitors_at_previous, do: acc.visitors_at_previous - current_visitors, else: 0
+
+      dropoff_percentage = percentage(dropoff, acc.visitors_at_previous)
+
+      funnel = [
+        %{
+          step: step,
+          visitors: current_visitors,
+          dropoff: dropoff,
+          dropoff_percentage: dropoff_percentage
+        }
+        | acc.funnel
+      ]
+
+      %{acc | funnel: funnel, visitors_at_previous: current_visitors}
     end)
+    |> Map.fetch!(:funnel)
+    |> Enum.reverse()
+  end
+
+  defp percentage(x, y) when x in [0, nil] or y in [0, nil] do
+    "0"
+  end
+
+  defp percentage(x, y) do
+    result =
+      x
+      |> Decimal.div(y)
+      |> Decimal.mult(100)
+      |> Decimal.round(2)
+      |> Decimal.to_string()
+
+    case result do
+      <<compact::binary-size(1), ".00">> -> compact
+      <<compact::binary-size(2), ".00">> -> compact
+      <<compact::binary-size(3), ".00">> -> compact
+      decimal -> decimal
+    end
   end
 end
