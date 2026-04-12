@@ -170,7 +170,7 @@ export function FunnelExploration() {
     }
   }
 
-  const numColumns = Math.max(steps.length, 3)
+  const numColumns = Math.max(steps.length + 1, 3)
 
   return (
     <div className="p-4">
