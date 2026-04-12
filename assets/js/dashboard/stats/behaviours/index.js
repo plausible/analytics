@@ -525,7 +525,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
                   Funnels
                 </TabButton>
               ))}
-            {!site.isConsolidatedView && (user.role === 'super_admin' || user.role === 'owner') && (
+            {!site.isConsolidatedView && site.explorationAvailable && (
               <TabButton
                 active={mode === Mode.EXPLORATION}
                 onClick={setTabFactory(Mode.EXPLORATION)}

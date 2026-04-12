@@ -63,6 +63,8 @@ defmodule PlausibleWeb.StatsController do
 
     consolidated_view? = Plausible.Sites.consolidated?(site)
 
+    exploration_available? = Plausible.Auth.is_super_admin?(current_user)
+
     consolidated_view_available? =
       on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team), else: false)
 
@@ -100,6 +102,7 @@ defmodule PlausibleWeb.StatsController do
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
           consolidated_view?: consolidated_view?,
           consolidated_view_available?: consolidated_view_available?,
+          exploration_available?: exploration_available?,
           team_identifier: team_identifier,
           limited_to_segment_id: nil
         )
