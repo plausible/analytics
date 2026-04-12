@@ -5,7 +5,8 @@ import { UserContextValue, useUserContext } from '../../user-context'
 export enum Mode {
   CONVERSIONS = 'conversions',
   PROPS = 'props',
-  FUNNELS = 'funnels'
+  FUNNELS = 'funnels',
+  EXPLORATION = 'exploration'
 }
 
 export const MODES = {
@@ -23,6 +24,11 @@ export const MODES = {
     title: 'Funnels',
     isAvailableKey: `${Mode.FUNNELS}Available`,
     optedOutKey: `${Mode.FUNNELS}OptedOut`
+  },
+  [Mode.EXPLORATION]: {
+    title: 'Exploration',
+    isAvailableKey: null, // always available
+    optedOutKey: null
   }
 } as const
 
@@ -48,7 +54,7 @@ function getInitiallyAvailableModes({
 }): Mode[] {
   return Object.entries(MODES)
     .filter(([_, { isAvailableKey, optedOutKey }]) => {
-      const isOptedOut = site[optedOutKey]
+      const isOptedOut = optedOutKey ? site[optedOutKey] : false
       const isAvailable = isAvailableKey ? site[isAvailableKey] : true
 
       // If the feature is not supported by the site owner's subscription,
