@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import * as api from '../api'
 import * as url from '../util/url'
+import { useDebounce } from '../custom-hooks'
 import { useSiteContext } from '../site-context'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { numberShortFormatter } from '../util/number-formatter'
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 
-function fetchColumnData(site, dashboardState, steps) {
+function fetchColumnData(site, dashboardState, steps, filter) {
   // Page filters only apply to the first step — strip them for subsequent columns
   const stateToUse =
     steps.length > 0
@@ -27,7 +28,8 @@ function fetchColumnData(site, dashboardState, steps) {
   }
 
   return api.get(url.apiPath(site, '/exploration/next'), stateToUse, {
-    journey: JSON.stringify(journey)
+    journey: JSON.stringify(journey),
+    search_term: filter
   })
 }
 
@@ -41,9 +43,17 @@ function ExplorationColumn({
   const site = useSiteContext()
   const [loading, setLoading] = useState(steps !== null)
   const [results, setResults] = useState([])
+  const [filter, setFilter] = useState('')
+
+  const onSearchInputChange = useCallback((event) => {
+    setFilter(event.target.value)
+  }, [])
+
+  const debouncedOnSearchInputChange = useDebounce(onSearchInputChange)
 
   useEffect(() => {
     if (steps === null) {
+      setFilter('')
       setResults([])
       setLoading(false)
       return
@@ -52,7 +62,7 @@ function ExplorationColumn({
     setLoading(true)
     setResults([])
 
-    fetchColumnData(site, dashboardState, steps)
+    fetchColumnData(site, dashboardState, steps, filter)
       .then((response) => {
         setResults(response || [])
       })
@@ -63,7 +73,7 @@ function ExplorationColumn({
         setLoading(false)
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dashboardState, steps === null ? null : steps.join('|||')])
+  }, [dashboardState, steps, filter])
 
   const maxVisitors = results.length > 0 ? results[0].visitors : 1
 
@@ -73,6 +83,15 @@ function ExplorationColumn({
         <span className="text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400 uppercase">
           {header}
         </span>
+        {!selected && steps !== null && (
+          <input
+            data-testid="search-input"
+            type="text"
+            placeholder="Search"
+            onChange={debouncedOnSearchInputChange}
+            className="peer w-32 text-sm dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+          />
+        )}
         {selected && (
           <button
             onClick={() => onSelect(null)}
@@ -106,7 +125,9 @@ function ExplorationColumn({
             const label = `${step.name} ${step.pathname}`
             const pct = Math.round((visitors / maxVisitors) * 100)
             const isSelected =
-              !!selected && step.name === selected.name && step.pathname === selected.pathname
+              !!selected &&
+              step.name === selected.name &&
+              step.pathname === selected.pathname
 
             return (
               <li key={label}>
