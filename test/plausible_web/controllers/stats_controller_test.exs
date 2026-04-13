@@ -22,6 +22,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-props-available") == "true"
       assert text_of_attr(resp, @react_container, "data-site-segments-available") == "true"
       assert text_of_attr(resp, @react_container, "data-funnels-available") == "true"
+      assert text_of_attr(resp, @react_container, "data-exploration-available") == "false"
       assert text_of_attr(resp, @react_container, "data-has-props") == "false"
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
@@ -145,6 +146,23 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       resp = conn |> get("/" <> site.domain <> "?skip_to_dashboard=true") |> html_response(200)
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+    end
+
+    test "non-superadmin can't see exploration funnel UI", %{conn: conn, site: site} do
+      populate_stats(site, [build(:pageview)])
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-exploration-available") == "false"
+    end
+
+    on_ee do
+      test "superadmin can see exploration funnel UI", %{conn: conn, site: site, user: user} do
+        patch_env(:super_admin_user_ids, [user.id])
+        populate_stats(site, [build(:pageview)])
+        conn = get(conn, "/" <> site.domain)
+        resp = html_response(conn, 200)
+        assert text_of_attr(resp, @react_container, "data-exploration-available") == "true"
+      end
     end
 
     on_ee do

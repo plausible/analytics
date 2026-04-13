@@ -63,6 +63,8 @@ defmodule PlausibleWeb.StatsController do
 
     consolidated_view? = Plausible.Sites.consolidated?(site)
 
+    exploration_available? = Plausible.Auth.is_super_admin?(current_user)
+
     consolidated_view_available? =
       on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team), else: false)
 
@@ -94,12 +96,13 @@ defmodule PlausibleWeb.StatsController do
           title: title(conn, site),
           demo: demo,
           flags: flags,
-          is_dbip: is_dbip(),
+          dbip?: dbip?(),
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
           consolidated_view?: consolidated_view?,
           consolidated_view_available?: consolidated_view_available?,
+          exploration_available?: exploration_available?,
           team_identifier: team_identifier,
           limited_to_segment_id: nil
         )
@@ -471,6 +474,8 @@ defmodule PlausibleWeb.StatsController do
 
         flags = get_flags(current_user, shared_link.site)
 
+        exploration_available? = Plausible.Auth.is_super_admin?(current_user)
+
         limited_to_segment_id =
           if Plausible.Site.SharedLink.limited_to_segment?(shared_link) do
             shared_link.segment.id
@@ -520,13 +525,14 @@ defmodule PlausibleWeb.StatsController do
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: flags,
-          is_dbip: is_dbip(),
+          dbip?: dbip?(),
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public),
           # no shared links for consolidated views
           consolidated_view?: false,
           consolidated_view_available?: false,
+          exploration_available?: exploration_available?,
           team_identifier: team_identifier,
           limited_to_segment_id: limited_to_segment_id
         )
@@ -546,7 +552,7 @@ defmodule PlausibleWeb.StatsController do
       end)
       |> Map.new()
 
-  defp is_dbip() do
+  defp dbip?() do
     on_ee do
       false
     else

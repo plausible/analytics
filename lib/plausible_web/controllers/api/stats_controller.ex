@@ -9,6 +9,7 @@ defmodule PlausibleWeb.Api.StatsController do
   alias Plausible.Stats.{
     Query,
     Comparisons,
+    Exploration,
     Filters,
     Time,
     TableDecider,
@@ -24,6 +25,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
+
+  plug PlausibleWeb.SuperAdminOnlyPlug when action in [:exploration_next, :exploration_funnel]
 
   plug(:date_validation_plug when action not in [:query])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
@@ -330,6 +333,54 @@ defmodule PlausibleWeb.Api.StatsController do
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
+  end
+
+  def exploration_next(conn, %{"journey" => steps} = params) do
+    site = conn.assigns.site
+    search_term = params["search_term"] || ""
+
+    with {:ok, journey} <- parse_journey(steps),
+         query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+         {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term) do
+      json(conn, next_steps)
+    else
+      _ ->
+        bad_request(conn, "There was an error with your request")
+    end
+  end
+
+  def exploration_funnel(conn, %{"journey" => steps} = params) do
+    site = conn.assigns.site
+
+    with {:ok, journey} <- parse_journey(steps),
+         query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+         {:ok, funnel} <- Exploration.journey_funnel(query, journey) do
+      json(conn, funnel)
+    else
+      {:error, :empty_journey} ->
+        bad_request(
+          conn,
+          "We are unable to show funnels when journey is empty",
+          %{
+            level: :normal
+          }
+        )
+    end
+  end
+
+  defp parse_journey(input) when is_binary(input) do
+    input
+    |> Jason.decode!()
+    |> Enum.map(&parse_journey_step/1)
+    |> Enum.reject(&is_nil/1)
+    |> then(&{:ok, &1})
+  end
+
+  defp parse_journey_step(%{"name" => name, "pathname" => pathname}) do
+    %Exploration.Journey.Step{
+      name: name,
+      pathname: pathname
+    }
   end
 
   on_ee do
@@ -839,49 +890,53 @@ defmodule PlausibleWeb.Api.StatsController do
       results
       |> transform_keys(%{country: :code})
 
-    if params["csv"] do
-      countries =
-        countries
-        |> Enum.map(fn country ->
-          country_info = get_country(country[:code])
-          Map.put(country, :name, country_info.name)
-        end)
+    countries_response(conn, query, meta, countries, !!params["csv"])
+  end
 
-      if toplevel_goal_filter?(query) do
-        countries
-        |> transform_keys(%{visitors: :conversions})
-        |> to_csv([:name, :conversions, :conversion_rate])
-      else
-        countries |> to_csv([:name, :visitors])
-      end
+  defp countries_response(_conn, query, _meta, countries, true = _csv?) do
+    countries =
+      countries
+      |> Enum.map(fn country ->
+        country_info = get_country(country[:code])
+        Map.put(country, :name, country_info.name)
+      end)
+
+    if toplevel_goal_filter?(query) do
+      countries
+      |> transform_keys(%{visitors: :conversions})
+      |> to_csv([:name, :conversions, :conversion_rate])
     else
-      countries =
-        Enum.map(countries, fn row ->
-          country = get_country(row[:code])
-
-          if country do
-            Map.merge(row, %{
-              name: country.name,
-              flag: country.flag,
-              alpha_3: country.alpha_3,
-              code: country.alpha_2
-            })
-          else
-            Map.merge(row, %{
-              name: row[:code],
-              flag: "",
-              alpha_3: "",
-              code: ""
-            })
-          end
-        end)
-
-      json(conn, %{
-        results: countries,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
-        skip_imported_reason: meta[:imports_skip_reason]
-      })
+      countries |> to_csv([:name, :visitors])
     end
+  end
+
+  defp countries_response(conn, query, meta, countries, _csv?) do
+    countries =
+      Enum.map(countries, fn row ->
+        country = get_country(row[:code])
+
+        if country do
+          Map.merge(row, %{
+            name: country.name,
+            flag: country.flag,
+            alpha_3: country.alpha_3,
+            code: country.alpha_2
+          })
+        else
+          Map.merge(row, %{
+            name: row[:code],
+            flag: "",
+            alpha_3: "",
+            code: ""
+          })
+        end
+      end)
+
+    json(conn, %{
+      results: countries,
+      meta: Stats.Breakdown.formatted_date_ranges(query),
+      skip_imported_reason: meta[:imports_skip_reason]
+    })
   end
 
   def regions(conn, params) do
