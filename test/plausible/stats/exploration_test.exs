@@ -140,12 +140,14 @@ defmodule Plausible.Stats.ExplorationTest do
         %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
       ]
 
-      assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(query, journey)
+      assert {:ok, [next_step1, next_step2, next_step3]} = Exploration.next_steps(query, journey)
 
       assert next_step1.step.pathname == "/docs"
       assert next_step1.visitors == 1
-      assert next_step2.step.pathname == "/logout"
+      assert next_step2.step.pathname == "/home"
       assert next_step2.visitors == 1
+      assert next_step3.step.pathname == "/logout"
+      assert next_step3.visitors == 1
     end
 
     test "suggests the first step in the journey", %{site: site} do

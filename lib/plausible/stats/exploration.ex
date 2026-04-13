@@ -36,17 +36,7 @@ defmodule Plausible.Stats.Exploration do
 
   @spec next_steps(Query.t(), journey(), String.t()) ::
           {:ok, [next_step()]}
-  def next_steps(query, journey, search_term \\ "")
-
-  def next_steps(query, [], search_term) do
-    query
-    |> Base.base_event_query()
-    |> next_steps_first_query(search_term)
-    |> ClickhouseRepo.all()
-    |> then(&{:ok, &1})
-  end
-
-  def next_steps(query, journey, search_term) do
+  def next_steps(query, journey, search_term \\ "") do
     query
     |> Base.base_event_query()
     |> next_steps_query(journey, search_term)
@@ -67,29 +57,6 @@ defmodule Plausible.Stats.Exploration do
     |> then(&{:ok, &1})
   end
 
-  defp next_steps_first_query(query, search_term) do
-    q_steps = steps_query(query, 1)
-
-    from(s in subquery(q_steps),
-      where: selected_as(:next_name) != "",
-      select: %{
-        step: %Journey.Step{
-          name: selected_as(s.name1, :next_name),
-          pathname: selected_as(s.pathname1, :next_pathname)
-        },
-        visitors: selected_as(scale_sample(fragment("uniq(?)", s.user_id)), :count)
-      },
-      group_by: [selected_as(:next_name), selected_as(:next_pathname)],
-      order_by: [
-        desc: selected_as(:count),
-        asc: selected_as(:next_pathname),
-        asc: selected_as(:next_name)
-      ],
-      limit: 10
-    )
-    |> maybe_search(search_term)
-  end
-
   defp next_steps_query(query, steps, search_term) do
     next_step_idx = length(steps) + 1
     q_steps = steps_query(query, next_step_idx)
@@ -99,10 +66,7 @@ defmodule Plausible.Stats.Exploration do
 
     q_next =
       from(s in subquery(q_steps),
-        # avoid cycling back to the beginning of the exploration
-        where:
-          selected_as(:next_name) != "" and
-            (selected_as(:next_name) != s.name1 or selected_as(:next_pathname) != s.pathname1),
+        where: selected_as(:next_name) != "",
         select: %{
           step: %Journey.Step{
             name: selected_as(field(s, ^next_name), :next_name),
