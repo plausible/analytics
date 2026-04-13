@@ -1533,6 +1533,31 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert response["meta"]["partial_time_labels"] == []
     end
 
+    test "returns comparison_partial_time_labels", %{
+      conn: conn,
+      site: site
+    } do
+      response =
+        do_query(conn, site, %{
+          "date_range" => ["2026-02-08", "2026-02-25"],
+          "metrics" => ["visitors"],
+          "dimensions" => ["time:week"],
+          "include" => %{
+            "time_labels" => true,
+            "partial_time_labels" => true,
+            "compare" => ["2026-01-08", "2026-01-25"]
+          }
+        })
+
+      assert response["meta"]["comparison_time_labels"] == [
+               "2026-01-08",
+               "2026-01-12",
+               "2026-01-19"
+             ]
+
+      assert response["meta"]["comparison_partial_time_labels"] == ["2026-01-08"]
+    end
+
     test "returns stats for a day with a minute interval", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2023-03-01 12:00:00])

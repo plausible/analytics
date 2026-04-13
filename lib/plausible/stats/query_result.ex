@@ -65,6 +65,7 @@ defmodule Plausible.Stats.QueryResult do
     |> add_comparison_time_label_result_indices_meta(runner)
     |> add_present_index_meta(runner.main_query)
     |> add_partial_time_labels_meta(runner.main_query)
+    |> add_comparison_partial_time_labels_meta(runner)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
     |> Enum.sort_by(&elem(&1, 0))
   end
@@ -174,6 +175,20 @@ defmodule Plausible.Stats.QueryResult do
         meta,
         :partial_time_labels,
         Plausible.Stats.Time.partial_time_labels(time_labels, query)
+      )
+    else
+      meta
+    end
+  end
+
+  defp add_comparison_partial_time_labels_meta(meta, %QueryRunner{main_query: query} = runner) do
+    comparison_time_labels = meta[:comparison_time_labels]
+
+    if query.include.partial_time_labels and is_list(comparison_time_labels) do
+      Map.put(
+        meta,
+        :comparison_partial_time_labels,
+        Plausible.Stats.Time.partial_time_labels(comparison_time_labels, runner.comparison_query)
       )
     else
       meta
