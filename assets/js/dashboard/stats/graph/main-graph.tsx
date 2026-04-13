@@ -106,8 +106,8 @@ export const MainGraph = ({
     const remappedDataInGraphFormat = remappedData.map((d, bucketIndex) => {
       const dataPoint = {
         values: [
-          d.mainSeriesDefined ? d.value : null,
-          d.comparisonSeriesDefined ? d.comparisonValue : null
+          d.mainSeriesDefined ? d.numericValue : null,
+          d.comparisonSeriesDefined ? d.comparisonNumericValue : null
         ] as const,
         xLabel: d.mainSeriesDefined
           ? getBucketLabel(d.timeLabel, {
@@ -125,11 +125,11 @@ export const MainGraph = ({
             })
           : ''
       }
-      if (d.mainSeriesDefined && d.value > yMax) {
-        yMax = d.value
+      if (d.mainSeriesDefined && d.numericValue > yMax) {
+        yMax = d.numericValue
       }
-      if (d.comparisonSeriesDefined && d.comparisonValue > yMax) {
-        yMax = d.comparisonValue
+      if (d.comparisonSeriesDefined && d.comparisonNumericValue > yMax) {
+        yMax = d.comparisonNumericValue
       }
       return dataPoint
     })

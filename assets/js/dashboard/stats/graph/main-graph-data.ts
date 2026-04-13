@@ -82,11 +82,11 @@ export const remapAndFillData = ({
           indexOfResult !== null
             ? getValue(data.results[indexOfResult]!)
             : getValue({ metrics: data.meta.empty_metrics })
-        const value = getNumericValue(outerValue)
+        const numericValue = getNumericValue(outerValue)
 
         mainSeries = {
           mainSeriesDefined,
-          value,
+          numericValue,
           outerValue,
           isPartial,
           timeLabel
@@ -106,11 +106,11 @@ export const remapAndFillData = ({
           indexOfComparisonResult !== null
             ? getValue(data.comparison_results[indexOfComparisonResult]!)
             : getValue({ metrics: data.meta.empty_metrics })
-        const comparisonValue = getNumericValue(comparisonOuterValue)
+        const comparisonNumericValue = getNumericValue(comparisonOuterValue)
 
         comparisonSeries = {
           comparisonSeriesDefined,
-          comparisonValue,
+          comparisonNumericValue,
           comparisonOuterValue,
           comparisonTimeLabel
         }
@@ -123,7 +123,7 @@ export const remapAndFillData = ({
         comparisonSeries.comparisonSeriesDefined &&
         change === null
       ) {
-        change = getChange(mainSeries.value, comparisonSeries.comparisonValue)
+        change = getChange(mainSeries.numericValue, comparisonSeries.comparisonNumericValue)
       }
 
       return {
@@ -216,7 +216,7 @@ export function getLineSegments(data: MainSeriesValue[]): LineSegment[] {
 /**
  * A data point for the graph and tooltip.
  * It's x position is its index in `GraphDatum[]` array.
- * The values for `value`, `comparisonValue` should be plotted on the y axis, when they are defined for the x position.
+ * The values for `numericValue`, `comparisonNumericValue` should be plotted on the y axis, when they are defined for the x position.
  */
 export type GraphDatum = {
   change?: number | null
@@ -227,7 +227,7 @@ type MainSeriesValue =
   | { mainSeriesDefined: false }
   | {
       mainSeriesDefined: true
-      value: number
+      numericValue: number
       outerValue: RevenueMetricValue | number
       isPartial: boolean
       timeLabel: string
@@ -239,7 +239,7 @@ type ComparisonSeriesValue =
     }
   | {
       comparisonSeriesDefined: true
-      comparisonValue: number
+      comparisonNumericValue: number
       comparisonOuterValue: RevenueMetricValue | number
       comparisonTimeLabel: string
     }

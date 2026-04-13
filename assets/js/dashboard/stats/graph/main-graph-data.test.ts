@@ -40,15 +40,17 @@ describe(`${getRelativeChange.name}`, () => {
   })
 })
 
-const np = (value = 0) => ({
+const np = (numericValue = 0) => ({
   mainSeriesDefined: true,
-  value,
+  numericValue,
+  outerValue: numericValue,
   isPartial: false,
   timeLabel: ''
 })
-const p = (value = 0) => ({
+const p = (numericValue = 0) => ({
   mainSeriesDefined: true,
-  value,
+  numericValue,
+  outerValue: numericValue,
   isPartial: true,
   timeLabel: ''
 })
