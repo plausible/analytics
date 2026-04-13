@@ -1,4 +1,9 @@
-import { parseUTCDate, formatMonthYYYY, formatDayShort, is12HourClock } from '../../util/date'
+import {
+  parseUTCDate,
+  formatMonthYYYY,
+  formatDayShort,
+  is12HourClock
+} from '../../util/date'
 
 const monthIntervalFormatter = {
   long(isoDate, options) {

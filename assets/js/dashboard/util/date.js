@@ -7,7 +7,7 @@ const browserDateFormat = Intl.DateTimeFormat(navigator.language, {
   hour: 'numeric'
 })
 
-export function is12HourClock () {
+export function is12HourClock() {
   return browserDateFormat.resolvedOptions().hour12
 }
 
