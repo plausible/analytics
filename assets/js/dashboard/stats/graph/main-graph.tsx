@@ -223,20 +223,16 @@ export const MainGraph = ({
   }, [])
 
   const showZoomToPeriod = ['month', 'day'].includes(interval)
+  const selectedDatum = selectedIndex !== null && remappedData[selectedIndex]
+
   const zoomDate =
-    selectedIndex !== null && remappedData[selectedIndex].mainSeriesDefined
-      ? remappedData[selectedIndex].timeLabel
+    selectedDatum && selectedDatum.mainSeriesDefined
+      ? selectedDatum.timeLabel
       : null
 
   return (
     <Graph<Readonly<[number | null, number | null]>>
-      className={
-        showZoomToPeriod &&
-        selectedIndex !== null &&
-        remappedData[selectedIndex]
-          ? 'cursor-pointer'
-          : ''
-      }
+      className={showZoomToPeriod && selectedDatum ? 'cursor-pointer' : ''}
       width={width}
       height={height}
       hoverBuffer={hoverBuffer}
@@ -269,7 +265,7 @@ export const MainGraph = ({
       yFormat={yFormat}
       gradients={gradients}
     >
-      {selectedIndex !== null && remappedData[selectedIndex] && (
+      {selectedDatum && (
         <MainGraphTooltip
           getFormattedValue={getFormattedValue}
           maxX={width}
@@ -281,7 +277,7 @@ export const MainGraph = ({
           metric={metric}
           x={tooltip.x}
           y={tooltip.y}
-          datum={remappedData[selectedIndex]}
+          datum={selectedDatum}
           bucketIndex={selectedIndex}
           totalBuckets={remappedData.length}
           isTouchDevice={isTouchDevice}
