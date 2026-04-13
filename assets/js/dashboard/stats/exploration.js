@@ -45,11 +45,9 @@ function ExplorationColumn({
   const [results, setResults] = useState([])
   const [filter, setFilter] = useState('')
 
-  const onSearchInputChange = useCallback((event) => {
+  const debouncedOnSearchInputChange = useDebounce((event) =>
     setFilter(event.target.value)
-  }, [])
-
-  const debouncedOnSearchInputChange = useDebounce(onSearchInputChange)
+  )
 
   useEffect(() => {
     if (steps === null) {
@@ -87,6 +85,7 @@ function ExplorationColumn({
           <input
             data-testid="search-input"
             type="text"
+            defaultValue={filter}
             placeholder="Search"
             onChange={debouncedOnSearchInputChange}
             className="peer w-32 text-sm dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
