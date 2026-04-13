@@ -49,7 +49,7 @@ export type ResultItem = {
   metrics: MetricValues // one item
 }
 
-export type MetricValues = [number] | [RevenueMetricValue]
+export type MetricValues = [null] | [number] | [RevenueMetricValue]
 
 export type MainGraphResponse = {
   results: Array<ResultItem | null>

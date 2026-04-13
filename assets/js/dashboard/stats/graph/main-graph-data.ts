@@ -24,8 +24,10 @@ export const remapAndFillData = ({
   getChange
 }: {
   data: MainGraphResponse
-  getNumericValue: (metrics: RevenueMetricValue | number) => number
-  getValue: (item: Pick<ResultItem, 'metrics'>) => RevenueMetricValue | number
+  getNumericValue: (metrics: RevenueMetricValue | number | null) => number
+  getValue: (
+    item: Pick<ResultItem, 'metrics'>
+  ) => RevenueMetricValue | number | null
   getChange: (value: number, comparisonValue: number) => number
 }): {
   remappedData: GraphDatum[]
@@ -120,7 +122,13 @@ export const remapAndFillData = ({
 
       let change = null
 
-      if (main.isDefined && comparison.isDefined && change === null) {
+      if (
+        main.isDefined &&
+        main.value !== null &&
+        comparison.isDefined &&
+        comparison.value !== null &&
+        change === null
+      ) {
         change = getChange(main.numericValue, comparison.numericValue)
       }
 
@@ -230,7 +238,7 @@ type SeriesValue =
   | {
       isDefined: true
       numericValue: number
-      value: RevenueMetricValue | number
+      value: RevenueMetricValue | number | null
       isPartial: boolean
       timeLabel: string
     }

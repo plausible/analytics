@@ -88,7 +88,7 @@ export const MainGraph = ({
       getValue: (item) => item.metrics[0],
       getNumericValue: REVENUE_METRICS.includes(metric)
         ? (v) => (v as RevenueMetricValue).value
-        : (v) => v as number,
+        : (v) => (v === null ? 0 : (v as number)),
       getChange: METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS.includes(metric)
         ? getChangeInPercentagePoints
         : getRelativeChange,
@@ -196,7 +196,8 @@ export const MainGraph = ({
   }, [site, data, interval, period, primaryGradient, secondaryGradient, metric])
 
   const getFormattedValue = useCallback(
-    (value: number | RevenueMetricValue) => MetricFormatterShort[metric](value),
+    (value: number | RevenueMetricValue | null) =>
+      MetricFormatterShort[metric](value),
     [metric]
   )
   const yFormat = useCallback(
@@ -274,7 +275,7 @@ export const MainGraph = ({
         <MainGraphTooltip
           getFormattedValue={getFormattedValue}
           maxX={width}
-          showZoomToPeriod={showZoomToPeriod}
+          showZoomToPeriod={showZoomToPeriod && !!zoomDate}
           shouldShowYear={!yearIsUnambiguous}
           shouldShowDate={!dateIsUnambiguous}
           period={period}
@@ -309,7 +310,7 @@ const MainGraphTooltip = ({
   isTouchDevice
 }: {
   metric: Metric
-  getFormattedValue: (value: RevenueMetricValue | number) => string
+  getFormattedValue: (value: RevenueMetricValue | number | null) => string
   interval: string
   period: DashboardPeriod
   shouldShowYear: boolean
