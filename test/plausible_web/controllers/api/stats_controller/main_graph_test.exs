@@ -501,6 +501,22 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                %{"dimensions" => ["2021-12-01"], "metrics" => [1]}
              ]
     end
+
+    test "returns empty metrics under response.meta", %{conn: conn, site: site} do
+      response =
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => "28d",
+            "metrics" => ["visitors"],
+            "dimensions" => ["time:day"],
+            "include" => %{"empty_metrics" => true}
+          }
+        )
+
+      assert response["meta"]["empty_metrics"] == [0]
+    end
   end
 
   describe "default labels" do

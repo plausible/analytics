@@ -505,22 +505,70 @@ defmodule Plausible.Stats.QueryTest do
       assert is_nil(meta[:empty_metrics])
     end
 
-    test "for regular metrics", %{site: site} do
-      {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
-          metrics: [:visitors, :bounce_rate, :scroll_depth],
-          input_date_range: :all,
-          include: %QueryInclude{empty_metrics: true},
-          filters: [[:is, "event:page", ["/"]]]
-        })
+    for {metric, expected} <- [
+          {:visitors, 0},
+          {:visits, 0},
+          {:pageviews, 0},
+          {:views_per_visit, 0.0},
+          {:bounce_rate, 0.0},
+          {:visit_duration, nil}
+        ] do
+      test "default: empty #{metric} is #{expected}", %{site: site} do
+        {:ok, query} =
+          QueryBuilder.build(site, %ParsedQueryParams{
+            metrics: [unquote(metric)],
+            input_date_range: :all,
+            include: %QueryInclude{empty_metrics: true}
+          })
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
 
-      assert meta[:empty_metrics] == [0, 0.0, nil]
+        assert meta[:empty_metrics] == [unquote(expected)]
+      end
+    end
+
+    for {metric, expected} <- [
+          {:time_on_page, nil},
+          {:scroll_depth, nil}
+        ] do
+      test "page filter: empty #{metric} is #{expected}", %{site: site} do
+        {:ok, query} =
+          QueryBuilder.build(site, %ParsedQueryParams{
+            metrics: [unquote(metric)],
+            input_date_range: :all,
+            include: %QueryInclude{empty_metrics: true},
+            filters: [[:is, "event:page", ["/"]]]
+          })
+
+        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+        assert meta[:empty_metrics] == [unquote(expected)]
+      end
+    end
+
+    for {metric, expected} <- [
+          {:events, 0},
+          {:group_conversion_rate, 0.0}
+        ] do
+      test "goal filter: empty #{metric} is #{expected}", %{site: site} do
+        insert(:goal, site: site, event_name: "Signup")
+
+        {:ok, query} =
+          QueryBuilder.build(site, %ParsedQueryParams{
+            metrics: [unquote(metric)],
+            input_date_range: :all,
+            include: %QueryInclude{empty_metrics: true},
+            filters: [[:is, "event:goal", ["Signup"]]]
+          })
+
+        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+        assert meta[:empty_metrics] == [unquote(expected)]
+      end
     end
 
     @tag :ee_only
-    test "for revenue metrics", %{site: site} do
+    test "goal filter: empty revenue metrics", %{site: site} do
       insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
 
       {:ok, query} =
