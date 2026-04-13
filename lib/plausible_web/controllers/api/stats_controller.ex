@@ -372,7 +372,6 @@ defmodule PlausibleWeb.Api.StatsController do
     input
     |> Jason.decode!()
     |> Enum.map(&parse_journey_step/1)
-    |> Enum.reject(&is_nil/1)
     |> then(&{:ok, &1})
   end
 
