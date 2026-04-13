@@ -53,9 +53,7 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
         ref={leftActionsRef}
       >
         <SiteSwitcher />
-        {showCurrentVisitors && (
-          <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />
-        )}
+        {showCurrentVisitors && <CurrentVisitors />}
       </div>
       <div className="flex min-w-0 flex-1">
         <FiltersBar

@@ -9,10 +9,7 @@ import { useLastLoadContext } from '../last-load-context'
 import classNames from 'classnames'
 import { popover } from '../components/popover'
 
-export default function CurrentVisitors({
-  className = '',
-  tooltipBoundaryRef
-}) {
+export default function CurrentVisitors({ className = '' }) {
   const { dashboardState } = useDashboardStateContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
