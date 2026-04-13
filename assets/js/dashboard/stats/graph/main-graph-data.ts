@@ -94,6 +94,12 @@ export const remapAndFillData = ({
       }
 
       if (comparisonSeriesDefined) {
+        const comparisonIsPartial = (
+          data.meta.comparison_partial_time_labels ?? []
+        ).find((l) => l === timeLabel)
+          ? true
+          : false
+
         if (firstComparisonTimeLabel === null) {
           firstComparisonTimeLabel = comparisonTimeLabel
         }
@@ -109,6 +115,7 @@ export const remapAndFillData = ({
           comparisonSeriesDefined,
           comparisonValue,
           comparisonNumericValue: getNumericValue(comparisonValue),
+          comparisonIsPartial,
           comparisonTimeLabel
         }
       } else {
@@ -241,5 +248,6 @@ type ComparisonSeriesValue =
       comparisonSeriesDefined: true
       comparisonNumericValue: number
       comparisonValue: RevenueMetricValue | number
+      comparisonIsPartial: boolean
       comparisonTimeLabel: string
     }

@@ -58,6 +58,7 @@ export type MainGraphResponse = {
   >
   meta: {
     partial_time_labels: string[] | null
+    comparison_partial_time_labels: string[] | null
     time_labels: string[]
     time_label_result_indices: (number | null)[]
     comparison_time_labels?: string[]
