@@ -148,6 +148,21 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
+    test "non-superadmin can't see exploration funnel UI", %{conn: conn, site: site} do
+      populate_stats(site, [build(:pageview)])
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-exploration-available") == "false"
+    end
+
+    test "superadmin can see exploration funnel UI", %{conn: conn, site: site, user: user} do
+      patch_env(:super_admin_user_ids, [user.id])
+      populate_stats(site, [build(:pageview)])
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-exploration-available") == "true"
+    end
+
     on_ee do
       test "first view of a consolidated dashboard sets stats_start_date and native_stats_start_at according to native_stats_start_at of the earliest team site",
            %{
