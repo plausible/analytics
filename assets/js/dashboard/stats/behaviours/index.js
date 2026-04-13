@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import * as storage from '../../util/storage'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import Properties from './props'
+import { FunnelExploration } from '../exploration'
 import { FeatureSetupNotice } from '../../components/notice'
 import {
   hasConversionGoalFilter,
@@ -290,6 +291,10 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }
 
+  function renderExploration() {
+    return <FunnelExploration />
+  }
+
   function renderFunnels() {
     if (Funnel === null) {
       return featureUnavailable()
@@ -380,6 +385,8 @@ function Behaviours({ importedDataInView, setMode, mode }) {
         return renderProps()
       case Mode.FUNNELS:
         return renderFunnels()
+      case Mode.EXPLORATION:
+        return renderExploration()
     }
   }
 
@@ -518,6 +525,14 @@ function Behaviours({ importedDataInView, setMode, mode }) {
                   Funnels
                 </TabButton>
               ))}
+            {!site.isConsolidatedView && site.explorationAvailable && (
+              <TabButton
+                active={mode === Mode.EXPLORATION}
+                onClick={setTabFactory(Mode.EXPLORATION)}
+              >
+                Exploration
+              </TabButton>
+            )}
           </TabWrapper>
           {isRealtime() && <Pill className="-mt-1">last 30min</Pill>}
           {renderImportedQueryUnsupportedWarning()}
