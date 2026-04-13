@@ -96,7 +96,7 @@ defmodule PlausibleWeb.StatsController do
           title: title(conn, site),
           demo: demo,
           flags: flags,
-          is_dbip: is_dbip(),
+          dbip?: dbip?(),
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
@@ -525,7 +525,7 @@ defmodule PlausibleWeb.StatsController do
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: flags,
-          is_dbip: is_dbip(),
+          dbip?: dbip?(),
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public),
@@ -552,7 +552,7 @@ defmodule PlausibleWeb.StatsController do
       end)
       |> Map.new()
 
-  defp is_dbip() do
+  defp dbip?() do
     on_ee do
       false
     else
