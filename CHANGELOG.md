@@ -22,6 +22,8 @@ All notable changes to this project will be documented in this file.
 - Keybind hints are hidden on smaller screens
 - Site index is sortable alphanumerically and by traffic
 - "Top referrers" and "Search terms" breakdowns are rendered side by side with other "Sources" tabs instead of replacing them
+- Improved top bar and top stats UI/styling
+- Moved graph interval picker, export button, imported data toggle and notices out of the graph and into a new options menu in the top bar
 
 ### Fixed
 
@@ -30,6 +32,8 @@ All notable changes to this project will be documented in this file.
 - Fixed issue with all non-interactive events being counted as interactive
 - Fixed countries map countries staying highlighted on Chrome
 - Fixed comparison tooltip in the top pages report missing date labels
+- Fixed top bar not scrolling horizontally on mobile
+- Fixed incline/decline percentages not showing in top stats in comparison mode
 
 ## v3.2.0 - 2026-01-16
 
