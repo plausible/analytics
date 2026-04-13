@@ -365,7 +365,7 @@ const MainGraphTooltip = ({
                     shouldShowDate,
                     bucketIndex,
                     totalBuckets,
-                    isPartial: datum.isPartial!
+                    isPartial: datum.isPartial
                   })}
                 </div>
               </div>
