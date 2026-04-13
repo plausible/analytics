@@ -76,9 +76,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   @max_breakdown_limit 1000
   defp validate_or_default_limit(%{"limit" => limit}) do
-    with {limit, ""} when limit > 0 and limit <= @max_breakdown_limit <- Integer.parse(limit) do
-      {:ok, limit}
-    else
+    case Integer.parse(limit) do
+      {limit, ""} when limit > 0 and limit <= @max_breakdown_limit ->
+        {:ok, limit}
+
       _ ->
         {:error, "Please provide limit as a number between 1 and #{@max_breakdown_limit}."}
     end
@@ -313,7 +314,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp validate_period(_), do: :ok
 
   @valid_intervals ["day", "month"]
-  @valid_intervals_str Enum.map(@valid_intervals, &("`" <> &1 <> "`")) |> Enum.join(", ")
+  @valid_intervals_str Enum.map_join(@valid_intervals, ", ", &("`" <> &1 <> "`"))
 
   defp validate_interval(%{"interval" => interval}) do
     if interval in @valid_intervals do
