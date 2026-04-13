@@ -19,15 +19,15 @@ import {
   DashboardPeriod,
   getCurrentPeriodDisplayName,
   getSearchToApplyCustomDates,
-  isComparisonForbidden
+  isComparisonForbidden,
+  isComparisonEnabled
 } from '../../dashboard-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
-  datemenuButtonClassName,
-  DateMenuChevron,
+  DateMenuCalendarIcon,
   PopoverMenuProps,
   linkClassName,
   CalendarPanel,
@@ -36,6 +36,7 @@ import {
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 import { MenuSeparator } from '../nav-menu-components'
+import { MovePeriodArrows } from './move-period-arrows'
 
 function DashboardPeriodMenuKeybinds({
   closeDropdown,
@@ -85,6 +86,7 @@ export const DashboardPeriodMenu = ({
 }: PopoverMenuProps) => {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
+  const isComparing = isComparisonEnabled(dashboardState.comparison)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const toggleCalendar = () => {
     if (typeof calendarButtonRef.current?.click === 'function') {
@@ -95,15 +97,28 @@ export const DashboardPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
-        <span
-          data-testid="current-query-period"
-          className={popover.toggleButton.classNames.truncatedText}
+      <div
+        className={classNames(
+          'flex rounded-md h-8 transition-all duration-150',
+          'hover:bg-gray-150/80 dark:hover:bg-gray-800',
+          'has-[[aria-expanded=true]]:bg-gray-150/80 dark:has-[[aria-expanded=true]]:bg-gray-800',
+          isComparing && 'bg-gray-150/80 dark:bg-gray-800'
+        )}
+      >
+        <Popover.Button
+          ref={buttonRef}
+          className="flex items-center gap-x-1.5 pl-2.5 pr-1.5 text-sm font-medium text-gray-700 dark:text-gray-100 leading-tight h-full rounded-md"
         >
-          {getCurrentPeriodDisplayName({ dashboardState, site })}
-        </span>
-        <DateMenuChevron />
-      </Popover.Button>
+          <DateMenuCalendarIcon />
+          <span
+            data-testid="current-query-period"
+            className={popover.toggleButton.classNames.truncatedText}
+          >
+            {getCurrentPeriodDisplayName({ dashboardState, site })}
+          </span>
+        </Popover.Button>
+        <MovePeriodArrows />
+      </div>
       <DashboardPeriodMenuInner
         toggleCalendar={toggleCalendar}
         closeDropdown={closeDropdown}

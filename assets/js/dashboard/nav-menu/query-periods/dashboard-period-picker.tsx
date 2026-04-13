@@ -2,7 +2,6 @@ import React, { useRef } from 'react'
 import classNames from 'classnames'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { isComparisonEnabled } from '../../dashboard-time-periods'
-import { MovePeriodArrows } from './move-period-arrows'
 import { MainCalendar, DashboardPeriodMenu } from './dashboard-period-menu'
 import {
   ComparisonCalendarMenu,
@@ -21,8 +20,7 @@ export function DashboardPeriodPicker({ className }: { className?: string }) {
       data-testid="query-period-picker"
       className={classNames('flex shrink-0', className)}
     >
-      <MovePeriodArrows className={isComparing ? 'hidden md:flex' : ''} />
-      <Popover className="min-w-36 md:relative lg:w-48">
+      <Popover className="md:relative">
         {({ close }) => (
           <DashboardPeriodMenu
             closeDropdown={close}
@@ -30,7 +28,7 @@ export function DashboardPeriodPicker({ className }: { className?: string }) {
           />
         )}
       </Popover>
-      <Popover className="w-0 h-9 md:relative">
+      <Popover className="w-0 h-8 md:relative">
         {({ close }) => (
           <MainCalendar
             calendarButtonRef={mainCalendarButtonRef}
@@ -40,10 +38,10 @@ export function DashboardPeriodPicker({ className }: { className?: string }) {
       </Popover>
       {isComparing && (
         <>
-          <div className="my-auto px-1 text-sm font-medium text-gray-800 dark:text-gray-200">
-            <span className="px-1">vs.</span>
+          <div className="my-auto px-2.5 text-sm font-medium text-gray-800 dark:text-gray-200">
+            vs
           </div>
-          <Popover className="min-w-36 md:relative lg:w-48">
+          <Popover className="md:relative">
             {({ close }) => (
               <ComparisonPeriodMenu
                 closeDropdown={close}
@@ -51,7 +49,7 @@ export function DashboardPeriodPicker({ className }: { className?: string }) {
               />
             )}
           </Popover>
-          <Popover className="w-0 h-9 md:relative">
+          <Popover className="w-0 h-8 md:relative">
             {({ close }) => (
               <ComparisonCalendarMenu
                 calendarButtonRef={compareCalendarButtonRef}

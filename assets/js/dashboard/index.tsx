@@ -8,6 +8,7 @@ import { TopBar } from './nav-menu/top-bar'
 import Behaviours from './stats/behaviours'
 import { useDashboardStateContext } from './dashboard-state-context'
 import { isRealTimeDashboard } from './util/filters'
+import { DashboardOptionsProvider } from './stats/graph/dashboard-options-context'
 
 function DashboardStats({
   importedDataInView,
@@ -40,17 +41,19 @@ function Dashboard() {
   const [importedDataInView, setImportedDataInView] = useState(false)
 
   return (
-    <div className="mb-16 grid grid-cols-1 md:grid-cols-2 gap-5">
-      <TopBar showCurrentVisitors={!isRealTimeDashboard} />
-      <DashboardStats
-        importedDataInView={
-          isRealTimeDashboard ? undefined : importedDataInView
-        }
-        updateImportedDataInView={
-          isRealTimeDashboard ? undefined : setImportedDataInView
-        }
-      />
-    </div>
+    <DashboardOptionsProvider>
+      <div className="mb-16 grid grid-cols-1 md:grid-cols-2 gap-5">
+        <TopBar showCurrentVisitors={!isRealTimeDashboard} />
+        <DashboardStats
+          importedDataInView={
+            isRealTimeDashboard ? undefined : importedDataInView
+          }
+          updateImportedDataInView={
+            isRealTimeDashboard ? undefined : setImportedDataInView
+          }
+        />
+      </div>
+    </DashboardOptionsProvider>
   )
 }
 

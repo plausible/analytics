@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import * as storage from '../../util/storage'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import Properties from './props'
-import { FeatureSetupNotice } from '../../components/notice'
+import { FeatureSetupNotice } from '../../components/feature-setup-notice'
 import {
   hasConversionGoalFilter,
   getGoalFilter,

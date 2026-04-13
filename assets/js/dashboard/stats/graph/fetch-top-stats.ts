@@ -193,5 +193,28 @@ function formatTopStatsData(
     ? query.comparison_date_range[1].split('T')[0]
     : null
 
-  return { topStats, meta, from, to, comparingFrom, comparingTo }
+  const timeRange = getPartialDayTimeRange(query.date_range)
+
+  return { topStats, meta, from, to, comparingFrom, comparingTo, timeRange }
+}
+
+// Returns "until HH:MM" when the date range is a partial day (period=day for
+// today, where the range is trimmed to the current time). Returns null otherwise.
+const END_OF_DAY = '23:59:59'
+
+export function getPartialDayTimeRange(
+  dateRange: [string, string]
+): string | null {
+  const [startIso, endIso] = dateRange
+  if (!endIso.includes('T')) return null
+
+  const [startDate, endDate] = [startIso, endIso].map(
+    (iso) => iso.split('T')[0]
+  )
+  if (startDate !== endDate) return null
+
+  const endTime = endIso.split('T')[1]
+  if (endTime.startsWith(END_OF_DAY)) return null
+
+  return `until ${endTime.substring(0, 5)}`
 }

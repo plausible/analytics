@@ -1,20 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Popover, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import classNames from 'classnames'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import * as storage from '../../util/storage'
-import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
-import { useDashboardStateContext } from '../../dashboard-state-context'
+import { SegmentedControl } from '../../components/segmented-control'
 import { PlausibleSite } from '../../site-context'
-import { useMatch } from 'react-router-dom'
-import { rootRoute } from '../../router'
-import { BlurMenuButtonOnEscape, popover } from '../../components/popover'
 import { DashboardState } from '../../dashboard-state'
 import { Dayjs } from 'dayjs'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 
 const INTERVAL_LABELS: Record<string, string> = {
-  minute: 'Minutes',
+  minute: 'Min',
   hour: 'Hours',
   day: 'Days',
   week: 'Weeks',
@@ -96,7 +89,11 @@ export const useStoredInterval = (
   site: PlausibleSite,
   { to, from, period }: Pick<DashboardState, 'to' | 'from' | 'period'>
 ) => {
-  const availableIntervals = validIntervals(site, { to, from, period })
+  const availableIntervals = useMemo(
+    () => validIntervals(site, { to, from, period }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [site, period, to?.valueOf() ?? null, from?.valueOf() ?? null]
+  )
 
   const isValid = (interval: string | null): interval is string =>
     !!interval && availableIntervals.includes(interval)
@@ -137,83 +134,24 @@ export function IntervalPicker({
   onIntervalClick: (interval: string) => void
   options: string[]
 }): JSX.Element | null {
-  const menuElement = useRef<HTMLButtonElement>(null)
-  const { dashboardState } = useDashboardStateContext()
-  const dashboardRouteMatch = useMatch(rootRoute.path)
-
-  if (dashboardState.period == 'realtime') {
+  if (options.length === 0) {
     return null
   }
 
-  return (
-    <>
-      {!!dashboardRouteMatch && (
-        <Keybind
-          targetRef="document"
-          type="keydown"
-          keyboardKey="i"
-          handler={() => {
-            menuElement.current?.click()
-          }}
-          shouldIgnoreWhen={[isModifierPressed, isTyping]}
-        />
-      )}
-      <Popover className="relative inline-block">
-        {({ close: closeDropdown }) => (
-          <>
-            <BlurMenuButtonOnEscape targetRef={menuElement} />
-            <Popover.Button
-              ref={menuElement}
-              className={classNames(
-                popover.toggleButton.classNames.linkLike,
-                'rounded-sm text-sm flex items-center'
-              )}
-            >
-              <span data-testid="current-graph-interval">
-                {INTERVAL_LABELS[selectedInterval]}
-              </span>
-              <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
-            </Popover.Button>
+  const controlOptions = options.map((value) => ({
+    value,
+    label: INTERVAL_LABELS[value] ?? value
+  }))
 
-            <Transition
-              as="div"
-              {...popover.transition.props}
-              className={classNames(
-                popover.transition.classNames.right,
-                'mt-2 w-56'
-              )}
-            >
-              <Popover.Panel
-                className={classNames(
-                  popover.panel.classNames.roundedSheet,
-                  'font-normal'
-                )}
-              >
-                {options.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => {
-                      onIntervalClick(option)
-                      closeDropdown()
-                    }}
-                    data-selected={option == selectedInterval}
-                    className={classNames(
-                      popover.items.classNames.navigationLink,
-                      popover.items.classNames.selectedOption,
-                      popover.items.classNames.hoverLink,
-                      'w-full text-left'
-                    )}
-                  >
-                    <span data-testid="graph-interval">
-                      {INTERVAL_LABELS[option]}
-                    </span>
-                  </button>
-                ))}
-              </Popover.Panel>
-            </Transition>
-          </>
-        )}
-      </Popover>
-    </>
+  return (
+    <SegmentedControl
+      ariaLabel="Graph data interval"
+      options={controlOptions}
+      selected={selectedInterval}
+      onSelect={onIntervalClick}
+      getTestId={(_value, isSelected) =>
+        isSelected ? 'current-graph-interval' : 'graph-interval'
+      }
+    />
   )
 }

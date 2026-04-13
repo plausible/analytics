@@ -282,7 +282,9 @@ class LineGraph extends React.Component {
 }
 
 export function LineGraphContainer(props) {
-  return <div className="relative my-4 h-92 w-full z-0">{props.children}</div>
+  return (
+    <div className="relative mt-1 mb-3 h-92 w-full z-0">{props.children}</div>
+  )
 }
 
 export default function LineGraphWrapped(props) {

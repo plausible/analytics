@@ -91,6 +91,7 @@ test('dashboard renders with imported data', async ({ page, request }) => {
   })
 
   await test.step('with imported data excluded', async () => {
+    await page.getByTestId('dashboard-options-menu').click()
     await page.getByTestId('import-switch').click()
 
     await expect(page).toHaveURL(/with_imported=false/)

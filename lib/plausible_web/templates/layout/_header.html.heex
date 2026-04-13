@@ -1,4 +1,4 @@
-<nav class="relative z-20 py-8">
+<nav class="relative z-20 py-5">
   <div class="container print:max-w-full">
     <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
       <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
@@ -10,7 +10,7 @@
                 logo_path("logo_dark.svg")
               )
             }
-            class="w-32 hidden dark:inline"
+            class="w-30 hidden dark:inline"
             alt="Plausible logo"
             loading="lazy"
           />
@@ -21,7 +21,7 @@
                 logo_path("logo_light.svg")
               )
             }
-            class="w-32 inline dark:hidden"
+            class="w-30 inline dark:hidden"
             alt="Plausible logo"
             loading="lazy"
           />
@@ -36,7 +36,7 @@
                   Plausible.Auth.is_super_admin?(@conn.assigns[:current_user])
               }>
                 <.styled_link
-                  class="text-sm mr-6"
+                  class="text-sm font-medium"
                   href={"/cs/sites/site/#{@conn.assigns.site.id}"}
                   new_tab={true}
                 >

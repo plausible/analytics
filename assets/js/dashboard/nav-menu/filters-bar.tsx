@@ -19,7 +19,6 @@ import { useUserContext } from '../user-context'
 // where `..` represents an ideally equal length.
 // The following calculations guarantee that.
 const BUFFER_RIGHT_PX = 16 - PILL_X_GAP_PX
-const BUFFER_LEFT_PX = 16
 const SEE_MORE_WIDTH_PX = 36
 const SEE_MORE_RIGHT_MARGIN_PX = PILL_X_GAP_PX
 const SEE_MORE_LEFT_MARGIN_PX = 0
@@ -163,7 +162,6 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
             ? getElementWidthOrNull(topBar)! -
               getElementWidthOrNull(leftSection)! -
               getElementWidthOrNull(rightSection)! -
-              BUFFER_LEFT_PX -
               BUFFER_RIGHT_PX
             : null,
         seeMoreWidth:
@@ -190,7 +188,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
 
   return (
     <div
-      style={{ paddingRight: BUFFER_RIGHT_PX, paddingLeft: BUFFER_LEFT_PX }}
+      style={{ paddingRight: BUFFER_RIGHT_PX }}
       className={classNames(
         'flex w-full items-center',
         visibility === null && 'invisible' // hide until we've calculated the positions
@@ -258,20 +256,19 @@ const SeeMoreMenu = ({
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.shadow,
           'justify-center',
-          'relative group'
+          'relative group',
+          'size-8'
         )}
         style={{
-          height: SEE_MORE_WIDTH_PX,
-          width: SEE_MORE_WIDTH_PX,
           marginLeft: SEE_MORE_LEFT_MARGIN_PX,
           marginRight: SEE_MORE_RIGHT_MARGIN_PX
         }}
       >
-        <EllipsisHorizontalIcon className="block h-5 w-5" />
+        <EllipsisHorizontalIcon className="block size-4" />
         {showMoreFilters && (
           <div
             aria-hidden="true"
-            className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 pr-[3px]"
+            className="absolute flex justify-end left-0 -right-1 bottom-0 translate-y-1/4"
           >
             <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow-sm px-[3px] py-[1px] flex items-center rounded-xs bg-gray-100 dark:bg-gray-850">
               +{filtersInMenuCount}

@@ -18,7 +18,7 @@ export function ChangeArrow({
   let icon = null
   const arrowClassName = classNames(
     color(change, metric),
-    'mb-0.5 inline-block size-3 stroke-[1px] stroke-current'
+    'mb-0.5 inline-block size-2.5 stroke-[1.5px] stroke-current'
   )
 
   if (change > 0) {
@@ -42,5 +42,5 @@ export function ChangeArrow({
 function color(change: number, metric: Metric) {
   const invert = metric === 'bounce_rate'
 
-  return change > 0 != invert ? 'text-green-500' : 'text-red-400'
+  return change > 0 != invert ? 'text-green-500' : 'text-red-500'
 }

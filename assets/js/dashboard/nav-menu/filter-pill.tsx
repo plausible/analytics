@@ -32,12 +32,12 @@ export function FilterPill({
   interactive,
   actions
 }: FilterPillProps) {
-  const contentClassName = 'flex w-full h-full items-center py-2 pl-3 last:pr-3'
+  const contentClassName = 'flex w-full h-full items-center pl-2.5 last:pr-2.5'
 
   return (
     <div
       className={classNames(
-        'flex h-9 shadow rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm items-center',
+        'flex h-8 shadow rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm items-center',
         className
       )}
     >
@@ -53,7 +53,7 @@ export function FilterPill({
           {!!interactive.onRemoveClick && (
             <button
               title={`Remove filter: ${plainText}`}
-              className="flex items-center h-full px-2 mr-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
+              className="flex items-center h-full pl-1.5 pr-2.5 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
               onClick={interactive.onRemoveClick}
             >
               <XMarkIcon className="w-4 h-4" />

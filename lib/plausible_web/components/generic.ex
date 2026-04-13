@@ -815,11 +815,15 @@ defmodule PlausibleWeb.Components.Generic do
   defp icon_class(link_assigns) do
     classes = List.wrap(link_assigns[:class]) |> Enum.join(" ")
 
-    if String.contains?(classes, "text-sm") or
-         String.contains?(classes, "text-xs") do
-      ["size-3"]
-    else
-      ["size-4"]
+    cond do
+      String.contains?(classes, "text-sm") ->
+        ["size-3.5"]
+
+      String.contains?(classes, "text-xs") ->
+        ["size-3"]
+
+      true ->
+        ["size-4"]
     end
   end
 

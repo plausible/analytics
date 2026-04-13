@@ -19,8 +19,7 @@ import {
 import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
-  datemenuButtonClassName,
-  DateMenuChevron,
+  DateMenuCalendarIcon,
   PopoverMenuProps,
   linkClassName,
   CalendarPanel,
@@ -123,11 +122,18 @@ export const ComparisonPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
+      <Popover.Button
+        className={classNames(
+          popover.toggleButton.classNames.rounded,
+          popover.toggleButton.classNames.ghost,
+          'bg-gray-150/80 dark:bg-gray-800'
+        )}
+        ref={buttonRef}
+      >
+        <DateMenuCalendarIcon />
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentComparisonPeriodDisplayName({ site, dashboardState })}
         </span>
-        <DateMenuChevron />
       </Popover.Button>
       <ComparisonPeriodMenuItems
         closeDropdown={closeDropdown}

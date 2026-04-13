@@ -1,7 +1,7 @@
 import React, { ReactNode, RefObject } from 'react'
 import classNames from 'classnames'
 import { popover } from '../../components/popover'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { CalendarIcon } from '@heroicons/react/24/outline'
 import { Popover, Transition } from '@headlessui/react'
 
 export const linkClassName = classNames(
@@ -10,17 +10,9 @@ export const linkClassName = classNames(
   popover.items.classNames.hoverLink
 )
 
-export const datemenuButtonClassName = classNames(
-  popover.toggleButton.classNames.rounded,
-  popover.toggleButton.classNames.shadow,
-  'justify-between px-2 w-full'
-)
+export const hiddenCalendarButtonClassName = 'flex h-8 w-0 outline-none'
 
-export const hiddenCalendarButtonClassName = 'flex h-9 w-0 outline-none'
-
-export const DateMenuChevron = () => (
-  <ChevronDownIcon className="hidden lg:inline-block h-4 w-4 md:h-5 md:w-5 ml-1 md:ml-2 text-gray-500" />
-)
+export const DateMenuCalendarIcon = () => <CalendarIcon className="size-4" />
 
 export interface PopoverMenuProps {
   closeDropdown: () => void

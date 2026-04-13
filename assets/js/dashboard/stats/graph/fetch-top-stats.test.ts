@@ -8,7 +8,11 @@ import { ComparisonMode, DashboardPeriod } from '../../dashboard-time-periods'
 import { PlausibleSite, siteContextDefaultValue } from '../../site-context'
 import { StatsQuery } from '../../stats-query'
 import { remapToApiFilters } from '../../util/filters'
-import { chooseMetrics, topStatsQueries } from './fetch-top-stats'
+import {
+  chooseMetrics,
+  topStatsQueries,
+  getPartialDayTimeRange
+} from './fetch-top-stats'
 
 const aGoalFilter = ['is', 'goal', ['any goal']] as Filter
 const aPageFilter = ['is', 'page', ['/any/page']] as Filter
@@ -224,6 +228,30 @@ describe(`${chooseMetrics.name}`, () => {
       ).toEqual(expectedMetrics)
     }
   )
+})
+
+describe(`${getPartialDayTimeRange.name}`, () => {
+  it('returns "until HH:MM" for today (partial day with current time as end)', () => {
+    expect(
+      getPartialDayTimeRange(['2024-01-13T00:00:00', '2024-01-13T14:32:00'])
+    ).toBe('until 14:32')
+  })
+
+  it('returns null for a full past day ending at 23:59:59', () => {
+    expect(
+      getPartialDayTimeRange(['2024-01-12T00:00:00', '2024-01-12T23:59:59'])
+    ).toBeNull()
+  })
+
+  it('returns null when the date range spans multiple days', () => {
+    expect(
+      getPartialDayTimeRange(['2024-01-12T00:00:00', '2024-01-13T14:32:00'])
+    ).toBeNull()
+  })
+
+  it('returns null when the end ISO has no time component', () => {
+    expect(getPartialDayTimeRange(['2024-01-13', '2024-01-13'])).toBeNull()
+  })
 })
 
 describe(`${topStatsQueries.name}`, () => {

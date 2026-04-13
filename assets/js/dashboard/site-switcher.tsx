@@ -8,6 +8,7 @@ import { Cog8ToothIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 import { isModifierPressed, isTyping, Keybind, KeybindHint } from './keybinding'
 import { popover, BlurMenuButtonOnEscape } from './components/popover'
+import { GlobeIcon } from './components/icons'
 import { useQuery } from '@tanstack/react-query'
 import { Role, useUserContext } from './user-context'
 import { PlausibleSite, useSiteContext } from './site-context'
@@ -37,30 +38,6 @@ const Favicon = ({
     referrerPolicy="no-referrer"
     className={className}
   />
-)
-
-const GlobeIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    className={className}
-  >
-    <path
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.5"
-      d="M22 12H2M12 22c5.714-5.442 5.714-14.558 0-20M12 22C6.286 16.558 6.286 7.442 12 2"
-    />
-    <path
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.5"
-      d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
-    />
-  </svg>
 )
 
 const menuItemClassName = classNames(
@@ -170,18 +147,16 @@ export const SiteSwitcher = () => {
           <Popover.Button
             ref={buttonRef}
             className={classNames(
-              'flex items-center rounded h-9 text-sm leading-5 font-semibold dark:text-gray-100',
-              'hover:bg-gray-100 dark:hover:bg-gray-800'
+              popover.toggleButton.classNames.rounded,
+              popover.toggleButton.classNames.ghost,
+              '!pl-1.5'
             )}
             title={currentSite.domain}
           >
             {currentSite.isConsolidatedView ? (
               <GlobeIcon className="size-4 block mx-1 h-4 w-4 text-indigo-600 dark:text-white" />
             ) : (
-              <Favicon
-                domain={currentSite.domain}
-                className="block h-4 w-4 mx-1"
-              />
+              <Favicon domain={currentSite.domain} className="block size-4" />
             )}
             <span
               data-testid="site-switcher-current-site"
@@ -191,7 +166,7 @@ export const SiteSwitcher = () => {
                 ? 'All sites'
                 : currentSite.domain}
             </span>
-            <ChevronDownIcon className="hidden lg:block size-4 ml-2 dark:text-gray-100" />
+            <ChevronDownIcon className="hidden lg:block size-4" />
           </Popover.Button>
           <Transition
             as="div"
