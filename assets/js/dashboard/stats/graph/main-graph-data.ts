@@ -1,29 +1,9 @@
-import { Metric } from '../../../types/query-api'
-import { MainGraphResponse, RevenueMetricValue } from './fetch-main-graph'
+import {
+  MainGraphResponse,
+  ResultItem,
+  RevenueMetricValue
+} from './fetch-main-graph'
 
-const DEFAULT_VALUE = 0
-const DEFAULT_COMPARISON_VALUE = 0
-export const getDefaultRevenueMetricValue = (
-  sampleValue?: RevenueMetricValue
-): RevenueMetricValue => {
-  if (!sampleValue) {
-    return {
-      short: '0.0',
-      value: 0.0,
-      long: '0.00',
-      currency: ''
-    }
-  }
-
-  const short = sampleValue.long.replace(/[\d,.]+/i, '0.0')
-  const long = sampleValue.long.replace(/[\d,.]+/i, '0.00')
-  return {
-    short,
-    value: 0.0,
-    long,
-    currency: sampleValue.currency
-  }
-}
 /**
  * Fills gaps in @see MainGraphResponse the series of `results` and `comparisonResults`.
  * The BE doesn't return buckets in the series where the value is 0:
@@ -40,13 +20,16 @@ export const getDefaultRevenueMetricValue = (
  */
 export const remapAndFillData = ({
   data,
-  metric
+  getNumericValue,
+  getValue,
+  getChange
 }: {
   data: MainGraphResponse
-  metric: Metric
+  getNumericValue: (metrics: RevenueMetricValue | number) => number
+  getValue: (item: Pick<ResultItem, 'metrics'>) => RevenueMetricValue | number
+  getChange: (value: number, comparisonValue: number) => number
 }): {
   remappedData: GraphDatum[]
-  yMax: number
   mainSeriesStartEndLabels: [string | null, string | null]
   comparisonSeriesStartEndLabels: [string | null, string | null]
 } => {
@@ -55,7 +38,6 @@ export const remapAndFillData = ({
     data.meta.time_label_result_indices.length
   )
 
-  let yMax: number = 1
   let firstTimeLabel: null | string = null
   let lastTimeLabel: null | string = null
 
@@ -84,7 +66,6 @@ export const remapAndFillData = ({
       let change = null
 
       if (mainSeriesDefined) {
-        let value = DEFAULT_VALUE
         const isPartial = (data.meta.partial_time_labels ?? []).find(
           (l) => l === timeLabel
         )
@@ -97,60 +78,40 @@ export const remapAndFillData = ({
 
         lastTimeLabel = timeLabel
 
-        if (indexOfResult !== null) {
-          const row = data.results[indexOfResult]
-          const [unparsedValue] = row!.metrics!
+        const outerValue =
+          indexOfResult !== null
+            ? getValue(data.results[indexOfResult]!)
+            : getValue({ metrics: data.meta.empty_metrics })
+        const value = getNumericValue(outerValue)
 
-          if (typeof unparsedValue === 'number') {
-            value = unparsedValue
-          } else if (
-            unparsedValue !== null &&
-            typeof unparsedValue === 'object' &&
-            unparsedValue.hasOwnProperty('value')
-          ) {
-            value = unparsedValue.value
-          }
+        mainSeries = {
+          mainSeriesDefined,
+          value,
+          outerValue,
+          isPartial,
+          timeLabel
         }
-        if (value > yMax) {
-          yMax = value
-        }
-        mainSeries = { mainSeriesDefined, value, isPartial, timeLabel }
       } else {
         mainSeries = { mainSeriesDefined }
       }
 
       if (comparisonSeriesDefined) {
-        let comparisonValue = DEFAULT_COMPARISON_VALUE
-
         if (firstComparisonTimeLabel === null) {
           firstComparisonTimeLabel = comparisonTimeLabel
         }
 
         lastComparisonTimeLabel = comparisonTimeLabel
 
-        if (indexOfComparisonResult !== null) {
-          const row = data.comparison_results[indexOfComparisonResult]
-          const [unparsedValue] = row!.metrics!
-
-          if (typeof unparsedValue === 'number') {
-            comparisonValue = unparsedValue
-            change = row!.change !== null ? row!.change[0] : null
-          } else if (
-            unparsedValue !== null &&
-            typeof unparsedValue === 'object' &&
-            unparsedValue.hasOwnProperty('value')
-          ) {
-            comparisonValue = unparsedValue.value
-          }
-        }
-
-        if (comparisonValue > yMax) {
-          yMax = comparisonValue
-        }
+        const comparisonOuterValue =
+          indexOfComparisonResult !== null
+            ? getValue(data.comparison_results[indexOfComparisonResult]!)
+            : getValue({ metrics: data.meta.empty_metrics })
+        const comparisonValue = getNumericValue(comparisonOuterValue)
 
         comparisonSeries = {
           comparisonSeriesDefined,
           comparisonValue,
+          comparisonOuterValue,
           comparisonTimeLabel
         }
       } else {
@@ -162,15 +123,7 @@ export const remapAndFillData = ({
         comparisonSeries.comparisonSeriesDefined &&
         change === null
       ) {
-        change = METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS.includes(metric)
-          ? getChangeInPercentagePoints(
-              mainSeries.value,
-              comparisonSeries.comparisonValue
-            )
-          : getRelativeChange(
-              mainSeries.value,
-              comparisonSeries.comparisonValue
-            )
+        change = getChange(mainSeries.value, comparisonSeries.comparisonValue)
       }
 
       return {
@@ -182,7 +135,6 @@ export const remapAndFillData = ({
 
   return {
     remappedData,
-    yMax,
     mainSeriesStartEndLabels: [firstTimeLabel, lastTimeLabel],
     comparisonSeriesStartEndLabels: [
       firstComparisonTimeLabel,
@@ -218,6 +170,8 @@ export const getRelativeChange = (
 
   return Math.round(((value - comparisonValue) / comparisonValue) * 100)
 }
+
+export const REVENUE_METRICS = ['average_revenue', 'total_revenue']
 
 export type LineSegment = {
   startIndexInclusive: number
@@ -269,22 +223,23 @@ export type GraphDatum = {
 } & MainSeriesValue &
   ComparisonSeriesValue
 
-type NotDefinedValue = { mainSeriesDefined: false }
-type DefinedValue = {
-  mainSeriesDefined: true
-  value: number
-  isPartial: boolean
-  timeLabel: string
-}
+type MainSeriesValue =
+  | { mainSeriesDefined: false }
+  | {
+      mainSeriesDefined: true
+      value: number
+      outerValue: RevenueMetricValue | number
+      isPartial: boolean
+      timeLabel: string
+    }
 
-type MainSeriesValue = NotDefinedValue | DefinedValue
-
-type NotDefinedComparisonValue = {
-  comparisonSeriesDefined: false
-}
-type DefinedComparisonValue = {
-  comparisonSeriesDefined: true
-  comparisonValue: number
-  comparisonTimeLabel: string
-}
-type ComparisonSeriesValue = NotDefinedComparisonValue | DefinedComparisonValue
+type ComparisonSeriesValue =
+  | {
+      comparisonSeriesDefined: false
+    }
+  | {
+      comparisonSeriesDefined: true
+      comparisonValue: number
+      comparisonOuterValue: RevenueMetricValue | number
+      comparisonTimeLabel: string
+    }

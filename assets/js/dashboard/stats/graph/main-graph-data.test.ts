@@ -1,35 +1,8 @@
 import {
-  getDefaultRevenueMetricValue,
   getChangeInPercentagePoints,
   getRelativeChange,
   getLineSegments
 } from './main-graph-data'
-
-describe(`${getDefaultRevenueMetricValue.name}`, () => {
-  it('makes a unitless guess for situation with no sample revenue item', () => {
-    expect(getDefaultRevenueMetricValue()).toEqual({
-      short: '0.0',
-      value: 0.0,
-      long: '0.00',
-      currency: ''
-    })
-  })
-
-  it('handles sample dollar item', () => {
-    const sample = {
-      short: '$1.1K',
-      value: 1076.0,
-      long: '$1,076.00',
-      currency: 'USD'
-    }
-    expect(getDefaultRevenueMetricValue(sample)).toEqual({
-      short: '$0.0',
-      value: 0.0,
-      long: '$0.00',
-      currency: 'USD'
-    })
-  })
-})
 
 describe(`${getChangeInPercentagePoints.name}`, () => {
   it('returns the difference', () => {

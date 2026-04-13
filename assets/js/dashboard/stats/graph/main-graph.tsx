@@ -27,11 +27,15 @@ import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { Graph, PointerHandler, SeriesConfig } from '../../components/graph'
 import { useSiteContext, PlausibleSite } from '../../site-context'
 import { GraphTooltipWrapper } from '../../components/graph-tooltip'
-import { MainGraphResponse } from './fetch-main-graph'
+import { MainGraphResponse, RevenueMetricValue } from './fetch-main-graph'
 import {
   remapAndFillData,
   getLineSegments,
-  GraphDatum
+  GraphDatum,
+  METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS,
+  getChangeInPercentagePoints,
+  getRelativeChange,
+  REVENUE_METRICS
 } from './main-graph-data'
 
 const height = 368
@@ -78,17 +82,24 @@ export const MainGraph = ({
   } = useMemo(() => {
     const {
       remappedData,
-      yMax,
       mainSeriesStartEndLabels,
       comparisonSeriesStartEndLabels
     } = remapAndFillData({
-      data,
-      metric
+      getValue: (item) => item.metrics[0],
+      getNumericValue: REVENUE_METRICS.includes(metric)
+        ? (v) => (v as RevenueMetricValue).value
+        : (v) => v as number,
+      getChange: METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS.includes(metric)
+        ? getChangeInPercentagePoints
+        : getRelativeChange,
+      data
     })
 
     const gradients = [primaryGradient, secondaryGradient]
 
     const lineSegments = getLineSegments(remappedData)
+
+    let yMax = 1
 
     // can't be done in a single pass with remapAndFillData
     // because we need the xLabels formatting parameters to be known
@@ -114,7 +125,12 @@ export const MainGraph = ({
             })
           : ''
       }
-
+      if (d.mainSeriesDefined && d.value > yMax) {
+        yMax = d.value
+      }
+      if (d.comparisonSeriesDefined && d.comparisonValue > yMax) {
+        yMax = d.comparisonValue
+      }
       return dataPoint
     })
 
