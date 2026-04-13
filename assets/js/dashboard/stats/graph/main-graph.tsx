@@ -6,10 +6,7 @@ import React, {
   useState
 } from 'react'
 import { UIMode, useTheme } from '../../theme-context'
-import {
-  FormattableMetric,
-  MetricFormatterShort
-} from '../reports/metric-formatter'
+import { MetricFormatterShort } from '../reports/metric-formatter'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import {
   formatMonthYYYY,
@@ -37,6 +34,9 @@ import {
   getRelativeChange,
   REVENUE_METRICS
 } from './main-graph-data'
+import { getMetricLabel } from '../metrics'
+import { useDashboardStateContext } from '../../dashboard-state-context'
+import { hasConversionGoalFilter } from '../../util/filters'
 
 const height = 368
 const marginTop = 16
@@ -190,8 +190,13 @@ export const MainGraph = ({
     }
   }, [site, data, interval, period, primaryGradient, secondaryGradient, metric])
 
+  const getFormattedValue = useCallback(
+    (value: number | RevenueMetricValue) => MetricFormatterShort[metric](value),
+    [metric]
+  )
   const yFormat = useCallback(
-    (v: { valueOf(): number }) => MetricFormatterShort[metric](v),
+    (numericValue: d3.NumberValue) =>
+      MetricFormatterShort[metric](numericValue),
     [metric]
   )
 
@@ -266,6 +271,7 @@ export const MainGraph = ({
     >
       {selectedIndex !== null && remappedData[selectedIndex] && (
         <MainGraphTooltip
+          getFormattedValue={getFormattedValue}
           maxX={width}
           showZoomToPeriod={showZoomToPeriod}
           shouldShowYear={!yearIsUnambiguous}
@@ -287,6 +293,7 @@ export const MainGraph = ({
 
 const MainGraphTooltip = ({
   metric,
+  getFormattedValue,
   interval,
   period,
   shouldShowDate,
@@ -300,7 +307,8 @@ const MainGraphTooltip = ({
   totalBuckets,
   isTouchDevice
 }: {
-  metric: FormattableMetric
+  metric: Metric
+  getFormattedValue: (value: RevenueMetricValue | number) => string
   interval: string
   period: DashboardPeriod
   shouldShowYear: boolean
@@ -314,7 +322,10 @@ const MainGraphTooltip = ({
   maxX: number
   isTouchDevice: boolean
 }) => {
-  const formatter = MetricFormatterShort[metric]
+  const { dashboardState } = useDashboardStateContext()
+  const metricLabel = getMetricLabel(metric, {
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+  })
 
   return (
     <GraphTooltipWrapper
@@ -330,13 +341,13 @@ const MainGraphTooltip = ({
       <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
         <div className="flex justify-between items-center rounded-sm">
           <div className="font-semibold mr-4 text-xs uppercase whitespace-nowrap">
-            {METRIC_LABELS[metric as keyof typeof METRIC_LABELS]}
+            {metricLabel}
           </div>
           {datum.comparisonSeriesDefined &&
             typeof datum.change === 'number' && (
               <ChangeArrow
                 className="text-xs/6 font-medium text-white whitespace-nowrap"
-                metric={metric as Metric}
+                metric={metric}
                 change={datum.change}
               />
             )}
@@ -359,7 +370,7 @@ const MainGraphTooltip = ({
                 </div>
               </div>
               <div className="font-bold whitespace-nowrap">
-                {formatter(datum.value)}
+                {getFormattedValue(datum.outerValue)}
               </div>
             </div>
           )}
@@ -382,7 +393,7 @@ const MainGraphTooltip = ({
               </div>
               <div className="font-bold whitespace-nowrap">
                 {' '}
-                {formatter(datum.comparisonValue)}
+                {getFormattedValue(datum.comparisonOuterValue)}
               </div>
             </div>
           )}
@@ -605,22 +616,6 @@ const sharedDotClass =
   'opacity-0 group-data-active:opacity-100 transition-opacity duration-100'
 const mainDotClass = 'fill-indigo-500 dark:fill-indigo-400'
 const comparisonDotClass = 'fill-indigo-500/20 dark:fill-indigo-400/20'
-
-const METRIC_LABELS = {
-  visitors: 'Visitors',
-  pageviews: 'Pageviews',
-  events: 'Total conversions',
-  views_per_visit: 'Views per visit',
-  visits: 'Visits',
-  bounce_rate: 'Bounce rate',
-  visit_duration: 'Visit duration',
-  conversions: 'Converted visitors',
-  conversion_rate: 'Conversion rate',
-  average_revenue: 'Average revenue',
-  total_revenue: 'Total revenue',
-  scroll_depth: 'Scroll depth',
-  time_on_page: 'Time on page'
-}
 
 export function useMainGraphWidth(
   mainGraphContainer: React.RefObject<HTMLDivElement>
