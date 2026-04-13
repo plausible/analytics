@@ -2,7 +2,7 @@ import { Metric } from '../../../types/query-api'
 import { DashboardState } from '../../dashboard-state'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { PlausibleSite } from '../../site-context'
-import { createStatsQuery } from '../../stats-query'
+import { createStatsQuery, ReportParams } from '../../stats-query'
 import { isRealTimeDashboard } from '../../util/filters'
 import * as api from '../../api'
 
@@ -15,14 +15,14 @@ export function fetchMainGraph(
   const metricToQuery =
     metric === 'conversion_rate' ? 'group_conversion_rate' : metric
 
-  const reportParams = {
+  const reportParams: ReportParams = {
     metrics: [metricToQuery],
     dimensions: [`time:${interval}`],
     include: {
       time_labels: true,
-      time_label_result_indices: true,
       present_index: true,
-      partial_time_labels: true
+      partial_time_labels: true,
+      empty_metrics: true
     }
   }
 
@@ -46,8 +46,10 @@ export type RevenueMetricValue = {
 
 export type ResultItem = {
   dimensions: [string] // one item
-  metrics: null | [number] | [RevenueMetricValue] // one item
+  metrics: MetricValues // one item
 }
+
+export type MetricValues = [number] | [RevenueMetricValue]
 
 export type MainGraphResponse = {
   results: Array<ResultItem | null>
@@ -60,6 +62,7 @@ export type MainGraphResponse = {
     time_label_result_indices: (number | null)[]
     comparison_time_labels?: string[]
     comparison_time_label_result_indices?: (number | null)[]
+    empty_metrics: MetricValues
   }
   query: {
     interval: string
