@@ -22,6 +22,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-props-available") == "true"
       assert text_of_attr(resp, @react_container, "data-site-segments-available") == "true"
       assert text_of_attr(resp, @react_container, "data-funnels-available") == "true"
+      assert text_of_attr(resp, @react_container, "data-exploration-available") == "false"
       assert text_of_attr(resp, @react_container, "data-has-props") == "false"
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"

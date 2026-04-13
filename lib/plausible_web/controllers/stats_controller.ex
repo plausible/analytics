@@ -474,6 +474,8 @@ defmodule PlausibleWeb.StatsController do
 
         flags = get_flags(current_user, shared_link.site)
 
+        exploration_available? = Plausible.Auth.is_super_admin?(current_user)
+
         limited_to_segment_id =
           if Plausible.Site.SharedLink.limited_to_segment?(shared_link) do
             shared_link.segment.id
@@ -530,6 +532,7 @@ defmodule PlausibleWeb.StatsController do
           # no shared links for consolidated views
           consolidated_view?: false,
           consolidated_view_available?: false,
+          exploration_available?: exploration_available?,
           team_identifier: team_identifier,
           limited_to_segment_id: limited_to_segment_id
         )
