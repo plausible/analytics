@@ -365,9 +365,6 @@ defmodule PlausibleWeb.Api.StatsController do
             level: :normal
           }
         )
-
-      _ ->
-        bad_request(conn, "There was an error with your request")
     end
   end
 
