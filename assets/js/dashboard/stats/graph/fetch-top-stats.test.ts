@@ -19,7 +19,9 @@ const expectedBaseInclude: StatsQuery['include'] = {
   compare_match_day_of_week: true,
   imports: true,
   imports_meta: true,
-  time_labels: false
+  time_labels: false,
+  partial_time_labels: false,
+  empty_metrics: false
 }
 
 const expectedRealtimeVisitorsQuery: StatsQuery = {
