@@ -40,21 +40,22 @@ describe(`${getRelativeChange.name}`, () => {
   })
 })
 
-const np = (numericValue = 0) => ({
-  mainSeriesDefined: true,
-  numericValue,
-  value: numericValue,
+const seriesValueBase = {
+  numericValue: 0,
+  value: 0,
+  timeLabel: ''
+}
+const np = () => ({
+  isDefined: true,
   isPartial: false,
-  timeLabel: ''
+  ...seriesValueBase
 })
-const p = (numericValue = 0) => ({
-  mainSeriesDefined: true,
-  numericValue,
-  value: numericValue,
+const p = () => ({
+  isDefined: true,
   isPartial: true,
-  timeLabel: ''
+  ...seriesValueBase
 })
-const gap = () => ({ mainSeriesDefined: false }) as const
+const gap = () => ({ isDefined: false }) as const
 
 describe(`${getLineSegments.name}`, () => {
   it('returns empty for empty input', () => {

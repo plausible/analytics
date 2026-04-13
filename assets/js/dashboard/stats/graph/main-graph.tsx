@@ -97,65 +97,70 @@ export const MainGraph = ({
 
     const gradients = [primaryGradient, secondaryGradient]
 
-    const lineSegments = getLineSegments(remappedData)
-
     let yMax = 1
 
     // can't be done in a single pass with remapAndFillData
     // because we need the xLabels formatting parameters to be known
-    const remappedDataInGraphFormat = remappedData.map((d, bucketIndex) => {
-      const dataPoint = {
-        values: [
-          d.mainSeriesDefined ? d.numericValue : null,
-          d.comparisonSeriesDefined ? d.comparisonNumericValue : null
-        ] as const,
-        xLabel: d.mainSeriesDefined
-          ? getBucketLabel(d.timeLabel, {
-              shouldShowDate: !isDateUnambiguous({
-                startEndLabels: mainSeriesStartEndLabels
-              }),
-              shouldShowYear: !isYearUnambiguous({
-                site,
-                startEndLabels: mainSeriesStartEndLabels
-              }),
-              interval,
-              period,
-              bucketIndex,
-              totalBuckets: remappedData.length
-            })
-          : ''
+    const remappedDataInGraphFormat = remappedData.map(
+      ({ main, comparison }, bucketIndex) => {
+        const dataPoint = {
+          values: [
+            main.isDefined ? main.numericValue : null,
+            comparison.isDefined ? comparison.numericValue : null
+          ] as const,
+          xLabel: main.isDefined
+            ? getBucketLabel(main.timeLabel, {
+                shouldShowDate: !isDateUnambiguous({
+                  startEndLabels: mainSeriesStartEndLabels
+                }),
+                shouldShowYear: !isYearUnambiguous({
+                  site,
+                  startEndLabels: mainSeriesStartEndLabels
+                }),
+                interval,
+                period,
+                bucketIndex,
+                totalBuckets: remappedData.length
+              })
+            : ''
+        }
+        if (main.isDefined && main.numericValue > yMax) {
+          yMax = main.numericValue
+        }
+        if (comparison.isDefined && comparison.numericValue > yMax) {
+          yMax = comparison.numericValue
+        }
+        return dataPoint
       }
-      if (d.mainSeriesDefined && d.numericValue > yMax) {
-        yMax = d.numericValue
-      }
-      if (d.comparisonSeriesDefined && d.comparisonNumericValue > yMax) {
-        yMax = d.comparisonNumericValue
-      }
-      return dataPoint
-    })
+    )
+
+    const mainLineSegments = getLineSegments(remappedData.map((d) => d.main))
+    const comparisonLineSegments = getLineSegments(
+      remappedData.map((d) => d.comparison)
+    )
 
     const mainSeries: SeriesConfig = {
-      lines: lineSegments.map(
-        ({ startIndexInclusive, stopIndexExclusive, type }) => ({
-          startIndexInclusive,
-          stopIndexExclusive,
-          lineClassName: classNames(
-            sharedPathClass,
-            mainPathClass,
-            { partial: dashedPathClass, full: roundedPathClass }[type]
-          )
-        })
-      ),
+      lines: mainLineSegments.map(({ type, ...rest }) => ({
+        lineClassName: classNames(
+          sharedPathClass,
+          mainPathClass,
+          { partial: dashedPathClass, full: roundedPathClass }[type]
+        ),
+        ...rest
+      })),
       underline: { gradientId: primaryGradient.id },
       dot: { dotClassName: classNames(sharedDotClass, mainDotClass) }
     }
 
     const comparisonSeries: SeriesConfig = {
-      lines: [
-        {
-          lineClassName: classNames(sharedPathClass, comparisonPathClass)
-        }
-      ],
+      lines: comparisonLineSegments.map(({ type, ...rest }) => ({
+        lineClassName: classNames(
+          sharedPathClass,
+          comparisonPathClass,
+          { partial: dashedPathClass, full: roundedPathClass }[type]
+        ),
+        ...rest
+      })),
       underline: { gradientId: secondaryGradient.id },
       dot: { dotClassName: classNames(sharedDotClass, comparisonDotClass) }
     }
@@ -226,8 +231,8 @@ export const MainGraph = ({
   const selectedDatum = selectedIndex !== null && remappedData[selectedIndex]
 
   const zoomDate =
-    selectedDatum && selectedDatum.mainSeriesDefined
-      ? selectedDatum.timeLabel
+    selectedDatum && selectedDatum.main.isDefined
+      ? selectedDatum.main.timeLabel
       : null
 
   return (
@@ -322,6 +327,7 @@ const MainGraphTooltip = ({
   const metricLabel = getMetricLabel(metric, {
     hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
   })
+  const { main, comparison, change } = datum
 
   return (
     <GraphTooltipWrapper
@@ -339,57 +345,56 @@ const MainGraphTooltip = ({
           <div className="font-semibold mr-4 text-xs uppercase whitespace-nowrap">
             {metricLabel}
           </div>
-          {datum.comparisonSeriesDefined &&
-            typeof datum.change === 'number' && (
-              <ChangeArrow
-                className="text-xs/6 font-medium text-white whitespace-nowrap"
-                metric={metric}
-                change={datum.change}
-              />
-            )}
+          {comparison.isDefined && typeof change === 'number' && (
+            <ChangeArrow
+              className="text-xs/6 font-medium text-white whitespace-nowrap"
+              metric={metric}
+              change={change}
+            />
+          )}
         </div>
         <div className="flex flex-col">
-          {datum.mainSeriesDefined && (
+          {main.isDefined && (
             <div className="flex flex-row justify-between items-center">
               <div className="flex items-center mr-4">
                 <div className="size-2 flex-none mr-2 rounded-full bg-indigo-400" />
                 <div className="whitespace-nowrap">
-                  {getFullBucketLabel(datum.timeLabel, {
+                  {getFullBucketLabel(main.timeLabel, {
                     period,
                     interval,
                     shouldShowYear,
                     shouldShowDate,
                     bucketIndex,
                     totalBuckets,
-                    isPartial: datum.isPartial
+                    isPartial: main.isPartial
                   })}
                 </div>
               </div>
               <div className="font-bold whitespace-nowrap">
-                {getFormattedValue(datum.value)}
+                {getFormattedValue(main.value)}
               </div>
             </div>
           )}
 
-          {datum.comparisonSeriesDefined && (
+          {comparison.isDefined && (
             <div className="flex flex-row justify-between items-center">
               <div className="flex items-center mr-4">
                 <div className="size-2 flex-none mr-2 rounded-full bg-gray-500"></div>
                 <div className="whitespace-nowrap">
-                  {getFullBucketLabel(datum.comparisonTimeLabel, {
+                  {getFullBucketLabel(comparison.timeLabel, {
                     period,
                     interval,
                     shouldShowYear,
                     shouldShowDate,
                     bucketIndex,
                     totalBuckets,
-                    isPartial: false
+                    isPartial: comparison.isPartial
                   })}
                 </div>
               </div>
               <div className="font-bold whitespace-nowrap">
                 {' '}
-                {getFormattedValue(datum.comparisonValue)}
+                {getFormattedValue(comparison.value)}
               </div>
             </div>
           )}
