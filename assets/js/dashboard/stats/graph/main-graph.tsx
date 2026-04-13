@@ -370,7 +370,7 @@ const MainGraphTooltip = ({
                 </div>
               </div>
               <div className="font-bold whitespace-nowrap">
-                {getFormattedValue(datum.outerValue)}
+                {getFormattedValue(datum.value)}
               </div>
             </div>
           )}
@@ -393,7 +393,7 @@ const MainGraphTooltip = ({
               </div>
               <div className="font-bold whitespace-nowrap">
                 {' '}
-                {getFormattedValue(datum.comparisonOuterValue)}
+                {getFormattedValue(datum.comparisonValue)}
               </div>
             </div>
           )}

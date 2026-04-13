@@ -14,7 +14,6 @@ import {
  * Extracts the numeric values for the series when they are wrapped.
  *
  * In the same single loop, for the sake of efficiency, it determines
- * - the maximum y value (used for scaling the graph),
  * - the start and end labels of both series (used for generating appropriate X axis labels),
  *
  */
@@ -78,16 +77,15 @@ export const remapAndFillData = ({
 
         lastTimeLabel = timeLabel
 
-        const outerValue =
+        const value =
           indexOfResult !== null
             ? getValue(data.results[indexOfResult]!)
             : getValue({ metrics: data.meta.empty_metrics })
-        const numericValue = getNumericValue(outerValue)
 
         mainSeries = {
           mainSeriesDefined,
-          numericValue,
-          outerValue,
+          value,
+          numericValue: getNumericValue(value),
           isPartial,
           timeLabel
         }
@@ -102,16 +100,15 @@ export const remapAndFillData = ({
 
         lastComparisonTimeLabel = comparisonTimeLabel
 
-        const comparisonOuterValue =
+        const comparisonValue =
           indexOfComparisonResult !== null
             ? getValue(data.comparison_results[indexOfComparisonResult]!)
             : getValue({ metrics: data.meta.empty_metrics })
-        const comparisonNumericValue = getNumericValue(comparisonOuterValue)
 
         comparisonSeries = {
           comparisonSeriesDefined,
-          comparisonNumericValue,
-          comparisonOuterValue,
+          comparisonValue,
+          comparisonNumericValue: getNumericValue(comparisonValue),
           comparisonTimeLabel
         }
       } else {
@@ -123,7 +120,10 @@ export const remapAndFillData = ({
         comparisonSeries.comparisonSeriesDefined &&
         change === null
       ) {
-        change = getChange(mainSeries.numericValue, comparisonSeries.comparisonNumericValue)
+        change = getChange(
+          mainSeries.numericValue,
+          comparisonSeries.comparisonNumericValue
+        )
       }
 
       return {
@@ -228,7 +228,7 @@ type MainSeriesValue =
   | {
       mainSeriesDefined: true
       numericValue: number
-      outerValue: RevenueMetricValue | number
+      value: RevenueMetricValue | number
       isPartial: boolean
       timeLabel: string
     }
@@ -240,6 +240,6 @@ type ComparisonSeriesValue =
   | {
       comparisonSeriesDefined: true
       comparisonNumericValue: number
-      comparisonOuterValue: RevenueMetricValue | number
+      comparisonValue: RevenueMetricValue | number
       comparisonTimeLabel: string
     }

@@ -43,14 +43,14 @@ describe(`${getRelativeChange.name}`, () => {
 const np = (numericValue = 0) => ({
   mainSeriesDefined: true,
   numericValue,
-  outerValue: numericValue,
+  value: numericValue,
   isPartial: false,
   timeLabel: ''
 })
 const p = (numericValue = 0) => ({
   mainSeriesDefined: true,
   numericValue,
-  outerValue: numericValue,
+  value: numericValue,
   isPartial: true,
   timeLabel: ''
 })
