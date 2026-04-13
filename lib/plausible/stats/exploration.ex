@@ -14,6 +14,7 @@ defmodule Plausible.Stats.Exploration do
 
   import Ecto.Query
   import Plausible.Stats.SQL.Fragments
+  import Plausible.Stats.Util, only: [percentage: 2]
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.Base
@@ -239,25 +240,5 @@ defmodule Plausible.Stats.Exploration do
     end)
     |> Map.fetch!(:funnel)
     |> Enum.reverse()
-  end
-
-  defp percentage(x, y) when x in [0, nil] or y in [0, nil] do
-    "0"
-  end
-
-  defp percentage(x, y) do
-    result =
-      x
-      |> Decimal.div(y)
-      |> Decimal.mult(100)
-      |> Decimal.round(2)
-      |> Decimal.to_string()
-
-    case result do
-      <<compact::binary-size(1), ".00">> -> compact
-      <<compact::binary-size(2), ".00">> -> compact
-      <<compact::binary-size(3), ".00">> -> compact
-      decimal -> decimal
-    end
   end
 end
