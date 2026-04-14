@@ -345,9 +345,6 @@ defmodule PlausibleWeb.Api.StatsController do
          {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term, direction) do
       json(conn, next_steps)
     else
-      {:error, :invalid_direction} ->
-        bad_request(conn, "Invalid value for direction. Accepted values are: forward, backward")
-
       _ ->
         bad_request(conn, "There was an error with your request")
     end
@@ -362,9 +359,6 @@ defmodule PlausibleWeb.Api.StatsController do
          {:ok, funnel} <- Exploration.journey_funnel(query, journey, direction) do
       json(conn, funnel)
     else
-      {:error, :invalid_direction} ->
-        bad_request(conn, "Invalid value for direction. Accepted values are: forward, backward")
-
       {:error, :empty_journey} ->
         bad_request(
           conn,
