@@ -64,6 +64,10 @@ function ExplorationColumn({
   const [loading, setLoading] = useState(steps !== null)
   const [results, setResults] = useState([])
   const [filter, setFilter] = useState('')
+  const stepsFingerprint =
+    steps === null
+      ? null
+      : steps.map((step) => `${step.name}:${step.pathname}`).join(';')
 
   const debouncedOnSearchInputChange = useDebounce((event) =>
     setFilter(event.target.value)
@@ -107,14 +111,7 @@ function ExplorationColumn({
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    dashboardState,
-    steps === null ? null : steps.join('|||'),
-    filter,
-    direction,
-    site,
-    selected
-  ])
+  }, [dashboardState, stepsFingerprint, filter, direction, site, selected])
 
   const maxVisitors = results.length > 0 ? results[0].visitors : 1
 
