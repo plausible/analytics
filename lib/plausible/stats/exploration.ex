@@ -55,11 +55,14 @@ defmodule Plausible.Stats.Exploration do
   def journey_funnel(_query, [], _direction), do: {:error, :empty_journey}
 
   def journey_funnel(query, journey, direction) when is_direction(direction) do
+    journey_for_query = journey_for_query(journey, direction)
+
     query
     |> Base.base_event_query()
-    |> journey_funnel_query(journey, direction)
+    |> journey_funnel_query(journey_for_query)
     |> ClickhouseRepo.all()
-    |> to_funnel(journey)
+    |> to_funnel(journey_for_query)
+    |> maybe_reverse_funnel(direction)
     |> then(&{:ok, &1})
   end
 
@@ -102,8 +105,8 @@ defmodule Plausible.Stats.Exploration do
     end)
   end
 
-  defp journey_funnel_query(query, steps, direction) do
-    q_steps = steps_query(query, length(steps), direction)
+  defp journey_funnel_query(query, steps) do
+    q_steps = steps_query(query, length(steps), :forward)
 
     [first_step | steps] = steps
 
@@ -217,4 +220,10 @@ defmodule Plausible.Stats.Exploration do
     |> Map.fetch!(:funnel)
     |> Enum.reverse()
   end
+
+  defp journey_for_query(journey, :backward), do: Enum.reverse(journey)
+  defp journey_for_query(journey, :forward), do: journey
+
+  defp maybe_reverse_funnel(funnel, :backward), do: Enum.reverse(funnel)
+  defp maybe_reverse_funnel(funnel, :forward), do: funnel
 end

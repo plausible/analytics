@@ -168,15 +168,15 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert [step1, step2, step3] = resp
 
         assert step1["step"]["pathname"] == "/logout"
-        assert step1["visitors"] == 2
-        assert step1["dropoff"] == 0
-        assert step1["dropoff_percentage"] == "0"
+        assert step1["visitors"] == 1
+        assert step1["dropoff"] == 1
+        assert step1["dropoff_percentage"] == "50"
         assert step2["step"]["pathname"] == "/login"
-        assert step2["visitors"] == 1
-        assert step2["dropoff"] == 1
-        assert step2["dropoff_percentage"] == "50"
+        assert step2["visitors"] == 2
+        assert step2["dropoff"] == 0
+        assert step2["dropoff_percentage"] == "0"
         assert step3["step"]["pathname"] == "/home"
-        assert step3["visitors"] == 1
+        assert step3["visitors"] == 2
         assert step3["dropoff"] == 0
         assert step3["dropoff_percentage"] == "0"
       end
