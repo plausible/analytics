@@ -129,6 +129,32 @@ defmodule Plausible.Stats.ExplorationTest do
 
       assert {:error, :empty_journey} = Exploration.journey_funnel(query, [])
     end
+
+    test "supports backward journey funnel", %{site: site} do
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/logout"},
+        %Exploration.Journey.Step{name: "pageview", pathname: "/login"},
+        %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
+      ]
+
+      assert {:ok, [step1, step2, step3]} =
+               Exploration.journey_funnel(query, journey, :backward)
+
+      assert step1.step.pathname == "/logout"
+      assert step1.visitors == 2
+      assert step1.dropoff == 0
+      assert step1.dropoff_percentage == "0"
+      assert step2.step.pathname == "/login"
+      assert step2.visitors == 1
+      assert step2.dropoff == 1
+      assert step2.dropoff_percentage == "50"
+      assert step3.step.pathname == "/home"
+      assert step3.visitors == 1
+      assert step3.dropoff == 0
+      assert step3.dropoff_percentage == "0"
+    end
   end
 
   describe "next_steps" do
@@ -198,6 +224,22 @@ defmodule Plausible.Stats.ExplorationTest do
 
       assert next_step.step.pathname == "/docs"
       assert next_step.visitors == 1
+    end
+
+    test "supports backward exploration", %{site: site} do
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/logout"}
+      ]
+
+      assert {:ok, [next_step1, next_step2]} =
+               Exploration.next_steps(query, journey, "", :backward)
+
+      assert next_step1.step.pathname == "/docs"
+      assert next_step1.visitors == 1
+      assert next_step2.step.pathname == "/login"
+      assert next_step2.visitors == 1
     end
   end
 end

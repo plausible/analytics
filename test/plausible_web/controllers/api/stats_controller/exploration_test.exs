@@ -101,6 +101,23 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert next_step["step"]["pathname"] == "/docs"
         assert next_step["visitors"] == 1
       end
+
+      test "it supports backward direction", %{conn: conn, site: site} do
+        journey = Jason.encode!([%{name: "pageview", pathname: "/logout"}])
+
+        resp =
+          conn
+          |> get(
+            "/api/stats/#{site.domain}/exploration/next/?journey=#{journey}&direction=backward&period=24h"
+          )
+          |> json_response(200)
+
+        assert [next_step1, next_step2] = resp
+        assert next_step1["step"]["pathname"] == "/docs"
+        assert next_step1["visitors"] == 1
+        assert next_step2["step"]["pathname"] == "/login"
+        assert next_step2["visitors"] == 1
+      end
     end
 
     describe "exploration_funnel/2" do
@@ -131,6 +148,37 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert step3["visitors"] == 1
         assert step3["dropoff"] == 1
         assert step3["dropoff_percentage"] == "50"
+      end
+
+      test "it supports backward direction", %{conn: conn, site: site} do
+        journey =
+          Jason.encode!([
+            %{name: "pageview", pathname: "/logout"},
+            %{name: "pageview", pathname: "/login"},
+            %{name: "pageview", pathname: "/home"}
+          ])
+
+        resp =
+          conn
+          |> get(
+            "/api/stats/#{site.domain}/exploration/funnel/?journey=#{journey}&direction=backward&period=24h"
+          )
+          |> json_response(200)
+
+        assert [step1, step2, step3] = resp
+
+        assert step1["step"]["pathname"] == "/logout"
+        assert step1["visitors"] == 2
+        assert step1["dropoff"] == 0
+        assert step1["dropoff_percentage"] == "0"
+        assert step2["step"]["pathname"] == "/login"
+        assert step2["visitors"] == 1
+        assert step2["dropoff"] == 1
+        assert step2["dropoff_percentage"] == "50"
+        assert step3["step"]["pathname"] == "/home"
+        assert step3["visitors"] == 1
+        assert step3["dropoff"] == 0
+        assert step3["dropoff_percentage"] == "0"
       end
     end
   end

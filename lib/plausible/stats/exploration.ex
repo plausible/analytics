@@ -21,6 +21,9 @@ defmodule Plausible.Stats.Exploration do
   alias Plausible.Stats.Query
 
   @type journey() :: [Journey.Step.t()]
+  @type direction() :: :forward | :backward
+
+  defguard is_direction(value) when value in [:forward, :backward]
 
   @type next_step() :: %{
           step: Journey.Step.t(),
@@ -34,32 +37,34 @@ defmodule Plausible.Stats.Exploration do
           dropoff_percentage: String.t()
         }
 
-  @spec next_steps(Query.t(), journey(), String.t()) ::
+  @spec next_steps(Query.t(), journey(), String.t(), direction()) ::
           {:ok, [next_step()]}
-  def next_steps(query, journey, search_term \\ "") do
+          def next_steps(query, journey, search_term \\ "", direction \\ :forward) when is_direction(direction) do
     query
     |> Base.base_event_query()
-    |> next_steps_query(journey, search_term)
+    |> next_steps_query(journey, search_term, direction)
     |> ClickhouseRepo.all()
     |> then(&{:ok, &1})
   end
 
-  @spec journey_funnel(Query.t(), journey()) ::
+  @spec journey_funnel(Query.t(), journey(), direction()) ::
           {:ok, [funnel_step()]} | {:error, :empty_journey}
-  def journey_funnel(_query, []), do: {:error, :empty_journey}
+  def journey_funnel(query, journey, direction \\ :forward)
 
-  def journey_funnel(query, journey) do
+  def journey_funnel(_query, [], _direction), do: {:error, :empty_journey}
+
+  def journey_funnel(query, journey, direction) when is_direction(direction) do
     query
     |> Base.base_event_query()
-    |> journey_funnel_query(journey)
+    |> journey_funnel_query(journey, direction)
     |> ClickhouseRepo.all()
     |> to_funnel(journey)
     |> then(&{:ok, &1})
   end
 
-  defp next_steps_query(query, steps, search_term) do
+  defp next_steps_query(query, steps, search_term, direction) do
     next_step_idx = length(steps) + 1
-    q_steps = steps_query(query, next_step_idx)
+    q_steps = steps_query(query, next_step_idx, direction)
 
     next_name = :"name#{next_step_idx}"
     next_pathname = :"pathname#{next_step_idx}"
@@ -96,8 +101,8 @@ defmodule Plausible.Stats.Exploration do
     end)
   end
 
-  defp journey_funnel_query(query, steps) do
-    q_steps = steps_query(query, length(steps))
+  defp journey_funnel_query(query, steps, direction) do
+    q_steps = steps_query(query, length(steps), direction)
 
     [first_step | steps] = steps
 
@@ -129,10 +134,16 @@ defmodule Plausible.Stats.Exploration do
     end)
   end
 
-  defp steps_query(query, steps) when is_integer(steps) do
+  defp steps_query(query, steps, direction) when is_integer(steps) do
+    event_ordering =
+      case direction do
+        :backward -> [desc: :timestamp]
+        _ -> [asc: :timestamp]
+      end
+
     q_steps =
       from(e in query,
-        windows: [step_window: [partition_by: e.user_id, order_by: e.timestamp]],
+        windows: [step_window: [partition_by: e.user_id, order_by: ^event_ordering]],
         select: %{
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
@@ -140,7 +151,7 @@ defmodule Plausible.Stats.Exploration do
           pathname1: e.pathname
         },
         where: e.name != "engagement",
-        order_by: e.timestamp
+        order_by: ^event_ordering
       )
 
     if steps > 1 do
