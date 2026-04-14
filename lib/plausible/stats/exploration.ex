@@ -39,7 +39,8 @@ defmodule Plausible.Stats.Exploration do
 
   @spec next_steps(Query.t(), journey(), String.t(), direction()) ::
           {:ok, [next_step()]}
-          def next_steps(query, journey, search_term \\ "", direction \\ :forward) when is_direction(direction) do
+  def next_steps(query, journey, search_term \\ "", direction \\ :forward)
+      when is_direction(direction) do
     query
     |> Base.base_event_query()
     |> next_steps_query(journey, search_term, direction)
