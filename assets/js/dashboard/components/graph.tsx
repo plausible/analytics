@@ -385,7 +385,7 @@ const getYScale = ({
 }) => {
   const yBottomEdge = height - marginBottom
   const yTopEdge = marginTop
-  const scale = d3.scaleLinear([0, yMax], [yBottomEdge, yTopEdge]).nice()
+  const scale = d3.scaleLinear([0, yMax], [yBottomEdge, yTopEdge]).nice(5)
   return { scale, yBottomEdge, yTopEdge }
 }
 
