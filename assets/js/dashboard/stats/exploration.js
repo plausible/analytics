@@ -26,7 +26,7 @@ function stateWithApplicableFilters(dashboardState, steps) {
 }
 
 function toJourney(steps) {
-  steps.map((s) => { name: s.name, pathname: s.pathname })
+  return steps.map((s) => ({ name: s.name, pathname: s.pathname }))
 }
 
 function fetchColumnData(site, dashboardState, steps, filter, direction) {
