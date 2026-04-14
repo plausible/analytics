@@ -244,11 +244,14 @@ test('different graph time intervals are available', async ({
     'Last 28 days'
   )
 
+  const optionsMenu = page.getByTestId('dashboard-options-menu')
+
+  await optionsMenu.click()
   const graphIntervalSegments = page.getByTestId('graph-interval')
   await expect(page.getByTestId('current-graph-interval')).toHaveText('Days')
-  await expect(graphIntervalSegments).toHaveCount(2)
+  await expect(graphIntervalSegments).toHaveCount(1)
   await expect(graphIntervalSegments.filter({ hasText: 'Weeks' })).toBeVisible()
-  await expect(graphIntervalSegments.filter({ hasText: 'Days' })).toBeVisible()
+  await optionsMenu.click()
 
   await page.getByTestId('current-query-period').click()
   await page
@@ -256,10 +259,11 @@ test('different graph time intervals are available', async ({
     .getByRole('link', { name: 'Today' })
     .click()
 
+  await optionsMenu.click()
   await expect(page.getByTestId('current-graph-interval')).toHaveText('Hours')
-  await expect(graphIntervalSegments).toHaveCount(2)
-  await graphIntervalSegments.filter({ hasText: 'Minutes' }).click()
-  await expect(page.getByTestId('current-graph-interval')).toHaveText('Minutes')
+  await expect(graphIntervalSegments).toHaveCount(1)
+  await graphIntervalSegments.filter({ hasText: 'Min' }).click()
+  await expect(page.getByTestId('current-graph-interval')).toHaveText('Min')
 })
 
 test('navigating dates previous next time periods', async ({

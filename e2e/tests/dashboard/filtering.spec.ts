@@ -627,10 +627,6 @@ test.describe('location filtering tests', () => {
 
       await applyFilterButton(page).click()
 
-      await page
-        .getByRole('button', { name: 'See 1 more filter and actions' })
-        .click()
-
       await expect(
         page.getByRole('link', { name: 'City is Tallinn' })
       ).toBeVisible()
@@ -807,10 +803,6 @@ test.describe('operating system filtering tests', () => {
       await suggestedItem(operatingSystemVersionFilterRow, '11').click()
 
       await applyFilterButton(page).click()
-
-      await page
-        .getByRole('button', { name: 'See 1 more filter and actions' })
-        .click()
 
       await expect(
         page.getByRole('link', { name: 'Operating system version is 11' })

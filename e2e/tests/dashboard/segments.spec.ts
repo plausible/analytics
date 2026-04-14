@@ -230,10 +230,6 @@ test('creating a segment from a combination of segment and a filter is not allow
     page.getByRole('link', { name: 'UTM source is Adwords' })
   ).toBeVisible()
 
-  await page
-    .getByRole('button', { name: 'See 1 more filter and actions' })
-    .click()
-
   await expect(
     page.getByRole('link', { name: 'Segment is Traffic from Google' })
   ).toBeVisible()
