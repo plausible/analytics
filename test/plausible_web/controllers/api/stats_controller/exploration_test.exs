@@ -71,7 +71,10 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
 
         resp =
           conn
-          |> get("/api/stats/#{site.domain}/exploration/next/?journey=#{journey}&period=24h")
+          |> post("/api/stats/#{site.domain}/exploration/next/", %{
+            "journey" => journey,
+            "period" => "24h"
+          })
           |> json_response(200)
 
         assert [next_step1, next_step2, next_step3] = resp
@@ -92,9 +95,11 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
 
         resp =
           conn
-          |> get(
-            "/api/stats/#{site.domain}/exploration/next/?journey=#{journey}&search_term=doc&period=24h"
-          )
+          |> post("/api/stats/#{site.domain}/exploration/next/", %{
+            "journey" => journey,
+            "search_term" => "doc",
+            "period" => "24h"
+          })
           |> json_response(200)
 
         assert [next_step] = resp
@@ -107,9 +112,11 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
 
         resp =
           conn
-          |> get(
-            "/api/stats/#{site.domain}/exploration/next/?journey=#{journey}&direction=backward&period=24h"
-          )
+          |> post("/api/stats/#{site.domain}/exploration/next/", %{
+            "journey" => journey,
+            "direction" => "backward",
+            "period" => "24h"
+          })
           |> json_response(200)
 
         assert [next_step1, next_step2] = resp
@@ -131,7 +138,10 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
 
         resp =
           conn
-          |> get("/api/stats/#{site.domain}/exploration/funnel/?journey=#{journey}&period=24h")
+          |> post("/api/stats/#{site.domain}/exploration/funnel/", %{
+            "journey" => journey,
+            "period" => "24h"
+          })
           |> json_response(200)
 
         assert [step1, step2, step3] = resp
@@ -160,9 +170,11 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
 
         resp =
           conn
-          |> get(
-            "/api/stats/#{site.domain}/exploration/funnel/?journey=#{journey}&direction=backward&period=24h"
-          )
+          |> post("/api/stats/#{site.domain}/exploration/funnel/", %{
+            "journey" => journey,
+            "direction" => "backward",
+            "period" => "24h"
+          })
           |> json_response(200)
 
         assert [step1, step2, step3] = resp

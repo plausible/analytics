@@ -34,7 +34,7 @@ function fetchColumnData(site, dashboardState, steps, filter, direction) {
   const stateToUse = stateWithApplicableFilters(dashboardState, steps)
   const journey = toJourney(steps)
 
-  return api.get(url.apiPath(site, '/exploration/next'), stateToUse, {
+  return api.post(url.apiPath(site, '/exploration/next'), stateToUse, {
     journey: JSON.stringify(journey),
     search_term: filter,
     direction
@@ -45,7 +45,7 @@ function fetchFunnelData(site, dashboardState, steps, direction) {
   const stateToUse = stateWithApplicableFilters(dashboardState, steps)
   const journey = toJourney(steps)
 
-  return api.get(url.apiPath(site, '/exploration/funnel'), stateToUse, {
+  return api.post(url.apiPath(site, '/exploration/funnel'), stateToUse, {
     journey: JSON.stringify(journey),
     direction
   })
