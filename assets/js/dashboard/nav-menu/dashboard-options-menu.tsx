@@ -104,8 +104,6 @@ function DashboardOptionsMenuItems() {
   } = options
 
   const showIntervalSection = !isRealtime && availableIntervals.length > 1
-  const hasActionItems =
-    !isRealtime || importedSwitchVisible || !!importedIntervalUnsupportedNotice
 
   const dashboardRouteMatch = useMatch(rootRoute.path)
   const n = availableIntervals.length
