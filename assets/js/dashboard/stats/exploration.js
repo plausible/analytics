@@ -25,16 +25,14 @@ function stateWithApplicableFilters(dashboardState, steps) {
   }
 }
 
+function toJourney(steps) {
+  steps.map((s) => { name: s.name, pathname: s.pathname })
+}
+
 function fetchColumnData(site, dashboardState, steps, filter, direction) {
   // Page filters only apply to the first step — strip them for subsequent columns
   const stateToUse = stateWithApplicableFilters(dashboardState, steps)
-
-  const journey = []
-  if (steps.length > 0) {
-    for (const s of steps) {
-      journey.push({ name: s.name, pathname: s.pathname })
-    }
-  }
+  const journey = toJourney(steps)
 
   return api.get(url.apiPath(site, '/exploration/next'), stateToUse, {
     journey: JSON.stringify(journey),
@@ -45,13 +43,7 @@ function fetchColumnData(site, dashboardState, steps, filter, direction) {
 
 function fetchFunnelData(site, dashboardState, steps, direction) {
   const stateToUse = stateWithApplicableFilters(dashboardState, steps)
-
-  const journey = []
-  if (steps.length > 0) {
-    for (const s of steps) {
-      journey.push({ name: s.name, pathname: s.pathname })
-    }
-  }
+  const journey = toJourney(steps)
 
   return api.get(url.apiPath(site, '/exploration/funnel'), stateToUse, {
     journey: JSON.stringify(journey),
