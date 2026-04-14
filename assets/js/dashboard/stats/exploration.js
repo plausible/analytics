@@ -317,7 +317,9 @@ export function FunnelExploration() {
           </button>
         </div>
       </div>
-      <div className="flex gap-3">
+      <div
+        className={`flex gap-3 ${direction === 'backward' ? 'flex-row-reverse' : ''}`}
+      >
         {Array.from({ length: numColumns }, (_, i) => (
           <ExplorationColumn
             key={i}
