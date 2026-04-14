@@ -33,6 +33,10 @@ export type PointerHandler = (opts: {
   event: unknown
 }) => void
 
+/** 
+ * To ensure the effect to redraw the chart only runs when needed, 
+ * make sure these props don't change on every render of the parent.
+ */
 type GraphProps<
   T extends ReadonlyArray<number | null>,
   U = { [K in keyof T]: SeriesConfig }
@@ -97,11 +101,11 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
   gradients
 }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement | null>(null)
+  // Effect to fully redraw chart from scratch
   useEffect(() => {
     if (!svgRef.current) {
       return
     }
-    console.log('effect running')
     const svgBoundingClientRect = svgRef.current.getBoundingClientRect()
     const minClientX = svgBoundingClientRect.left
     const maxClientX = svgBoundingClientRect.right
@@ -121,9 +125,10 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
     } = getYScale({ yMax, height, marginTop, marginBottom })
     const optimalYTickValues = getOptimalYTickValues(y, yMax)
 
-    // select the svg container, hide it until ready
-    const svg = d3.select(svgRef.current).attr('opacity', 0)
+    const svg = d3.select(svgRef.current)
 
+    // Hide svg until ready
+    svg.attr('opacity', 0)
     ;({ marginLeft, chartAreaWidth } = fitYAxis({
       buildAxis: (marginLeft, chartAreaWidth) =>
         svg
@@ -162,7 +167,7 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
     } = getXScale({ xMax, width, marginLeft, marginRight })
     const suggestedXTickValues = getSuggestedXTickValues(x, data.length)
 
-    // add the x-axis
+    // Add the x-axis
     const xAxisSelection = svg
       .append('g')
       .attr('class', 'x-axis--container')
@@ -313,7 +318,9 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
         },
         { passive: true }
       )
-      .attr('opacity', 1)
+
+    // Unhide chart
+    svg.attr('opacity', 1)
 
     return () => {
       svg.selectAll('*').remove()
