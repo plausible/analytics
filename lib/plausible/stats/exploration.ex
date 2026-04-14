@@ -145,8 +145,30 @@ defmodule Plausible.Stats.Exploration do
         _ -> [asc: :timestamp]
       end
 
-    q_steps =
+    q_pairs =
       from(e in query,
+        windows: [
+          session_window: [
+            partition_by: e.user_id,
+            order_by: [asc: e.timestamp]
+          ]
+        ],
+        select: %{
+          site_id: e.site_id,
+          user_id: e.user_id,
+          _sample_factor: e._sample_factor,
+          prev_pathname: lag(e.pathname) |> over(:session_window),
+          prev_name: lag(e.name) |> over(:session_window),
+          name: e.name,
+          pathname: e.pathname,
+          timestamp: e.timestamp
+        },
+        where: e.name != "engagement",
+        order_by: [asc: e.timestamp]
+      )
+
+    q_steps =
+      from(e in subquery(q_pairs),
         windows: [step_window: [partition_by: e.user_id, order_by: ^event_ordering]],
         select: %{
           user_id: e.user_id,
@@ -154,7 +176,7 @@ defmodule Plausible.Stats.Exploration do
           name1: e.name,
           pathname1: e.pathname
         },
-        where: e.name != "engagement",
+        where: e.prev_name != e.name or e.prev_pathname != e.pathname,
         order_by: ^event_ordering
       )
 

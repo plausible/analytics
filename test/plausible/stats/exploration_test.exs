@@ -241,5 +241,96 @@ defmodule Plausible.Stats.ExplorationTest do
       assert next_step2.step.pathname == "/login"
       assert next_step2.visitors == 1
     end
+
+    test "treats identical sequence of events as a single step" do
+      site = new_site()
+
+      now = DateTime.utc_now()
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/home",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/login",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/home",
+          timestamp: DateTime.shift(now, minute: -30)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/login",
+          timestamp: DateTime.shift(now, minute: -25)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/login",
+          timestamp: DateTime.shift(now, minute: -24)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/logout",
+          timestamp: DateTime.shift(now, minute: -20)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/home",
+          timestamp: DateTime.shift(now, minute: -30)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/login",
+          timestamp: DateTime.shift(now, minute: -25)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/docs",
+          timestamp: DateTime.shift(now, minute: -20)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/docs",
+          timestamp: DateTime.shift(now, minute: -19)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/logout",
+          timestamp: DateTime.shift(now, minute: -15)
+        )
+      ])
+
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+        %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+      ]
+
+      assert {:ok, [next_step1, next_step2, next_step3]} = Exploration.next_steps(query, journey)
+
+      assert next_step1.step.pathname == "/docs"
+      assert next_step1.visitors == 1
+      assert next_step2.step.pathname == "/home"
+      assert next_step2.visitors == 1
+      assert next_step3.step.pathname == "/logout"
+      assert next_step3.visitors == 1
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+        %Exploration.Journey.Step{name: "pageview", pathname: "/login"},
+        %Exploration.Journey.Step{name: "pageview", pathname: "/docs"}
+      ]
+
+      assert {:ok, [next_step]} = Exploration.next_steps(query, journey)
+
+      assert next_step.step.pathname == "/logout"
+      assert next_step.visitors == 1
+    end
   end
 end
