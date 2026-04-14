@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import * as api from '../../api'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
 import { fetchTopStats } from './fetch-top-stats'
@@ -8,8 +7,6 @@ import { IntervalPicker, useStoredInterval } from './interval-picker'
 import StatsExport from './stats-export'
 import WithImportedSwitch from './with-imported-switch'
 import { NoticesIcon } from './notices'
-import * as url from '../../util/url'
-import LineGraphWithRouter, { LineGraphContainer } from './line-graph'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -80,34 +77,19 @@ export default function VisitorGraph({
     ] as const,
     queryFn: async ({ queryKey }) => {
       const [_, opts] = queryKey
-      const oldDataSource = window.location.hostname.match(
-        /pr-\d+\.review\.plausible\.io/
+      const data = await fetchMainGraph(
+        site,
+        opts.dashboardState,
+        opts.metric,
+        opts.interval
       )
-        ? 'https://staging.plausible.io'
-        : `http://${window.location.hostname}:8000`
-      const [dataOld, dataNew] = await Promise.all([
-        api
-          .get(
-            `${oldDataSource}${url.apiPath(site, '/main-graph')}`,
-            opts.dashboardState,
-            {
-              metric: opts.metric,
-              interval: opts.interval
-            }
-          )
-          .then((res) => ({ ...res, interval: opts.interval }))
-          .catch(console.error),
-        fetchMainGraph(site, opts.dashboardState, opts.metric, opts.interval)
-          .then((res) => ({
-            ...res,
-            period: opts.dashboardState.period,
-            interval: opts.interval
-          }))
-          .catch(() => undefined)
-      ])
+
+      // pack dashboard period and interval used for the request next to data
+      // so they'd never be out of sync with each other
       return {
-        dataOld,
-        dataNew
+        ...data,
+        period: opts.dashboardState.period,
+        interval: opts.interval
       }
     },
     placeholderData: (previousData) => previousData,
@@ -294,24 +276,11 @@ export default function VisitorGraph({
               />
             </div>
           )}
-          <LineGraphContainer>
-            {mainGraphQuery.data?.dataNew && (
-              <>
-                {!showGraphLoader && (
-                  <LineGraphWithRouter
-                    graphData={mainGraphQuery.data.dataOld}
-                  />
-                )}
-                {showGraphLoader && <Loader />}
-              </>
-            )}
-          </LineGraphContainer>
-
           <MainGraphContainer ref={mainGraphContainer}>
-            {mainGraphQuery.data?.dataNew && width && (
+            {!!mainGraphQuery.data && !!width && (
               <>
                 {!showGraphLoader && (
-                  <MainGraph width={width} data={mainGraphQuery.data.dataNew} />
+                  <MainGraph width={width} data={mainGraphQuery.data} />
                 )}
                 {showGraphLoader && <Loader />}
               </>
