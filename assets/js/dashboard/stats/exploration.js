@@ -7,18 +7,27 @@ import { useDashboardStateContext } from '../dashboard-state-context'
 import { numberShortFormatter } from '../util/number-formatter'
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
+const EXPLORATION_DIRECTIONS = {
+  FORWARD: 'forward',
+  BACKWARD: 'backward'
+}
 
-function fetchColumnData(site, dashboardState, steps, filter) {
+function stateWithApplicableFilters(dashboardState, steps) {
+  if (steps.length === 0) {
+    return dashboardState
+  }
+
+  return {
+    ...dashboardState,
+    filters: dashboardState.filters.filter(
+      ([_op, key]) => !PAGE_FILTER_KEYS.includes(key)
+    )
+  }
+}
+
+function fetchColumnData(site, dashboardState, steps, filter, direction) {
   // Page filters only apply to the first step — strip them for subsequent columns
-  const stateToUse =
-    steps.length > 0
-      ? {
-          ...dashboardState,
-          filters: dashboardState.filters.filter(
-            ([_op, key]) => !PAGE_FILTER_KEYS.includes(key)
-          )
-        }
-      : dashboardState
+  const stateToUse = stateWithApplicableFilters(dashboardState, steps)
 
   const journey = []
   if (steps.length > 0) {
@@ -29,7 +38,24 @@ function fetchColumnData(site, dashboardState, steps, filter) {
 
   return api.get(url.apiPath(site, '/exploration/next'), stateToUse, {
     journey: JSON.stringify(journey),
-    search_term: filter
+    search_term: filter,
+    direction
+  })
+}
+
+function fetchFunnelData(site, dashboardState, steps, direction) {
+  const stateToUse = stateWithApplicableFilters(dashboardState, steps)
+
+  const journey = []
+  if (steps.length > 0) {
+    for (const s of steps) {
+      journey.push({ name: s.name, pathname: s.pathname })
+    }
+  }
+
+  return api.get(url.apiPath(site, '/exploration/funnel'), stateToUse, {
+    journey: JSON.stringify(journey),
+    direction
   })
 }
 
@@ -37,13 +63,19 @@ function ExplorationColumn({
   header,
   steps,
   selected,
+  selectedVisitors,
   onSelect,
-  dashboardState
+  dashboardState,
+  direction
 }) {
   const site = useSiteContext()
   const [loading, setLoading] = useState(steps !== null)
   const [results, setResults] = useState([])
   const [filter, setFilter] = useState('')
+  const stepsFingerprint =
+    steps === null
+      ? null
+      : steps.map((step) => `${step.name}:${step.pathname}`).join(';')
 
   const debouncedOnSearchInputChange = useDebounce((event) =>
     setFilter(event.target.value)
@@ -64,18 +96,30 @@ function ExplorationColumn({
     setLoading(true)
     setResults([])
 
-    fetchColumnData(site, dashboardState, steps, filter)
+    let cancelled = false
+
+    fetchColumnData(site, dashboardState, steps, filter, direction)
       .then((response) => {
-        setResults(response || [])
+        if (!cancelled) {
+          setResults(response || [])
+        }
       })
       .catch(() => {
-        setResults([])
+        if (!cancelled) {
+          setResults([])
+        }
       })
       .finally(() => {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       })
+
+    return () => {
+      cancelled = true
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dashboardState, steps, filter])
+  }, [dashboardState, stepsFingerprint, filter, direction, site, selected])
 
   const maxVisitors = results.length > 0 ? results[0].visitors : 1
 
@@ -126,11 +170,15 @@ function ExplorationColumn({
             : results.slice(0, 10)
           ).map(({ step, visitors }) => {
             const label = `${step.name} ${step.pathname}`
-            const pct = Math.round((visitors / maxVisitors) * 100)
             const isSelected =
               !!selected &&
               step.name === selected.name &&
               step.pathname === selected.pathname
+            const visitorsToShow =
+              isSelected && selectedVisitors !== null
+                ? selectedVisitors
+                : visitors
+            const pct = Math.round((visitorsToShow / maxVisitors) * 100)
 
             return (
               <li key={label}>
@@ -154,7 +202,7 @@ function ExplorationColumn({
                       {label}
                     </span>
                     <span className="ml-2 shrink-0 text-gray-500 dark:text-gray-400 tabular-nums">
-                      {numberShortFormatter(visitors)}
+                      {numberShortFormatter(visitorsToShow)}
                     </span>
                   </div>
                   <div className="h-1 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
@@ -177,14 +225,22 @@ function ExplorationColumn({
   )
 }
 
-function columnHeader(index) {
-  if (index === 0) return 'Start'
-  return `${index} step${index === 1 ? '' : 's'} after`
+function columnHeader(index, direction) {
+  if (index === 0) {
+    return direction === EXPLORATION_DIRECTIONS.BACKWARD ? 'End' : 'Start'
+  }
+
+  return `${index} step${index === 1 ? '' : 's'} ${
+    direction === EXPLORATION_DIRECTIONS.BACKWARD ? 'before' : 'after'
+  }`
 }
 
 export function FunnelExploration() {
+  const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [steps, setSteps] = useState([])
+  const [direction, setDirection] = useState(EXPLORATION_DIRECTIONS.FORWARD)
+  const [funnel, setFunnel] = useState([])
 
   function handleSelect(columnIndex, selected) {
     if (selected === null) {
@@ -194,22 +250,84 @@ export function FunnelExploration() {
     }
   }
 
+  function handleDirectionSelect(nextDirection) {
+    if (nextDirection === direction) return
+    setDirection(nextDirection)
+    setSteps([])
+    setFunnel([])
+  }
+
+  useEffect(() => {
+    if (steps.length === 0) {
+      setFunnel([])
+      return
+    }
+
+    let cancelled = false
+
+    fetchFunnelData(site, dashboardState, steps, direction)
+      .then((response) => {
+        if (!cancelled) {
+          setFunnel(response || [])
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFunnel([])
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [site, dashboardState, steps, direction])
+
   const numColumns = Math.max(steps.length + 1, 3)
 
   return (
     <div className="p-4">
-      <h4 className="mt-2 mb-4 text-base font-semibold dark:text-gray-100">
-        Explore user journeys
-      </h4>
+      <div className="mt-2 mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h4 className="text-base font-semibold dark:text-gray-100">
+          Explore user journeys
+        </h4>
+        <div className="flex shrink-0 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <button
+            onClick={() =>
+              handleDirectionSelect(EXPLORATION_DIRECTIONS.FORWARD)
+            }
+            className={`px-3 py-1 text-xs font-semibold transition-colors ${
+              direction === EXPLORATION_DIRECTIONS.FORWARD
+                ? 'bg-indigo-500 text-white'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            Forward
+          </button>
+          <button
+            onClick={() =>
+              handleDirectionSelect(EXPLORATION_DIRECTIONS.BACKWARD)
+            }
+            className={`px-3 py-1 text-xs font-semibold transition-colors border-l border-gray-200 dark:border-gray-700 ${
+              direction === EXPLORATION_DIRECTIONS.BACKWARD
+                ? 'bg-indigo-500 text-white'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            Backward
+          </button>
+        </div>
+      </div>
       <div className="flex gap-3">
         {Array.from({ length: numColumns }, (_, i) => (
           <ExplorationColumn
             key={i}
-            header={columnHeader(i)}
+            header={columnHeader(i, direction)}
             steps={steps.length >= i ? steps.slice(0, i) : null}
             selected={steps[i] || null}
+            selectedVisitors={funnel[i]?.visitors ?? null}
             onSelect={(selected) => handleSelect(i, selected)}
             dashboardState={dashboardState}
+            direction={direction}
           />
         ))}
       </div>
