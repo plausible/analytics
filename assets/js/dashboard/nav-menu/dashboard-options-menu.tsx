@@ -12,7 +12,6 @@ import { useDashboardOptionsContext } from '../stats/graph/dashboard-options-con
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { DashboardPeriod } from '../dashboard-time-periods'
 import { IntervalPicker } from '../stats/graph/interval-picker'
-import { MenuSeparator } from './nav-menu-components'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { useSiteContext } from '../site-context'
 import * as api from '../api'
@@ -150,15 +149,12 @@ function DashboardOptionsMenuItems() {
           )}
         >
           {showIntervalSection && (
-            <div className="flex m-1">
-              <IntervalPicker
-                selectedInterval={selectedInterval}
-                onIntervalClick={onIntervalClick}
-                options={availableIntervals}
-              />
-            </div>
+            <IntervalPicker
+              selectedInterval={selectedInterval}
+              onIntervalClick={onIntervalClick}
+              options={availableIntervals}
+            />
           )}
-          {showIntervalSection && hasActionItems && <MenuSeparator />}
           {!isRealtime && <ExportItem selectedInterval={selectedInterval} />}
           {importedSwitchVisible && (
             <>
