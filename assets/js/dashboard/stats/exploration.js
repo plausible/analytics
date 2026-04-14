@@ -50,6 +50,10 @@ function ExplorationColumn({
   )
 
   useEffect(() => {
+    if (selected) {
+      return
+    }
+
     if (steps === null) {
       setFilter('')
       setResults([])
