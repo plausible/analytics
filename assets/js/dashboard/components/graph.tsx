@@ -2,36 +2,8 @@ import React, { ReactNode, useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
 
-export type Datum<T extends ReadonlyArray<number | null>> = {
-  values: T
-  xLabel: string
-}
-
-type XPos = number
-type Point<T extends ReadonlyArray<number | null>> = {
-  x: XPos
-  values: T
-  dots: SelectedDots
-}
-
-export type SeriesConfig = {
-  /** a single series can be drawn with multiple lines, like a solid line for some parts and a dashed line for other parts */
-  lines?: {
-    lineClassName: string
-    startIndexInclusive?: number
-    stopIndexExclusive?: number
-  }[]
-  underline?: { gradientId: string }
-  dot?: { dotClassName: string }
-}
-
-export type PointerHandler = (opts: {
-  inHoverableArea: boolean
-  x: number
-  y: number
-  closestIndex: number | null
-  event: unknown
-}) => void
+const IDEAL_Y_TICK_COUNT = 5
+const MAX_X_TICK_COUNT = 8
 
 /**
  * To ensure the effect to redraw the chart only runs when needed,
@@ -400,7 +372,9 @@ const getYScale = ({
 }) => {
   const yBottomEdge = height - marginBottom
   const yTopEdge = marginTop
-  const scale = d3.scaleLinear([0, yMax], [yBottomEdge, yTopEdge]).nice(5)
+  const scale = d3
+    .scaleLinear([0, yMax], [yBottomEdge, yTopEdge])
+    .nice(IDEAL_Y_TICK_COUNT)
   return { scale, yBottomEdge, yTopEdge }
 }
 
@@ -505,7 +479,7 @@ export const getSuggestedXTickValues = (
   scale: d3.ScaleLinear<number, number>,
   bucketCount: number
 ): number[][] => {
-  const maxXTicks = Math.min(bucketCount, 8)
+  const maxXTicks = Math.min(bucketCount, MAX_X_TICK_COUNT)
   const minTicks = 1
   const result = new Set<string>()
   for (let tickCount = maxXTicks; tickCount >= minTicks; tickCount--) {
@@ -520,15 +494,23 @@ export const getSuggestedXTickValues = (
   return [...result].map((serializedArray) => JSON.parse(serializedArray))
 }
 
+const areIdealYTickValues = (tickValues: number[], yMax: number) =>
+  Math.max(...tickValues) >= yMax && tickValues.every(isWholeNumber)
+
 const getOptimalYTickValues = (
   scale: d3.ScaleLinear<number, number>,
   yMax: number
 ) => {
-  const suggested = [5, 4, 3, 2, 1].map((i) => scale.ticks(i))
+  const maxYTicks = IDEAL_Y_TICK_COUNT
+  const minTicks = 1
+  const suggested: number[][] = []
+  for (let tickCount = maxYTicks; tickCount >= minTicks; tickCount--) {
+    const tickValues = scale.ticks(tickCount)
+    suggested.push(tickValues)
+  }
   return (
-    suggested.find(
-      (values) => Math.max(...values) >= yMax && values.every(isWholeNumber)
-    ) ?? suggested[0]
+    suggested.find((tickValues) => areIdealYTickValues(tickValues, yMax)) ??
+    suggested[0]
   )
 }
 
@@ -704,6 +686,37 @@ function drawDots<T extends ReadonlyArray<number | null>>({
 }
 
 const isWholeNumber = (v: number) => v % 1 === 0
+
+export type Datum<T extends ReadonlyArray<number | null>> = {
+  values: T
+  xLabel: string
+}
+
+type XPos = number
+type Point<T extends ReadonlyArray<number | null>> = {
+  x: XPos
+  values: T
+  dots: SelectedDots
+}
+
+export type SeriesConfig = {
+  /** a single series can be drawn with multiple lines, like a solid line for some parts and a dashed line for other parts */
+  lines?: {
+    lineClassName: string
+    startIndexInclusive?: number
+    stopIndexExclusive?: number
+  }[]
+  underline?: { gradientId: string }
+  dot?: { dotClassName: string }
+}
+
+export type PointerHandler = (opts: {
+  inHoverableArea: boolean
+  x: number
+  y: number
+  closestIndex: number | null
+  event: unknown
+}) => void
 
 type SelectedSVG = d3.Selection<SVGSVGElement, unknown, null, undefined>
 type SelectedDots = d3.Selection<SVGGElement, unknown, null, undefined>
