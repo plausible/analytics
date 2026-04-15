@@ -40,70 +40,57 @@ export const remapAndFillData = ({
           data.meta.comparison_time_label_result_indices[index]) ??
         null
 
-      const getSeriesValue = ({
-        timeLabel,
-        indexOfResult,
-        results,
-        partialTimeLabels
-      }: {
-        timeLabel: string
-        indexOfResult: number | null
-        results: Array<ResultItem | null>
-        partialTimeLabels: string[]
-      }): SeriesValue => {
-        const isPartial = partialTimeLabels.find((l) => l === timeLabel)
-          ? true
-          : false
-
+      let main: SeriesValue
+      if (typeof timeLabel === 'string') {
         const value =
           indexOfResult !== null
-            ? getValue(results[indexOfResult]!)
+            ? getValue(data.results[indexOfResult]!)
             : getValue({ metrics: data.meta.empty_metrics })
-
-        return {
+        main = {
           isDefined: true,
+          timeLabel,
           value,
           numericValue: getNumericValue(value),
-          isPartial,
-          timeLabel
+          isPartial: (data.meta.partial_time_labels ?? []).includes(timeLabel)
         }
+      } else {
+        main = { isDefined: false }
       }
 
-      const main: SeriesValue =
-        typeof timeLabel === 'string'
-          ? getSeriesValue({
-              timeLabel,
-              partialTimeLabels: data.meta.partial_time_labels ?? [],
-              results: data.results,
-              indexOfResult: indexOfResult
-            })
-          : { isDefined: false }
-
-      const comparison: SeriesValue =
-        typeof comparisonTimeLabel === 'string'
-          ? getSeriesValue({
-              timeLabel: comparisonTimeLabel,
-              partialTimeLabels: data.meta.comparison_partial_time_labels ?? [],
-              results: data.comparison_results,
-              indexOfResult: indexOfComparisonResult
-            })
-          : { isDefined: false }
+      let comparison: SeriesValue
+      if (typeof comparisonTimeLabel === 'string') {
+        const value =
+          indexOfComparisonResult !== null
+            ? getValue(data.comparison_results[indexOfComparisonResult]!)
+            : getValue({ metrics: data.meta.empty_metrics })
+        comparison = {
+          isDefined: true,
+          timeLabel: comparisonTimeLabel,
+          value,
+          numericValue: getNumericValue(value),
+          isPartial: (data.meta.comparison_partial_time_labels ?? []).includes(
+            comparisonTimeLabel
+          )
+        }
+      } else {
+        comparison = { isDefined: false }
+      }
 
       let change = null
 
       if (
+        change === null &&
         main.isDefined &&
-        main.value !== null &&
         comparison.isDefined &&
-        comparison.value !== null &&
-        change === null
+        main.value !== null &&
+        comparison.value !== null
       ) {
         change = getChange(main.numericValue, comparison.numericValue)
       }
 
       return {
-        main: main,
-        comparison: comparison,
+        main,
+        comparison,
         change
       }
     })
