@@ -29,6 +29,11 @@ type GraphProps<
   onPointerLeave: () => void
   onClick?: () => void
   yFormat: (domainValue: d3.NumberValue, index: number) => string
+  /**
+   * Things are drawn in the order of settings,
+   * so if one series needs to be drawn on top of the other,
+   * it has to be after the other in the settings array.
+   */
   settings: U
   gradients: {
     id: string
@@ -188,20 +193,19 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
       })
     }
 
-    const points: Point<T>[] = data.map((d, index) => {
-      const xValue = x(index)
-      const yValues: T = d.values.map((v) =>
-        v !== null ? y(v) : null
-      ) as unknown as T
-      const dots = drawDots({ svg, settings, x: xValue, yValues })
-      return {
-        x: xValue,
-        values: yValues,
-        dots
-      }
-    })
-
     for (const [seriesIndex, series] of settings.entries()) {
+      if (series.underline) {
+        drawAreaUnderLine({
+          svg,
+          gradientId: series.underline.gradientId,
+          datum: data,
+          isDefined: (d) => d.values[seriesIndex] !== null,
+          xAccessor: (_d, index) => x(index),
+          y0Accessor: yBottomEdge,
+          y1Accessor: (d) => y(d.values[seriesIndex]!)
+        })
+      }
+
       if (series.lines) {
         for (const line of series.lines) {
           drawLine({
@@ -225,19 +229,20 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
           })
         }
       }
-
-      if (series.underline) {
-        drawAreaUnderLine({
-          svg,
-          gradientId: series.underline.gradientId,
-          datum: data,
-          isDefined: (d) => d.values[seriesIndex] !== null,
-          xAccessor: (_d, index) => x(index),
-          y0Accessor: yBottomEdge,
-          y1Accessor: (d) => y(d.values[seriesIndex]!)
-        })
-      }
     }
+
+    const points: Point<T>[] = data.map((d, index) => {
+      const xValue = x(index)
+      const yValues: T = d.values.map((v) =>
+        v !== null ? y(v) : null
+      ) as unknown as T
+      const dots = drawDots({ svg, settings, x: xValue, yValues })
+      return {
+        x: xValue,
+        values: yValues,
+        dots
+      }
+    })
 
     const getPosition = (
       event: unknown
