@@ -26,7 +26,12 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
 
-  plug PlausibleWeb.SuperAdminOnlyPlug when action in [:exploration_next, :exploration_funnel]
+  plug PlausibleWeb.SuperAdminOnlyPlug
+       when action in [
+              :exploration_next,
+              :exploration_funnel,
+              :exploration_interesting_funnel
+            ]
 
   plug(:date_validation_plug when action not in [:query])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
@@ -367,6 +372,16 @@ defmodule PlausibleWeb.Api.StatsController do
             level: :normal
           }
         )
+    end
+  end
+
+  def exploration_interesting_funnel(conn, params) do
+    site = conn.assigns.site
+    query = Query.from(site, params, debug_metadata: debug_metadata(conn))
+
+    case Exploration.interesting_funnel(query) do
+      {:ok, funnel} -> json(conn, funnel)
+      {:error, :not_found} -> json(conn, [])
     end
   end
 
