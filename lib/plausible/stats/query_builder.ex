@@ -330,16 +330,16 @@ defmodule Plausible.Stats.QueryBuilder do
     end
   end
 
-  @minutes_in_24h 24 * 60
+  @max_hours_for_minute_interval 30
 
   defp validate_time_dimension_granularity(query) do
     if Time.time_dimension(query) == "time:minute" and
-         DateTimeRange.length(query.utc_time_range, :minute) > @minutes_in_24h do
+         DateTimeRange.length(query.utc_time_range, :minute) > @max_hours_for_minute_interval * 60 do
       {:error,
        %QueryError{
          code: :invalid_dimensions,
          message:
-           "Invalid dimensions. Dimension `time:minute` is only supported for time ranges up to 24 hours."
+           "Invalid dimensions. Dimension `time:minute` is only supported for time ranges up to 30 hours."
        }}
     else
       :ok

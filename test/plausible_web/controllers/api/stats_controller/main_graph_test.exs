@@ -1325,30 +1325,35 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert error =~ "Invalid dimensions"
     end
 
-    test "time:minute dimension for a complete day", %{
+    test "time:minute dimension for a complete day, including DST transition", %{
       conn: conn,
       site: site
     } do
+      # On Oct 26, 2025, in Tallinn, Estonia, the clocks shifted back
+      # from 04:00 -> 03:00, so there were 25 hours in that day.
+      Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
+      |> Plausible.Repo.update!()
+
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:01:01]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:01:02]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:02:30])
+        build(:pageview, timestamp: ~N[2025-10-26 01:01:01]),
+        build(:pageview, timestamp: ~N[2025-10-26 01:01:02]),
+        build(:pageview, timestamp: ~N[2025-10-26 10:02:30])
       ])
 
       response =
         do_query(conn, site, %{
           "date_range" => "day",
-          "relative_date" => "2021-01-01",
+          "relative_date" => "2025-10-26",
           "metrics" => ["pageviews"],
           "dimensions" => ["time:minute"],
           "include" => %{"time_labels" => true}
         })
 
-      assert length(response["meta"]["time_labels"]) == 1440
+      assert length(response["meta"]["time_labels"]) == 1500
 
       assert response["results"] == [
-               %{"dimensions" => ["2021-01-01 00:01:00"], "metrics" => [2]},
-               %{"dimensions" => ["2021-01-01 00:02:00"], "metrics" => [1]}
+               %{"dimensions" => ["2025-10-26 03:01:00"], "metrics" => [2]},
+               %{"dimensions" => ["2025-10-26 12:02:00"], "metrics" => [1]}
              ]
     end
 
