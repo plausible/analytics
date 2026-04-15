@@ -20,7 +20,6 @@ export function fetchMainGraph(
     dimensions: [`time:${interval}`],
     include: {
       time_labels: true,
-      present_index: true,
       partial_time_labels: true,
       empty_metrics: true
     }
@@ -31,8 +30,6 @@ export function fetchMainGraph(
   if (isRealTimeDashboard(dashboardState)) {
     statsQuery.date_range = DashboardPeriod.realtime_30m
   }
-
-  statsQuery.include.present_index = true
 
   return api.stats(site, statsQuery)
 }
