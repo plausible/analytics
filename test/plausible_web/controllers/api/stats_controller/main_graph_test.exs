@@ -1325,6 +1325,80 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert error =~ "Invalid dimensions"
     end
 
+    test "time:minute dimension for a complete day", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:01]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:02]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:02:30])
+      ])
+
+      response =
+        do_query(conn, site, %{
+          "date_range" => "day",
+          "relative_date" => "2021-01-01",
+          "metrics" => ["pageviews"],
+          "dimensions" => ["time:minute"],
+          "include" => %{"time_labels" => true}
+        })
+
+      assert length(response["meta"]["time_labels"]) == 1440
+
+      assert response["results"] == [
+               %{"dimensions" => ["2021-01-01 00:01:00"], "metrics" => [2]},
+               %{"dimensions" => ["2021-01-01 00:02:00"], "metrics" => [1]}
+             ]
+    end
+
+    test "time:minute dimension for last 24h", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:01]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:02]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:02:30])
+      ])
+
+      response =
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => "24h",
+            "metrics" => ["pageviews"],
+            "dimensions" => ["time:minute"],
+            "include" => %{"time_labels" => true}
+          },
+          now: ~U[2021-01-01 12:00:00Z]
+        )
+
+      assert length(response["meta"]["time_labels"]) == 1440
+
+      assert response["results"] == [
+               %{"dimensions" => ["2021-01-01 00:01:00"], "metrics" => [2]},
+               %{"dimensions" => ["2021-01-01 00:02:00"], "metrics" => [1]}
+             ]
+    end
+
+    test "returns error when time:minute dimension is queried for a period longer than 24h", %{
+      conn: conn,
+      site: site
+    } do
+      response =
+        do_query_fail(conn, site, %{
+          "date_range" => ["2021-01-01", "2021-01-02"],
+          "metrics" => ["visitors"],
+          "dimensions" => ["time:minute"]
+        })
+
+      assert %{"error" => error} = json_response(response, 400)
+      assert error =~ "Invalid dimensions"
+      assert error =~ "time:minute"
+    end
+
     test "displays visitors for a month on a weekly scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),

@@ -35,6 +35,7 @@ defmodule Plausible.Stats.QueryBuilder do
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_case_sensitive_filter_modifier(query),
          :ok <- validate_toplevel_only_filter_dimension(query),
+         :ok <- validate_time_dimension_granularity(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_behavioral_filters(query),
          :ok <- validate_filtered_goals_exist(query, parsed_query_params),
@@ -323,6 +324,22 @@ defmodule Plausible.Stats.QueryBuilder do
          code: :invalid_filters,
          message:
            "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."
+       }}
+    else
+      :ok
+    end
+  end
+
+  @minutes_in_24h 24 * 60
+
+  defp validate_time_dimension_granularity(query) do
+    if Time.time_dimension(query) == "time:minute" and
+         DateTimeRange.length(query.utc_time_range, :minute) > @minutes_in_24h do
+      {:error,
+       %QueryError{
+         code: :invalid_dimensions,
+         message:
+           "Invalid dimensions. Dimension `time:minute` is only supported for time ranges up to 24 hours."
        }}
     else
       :ok
