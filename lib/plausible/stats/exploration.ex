@@ -34,7 +34,9 @@ defmodule Plausible.Stats.Exploration do
           step: Journey.Step.t(),
           visitors: non_neg_integer(),
           dropoff: non_neg_integer(),
-          dropoff_percentage: String.t()
+          dropoff_percentage: String.t(),
+          conversion_rate: String.t(),
+          conversion_rate_step: String.t()
         }
 
   @spec next_steps(Query.t(), journey(), String.t(), direction()) ::
@@ -219,25 +221,36 @@ defmodule Plausible.Stats.Exploration do
   defp to_funnel([result], journey) do
     journey
     |> Enum.with_index()
-    |> Enum.reduce(%{funnel: [], visitors_at_previous: nil}, fn {step, idx}, acc ->
+    |> Enum.reduce(%{funnel: [], visitors_at_previous: nil, total_visitors: nil}, fn {step, idx},
+                                                                                     acc ->
       current_visitors = Map.get(result, idx + 1, 0)
+      total_visitors = acc.total_visitors || current_visitors
 
       dropoff =
         if acc.visitors_at_previous, do: acc.visitors_at_previous - current_visitors, else: 0
 
       dropoff_percentage = percentage(dropoff, acc.visitors_at_previous)
+      conversion_rate = percentage(current_visitors, total_visitors)
+      conversion_rate_step = percentage(current_visitors, acc.visitors_at_previous)
 
       funnel = [
         %{
           step: step,
           visitors: current_visitors,
           dropoff: dropoff,
-          dropoff_percentage: dropoff_percentage
+          dropoff_percentage: dropoff_percentage,
+          conversion_rate: conversion_rate,
+          conversion_rate_step: conversion_rate_step
         }
         | acc.funnel
       ]
 
-      %{acc | funnel: funnel, visitors_at_previous: current_visitors}
+      %{
+        acc
+        | funnel: funnel,
+          visitors_at_previous: current_visitors,
+          total_visitors: total_visitors
+      }
     end)
     |> Map.fetch!(:funnel)
     |> Enum.reverse()
