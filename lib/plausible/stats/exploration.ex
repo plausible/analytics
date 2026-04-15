@@ -79,6 +79,59 @@ defmodule Plausible.Stats.Exploration do
     |> then(&{:ok, &1})
   end
 
+  @doc """
+  Builds a "teaser" funnel by greedily selecting steps.
+
+  We currently don't know what the "interesting" funnel might be,
+  but blindly following the most visited cascade, oftentimes results with
+  a repetetive back and forth between two pages.
+
+  Therefore we start with the most visited entry and 
+  iteratively pick the most popular next step, that hasn't appeared 
+  in the journey yet. Trailing slashes are ignored when 
+  comparing pathnames (e.g. `/foo` and `/foo/` are treated as
+  the same page - we should probably do that when deduplicating step candidates too).
+  """
+  @spec interesting_funnel(Query.t(), pos_integer()) ::
+          {:ok, [funnel_step()]} | {:error, :not_found}
+  def interesting_funnel(query, max_steps \\ 6) do
+    case build_interesting_journey(query, [], MapSet.new(), max_steps) do
+      [] -> {:error, :not_found}
+      journey -> journey_funnel(query, journey)
+    end
+  end
+
+  defp build_interesting_journey(_query, journey, _seen, max_steps)
+       when length(journey) >= max_steps do
+    journey
+  end
+
+  defp build_interesting_journey(query, journey, seen, max_steps) do
+    {:ok, candidates} = next_steps(query, journey, "")
+
+    case find_unseen_step(candidates, seen) do
+      nil ->
+        journey
+
+      step ->
+        new_seen = MapSet.put(seen, normalize_step_key(step))
+        build_interesting_journey(query, journey ++ [step], new_seen, max_steps)
+    end
+  end
+
+  defp find_unseen_step(candidates, seen) do
+    Enum.find_value(candidates, fn %{step: step} ->
+      if not MapSet.member?(seen, normalize_step_key(step)), do: step
+    end)
+  end
+
+  defp normalize_step_key(%Journey.Step{name: name, pathname: pathname}) do
+    {name, normalize_pathname(pathname)}
+  end
+
+  defp normalize_pathname("/"), do: "/"
+  defp normalize_pathname(pathname), do: String.trim_trailing(pathname, "/")
+
   defp next_steps_query(query, steps, search_term, direction) do
     next_step_idx = length(steps) + 1
     q_steps = steps_query(query, next_step_idx, direction)

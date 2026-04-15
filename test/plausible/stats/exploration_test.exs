@@ -227,6 +227,195 @@ defmodule Plausible.Stats.ExplorationTest do
     end
   end
 
+  describe "interesting_funnel" do
+    test "builds a funnel starting with the most visited step", %{site: site} do
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      assert {:ok, [step1, step2, step3, step4]} = Exploration.interesting_funnel(query)
+
+      assert step1.step.pathname == "/home"
+      assert step1.visitors == 2
+
+      assert step2.step.pathname == "/login"
+      assert step2.visitors == 2
+
+      assert step3.step.pathname == "/docs"
+      assert step3.visitors == 1
+
+      assert step4.step.pathname == "/logout"
+      assert step4.visitors == 1
+    end
+
+    test "limits the funnel to max_steps", %{site: site} do
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      assert {:ok, [step1, step2]} = Exploration.interesting_funnel(query, 2)
+
+      assert step1.step.pathname == "/home"
+      assert step2.step.pathname == "/login"
+    end
+
+    test "returns error when no events exist" do
+      empty_site = new_site()
+      query = QueryBuilder.build!(empty_site, input_date_range: :all)
+
+      assert {:error, :not_found} = Exploration.interesting_funnel(query)
+    end
+
+    test "treats trailing slash as the same page" do
+      site = new_site()
+      now = DateTime.utc_now()
+
+      populate_stats(site, [
+        # user 123
+        build(:pageview,
+          user_id: 123,
+          pathname: "/home",
+          timestamp: DateTime.shift(now, minute: -30)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/about/",
+          timestamp: DateTime.shift(now, minute: -25)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/contact",
+          timestamp: DateTime.shift(now, minute: -20)
+        ),
+        # user 124
+        build(:pageview,
+          user_id: 124,
+          pathname: "/home",
+          timestamp: DateTime.shift(now, minute: -30)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/about",
+          timestamp: DateTime.shift(now, minute: -25)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/pricing",
+          timestamp: DateTime.shift(now, minute: -20)
+        ),
+        # user 125
+        build(:pageview,
+          user_id: 125,
+          pathname: "/home",
+          timestamp: DateTime.shift(now, minute: -30)
+        ),
+        build(:pageview,
+          user_id: 125,
+          pathname: "/about/",
+          timestamp: DateTime.shift(now, minute: -25)
+        ),
+        build(:pageview,
+          user_id: 125,
+          pathname: "/contact",
+          timestamp: DateTime.shift(now, minute: -20)
+        )
+      ])
+
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      assert {:ok, funnel} = Exploration.interesting_funnel(query)
+
+      pathnames = Enum.map(funnel, & &1.step.pathname)
+      assert pathnames == ["/home", "/about/", "/contact"]
+    end
+
+    test "stops when no more unseen steps are available" do
+      site = new_site()
+      now = DateTime.utc_now()
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/only-page",
+          timestamp: DateTime.shift(now, minute: -30)
+        )
+      ])
+
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      assert {:ok, [step1]} = Exploration.interesting_funnel(query, 6)
+
+      assert step1.step.pathname == "/only-page"
+      assert step1.visitors == 1
+    end
+
+    test "respects query filters", %{site: site} do
+      query =
+        QueryBuilder.build!(site,
+          input_date_range: :all,
+          filters: [[:is, "visit:browser", ["Firefox"]]]
+        )
+
+      assert {:ok, funnel} = Exploration.interesting_funnel(query)
+
+      pathnames = Enum.map(funnel, & &1.step.pathname)
+      assert pathnames == ["/docs", "/logout"]
+    end
+
+    test "does not revisit already-seen steps in a cycle" do
+      site = new_site()
+      now = DateTime.utc_now()
+
+      populate_stats(site, [
+        # user 123
+        build(:pageview,
+          user_id: 123,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -50)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/b",
+          timestamp: DateTime.shift(now, minute: -40)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -30)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/b",
+          timestamp: DateTime.shift(now, minute: -20)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/c",
+          timestamp: DateTime.shift(now, minute: -10)
+        ),
+        # user 124
+        build(:pageview,
+          user_id: 124,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -50)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/b",
+          timestamp: DateTime.shift(now, minute: -40)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/c",
+          timestamp: DateTime.shift(now, minute: -30)
+        )
+      ])
+
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      assert {:ok, funnel} = Exploration.interesting_funnel(query)
+
+      pathnames = Enum.map(funnel, & &1.step.pathname)
+      assert pathnames == ["/a", "/b", "/c"]
+    end
+  end
+
   describe "next_steps" do
     test "suggests the next step for a 2-step journey", %{site: site} do
       query = QueryBuilder.build!(site, input_date_range: :all)
