@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import * as api from '../api'
 import * as url from '../util/url'
 import { useDebounce } from '../custom-hooks'
@@ -121,9 +121,9 @@ function ExplorationColumn({
       : maxVisitors || results[0]?.visitors
 
   return (
-    <div className="flex-1 min-w-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <span className="text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400 uppercase">
+    <div className="min-w-80 flex-1 border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden">
+      <div className="h-12 pl-4 pr-1.5 flex items-center justify-between">
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
           {header}
         </span>
         {!selected && steps !== null && (
@@ -133,13 +133,13 @@ function ExplorationColumn({
             defaultValue={filter}
             placeholder="Search"
             onChange={debouncedOnSearchInputChange}
-            className="peer w-32 text-sm dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+            className="peer text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
           />
         )}
         {selected && (
           <button
             onClick={() => onSelect(null)}
-            className="text-xs text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200"
+            className="pr-2.5 text-xs text-indigo-500 font-medium hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200"
           >
             Clear
           </button>
@@ -147,17 +147,17 @@ function ExplorationColumn({
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-48">
+        <div className="h-112 flex items-center justify-center">
           <div className="mx-auto loading pt-4">
             <div></div>
           </div>
         </div>
       ) : results.length === 0 ? (
-        <div className="flex items-center justify-center h-48 text-sm text-gray-400 dark:text-gray-500">
+        <div className="h-108 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
           {steps === null ? 'Select an event to continue' : 'No data'}
         </div>
       ) : (
-        <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+        <ul className="flex flex-col gap-y-0.5 px-1.5 pb-1.5 h-108 overflow-y-auto">
           {(selected
             ? results.filter(
                 ({ step }) =>
@@ -183,34 +183,33 @@ function ExplorationColumn({
             return (
               <li key={label}>
                 <button
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors focus:outline-none ${
+                  className={`group w-full border text-left px-2.5 pt-2 pb-2.5 text-sm rounded-md focus:outline-none ${
                     isSelected
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                      ? 'bg-indigo-50/80 dark:bg-gray-750 border-indigo-50 dark:border-transparent'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent'
                   }`}
                   onClick={() => onSelect(isSelected ? null : step)}
                 >
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
                     <span
-                      className={`truncate font-medium ${
-                        isSelected
-                          ? 'text-indigo-700 dark:text-indigo-300'
-                          : 'text-gray-800 dark:text-gray-200'
-                      }`}
+                      className="truncate font-medium text-gray-800 dark:text-gray-200"
                       title={label}
                     >
                       {label}
                     </span>
-                    <span className="ml-2 shrink-0 text-gray-500 dark:text-gray-400 tabular-nums">
+                    <span className="shrink-0 text-gray-800 dark:text-gray-200 tabular-nums">
                       {numberShortFormatter(visitorsToShow)}
                     </span>
                   </div>
-                  <div className="h-1 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                  <div
+                    className={`h-1 rounded-full overflow-hidden 
+                    ${isSelected ? 'bg-indigo-100 dark:bg-gray-700' : 'bg-indigo-100/70 dark:bg-gray-700 group-hover:bg-indigo-100 dark:group-hover:bg-gray-600'}`}
+                  >
                     <div
-                      className={`h-full rounded-full ${
+                      className={`h-full rounded-full transition-[width] ease-in-out ${
                         isSelected
-                          ? 'bg-indigo-500'
-                          : 'bg-indigo-300 dark:bg-indigo-600'
+                          ? 'bg-indigo-500 dark:bg-white'
+                          : 'bg-indigo-300 dark:bg-gray-300 group-hover:bg-indigo-400 dark:group-hover:bg-white'
                       }`}
                       style={{ width: `${conversionRateToShow}%` }}
                     />
@@ -227,7 +226,9 @@ function ExplorationColumn({
 
 function columnHeader(index, direction) {
   if (index === 0) {
-    return direction === EXPLORATION_DIRECTIONS.BACKWARD ? 'End' : 'Start'
+    return direction === EXPLORATION_DIRECTIONS.BACKWARD
+      ? 'End point'
+      : 'Starting point'
   }
 
   return `${index} step${index === 1 ? '' : 's'} ${
@@ -283,42 +284,53 @@ export function FunnelExploration() {
   }, [site, dashboardState, steps, direction])
 
   const numColumns = Math.max(steps.length + 1, 3)
+  const scrollRef = useRef(null)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
+  }, [steps.length])
 
   return (
-    <div className="p-4">
-      <div className="mt-2 mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h4 className="text-base font-semibold dark:text-gray-100">
-          Explore user journeys
-        </h4>
-        <div className="flex shrink-0 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="flex flex-col gap-4 pt-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col">
+          <h4 className="text-base font-semibold dark:text-gray-100">
+            Explore
+          </h4>
+        </div>
+        <div className="flex shrink-0 gap-1 overflow-hidden">
           <button
             onClick={() =>
               handleDirectionSelect(EXPLORATION_DIRECTIONS.FORWARD)
             }
-            className={`px-3 py-1 text-xs font-semibold transition-colors ${
+            className={`px-2 py-1.5 text-xs font-medium rounded-md ${
               direction === EXPLORATION_DIRECTIONS.FORWARD
-                ? 'bg-indigo-500 text-white'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+                ? 'bg-gray-150 text-gray-900 dark:bg-gray-750 dark:text-gray-100'
+                : 'text-gray-500 dark:text-gray-400'
             }`}
           >
-            Forward
+            Starting point
           </button>
           <button
             onClick={() =>
               handleDirectionSelect(EXPLORATION_DIRECTIONS.BACKWARD)
             }
-            className={`px-3 py-1 text-xs font-semibold transition-colors border-l border-gray-200 dark:border-gray-700 ${
+            className={`px-2 py-1.5 text-xs font-medium rounded-md ${
               direction === EXPLORATION_DIRECTIONS.BACKWARD
-                ? 'bg-indigo-500 text-white'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+                ? 'bg-gray-150 text-gray-900 dark:bg-gray-750 dark:text-gray-100'
+                : 'text-gray-500 dark:text-gray-400'
             }`}
           >
-            Backward
+            End point
           </button>
         </div>
       </div>
+
       <div
-        className={`flex gap-3 ${direction === 'backward' ? 'flex-row-reverse' : ''}`}
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto -mx-5 px-5 -mb-3 pb-3"
       >
         {Array.from({ length: numColumns }, (_, i) => (
           <ExplorationColumn

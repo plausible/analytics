@@ -530,7 +530,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
                 active={mode === Mode.EXPLORATION}
                 onClick={setTabFactory(Mode.EXPLORATION)}
               >
-                Exploration
+                Explore
               </TabButton>
             )}
           </TabWrapper>
