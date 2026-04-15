@@ -84,7 +84,7 @@ defmodule Plausible.Stats.Exploration do
 
   We currently don't know what the "interesting" funnel might be,
   but blindly following the most visited cascade, oftentimes results with
-  a repetetive back and forth between two pages.
+  a repetitive back and forth between two pages.
 
   Therefore we start with the most visited entry and 
   iteratively pick the most popular next step, that hasn't appeared 
