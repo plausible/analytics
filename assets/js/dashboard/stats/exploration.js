@@ -115,7 +115,10 @@ function ExplorationColumn({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dashboardState, stepsFingerprint, filter, direction, site, selected])
 
-  const stepMaxVisitors = maxVisitors || results[0]?.visitors
+  const stepMaxVisitors =
+    direction === EXPLORATION_DIRECTIONS.BACKWARD
+      ? results[0]?.visitors
+      : maxVisitors || results[0]?.visitors
 
   return (
     <div className="flex-1 min-w-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
