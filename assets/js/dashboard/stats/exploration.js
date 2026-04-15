@@ -54,8 +54,10 @@ function fetchFunnelData(site, dashboardState, steps, direction) {
 function ExplorationColumn({
   header,
   steps,
+  maxVisitors,
   selected,
   selectedVisitors,
+  selectedConversionRate,
   onSelect,
   dashboardState,
   direction
@@ -113,7 +115,7 @@ function ExplorationColumn({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dashboardState, stepsFingerprint, filter, direction, site, selected])
 
-  const maxVisitors = results.length > 0 ? results[0].visitors : 1
+  const stepMaxVisitors = maxVisitors || results[0]?.visitors
 
   return (
     <div className="flex-1 min-w-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
@@ -170,7 +172,10 @@ function ExplorationColumn({
               isSelected && selectedVisitors !== null
                 ? selectedVisitors
                 : visitors
-            const pct = Math.round((visitorsToShow / maxVisitors) * 100)
+            const conversionRateToShow =
+              isSelected && selectedConversionRate !== null
+                ? selectedConversionRate
+                : Math.round((visitors / stepMaxVisitors) * 100)
 
             return (
               <li key={label}>
@@ -204,7 +209,7 @@ function ExplorationColumn({
                           ? 'bg-indigo-500'
                           : 'bg-indigo-300 dark:bg-indigo-600'
                       }`}
-                      style={{ width: `${pct}%` }}
+                      style={{ width: `${conversionRateToShow}%` }}
                     />
                   </div>
                 </button>
@@ -319,6 +324,8 @@ export function FunnelExploration() {
             steps={steps.length >= i ? steps.slice(0, i) : null}
             selected={steps[i] || null}
             selectedVisitors={funnel[i]?.visitors ?? null}
+            selectedConversionRate={funnel[i]?.conversion_rate ?? null}
+            maxVisitors={funnel[0]?.visitors ?? null}
             onSelect={(selected) => handleSelect(i, selected)}
             dashboardState={dashboardState}
             direction={direction}
