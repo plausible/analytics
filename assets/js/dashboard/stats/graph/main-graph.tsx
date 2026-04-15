@@ -36,7 +36,9 @@ import {
   METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS,
   getChangeInPercentagePoints,
   getRelativeChange,
-  REVENUE_METRICS
+  REVENUE_METRICS,
+  getFirstAndLastTimeLabels,
+  MainGraphSeriesName
 } from './main-graph-data'
 import { getMetricLabel } from '../metrics'
 import { useDashboardStateContext } from '../../dashboard-state-context'
@@ -84,11 +86,15 @@ export const MainGraph = ({
     remappedDataInGraphFormat,
     gradients
   } = useMemo(() => {
-    const {
-      remappedData,
-      mainSeriesStartEndLabels,
-      comparisonSeriesStartEndLabels
-    } = remapAndFillData({
+    const mainSeriesStartEndLabels = getFirstAndLastTimeLabels(
+      data,
+      MainGraphSeriesName.main
+    )
+    const comparisonSeriesStartEndLabels = getFirstAndLastTimeLabels(
+      data,
+      MainGraphSeriesName.comparison
+    )
+    const remappedData = remapAndFillData({
       getValue: (item) => item.metrics[0],
       getNumericValue: REVENUE_METRICS.includes(metric)
         ? (v) => (v as RevenueMetricValue).value
@@ -98,8 +104,6 @@ export const MainGraph = ({
         : getRelativeChange,
       data
     })
-
-    const gradients = [primaryGradient, secondaryGradient]
 
     let yMax = 1
 
@@ -138,6 +142,7 @@ export const MainGraph = ({
       }
     )
 
+    const gradients = [primaryGradient, secondaryGradient]
     const mainLineSegments = getLineSegments(remappedData.map((d) => d.main))
     const comparisonLineSegments = getLineSegments(
       remappedData.map((d) => d.comparison)

@@ -1,8 +1,4 @@
-import {
-  MainGraphResponse,
-  MetricValue,
-  ResultItem,
-} from './fetch-main-graph'
+import { MainGraphResponse, MetricValue, ResultItem } from './fetch-main-graph'
 
 /**
  * Fills gaps in @see MainGraphResponse the series of `results` and `comparisonResults`.
@@ -13,9 +9,6 @@ import {
  *
  * Extracts the numeric values for the series when they are wrapped.
  *
- * In the same single loop, for the sake of efficiency, it determines
- * - the start and end labels of both series (used for generating appropriate X axis labels),
- *
  */
 export const remapAndFillData = ({
   data,
@@ -25,25 +18,13 @@ export const remapAndFillData = ({
 }: {
   data: MainGraphResponse
   getNumericValue: (metrics: MetricValue) => number
-  getValue: (
-    item: Pick<ResultItem, 'metrics'>
-  ) => MetricValue
+  getValue: (item: Pick<ResultItem, 'metrics'>) => MetricValue
   getChange: (value: number, comparisonValue: number) => number
-}): {
-  remappedData: GraphDatum[]
-  mainSeriesStartEndLabels: [string | null, string | null]
-  comparisonSeriesStartEndLabels: [string | null, string | null]
-} => {
+}): GraphDatum[] => {
   const totalBucketCount = Math.max(
     data.meta.comparison_time_label_result_indices?.length ?? 0,
     data.meta.time_label_result_indices.length
   )
-
-  let firstTimeLabel: null | string = null
-  let lastTimeLabel: null | string = null
-
-  let firstComparisonTimeLabel: null | string = null
-  let lastComparisonTimeLabel: null | string = null
 
   const remappedData: GraphDatum[] = new Array(totalBucketCount)
     .fill(null)
@@ -97,11 +78,6 @@ export const remapAndFillData = ({
               indexOfResult: indexOfResult
             })
           : { isDefined: false }
-      if (main.isDefined) {
-        firstTimeLabel =
-          firstTimeLabel === null ? main.timeLabel : firstTimeLabel
-        lastTimeLabel = timeLabel
-      }
 
       const comparison: SeriesValue =
         typeof comparisonTimeLabel === 'string'
@@ -112,13 +88,6 @@ export const remapAndFillData = ({
               indexOfResult: indexOfComparisonResult
             })
           : { isDefined: false }
-      if (comparison.isDefined) {
-        firstComparisonTimeLabel =
-          firstComparisonTimeLabel === null
-            ? comparison.timeLabel
-            : firstComparisonTimeLabel
-        lastComparisonTimeLabel = comparison.timeLabel
-      }
 
       let change = null
 
@@ -139,14 +108,21 @@ export const remapAndFillData = ({
       }
     })
 
-  return {
-    remappedData,
-    mainSeriesStartEndLabels: [firstTimeLabel, lastTimeLabel],
-    comparisonSeriesStartEndLabels: [
-      firstComparisonTimeLabel,
-      lastComparisonTimeLabel
-    ]
+  return remappedData
+}
+
+export const getFirstAndLastTimeLabels = (
+  response: Pick<MainGraphResponse, 'meta'>,
+  series: MainGraphSeriesName
+): [string | null, string | null] => {
+  const labels = {
+    [MainGraphSeriesName.main]: response.meta.time_labels,
+    [MainGraphSeriesName.comparison]: response.meta.comparison_time_labels
+  }[series]
+  if (!labels?.length) {
+    return [null, null]
   }
+  return [labels[0], labels[labels.length - 1]]
 }
 
 export const METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS = [
