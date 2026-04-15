@@ -534,7 +534,7 @@ const handleXTickText = ({
 }): { isOverlappingPrevious: boolean; rightEdge: number } => {
   const textContent = elem.textContent
   // empty texts can't overlap
-  if (!textContent.length) {
+  if (!textContent?.length) {
     return { isOverlappingPrevious: false, rightEdge: lastTickTextRightEdge }
   }
   let textRect = elem.getBoundingClientRect()
