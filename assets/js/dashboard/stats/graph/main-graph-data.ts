@@ -17,7 +17,7 @@ export const remapAndFillData = ({
   getChange
 }: {
   data: MainGraphResponse
-  getNumericValue: (metrics: MetricValue) => number
+  getNumericValue: (metricValue: MetricValue) => number
   getValue: (item: Pick<ResultItem, 'metrics'>) => MetricValue
   getChange: (value: number, comparisonValue: number) => number
 }): GraphDatum[] => {
@@ -149,7 +149,7 @@ export type LineSegment = {
 }
 
 /**
- * Creates segments from points of main series.
+ * Creates segments from points of a series.
  * When a point of data is partial, all lines to and from it must be partial lines.
  * (If that partial point moves, the lines to and from it move.)
  * A full line is drawn only between two or more continuous full periods.
