@@ -113,8 +113,8 @@ export const MainGraph = ({
       ({ main, comparison }, bucketIndex) => {
         const dataPoint = {
           values: [
-            main.isDefined ? main.numericValue : null,
-            comparison.isDefined ? comparison.numericValue : null
+            comparison.isDefined ? comparison.numericValue : null,
+            main.isDefined ? main.numericValue : null
           ] as const,
           xLabel: main.isDefined
             ? getBucketLabel(main.timeLabel, {
@@ -175,8 +175,8 @@ export const MainGraph = ({
     }
 
     const settings: [SeriesConfig, SeriesConfig] = [
-      mainSeries,
-      comparisonSeries
+      comparisonSeries,
+      mainSeries
     ]
 
     const yearIsUnambiguous = isYearUnambiguous({
@@ -610,7 +610,6 @@ const paletteByTheme = {
     },
     secondaryGradient: {
       id: 'secondary-gradient',
-
       stopTop: { color: '#4f46e5', opacity: 0.05 },
       stopBottom: { color: '#4f46e5', opacity: 0 }
     }
@@ -618,14 +617,15 @@ const paletteByTheme = {
 }
 
 const sharedPathClass = 'fill-none stroke-2'
-const mainPathClass = 'stroke-indigo-500 dark:stroke-indigo-400 z-2'
-const comparisonPathClass = 'stroke-indigo-500/20 dark:stroke-indigo-400/20 z-1'
+const mainPathClass = 'stroke-indigo-500 dark:stroke-indigo-400'
+const comparisonPathClass =
+  'stroke-[rgb(222,221,255)] dark:stroke-[rgb(45,46,76)]'
 const roundedPathClass = '[stroke-linecap:round] [stroke-linejoin:round]'
 const dashedPathClass = '[stroke-dasharray:3,3]'
 const sharedDotClass =
   'opacity-0 group-data-active:opacity-100 transition-opacity duration-100'
 const mainDotClass = 'fill-indigo-500 dark:fill-indigo-400'
-const comparisonDotClass = 'fill-indigo-500/20 dark:fill-indigo-400/20'
+const comparisonDotClass = 'fill-[rgb(222,221,255)] dark:fill-[rgb(45,46,76)]'
 
 export function useMainGraphWidth(
   mainGraphContainer: React.RefObject<HTMLDivElement>
