@@ -120,9 +120,9 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
           |> json_response(200)
 
         assert [next_step1, next_step2] = resp
-        assert next_step1["step"]["pathname"] == "/docs"
-        assert next_step1["visitors"] == 1
-        assert next_step2["step"]["pathname"] == "/login"
+        assert next_step1["step"]["pathname"] == "/login"
+        assert next_step1["visitors"] == 2
+        assert next_step2["step"]["pathname"] == "/docs"
         assert next_step2["visitors"] == 1
       end
     end

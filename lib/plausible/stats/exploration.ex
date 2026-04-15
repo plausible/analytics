@@ -82,8 +82,7 @@ defmodule Plausible.Stats.Exploration do
           step: %Journey.Step{
             name: selected_as(field(s, ^next_name), :next_name),
             pathname: selected_as(field(s, ^next_pathname), :next_pathname)
-          },
-          visitors: selected_as(scale_sample(fragment("uniq(?)", s.user_id)), :count)
+          }
         },
         group_by: [selected_as(:next_name), selected_as(:next_pathname)],
         order_by: [
@@ -93,6 +92,7 @@ defmodule Plausible.Stats.Exploration do
         ],
         limit: 10
       )
+      |> count_by_direction(query, steps, direction)
       |> maybe_search(search_term)
 
     steps
@@ -105,6 +105,38 @@ defmodule Plausible.Stats.Exploration do
         where: field(s, ^name) == ^step.name and field(s, ^pathname) == ^step.pathname
       )
     end)
+  end
+
+  defp count_by_direction(steps_query, _query, steps, direction)
+       when steps == [] or direction == :forward do
+    from(s in steps_query,
+      select_merge: %{
+        visitors: selected_as(scale_sample(fragment("uniq(?)", s.user_id)), :count)
+      }
+    )
+  end
+
+  defp count_by_direction(steps_query, query, _steps, :backward) do
+    q_steps_first = steps_query(query, 1, :forward)
+
+    q_counts =
+      from(fs in subquery(q_steps_first),
+        where: fs.name1 != "",
+        select: %{
+          name: fs.name1,
+          pathname: fs.pathname1,
+          visitors: scale_sample(fragment("uniq(?)", fs.user_id))
+        },
+        group_by: [fs.name1, fs.pathname1]
+      )
+
+    from(s in steps_query,
+      inner_join: c in subquery(q_counts),
+      on: c.name == selected_as(:next_name) and c.pathname == selected_as(:next_pathname),
+      select_merge: %{
+        visitors: selected_as(scale_sample(fragment("any(?)", c.visitors)), :count)
+      }
+    )
   end
 
   defp journey_funnel_query(query, steps) do

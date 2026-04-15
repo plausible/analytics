@@ -254,9 +254,9 @@ defmodule Plausible.Stats.ExplorationTest do
       assert {:ok, [next_step1, next_step2]} =
                Exploration.next_steps(query, journey, "", :backward)
 
-      assert next_step1.step.pathname == "/docs"
-      assert next_step1.visitors == 1
-      assert next_step2.step.pathname == "/login"
+      assert next_step1.step.pathname == "/login"
+      assert next_step1.visitors == 2
+      assert next_step2.step.pathname == "/docs"
       assert next_step2.visitors == 1
     end
 
