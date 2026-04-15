@@ -33,8 +33,8 @@ export type PointerHandler = (opts: {
   event: unknown
 }) => void
 
-/** 
- * To ensure the effect to redraw the chart only runs when needed, 
+/**
+ * To ensure the effect to redraw the chart only runs when needed,
  * make sure these props don't change on every render of the parent.
  */
 type GraphProps<
@@ -292,9 +292,6 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
       .on(
         'pointermove',
         (event) => {
-          if (typeof onPointerMove !== 'function') {
-            return
-          }
           const { xPointer, yPointer, inHoverableArea } = getPosition(event)
           const closestIndexToPointer = inHoverableArea
             ? getClosestIndexToPointer(xPointer)
@@ -587,7 +584,7 @@ const addGradient = ({
   id: string
   stopTop: { color: string; opacity: number }
   stopBottom: { color: string; opacity: number }
-}): string => {
+}): void => {
   const grad = svg
     .append('defs')
     .append('linearGradient')
@@ -608,7 +605,6 @@ const addGradient = ({
     .attr('offset', '100%')
     .attr('stop-color', stopBottom.color)
     .attr('stop-opacity', stopBottom.opacity)
-  return id
 }
 
 function drawAreaUnderLine<T extends ReadonlyArray<number | null>>({
