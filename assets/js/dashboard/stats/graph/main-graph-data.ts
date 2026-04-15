@@ -1,7 +1,7 @@
 import {
   MainGraphResponse,
+  MetricValue,
   ResultItem,
-  RevenueMetricValue
 } from './fetch-main-graph'
 
 /**
@@ -24,10 +24,10 @@ export const remapAndFillData = ({
   getChange
 }: {
   data: MainGraphResponse
-  getNumericValue: (metrics: RevenueMetricValue | number | null) => number
+  getNumericValue: (metrics: MetricValue) => number
   getValue: (
     item: Pick<ResultItem, 'metrics'>
-  ) => RevenueMetricValue | number | null
+  ) => MetricValue
   getChange: (value: number, comparisonValue: number) => number
 }): {
   remappedData: GraphDatum[]
@@ -238,7 +238,7 @@ type SeriesValue =
   | {
       isDefined: true
       numericValue: number
-      value: RevenueMetricValue | number | null
+      value: MetricValue
       isPartial: boolean
       timeLabel: string
     }

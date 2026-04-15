@@ -46,10 +46,12 @@ export type RevenueMetricValue = {
 
 export type ResultItem = {
   dimensions: [string] // one item
-  metrics: MetricValues // one item
+  metrics: MetricValues
 }
 
-export type MetricValues = [null] | [number] | [RevenueMetricValue]
+export type MetricValue = null | number | RevenueMetricValue
+
+export type MetricValues = [MetricValue] // one item
 
 export type MainGraphResponse = {
   results: Array<ResultItem | null>

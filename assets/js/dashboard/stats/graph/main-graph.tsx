@@ -24,7 +24,11 @@ import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { Graph, PointerHandler, SeriesConfig } from '../../components/graph'
 import { useSiteContext, PlausibleSite } from '../../site-context'
 import { GraphTooltipWrapper } from '../../components/graph-tooltip'
-import { MainGraphResponse, RevenueMetricValue } from './fetch-main-graph'
+import {
+  MainGraphResponse,
+  MetricValue,
+  RevenueMetricValue
+} from './fetch-main-graph'
 import {
   remapAndFillData,
   getLineSegments,
@@ -88,7 +92,7 @@ export const MainGraph = ({
       getValue: (item) => item.metrics[0],
       getNumericValue: REVENUE_METRICS.includes(metric)
         ? (v) => (v as RevenueMetricValue).value
-        : (v) => (v === null ? 0 : (v as number)),
+        : (v) => ((v as number | null) === null ? 0 : (v as number)),
       getChange: METRICS_WITH_CHANGE_IN_PERCENTAGE_POINTS.includes(metric)
         ? getChangeInPercentagePoints
         : getRelativeChange,
@@ -196,8 +200,7 @@ export const MainGraph = ({
   }, [site, data, interval, period, primaryGradient, secondaryGradient, metric])
 
   const getFormattedValue = useCallback(
-    (value: number | RevenueMetricValue | null) =>
-      MetricFormatterShort[metric](value),
+    (value: MetricValue) => MetricFormatterShort[metric](value),
     [metric]
   )
   const yFormat = useCallback(
@@ -310,7 +313,7 @@ const MainGraphTooltip = ({
   isTouchDevice
 }: {
   metric: Metric
-  getFormattedValue: (value: RevenueMetricValue | number | null) => string
+  getFormattedValue: (value: MetricValue) => string
   interval: string
   period: DashboardPeriod
   shouldShowYear: boolean
