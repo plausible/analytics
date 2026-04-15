@@ -123,7 +123,7 @@ function ExplorationColumn({
   return (
     <div className="min-w-80 flex-1 border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden">
       <div className="h-12 pl-4 pr-1.5 flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+        <span className="shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400">
           {header}
         </span>
         {!selected && steps !== null && (
@@ -133,7 +133,7 @@ function ExplorationColumn({
             defaultValue={filter}
             placeholder="Search"
             onChange={debouncedOnSearchInputChange}
-            className="peer text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+            className="peer max-w-48 w-full text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
           />
         )}
         {selected && (
