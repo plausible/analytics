@@ -183,7 +183,7 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
           .call(
             d3
               .axisBottom(x)
-              .tickValues(JSON.parse(xTickValues) as Array<number>)
+              .tickValues(xTickValues)
               .tickSize(4)
               .tickFormat(getXTickFormat(data))
           )
@@ -402,13 +402,14 @@ const fitXAxis = ({
 }: {
   xAxisSelection: d3.Selection<SVGGElement, unknown, null, undefined>
   buildAxis: (
-    xTickValues: string
+    xTickValues: number[]
   ) => d3.Selection<SVGGElement, unknown, null, undefined>
-  suggestedXTickValues: Set<string>
+  suggestedXTickValues: number[][]
   minClientX: number
   maxClientX: number
 }) => {
-  for (const [index, xTickValues] of [...suggestedXTickValues].entries()) {
+  for (const [index, xTickValues] of suggestedXTickValues.entries()) {
+    const isLastAttempt = index === suggestedXTickValues.length - 1
     const axis = buildAxis(xTickValues)
 
     let overlapCount = 0
@@ -430,7 +431,7 @@ const fitXAxis = ({
       })
     )
 
-    if (overlapCount > 0 && index !== suggestedXTickValues.size - 1) {
+    if (overlapCount > 0 && !isLastAttempt) {
       axis.remove()
     } else {
       break
@@ -445,8 +446,7 @@ const fitYAxis = ({
   chartAreaWidth: initialChartAreaWidth,
   width,
   marginRight,
-  minClientX,
-  maxAttempts = 2
+  minClientX
 }: {
   buildAxis: (
     marginLeft: number,
@@ -457,8 +457,8 @@ const fitYAxis = ({
   width: number
   marginRight: number
   minClientX: number
-  maxAttempts?: number
 }): { marginLeft: number; chartAreaWidth: number } => {
+  const maxAttempts = 2
   let marginLeft = initialMarginLeft
   let chartAreaWidth = initialChartAreaWidth
 
@@ -493,16 +493,20 @@ const fitYAxis = ({
 const getSuggestedXTickValues = (
   scale: d3.ScaleLinear<number, number>,
   bucketCount: number
-): Set<string> => {
+): number[][] => {
   const maxXTicks = Math.min(bucketCount, 8)
+  const minTicks = 1
   const result = new Set<string>()
-  new Array(maxXTicks).fill(null).forEach((_v, i) => {
-    const tickValues = scale.ticks(maxXTicks - i)
+  for (let tickCount = maxXTicks; tickCount >= minTicks; tickCount--) {
+    const tickValues = scale.ticks(tickCount)
     if (tickValues.every(isWholeNumber)) {
-      result.add(JSON.stringify(tickValues))
+      // needs serialization to be comparable for uniqueness in Set
+      const serializedArray = JSON.stringify(tickValues)
+      result.add(serializedArray)
     }
-  })
-  return result
+  }
+
+  return [...result].map((serializedArray) => JSON.parse(serializedArray))
 }
 
 const getOptimalYTickValues = (
