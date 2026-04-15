@@ -633,7 +633,10 @@ export function getCurrentPeriodDisplayName({
     if (isToday(site, dashboardState.date)) {
       return 'Today'
     }
-    return formatDay(dashboardState.date)
+    return formatDay(
+      dashboardState.date,
+      !isThisYear(site, dashboardState.date)
+    )
   }
 
   if (dashboardState.period === '24h') {

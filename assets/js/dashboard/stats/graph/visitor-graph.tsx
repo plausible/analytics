@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import * as api from '../../api'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
 import { fetchTopStats } from './fetch-top-stats'
+import { fetchMainGraph } from './fetch-main-graph'
 import { IntervalPicker, useStoredInterval } from './interval-picker'
 import StatsExport from './stats-export'
 import WithImportedSwitch from './with-imported-switch'
 import { NoticesIcon } from './notices'
-import * as url from '../../util/url'
-import LineGraphWithRouter, { LineGraphContainer } from './line-graph'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -17,6 +15,7 @@ import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
 import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
+import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
@@ -27,6 +26,8 @@ export default function VisitorGraph({
   updateImportedDataInView?: (v: boolean) => void
 }) {
   const topStatsBoundary = useRef<HTMLDivElement>(null)
+  const mainGraphContainer = useRef<HTMLDivElement>(null)
+  const { width } = useMainGraphWidth(mainGraphContainer)
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
@@ -72,19 +73,24 @@ export default function VisitorGraph({
     enabled: !!selectedMetric,
     queryKey: [
       'main-graph',
-      { dashboardState, metric: selectedMetric, interval: selectedInterval }
+      { dashboardState, metric: selectedMetric!, interval: selectedInterval }
     ] as const,
     queryFn: async ({ queryKey }) => {
       const [_, opts] = queryKey
-      const data = await api.get(
-        url.apiPath(site, '/main-graph'),
+      const data = await fetchMainGraph(
+        site,
         opts.dashboardState,
-        {
-          metric: opts.metric,
-          interval: opts.interval
-        }
+        opts.metric,
+        opts.interval
       )
-      return { ...data, interval: opts.interval }
+
+      // pack dashboard period and interval used for the request next to data
+      // so they'd never be out of sync with each other
+      return {
+        ...data,
+        period: opts.dashboardState.period,
+        interval: opts.interval
+      }
     },
     placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey, meta }) => {
@@ -270,20 +276,16 @@ export default function VisitorGraph({
               />
             </div>
           )}
-          <LineGraphContainer>
-            {mainGraphQuery.data && (
+          <MainGraphContainer ref={mainGraphContainer}>
+            {!!mainGraphQuery.data && !!width && (
               <>
                 {!showGraphLoader && (
-                  <LineGraphWithRouter
-                    graphData={{
-                      ...mainGraphQuery.data
-                    }}
-                  />
+                  <MainGraph width={width} data={mainGraphQuery.data} />
                 )}
                 {showGraphLoader && <Loader />}
               </>
             )}
-          </LineGraphContainer>
+          </MainGraphContainer>
         </div>
       </>
       {(!(topStatsQuery.data && mainGraphQuery.data) || showFullLoader) && (
