@@ -17,7 +17,7 @@ env:
 jobs:
   build:
     name: "Build and test (${{ matrix.mix_env }}, ${{ matrix.postgres_image }})"
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     strategy:
       matrix:
         mix_env: ["test", "ce_test"]
