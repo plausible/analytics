@@ -159,13 +159,18 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
       marginRight,
       minClientX
     }))
-    const xMax = Math.max(data.length - 1, 1)
+    const bucketCount = data.length
     const {
       scale: x,
       xLeftEdge,
       xRightEdge
-    } = getXScale({ xMax, width, marginLeft, marginRight })
-    const suggestedXTickValues = getSuggestedXTickValues(x, data.length)
+    } = getXScale({
+      domain: getXDomain(bucketCount),
+      width,
+      marginLeft,
+      marginRight
+    })
+    const suggestedXTickValues = getSuggestedXTickValues(x, bucketCount)
 
     // Add the x-axis
     const xAxisSelection = svg
@@ -359,20 +364,26 @@ const yTickLineClass =
 const tickTextClass = 'fill-gray-500 dark:fill-gray-400 text-xs select-none'
 const xTickLineClass = 'stroke-gray-300 dark:stroke-gray-700'
 
+export const getXDomain = (bucketCount: number): [number, number] => {
+  const xMin = 0
+  const xMax = Math.max(bucketCount - 1, 1)
+  return [xMin, xMax]
+}
+
 const getXScale = ({
-  xMax,
+  domain,
   width,
   marginLeft,
   marginRight
 }: {
-  xMax: number
+  domain: [number, number]
   width: number
   marginLeft: number
   marginRight: number
 }) => {
   const xLeftEdge = marginLeft
   const xRightEdge = width - marginRight
-  const scale = d3.scaleLinear([0, xMax], [xLeftEdge, xRightEdge])
+  const scale = d3.scaleLinear(domain, [xLeftEdge, xRightEdge])
   return { scale, xLeftEdge, xRightEdge }
 }
 
@@ -490,7 +501,7 @@ const fitYAxis = ({
   return { marginLeft, chartAreaWidth }
 }
 
-const getSuggestedXTickValues = (
+export const getSuggestedXTickValues = (
   scale: d3.ScaleLinear<number, number>,
   bucketCount: number
 ): number[][] => {
