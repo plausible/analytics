@@ -25,7 +25,7 @@ type GraphProps<
   defaultMarginLeft: number
   data: Datum<T>[]
   yMax: number
-  onPointerMove: PointerHandler
+  onPointerMove: PointerHandler<T>
   onPointerLeave: () => void
   onClick?: () => void
   yFormat: (domainValue: d3.NumberValue, index: number) => string
@@ -41,6 +41,7 @@ type GraphProps<
     stopBottom: { color: string; opacity: number }
   }[]
   children?: ReactNode
+  highlightedIndex?: number | null
 }
 
 export function Graph<T extends ReadonlyArray<number | null>>({
@@ -75,9 +76,12 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
   onClick,
   yFormat,
   settings,
-  gradients
+  gradients,
+  highlightedIndex
 }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement | null>(null)
+  const pointsRef = useRef<Point<T>[] | null>(null)
+
   // Effect to fully redraw chart from scratch
   useEffect(() => {
     if (!svgRef.current) {
@@ -244,6 +248,8 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
       }
     })
 
+    pointsRef.current = points
+
     const getPosition = (
       event: unknown
     ): { xPointer: number; yPointer: number; inHoverableArea: boolean } => {
@@ -260,16 +266,6 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
     const getClosestIndexToPointer = (xPointer: number): number =>
       d3.bisector(({ x }: Point<T>) => x).center(points, xPointer)
 
-    const handleDotsForClosestIndex = (closestIndexToPointer: number | null) =>
-      points.forEach(({ dots }, index) =>
-        dots.attr(
-          'data-active',
-          closestIndexToPointer !== null && index === closestIndexToPointer
-            ? ''
-            : null
-        )
-      )
-
     svg
       .on(
         'pointermove',
@@ -278,12 +274,18 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
           const closestIndexToPointer = inHoverableArea
             ? getClosestIndexToPointer(xPointer)
             : null
-          handleDotsForClosestIndex(closestIndexToPointer)
           onPointerMove({
             inHoverableArea: true,
-            closestIndex: closestIndexToPointer,
-            x: xPointer,
-            y: yPointer,
+            closestPoint:
+              closestIndexToPointer !== null
+                ? {
+                    index: closestIndexToPointer,
+                    x: points[closestIndexToPointer].x,
+                    values: points[closestIndexToPointer].values
+                  }
+                : null,
+            xPointer,
+            yPointer,
             event
           })
         },
@@ -292,7 +294,6 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
       .on(
         'lostpointercapture pointerleave',
         () => {
-          handleDotsForClosestIndex(null)
           onPointerLeave()
         },
         { passive: true }
@@ -302,6 +303,7 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
     svg.attr('opacity', 1)
 
     return () => {
+      pointsRef.current = null
       svg.selectAll('*').remove()
     }
   }, [
@@ -320,6 +322,15 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
     yFormat,
     yMax
   ])
+
+  useEffect(() => {
+    pointsRef.current?.forEach(({ dots }, index) =>
+      dots.attr(
+        'data-active',
+        highlightedIndex !== null && index === highlightedIndex ? '' : null
+      )
+    )
+  }, [highlightedIndex])
 
   return (
     <svg
@@ -720,11 +731,11 @@ export type SeriesConfig = {
   dot?: { dotClassName: string }
 }
 
-export type PointerHandler = (opts: {
+export type PointerHandler<T extends ReadonlyArray<number | null>> = (opts: {
   inHoverableArea: boolean
-  x: number
-  y: number
-  closestIndex: number | null
+  xPointer: number
+  yPointer: number
+  closestPoint: ({ index: number } & Pick<Point<T>, 'x' | 'values'>) | null
   event: unknown
 }) => void
 

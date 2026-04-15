@@ -56,6 +56,13 @@ type MainGraphData = MainGraphResponse & {
   interval: string
 }
 
+type MainGraphYValues = Readonly<[
+  // first element is comparison series
+  number | null, 
+  // second element is main series
+  number | null
+]>
+
 export const MainGraph = ({
   width,
   data
@@ -214,23 +221,22 @@ export const MainGraph = ({
     [metric]
   )
 
-  const onPointerMove = useCallback<PointerHandler>(
-    ({ inHoverableArea, closestIndex, x, y, event }) => {
-      if (event instanceof PointerEvent) {
-        setIsTouchDevice(event.pointerType === 'touch')
-      }
-      if (!inHoverableArea) {
-        setTooltip({ selectedIndex: null, x: 0, y: 0 })
-      } else {
-        setTooltip({
-          selectedIndex: closestIndex,
-          x: Math.floor(x),
-          y: Math.floor(y)
-        })
-      }
-    },
-    []
-  )
+  const onPointerMove = useCallback<
+    PointerHandler<MainGraphYValues>
+  >(({ inHoverableArea, closestPoint, xPointer, yPointer, event }) => {
+    if (event instanceof PointerEvent) {
+      setIsTouchDevice(event.pointerType === 'touch')
+    }
+    if (!inHoverableArea || !closestPoint) {
+      setTooltip({ selectedIndex: null, x: 0, y: 0 })
+    } else {
+      setTooltip({
+        selectedIndex: closestPoint.index,
+        x: Math.floor(xPointer),
+        y: Math.floor(yPointer)
+      })
+    }
+  }, [])
 
   const onPointerLeave = useCallback(() => {
     setTooltip({ selectedIndex: null, x: 0, y: 0 })
@@ -245,8 +251,9 @@ export const MainGraph = ({
       : null
 
   return (
-    <Graph<Readonly<[number | null, number | null]>>
+    <Graph<MainGraphYValues>
       className={showZoomToPeriod && selectedDatum ? 'cursor-pointer' : ''}
+      highlightedIndex={selectedIndex}
       width={width}
       height={height}
       hoverBuffer={hoverBuffer}
