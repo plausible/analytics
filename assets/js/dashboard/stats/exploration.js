@@ -166,7 +166,6 @@ function ExplorationColumn({
               )
             : results.slice(0, 10)
           ).map(({ step, visitors }) => {
-            const label = `${step.name} ${step.pathname}`
             const isSelected =
               !!selected &&
               step.name === selected.name &&
@@ -181,7 +180,7 @@ function ExplorationColumn({
                 : Math.round((visitors / stepMaxVisitors) * 100)
 
             return (
-              <li key={label}>
+              <li key={step.label}>
                 <button
                   className={`group w-full border text-left px-2.5 pt-2 pb-2.5 text-sm rounded-md focus:outline-none ${
                     isSelected
@@ -193,9 +192,9 @@ function ExplorationColumn({
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span
                       className="truncate font-medium text-gray-800 dark:text-gray-200"
-                      title={label}
+                      title={step.label}
                     >
-                      {label}
+                      {step.label}
                     </span>
                     <span className="shrink-0 text-gray-800 dark:text-gray-200 tabular-nums">
                       {numberShortFormatter(visitorsToShow)}

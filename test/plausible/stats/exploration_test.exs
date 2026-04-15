@@ -101,6 +101,58 @@ defmodule Plausible.Stats.ExplorationTest do
       assert step3.conversion_rate_step == "50"
     end
 
+    test "returns labels" do
+      site = new_site()
+
+      now = DateTime.utc_now()
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/home",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/register",
+          timestamp: DateTime.shift(now, minute: -290)
+        ),
+        build(:event,
+          user_id: 123,
+          name: "Signup",
+          pathname: "/register",
+          timestamp: DateTime.shift(now, minute: -280)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/activate",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:event,
+          user_id: 123,
+          name: "Create site",
+          pathname: "/sites/new",
+          timestamp: DateTime.shift(now, minute: -260)
+        )
+      ])
+
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/register"},
+        %Exploration.Journey.Step{name: "Signup", pathname: "/register"},
+        %Exploration.Journey.Step{name: "pageview", pathname: "/activate"},
+        %Exploration.Journey.Step{name: "Create site", pathname: "/sites/new"}
+      ]
+
+      assert {:ok, [step1, step2, step3, step4]} = Exploration.journey_funnel(query, journey)
+
+      assert step1.step.label == "Visit /register"
+      assert step2.step.label == "Signup /register"
+      assert step3.step.label == "Visit /activate"
+      assert step4.step.label == "Create site /sites/new"
+    end
+
     test "respects filters in the query", %{site: site} do
       query =
         QueryBuilder.build!(site,
@@ -186,10 +238,13 @@ defmodule Plausible.Stats.ExplorationTest do
 
       assert {:ok, [next_step1, next_step2, next_step3]} = Exploration.next_steps(query, journey)
 
+      assert next_step1.step.label == "Visit /docs"
       assert next_step1.step.pathname == "/docs"
       assert next_step1.visitors == 1
+      assert next_step2.step.label == "Visit /home"
       assert next_step2.step.pathname == "/home"
       assert next_step2.visitors == 1
+      assert next_step3.step.label == "Visit /logout"
       assert next_step3.step.pathname == "/logout"
       assert next_step3.visitors == 1
     end
@@ -239,6 +294,20 @@ defmodule Plausible.Stats.ExplorationTest do
       ]
 
       assert {:ok, [next_step]} = Exploration.next_steps(query, journey, "doc")
+
+      assert next_step.step.pathname == "/docs"
+      assert next_step.visitors == 1
+    end
+
+    test "allows to filter according to how label is rendered", %{site: site} do
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+        %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+      ]
+
+      assert {:ok, [next_step]} = Exploration.next_steps(query, journey, "isit /doc")
 
       assert next_step.step.pathname == "/docs"
       assert next_step.visitors == 1

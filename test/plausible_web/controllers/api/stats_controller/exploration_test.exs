@@ -78,10 +78,13 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
           |> json_response(200)
 
         assert [next_step1, next_step2, next_step3] = resp
+        assert next_step1["step"]["label"] == "Visit /docs"
         assert next_step1["step"]["pathname"] == "/docs"
         assert next_step1["visitors"] == 1
+        assert next_step2["step"]["label"] == "Visit /home"
         assert next_step2["step"]["pathname"] == "/home"
         assert next_step2["visitors"] == 1
+        assert next_step3["step"]["label"] == "Visit /logout"
         assert next_step3["step"]["pathname"] == "/logout"
         assert next_step3["visitors"] == 1
       end
@@ -146,18 +149,21 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
 
         assert [step1, step2, step3] = resp
 
+        assert step1["step"]["label"] == "Visit /home"
         assert step1["step"]["pathname"] == "/home"
         assert step1["visitors"] == 2
         assert step1["dropoff"] == 0
         assert step1["dropoff_percentage"] == "0"
         assert step1["conversion_rate"] == "100"
         assert step1["conversion_rate_step"] == "0"
+        assert step2["step"]["label"] == "Visit /login"
         assert step2["step"]["pathname"] == "/login"
         assert step2["visitors"] == 2
         assert step2["dropoff"] == 0
         assert step2["dropoff_percentage"] == "0"
         assert step2["conversion_rate"] == "100"
         assert step2["conversion_rate_step"] == "100"
+        assert step3["step"]["label"] == "Visit /logout"
         assert step3["step"]["pathname"] == "/logout"
         assert step3["visitors"] == 1
         assert step3["dropoff"] == 1
