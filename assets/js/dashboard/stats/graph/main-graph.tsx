@@ -56,12 +56,27 @@ type MainGraphData = MainGraphResponse & {
   interval: string
 }
 
-type MainGraphYValues = Readonly<[
-  // first element is comparison series
-  number | null, 
-  // second element is main series
-  number | null
-]>
+type MainGraphYValues = Readonly<
+  [
+    // first element is comparison series
+    number | null,
+    // second element is main series
+    number | null
+  ]
+>
+
+type TooltipState = {
+  x: number
+  y: number
+  selectedIndex: number | null
+  persistent: boolean
+}
+const initialTooltipState: TooltipState = {
+  x: 0,
+  y: 0,
+  selectedIndex: null,
+  persistent: false
+}
 
 export const MainGraph = ({
   width,
@@ -74,16 +89,15 @@ export const MainGraph = ({
   const { mode } = useTheme()
   const navigate = useAppNavigate()
   const { primaryGradient, secondaryGradient } = paletteByTheme[mode]
-  const [isTouchDevice, setIsTouchDevice] = useState(false)
-  const [tooltip, setTooltip] = useState<{
-    x: number
-    y: number
-    selectedIndex: number | null
-  }>({ x: 0, y: 0, selectedIndex: null })
+  const [isTouchDevice, setIsTouchDevice] = useState<null | boolean>(null)
+  const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
   const { selectedIndex } = tooltip
   const metric = data.query.metrics[0] as Metric
   const interval = data.interval
   const period = data.period
+  useEffect(() => {
+    setTooltip(initialTooltipState)
+  }, [data])
   const {
     remappedData,
     yMax,
@@ -221,25 +235,38 @@ export const MainGraph = ({
     [metric]
   )
 
-  const onPointerMove = useCallback<
-    PointerHandler<MainGraphYValues>
-  >(({ inHoverableArea, closestPoint, xPointer, yPointer, event }) => {
-    if (event instanceof PointerEvent) {
-      setIsTouchDevice(event.pointerType === 'touch')
-    }
-    if (!inHoverableArea || !closestPoint) {
-      setTooltip({ selectedIndex: null, x: 0, y: 0 })
+  const onPointerMove = useCallback<PointerHandler<MainGraphYValues>>(
+    ({ inHoverableArea, closestPoint, xPointer, yPointer, event }) => {
+      if (event instanceof PointerEvent && event.pointerType === 'touch') {
+        setIsTouchDevice(true)
+      } else {
+        setIsTouchDevice(false)
+        if (!inHoverableArea || !closestPoint) {
+          setTooltip(initialTooltipState)
+        } else {
+          setTooltip({
+            selectedIndex: closestPoint.index,
+            x: Math.floor(xPointer),
+            y: Math.floor(yPointer),
+            persistent: false
+          })
+        }
+      }
+    },
+    []
+  )
+
+  const onGotPointerCapture = useCallback((event: unknown) => {
+    console.log('onGotPointerCapture', event.pointerType)
+    if (event instanceof PointerEvent && event.pointerType === 'touch') {
+      setIsTouchDevice(true)
     } else {
-      setTooltip({
-        selectedIndex: closestPoint.index,
-        x: Math.floor(xPointer),
-        y: Math.floor(yPointer)
-      })
+      setIsTouchDevice(false)
     }
   }, [])
 
   const onPointerLeave = useCallback(() => {
-    setTooltip({ selectedIndex: null, x: 0, y: 0 })
+    setTooltip(initialTooltipState)
   }, [])
 
   const showZoomToPeriod = ['month', 'day'].includes(interval)
@@ -249,6 +276,50 @@ export const MainGraph = ({
     selectedDatum && selectedDatum.main.isDefined
       ? selectedDatum.main.timeLabel
       : null
+
+  const zoomToPeriod = useCallback(
+    (date: string) => {
+      navigate({
+        search: (currentSearch) => ({
+          ...currentSearch,
+          date,
+          period: {
+            month: DashboardPeriod.month,
+            day: DashboardPeriod.day
+          }[interval]
+        })
+      })
+    },
+    [navigate, interval]
+  )
+
+  const onClick = useCallback<PointerHandler<MainGraphYValues>>(
+    ({ inHoverableArea, closestPoint, xPointer, yPointer, event }) => {
+      console.log('onClick', 'isTouchDevice', isTouchDevice)
+      if (isTouchDevice) {
+        setTooltip((currentTooltip) => {
+          if (
+            !currentTooltip.selectedIndex &&
+            inHoverableArea &&
+            closestPoint
+          ) {
+            return {
+              selectedIndex: closestPoint.index,
+              x: closestPoint.x,
+              y: Math.min(...closestPoint.values.filter((y) => y !== null)),
+              persistent: true
+            }
+          }
+          return { selectedIndex: null, x: 0, y: 0, persistent: false }
+        })
+      } else {
+        if (typeof zoomDate === 'string') {
+          zoomToPeriod(zoomDate)
+        }
+      }
+    },
+    [zoomDate, zoomToPeriod, isTouchDevice]
+  )
 
   return (
     <Graph<MainGraphYValues>
@@ -264,29 +335,14 @@ export const MainGraph = ({
       settings={settings}
       data={remappedDataInGraphFormat}
       yMax={yMax}
+      onGotPointerCapture={onGotPointerCapture}
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
-      onClick={
-        selectedIndex !== null &&
-        showZoomToPeriod &&
-        typeof zoomDate === 'string'
-          ? () =>
-              navigate({
-                search: (currentSearch) => ({
-                  ...currentSearch,
-                  date: zoomDate,
-                  period: {
-                    month: DashboardPeriod.month,
-                    day: DashboardPeriod.day
-                  }[interval]
-                })
-              })
-          : undefined
-      }
+      onClick={onClick}
       yFormat={yFormat}
       gradients={gradients}
     >
-      {selectedDatum && (
+      {!!selectedDatum && isTouchDevice !== null && (
         <MainGraphTooltip
           getFormattedValue={getFormattedValue}
           maxX={width}
@@ -301,7 +357,12 @@ export const MainGraph = ({
           datum={selectedDatum}
           bucketIndex={selectedIndex}
           totalBuckets={remappedData.length}
-          isTouchDevice={isTouchDevice}
+          persistent={tooltip.persistent}
+          onClick={
+            tooltip.persistent && typeof zoomDate === 'string'
+              ? () => zoomToPeriod(zoomDate)
+              : undefined
+          }
         />
       )}
     </Graph>
@@ -322,7 +383,8 @@ const MainGraphTooltip = ({
   showZoomToPeriod,
   bucketIndex,
   totalBuckets,
-  isTouchDevice
+  persistent,
+  onClick
 }: {
   metric: Metric
   getFormattedValue: (value: MetricValue) => string
@@ -337,7 +399,8 @@ const MainGraphTooltip = ({
   bucketIndex: number
   totalBuckets: number
   maxX: number
-  isTouchDevice: boolean
+  persistent: boolean
+  onClick?: () => void
 }) => {
   const { dashboardState } = useDashboardStateContext()
   const metricLabel = getMetricLabel(metric, {
@@ -351,10 +414,11 @@ const MainGraphTooltip = ({
       y={y}
       minWidth={200}
       maxX={maxX}
-      isTouchDevice={isTouchDevice}
-      className={
-        'absolute z-10 select-none pointer-events-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850'
-      }
+      isTouchDevice={persistent}
+      className={classNames(
+        'absolute z-10 select-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850',
+        typeof onClick !== 'function' && 'pointer-events-none'
+      )}
     >
       <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
         <div className="flex justify-between items-center rounded-sm">
@@ -419,11 +483,17 @@ const MainGraphTooltip = ({
         {!!showZoomToPeriod && (
           <>
             <hr className="border-gray-600 dark:border-gray-800 my-1" />
-            <span className="text-gray-300 dark:text-gray-400 text-xs">
-              {isTouchDevice
-                ? `Release to view ${interval}`
-                : `Click to view ${interval}`}
-            </span>
+            {!persistent && (
+              <span className="text-gray-300 dark:text-gray-400 text-xs">
+                {`Click to view ${interval}`}
+              </span>
+            )}
+            {persistent && (
+              <button
+                className="button"
+                onClick={onClick}
+              >{`View ${interval}`}</button>
+            )}
           </>
         )}
       </aside>

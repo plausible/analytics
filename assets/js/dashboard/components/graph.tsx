@@ -1,4 +1,10 @@
-import React, { ReactNode, useCallback, useEffect, useRef } from 'react'
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
 
@@ -29,6 +35,7 @@ type GraphProps<
   yMax: number
   onPointerMove: PointerHandler<T>
   onPointerLeave: () => void
+  onGotPointerCapture: (event: unknown) => void
   onClick?: PointerHandler<T>
   yFormat: (domainValue: d3.NumberValue, index: number) => string
   /**
@@ -80,57 +87,52 @@ function InnerGraph<T extends GraphYValues>({
   yMax,
   onPointerMove,
   onPointerLeave,
+  onGotPointerCapture,
   onClick,
   yFormat,
   settings,
   gradients,
   highlightedIndex
 }: GraphProps<T>) {
+  const [extraMarginLeft, setExtraMarginLeft] = useState(0)
+
+  const marginLeft = defaultMarginLeft + extraMarginLeft
+  const xLeftEdge = marginLeft
+  const xRightEdge = width - marginRight
+  const yTopEdge = marginTop
+  const yBottomEdge = height - marginBottom
+
   const svgRef = useRef<SVGSVGElement | null>(null)
   const pointsRef = useRef<Point<T>[] | null>(null)
-  const sizeRef = useRef<{
-    yBottomEdge: number
-    yTopEdge: number
-    xLeftEdge: number
-    xRightEdge: number
-  } | null>(null)
 
   // Effect to fully redraw chart from scratch
   useEffect(() => {
     if (!svgRef.current) {
       return
     }
+    console.log('setting up with extraMarginLeft', extraMarginLeft)
     const svgBoundingClientRect = svgRef.current.getBoundingClientRect()
     const minClientX = svgBoundingClientRect.left
     const maxClientX = svgBoundingClientRect.right
 
-    let marginLeft = defaultMarginLeft
-    let chartAreaWidth = getChartAreaWidth({
-      width,
-      marginLeft,
-      marginRight
-    })
-
     // Declare the y (vertical position) scale.
-    const {
-      scale: y,
-      yBottomEdge,
-      yTopEdge
-    } = getYScale({ yMax, height, marginTop, marginBottom })
+    const y = getYScale({ yMax, yBottomEdge, yTopEdge })
 
     const optimalYTickValues = getOptimalYTickValues(y, yMax)
 
     const svg = d3.select(svgRef.current)
-
+    const cleanup = () => {
+      pointsRef.current = null
+      svg.selectAll('*').remove()
+    }
     // Hide svg until ready
     svg.attr('opacity', 0)
-    ;({ marginLeft, chartAreaWidth } = fitYAxis({
-      buildAxis: (marginLeft, chartAreaWidth) =>
+    const { textOffset } = fitYAxis({
+      buildAxis: () =>
         svg
           .append('g')
-          .attr('opacity', 0)
           .attr('class', 'y-axis--container')
-          .attr('transform', `translate(${marginLeft}, 0)`)
+          .attr('transform', `translate(${xLeftEdge}, 0)`)
           .call(
             d3
               .axisLeft(y)
@@ -145,25 +147,36 @@ function InnerGraph<T extends GraphYValues>({
             g
               .selectAll('.tick line')
               .clone()
-              .attr('x2', chartAreaWidth)
+              .attr(
+                'x2',
+                getChartAreaWidth({
+                  width,
+                  marginLeft,
+                  marginRight
+                })
+              )
               .attr('class', yTickLineClass)
           ),
-      marginLeft,
-      chartAreaWidth,
-      width,
-      marginRight,
       minClientX
-    }))
+    })
+    const adjustmentIncrement = 4
+    if (textOffset < 0) {
+      const adjustmentSteps = Math.ceil(-textOffset / adjustmentIncrement)
+      setExtraMarginLeft((curr) => curr + adjustmentSteps * adjustmentIncrement)
+      return cleanup
+    } else if (extraMarginLeft !== 0 && textOffset > 1 * adjustmentIncrement) {
+      const adjustmentSteps = Math.floor(textOffset / adjustmentIncrement)
+      setExtraMarginLeft((curr) =>
+        Math.max(curr - adjustmentSteps * adjustmentIncrement, 0)
+      )
+      return cleanup
+    }
+
     const bucketCount = data.length
-    const {
-      scale: x,
+    const x = getXScale({
+      domain: getXDomain(bucketCount),
       xLeftEdge,
       xRightEdge
-    } = getXScale({
-      domain: getXDomain(bucketCount),
-      width,
-      marginLeft,
-      marginRight
     })
     const suggestedXTickValues = getSuggestedXTickValues(x, bucketCount)
 
@@ -179,7 +192,6 @@ function InnerGraph<T extends GraphYValues>({
         xAxisSelection
           .append('g')
           .attr('class', 'x-axis')
-          .attr('opacity', 0)
           .call(
             d3
               .axisBottom(x)
@@ -263,36 +275,32 @@ function InnerGraph<T extends GraphYValues>({
     })
 
     pointsRef.current = points
-    sizeRef.current = { yBottomEdge, yTopEdge, xLeftEdge, xRightEdge }
 
     // Unhide chart
     svg.attr('opacity', 1)
 
-    return () => {
-      sizeRef.current = null
-      pointsRef.current = null
-      svg.selectAll('*').remove()
-    }
+    return cleanup
   }, [
     data,
-    defaultMarginLeft,
     gradients,
     height,
-    marginBottom,
     marginRight,
+    defaultMarginLeft,
+    extraMarginLeft,
     marginTop,
     settings,
     width,
     yFormat,
-    yMax
+    yMax,
+    marginLeft,
+    yBottomEdge,
+    yTopEdge,
+    xLeftEdge,
+    xRightEdge
   ])
 
   const isInHoverableArea = useCallback(
     (xPointer: number, yPointer: number): boolean => {
-      if (!sizeRef.current) {
-        return false
-      }
-      const { xLeftEdge, xRightEdge, yTopEdge } = sizeRef.current
       return (
         xPointer >= xLeftEdge - hoverBuffer &&
         xPointer <= xRightEdge + hoverBuffer &&
@@ -301,12 +309,13 @@ function InnerGraph<T extends GraphYValues>({
         yPointer <= height
       )
     },
-    [height, hoverBuffer]
+    [height, hoverBuffer, xLeftEdge, xRightEdge, yTopEdge]
   )
 
   useEffect(() => {
+    console.log('setting up pointermove')
     const currentSvg = svgRef.current
-    if (currentSvg && sizeRef.current && pointsRef.current) {
+    if (currentSvg && pointsRef.current) {
       const points = pointsRef.current
       const svg = d3.select(currentSvg)
 
@@ -345,8 +354,30 @@ function InnerGraph<T extends GraphYValues>({
   }, [onPointerMove, isInHoverableArea])
 
   useEffect(() => {
+    console.log('setting up gotpointercapture')
     const currentSvg = svgRef.current
-    if (currentSvg && sizeRef.current && pointsRef.current) {
+    if (currentSvg && pointsRef.current) {
+      const svg = d3.select(currentSvg)
+      svg.on(
+        'gotpointercapture',
+        () => {
+          onGotPointerCapture()
+        },
+        { passive: true }
+      )
+    }
+    return () => {
+      if (currentSvg) {
+        const svg = d3.select(currentSvg)
+        svg.on('gotpointercapture', null)
+      }
+    }
+  }, [onGotPointerCapture, isInHoverableArea])
+
+  useEffect(() => {
+    console.log('setting up pointerleave')
+    const currentSvg = svgRef.current
+    if (currentSvg && pointsRef.current) {
       const svg = d3.select(currentSvg)
       svg.on(
         'lostpointercapture pointerleave',
@@ -366,8 +397,9 @@ function InnerGraph<T extends GraphYValues>({
   }, [onPointerLeave, isInHoverableArea])
 
   useEffect(() => {
+    console.log('setting up click')
     const currentSvg = svgRef.current
-    if (currentSvg && sizeRef.current && pointsRef.current) {
+    if (currentSvg && pointsRef.current) {
       const svg = d3.select(currentSvg)
       const points = pointsRef.current
       if (typeof onClick !== 'function') {
@@ -435,42 +467,33 @@ export const getXDomain = (bucketCount: number): [number, number] => {
 
 const getXScale = ({
   domain,
-  width,
-  marginLeft,
-  marginRight
+  xLeftEdge,
+  xRightEdge
 }: {
   domain: [number, number]
-  width: number
-  marginLeft: number
-  marginRight: number
-}) => {
-  const xLeftEdge = marginLeft
-  const xRightEdge = width - marginRight
+  xLeftEdge: number
+  xRightEdge: number
+}): d3.ScaleLinear<number, number, never> => {
   const scale = d3.scaleLinear(domain, [xLeftEdge, xRightEdge])
-  return { scale, xLeftEdge, xRightEdge }
+  return scale
 }
 
 const getYScale = ({
   yMax,
-  height,
-  marginTop,
-  marginBottom
+  yBottomEdge,
+  yTopEdge
 }: {
   yMax: number
-  height: number
-  marginTop: number
-  marginBottom: number
-}) => {
-  const yBottomEdge = height - marginBottom
-  const yTopEdge = marginTop
+  yBottomEdge: number
+  yTopEdge: number
+}): d3.ScaleLinear<number, number, never> => {
   const scale = d3
     .scaleLinear([0, yMax], [yBottomEdge, yTopEdge])
     .nice(IDEAL_Y_TICK_COUNT)
-  return { scale, yBottomEdge, yTopEdge }
+  return scale
 }
 
 const fitXAxis = ({
-  xAxisSelection,
   buildAxis,
   suggestedXTickValues,
   minClientX,
@@ -513,57 +536,27 @@ const fitXAxis = ({
       break
     }
   }
-  xAxisSelection.call((g) => g.select('.x-axis').attr('opacity', 1))
 }
 
 const fitYAxis = ({
   buildAxis,
-  marginLeft: initialMarginLeft,
-  chartAreaWidth: initialChartAreaWidth,
-  width,
-  marginRight,
   minClientX
 }: {
-  buildAxis: (
-    marginLeft: number,
-    chartAreaWidth: number
-  ) => d3.Selection<SVGGElement, unknown, null, undefined>
-  marginLeft: number
-  chartAreaWidth: number
-  width: number
-  marginRight: number
+  buildAxis: () => d3.Selection<SVGGElement, unknown, null, undefined>
   minClientX: number
-}): { marginLeft: number; chartAreaWidth: number } => {
-  const maxAttempts = 2
-  let marginLeft = initialMarginLeft
-  let chartAreaWidth = initialChartAreaWidth
+}): { textOffset: number } => {
+  let leftMostYTickText: number | null = null
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    let leftMostYTickText: number | null = null
-
-    const yAxis = buildAxis(marginLeft, chartAreaWidth).call((g) =>
-      g.selectAll('.tick').each(function () {
-        const rect = (this as SVGGraphicsElement).getBoundingClientRect()
-        if (leftMostYTickText === null || rect.left < leftMostYTickText)
-          leftMostYTickText = rect.left
-      })
-    )
-
-    if (leftMostYTickText !== null) {
-      const isLastAttempt = attempt === maxAttempts
-      const textOffset = leftMostYTickText - minClientX
-      if (textOffset < 0 && !isLastAttempt) {
-        yAxis.remove()
-        marginLeft += Math.ceil(-textOffset / 4) * 4
-        chartAreaWidth = getChartAreaWidth({ width, marginLeft, marginRight })
-        continue
-      }
-      yAxis.attr('opacity', null)
-    }
-    break
-  }
-
-  return { marginLeft, chartAreaWidth }
+  buildAxis().call((g) =>
+    g.selectAll('.tick').each(function () {
+      const rect = (this as SVGGraphicsElement).getBoundingClientRect()
+      if (leftMostYTickText === null || rect.left < leftMostYTickText)
+        leftMostYTickText = rect.left
+    })
+  )
+  return leftMostYTickText !== null
+    ? { textOffset: leftMostYTickText - minClientX }
+    : { textOffset: 0 }
 }
 
 export const getSuggestedXTickValues = (

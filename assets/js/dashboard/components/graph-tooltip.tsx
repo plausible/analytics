@@ -1,5 +1,5 @@
 import React, { ReactNode, useLayoutEffect, useRef, useState } from 'react'
-import { Transition } from '@headlessui/react'
+import { Transition, TransitionRootProps } from '@headlessui/react'
 
 export const GraphTooltipWrapper = ({
   x,
@@ -22,8 +22,8 @@ export const GraphTooltipWrapper = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null)
   // bigger on mobile to have room between thumb and tooltip
-  const xOffsetFromCursor = isTouchDevice ? 24 : 12
-  const yOffsetFromCursor = isTouchDevice ? 48 : 24
+  const xOffsetFromCursor = isTouchDevice ? 0 : 12
+  const yOffsetFromCursor = 24
   const [measuredWidth, setMeasuredWidth] = useState(minWidth)
   // center tooltip above the cursor, clamped to prevent left/right overflow
   const rawLeft = x + xOffsetFromCursor
