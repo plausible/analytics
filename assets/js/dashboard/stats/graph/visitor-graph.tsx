@@ -35,10 +35,14 @@ export default function VisitorGraph({
   const startOfDay = nowForSite(site).startOf('day')
 
   const { selectedInterval, onIntervalClick, availableIntervals } =
-    useStoredInterval(site, {
+    useStoredInterval({
+      site: site,
       to: dashboardState.to,
       from: dashboardState.from,
-      period: dashboardState.period
+      period: dashboardState.period,
+      comparison: dashboardState.comparison,
+      compare_to: dashboardState.compare_to,
+      compare_from: dashboardState.compare_from
     })
 
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(

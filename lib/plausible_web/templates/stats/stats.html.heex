@@ -46,9 +46,6 @@
     }
     data-flags={Jason.encode!(@flags)}
     data-segments={Jason.encode!(@segments)}
-    data-valid-intervals-by-period={
-      Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()
-    }
     data-is-consolidated-view={Jason.encode!(@consolidated_view?)}
     data-consolidated-view-available={Jason.encode!(@consolidated_view_available?)}
     data-exploration-available={Jason.encode!(@exploration_available?)}

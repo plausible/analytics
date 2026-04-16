@@ -43,7 +43,6 @@ export const DEFAULT_SITE: PlausibleSite = {
   background: '',
   isDbip: false,
   flags: {},
-  validIntervalsByPeriod: {},
   shared: false,
   isConsolidatedView: false
 }
