@@ -378,7 +378,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp parse_journey_step(%{"name" => name, "pathname" => pathname}) do
-    Exploration.JourneyStep.new(name, pathname)
+    Exploration.Journey.Step.new(name, pathname)
   end
 
   defp parse_exploration_direction("backward"), do: {:ok, :backward}
