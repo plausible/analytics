@@ -329,6 +329,103 @@ defmodule Plausible.Stats.ExplorationTest do
       assert next_step2.visitors == 1
     end
 
+    test "does not suggest current first step" do
+      site = new_site()
+
+      populate_stats(site, [
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:07:01Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:14:25Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 09:14:26Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:14:26Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:16:20Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:46:57Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 09:53:04Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:55:02Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 09:55:03Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:11:23Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 10:11:25Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:11:26Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:15:30Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:21:48Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 10:21:49Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:21:50Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:49:45Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 10:49:47Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:49:47Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard/",
+          timestamp: ~U[2026-03-23 10:50:32Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 11:07:53Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 11:07:55Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:19:21Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 13:19:23Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:19:24Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:30:17Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:32:44Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 13:32:45Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:32:46Z]),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 21:48:23Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 21:48:25Z]
+        ),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 21:48:26Z]),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/:dashboard",
+          timestamp: ~U[2026-03-23 21:48:30Z]
+        )
+      ])
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/sites"}
+      ]
+
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      assert {:ok, [%{step: %{pathname: "/:dashboard"}}]} =
+               Exploration.next_steps(query, journey, "", :forward)
+    end
+
     test "treats identical sequence of events as a single step" do
       site = new_site()
 
