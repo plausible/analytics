@@ -71,14 +71,11 @@ defmodule Plausible.Stats.Exploration do
   def journey_funnel(_query, [], _direction), do: {:error, :empty_journey}
 
   def journey_funnel(query, journey, direction) when is_direction(direction) do
-    journey_for_query = journey_for_query(journey, direction)
-
     query
     |> Base.base_event_query()
-    |> journey_funnel_query(journey_for_query)
+    |> journey_funnel_query(journey, direction)
     |> ClickhouseRepo.all()
-    |> to_funnel(journey_for_query)
-    |> maybe_reverse_funnel(direction)
+    |> to_funnel(journey)
     |> then(&{:ok, &1})
   end
 
@@ -108,7 +105,8 @@ defmodule Plausible.Stats.Exploration do
               ),
             name: selected_as(field(s, ^next_name), :next_name),
             pathname: selected_as(field(s, ^next_pathname), :next_pathname)
-          }
+          },
+          visitors: selected_as(scale_sample(fragment("uniq(?)", s.user_id)), :count)
         },
         group_by: [selected_as(:next_name), selected_as(:next_pathname)],
         order_by: [
@@ -118,7 +116,6 @@ defmodule Plausible.Stats.Exploration do
         ],
         limit: 10
       )
-      |> count_by_direction(query, steps, direction)
       |> maybe_search(search_term)
 
     steps
@@ -133,40 +130,8 @@ defmodule Plausible.Stats.Exploration do
     end)
   end
 
-  defp count_by_direction(steps_query, _query, steps, direction)
-       when steps == [] or direction == :forward do
-    from(s in steps_query,
-      select_merge: %{
-        visitors: selected_as(scale_sample(fragment("uniq(?)", s.user_id)), :count)
-      }
-    )
-  end
-
-  defp count_by_direction(steps_query, query, _steps, :backward) do
-    q_steps_first = steps_query(query, 1, :forward)
-
-    q_counts =
-      from(fs in subquery(q_steps_first),
-        where: fs.name1 != "",
-        select: %{
-          name: fs.name1,
-          pathname: fs.pathname1,
-          visitors: scale_sample(fragment("uniq(?)", fs.user_id))
-        },
-        group_by: [fs.name1, fs.pathname1]
-      )
-
-    from(s in steps_query,
-      inner_join: c in subquery(q_counts),
-      on: c.name == selected_as(:next_name) and c.pathname == selected_as(:next_pathname),
-      select_merge: %{
-        visitors: selected_as(scale_sample(fragment("any(?)", c.visitors)), :count)
-      }
-    )
-  end
-
-  defp journey_funnel_query(query, steps) do
-    q_steps = steps_query(query, length(steps), :forward)
+  defp journey_funnel_query(query, steps, direction) do
+    q_steps = steps_query(query, length(steps), direction)
 
     [first_step | steps] = steps
 
@@ -198,12 +163,32 @@ defmodule Plausible.Stats.Exploration do
     end)
   end
 
-  defp steps_query(query, steps, direction) when is_integer(steps) do
-    event_ordering =
-      case direction do
-        :backward -> [desc: :timestamp, desc: :name, desc: :pathname]
-        _ -> [asc: :timestamp, asc: :name, asc: :pathname]
+  defmacrop lag_or_lead(direction, expr) do
+    if direction == :forward do
+      quote do
+        lag(unquote(expr))
       end
+    else
+      quote do
+        lead(unquote(expr))
+      end
+    end
+  end
+
+  defmacrop lead_or_lag(direction, expr, offset) do
+    if direction == :forward do
+      quote do
+        lead(unquote(expr), unquote(offset))
+      end
+    else
+      quote do
+        lag(unquote(expr), unquote(offset))
+      end
+    end
+  end
+
+  defp steps_query(query, steps, direction) when is_integer(steps) do
+    event_ordering = [asc: :timestamp, asc: :name, asc: :pathname]
 
     q_pairs =
       from(e in query,
@@ -217,8 +202,8 @@ defmodule Plausible.Stats.Exploration do
           site_id: e.site_id,
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
-          prev_pathname: lag(e.pathname) |> over(:session_window),
-          prev_name: lag(e.name) |> over(:session_window),
+          prev_pathname: lag_or_lead(^direction, e.pathname) |> over(:session_window),
+          prev_name: lag_or_lead(^direction, e.name) |> over(:session_window),
           name: e.name,
           pathname: e.pathname,
           timestamp: e.timestamp
@@ -244,8 +229,9 @@ defmodule Plausible.Stats.Exploration do
       Enum.reduce(1..(steps - 1), q_steps, fn idx, q ->
         from(e in q,
           select_merge: %{
-            ^:"name#{idx + 1}" => lead(e.name, ^idx) |> over(:step_window),
-            ^:"pathname#{idx + 1}" => lead(e.pathname, ^idx) |> over(:step_window)
+            ^:"name#{idx + 1}" => lead_or_lag(^direction, e.name, ^idx) |> over(:step_window),
+            ^:"pathname#{idx + 1}" =>
+              lead_or_lag(^direction, e.pathname, ^idx) |> over(:step_window)
           }
         )
       end)
@@ -310,10 +296,4 @@ defmodule Plausible.Stats.Exploration do
     |> Map.fetch!(:funnel)
     |> Enum.reverse()
   end
-
-  defp journey_for_query(journey, :backward), do: Enum.reverse(journey)
-  defp journey_for_query(journey, :forward), do: journey
-
-  defp maybe_reverse_funnel(funnel, :backward), do: Enum.reverse(funnel)
-  defp maybe_reverse_funnel(funnel, :forward), do: funnel
 end
