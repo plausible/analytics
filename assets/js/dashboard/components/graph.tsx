@@ -5,12 +5,14 @@ import classNames from 'classnames'
 const IDEAL_Y_TICK_COUNT = 5
 const MAX_X_TICK_COUNT = 8
 
+type GraphYValues = ReadonlyArray<number | null>
+
 /**
  * To ensure the effect to redraw the chart only runs when needed,
  * make sure these props don't change on every render of the parent.
  */
 type GraphProps<
-  T extends ReadonlyArray<number | null>,
+  T extends GraphYValues,
   U = { [K in keyof T]: SeriesConfig }
 > = {
   className: string
@@ -44,7 +46,12 @@ type GraphProps<
   highlightedIndex?: number | null
 }
 
-export function Graph<T extends ReadonlyArray<number | null>>({
+/**
+ * Usage:
+ * By setting `T` to `Readonly<[number | null, number | null, number | null]>>`
+ * the graph is configured to draw 3 series.
+ */
+export function Graph<T extends GraphYValues>({
   children,
   ...rest
 }: GraphProps<T>) {
@@ -60,7 +67,7 @@ export function Graph<T extends ReadonlyArray<number | null>>({
   )
 }
 
-function InnerGraph<T extends ReadonlyArray<number | null>>({
+function InnerGraph<T extends GraphYValues>({
   className,
   width,
   height,
@@ -390,7 +397,7 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
       }
     }
     return () => {
-      if (currentSvg) {  
+      if (currentSvg) {
         const svg = d3.select(currentSvg)
         svg.on('click', null)
       }
@@ -693,7 +700,7 @@ const addGradient = ({
     .attr('stop-opacity', stopBottom.opacity)
 }
 
-function drawAreaUnderLine<T extends ReadonlyArray<number | null>>({
+function drawAreaUnderLine<T extends GraphYValues>({
   svg,
   gradientId,
   isDefined,
@@ -725,7 +732,7 @@ function drawAreaUnderLine<T extends ReadonlyArray<number | null>>({
     .attr('d', area)
 }
 
-function drawLine<T extends ReadonlyArray<number | null>>({
+function drawLine<T extends GraphYValues>({
   svg,
   datum,
   isDefined,
@@ -749,7 +756,7 @@ function drawLine<T extends ReadonlyArray<number | null>>({
     .attr('d', line)
 }
 
-function drawDots<T extends ReadonlyArray<number | null>>({
+function drawDots<T extends GraphYValues>({
   svg,
   settings,
   x,
@@ -774,7 +781,7 @@ function drawDots<T extends ReadonlyArray<number | null>>({
   return dotsForX
 }
 
-function getClosestIndexToPointer<T extends ReadonlyArray<number | null>>(
+function getClosestIndexToPointer<T extends GraphYValues>(
   xPointer: number,
   points: Point<T>[]
 ): number {
@@ -790,13 +797,13 @@ const getPosition = (
 
 const isWholeNumber = (v: number) => v % 1 === 0
 
-export type Datum<T extends ReadonlyArray<number | null>> = {
+export type Datum<T extends GraphYValues> = {
   values: T
   xLabel: string
 }
 
 type XPos = number
-type Point<T extends ReadonlyArray<number | null>> = {
+type Point<T extends GraphYValues> = {
   x: XPos
   values: T
   dots: SelectedDots
@@ -813,7 +820,7 @@ export type SeriesConfig = {
   dot?: { dotClassName: string }
 }
 
-export type PointerHandler<T extends ReadonlyArray<number | null>> = (opts: {
+export type PointerHandler<T extends GraphYValues> = (opts: {
   inHoverableArea: boolean
   xPointer: number
   yPointer: number
