@@ -95,9 +95,11 @@ export const MainGraph = ({
   const metric = data.query.metrics[0] as Metric
   const interval = data.interval
   const period = data.period
+
   useEffect(() => {
     setTooltip(initialTooltipState)
   }, [data])
+
   const {
     remappedData,
     yMax,
@@ -238,30 +240,31 @@ export const MainGraph = ({
   const onPointerMove = useCallback<PointerHandler<MainGraphYValues>>(
     ({ inHoverableArea, closestPoint, xPointer, yPointer, event }) => {
       if (event instanceof PointerEvent && event.pointerType === 'touch') {
-        setIsTouchDevice(true)
-      } else {
-        setIsTouchDevice(false)
-        if (!inHoverableArea || !closestPoint) {
-          setTooltip(initialTooltipState)
-        } else {
-          setTooltip({
-            selectedIndex: closestPoint.index,
-            x: Math.floor(xPointer),
-            y: Math.floor(yPointer),
-            persistent: false
-          })
-        }
+        return setIsTouchDevice(true)
       }
+      setIsTouchDevice(false)
+      if (!inHoverableArea || !closestPoint) {
+        return setTooltip(initialTooltipState)
+      }
+      return setTooltip({
+        selectedIndex: closestPoint.index,
+        x: Math.floor(xPointer),
+        y: Math.floor(yPointer),
+        persistent: false
+      })
     },
     []
   )
 
   const onGotPointerCapture = useCallback((event: unknown) => {
-    console.log('onGotPointerCapture', event.pointerType)
     if (event instanceof PointerEvent && event.pointerType === 'touch') {
-      setIsTouchDevice(true)
-    } else {
-      setIsTouchDevice(false)
+      return setIsTouchDevice(true)
+    }
+  }, [])
+
+  const onPointerEnter = useCallback((event: unknown) => {
+    if (event instanceof PointerEvent && event.pointerType === 'touch') {
+      return setIsTouchDevice(true)
     }
   }, [])
 
@@ -273,12 +276,13 @@ export const MainGraph = ({
   const selectedDatum = selectedIndex !== null && remappedData[selectedIndex]
 
   const zoomDate =
-    selectedDatum && selectedDatum.main.isDefined
+    showZoomToPeriod && selectedDatum && selectedDatum.main.isDefined
       ? selectedDatum.main.timeLabel
       : null
 
   const zoomToPeriod = useCallback(
     (date: string) => {
+      setTooltip(initialTooltipState)
       navigate({
         search: (currentSearch) => ({
           ...currentSearch,
@@ -294,28 +298,20 @@ export const MainGraph = ({
   )
 
   const onClick = useCallback<PointerHandler<MainGraphYValues>>(
-    ({ inHoverableArea, closestPoint, xPointer, yPointer, event }) => {
-      console.log('onClick', 'isTouchDevice', isTouchDevice)
+    ({ inHoverableArea, closestPoint }) => {
       if (isTouchDevice) {
-        setTooltip((currentTooltip) => {
-          if (
-            !currentTooltip.selectedIndex &&
-            inHoverableArea &&
-            closestPoint
-          ) {
-            return {
-              selectedIndex: closestPoint.index,
-              x: closestPoint.x,
-              y: Math.min(...closestPoint.values.filter((y) => y !== null)),
-              persistent: true
-            }
-          }
-          return { selectedIndex: null, x: 0, y: 0, persistent: false }
-        })
-      } else {
-        if (typeof zoomDate === 'string') {
-          zoomToPeriod(zoomDate)
+        if (inHoverableArea && closestPoint) {
+          return setTooltip({
+            selectedIndex: closestPoint.index,
+            x: closestPoint.x,
+            y: Math.min(...closestPoint.values.filter((y) => y !== null)),
+            persistent: true
+          })
         }
+        return setTooltip(initialTooltipState)
+      }
+      if (typeof zoomDate === 'string') {
+        return zoomToPeriod(zoomDate)
       }
     },
     [zoomDate, zoomToPeriod, isTouchDevice]
@@ -335,6 +331,7 @@ export const MainGraph = ({
       settings={settings}
       data={remappedDataInGraphFormat}
       yMax={yMax}
+      onPointerEnter={onPointerEnter}
       onGotPointerCapture={onGotPointerCapture}
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
@@ -346,7 +343,7 @@ export const MainGraph = ({
         <MainGraphTooltip
           getFormattedValue={getFormattedValue}
           maxX={width}
-          showZoomToPeriod={showZoomToPeriod && !!zoomDate}
+          showZoomToPeriod={!!zoomDate}
           shouldShowYear={!yearIsUnambiguous}
           shouldShowDate={!dateIsUnambiguous}
           period={period}
@@ -407,18 +404,27 @@ const MainGraphTooltip = ({
     hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
   })
   const { main, comparison, change } = datum
-
   return (
     <GraphTooltipWrapper
       x={x}
       y={y}
       minWidth={200}
       maxX={maxX}
-      isTouchDevice={persistent}
       className={classNames(
-        'absolute z-10 select-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850',
+        'absolute select-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850',
         typeof onClick !== 'function' && 'pointer-events-none'
       )}
+      transition={
+        persistent
+          ? {
+              // enter delay on mobile is needed to prevent the tooltip from entering when the user starts to y-pan
+              // but the y-pan is not yet certain
+              enter: 'transition-opacity duration-0 delay-150',
+              enterFrom: 'opacity-0',
+              enterTo: 'opacity-100'
+            }
+          : {}
+      }
     >
       <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
         <div className="flex justify-between items-center rounded-sm">

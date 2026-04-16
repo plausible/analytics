@@ -33,8 +33,9 @@ type GraphProps<
   defaultMarginLeft: number
   data: Datum<T>[]
   yMax: number
+  onPointerEnter: (event: unknown) => void
   onPointerMove: PointerHandler<T>
-  onPointerLeave: () => void
+  onPointerLeave: (event: unknown) => void
   onGotPointerCapture: (event: unknown) => void
   onClick?: PointerHandler<T>
   yFormat: (domainValue: d3.NumberValue, index: number) => string
@@ -88,6 +89,7 @@ function InnerGraph<T extends GraphYValues>({
   onPointerMove,
   onPointerLeave,
   onGotPointerCapture,
+  onPointerEnter,
   onClick,
   yFormat,
   settings,
@@ -110,7 +112,6 @@ function InnerGraph<T extends GraphYValues>({
     if (!svgRef.current) {
       return
     }
-    console.log('setting up with extraMarginLeft', extraMarginLeft)
     const svgBoundingClientRect = svgRef.current.getBoundingClientRect()
     const minClientX = svgBoundingClientRect.left
     const maxClientX = svgBoundingClientRect.right
@@ -313,7 +314,6 @@ function InnerGraph<T extends GraphYValues>({
   )
 
   useEffect(() => {
-    console.log('setting up pointermove')
     const currentSvg = svgRef.current
     if (currentSvg && pointsRef.current) {
       const points = pointsRef.current
@@ -354,14 +354,13 @@ function InnerGraph<T extends GraphYValues>({
   }, [onPointerMove, isInHoverableArea])
 
   useEffect(() => {
-    console.log('setting up gotpointercapture')
     const currentSvg = svgRef.current
     if (currentSvg && pointsRef.current) {
       const svg = d3.select(currentSvg)
       svg.on(
         'gotpointercapture',
-        () => {
-          onGotPointerCapture()
+        (event) => {
+          onGotPointerCapture(event)
         },
         { passive: true }
       )
@@ -375,14 +374,33 @@ function InnerGraph<T extends GraphYValues>({
   }, [onGotPointerCapture, isInHoverableArea])
 
   useEffect(() => {
-    console.log('setting up pointerleave')
+    const currentSvg = svgRef.current
+    if (currentSvg && pointsRef.current) {
+      const svg = d3.select(currentSvg)
+      svg.on(
+        'pointerenter',
+        (event) => {
+          onPointerEnter(event)
+        },
+        { passive: true }
+      )
+    }
+    return () => {
+      if (currentSvg) {
+        const svg = d3.select(currentSvg)
+        svg.on('pointerenter', null)
+      }
+    }
+  }, [onPointerEnter, isInHoverableArea])
+
+  useEffect(() => {
     const currentSvg = svgRef.current
     if (currentSvg && pointsRef.current) {
       const svg = d3.select(currentSvg)
       svg.on(
         'lostpointercapture pointerleave',
-        () => {
-          onPointerLeave()
+        (event) => {
+          onPointerLeave(event)
         },
         { passive: true }
       )
@@ -397,7 +415,6 @@ function InnerGraph<T extends GraphYValues>({
   }, [onPointerLeave, isInHoverableArea])
 
   useEffect(() => {
-    console.log('setting up click')
     const currentSvg = svgRef.current
     if (currentSvg && pointsRef.current) {
       const svg = d3.select(currentSvg)
