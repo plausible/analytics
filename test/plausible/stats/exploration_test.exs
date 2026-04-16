@@ -336,10 +336,10 @@ defmodule Plausible.Stats.ExplorationTest do
 
       ago = fn ms -> DateTime.shift(now, minute: -1 * ms) end
 
-      # The issue manifested from some very specific combinations of events with occurrences
-      # of different path/pathname combinations for the same timestamp appearing in it.
+      # The issue manifested in some very specific combinations of events with occurrences
+      # of different path/pathname combinations, some of them with identical timestamp.
       #
-      # The cause was inconsistent ordering between `q_pairs` and `q_steps` in `steps_query`
+      # The cause was inconsistent ordering between `q_pairs` and `q_steps` in `steps_query`.
       #
       populate_stats(site, [
         build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(100)),
