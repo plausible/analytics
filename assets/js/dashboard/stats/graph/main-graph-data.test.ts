@@ -45,14 +45,19 @@ const seriesValueBase = {
   value: 0,
   timeLabel: ''
 }
-const np = () => ({
-  isDefined: true,
+
+// not current
+const nc = () => ({
+  isCurrent: false,
   isPartial: false,
+  isDefined: true,
   ...seriesValueBase
 })
-const p = () => ({
+// current
+const c = () => ({
+  isCurrent: true,
+  isPartial: false,
   isDefined: true,
-  isPartial: true,
   ...seriesValueBase
 })
 const gap = () => ({ isDefined: false }) as const
@@ -63,64 +68,44 @@ describe(`${getLineSegments.name}`, () => {
   })
 
   it('returns empty for a single point (no edge to draw)', () => {
-    expect(getLineSegments([np()])).toEqual([])
+    expect(getLineSegments([nc()])).toEqual([])
   })
 
   it('returns empty for a single gap', () => {
     expect(getLineSegments([gap()])).toEqual([])
   })
 
-  it('returns a full segment for two non-partial points', () => {
-    expect(getLineSegments([np(), np()])).toEqual([
+  it('returns a full segment for two points', () => {
+    expect(getLineSegments([nc(), nc()])).toEqual([
       { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'full' }
     ])
   })
 
-  it('returns a partial segment for two partial points', () => {
-    expect(getLineSegments([p(), p()])).toEqual([
-      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'partial' }
+  it('returns a current segment when connecting to current point', () => {
+    expect(getLineSegments([nc(), c()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'current' }
     ])
   })
 
-  it('returns partial when connecting non-partial to partial', () => {
-    expect(getLineSegments([np(), p()])).toEqual([
-      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'partial' }
-    ])
-  })
-
-  it('returns partial when connecting partial to non-partial', () => {
-    expect(getLineSegments([p(), np()])).toEqual([
-      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'partial' }
-    ])
-  })
-
-  it('handles single full period in the middle of two partial periods', () => {
-    expect(getLineSegments([p(), np(), p()])).toEqual([
-      { startIndexInclusive: 0, stopIndexExclusive: 3, type: 'partial' }
-    ])
-  })
-
-  it('handles partial periods on both ends', () => {
-    expect(getLineSegments([p(), np(), np(), p()])).toEqual([
-      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'partial' },
-      { startIndexInclusive: 1, stopIndexExclusive: 3, type: 'full' },
-      { startIndexInclusive: 2, stopIndexExclusive: 4, type: 'partial' }
+  it('handles more points when the last point is current', () => {
+    expect(getLineSegments([nc(), nc(), nc(), c()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 3, type: 'full' },
+      { startIndexInclusive: 2, stopIndexExclusive: 4, type: 'current' }
     ])
   })
 
   it('handles leading gaps', () => {
     expect(
-      getLineSegments([gap(), gap(), np(), np(), np(), np(), p()])
+      getLineSegments([gap(), gap(), nc(), nc(), nc(), nc(), c()])
     ).toEqual([
       { startIndexInclusive: 2, stopIndexExclusive: 6, type: 'full' },
-      { startIndexInclusive: 5, stopIndexExclusive: 7, type: 'partial' }
+      { startIndexInclusive: 5, stopIndexExclusive: 7, type: 'current' }
     ])
   })
 
   it('handles trailing gaps', () => {
-    expect(getLineSegments([np(), np(), p(), gap(), gap()])).toEqual([
-      { startIndexInclusive: 0, stopIndexExclusive: 2, type: 'full' },
-      { startIndexInclusive: 1, stopIndexExclusive: 3, type: 'partial' }
+    expect(getLineSegments([nc(), nc(), nc(), gap(), gap()])).toEqual([
+      { startIndexInclusive: 0, stopIndexExclusive: 3, type: 'full' }
     ])
   })
 })

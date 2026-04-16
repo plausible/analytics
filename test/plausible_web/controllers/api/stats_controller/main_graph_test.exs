@@ -2445,5 +2445,60 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         assert List.last(labels) == yesterday
       end
     end
+
+    test "returns present_index for time:hour interval", %{conn: conn, site: site} do
+      response =
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => "day",
+            "relative_date" => "2021-01-08",
+            "metrics" => ["pageviews"],
+            "dimensions" => ["time:hour"],
+            "include" => %{"time_labels" => true, "present_index" => true}
+          },
+          now: ~U[2021-01-08 01:30:00Z]
+        )
+
+      assert response["meta"]["time_labels"] == ["2021-01-08 00:00:00", "2021-01-08 01:00:00"]
+      assert response["meta"]["present_index"] == 1
+    end
+
+    test "returns present_index for time:week interval", %{conn: conn, site: site} do
+      response =
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => ["2021-01-04", "2021-01-17"],
+            "metrics" => ["pageviews"],
+            "dimensions" => ["time:week"],
+            "include" => %{"time_labels" => true, "present_index" => true}
+          },
+          now: ~U[2021-01-14 12:00:00Z]
+        )
+
+      assert response["meta"]["time_labels"] == ["2021-01-04", "2021-01-11"]
+      assert response["meta"]["present_index"] == 1
+    end
+
+    test "returns present_index for time:month interval", %{conn: conn, site: site} do
+      response =
+        do_query(
+          conn,
+          site,
+          %{
+            "date_range" => ["2021-01-01", "2021-02-28"],
+            "metrics" => ["pageviews"],
+            "dimensions" => ["time:month"],
+            "include" => %{"time_labels" => true, "present_index" => true}
+          },
+          now: ~U[2021-02-15 12:00:00Z]
+        )
+
+      assert response["meta"]["time_labels"] == ["2021-01-01", "2021-02-01"]
+      assert response["meta"]["present_index"] == 1
+    end
   end
 end

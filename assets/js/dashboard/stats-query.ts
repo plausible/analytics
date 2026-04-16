@@ -54,7 +54,8 @@ export function createStatsQuery(
       partial_time_labels: reportParams.include?.partial_time_labels || false,
       compare: createIncludeCompare(dashboardState),
       compare_match_day_of_week: dashboardState.match_day_of_week,
-      empty_metrics: reportParams.include?.empty_metrics || false
+      empty_metrics: reportParams.include?.empty_metrics || false,
+      present_index: reportParams.include?.present_index || false
     }
   }
 }

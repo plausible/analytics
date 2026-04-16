@@ -153,7 +153,7 @@ export const MainGraph = ({
         lineClassName: classNames(
           sharedPathClass,
           mainPathClass,
-          { partial: dashedPathClass, full: roundedPathClass }[type]
+          { current: dashedPathClass, full: roundedPathClass }[type]
         ),
         ...rest
       })),
@@ -166,7 +166,7 @@ export const MainGraph = ({
         lineClassName: classNames(
           sharedPathClass,
           comparisonPathClass,
-          { partial: dashedPathClass, full: roundedPathClass }[type]
+          roundedPathClass
         ),
         ...rest
       })),

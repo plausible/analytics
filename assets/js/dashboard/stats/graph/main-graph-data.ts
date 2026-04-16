@@ -51,7 +51,8 @@ export const remapAndFillData = ({
           timeLabel,
           value,
           numericValue: getNumericValue(value),
-          isPartial: (data.meta.partial_time_labels ?? []).includes(timeLabel)
+          isPartial: (data.meta.partial_time_labels ?? []).includes(timeLabel),
+          isCurrent: data.meta.present_index === index
         }
       } else {
         main = { isDefined: false }
@@ -70,7 +71,8 @@ export const remapAndFillData = ({
           numericValue: getNumericValue(value),
           isPartial: (data.meta.comparison_partial_time_labels ?? []).includes(
             comparisonTimeLabel
-          )
+          ),
+          isCurrent: false
         }
       } else {
         comparison = { isDefined: false }
@@ -145,13 +147,16 @@ export const REVENUE_METRICS = ['average_revenue', 'total_revenue']
 export type LineSegment = {
   startIndexInclusive: number
   stopIndexExclusive: number
-  type: 'full' | 'partial'
+  type: 'full' | 'current'
 }
 
 /**
  * Creates segments from points of a series.
- * When a point of data is partial, all lines to and from it must be partial lines.
- * (If that partial point moves, the lines to and from it move.)
+ *
+ * When a point of data is 'current' (only the last point of the series can be),
+ * then the line that connects it is dashed. If the 'current' point moves, so
+ * does the line connecting it.
+ *
  * A full line is drawn only between two or more continuous full periods.
  * No line is drawn from or to gaps in the data.
  */
@@ -165,7 +170,8 @@ export function getLineSegments(data: SeriesValue[]): LineSegment[] {
       return segments
     }
 
-    const type = prev.isPartial || curr.isPartial ? 'partial' : 'full'
+    const type = curr.isCurrent ? 'current' : 'full'
+
     const lastSegment = segments[segments.length - 1]
 
     if (lastSegment?.type === type && lastSegment.stopIndexExclusive === i) {
@@ -203,5 +209,6 @@ type SeriesValue =
       numericValue: number
       value: MetricValue
       isPartial: boolean
+      isCurrent: boolean
       timeLabel: string
     }

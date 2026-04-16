@@ -21,7 +21,8 @@ export function fetchMainGraph(
     include: {
       time_labels: true,
       partial_time_labels: true,
-      empty_metrics: true
+      empty_metrics: true,
+      present_index: true
     }
   }
 
@@ -63,6 +64,7 @@ export type MainGraphResponse = {
     comparison_time_labels?: string[]
     comparison_time_label_result_indices?: (number | null)[]
     empty_metrics: MetricValues
+    present_index: number
   }
   query: {
     interval: string

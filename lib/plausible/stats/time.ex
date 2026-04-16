@@ -195,7 +195,7 @@ defmodule Plausible.Stats.Time do
   end
 
   def present_index(time_labels, query) do
-    now = DateTime.now!(query.timezone)
+    now = DateTime.shift_zone!(query.now, query.timezone)
 
     current_label =
       case time_dimension(query) do
