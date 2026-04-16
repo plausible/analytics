@@ -342,7 +342,7 @@ function InnerGraph<T extends GraphYValues>({
         }
       }
     }
-  }, [onPointerMove, onClick, isInHoverableArea])
+  }, [onPointerMove, isInHoverableArea])
 
   useEffect(() => {
     const currentSvg = svgRef.current
