@@ -36,7 +36,7 @@ import {
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 import { MenuSeparator } from '../nav-menu-components'
-import { MovePeriodArrows } from './move-period-arrows'
+import { MovePeriodArrows, periodsWithArrows } from './move-period-arrows'
 
 function DashboardPeriodMenuKeybinds({
   closeDropdown,
@@ -102,12 +102,18 @@ export const DashboardPeriodMenu = ({
           'flex rounded-md h-8 transition-all duration-150',
           'hover:bg-gray-150/80 dark:hover:bg-gray-800',
           'has-[[aria-expanded=true]]:bg-gray-150/80 dark:has-[[aria-expanded=true]]:bg-gray-800',
+          'has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-indigo-500 has-[button:focus-visible]:ring-offset-2 dark:has-[button:focus-visible]:ring-offset-gray-900',
           isComparing && 'bg-gray-150/80 dark:bg-gray-800'
         )}
       >
         <Popover.Button
           ref={buttonRef}
-          className="flex items-center gap-x-1.5 pl-2.5 pr-1.5 text-sm font-medium text-gray-700 dark:text-gray-100 leading-tight h-full rounded-md"
+          className={classNames(
+            'flex items-center gap-x-1.5 pl-2.5 text-sm font-medium text-gray-700 dark:text-gray-100 leading-tight h-full rounded-md focus-visible:ring-0 focus-visible:ring-offset-0',
+            periodsWithArrows.includes(dashboardState.period)
+              ? 'pr-1.5'
+              : 'pr-2.5'
+          )}
         >
           <DateMenuCalendarIcon />
           <span

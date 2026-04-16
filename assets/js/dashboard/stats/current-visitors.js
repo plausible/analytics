@@ -65,7 +65,7 @@ export default function CurrentVisitors({ className = '' }) {
           >
             <circle cx="8" cy="8" r="8" />
           </svg>
-          <div className="inline-block">
+          <div className="inline-block text-gray-500 dark:text-gray-400">
             {currentVisitors}
             <span className="hidden lg:inline">
               {' '}

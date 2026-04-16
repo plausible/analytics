@@ -72,7 +72,7 @@ function ArrowIcon({
   )
 }
 
-const periodsWithArrows = [
+export const periodsWithArrows = [
   DashboardPeriod.year,
   DashboardPeriod.month,
   DashboardPeriod.day

@@ -67,6 +67,27 @@ const getSwitchToSiteURL = (
   return `/${encodeURIComponent(site.domain)}`
 }
 
+const SiteSwitcherStatic = () => {
+  const currentSite = useSiteContext()
+
+  return (
+    <div
+      data-testid="site-switcher-static"
+      className={classNames(
+        popover.toggleButton.classNames.rounded,
+        'gap-x-1.5 px-2.5 font-medium text-gray-700 dark:text-gray-100',
+        '!pl-0'
+      )}
+      title={currentSite.domain}
+    >
+      <Favicon domain={currentSite.domain} className="block size-4" />
+      <span className="truncate hidden sm:block sm:mr-1 lg:mr-0 font-semibold">
+        {currentSite.domain}
+      </span>
+    </div>
+  )
+}
+
 export const SiteSwitcher = () => {
   const dashboardRouteMatch = useMatch(rootRoute.path)
   const { modal } = useRoutelessModalsContext()
@@ -83,10 +104,11 @@ export const SiteSwitcher = () => {
     placeholderData: (previousData) => previousData
   })
 
-  const sitesInDropdown = user.loggedIn
-    ? sitesQuery.data?.data
-    : // show only current site in dropdown when viewing public / embedded dashboard
-      [{ domain: currentSite.domain }]
+  if (!user.loggedIn) {
+    return <SiteSwitcherStatic />
+  }
+
+  const sitesInDropdown = sitesQuery.data?.data
 
   const canSeeSiteSettings: boolean =
     user.loggedIn &&
@@ -160,7 +182,9 @@ export const SiteSwitcher = () => {
             )}
             <span
               data-testid="site-switcher-current-site"
-              className={'truncate hidden sm:block sm:mr-1 lg:mr-0'}
+              className={
+                'truncate hidden sm:block sm:mr-1 lg:mr-0 font-semibold'
+              }
             >
               {currentSite.isConsolidatedView
                 ? 'All sites'
