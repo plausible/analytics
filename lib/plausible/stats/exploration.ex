@@ -8,8 +8,22 @@ defmodule Plausible.Stats.Exploration do
 
     @type t() :: %__MODULE__{}
 
-    @derive {Jason.Encoder, only: [:name, :pathname]}
-    defstruct [:name, :pathname]
+    @derive {Jason.Encoder, only: [:name, :pathname, :label]}
+    defstruct [:name, :pathname, :label]
+
+    @spec from(map()) :: t()
+    def from(step) do
+      new(step.name, step.pathname)
+    end
+
+    @spec new(String.t(), String.t()) :: t()
+    def new(name, pathname) do
+      %__MODULE__{
+        label: if(name == "pageview", do: "Visit", else: name) <> " " <> pathname,
+        name: name,
+        pathname: pathname
+      }
+    end
   end
 
   import Ecto.Query
@@ -80,6 +94,18 @@ defmodule Plausible.Stats.Exploration do
         where: selected_as(:next_name) != "",
         select: %{
           step: %Journey.Step{
+            label:
+              selected_as(
+                fragment(
+                  "concat(CASE WHEN ? = ? THEN ? ELSE ? END, ' ', ?)",
+                  selected_as(:next_name),
+                  "pageview",
+                  "Visit",
+                  selected_as(:next_name),
+                  selected_as(:next_pathname)
+                ),
+                :next_label
+              ),
             name: selected_as(field(s, ^next_name), :next_name),
             pathname: selected_as(field(s, ^next_pathname), :next_pathname)
           }
@@ -239,11 +265,7 @@ defmodule Plausible.Stats.Exploration do
   defp maybe_search(query, search_term) do
     case String.trim(search_term) do
       term when byte_size(term) > 2 ->
-        from(s in query,
-          where:
-            ilike(selected_as(:next_name), ^"%#{term}%") or
-              ilike(selected_as(:next_pathname), ^"%#{term}%")
-        )
+        from(s in query, where: ilike(selected_as(:next_label), ^"%#{term}%"))
 
       _ ->
         query
@@ -255,6 +277,7 @@ defmodule Plausible.Stats.Exploration do
     |> Enum.with_index()
     |> Enum.reduce(%{funnel: [], visitors_at_previous: nil, total_visitors: nil}, fn {step, idx},
                                                                                      acc ->
+      step = Journey.Step.from(step)
       current_visitors = Map.get(result, idx + 1, 0)
       total_visitors = acc.total_visitors || current_visitors
 

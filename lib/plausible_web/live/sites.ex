@@ -429,7 +429,7 @@ defmodule PlausibleWeb.Live.Sites do
           </div>
           <span
             :if={is_map(@consolidated_sparkline)}
-            class="max-w-sm sm:max-w-none text-indigo-500 my-auto"
+            class="h-[48px] max-w-sm sm:max-w-none text-indigo-500 my-auto"
             data-test-id="consolidated-view-chart-loaded"
           >
             <PlausibleWeb.Live.Components.Visitors.chart
@@ -470,7 +470,7 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
         <div
           :if={@consolidated_sparkline == :loading}
-          class="flex flex-col gap-y-2 min-h-[254px] h-full text-center animate-pulse"
+          class="flex flex-col gap-y-2 h-[290px] sm:h-[236px] text-center animate-pulse"
           data-test-id="consolidated-viw-stats-loading"
         >
           <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
@@ -646,7 +646,7 @@ defmodule PlausibleWeb.Live.Sites do
   def site_stats(assigns) do
     ~H"""
     <div class={[
-      "flex flex-col gap-y-2 h-[122px] text-center animate-pulse",
+      "flex flex-col gap-y-2 h-[116px] text-center animate-pulse",
       is_map(@sparkline) && " hidden"
     ]}>
       <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
@@ -654,7 +654,7 @@ defmodule PlausibleWeb.Live.Sites do
     </div>
     <div :if={is_map(@sparkline)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
-        <span class="max-w-sm sm:max-w-none text-indigo-500">
+        <span class="h-[48px] max-w-sm sm:max-w-none text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
             intervals={@sparkline.intervals}
             height={80}
@@ -807,39 +807,7 @@ defmodule PlausibleWeb.Live.Sites do
     site = Enum.find(socket.assigns.sites.entries, &(&1.domain == domain))
 
     if site do
-      socket =
-        case Sites.toggle_pin(socket.assigns.current_user, site) do
-          {:ok, preference} ->
-            flash_message =
-              if preference.pinned_at do
-                "Site pinned"
-              else
-                "Site unpinned"
-              end
-
-            socket
-            |> put_live_flash(:success, flash_message)
-            |> refresh_index_pins()
-            |> load_page()
-            |> push_event("js-exec", %{
-              to: "#site-card-#{hash_domain(site.domain)}",
-              attr: "data-pin-toggled"
-            })
-
-          {:error, :too_many_pins} ->
-            flash_message =
-              "Looks like you've hit the pinned sites limit! " <>
-                "Please unpin one of your pinned sites to make room for new pins"
-
-            socket
-            |> put_live_flash(:error, flash_message)
-            |> push_event("js-exec", %{
-              to: "#site-card-#{hash_domain(site.domain)}",
-              attr: "data-pin-failed"
-            })
-        end
-
-      {:noreply, socket}
+      {:noreply, apply_pin_toggle(socket, site)}
     else
       Sentry.capture_message("Attempting to toggle pin for invalid domain.",
         extra: %{domain: domain, user: socket.assigns.current_user.id}
@@ -905,6 +873,34 @@ defmodule PlausibleWeb.Live.Sites do
         )
 
       {:noreply, assign(socket, :consolidated_view_cta_dismissed?, false)}
+    end
+  end
+
+  defp apply_pin_toggle(socket, site) do
+    case Sites.toggle_pin(socket.assigns.current_user, site) do
+      {:ok, preference} ->
+        flash_message = if preference.pinned_at, do: "Site pinned", else: "Site unpinned"
+
+        socket
+        |> put_live_flash(:success, flash_message)
+        |> refresh_index_pins()
+        |> load_page()
+        |> push_event("js-exec", %{
+          to: "#site-card-#{hash_domain(site.domain)}",
+          attr: "data-pin-toggled"
+        })
+
+      {:error, :too_many_pins} ->
+        flash_message =
+          "Looks like you've hit the pinned sites limit! " <>
+            "Please unpin one of your pinned sites to make room for new pins"
+
+        socket
+        |> put_live_flash(:error, flash_message)
+        |> push_event("js-exec", %{
+          to: "#site-card-#{hash_domain(site.domain)}",
+          attr: "data-pin-failed"
+        })
     end
   end
 
