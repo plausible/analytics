@@ -122,10 +122,12 @@ function InnerGraph<T extends GraphYValues>({
     const optimalYTickValues = getOptimalYTickValues(y, yMax)
 
     const svg = d3.select(svgRef.current)
+
     const cleanup = () => {
       pointsRef.current = null
       svg.selectAll('*').remove()
     }
+
     // Hide svg until ready
     svg.attr('opacity', 0)
     const { textOffset } = fitYAxis({
@@ -490,10 +492,8 @@ const getXScale = ({
   domain: [number, number]
   xLeftEdge: number
   xRightEdge: number
-}): d3.ScaleLinear<number, number, never> => {
-  const scale = d3.scaleLinear(domain, [xLeftEdge, xRightEdge])
-  return scale
-}
+}): d3.ScaleLinear<number, number, never> =>
+  d3.scaleLinear(domain, [xLeftEdge, xRightEdge])
 
 const getYScale = ({
   yMax,
@@ -503,12 +503,8 @@ const getYScale = ({
   yMax: number
   yBottomEdge: number
   yTopEdge: number
-}): d3.ScaleLinear<number, number, never> => {
-  const scale = d3
-    .scaleLinear([0, yMax], [yBottomEdge, yTopEdge])
-    .nice(IDEAL_Y_TICK_COUNT)
-  return scale
-}
+}): d3.ScaleLinear<number, number, never> =>
+  d3.scaleLinear([0, yMax], [yBottomEdge, yTopEdge]).nice(IDEAL_Y_TICK_COUNT)
 
 const fitXAxis = ({
   buildAxis,
