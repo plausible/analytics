@@ -201,8 +201,8 @@ defmodule Plausible.Stats.Exploration do
   defp steps_query(query, steps, direction) when is_integer(steps) do
     event_ordering =
       case direction do
-        :backward -> [desc: :timestamp]
-        _ -> [asc: :timestamp]
+        :backward -> [desc: :timestamp, desc: :name, desc: :pathname]
+        _ -> [asc: :timestamp, asc: :name, asc: :pathname]
       end
 
     q_pairs =
@@ -210,7 +210,7 @@ defmodule Plausible.Stats.Exploration do
         windows: [
           session_window: [
             partition_by: e.user_id,
-            order_by: [asc: e.timestamp]
+            order_by: ^event_ordering
           ]
         ],
         select: %{
@@ -224,7 +224,7 @@ defmodule Plausible.Stats.Exploration do
           timestamp: e.timestamp
         },
         where: e.name != "engagement",
-        order_by: [asc: e.timestamp]
+        order_by: ^event_ordering
       )
 
     q_steps =

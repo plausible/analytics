@@ -329,13 +329,18 @@ defmodule Plausible.Stats.ExplorationTest do
       assert next_step2.visitors == 1
     end
 
-    test "does not suggest current first step" do
+    test "does not suggest the same path/pathname as in previous step (regression test)" do
       site = new_site()
 
       now = DateTime.utc_now()
 
       ago = fn ms -> DateTime.shift(now, minute: -1 * ms) end
 
+      # The issue manifested from some very specific combinations of events with occurrences
+      # of different path/pathname combinations for the same timestamp appearing in it.
+      #
+      # The cause was inconsistent ordering between `q_pairs` and `q_steps` in `steps_query`
+      #
       populate_stats(site, [
         build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(100)),
         build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(100)),
@@ -372,8 +377,11 @@ defmodule Plausible.Stats.ExplorationTest do
 
       query = QueryBuilder.build!(site, input_date_range: :all)
 
-      assert {:ok, [%{step: %{pathname: "/:dashboard"}}]} =
+      assert {:ok, [%{step: %{pathname: "/:dashboard"}}, %{step: %{pathname: "/:dashboard/"}}]} =
                Exploration.next_steps(query, journey, "", :forward)
+
+      assert {:ok, [%{step: %{pathname: "/:dashboard"}}, %{step: %{pathname: "/:dashboard/"}}]} =
+               Exploration.next_steps(query, journey, "", :backward)
     end
 
     test "treats identical sequence of events as a single step" do
