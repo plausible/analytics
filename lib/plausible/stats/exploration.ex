@@ -163,30 +163,6 @@ defmodule Plausible.Stats.Exploration do
     end)
   end
 
-  defmacrop lag_or_lead(direction, expr) do
-    if direction == :forward do
-      quote do
-        lag(unquote(expr))
-      end
-    else
-      quote do
-        lead(unquote(expr))
-      end
-    end
-  end
-
-  defmacrop lead_or_lag(direction, expr, offset) do
-    if direction == :forward do
-      quote do
-        lead(unquote(expr), unquote(offset))
-      end
-    else
-      quote do
-        lag(unquote(expr), unquote(offset))
-      end
-    end
-  end
-
   defp steps_query(query, steps, direction) when is_integer(steps) do
     event_ordering = [asc: :timestamp, asc: :name, asc: :pathname]
 
@@ -202,8 +178,6 @@ defmodule Plausible.Stats.Exploration do
           site_id: e.site_id,
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
-          prev_pathname: lag_or_lead(^direction, e.pathname) |> over(:session_window),
-          prev_name: lag_or_lead(^direction, e.name) |> over(:session_window),
           name: e.name,
           pathname: e.pathname,
           timestamp: e.timestamp
@@ -211,6 +185,7 @@ defmodule Plausible.Stats.Exploration do
         where: e.name != "engagement",
         order_by: ^event_ordering
       )
+      |> select_previous(direction)
 
     q_steps =
       from(e in subquery(q_pairs),
@@ -227,17 +202,47 @@ defmodule Plausible.Stats.Exploration do
 
     if steps > 1 do
       Enum.reduce(1..(steps - 1), q_steps, fn idx, q ->
-        from(e in q,
-          select_merge: %{
-            ^:"name#{idx + 1}" => lead_or_lag(^direction, e.name, ^idx) |> over(:step_window),
-            ^:"pathname#{idx + 1}" =>
-              lead_or_lag(^direction, e.pathname, ^idx) |> over(:step_window)
-          }
-        )
+        select_next(q, idx, direction)
       end)
     else
       q_steps
     end
+  end
+
+  defp select_previous(query, :forward) do
+    from(e in query,
+      select_merge: %{
+        prev_pathname: lag(e.pathname) |> over(:session_window),
+        prev_name: lag(e.name) |> over(:session_window)
+      }
+    )
+  end
+
+  defp select_previous(query, :backward) do
+    from(e in query,
+      select_merge: %{
+        prev_pathname: lead(e.pathname) |> over(:session_window),
+        prev_name: lead(e.name) |> over(:session_window)
+      }
+    )
+  end
+
+  defp select_next(query, idx, :forward) do
+    from(e in query,
+      select_merge: %{
+        ^:"name#{idx + 1}" => lead(e.name, ^idx) |> over(:step_window),
+        ^:"pathname#{idx + 1}" => lead(e.pathname, ^idx) |> over(:step_window)
+      }
+    )
+  end
+
+  defp select_next(query, idx, :backward) do
+    from(e in query,
+      select_merge: %{
+        ^:"name#{idx + 1}" => lag(e.name, ^idx) |> over(:step_window),
+        ^:"pathname#{idx + 1}" => lag(e.pathname, ^idx) |> over(:step_window)
+      }
+    )
   end
 
   defp step_condition(step, count) do
