@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react'
+import React, { ReactNode, useCallback, useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
 
@@ -27,7 +27,7 @@ type GraphProps<
   yMax: number
   onPointerMove: PointerHandler<T>
   onPointerLeave: () => void
-  onClick?: () => void
+  onClick?: PointerHandler<T>
   yFormat: (domainValue: d3.NumberValue, index: number) => string
   /**
    * Things are drawn in the order of settings,
@@ -81,6 +81,12 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
 }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement | null>(null)
   const pointsRef = useRef<Point<T>[] | null>(null)
+  const sizeRef = useRef<{
+    yBottomEdge: number
+    yTopEdge: number
+    xLeftEdge: number
+    xRightEdge: number
+  } | null>(null)
 
   // Effect to fully redraw chart from scratch
   useEffect(() => {
@@ -104,6 +110,7 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
       yBottomEdge,
       yTopEdge
     } = getYScale({ yMax, height, marginTop, marginBottom })
+
     const optimalYTickValues = getOptimalYTickValues(y, yMax)
 
     const svg = d3.select(svgRef.current)
@@ -249,33 +256,63 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
     })
 
     pointsRef.current = points
+    sizeRef.current = { yBottomEdge, yTopEdge, xLeftEdge, xRightEdge }
 
-    const getPosition = (
-      event: unknown
-    ): { xPointer: number; yPointer: number; inHoverableArea: boolean } => {
-      const [[xPointer, yPointer]] = d3.pointers(event)
+    // Unhide chart
+    svg.attr('opacity', 1)
 
-      const inHoverableArea =
+    return () => {
+      sizeRef.current = null
+      pointsRef.current = null
+      svg.selectAll('*').remove()
+    }
+  }, [
+    data,
+    defaultMarginLeft,
+    gradients,
+    height,
+    marginBottom,
+    marginRight,
+    marginTop,
+    settings,
+    width,
+    yFormat,
+    yMax
+  ])
+
+  const isInHoverableArea = useCallback(
+    (xPointer: number, yPointer: number): boolean => {
+      if (!sizeRef.current) {
+        return false
+      }
+      const { xLeftEdge, xRightEdge, yTopEdge } = sizeRef.current
+      return (
         xPointer >= xLeftEdge - hoverBuffer &&
         xPointer <= xRightEdge + hoverBuffer &&
         yPointer >= yTopEdge - hoverBuffer &&
         // chart is interactive even over x-axis labels
         yPointer <= height
-      return { xPointer, yPointer, inHoverableArea }
-    }
-    const getClosestIndexToPointer = (xPointer: number): number =>
-      d3.bisector(({ x }: Point<T>) => x).center(points, xPointer)
+      )
+    },
+    [height, hoverBuffer]
+  )
 
-    svg
-      .on(
+  useEffect(() => {
+    const currentSvg = svgRef.current
+    if (currentSvg && sizeRef.current && pointsRef.current) {
+      const points = pointsRef.current
+      const svg = d3.select(currentSvg)
+
+      svg.on(
         'pointermove',
         (event) => {
-          const { xPointer, yPointer, inHoverableArea } = getPosition(event)
+          const { xPointer, yPointer } = getPosition(event)
+          const inHoverableArea = isInHoverableArea(xPointer, yPointer)
           const closestIndexToPointer = inHoverableArea
-            ? getClosestIndexToPointer(xPointer)
+            ? getClosestIndexToPointer(xPointer, points)
             : null
           onPointerMove({
-            inHoverableArea: true,
+            inHoverableArea,
             closestPoint:
               closestIndexToPointer !== null
                 ? {
@@ -291,37 +328,74 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
         },
         { passive: true }
       )
-      .on(
+      return () => {
+        if (currentSvg) {
+          const svg = d3.select(currentSvg)
+          svg.on('pointermove', null)
+        }
+      }
+    }
+  }, [onPointerMove, onClick, isInHoverableArea])
+
+  useEffect(() => {
+    const currentSvg = svgRef.current
+    if (currentSvg && sizeRef.current && pointsRef.current) {
+      const svg = d3.select(currentSvg)
+      svg.on(
         'lostpointercapture pointerleave',
         () => {
           onPointerLeave()
         },
         { passive: true }
       )
-
-    // Unhide chart
-    svg.attr('opacity', 1)
+    }
 
     return () => {
-      pointsRef.current = null
-      svg.selectAll('*').remove()
+      if (currentSvg) {
+        const svg = d3.select(currentSvg)
+        svg.on('lostpointercapture pointerleave', null)
+      }
     }
-  }, [
-    data,
-    gradients,
-    onPointerLeave,
-    onPointerMove,
-    settings,
-    width,
-    height,
-    marginBottom,
-    marginTop,
-    defaultMarginLeft,
-    marginRight,
-    hoverBuffer,
-    yFormat,
-    yMax
-  ])
+  }, [onPointerLeave, isInHoverableArea])
+
+  useEffect(() => {
+    const currentSvg = svgRef.current
+    if (currentSvg && sizeRef.current && pointsRef.current) {
+      const svg = d3.select(currentSvg)
+      const points = pointsRef.current
+      if (typeof onClick !== 'function') {
+        svg.on('click', null)
+      } else {
+        svg.on('click', (event) => {
+          const { xPointer, yPointer } = getPosition(event)
+          const inHoverableArea = isInHoverableArea(xPointer, yPointer)
+          const closestIndexToPointer = inHoverableArea
+            ? getClosestIndexToPointer(xPointer, points)
+            : null
+          onClick({
+            inHoverableArea,
+            closestPoint:
+              closestIndexToPointer !== null
+                ? {
+                    index: closestIndexToPointer,
+                    x: points[closestIndexToPointer].x,
+                    values: points[closestIndexToPointer].values
+                  }
+                : null,
+            xPointer,
+            yPointer,
+            event
+          })
+        })
+      }
+    }
+    return () => {
+      if (currentSvg) {  
+        const svg = d3.select(currentSvg)
+        svg.on('click', null)
+      }
+    }
+  }, [onClick, isInHoverableArea])
 
   useEffect(() => {
     pointsRef.current?.forEach(({ dots }, index) =>
@@ -334,15 +408,9 @@ function InnerGraph<T extends ReadonlyArray<number | null>>({
 
   return (
     <svg
-      onClick={onClick}
-      onPointerUp={(e) => {
-        if (e.pointerType === 'touch' && typeof onClick === 'function') {
-          onClick()
-        }
-      }}
       ref={svgRef}
       viewBox={`0 0 ${width} ${height}`}
-      className={classNames('w-full h-auto [touch-action:pan-y]', className)}
+      className={classNames('w-full h-auto', className)}
     />
   )
 }
@@ -704,6 +772,20 @@ function drawDots<T extends ReadonlyArray<number | null>>({
   }
 
   return dotsForX
+}
+
+function getClosestIndexToPointer<T extends ReadonlyArray<number | null>>(
+  xPointer: number,
+  points: Point<T>[]
+): number {
+  return d3.bisector(({ x }: Point<T>) => x).center(points, xPointer)
+}
+
+const getPosition = (
+  event: unknown
+): { xPointer: number; yPointer: number } => {
+  const [[xPointer, yPointer]] = d3.pointers(event)
+  return { xPointer, yPointer }
 }
 
 const isWholeNumber = (v: number) => v % 1 === 0
