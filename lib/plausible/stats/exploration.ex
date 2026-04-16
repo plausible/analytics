@@ -3,49 +3,27 @@ defmodule Plausible.Stats.Exploration do
   Query logic for user journey exploration.
   """
 
-  defmodule Journey.Step do
-    @moduledoc false
-
-    @type t() :: %__MODULE__{}
-
-    @derive {Jason.Encoder, only: [:name, :pathname, :label]}
-    defstruct [:name, :pathname, :label]
-
-    @spec from(map()) :: t()
-    def from(step) do
-      new(step.name, step.pathname)
-    end
-
-    @spec new(String.t(), String.t()) :: t()
-    def new(name, pathname) do
-      %__MODULE__{
-        label: if(name == "pageview", do: "Visit", else: name) <> " " <> pathname,
-        name: name,
-        pathname: pathname
-      }
-    end
-  end
-
   import Ecto.Query
   import Plausible.Stats.SQL.Fragments
   import Plausible.Stats.Util, only: [percentage: 2]
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.Base
+  alias Plausible.Stats.Exploration.JourneyStep
   alias Plausible.Stats.Query
 
-  @type journey() :: [Journey.Step.t()]
+  @type journey() :: [JourneyStep.t()]
   @type direction() :: :forward | :backward
 
   defguard is_direction(value) when value in [:forward, :backward]
 
   @type next_step() :: %{
-          step: Journey.Step.t(),
+          step: JourneyStep.t(),
           visitors: pos_integer()
         }
 
   @type funnel_step() :: %{
-          step: Journey.Step.t(),
+          step: JourneyStep.t(),
           visitors: non_neg_integer(),
           dropoff: non_neg_integer(),
           dropoff_percentage: String.t(),
@@ -90,7 +68,7 @@ defmodule Plausible.Stats.Exploration do
       from(s in subquery(q_steps),
         where: selected_as(:next_name) != "",
         select: %{
-          step: %Journey.Step{
+          step: %JourneyStep{
             label:
               selected_as(
                 fragment(
@@ -268,7 +246,7 @@ defmodule Plausible.Stats.Exploration do
     |> Enum.with_index()
     |> Enum.reduce(%{funnel: [], visitors_at_previous: nil, total_visitors: nil}, fn {step, idx},
                                                                                      acc ->
-      step = Journey.Step.from(step)
+      step = JourneyStep.from(step)
       current_visitors = Map.get(result, idx + 1, 0)
       total_visitors = acc.total_visitors || current_visitors
 

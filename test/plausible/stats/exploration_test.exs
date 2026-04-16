@@ -74,9 +74,9 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/logout"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/logout"}
       ]
 
       assert {:ok, [step1, step2, step3]} = Exploration.journey_funnel(query, journey)
@@ -139,10 +139,10 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/register"},
-        %Exploration.Journey.Step{name: "Signup", pathname: "/register"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/activate"},
-        %Exploration.Journey.Step{name: "Create site", pathname: "/sites/new"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/register"},
+        %Exploration.JourneyStep{name: "Signup", pathname: "/register"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/activate"},
+        %Exploration.JourneyStep{name: "Create site", pathname: "/sites/new"}
       ]
 
       assert {:ok, [step1, step2, step3, step4]} = Exploration.journey_funnel(query, journey)
@@ -161,9 +161,9 @@ defmodule Plausible.Stats.ExplorationTest do
         )
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/logout"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/logout"}
       ]
 
       assert {:ok, [step1, step2, step3]} = Exploration.journey_funnel(query, journey)
@@ -198,9 +198,9 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/logout"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/logout"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"}
       ]
 
       assert {:ok, [step1, step2, step3]} =
@@ -232,8 +232,8 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"}
       ]
 
       assert {:ok, [next_step1, next_step2, next_step3]} = Exploration.next_steps(query, journey)
@@ -289,8 +289,8 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"}
       ]
 
       assert {:ok, [next_step]} = Exploration.next_steps(query, journey, "doc")
@@ -303,8 +303,8 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"}
       ]
 
       assert {:ok, [next_step]} = Exploration.next_steps(query, journey, "isit /doc")
@@ -317,7 +317,7 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/logout"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/logout"}
       ]
 
       assert {:ok, [next_step1, next_step2]} =
@@ -372,7 +372,7 @@ defmodule Plausible.Stats.ExplorationTest do
       ])
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/sites"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/sites"}
       ]
 
       query = QueryBuilder.build!(site, input_date_range: :all)
@@ -455,8 +455,8 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"}
       ]
 
       assert {:ok, [next_step1, next_step2, next_step3]} = Exploration.next_steps(query, journey)
@@ -469,9 +469,9 @@ defmodule Plausible.Stats.ExplorationTest do
       assert next_step3.visitors == 1
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/docs"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/docs"}
       ]
 
       assert {:ok, [next_step]} = Exploration.next_steps(query, journey)
@@ -526,7 +526,7 @@ defmodule Plausible.Stats.ExplorationTest do
       query = QueryBuilder.build!(site, input_date_range: :all)
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/logout"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/logout"}
       ]
 
       assert {:ok, [next_step]} = Exploration.next_steps(query, journey, "", :backward)
@@ -590,7 +590,7 @@ defmodule Plausible.Stats.ExplorationTest do
       assert next_step3.visitors == 2
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"}
       ]
 
       assert {:ok, [next_step]} = Exploration.next_steps(query, journey)
@@ -599,8 +599,8 @@ defmodule Plausible.Stats.ExplorationTest do
       assert next_step.visitors == 2
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-        %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        %Exploration.JourneyStep{name: "pageview", pathname: "/home"},
+        %Exploration.JourneyStep{name: "pageview", pathname: "/login"}
       ]
 
       assert {:ok, [next_step]} = Exploration.next_steps(query, journey)
