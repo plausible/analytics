@@ -332,88 +332,38 @@ defmodule Plausible.Stats.ExplorationTest do
     test "does not suggest current first step" do
       site = new_site()
 
+      now = DateTime.utc_now()
+
+      ago = fn ms -> DateTime.shift(now, minute: -1 * ms) end
+
       populate_stats(site, [
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:07:01Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:14:25Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 09:14:26Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:14:26Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:16:20Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:46:57Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 09:53:04Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 09:55:02Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 09:55:03Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:11:23Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 10:11:25Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:11:26Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:15:30Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:21:48Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 10:21:49Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:21:50Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:49:45Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 10:49:47Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 10:49:47Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard/",
-          timestamp: ~U[2026-03-23 10:50:32Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 11:07:53Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 11:07:55Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:19:21Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 13:19:23Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:19:24Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:30:17Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:32:44Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 13:32:45Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 13:32:46Z]),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 21:48:23Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 21:48:25Z]
-        ),
-        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ~U[2026-03-23 21:48:26Z]),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/:dashboard",
-          timestamp: ~U[2026-03-23 21:48:30Z]
-        )
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(100)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(100)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(99)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(98)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(97)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(96)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(95)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(94)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(93)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(92)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(91)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(90)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(89)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(88)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(87)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(87)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard/", timestamp: ago.(86)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(85)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(84)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(83)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(82)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(81)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(80)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(79)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(78)),
+        build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(77)),
+        build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(76))
       ])
 
       journey = [
