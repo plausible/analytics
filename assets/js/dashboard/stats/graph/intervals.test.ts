@@ -1,6 +1,6 @@
 import { DEFAULT_SITE } from '../../../../test-utils/app-context-providers'
 import { ComparisonMode, DashboardPeriod } from '../../dashboard-time-periods'
-import { getDefaultInterval, validIntervals } from './interval-picker'
+import { getDefaultInterval, validIntervals } from './intervals'
 import dayjs from 'dayjs'
 
 const site = DEFAULT_SITE
