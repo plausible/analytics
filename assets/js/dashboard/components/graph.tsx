@@ -266,8 +266,7 @@ function InnerGraph<T extends GraphYValues>({
 
       for (const [i, d] of data.entries()) {
         const point =
-          points[i] ??
-          getPoint({ index: i, datum: d, xScale: x, yScale: y })
+          points[i] ?? getPoint({ index: i, datum: d, xScale: x, yScale: y })
         const dotForSeries = drawDot({
           svg,
           series,
