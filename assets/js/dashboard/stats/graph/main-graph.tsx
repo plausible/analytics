@@ -43,6 +43,7 @@ import {
 import { getMetricLabel } from '../metrics'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { hasConversionGoalFilter } from '../../util/filters'
+import { Interval } from './intervals'
 
 const height = 368
 const marginTop = 16
@@ -53,7 +54,7 @@ const hoverBuffer = 4
 
 type MainGraphData = MainGraphResponse & {
   period: DashboardPeriod
-  interval: string
+  interval: Interval
 }
 
 type MainGraphYValues = Readonly<
@@ -105,6 +106,8 @@ export const MainGraph = ({
     yMax,
     dateIsUnambiguous,
     yearIsUnambiguous,
+    mainPeriodLengthInDays,
+    mainPeriodLengthInMonths,
     settings,
     remappedDataInGraphFormat,
     gradients
@@ -215,6 +218,13 @@ export const MainGraph = ({
         ...comparisonSeriesStartEndLabels
       ]
     })
+    const mainPeriodStart = parseNaiveDate(data.query.date_range[0])
+    const mainPeriodEnd = parseNaiveDate(data.query.date_range[1])
+    const mainPeriodLengthInDays = mainPeriodEnd.diff(mainPeriodStart, 'days')
+    const mainPeriodLengthInMonths = mainPeriodEnd.diff(
+      mainPeriodStart,
+      'months'
+    )
 
     return {
       remappedData,
@@ -222,6 +232,8 @@ export const MainGraph = ({
       yMax,
       dateIsUnambiguous,
       yearIsUnambiguous,
+      mainPeriodLengthInDays,
+      mainPeriodLengthInMonths,
       settings,
       gradients
     }
@@ -272,7 +284,11 @@ export const MainGraph = ({
     setTooltip(initialTooltipState)
   }, [])
 
-  const showZoomToPeriod = ['month', 'day'].includes(interval)
+  const showZoomToPeriod = canZoomToPeriod(
+    interval,
+    mainPeriodLengthInDays,
+    mainPeriodLengthInMonths
+  )
   const selectedDatum = selectedIndex !== null && remappedData[selectedIndex]
 
   const zoomDate =
@@ -287,10 +303,10 @@ export const MainGraph = ({
         search: (currentSearch) => ({
           ...currentSearch,
           date,
-          period: {
-            month: DashboardPeriod.month,
-            day: DashboardPeriod.day
-          }[interval]
+          period:
+            interval === Interval.month
+              ? DashboardPeriod.month
+              : DashboardPeriod.day
         })
       })
     },
@@ -385,7 +401,7 @@ const MainGraphTooltip = ({
 }: {
   metric: Metric
   getFormattedValue: (value: MetricValue) => string
-  interval: string
+  interval: Interval
   period: DashboardPeriod
   shouldShowYear: boolean
   shouldShowDate: boolean
@@ -521,8 +537,7 @@ export const MainGraphContainer = React.forwardRef<
 type BucketLabelParams = {
   shouldShowYear: boolean
   shouldShowDate: boolean
-  /* "month" | "week" | "day" | "hour" | "minute" */
-  interval: string
+  interval: Interval
   period: DashboardPeriod
   bucketIndex: number
   totalBuckets: number
@@ -542,12 +557,12 @@ const getBucketLabel = (
 ) => {
   const parsedDate = parseNaiveDate(xValue)
   switch (interval) {
-    case 'month':
+    case Interval.month:
       return formatMonthYYYY(parsedDate)
-    case 'week':
-    case 'day':
+    case Interval.week:
+    case Interval.day:
       return formatDayShort(parsedDate, shouldShowYear)
-    case 'hour': {
+    case Interval.hour: {
       const time = formatTime(parsedDate, {
         use12HourClock: is12HourClock(),
         includeMinutes: false
@@ -557,7 +572,7 @@ const getBucketLabel = (
       }
       return time
     }
-    case 'minute': {
+    case Interval.minute: {
       if (period === DashboardPeriod.realtime) {
         const minutesAgo = totalBuckets - bucketIndex
         return `-${minutesAgo}m`
@@ -571,8 +586,6 @@ const getBucketLabel = (
       }
       return time
     }
-    default:
-      return ''
   }
 }
 
@@ -591,7 +604,7 @@ const getFullBucketLabel = (
 ) => {
   const parsedDate = parseNaiveDate(xValue)
   switch (interval) {
-    case 'month': {
+    case Interval.month: {
       const month = getBucketLabel(xValue, {
         shouldShowYear,
         shouldShowDate,
@@ -602,7 +615,7 @@ const getFullBucketLabel = (
       })
       return isPartial ? `Partial of ${month}` : month
     }
-    case 'week': {
+    case Interval.week: {
       const date = getBucketLabel(xValue, {
         shouldShowYear,
         shouldShowDate,
@@ -613,9 +626,9 @@ const getFullBucketLabel = (
       })
       return isPartial ? `Partial week of ${date}` : `Week of ${date}`
     }
-    case 'day':
+    case Interval.day:
       return formatDay(parsedDate, shouldShowYear)
-    case 'hour': {
+    case Interval.hour: {
       const time = formatTime(parsedDate, {
         use12HourClock: is12HourClock(),
         includeMinutes: false
@@ -625,7 +638,7 @@ const getFullBucketLabel = (
       }
       return time
     }
-    case 'minute': {
+    case Interval.minute: {
       if (period === DashboardPeriod.realtime) {
         const minutesAgo = totalBuckets - bucketIndex
         return minutesAgo === 1 ? `1 minute ago` : `${minutesAgo} minutes ago`
@@ -639,8 +652,6 @@ const getFullBucketLabel = (
       }
       return time
     }
-    default:
-      return ''
   }
 }
 
@@ -670,6 +681,17 @@ function isDateUnambiguous({
     .every((item, _index, items) =>
       parseNaiveDate(items[0]).isSame(parseNaiveDate(item), 'day')
     )
+}
+
+function canZoomToPeriod(
+  interval: Interval,
+  mainPeriodLengthInDays: number,
+  mainPeriodLengthInMonths: number
+) {
+  return (
+    (interval === Interval.day && mainPeriodLengthInDays > 1) ||
+    (interval === Interval.month && mainPeriodLengthInMonths > 1)
+  )
 }
 
 const paletteByTheme = {

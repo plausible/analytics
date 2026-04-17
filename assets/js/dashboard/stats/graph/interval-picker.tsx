@@ -18,11 +18,11 @@ import {
 } from './intervals'
 
 const INTERVAL_LABELS: Record<Interval, string> = {
-  minute: 'Minutes',
-  hour: 'Hours',
-  day: 'Days',
-  week: 'Weeks',
-  month: 'Months'
+  [Interval.minute]: 'Minutes',
+  [Interval.hour]: 'Hours',
+  [Interval.day]: 'Days',
+  [Interval.week]: 'Weeks',
+  [Interval.month]: 'Months'
 }
 
 function getStoredInterval(period: string, domain: string): string | null {

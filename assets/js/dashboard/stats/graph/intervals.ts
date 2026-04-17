@@ -4,7 +4,13 @@ import { Dayjs } from 'dayjs'
 import { ComparisonMode, DashboardPeriod } from '../../dashboard-time-periods'
 import { dateForSite, nowForSite } from '../../util/date'
 
-export type Interval = 'minute' | 'hour' | 'day' | 'week' | 'month'
+export enum Interval {
+  minute = 'minute',
+  hour = 'hour',
+  day = 'day',
+  week = 'week',
+  month = 'month'
+}
 
 export type GetIntervalProps = { site: PlausibleSite } & Pick<
   DashboardState,
@@ -16,26 +22,26 @@ type DayjsRange = { from: Dayjs; to: Dayjs }
 type FixedPeriod = Exclude<DashboardPeriod, 'custom' | 'all'>
 
 const VALID_INTERVALS_BY_FIXED_PERIOD: Record<FixedPeriod, Interval[]> = {
-  realtime: ['minute'],
-  realtime_30m: ['minute'],
-  day: ['minute', 'hour'],
-  '24h': ['minute', 'hour'],
-  '7d': ['hour', 'day'],
-  '28d': ['day', 'week'],
-  '30d': ['day', 'week'],
-  '91d': ['day', 'week', 'month'],
-  month: ['day', 'week'],
-  '6mo': ['day', 'week', 'month'],
-  '12mo': ['day', 'week', 'month'],
-  year: ['day', 'week', 'month']
+  realtime: [Interval.minute],
+  realtime_30m: [Interval.minute],
+  day: [Interval.minute, Interval.hour],
+  '24h': [Interval.minute, Interval.hour],
+  '7d': [Interval.hour, Interval.day],
+  '28d': [Interval.day, Interval.week],
+  '30d': [Interval.day, Interval.week],
+  '91d': [Interval.day, Interval.week, Interval.month],
+  month: [Interval.day, Interval.week],
+  '6mo': [Interval.day, Interval.week, Interval.month],
+  '12mo': [Interval.day, Interval.week, Interval.month],
+  year: [Interval.day, Interval.week, Interval.month]
 }
 
 const INTERVAL_COARSENESS: Record<Interval, number> = {
-  minute: 0,
-  hour: 1,
-  day: 2,
-  week: 3,
-  month: 4
+  [Interval.minute]: 0,
+  [Interval.hour]: 1,
+  [Interval.day]: 2,
+  [Interval.week]: 3,
+  [Interval.month]: 4
 }
 
 function max_coarseness(intervals: Interval[]): number {
@@ -120,22 +126,22 @@ export function getDefaultInterval({
   }
 
   if (period === 'all') {
-    return mainIntervals.includes('day') ? 'day' : 'month'
+    return mainIntervals.includes(Interval.day) ? Interval.day : Interval.month
   }
 
   switch (period) {
     case 'day':
-      return 'hour'
+      return Interval.hour
     case '24h':
-      return 'hour'
+      return Interval.hour
     case '7d':
-      return 'day'
+      return Interval.day
     case '6mo':
-      return 'month'
+      return Interval.month
     case '12mo':
-      return 'month'
+      return Interval.month
     case 'year':
-      return 'month'
+      return Interval.month
     default:
       return VALID_INTERVALS_BY_FIXED_PERIOD[period as FixedPeriod][0]
   }
@@ -143,15 +149,15 @@ export function getDefaultInterval({
 
 function validIntervalsForCustomPeriod({ to, from }: DayjsRange): Interval[] {
   if (to.diff(from, 'days') < 7) {
-    return ['day']
+    return [Interval.day]
   }
   if (to.diff(from, 'months') < 1) {
-    return ['day', 'week']
+    return [Interval.day, Interval.week]
   }
   if (to.diff(from, 'months') < 12) {
-    return ['day', 'week', 'month']
+    return [Interval.day, Interval.week, Interval.month]
   }
-  return ['week', 'month']
+  return [Interval.week, Interval.month]
 }
 
 function validIntervalsForAllTimePeriod(site: PlausibleSite): Interval[] {
@@ -163,10 +169,10 @@ function validIntervalsForAllTimePeriod(site: PlausibleSite): Interval[] {
 
 function defaultForCustomPeriod({ from, to }: DayjsRange): Interval {
   if (to.diff(from, 'days') < 30) {
-    return 'day'
+    return Interval.day
   } else if (to.diff(from, 'months') < 6) {
-    return 'week'
+    return Interval.week
   } else {
-    return 'month'
+    return Interval.month
   }
 }
