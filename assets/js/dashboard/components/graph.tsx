@@ -226,6 +226,7 @@ function InnerGraph<T extends GraphYValues>({
       })
     }
 
+    const points: Point<T>[] = []
     for (const [seriesIndex, series] of settings.entries()) {
       if (series.underline) {
         drawAreaUnderLine({
@@ -262,20 +263,23 @@ function InnerGraph<T extends GraphYValues>({
           })
         }
       }
-    }
 
-    const points: Point<T>[] = data.map((d, index) => {
-      const xValue = x(index)
-      const yValues: T = d.values.map((v) =>
-        v !== null ? y(v) : null
-      ) as unknown as T
-      const dots = drawDots({ svg, settings, x: xValue, yValues })
-      return {
-        x: xValue,
-        values: yValues,
-        dots
+      for (const [i, d] of data.entries()) {
+        const point =
+          points[i] ??
+          getPoint({ index: i, datum: d, xScale: x, yScale: y })
+        const dotForSeries = drawDot({
+          svg,
+          series,
+          x: point.x,
+          y: point.values[seriesIndex]
+        })
+        points[i] = {
+          ...point,
+          dots: [...point.dots, dotForSeries] as { [K in keyof T]: SelectedDot }
+        }
       }
-    })
+    }
 
     pointsRef.current = points
 
@@ -457,9 +461,11 @@ function InnerGraph<T extends GraphYValues>({
 
   useEffect(() => {
     pointsRef.current?.forEach(({ dots }, index) =>
-      dots.attr(
-        'data-active',
-        highlightedIndex !== null && index === highlightedIndex ? '' : null
+      dots.forEach((g) =>
+        g.attr(
+          'data-active',
+          highlightedIndex !== null && index === highlightedIndex ? '' : null
+        )
       )
     )
   }, [highlightedIndex])
@@ -762,29 +768,46 @@ function drawLine<T extends GraphYValues>({
     .attr('d', line)
 }
 
-function drawDots<T extends GraphYValues>({
+function drawDot({
   svg,
-  settings,
+  series,
   x,
-  yValues
+  y
 }: {
   svg: SelectedSVG
-  settings: { [K in keyof T]: SeriesConfig }
+  series: SeriesConfig
   x: number
-  yValues: T
-}): SelectedDots {
-  const dotsForX = svg.append('g').attr('class', 'group')
-  for (const [seriesIndex, series] of settings.entries()) {
-    if (series.dot && yValues[seriesIndex] !== null) {
-      dotsForX
-        .append('circle')
-        .attr('r', 2.5)
-        .attr('class', series.dot.dotClassName)
-        .attr('transform', `translate(${x},${yValues[seriesIndex]})`)
-    }
+  y: number | null
+}): SelectedDot {
+  const group = svg.append('g').attr('class', 'group')
+  if (series.dot && y !== null) {
+    group
+      .append('circle')
+      .attr('r', 2.5)
+      .attr('class', series.dot.dotClassName)
+      .attr('transform', `translate(${x},${y})`)
   }
+  return group
+}
 
-  return dotsForX
+function getPoint<T extends GraphYValues>({
+  index,
+  datum,
+  xScale,
+  yScale
+}: {
+  index: number
+  datum: Datum<T>
+  xScale: d3.ScaleLinear<number, number, never>
+  yScale: d3.ScaleLinear<number, number, never>
+}): Point<T> {
+  return {
+    x: xScale(index),
+    values: datum.values.map((v): number | null =>
+      v !== null ? yScale(v) : null
+    ) as unknown as T,
+    dots: [] as Point<T>['dots']
+  }
 }
 
 function getClosestIndexToPointer<T extends GraphYValues>(
@@ -812,7 +835,7 @@ type XPos = number
 type Point<T extends GraphYValues> = {
   x: XPos
   values: T
-  dots: SelectedDots
+  dots: { [K in keyof T]: SelectedDot }
 }
 
 export type SeriesConfig = {
@@ -835,4 +858,4 @@ export type PointerHandler<T extends GraphYValues> = (opts: {
 }) => void
 
 type SelectedSVG = d3.Selection<SVGSVGElement, unknown, null, undefined>
-type SelectedDots = d3.Selection<SVGGElement, unknown, null, undefined>
+type SelectedDot = d3.Selection<SVGGElement, unknown, null, undefined>
