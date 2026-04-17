@@ -21,7 +21,8 @@ const expectedBaseInclude: StatsQuery['include'] = {
   imports_meta: true,
   time_labels: false,
   partial_time_labels: false,
-  empty_metrics: false
+  empty_metrics: false,
+  present_index: false
 }
 
 const expectedRealtimeVisitorsQuery: StatsQuery = {
