@@ -26,7 +26,7 @@ export const GraphTooltipWrapper = ({
   const xOffsetFromCursor = 12
   const yOffsetFromCursor = 24
   const [measuredWidth, setMeasuredWidth] = useState(minWidth)
-  // center tooltip above the cursor, clamped to prevent left/right overflow
+  // clamp to prevent left/right overflow
   const rawLeft = x + xOffsetFromCursor
   const tooltipLeft = Math.max(0, Math.min(rawLeft, maxX - measuredWidth))
 
