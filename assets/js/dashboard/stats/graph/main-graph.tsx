@@ -221,10 +221,9 @@ export const MainGraph = ({
     const mainPeriodStart = parseNaiveDate(data.query.date_range[0])
     const mainPeriodEnd = parseNaiveDate(data.query.date_range[1])
     const mainPeriodLengthInDays = mainPeriodEnd.diff(mainPeriodStart, 'days')
-    const mainPeriodLengthInMonths = mainPeriodEnd.diff(
-      mainPeriodStart,
-      'months'
-    )
+    const mainPeriodLengthInMonths = mainPeriodEnd
+      .startOf('month')
+      .diff(mainPeriodStart.startOf('month'), 'months')
 
     return {
       remappedData,
@@ -689,8 +688,8 @@ function canZoomToPeriod(
   mainPeriodLengthInMonths: number
 ) {
   return (
-    (interval === Interval.day && mainPeriodLengthInDays > 1) ||
-    (interval === Interval.month && mainPeriodLengthInMonths > 1)
+    (interval === Interval.day && mainPeriodLengthInDays > 0) ||
+    (interval === Interval.month && mainPeriodLengthInMonths > 0)
   )
 }
 

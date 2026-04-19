@@ -44,6 +44,70 @@ const INTERVAL_COARSENESS: Record<Interval, number> = {
   [Interval.month]: 4
 }
 
+/**
+ * Returns the intervals available for the current dashboard state.
+ *
+ * When a custom comparison period is active, the valid intervals for both the
+ * main period and the comparison period are computed independently and the
+ * coarser set is returned — ensuring the chosen interval is granular enough to
+ * be meaningful for whichever date range is longer. For all other comparison
+ * modes the valid intervals are determined solely by the main period.
+ */
+export function validIntervals({
+  site,
+  period,
+  to,
+  from,
+  comparison,
+  compare_to,
+  compare_from
+}: GetIntervalProps): Interval[] {
+  const mainIntervals = validIntervalsForMainPeriod(site, period, from, to)
+  const comparisonIntervals = validIntervalsForCustomComparison(
+    comparison,
+    compare_from,
+    compare_to
+  )
+  return comparisonIntervals
+    ? coarser(mainIntervals, comparisonIntervals)
+    : mainIntervals
+}
+
+/**
+ * Returns the default interval for the current dashboard state.
+ *
+ * The default is always derived from the main period. The only exception is
+ * when a custom comparison period is active and that period does not support
+ * the main-period default — in that case the default falls back to whatever is
+ * appropriate for the comparison date range.
+ */
+export function getDefaultInterval({
+  site,
+  period,
+  to,
+  from,
+  comparison,
+  compare_to,
+  compare_from
+}: GetIntervalProps): Interval {
+  const defaultForMain = defaultForMainPeriod(site, period, from, to)
+
+  const validComparisonIntervals = validIntervalsForCustomComparison(
+    comparison,
+    compare_from,
+    compare_to
+  )
+
+  if (
+    !validComparisonIntervals ||
+    validComparisonIntervals.includes(defaultForMain)
+  ) {
+    return defaultForMain
+  } else {
+    return defaultForCustomPeriod({ from: compare_from!, to: compare_to! })
+  }
+}
+
 function max_coarseness(intervals: Interval[]): number {
   return Math.max(...intervals.map((i) => INTERVAL_COARSENESS[i]))
 }
@@ -78,55 +142,19 @@ function validIntervalsForCustomComparison(
   return null
 }
 
-export function validIntervals({
-  site,
-  period,
-  to,
-  from,
-  comparison,
-  compare_to,
-  compare_from
-}: GetIntervalProps): Interval[] {
-  const mainIntervals = validIntervalsForMainPeriod(site, period, from, to)
-  const comparisonIntervals = validIntervalsForCustomComparison(
-    comparison,
-    compare_from,
-    compare_to
-  )
-  return comparisonIntervals
-    ? coarser(mainIntervals, comparisonIntervals)
-    : mainIntervals
-}
-
-export function getDefaultInterval({
-  site,
-  period,
-  to,
-  from,
-  comparison,
-  compare_to,
-  compare_from
-}: GetIntervalProps): Interval {
-  const mainIntervals = validIntervalsForMainPeriod(site, period, from, to)
-  const comparisonIntervals = validIntervalsForCustomComparison(
-    comparison,
-    compare_from,
-    compare_to
-  )
-
-  if (
-    comparisonIntervals &&
-    max_coarseness(comparisonIntervals) > max_coarseness(mainIntervals)
-  ) {
-    return defaultForCustomPeriod({ from: compare_from!, to: compare_to! })
-  }
-
+function defaultForMainPeriod(
+  site: PlausibleSite,
+  period: DashboardPeriod,
+  from: Dayjs | null,
+  to: Dayjs | null
+): Interval {
   if (period === DashboardPeriod.custom && from && to) {
     return defaultForCustomPeriod({ from, to })
   }
-
   if (period === 'all') {
-    return mainIntervals.includes(Interval.day) ? Interval.day : Interval.month
+    return validIntervalsForAllTimePeriod(site).includes(Interval.day)
+      ? Interval.day
+      : Interval.month
   }
 
   switch (period) {
@@ -148,8 +176,11 @@ export function getDefaultInterval({
 }
 
 function validIntervalsForCustomPeriod({ to, from }: DayjsRange): Interval[] {
+  if (to.diff(from, 'days') < 1) {
+    return [Interval.minute, Interval.hour]
+  }
   if (to.diff(from, 'days') < 7) {
-    return [Interval.day]
+    return [Interval.hour, Interval.day]
   }
   if (to.diff(from, 'months') < 1) {
     return [Interval.day, Interval.week]
@@ -168,7 +199,9 @@ function validIntervalsForAllTimePeriod(site: PlausibleSite): Interval[] {
 }
 
 function defaultForCustomPeriod({ from, to }: DayjsRange): Interval {
-  if (to.diff(from, 'days') < 30) {
+  if (to.diff(from, 'days') < 1) {
+    return Interval.hour
+  } else if (to.diff(from, 'days') < 30) {
     return Interval.day
   } else if (to.diff(from, 'months') < 6) {
     return Interval.week

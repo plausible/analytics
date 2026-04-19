@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Popover, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -8,8 +8,6 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { BlurMenuButtonOnEscape, popover } from '../../components/popover'
-import { DashboardState } from '../../dashboard-state'
-import { ComparisonMode } from '../../dashboard-time-periods'
 import {
   Interval,
   GetIntervalProps,
@@ -38,38 +36,30 @@ function getStoredInterval(period: string, domain: string): string | null {
 function storeInterval(
   period: string,
   domain: string,
-  interval: Interval,
-  comparison: DashboardState['comparison']
+  interval: Interval
 ): void {
-  // Skip storing interval selections when in custom comparison mode
-  // as it affects the set of valid intervals.
-  if (comparison !== ComparisonMode.custom) {
-    storage.setItem(`interval__${period}__${domain}`, interval)
-  }
+  storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
 export const useStoredInterval = (props: GetIntervalProps) => {
-  const { period, site, comparison } = props
-  const availableIntervals = validIntervals(props)
+  const { period, from, to, site, comparison, compare_from, compare_to } = props
 
-  const isValid = (interval: string | null): interval is Interval =>
-    !!interval && (availableIntervals as string[]).includes(interval)
+  // Dayjs objects are new references on every render, so we
+  // use valueOf() (ms since epoch) to get stable primitive
+  // values for dependency arrays.
+  const customFrom = from?.valueOf()
+  const customTo = to?.valueOf()
+  const customComparisonFrom = compare_from?.valueOf()
+  const customComparisonTo = compare_to?.valueOf()
 
-  const storedInterval = getStoredInterval(period, site.domain)
-
-  const [selectedInterval, setSelectedInterval] = useState<string | null>(null)
-
-  // Dayjs objects are new references on every render, so
-  // we use valueOf() (ms since epoch) to get stable
-  // primitive values for the effect dependency array.
-  const customFrom = props.from?.valueOf()
-  const customTo = props.to?.valueOf()
-  const customComparisonFrom = props.compare_from?.valueOf()
-  const customComparisonTo = props.compare_to?.valueOf()
-
-  useEffect(() => {
-    setSelectedInterval(null)
+  const { availableIntervals, storableIntervals } = useMemo(() => {
+    return {
+      availableIntervals: validIntervals(props),
+      storableIntervals: validIntervals({ ...props, comparison: null })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    site,
     period,
     customFrom,
     customTo,
@@ -78,12 +68,38 @@ export const useStoredInterval = (props: GetIntervalProps) => {
     customComparisonTo
   ])
 
+  const isValid = useCallback(
+    (interval: string | null): interval is Interval =>
+      !!interval && (availableIntervals as string[]).includes(interval),
+    [availableIntervals]
+  )
+
+  // We skip storing interval selections that are only available
+  // due to a custom comparison period. E.g. even though `month`
+  // interval is available when comparing today with a whole year,
+  // we shouldn't store `interval__day__site.com = month`.
+  const isStorable = useCallback(
+    (interval: string | null): interval is Interval =>
+      !!interval && (storableIntervals as string[]).includes(interval),
+    [storableIntervals]
+  )
+
+  const storedInterval = getStoredInterval(period, site.domain)
+
+  const [selectedInterval, setSelectedInterval] = useState<string | null>(null)
+
+  useEffect(() => {
+    setSelectedInterval(null)
+  }, [availableIntervals])
+
   const onIntervalClick = useCallback(
     (interval: Interval) => {
-      storeInterval(period, site.domain, interval, comparison)
+      if (isStorable(interval)) {
+        storeInterval(period, site.domain, interval)
+      }
       setSelectedInterval(interval)
     },
-    [period, site.domain, comparison]
+    [period, site, isStorable]
   )
 
   return {

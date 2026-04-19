@@ -63,19 +63,19 @@ describe(`${validIntervals.name}`, () => {
   })
 
   describe('custom period', () => {
-    it('returns [day] for a range of 6 days', () => {
+    it('returns [minute, hour] for one day', () => {
       expect(
         validIntervals({
           site,
           period: DashboardPeriod.custom,
           from: dayjs('2024-01-01'),
-          to: dayjs('2024-01-07'),
+          to: dayjs('2024-01-01'),
           ...noComparison
         })
-      ).toEqual(['day'])
+      ).toEqual(['minute', 'hour'])
     })
 
-    it('returns [day, week] for a range of 7 days', () => {
+    it('returns [hour, day] for a range of 7 days', () => {
       expect(
         validIntervals({
           site,
@@ -84,7 +84,19 @@ describe(`${validIntervals.name}`, () => {
           to: dayjs('2024-01-07'),
           ...noComparison
         })
-      ).toEqual(['day'])
+      ).toEqual(['hour', 'day'])
+    })
+
+    it('returns [day, week] for a range of 8 days', () => {
+      expect(
+        validIntervals({
+          site,
+          period: DashboardPeriod.custom,
+          from: dayjs('2024-01-01'),
+          to: dayjs('2024-01-08'),
+          ...noComparison
+        })
+      ).toEqual(['day', 'week'])
     })
 
     it('returns [day, week] for a range of exactly one month', () => {
@@ -136,8 +148,8 @@ describe(`${validIntervals.name}`, () => {
     })
   })
 
-  describe('custom main or comparison period', () => {
-    it('uses custom comparison range when it is longer than the custom main range', () => {
+  describe('custom main vs comparison period', () => {
+    it('uses custom comparison range when it is coarser than the custom main range', () => {
       expect(
         validIntervals({
           site,
@@ -151,7 +163,7 @@ describe(`${validIntervals.name}`, () => {
       ).toEqual(['week', 'month'])
     })
 
-    it('uses custom main range when it is longer than the custom comparison range', () => {
+    it('uses custom main range when it is coarser than the custom comparison range', () => {
       expect(
         validIntervals({
           site,
@@ -165,7 +177,7 @@ describe(`${validIntervals.name}`, () => {
       ).toEqual(['week', 'month'])
     })
 
-    it('uses custom comparison range it is longer than the fixed main period', () => {
+    it('uses custom comparison range when it is coarser than the fixed main period', () => {
       expect(
         validIntervals({
           site,
@@ -179,7 +191,7 @@ describe(`${validIntervals.name}`, () => {
       ).toEqual(['week', 'month'])
     })
 
-    it('uses fixed main period when it is longer than custom comparison period', () => {
+    it('uses fixed main period when it is coarser than the custom comparison period', () => {
       expect(
         validIntervals({
           site,
@@ -247,6 +259,18 @@ describe(`${getDefaultInterval.name}`, () => {
   })
 
   describe('custom period', () => {
+    it('returns hour for a single date', () => {
+      expect(
+        getDefaultInterval({
+          site,
+          period: DashboardPeriod.custom,
+          from: dayjs('2024-01-01'),
+          to: dayjs('2024-01-01'),
+          ...noComparison
+        })
+      ).toBe('hour')
+    })
+
     it('returns day for a range under 30 days', () => {
       expect(
         getDefaultInterval({
@@ -271,7 +295,7 @@ describe(`${getDefaultInterval.name}`, () => {
       ).toBe('week')
     })
 
-    it('returns month for a range of exactly 6 months', () => {
+    it('returns month for a range that barely spans 7 months', () => {
       expect(
         getDefaultInterval({
           site,
@@ -283,7 +307,21 @@ describe(`${getDefaultInterval.name}`, () => {
       ).toBe('month')
     })
 
-    it('uses custom comparison range when it is longer than the fixed main period', () => {
+    it('returns day for a fixed 7d period even when comparing with a whole year', () => {
+      expect(
+        getDefaultInterval({
+          site,
+          period: DashboardPeriod['7d'],
+          from: null,
+          to: null,
+          comparison: ComparisonMode.custom,
+          compare_from: dayjs('2024-01-01'),
+          compare_to: dayjs('2024-12-01')
+        })
+      ).toBe('day')
+    })
+
+    it('returns default for comparison range instead when default for main is not appropriate', () => {
       expect(
         getDefaultInterval({
           site,
@@ -292,21 +330,7 @@ describe(`${getDefaultInterval.name}`, () => {
           to: null,
           comparison: ComparisonMode.custom,
           compare_from: dayjs('2024-01-01'),
-          compare_to: dayjs('2024-12-01')
-        })
-      ).toBe('month')
-    })
-
-    it('uses main custom period when it is longer than the custom comparison period', () => {
-      expect(
-        getDefaultInterval({
-          site,
-          period: DashboardPeriod.custom,
-          from: dayjs('2023-01-01'),
-          to: dayjs('2024-12-31'),
-          comparison: ComparisonMode.custom,
-          compare_from: dayjs('2024-01-01'),
-          compare_to: dayjs('2024-01-02')
+          compare_to: dayjs('2024-12-31')
         })
       ).toBe('month')
     })
