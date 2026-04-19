@@ -17,7 +17,7 @@ import { ColumnConfiguraton } from '../../components/table-legacy'
 import { BreakdownTable } from './breakdown-table-legacy'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
-import { SharedReportProps } from '../reports/list'
+import { SharedReportProps } from '../reports/list-legacy'
 import { hasConversionGoalFilter } from '../../util/filters'
 
 export type ReportInfo = {
