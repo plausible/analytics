@@ -2,6 +2,12 @@ import { Metric as PublicApiMetric } from '../../types/query-api'
 
 export type Metric = PublicApiMetric | 'total_visitors' | 'exit_rate'
 
+const NOT_SORTABLE = ['total_visitors']
+
+export const isSortable = (metric: Metric): boolean => {
+  return !NOT_SORTABLE.includes(metric)
+}
+
 export const getMetricLabel = (
   metric: Metric,
   { hasConversionGoalFilter }: { hasConversionGoalFilter: boolean }

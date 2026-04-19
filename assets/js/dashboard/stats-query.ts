@@ -1,8 +1,20 @@
 import { Metric } from './stats/metrics'
-import { DashboardState, Filter } from './dashboard-state'
+import {
+  DashboardState,
+  FilterOperator,
+  FilterKey,
+  FilterClause
+} from './dashboard-state'
+import { OrderByEntry } from '../types/query-api'
 import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'
 import { remapToApiFilters } from './util/filters'
+
+export type FilterModifiers = { case_sensitive?: boolean }
+
+export type ApiFilter =
+  | [FilterOperator, FilterKey, FilterClause[]]
+  | [FilterOperator, FilterKey, FilterClause[], FilterModifiers]
 
 type DateRange = DashboardPeriod | [string, string]
 type IncludeCompare =
@@ -26,15 +38,24 @@ export type ReportParams = {
   metrics: Metric[]
   dimensions?: string[]
   include?: Partial<QueryInclude>
+  order_by?: OrderByEntry[]
 }
 
 export type StatsQuery = {
   date_range: DateRange
   relative_date: string | null
-  filters: Filter[]
+  filters: ApiFilter[]
   dimensions: string[]
   metrics: Metric[]
   include: QueryInclude
+  order_by?: OrderByEntry[] | null
+}
+
+export function addFilter(
+  statsQuery: StatsQuery,
+  filter: ApiFilter
+): StatsQuery {
+  return { ...statsQuery, filters: [...statsQuery.filters, filter] }
 }
 
 export function createStatsQuery(
@@ -47,6 +68,7 @@ export function createStatsQuery(
     dimensions: reportParams.dimensions || [],
     metrics: reportParams.metrics,
     filters: remapToApiFilters(dashboardState.filters),
+    order_by: reportParams.order_by || null,
     include: {
       imports: dashboardState.with_imported,
       imports_meta: reportParams.include?.imports_meta || false,
