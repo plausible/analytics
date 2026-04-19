@@ -1,18 +1,34 @@
-import React, { useState, useEffect, useCallback, ReactNode } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import FlipMove from 'react-flip-move'
-
 import FadeIn from '../../fade-in'
-import Bar from '../bar'
 import LazyLoader from '../../components/lazy-loader'
 import { trimURL } from '../../util/url'
-import {
-  isRealTimeDashboard,
-  hasConversionGoalFilter
-} from '../../util/filters'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import { Metric } from './metrics'
+import { useSiteContext } from '../../site-context'
+import { usePaginatedQueryAPI } from '../../hooks/api-client'
+import { createStatsQuery } from '../../stats-query'
+import type { StatsQuery } from '../../stats-query'
+import { Metric, getBreakdownMetricLabel } from '../metrics'
+import {
+  ColumnConfiguration,
+  ExternalLinkIcon,
+  MetricValueTooltipContent,
+  SharedBreakdownReportProps,
+  formatDateRangeLabel,
+  useBodyPortalRef,
+  extractMetricValue
+} from '../breakdowns'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
-import { BreakdownResultMeta } from '../../dashboard-state'
+import * as api from '../../api'
+import type { QueryResultRow, QueryResultQuery } from '../../api'
+import classNames from 'classnames'
+import { Tooltip } from '../../util/tooltip'
+import { ChangeArrow } from './change-arrow'
+import { MetricFormatterShort, MetricFormatterLong } from './metric-formatter'
+import {
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356
@@ -20,370 +36,410 @@ const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT =
   (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
-const COL_MIN_WIDTH = 70
 
-function ExternalLink<T>({
-  item,
-  getExternalLinkUrl,
-  isTapped
-}: {
-  item: T
-  getExternalLinkUrl?: (item: T) => string
-  isTapped?: boolean
-}) {
-  const dest = getExternalLinkUrl && getExternalLinkUrl(item)
-  if (dest) {
-    const className = isTapped
-      ? 'visible md:invisible md:group-hover/row:visible'
-      : 'invisible md:group-hover/row:visible'
+const MAX_DIMENSION_LENGTH = 70
 
-    return (
-      <a target="_blank" rel="noreferrer" href={dest} className={className}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          className="inline size-3.5 mb-0.5 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-        >
-          <path
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M9 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 12l9-9-.303.303M14 3h7v7"
-          />
-        </svg>
-      </a>
-    )
-  }
+const DEFAULT_METRIC_COLUMN_WIDTH = 'w-16 min-w-16'
+const VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH = 'w-32 min-w-32'
 
-  return null
-}
+const BAR_METRIC = 'visitors'
 
-export interface SharedReportProps<
-  TListItem extends Record<string, unknown> = Record<string, unknown>,
-  TResponse = { results: TListItem[]; meta: BreakdownResultMeta }
-> {
-  metrics: Metric[]
-  /** A function that takes a list item and returns the filter
-   *    that should be applied when the list item is clicked. All existing filters matching prefix
-   *    are removed. If a list item is not supposed to be clickable, this function should
-   *    return `null` for that list item. */
-  getFilterInfo: (item: TListItem) => FilterInfo | null
-  /** A function that takes a list item and returns the HTML of an icon */
-  renderIcon?: (item: TListItem) => ReactNode
-  /** A function that takes a list item and returns an external URL
-   *     to navigate to. If this prop is given, an additional icon is rendered upon hovering
-   *     the entry. */
-  getExternalLinkUrl?: (item: TListItem) => string
-  /** A function that defines the data
-   *    to be rendered, and should return a list of objects under a `results` key. Think of
-   *    these objects as rows. The number of columns that are **actually rendered** is also
-   *    configurable through the `metrics` prop, which also defines the keys under which
-   *    column values are read, and how they're rendered. */
-  fetchData: () => Promise<TResponse>
-  afterFetchData?: (response: TResponse) => void
-  afterFetchNextPage?: (response: TResponse) => void
-}
-
-type ListReportProps = {
-  /** What each entry in the list represents (for UI only). */
-  keyLabel: string
-  metrics: Metric[]
-  colMinWidth?: number
-  /** Function with additional action to be taken when a list entry is clicked. */
-  onClick?: () => void
-  /** Color of the comparison bars in light-mode. */
-  color?: string
-}
-
-/**
- * @returns {HTMLElement} Table of metrics, in the following format:
- * | keyLabel           | METRIC_1.renderLabel(dashboardState) | METRIC_2.renderLabel(dashboardState) | ...
- * |--------------------|--------------------------------------|--------------------------------------| ---
- * | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]             | LISTITEM_1[METRIC_2.key]             | ...
- * | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]             | LISTITEM_2[METRIC_2.key]             | ...
- */
-export default function ListReport<
-  TListItem extends Record<string, unknown> & { name: string }
->({
-  keyLabel,
+export function IndexBreakdown({
   metrics,
-  colMinWidth = COL_MIN_WIDTH,
-  afterFetchData,
-  onClick,
+  dimensions,
   color,
   getFilterInfo,
-  renderIcon,
   getExternalLinkUrl,
-  fetchData
-}: Omit<SharedReportProps<TListItem>, 'afterFetchNextPage'> & ListReportProps) {
+  dimensionLabel,
+  afterFetchData,
+  metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
+}: SharedBreakdownReportProps & { color: string; metricColumnWidth?: string }) {
+  const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
-  const [state, setState] = useState<{
-    loading: boolean
-    list: TListItem[] | null
-    meta: BreakdownResultMeta | null
-  }>({ loading: true, list: null, meta: null })
   const [visible, setVisible] = useState(false)
+  const [query, setQuery] = useState<QueryResultQuery | null>(null)
+
+  const statsQuery: StatsQuery = useMemo(
+    () => createStatsQuery(dashboardState, { metrics: metrics, dimensions }),
+    [dashboardState, metrics, dimensions]
+  )
+
+  const handleAfterFetchData = useCallback(
+    (response: api.QueryApiResponse) => {
+      setQuery(response.query)
+      afterFetchData?.(response)
+    },
+    [afterFetchData]
+  )
+
+  const apiState = usePaginatedQueryAPI({
+    site,
+    statsQuery,
+    afterFetchData: handleAfterFetchData,
+    pageSize: MAX_ITEMS,
+    enabled: visible
+  })
+
+  const barMetricIndex = query
+    ? query.metrics.findIndex((m) => m === BAR_METRIC)
+    : null
+
+  const barMaxValue = useMemo(() => {
+    const rows = apiState.data?.pages?.[0] ?? []
+    return barMetricIndex === null
+      ? null
+      : Math.max(...rows.map((r) => r.metrics[barMetricIndex] as number))
+  }, [apiState.data, barMetricIndex])
+
+  const metricLabelFor = useCallback(
+    (metric: Metric): string => {
+      return getBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+        isRealtime: isRealTimeDashboard(dashboardState),
+        dimensions: dimensions
+      })
+    },
+    [dashboardState, dimensions]
+  )
+
+  const columns = useMemo((): ColumnConfiguration<QueryResultRow>[] | null => {
+    if (!query || barMetricIndex === null || barMaxValue === null) return null
+
+    // Only render columns for metrics the API actually returned. Also,
+    // percentage is not its own column —- it's shown inline in the
+    // visitors cell instead.
+    const filteredMetrics = query.metrics.filter((m) => m !== 'percentage')
+
+    const hasPercentage = query.metrics.includes('percentage')
+    const isVisitorsWithPercentageCell = (m: Metric) =>
+      hasPercentage && m === 'visitors'
+
+    return [
+      {
+        key: 'dimension',
+        renderLabel: () => dimensionLabel,
+        renderCell: (row, isActive) => (
+          <DimensionCell
+            row={row}
+            color={color}
+            barWidthPercent={
+              ((row.metrics[barMetricIndex] as number) / barMaxValue) * 100
+            }
+            getFilterInfo={getFilterInfo}
+            getExternalLinkUrl={getExternalLinkUrl}
+            isActive={isActive}
+          />
+        ),
+        align: 'left'
+      },
+      ...filteredMetrics.map(
+        (metric): ColumnConfiguration<QueryResultRow> => ({
+          key: metric,
+          renderLabel: () => metricLabelFor(metric),
+          renderCell: (row, isActive) => {
+            if (isVisitorsWithPercentageCell(metric)) {
+              return (
+                <VisitorsWithPercentageCell
+                  row={row}
+                  query={query}
+                  isActive={isActive}
+                />
+              )
+            } else {
+              return (
+                <MetricValueCell
+                  row={row}
+                  metric={metric}
+                  metricLabel={metricLabelFor(metric)}
+                  query={query}
+                />
+              )
+            }
+          },
+          width: isVisitorsWithPercentageCell(metric)
+            ? VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH
+            : metricColumnWidth,
+          align: 'right'
+        })
+      )
+    ]
+  }, [
+    dimensionLabel,
+    color,
+    barMetricIndex,
+    metricLabelFor,
+    barMaxValue,
+    query,
+    getFilterInfo,
+    getExternalLinkUrl,
+    metricColumnWidth
+  ])
+
+  return (
+    <LazyLoader onVisible={() => setVisible(true)}>
+      <IndexBreakdownRenderer apiState={apiState} columns={columns} />
+    </LazyLoader>
+  )
+}
+
+function DimensionCell({
+  row,
+  color,
+  barWidthPercent,
+  getFilterInfo,
+  getExternalLinkUrl,
+  isActive
+}: {
+  row: QueryResultRow
+  color: string
+  barWidthPercent: number
+  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
+  getExternalLinkUrl?: (row: QueryResultRow) => string | null
+  isActive?: boolean
+}) {
+  const externalUrl = getExternalLinkUrl?.(row)
+  return (
+    <div className="w-full h-full relative">
+      <div
+        className={`absolute top-0 left-0 h-full rounded-sm ${color} dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`}
+        style={{ width: `${barWidthPercent}%` }}
+      />
+      <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
+        <DrilldownLink
+          filterInfo={getFilterInfo(row)}
+          extraClass="max-w-max w-full flex items-center md:overflow-hidden"
+        >
+          <span className="w-full md:truncate">
+            {trimURL(row.dimensions[0], MAX_DIMENSION_LENGTH)}
+          </span>
+        </DrilldownLink>
+        {externalUrl && <ExternalLink href={externalUrl} isActive={isActive} />}
+      </div>
+    </div>
+  )
+}
+
+function VisitorsWithPercentageCell({
+  row,
+  query,
+  isActive
+}: {
+  row: QueryResultRow
+  query: QueryResultQuery
+  isActive?: boolean
+}) {
+  const portalRef = useBodyPortalRef()
+
+  const { value: visitorsValue, comparison: visitorsComparison } =
+    extractMetricValue(row, query, 'visitors')
+  const { value: percentageValue, comparison: percentageComparison } =
+    extractMetricValue(row, query, 'percentage')
+
+  const visitorsShortFormatter = MetricFormatterShort['visitors']
+  const visitorsLongFormatter = MetricFormatterLong['visitors']
+  const percentageFormatter = MetricFormatterShort['percentage']
+
+  const isVisitorsAbbreviated =
+    visitorsValue !== null &&
+    visitorsShortFormatter(visitorsValue) !==
+      visitorsLongFormatter(visitorsValue)
+
+  const showVisitorsTooltip = !!visitorsComparison || isVisitorsAbbreviated
+  const showPercentageTooltip = !!percentageComparison
+
+  const dateRangeLabel = formatDateRangeLabel(query.date_range)
+  const comparisonDateRangeLabel = query.comparison_date_range
+    ? formatDateRangeLabel(query.comparison_date_range)
+    : null
+
+  const percentageCell = (
+    <span
+      data-testid="metric-value"
+      className={classNames('block w-full text-gray-500 dark:text-gray-400', {
+        'translate-x-0 opacity-100 transition-all duration-150': isActive,
+        'translate-x-[100%] opacity-0 transition-all duration-150 md:group-hover/report:translate-x-0 md:group-hover/report:opacity-100':
+          !isActive
+      })}
+    >
+      {percentageFormatter(percentageValue)}
+      {percentageComparison && (
+        <ChangeArrow
+          change={percentageComparison.change}
+          metric={'percentage' as Metric}
+          className="inline-block pl-1 w-4"
+          hideNumber
+        />
+      )}
+    </span>
+  )
+
+  const percentageWithTooltip = showPercentageTooltip ? (
+    <Tooltip
+      containerRef={portalRef as React.RefObject<HTMLElement>}
+      info={
+        <MetricValueTooltipContent
+          value={percentageValue}
+          comparison={percentageComparison}
+          metric={'percentage'}
+          metricLabel="Percentage"
+          dateRangeLabel={dateRangeLabel}
+          comparisonDateRangeLabel={comparisonDateRangeLabel}
+        />
+      }
+    >
+      {percentageCell}
+    </Tooltip>
+  ) : (
+    percentageCell
+  )
+
+  const visitorsCell = (
+    <span
+      className={classNames('block w-full', {
+        'transition-transform duration-150 translate-x-0': isActive,
+        'transition-transform duration-150 translate-x-[100%] md:group-hover/report:translate-x-0':
+          !isActive
+      })}
+      data-testid="metric-value"
+    >
+      {visitorsShortFormatter(visitorsValue)}
+      {visitorsComparison && (
+        <ChangeArrow
+          change={visitorsComparison.change}
+          metric={'visitors'}
+          className="inline-block pl-1 w-4"
+          hideNumber
+        />
+      )}
+    </span>
+  )
+
+  const visitorsWithTooltip = showVisitorsTooltip ? (
+    <Tooltip
+      containerRef={portalRef as React.RefObject<HTMLElement>}
+      info={
+        <MetricValueTooltipContent
+          value={visitorsValue}
+          comparison={visitorsComparison}
+          metric={'visitors'}
+          metricLabel="Visitors"
+          dateRangeLabel={dateRangeLabel}
+          comparisonDateRangeLabel={comparisonDateRangeLabel}
+        />
+      }
+    >
+      {visitorsCell}
+    </Tooltip>
+  ) : (
+    visitorsCell
+  )
+
+  return (
+    <div
+      className={
+        'flex w-full font-medium text-sm block text-gray-800 dark:text-gray-200'
+      }
+    >
+      <div className="w-1/2">{visitorsWithTooltip}</div>
+      <div className="w-1/2">{percentageWithTooltip}</div>
+    </div>
+  )
+}
+
+function MetricValueCell({
+  row,
+  metric,
+  metricLabel,
+  query
+}: {
+  row: QueryResultRow
+  metric: Metric
+  metricLabel: string
+  query: QueryResultQuery
+}) {
+  const portalRef = useBodyPortalRef()
+
+  const { value, comparison } = extractMetricValue(row, query, metric)
+
+  const shortFormatter = MetricFormatterShort[metric]
+  const longFormatter = MetricFormatterLong[metric]
+
+  const isAbbreviated =
+    value !== null && shortFormatter(value) !== longFormatter(value)
+  const showTooltip = !!comparison || isAbbreviated
+
+  const valueContent = (
+    <span
+      className={classNames(
+        'font-medium text-sm block text-gray-800 dark:text-gray-200',
+        showTooltip && 'cursor-default'
+      )}
+      data-testid="metric-value"
+    >
+      {shortFormatter(value)}
+      {comparison && (
+        <ChangeArrow
+          change={comparison.change}
+          metric={metric}
+          className="inline-block pl-1 w-4"
+          hideNumber
+        />
+      )}
+    </span>
+  )
+
+  if (!showTooltip) return valueContent
+
+  const dateRangeLabel = formatDateRangeLabel(query.date_range)
+  const comparisonDateRangeLabel = query.comparison_date_range
+    ? formatDateRangeLabel(query.comparison_date_range)
+    : null
+
+  return (
+    <Tooltip
+      containerRef={portalRef as React.RefObject<HTMLElement>}
+      info={
+        <MetricValueTooltipContent
+          value={value}
+          comparison={comparison}
+          metric={metric}
+          metricLabel={metricLabel}
+          dateRangeLabel={dateRangeLabel}
+          comparisonDateRangeLabel={comparisonDateRangeLabel}
+        />
+      }
+    >
+      {valueContent}
+    </Tooltip>
+  )
+}
+
+export function IndexBreakdownRenderer({
+  apiState,
+  columns
+}: {
+  apiState: ReturnType<typeof usePaginatedQueryAPI>
+  columns: ColumnConfiguration<QueryResultRow>[] | null
+}) {
   const [tappedRow, setTappedRow] = useState<string | null>(null)
 
-  const isRealtime = isRealTimeDashboard(dashboardState)
-  const goalFilterApplied = hasConversionGoalFilter(dashboardState)
+  if (!columns) return null
+  const rows = apiState.data?.pages?.[0]?.slice(0, MAX_ITEMS) ?? []
 
-  const getData = useCallback(() => {
-    if (!isRealtime) {
-      setState({ loading: true, list: null, meta: null })
-    }
-    fetchData().then((response) => {
-      if (afterFetchData) {
-        afterFetchData(response)
-      }
-
-      setState({ loading: false, list: response.results, meta: response.meta })
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyLabel, dashboardState])
-
-  const onVisible = () => {
-    setVisible(true)
-  }
-
-  useEffect(() => {
-    if (isRealtime) {
-      // When a goal filter is applied or removed, we always want the component to go into a
-      // loading state, even in realtime mode, because the metrics list will change. We can
-      // only read the new metrics once the new list is loaded.
-      setState({ loading: true, list: null, meta: null })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goalFilterApplied])
-
-  useEffect(() => {
-    if (visible) {
-      if (isRealtime) {
-        document.addEventListener('tick', getData)
-      }
-      getData()
-    }
-
-    return () => {
-      document.removeEventListener('tick', getData)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyLabel, dashboardState, visible])
-
-  // returns a filtered `metrics` list. Since currently, the backend can return different
-  // metrics based on filters and existing data, this function validates that the metrics
-  // we want to display are actually there in the API response.
-  function getAvailableMetrics() {
-    return metrics.filter((metric) =>
-      state.list
-        ? state.list.some((listItem) => listItem[metric.key] != null)
-        : false
-    )
-  }
-
-  function hiddenOnMobileClass(metric: Metric) {
-    if (metric.meta.hiddenOnMobile) {
-      return 'hidden md:block'
-    } else {
-      return ''
-    }
-  }
-
-  function showOnHoverClass(metric: Metric, listItemName: string) {
-    if (!metric.meta.showOnHover) {
-      return ''
-    }
-
-    // On mobile: show if row is tapped, hide otherwise
-    // On desktop: slide in from right when hovering
-    if (tappedRow === listItemName) {
-      return 'translate-x-0 opacity-100 transition-all duration-150'
-    } else {
-      return 'translate-x-[100%] opacity-0 transition-all duration-150 md:group-hover/report:translate-x-0 md:group-hover/report:opacity-100'
-    }
-  }
-
-  function slideLeftClass(
-    metricIndex: number,
-    showOnHoverIndex: number,
-    hasShowOnHoverMetric: boolean,
-    listItemName: string
-  ) {
-    // Columns before the showOnHover column should slide left when it appears
-    if (!hasShowOnHoverMetric || metricIndex >= showOnHoverIndex) {
-      return ''
-    }
-
-    if (tappedRow === listItemName) {
-      return 'transition-transform duration-150 translate-x-0'
-    } else {
-      return 'transition-transform duration-150 translate-x-[100%] md:group-hover/report:translate-x-0'
-    }
-  }
-
-  function renderReport() {
-    if (state.list && state.list.length > 0) {
-      return (
-        <div className="h-full flex flex-col">
-          <div style={{ height: ROW_HEIGHT }}>{renderReportHeader()}</div>
-
-          <div
-            className="group/report"
-            style={{ minHeight: DATA_CONTAINER_HEIGHT }}
-          >
-            <FlipMove className="grow">
-              {state.list.slice(0, MAX_ITEMS).map(renderRow)}
-            </FlipMove>
-          </div>
-        </div>
-      )
-    }
-    return renderNoDataYet()
-  }
-
-  function renderReportHeader() {
-    const metricLabels = getAvailableMetrics()
-      .filter((metric) => !metric.meta.showOnHover)
-      .map((metric) => {
-        return (
-          <div
-            data-testid="report-header"
-            key={metric.key}
-            className={`${metric.key} text-right ${hiddenOnMobileClass(metric)}`}
-            style={{ minWidth: colMinWidth }}
-          >
-            {metric.renderLabel(dashboardState)}
-          </div>
-        )
-      })
-
-    return (
-      <div className="pt-3 w-full text-xs font-medium text-gray-500 flex items-center dark:text-gray-400">
-        <span data-testid="report-header" className="grow truncate">
-          {keyLabel}
-        </span>
-        {metricLabels}
-      </div>
-    )
-  }
-
-  function renderRow(listItem: TListItem) {
-    const handleRowClick = (e: React.MouseEvent) => {
-      if (window.innerWidth < 768 && !(e.target as HTMLElement).closest('a')) {
-        if (tappedRow === listItem.name) {
-          setTappedRow(null)
-        } else {
-          setTappedRow(listItem.name)
-        }
-      }
-    }
-
-    return (
-      <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
-        <div
-          data-testid="report-row"
-          className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm md:cursor-default cursor-pointer"
-          style={{ marginTop: ROW_GAP_HEIGHT }}
-          onClick={handleRowClick}
-        >
-          {renderBarFor(listItem)}
-          {renderMetricValuesFor(listItem)}
-        </div>
-      </div>
-    )
-  }
-
-  function renderBarFor(listItem: TListItem) {
-    const lightBackground = color || 'bg-green-50 group-hover/row:bg-green-100'
-    const metricToPlot = metrics.find((metric) => metric.meta.plot)?.key
-
-    return (
-      <div className="grow w-full overflow-hidden">
-        <Bar
-          maxWidthDeduction={undefined}
-          count={listItem[metricToPlot]}
-          all={state.list}
-          bg={`${lightBackground} dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`}
-          plot={metricToPlot}
-        >
-          <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
-            <DrilldownLink
-              filterInfo={getFilterInfo(listItem)}
-              onClick={onClick}
-              extraClass="max-w-max w-full flex items-center md:overflow-hidden"
-            >
-              {maybeRenderIconFor(listItem)}
-
-              <span className="w-full md:truncate">
-                {trimURL(listItem.name, colMinWidth)}
-              </span>
-            </DrilldownLink>
-            <ExternalLink
-              item={listItem}
-              getExternalLinkUrl={getExternalLinkUrl}
-              isTapped={tappedRow === listItem.name}
-            />
-          </div>
-        </Bar>
-      </div>
-    )
-  }
-
-  function maybeRenderIconFor(listItem: TListItem) {
-    if (renderIcon) {
-      return renderIcon(listItem)
-    }
-  }
-
-  function renderMetricValuesFor(listItem: TListItem) {
-    const availableMetrics = getAvailableMetrics()
-    const showOnHoverIndex = availableMetrics.findIndex(
-      (m) => m.meta.showOnHover
-    )
-    const hasShowOnHoverMetric = showOnHoverIndex !== -1
-
-    return (
-      <>
-        {availableMetrics.map((metric, index) => {
-          const isShowOnHover = metric.meta.showOnHover
-
-          return (
-            <div
-              key={`${listItem.name}__${metric.key}`}
-              className={`text-right ${hiddenOnMobileClass(metric)} ${showOnHoverClass(metric, listItem.name)} ${slideLeftClass(index, showOnHoverIndex, hasShowOnHoverMetric, listItem.name)}`}
-              style={{ width: colMinWidth, minWidth: colMinWidth }}
-            >
-              <span
-                className={`font-medium text-sm text-right ${isShowOnHover ? 'text-gray-500 group-hover/row:text-gray-800 dark:group-hover/row:text-gray-200' : 'text-gray-800 dark:text-gray-200'}`}
-              >
-                {metric.renderValue(listItem, state.meta, {
-                  detailedView: false,
-                  isRowHovered: false
-                })}
-              </span>
-            </div>
-          )
-        })}
-      </>
-    )
-  }
-
-  function renderLoading() {
+  if (apiState.isPending) {
     return (
       <div
         className="w-full flex flex-col justify-center"
         style={{ minHeight: `${MIN_HEIGHT}px` }}
       >
         <div className="mx-auto loading">
-          <div></div>
+          <div />
         </div>
       </div>
     )
   }
 
-  function renderNoDataYet() {
+  if (rows.length === 0) {
     return (
       <div
         className="w-full h-full flex flex-col justify-center"
@@ -397,15 +453,92 @@ export default function ListReport<
   }
 
   return (
-    <LazyLoader onVisible={onVisible}>
-      <div className="w-full" style={{ minHeight: `${MIN_HEIGHT}px` }}>
-        {state.loading && renderLoading()}
-        {!state.loading && (
-          <FadeIn show={!state.loading} className="h-full">
-            {renderReport()}
-          </FadeIn>
-        )}
+    <FadeIn show className="h-full">
+      <div className="h-full flex flex-col">
+        <div
+          style={{ height: ROW_HEIGHT }}
+          className="pt-3 w-full text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center"
+        >
+          {columns.map((col) => (
+            <div
+              key={col.key}
+              data-testid="report-header"
+              className={classNames(
+                col.width ?? 'grow w-full',
+                col.align === 'right' ? 'text-right' : 'truncate'
+              )}
+            >
+              {col.renderLabel()}
+            </div>
+          ))}
+        </div>
+        <div
+          className="group/report"
+          style={{ minHeight: DATA_CONTAINER_HEIGHT }}
+        >
+          <FlipMove>
+            {rows.map((row) => {
+              const dimension = row.dimensions[0]
+              const isActive = tappedRow === dimension
+
+              const handleClick = (e: React.MouseEvent) => {
+                if (
+                  window.innerWidth < 768 &&
+                  !(e.target as HTMLElement).closest('a')
+                ) {
+                  setTappedRow(isActive ? null : dimension)
+                }
+              }
+
+              return (
+                <div key={dimension} style={{ minHeight: ROW_HEIGHT }}>
+                  <div
+                    data-testid="report-row"
+                    className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm md:cursor-default cursor-pointer"
+                    style={{ marginTop: ROW_GAP_HEIGHT }}
+                    onClick={handleClick}
+                  >
+                    {columns.map((col) => (
+                      <div
+                        key={col.key}
+                        className={classNames(
+                          col.width ?? 'grow w-full',
+                          col.align === 'right' ? 'text-right' : 'truncate'
+                        )}
+                      >
+                        {col.renderCell(row, isActive)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </FlipMove>
+        </div>
       </div>
-    </LazyLoader>
+    </FadeIn>
+  )
+}
+
+function ExternalLink({
+  href,
+  isActive
+}: {
+  href: string
+  isActive?: boolean
+}) {
+  return (
+    <a
+      target="_blank"
+      rel="noreferrer"
+      href={href}
+      className={
+        isActive
+          ? 'visible md:invisible md:group-hover/row:visible'
+          : 'invisible md:group-hover/row:visible'
+      }
+    >
+      <ExternalLinkIcon />
+    </a>
   )
 }
