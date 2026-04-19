@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Metric } from '../stats/reports/metrics'
 import { getDomainScopedStorageKey, getItem, setItem } from '../util/storage'
 import { useSiteContext } from '../site-context'
-import { ReportInfo } from '../stats/modals/breakdown-modal'
+import { ReportInfo } from '../stats/modals/breakdown-modal-legacy'
 
 export enum SortDirection {
   asc = 'asc',

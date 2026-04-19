@@ -4,7 +4,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import BreakdownModal from './breakdown-modal'
+import BreakdownModal from './breakdown-modal-legacy'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { addFilter, revenueAvailable } from '../../dashboard-state'

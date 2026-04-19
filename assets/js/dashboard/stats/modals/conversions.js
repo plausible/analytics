@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react'
 
 import Modal from './modal'
-import BreakdownModal from './breakdown-modal'
+import BreakdownModal from './breakdown-modal-legacy'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { useSiteContext } from '../../site-context'
