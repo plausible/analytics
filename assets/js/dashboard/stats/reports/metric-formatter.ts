@@ -1,4 +1,4 @@
-import { Metric } from '../../../types/query-api'
+import { Metric } from '../metrics'
 import { formatMoneyShort, formatMoneyLong } from '../../util/money'
 import {
   numberShortFormatter,
@@ -8,12 +8,7 @@ import {
   nullable
 } from '../../util/number-formatter'
 
-export type FormattableMetric =
-  | Metric
-  | 'total_visitors'
-  | 'current_visitors'
-  | 'exit_rate'
-  | 'conversions'
+export type FormattableMetric = Metric | 'current_visitors' | 'conversions'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ValueType = any

@@ -1,4 +1,6 @@
-import { Metric } from '../../types/query-api'
+import { Metric as PublicApiMetric } from '../../types/query-api'
+
+export type Metric = PublicApiMetric | 'total_visitors' | 'exit_rate'
 
 export const getMetricLabel = (
   metric: Metric,
@@ -33,5 +35,125 @@ export const getMetricLabel = (
       return 'Percentage'
     case 'group_conversion_rate':
       return 'Conversion rate'
+    case 'total_visitors':
+      return 'Total visitors'
+    case 'exit_rate':
+      return 'Exit rate'
+  }
+}
+
+export const getBreakdownMetricLabel = (
+  metric: Metric,
+  {
+    hasConversionGoalFilter,
+    isRealtime,
+    dimensions
+  }: {
+    hasConversionGoalFilter: boolean
+    isRealtime: boolean
+    dimensions: string[]
+  }
+): string => {
+  switch (dimensions[0]) {
+    case 'visit:entry_page':
+      return getEntryPagesBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter,
+        isRealtime
+      })
+    case 'visit:exit_page':
+      return getExitPagesBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter,
+        isRealtime
+      })
+    case 'event:goal':
+      return getConversionsBreakdownMetricLabel(metric)
+    default:
+      return getDefaultBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter,
+        isRealtime
+      })
+  }
+}
+
+const getEntryPagesBreakdownMetricLabel = (
+  metric: Metric,
+  {
+    hasConversionGoalFilter,
+    isRealtime
+  }: { hasConversionGoalFilter: boolean; isRealtime: boolean }
+): string => {
+  if (metric === 'visitors' && !hasConversionGoalFilter && !isRealtime) {
+    return 'Unique entrances'
+  }
+  if (metric === 'visits' && !hasConversionGoalFilter && !isRealtime) {
+    return 'Total entrances'
+  }
+
+  return getDefaultBreakdownMetricLabel(metric, {
+    hasConversionGoalFilter,
+    isRealtime
+  })
+}
+
+const getExitPagesBreakdownMetricLabel = (
+  metric: Metric,
+  {
+    hasConversionGoalFilter,
+    isRealtime
+  }: { hasConversionGoalFilter: boolean; isRealtime: boolean }
+): string => {
+  if (metric === 'visitors' && !hasConversionGoalFilter && !isRealtime) {
+    return 'Unique exits'
+  }
+  if (metric === 'visits' && !hasConversionGoalFilter && !isRealtime) {
+    return 'Total exits'
+  }
+
+  return getDefaultBreakdownMetricLabel(metric, {
+    hasConversionGoalFilter,
+    isRealtime
+  })
+}
+
+const getConversionsBreakdownMetricLabel = (metric: Metric): string => {
+  switch (metric) {
+    case 'visitors':
+      return 'Uniques'
+    case 'events':
+      return 'Total'
+    default:
+      return getDefaultBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter: false,
+        isRealtime: false
+      })
+  }
+}
+
+const getDefaultBreakdownMetricLabel = (
+  metric: Metric,
+  {
+    hasConversionGoalFilter,
+    isRealtime
+  }: { hasConversionGoalFilter: boolean; isRealtime: boolean }
+): string => {
+  switch (metric) {
+    case 'visitors':
+      return hasConversionGoalFilter
+        ? 'Conversions'
+        : isRealtime
+          ? 'Current visitors'
+          : 'Visitors'
+    case 'group_conversion_rate':
+      return 'CR'
+    case 'conversion_rate':
+      return 'CR'
+    case 'average_revenue':
+      return 'Average'
+    case 'total_revenue':
+      return 'Revenue'
+    case 'pageviews':
+      return 'Pageviews'
+    default:
+      return getMetricLabel(metric, { hasConversionGoalFilter })
   }
 }

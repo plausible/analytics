@@ -1,4 +1,4 @@
-import { Metric } from '../../../types/query-api'
+import { Metric } from '../metrics'
 import {
   DashboardState,
   dashboardStateDefaultValue,

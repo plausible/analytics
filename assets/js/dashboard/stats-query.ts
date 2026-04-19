@@ -1,4 +1,4 @@
-import { Metric } from '../types/query-api'
+import { Metric } from './stats/metrics'
 import { DashboardState, Filter } from './dashboard-state'
 import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'

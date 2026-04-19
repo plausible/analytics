@@ -1,9 +1,10 @@
-import { Metric } from '../../../types/query-api'
+import { Metric } from '../metrics'
 import { DashboardState } from '../../dashboard-state'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { PlausibleSite } from '../../site-context'
 import { createStatsQuery, ReportParams } from '../../stats-query'
 import { isRealTimeDashboard } from '../../util/filters'
+import { MetricValue } from '../../api'
 import * as api from '../../api'
 
 export function fetchMainGraph(
@@ -35,19 +36,10 @@ export function fetchMainGraph(
   return api.stats(site, statsQuery)
 }
 
-export type RevenueMetricValue = {
-  short: string
-  value: number
-  long: string
-  currency: string
-}
-
 export type ResultItem = {
   dimensions: [string] // one item
   metrics: MetricValues
 }
-
-export type MetricValue = null | number | RevenueMetricValue
 
 export type MetricValues = [MetricValue] // one item
 

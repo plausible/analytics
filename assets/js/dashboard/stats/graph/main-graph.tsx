@@ -19,16 +19,12 @@ import {
 } from '../../util/date'
 import classNames from 'classnames'
 import { ChangeArrow } from '../reports/change-arrow'
-import { Metric } from '../../../types/query-api'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { Graph, PointerHandler, SeriesConfig } from '../../components/graph'
 import { useSiteContext, PlausibleSite } from '../../site-context'
 import { GraphTooltipWrapper } from '../../components/graph-tooltip'
-import {
-  MainGraphResponse,
-  MetricValue,
-  RevenueMetricValue
-} from './fetch-main-graph'
+import { MetricValue, RevenueMetricValue } from '../../api'
+import { MainGraphResponse } from './fetch-main-graph'
 import {
   remapAndFillData,
   getLineSegments,
@@ -40,7 +36,7 @@ import {
   getFirstAndLastTimeLabels,
   MainGraphSeriesName
 } from './main-graph-data'
-import { getMetricLabel } from '../metrics'
+import { Metric, getMetricLabel } from '../metrics'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { hasConversionGoalFilter } from '../../util/filters'
 import { Interval } from './intervals'

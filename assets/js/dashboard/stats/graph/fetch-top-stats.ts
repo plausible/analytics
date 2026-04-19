@@ -1,7 +1,6 @@
-import { Metric } from '../../../types/query-api'
 import * as api from '../../api'
 import { DashboardState } from '../../dashboard-state'
-import { getMetricLabel } from '../metrics'
+import { Metric, getMetricLabel } from '../metrics'
 import {
   ComparisonMode,
   DashboardPeriod,
@@ -141,7 +140,7 @@ function constructTopStatsQuery(
 
 type TopStatItem = {
   metric: Metric
-  value: number
+  value: api.MetricValue
   name: string
   graphable: boolean
   change?: number
