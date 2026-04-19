@@ -2,13 +2,14 @@ import React, { ReactNode, useRef } from 'react'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
 import { SearchInput } from '../../components/search-input'
-import { ColumnConfiguraton, Table } from '../../components/table-legacy'
+import { Table } from '../../components/table'
+import { ColumnConfiguration } from '../breakdowns'
 import RocketIcon from './rocket-icon'
 import { QueryStatus } from '@tanstack/react-query'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { rootRoute } from '../../router'
 
-export const BreakdownTable = <TListItem extends { name: string }>({
+export function BreakdownTable<T>({
   title,
   isPending,
   isFetching,
@@ -20,8 +21,9 @@ export const BreakdownTable = <TListItem extends { name: string }>({
   data,
   status,
   error,
-  displayError,
-  onClose
+  displayError = true,
+  onClose,
+  getRowKey
 }: {
   title: ReactNode
   onSearch?: (input: string) => void
@@ -30,14 +32,15 @@ export const BreakdownTable = <TListItem extends { name: string }>({
   hasNextPage: boolean
   isFetchingNextPage: boolean
   fetchNextPage: () => void
-  columns: ColumnConfiguraton<TListItem>[]
-  data?: { pages: TListItem[][] }
+  columns: ColumnConfiguration<T>[] | null
+  data?: { pages: T[][] }
   status?: QueryStatus
   error?: Error | null
   /** Controls whether the component displays API request errors or ignores them. */
   displayError?: boolean
   onClose?: () => void
-}) => {
+  getRowKey: (row: T) => string
+}) {
   const searchRef = useRef<HTMLInputElement>(null)
   const navigate = useAppNavigate()
   const handleClose =
@@ -50,7 +53,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
           <h1 className="shrink-0 mb-0.5 text-base md:text-lg font-bold dark:text-gray-100">
             {title}
           </h1>
-          {!!onSearch && (
+          {typeof onSearch === 'function' && (
             <SearchInput
               searchRef={searchRef}
               onSearch={onSearch}
@@ -76,7 +79,9 @@ export const BreakdownTable = <TListItem extends { name: string }>({
       <div className="flex-1 overflow-auto pr-4 -mr-4">
         {displayError && status === 'error' && <ErrorMessage error={error} />}
         {isPending && <InitialLoadingSpinner />}
-        {data && <Table<TListItem> data={data} columns={columns} />}
+        {columns && data && (
+          <Table data={data} columns={columns} getRowKey={getRowKey} />
+        )}
         {!isPending && !isFetching && hasNextPage && (
           <LoadMore
             onClick={() => fetchNextPage()}

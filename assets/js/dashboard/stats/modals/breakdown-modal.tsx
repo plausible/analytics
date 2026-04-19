@@ -1,273 +1,502 @@
-import React, { useState, ReactNode, useMemo } from 'react'
-
+import React, { ReactNode, useCallback, useMemo, useState } from 'react'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import { usePaginatedGetAPI } from '../../hooks/api-client'
+import { usePaginatedQueryAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
 import {
   getStoredOrderBy,
   Order,
   OrderBy,
+  SortDirection,
   useOrderBy,
   useRememberOrderBy
-} from '../../hooks/use-order-by-legacy'
-import { Metric } from '../reports/metrics'
-import * as metricsModule from '../reports/metrics'
-import { BreakdownResultMeta, DashboardState } from '../../dashboard-state'
-import { ColumnConfiguraton } from '../../components/table-legacy'
-import { BreakdownTable } from './breakdown-table-legacy'
+} from '../../hooks/use-order-by'
+import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
+import { BreakdownTable } from './breakdown-table'
+import { createStatsQuery, StatsQuery } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
-import { SharedReportProps } from '../reports/list'
-import { hasConversionGoalFilter } from '../../util/filters'
+import {
+  ColumnConfiguration,
+  ExternalLinkIcon,
+  MetricValueTooltipContent,
+  SharedBreakdownReportProps,
+  formatDateRangeLabel,
+  useBodyPortalRef,
+  extractMetricValue
+} from '../breakdowns'
+import {
+  QueryResultRow,
+  QueryResultMeta,
+  QueryResultQuery,
+  QueryApiResponse
+} from '../../api'
+import classNames from 'classnames'
+import { Tooltip } from '../../util/tooltip'
+import { ChangeArrow } from '../reports/change-arrow'
+import {
+  MetricFormatterShort,
+  MetricFormatterLong
+} from '../reports/metric-formatter'
+import {
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
+import { SortButton } from '../../components/sort-button'
 
-export type ReportInfo = {
-  /** Title of the report to render on the top left. */
-  title: string
-  /** Full pathname of the API endpoint to query. @example `/api/stats/plausible.io/sources` */
-  endpoint: string
-  /** Used as the leftmost column header. */
-  dimensionLabel: string
-  /** What this report will be initially sorted by. @example ["visitors", "desc"] */
-  defaultOrder?: Order
+type DetailsBreakdownProps = SharedBreakdownReportProps & {
+  title: ReactNode
+  defaultOrderBy?: OrderBy
+  addSearchFilter?: (statsQuery: StatsQuery, search: string) => StatsQuery
+  afterFetchNextPage?: (response: QueryApiResponse) => void
 }
 
-type BreakdownModalProps = {
-  /** Dimension and title of the breakdown. */
-  reportInfo: ReportInfo
-  /** Function that must return a new dashboardState that contains appropriate search filter for searchValue param. */
-  addSearchFilter?: (q: DashboardState, searchValue: string) => DashboardState
-  searchEnabled?: boolean
-  /** When true, keep the percentage metric as a permanently visible, sortable column. */
-  showPercentageColumn?: boolean
+const getMetricCellWidthClass = (
+  metric: Metric,
+  metricLabel: string
+): string => {
+  if (['average_revenue', 'total_revenue'].includes(metric)) {
+    return 'w-32 min-w-32'
+  }
+
+  if (metricLabel.length < 3) {
+    return 'w-28 min-w-28 md:w-24 md:min-w-24'
+  }
+
+  if (metricLabel.length < 15) {
+    return 'w-28 min-w-28'
+  }
+
+  return 'w-32 min-w-32'
 }
 
-/**
-  BreakdownModal is for rendering the "Details" reports on the dashboard,
-  i.e. a breakdown by a single (non-time) dimension, with a given set of metrics.
-
-  BreakdownModal is expected to be rendered inside a `<Modal>`, which has it's own
-  specific URL pathname (e.g. /plausible.io/sources). During the lifecycle of a
-  BreakdownModal, the `dashboardState` object is not expected to change.
-
-  ### Search As You Type
-  @see BreakdownTable
-
-  ### Filter Links
-  @see NameCell
-
-  ### Pagination
-  @see usePaginatedGetAPI
-
-*/
-
-export default function BreakdownModal<TListItem extends { name: string }>({
-  reportInfo,
+export function DetailsBreakdown({
+  title,
+  dimensionLabel,
+  dimensions,
   metrics,
-  renderIcon,
+  defaultOrderBy = [] as OrderBy,
+  getFilterInfo,
   getExternalLinkUrl,
-  searchEnabled = true,
-  showPercentageColumn = false,
-  afterFetchData,
-  afterFetchNextPage,
   addSearchFilter,
-  getFilterInfo
-}: Omit<SharedReportProps<TListItem>, 'fetchData'> & BreakdownModalProps) {
+  afterFetchData,
+  afterFetchNextPage
+}: DetailsBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
-  const [meta, setMeta] = useState<BreakdownResultMeta | null>(null)
-
-  const breakdownMetrics = useMemo(() => {
-    const hasPercentage = metrics.some((m) => m.key === 'percentage')
-    if (!hasPercentage && !hasConversionGoalFilter(dashboardState)) {
-      return [...metrics, metricsModule.createPercentage()]
-    }
-    return metrics
-  }, [metrics, dashboardState])
-
   const [search, setSearch] = useState('')
-  const defaultOrderBy = getStoredOrderBy({
+  const [meta, setMeta] = useState<QueryResultMeta | null>(null)
+  const [query, setQuery] = useState<QueryResultQuery | null>(null)
+
+  const storedOrderBy = getStoredOrderBy({
     domain: site.domain,
-    reportInfo,
-    metrics: breakdownMetrics,
-    fallbackValue: reportInfo.defaultOrder ? [reportInfo.defaultOrder] : []
+    reportInfo: { dimensionLabel },
+    metrics,
+    fallbackValue: defaultOrderBy
   })
+
   const { orderBy, orderByDictionary, toggleSortByMetric } = useOrderBy({
-    metrics: breakdownMetrics,
-    defaultOrderBy
+    metrics,
+    defaultOrderBy: storedOrderBy
   })
+
   useRememberOrderBy({
     effectiveOrderBy: orderBy,
-    metrics: breakdownMetrics,
-    reportInfo
+    metrics,
+    reportInfo: { dimensionLabel }
   })
-  const apiState = usePaginatedGetAPI<
-    { results: Array<TListItem>; meta: BreakdownResultMeta },
-    [
-      string,
-      { dashboardState: DashboardState; search: string; orderBy: OrderBy }
-    ]
-  >({
-    siteTimezoneOffset: site.offset,
-    siteStatsBegin: site.statsBegin,
-    key: [reportInfo.endpoint, { dashboardState, search, orderBy }],
-    getRequestParams: (key) => {
-      const [_endpoint, { dashboardState, search }] = key
 
-      let dashboardStateWithSearchFilter = { ...dashboardState }
+  const effectiveOrderBy = orderBy.length ? orderBy : storedOrderBy
 
-      if (
-        searchEnabled &&
-        typeof addSearchFilter === 'function' &&
-        search !== ''
-      ) {
-        dashboardStateWithSearchFilter = addSearchFilter(dashboardState, search)
-      }
+  const baseStatsQuery: StatsQuery = useMemo(
+    () =>
+      createStatsQuery(dashboardState, {
+        metrics: metrics,
+        dimensions,
+        order_by: effectiveOrderBy as Order[]
+      }),
+    [dashboardState, metrics, dimensions, effectiveOrderBy]
+  )
 
-      return [
-        dashboardStateWithSearchFilter,
-        {
-          detailed: true,
-          order_by: JSON.stringify(orderBy)
-        }
-      ]
-    },
-    afterFetchData: (response) => {
+  const statsQuery: StatsQuery = useMemo(() => {
+    if (search && addSearchFilter) {
+      return addSearchFilter(baseStatsQuery, search)
+    }
+    return baseStatsQuery
+  }, [baseStatsQuery, search, addSearchFilter])
+
+  const handleAfterFetchData = useCallback(
+    (response: QueryApiResponse) => {
       setMeta(response.meta)
+      setQuery(response.query)
       afterFetchData?.(response)
     },
+    [afterFetchData]
+  )
+
+  const apiState = usePaginatedQueryAPI({
+    site,
+    statsQuery,
+    afterFetchData: handleAfterFetchData,
     afterFetchNextPage
   })
 
-  const columns: ColumnConfiguraton<TListItem>[] = useMemo(
-    () => [
-      {
-        label: reportInfo.dimensionLabel,
-        key: 'name',
-        width: 'w-40 md:w-48',
-        align: 'left',
-        renderItem: (item) => (
-          <NameCell
-            item={item}
-            getFilterInfo={getFilterInfo}
-            getExternalLinkUrl={getExternalLinkUrl}
-            renderIcon={renderIcon}
-          />
-        )
-      },
-      ...breakdownMetrics
-        .filter((m) => showPercentageColumn || m.key !== 'percentage')
-        .map(
-          (m): ColumnConfiguraton<TListItem> => ({
-            label: m.renderLabel(dashboardState),
-            key: m.key,
-            width: m.width,
-            align: 'right',
-            metricWarning: getMetricWarning(m, meta),
-            renderValue: (item, isRowHovered) =>
-              m.renderValue(
-                showPercentageColumn && m.key === 'visitors'
-                  ? { ...item, percentage: null }
-                  : item,
-                meta,
-                { detailedView: true, isRowHovered }
-              ),
-            onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
-            sortDirection: orderByDictionary[m.key]
-          })
-        )
-    ],
-    [
-      reportInfo.dimensionLabel,
-      breakdownMetrics,
-      getFilterInfo,
-      dashboardState,
-      orderByDictionary,
-      toggleSortByMetric,
-      renderIcon,
-      getExternalLinkUrl,
-      meta,
-      showPercentageColumn
-    ]
+  const metricLabelFor = useCallback(
+    (metric: Metric): string => {
+      return getBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+        isRealtime: isRealTimeDashboard(dashboardState),
+        dimensions: dimensions
+      })
+    },
+    [dashboardState, dimensions]
   )
 
+  const columns: ColumnConfiguration<QueryResultRow>[] | null = useMemo(() => {
+    if (!query) return null
+
+    const hasPercentage = query.metrics.includes('percentage')
+    const isVisitorsWithPercentageCell = (m: Metric) =>
+      hasPercentage && m === 'visitors'
+
+    return [
+      {
+        key: 'dimension',
+        renderLabel: () => dimensionLabel,
+        renderCell: (row, isActive) => (
+          <DimensionCell
+            row={row}
+            getFilterInfo={getFilterInfo}
+            getExternalLinkUrl={getExternalLinkUrl}
+            isActive={isActive}
+          />
+        ),
+        align: 'left'
+      },
+      ...query.metrics
+        // Percentage is not its own column — shown inline in the visitors cell
+        .filter((metric) => metric !== 'percentage')
+        .map(
+          (metric): ColumnConfiguration<QueryResultRow> => ({
+            key: metric,
+            renderLabel: () => (
+              <MetricLabel
+                label={metricLabelFor(metric)}
+                warning={getMetricWarning(metric, meta)}
+                sortable={isSortable(metric)}
+                toggleSort={() => toggleSortByMetric(metric)}
+                sortDirection={orderByDictionary[metric] ?? null}
+              />
+            ),
+            renderCell: (row, isActive) => {
+              if (isVisitorsWithPercentageCell(metric)) {
+                return (
+                  <VisitorsWithPercentageCell
+                    row={row}
+                    query={query}
+                    isActive={isActive}
+                  />
+                )
+              } else {
+                return (
+                  <MetricValueCell
+                    row={row}
+                    metric={metric}
+                    metricLabel={metricLabelFor(metric)}
+                    query={query}
+                    isActive={isActive}
+                  />
+                )
+              }
+            },
+            onSort: isSortable(metric)
+              ? () => toggleSortByMetric(metric)
+              : undefined,
+            sortDirection: orderByDictionary[metric],
+            width: isVisitorsWithPercentageCell(metric)
+              ? 'w-36'
+              : getMetricCellWidthClass(metric, metricLabelFor(metric)),
+            align: 'right'
+          })
+        )
+    ]
+  }, [
+    dimensionLabel,
+    query,
+    meta,
+    getFilterInfo,
+    getExternalLinkUrl,
+    orderByDictionary,
+    toggleSortByMetric,
+    metricLabelFor
+  ])
+
   return (
-    <BreakdownTable<TListItem>
-      title={reportInfo.title}
+    <BreakdownTable<QueryResultRow>
+      title={title}
       {...apiState}
-      onSearch={searchEnabled ? setSearch : undefined}
       columns={columns}
+      onSearch={addSearchFilter ? setSearch : undefined}
+      getRowKey={(row) => row.dimensions[0]}
     />
   )
 }
 
-/**
- * Most interactive cell in the breakdown table.
- * May have an icon.
- * If `getFilterInfo(item)` does not return null,
- * drills down the dashboard to that particular item.
- * May have a tiny icon button to navigate to the actual resource.
- * */
-const NameCell = <TListItem extends { name: string }>({
-  item,
-  getFilterInfo,
-  renderIcon,
-  getExternalLinkUrl
+function VisitorsWithPercentageCell({
+  row,
+  query,
+  isActive
 }: {
-  item: TListItem
-  getFilterInfo: (item: TListItem) => FilterInfo | null
-  renderIcon?: (item: TListItem) => ReactNode
-  getExternalLinkUrl?: (listItem: TListItem) => string
-}) => (
-  <div className="max-w-full break-all flex items-center">
-    {typeof renderIcon === 'function' && renderIcon(item)}
-    <DrilldownLink
-      path={rootRoute.path}
-      filterInfo={getFilterInfo(item)}
-      onClick={undefined}
-      extraClass={undefined}
-    >
-      {item.name}
-    </DrilldownLink>
-    {typeof getExternalLinkUrl === 'function' && (
-      <ExternalLinkIcon url={getExternalLinkUrl(item)} />
-    )}
-  </div>
-)
+  row: QueryResultRow
+  query: QueryResultQuery
+  isActive?: boolean
+}) {
+  const portalRef = useBodyPortalRef()
 
-const ExternalLinkIcon = ({ url }: { url?: string }) =>
-  url ? (
-    <a
-      target="_blank"
-      href={url}
-      rel="noreferrer"
-      className="hidden group-hover:block"
-    >
-      <svg
-        className="inline h-4 w-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path>
-        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path>
-      </svg>
-    </a>
-  ) : null
+  const { value: visitorsValue, comparison: visitorsComparison } =
+    extractMetricValue(row, query, 'visitors')
+  const { value: percentageValue } = extractMetricValue(
+    row,
+    query,
+    'percentage'
+  )
 
-const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
+  const visitorsShortFormatter = MetricFormatterShort['visitors']
+  const visitorsLongFormatter = MetricFormatterLong['visitors']
+  const percentageFormatter = MetricFormatterShort['percentage']
+
+  const showTooltip = !!visitorsComparison
+
+  const dateRangeLabel = formatDateRangeLabel(query.date_range)
+  const comparisonDateRangeLabel = query.comparison_date_range
+    ? formatDateRangeLabel(query.comparison_date_range)
+    : null
+
+  const percentageCell = (
+    <span
+      className={classNames('mr-3 text-gray-500 dark:text-gray-400', {
+        invisible: !isActive
+      })}
+    >
+      {percentageFormatter(percentageValue)}
+    </span>
+  )
+
+  const visitorsCell = (
+    <span data-testid="metric-value">
+      {isActive
+        ? visitorsLongFormatter(visitorsValue)
+        : visitorsShortFormatter(visitorsValue)}
+      {visitorsComparison && (
+        <ChangeArrow
+          change={visitorsComparison.change}
+          metric={'visitors'}
+          className="inline-block pl-1 w-4"
+          hideNumber
+        />
+      )}
+    </span>
+  )
+
+  const visitorsWithTooltip = showTooltip ? (
+    <Tooltip
+      containerRef={portalRef as React.RefObject<HTMLElement>}
+      info={
+        <MetricValueTooltipContent
+          value={visitorsValue}
+          comparison={visitorsComparison}
+          metric={'visitors'}
+          metricLabel="Visitors"
+          dateRangeLabel={dateRangeLabel}
+          comparisonDateRangeLabel={comparisonDateRangeLabel}
+        />
+      }
+    >
+      {visitorsCell}
+    </Tooltip>
+  ) : (
+    visitorsCell
+  )
+
+  return (
+    <div className={'flex justify-end'}>
+      {percentageCell}
+      {visitorsWithTooltip}
+    </div>
+  )
+}
+
+function MetricValueCell({
+  row,
+  metric,
+  metricLabel,
+  query,
+  isActive
+}: {
+  row: QueryResultRow
+  metric: Metric
+  metricLabel: string
+  query: QueryResultQuery
+  isActive?: boolean
+}) {
+  const portalRef = useBodyPortalRef()
+
+  const { value, comparison } = extractMetricValue(row, query, metric)
+
+  const shortFormatter = MetricFormatterShort[metric]
+  const longFormatter = MetricFormatterLong[metric]
+
+  // Show long format when the row is active (hovered on desktop, tapped on mobile)
+  const displayFormatter = isActive ? longFormatter : shortFormatter
+
+  // Tooltip is used for comparison mode only
+  const showTooltip = !!comparison
+
+  const valueContent = (
+    <span
+      className={classNames(
+        'font-medium text-sm text-gray-800 dark:text-gray-200',
+        showTooltip && 'cursor-default'
+      )}
+      data-testid="metric-value"
+    >
+      {displayFormatter(value)}
+      {comparison && (
+        <ChangeArrow
+          change={comparison.change}
+          metric={metric}
+          className="inline-block pl-1 w-4"
+          hideNumber
+        />
+      )}
+    </span>
+  )
+
+  if (!showTooltip) return valueContent
+
+  const dateRangeLabel = formatDateRangeLabel(query.date_range)
+  const comparisonDateRangeLabel = query.comparison_date_range
+    ? formatDateRangeLabel(query.comparison_date_range)
+    : null
+
+  return (
+    <Tooltip
+      containerRef={portalRef as React.RefObject<HTMLElement>}
+      info={
+        <MetricValueTooltipContent
+          value={value}
+          comparison={comparison}
+          metric={metric}
+          metricLabel={metricLabel}
+          dateRangeLabel={dateRangeLabel}
+          comparisonDateRangeLabel={comparisonDateRangeLabel}
+        />
+      }
+    >
+      {valueContent}
+    </Tooltip>
+  )
+}
+
+function getMetricWarning(
+  metricKey: string,
+  meta: QueryResultMeta | null
+): string | null {
   const warnings = meta?.metric_warnings
-
-  if (warnings && warnings[metric.key]) {
-    const { code, message } = warnings[metric.key]
-
-    if (metric.key == 'bounce_rate' && code == 'no_imported_bounce_rate') {
-      return 'Does not include imported data'
-    }
-    if (metric.key == 'scroll_depth' && code == 'no_imported_scroll_depth') {
-      return 'Does not include imported data'
-    }
-
-    if (metric.key == 'time_on_page' && code) {
-      return message
-    }
+  if (!warnings || !warnings[metricKey]) return null
+  const { code, message } = warnings[metricKey]
+  if (metricKey === 'bounce_rate' && code === 'no_imported_bounce_rate') {
+    return 'Does not include imported data'
   }
+  if (metricKey === 'scroll_depth' && code === 'no_imported_scroll_depth') {
+    return 'Does not include imported data'
+  }
+  if (metricKey === 'time_on_page' && code) {
+    return message
+  }
+  return null
+}
+
+function MetricLabel({
+  label,
+  warning,
+  sortable,
+  toggleSort,
+  sortDirection
+}: {
+  label: string
+  warning: string | null
+  sortable: boolean
+  toggleSort: () => void
+  sortDirection: SortDirection | null
+}) {
+  const labelText = label + (warning ? ' *' : '')
+  const inner = sortable ? (
+    <SortButton toggleSort={toggleSort} sortDirection={sortDirection}>
+      {labelText}
+    </SortButton>
+  ) : (
+    labelText
+  )
+  if (warning) {
+    return (
+      <Tooltip
+        info={
+          <span className="text-xs font-normal whitespace-nowrap">
+            {'* ' + warning}
+          </span>
+        }
+        className="inline-block"
+      >
+        {inner}
+      </Tooltip>
+    )
+  } else {
+    return <>{inner}</>
+  }
+}
+
+function DimensionCell({
+  row,
+  getFilterInfo,
+  getExternalLinkUrl,
+  isActive
+}: {
+  row: QueryResultRow
+  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
+  getExternalLinkUrl?: (row: QueryResultRow) => string | null
+  isActive?: boolean
+}) {
+  return (
+    <div className="max-w-44 md:max-w-52 break-all flex items-center gap-x-1">
+      <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
+        {row.dimensions[0]}
+      </DrilldownLink>
+      {typeof getExternalLinkUrl === 'function' && (
+        <ExternalLink href={getExternalLinkUrl(row)} isActive={isActive} />
+      )}
+    </div>
+  )
+}
+
+function ExternalLink({
+  href,
+  isActive
+}: {
+  href: string | null
+  isActive?: boolean
+}) {
+  return (
+    <div className="w-4 min-w-4 self-stretch flex flex-col justify-center">
+      {href && (
+        <a
+          target="_blank"
+          rel="noreferrer"
+          href={href}
+          className={isActive ? 'block' : 'hidden'}
+        >
+          <ExternalLinkIcon />
+        </a>
+      )}
+    </div>
+  )
 }
