@@ -148,3 +148,60 @@ export function extractMetricValue(
       : null
   return { metricIndex, value, comparison }
 }
+
+const DEFAULT_DETAILED_METRICS = [
+  'visitors',
+  'percentage',
+  'bounce_rate',
+  'visit_duration'
+] as Metric[]
+
+export const getBreakdownMetrics = ({
+  hasConversionGoalFilter,
+  isRealtime,
+  isDetailed = false,
+  isRevenueAvailable = false,
+  detailedMetrics = DEFAULT_DETAILED_METRICS
+}: {
+  hasConversionGoalFilter: boolean
+  isRealtime: boolean
+  isDetailed?: boolean
+  isRevenueAvailable?: boolean
+  detailedMetrics?: Metric[]
+}): Metric[] => {
+  if (hasConversionGoalFilter && isDetailed && isRevenueAvailable) {
+    return [
+      'total_visitors',
+      'visitors',
+      'group_conversion_rate',
+      'total_revenue',
+      'average_revenue'
+    ]
+  }
+  if (hasConversionGoalFilter && isDetailed) {
+    return ['total_visitors', 'visitors', 'group_conversion_rate']
+  }
+  if (hasConversionGoalFilter) {
+    return ['visitors', 'group_conversion_rate']
+  }
+  if (isRealtime) {
+    return ['visitors', 'percentage']
+  }
+  if (isDetailed) {
+    return detailedMetrics
+  }
+  return ['visitors', 'percentage']
+}
+
+export function addDimensionSearchFilter(
+  statsQuery: StatsQuery,
+  dimension: string,
+  search: string
+) {
+  return addFilter(statsQuery, [
+    'contains',
+    dimension,
+    [search],
+    { case_sensitive: false }
+  ] as ApiFilter)
+}

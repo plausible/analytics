@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
 import * as storage from '../../util/storage'
-import * as url from '../../util/url'
-import * as api from '../../api'
-import ListReport from '../reports/list-legacy'
-import * as metrics from './../reports/metrics'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import { hasConversionGoalFilter } from '../../util/filters'
 import { useDashboardStateContext } from '../../dashboard-state-context'
@@ -15,138 +11,9 @@ import { ReportHeader } from '../reports/report-header'
 import { TabButton, TabWrapper } from '../../components/tabs'
 import MoreLink from '../more-link'
 import { MoreLinkState } from '../more-link-state'
-
-function EntryPages({ afterFetchData }) {
-  const { dashboardState } = useDashboardStateContext()
-  const site = useSiteContext()
-  function fetchData() {
-    return api.get(url.apiPath(site, '/entry-pages'), dashboardState, {
-      limit: 9
-    })
-  }
-
-  function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site, page.name)
-  }
-
-  function getFilterInfo(listItem) {
-    return {
-      prefix: 'entry_page',
-      filter: ['is', 'entry_page', [listItem['name']]]
-    }
-  }
-
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({
-        defaultLabel: 'Unique entrances',
-        width: 'w-36',
-        meta: { plot: true }
-      }),
-      !hasConversionGoalFilter(dashboardState) &&
-        metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
-    ].filter((metric) => !!metric)
-  }
-
-  return (
-    <ListReport
-      fetchData={fetchData}
-      afterFetchData={afterFetchData}
-      getFilterInfo={getFilterInfo}
-      keyLabel="Entry page"
-      metrics={chooseMetrics()}
-      getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50 group-hover/row:bg-orange-100"
-    />
-  )
-}
-
-function ExitPages({ afterFetchData }) {
-  const site = useSiteContext()
-  const { dashboardState } = useDashboardStateContext()
-  function fetchData() {
-    return api.get(url.apiPath(site, '/exit-pages'), dashboardState, {
-      limit: 9
-    })
-  }
-
-  function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site, page.name)
-  }
-
-  function getFilterInfo(listItem) {
-    return {
-      prefix: 'exit_page',
-      filter: ['is', 'exit_page', [listItem['name']]]
-    }
-  }
-
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({
-        defaultLabel: 'Unique exits',
-        width: 'w-36',
-        meta: { plot: true }
-      }),
-      !hasConversionGoalFilter(dashboardState) &&
-        metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
-    ].filter((metric) => !!metric)
-  }
-
-  return (
-    <ListReport
-      fetchData={fetchData}
-      afterFetchData={afterFetchData}
-      getFilterInfo={getFilterInfo}
-      keyLabel="Exit page"
-      metrics={chooseMetrics()}
-      getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50 group-hover/row:bg-orange-100"
-    />
-  )
-}
-
-function TopPages({ afterFetchData }) {
-  const { dashboardState } = useDashboardStateContext()
-  const site = useSiteContext()
-  function fetchData() {
-    return api.get(url.apiPath(site, '/pages'), dashboardState, { limit: 9 })
-  }
-
-  function getExternalLinkUrl(page) {
-    return url.externalLinkForPage(site, page.name)
-  }
-
-  function getFilterInfo(listItem) {
-    return {
-      prefix: 'page',
-      filter: ['is', 'page', [listItem['name']]]
-    }
-  }
-
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      !hasConversionGoalFilter(dashboardState) &&
-        metrics.createPercentage({ meta: { showOnHover: true } }),
-      hasConversionGoalFilter(dashboardState) && metrics.createConversionRate()
-    ].filter((metric) => !!metric)
-  }
-
-  return (
-    <ListReport
-      fetchData={fetchData}
-      afterFetchData={afterFetchData}
-      getFilterInfo={getFilterInfo}
-      keyLabel="Page"
-      metrics={chooseMetrics()}
-      getExternalLinkUrl={getExternalLinkUrl}
-      color="bg-orange-50 group-hover/row:bg-orange-100"
-    />
-  )
-}
+import { PagesIndex } from './pages'
+import { EntryPagesIndex } from './entry-pages'
+import { ExitPagesIndex } from './exit-pages'
 
 export default function Pages() {
   const { dashboardState } = useDashboardStateContext()
@@ -203,12 +70,12 @@ export default function Pages() {
   function renderContent() {
     switch (mode) {
       case 'entry-pages':
-        return <EntryPages afterFetchData={afterFetchData} />
+        return <EntryPagesIndex afterFetchData={afterFetchData} />
       case 'exit-pages':
-        return <ExitPages afterFetchData={afterFetchData} />
+        return <ExitPagesIndex afterFetchData={afterFetchData} />
       case 'pages':
       default:
-        return <TopPages afterFetchData={afterFetchData} />
+        return <PagesIndex afterFetchData={afterFetchData} />
     }
   }
 
