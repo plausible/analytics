@@ -10,7 +10,7 @@ import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { SortDirection } from '../../hooks/use-order-by'
+import { SortDirection } from '../../hooks/use-order-by-legacy'
 
 function ExitPagesModal() {
   const { dashboardState } = useDashboardStateContext()

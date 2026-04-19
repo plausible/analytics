@@ -9,7 +9,7 @@ import {
   OrderBy,
   useOrderBy,
   useRememberOrderBy
-} from '../../hooks/use-order-by'
+} from '../../hooks/use-order-by-legacy'
 import { Metric } from '../reports/metrics'
 import * as metricsModule from '../reports/metrics'
 import { BreakdownResultMeta, DashboardState } from '../../dashboard-state'

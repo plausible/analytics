@@ -7,7 +7,7 @@ import { useDashboardStateContext } from '../../../dashboard-state-context'
 import { useSiteContext } from '../../../site-context'
 import { browserIconFor } from '../../devices'
 import chooseMetrics from './choose-metrics'
-import { SortDirection } from '../../../hooks/use-order-by'
+import { SortDirection } from '../../../hooks/use-order-by-legacy'
 
 function BrowserVersionsModal() {
   const { dashboardState } = useDashboardStateContext()
