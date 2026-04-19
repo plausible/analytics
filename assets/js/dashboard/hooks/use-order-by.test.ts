@@ -1,4 +1,4 @@
-import { Metric } from '../stats/reports/metrics'
+import { Metric } from '../stats/metrics'
 import {
   OrderBy,
   SortDirection,
@@ -9,15 +9,15 @@ import {
   maybeStoreOrderBy,
   rearrangeOrderBy,
   validateOrderBy
-} from './use-order-by-legacy'
+} from './use-order-by'
 
 describe(`${findOrderIndex.name}`, () => {
   /* prettier-ignore */
-  const cases: [OrderBy, Pick<Metric, 'key'>, number][] = [
-    [[], { key: 'anything' }, -1],
-    [[['visitors', SortDirection.asc]], { key: 'anything' }, -1],
-    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], {key: 'bounce_rate'}, 0],
-    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], {key: 'visitors'}, 1]
+  const cases: [OrderBy, Metric, number][] = [
+    [[], 'visitors', -1],
+    [[['visitors', SortDirection.asc]], 'bounce_rate', -1],
+    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], 'bounce_rate', 0],
+    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], 'visitors', 1]
   ]
 
   test.each(cases)(
@@ -60,19 +60,19 @@ describe(`${cycleSortDirection.name}`, () => {
 })
 
 describe(`${rearrangeOrderBy.name}`, () => {
-  const cases: [Pick<Metric, 'key'>, OrderBy, OrderBy][] = [
+  const cases: [Metric, OrderBy, OrderBy][] = [
     [
-      { key: 'visitors' },
+      'visitors',
       [['visitors', SortDirection.asc]],
       [['visitors', SortDirection.desc]]
     ],
     [
-      { key: 'visitors' },
+      'visitors',
       [['visitors', SortDirection.desc]],
       [['visitors', SortDirection.asc]]
     ],
     [
-      { key: 'visit_duration' },
+      'visit_duration',
       [['visitors', SortDirection.asc]],
       [['visit_duration', SortDirection.desc]]
     ]
@@ -89,21 +89,21 @@ describe(`${validateOrderBy.name}`, () => {
   test.each([
     [false, '', []],
     [false, [], []],
-    [false, [['a']], [{ key: 'a' }]],
-    [false, [['a', 'b']], [{ key: 'a' }]],
+    [false, [['visitors']], ['visitors']],
+    [false, [['visitors', 'b']], ['visitors']],
     [
       false,
       [
-        ['a', 'desc'],
-        ['a', 'asc']
+        ['visitors', 'desc'],
+        ['visitors', 'asc']
       ],
-      [{ key: 'a' }]
+      ['visitors']
     ],
-    [true, [['a', 'desc']], [{ key: 'a' }]]
+    [true, [['visitors', 'desc']], ['visitors']]
   ])(
     '[%#] returns %p given input %p and sortable metrics %p',
     (expected, input, sortableMetrics) => {
-      expect(validateOrderBy(input, sortableMetrics)).toBe(expected)
+      expect(validateOrderBy(input, sortableMetrics as Metric[])).toBe(expected)
     }
   )
 })
@@ -114,10 +114,10 @@ describe(`storing detailed report preferred order`, () => {
 
   it('does not store invalid value', () => {
     maybeStoreOrderBy({
-      orderBy: [['foo', SortDirection.desc]],
+      orderBy: [['total_visitors', SortDirection.desc]],
       domain,
       reportInfo,
-      metrics: [{ key: 'foo', sortable: false }]
+      metrics: ['total_visitors']
     })
     expect(localStorage.getItem(getOrderByStorageKey(domain, reportInfo))).toBe(
       null
@@ -126,27 +126,27 @@ describe(`storing detailed report preferred order`, () => {
 
   it('falls back to fallbackValue if metric has become unsortable between storing and retrieving', () => {
     maybeStoreOrderBy({
-      orderBy: [['c', SortDirection.desc]],
+      orderBy: [['visitors', SortDirection.desc]],
       domain,
       reportInfo,
-      metrics: [{ key: 'c', sortable: true }]
+      metrics: ['visitors']
     })
     const inStorage = localStorage.getItem(
       getOrderByStorageKey(domain, reportInfo)
     )
-    expect(inStorage).toBe('[["c","desc"]]')
+    expect(inStorage).toBe('[["visitors","desc"]]')
     expect(
       getStoredOrderBy({
         domain,
         reportInfo,
-        metrics: [{ key: 'c', sortable: false }],
+        metrics: ['total_visitors'],
         fallbackValue: [['visitors', SortDirection.desc]]
       })
     ).toEqual([['visitors', SortDirection.desc]])
   })
 
   it('retrieves stored value correctly', () => {
-    const input = [['any-column', SortDirection.asc]]
+    const input: OrderBy = [['visitors', SortDirection.asc]]
     localStorage.setItem(
       getOrderByStorageKey(domain, reportInfo),
       JSON.stringify(input)
@@ -155,7 +155,7 @@ describe(`storing detailed report preferred order`, () => {
       getStoredOrderBy({
         domain,
         reportInfo,
-        metrics: [{ key: 'any-column', sortable: true }],
+        metrics: ['visitors'],
         fallbackValue: [['visitors', SortDirection.desc]]
       })
     ).toEqual(input)

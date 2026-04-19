@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Metric } from '../stats/reports/metrics'
+import { isSortable, Metric } from '../stats/metrics'
 import { getDomainScopedStorageKey, getItem, setItem } from '../util/storage'
 import { useSiteContext } from '../site-context'
 import { ReportInfo } from '../stats/modals/breakdown-modal'
@@ -9,7 +9,7 @@ export enum SortDirection {
   desc = 'desc'
 }
 
-export type Order = [Metric['key'], SortDirection]
+export type Order = [Metric, SortDirection]
 
 export type OrderBy = Order[]
 
@@ -23,21 +23,21 @@ export function useOrderBy({
   metrics,
   defaultOrderBy
 }: {
-  metrics: Pick<Metric, 'key'>[]
+  metrics: Metric[]
   defaultOrderBy: OrderBy
 }) {
   const [orderBy, setOrderBy] = useState<OrderBy>([])
-  const orderByDictionary: Record<Metric['key'], SortDirection> = useMemo(
+  const orderByDictionary = useMemo(
     () =>
-      orderBy.length
+      (orderBy.length
         ? Object.fromEntries(orderBy)
-        : Object.fromEntries(defaultOrderBy),
+        : Object.fromEntries(defaultOrderBy)) as Record<Metric, SortDirection>,
     [orderBy, defaultOrderBy]
   )
 
   const toggleSortByMetric = useCallback(
-    (metric: Pick<Metric, 'key'>) => {
-      if (!metrics.find(({ key }) => key === metric.key)) {
+    (metric: Metric) => {
+      if (!metrics.find((m) => m === metric)) {
         return
       }
       setOrderBy((currentOrderBy) =>
@@ -73,25 +73,25 @@ export function cycleSortDirection(
   }
 }
 
-export function findOrderIndex(orderBy: OrderBy, metric: Pick<Metric, 'key'>) {
-  return orderBy.findIndex(([metricKey]) => metricKey === metric.key)
+export function findOrderIndex(orderBy: OrderBy, metric: Metric) {
+  return orderBy.findIndex(([m]) => m === metric)
 }
 
 export function rearrangeOrderBy(
   currentOrderBy: OrderBy,
-  metric: Pick<Metric, 'key'>
+  metric: Metric
 ): OrderBy {
   const orderIndex = findOrderIndex(currentOrderBy, metric)
   if (orderIndex < 0) {
     const sortDirection = cycleSortDirection(null).direction as SortDirection
-    return [[metric.key, sortDirection]]
+    return [[metric, sortDirection]]
   }
   const previousOrder = currentOrderBy[orderIndex]
   const sortDirection = cycleSortDirection(previousOrder[1]).direction
   if (sortDirection === null) {
     return []
   }
-  return [[metric.key, sortDirection]]
+  return [[metric, sortDirection]]
 }
 
 export function getOrderByStorageKey(
@@ -107,7 +107,7 @@ export function getOrderByStorageKey(
 
 export function validateOrderBy(
   orderBy: unknown,
-  metrics: Pick<Metric, 'key'>[]
+  metrics: Metric[]
 ): orderBy is OrderBy {
   if (!Array.isArray(orderBy)) {
     return false
@@ -120,7 +120,7 @@ export function validateOrderBy(
   }
   if (
     orderBy[0].length === 2 &&
-    metrics.findIndex((m) => m.key === orderBy[0][0]) > -1 &&
+    metrics.findIndex((m) => m === orderBy[0][0]) > -1 &&
     [SortDirection.asc, SortDirection.desc].includes(orderBy[0][1])
   ) {
     return true
@@ -136,7 +136,7 @@ export function getStoredOrderBy({
 }: {
   domain: string
   reportInfo: Pick<ReportInfo, 'dimensionLabel'>
-  metrics: Pick<Metric, 'key' | 'sortable'>[]
+  metrics: Metric[]
   fallbackValue: OrderBy
 }): OrderBy {
   try {
@@ -145,7 +145,7 @@ export function getStoredOrderBy({
     if (
       validateOrderBy(
         parsed,
-        metrics.filter((m) => m.sortable)
+        metrics.filter((m) => isSortable(m))
       )
     ) {
       return parsed
@@ -165,13 +165,13 @@ export function maybeStoreOrderBy({
 }: {
   domain: string
   reportInfo: Pick<ReportInfo, 'dimensionLabel'>
-  metrics: Pick<Metric, 'key' | 'sortable'>[]
+  metrics: Metric[]
   orderBy: OrderBy
 }) {
   if (
     validateOrderBy(
       orderBy,
-      metrics.filter((m) => m.sortable)
+      metrics.filter((m) => isSortable(m))
     )
   ) {
     setItem(getOrderByStorageKey(domain, reportInfo), JSON.stringify(orderBy))
@@ -184,7 +184,7 @@ export function useRememberOrderBy({
   reportInfo
 }: {
   effectiveOrderBy: OrderBy
-  metrics: Pick<Metric, 'key' | 'sortable'>[]
+  metrics: Metric[]
   reportInfo: Pick<ReportInfo, 'dimensionLabel'>
 }) {
   const site = useSiteContext()
