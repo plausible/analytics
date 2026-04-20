@@ -54,6 +54,13 @@ export function dashboardStateToSearchParams(
   dashboardState: DashboardState,
   extraQuery: unknown[] = []
 ): string {
+  return serializeUrlParams(dashboardStateToParams(dashboardState, extraQuery))
+}
+
+export function dashboardStateToParams(
+  dashboardState: DashboardState,
+  extraQuery: unknown[] = []
+): Record<string, string> {
   const queryObj: Record<string, string> = {}
   if (dashboardState.period) {
     queryObj.period = dashboardState.period
@@ -92,7 +99,7 @@ export function dashboardStateToSearchParams(
 
   Object.assign(queryObj, ...extraQuery)
 
-  return serializeUrlParams(queryObj)
+  return queryObj
 }
 
 function getHeaders(): Record<string, string> {
@@ -144,6 +151,28 @@ export async function get(
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     signal: abortController.signal,
     headers: { ...getHeaders(), Accept: 'application/json' }
+  })
+
+  return handleApiResponse(response)
+}
+
+export async function post(
+  url: string,
+  dashboardState: DashboardState,
+  ...extraBodyParams: unknown[]
+) {
+  const queryString = serializeUrlParams(getSharedLinkSearchParams())
+  const response = await fetch(queryString ? `${url}?${queryString}` : url, {
+    method: 'POST',
+    signal: abortController.signal,
+    headers: {
+      ...getHeaders(),
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify(
+      dashboardStateToParams(dashboardState, [...extraBodyParams])
+    )
   })
 
   return handleApiResponse(response)

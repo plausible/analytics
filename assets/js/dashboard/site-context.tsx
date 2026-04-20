@@ -21,7 +21,6 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     background: dataset.background,
     isDbip: dataset.isDbip === 'true',
     flags: JSON.parse(dataset.flags!),
-    validIntervalsByPeriod: JSON.parse(dataset.validIntervalsByPeriod!),
     shared: !!dataset.sharedLinkAuth,
     isConsolidatedView: dataset.isConsolidatedView === 'true'
   }
@@ -53,7 +52,6 @@ export const siteContextDefaultValue = {
   background: undefined as string | undefined,
   isDbip: false,
   flags: {} as FeatureFlags,
-  validIntervalsByPeriod: {} as Record<string, Array<string>>,
   shared: false,
   isConsolidatedView: false
 }

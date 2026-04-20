@@ -55,20 +55,6 @@ describe('parseSiteFromDataset', () => {
     background: undefined,
     isDbip: false,
     flags: {},
-    validIntervalsByPeriod: {
-      '12mo': ['day', 'week', 'month'],
-      '7d': ['hour', 'day'],
-      '28d': ['day', 'week'],
-      '30d': ['day', 'week'],
-      '91d': ['day', 'week', 'month'],
-      '6mo': ['day', 'week', 'month'],
-      all: ['week', 'month'],
-      custom: ['day', 'week', 'month'],
-      day: ['minute', 'hour'],
-      month: ['day', 'week'],
-      realtime: ['minute'],
-      year: ['day', 'week', 'month']
-    },
     shared: false,
     isConsolidatedView: false
   }

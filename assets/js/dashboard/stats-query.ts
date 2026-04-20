@@ -15,8 +15,11 @@ type QueryInclude = {
   imports: boolean
   imports_meta: boolean
   time_labels: boolean
+  partial_time_labels: boolean
   compare: IncludeCompare
   compare_match_day_of_week: boolean
+  present_index?: boolean
+  empty_metrics?: boolean
 }
 
 export type ReportParams = {
@@ -48,8 +51,11 @@ export function createStatsQuery(
       imports: dashboardState.with_imported,
       imports_meta: reportParams.include?.imports_meta || false,
       time_labels: reportParams.include?.time_labels || false,
+      partial_time_labels: reportParams.include?.partial_time_labels || false,
       compare: createIncludeCompare(dashboardState),
-      compare_match_day_of_week: dashboardState.match_day_of_week
+      compare_match_day_of_week: dashboardState.match_day_of_week,
+      empty_metrics: reportParams.include?.empty_metrics || false,
+      present_index: reportParams.include?.present_index || false
     }
   }
 }

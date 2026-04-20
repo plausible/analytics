@@ -3,6 +3,14 @@ import utc from 'dayjs/plugin/utc'
 
 dayjs.extend(utc)
 
+const browserDateFormat = Intl.DateTimeFormat(navigator.language, {
+  hour: 'numeric'
+})
+
+export function is12HourClock() {
+  return browserDateFormat.resolvedOptions().hour12
+}
+
 export function utcNow() {
   return dayjs()
 }
@@ -32,12 +40,19 @@ export function formatYearShort(date) {
   return date.getUTCFullYear().toString().substring(2)
 }
 
-export function formatDay(date) {
-  if (date.year() !== dayjs().year()) {
+export function formatDay(date, includeYear = false) {
+  if (includeYear) {
     return date.format('ddd, DD MMM YYYY')
   } else {
     return date.format('ddd, DD MMM')
   }
+}
+
+export function formatTime(date, { use12HourClock, includeMinutes }) {
+  if (use12HourClock) {
+    return includeMinutes ? date.format('h:mma') : date.format('ha')
+  }
+  return date.format('HH:mm')
 }
 
 export function formatDayShort(date, includeYear = false) {

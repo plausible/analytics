@@ -72,4 +72,8 @@ defmodule Plausible.Stats.DateTimeRange do
 
     Date.range(first, last)
   end
+
+  def length(%__MODULE__{first: first, last: last}, unit) do
+    DateTime.diff(last, first, unit)
+  end
 end

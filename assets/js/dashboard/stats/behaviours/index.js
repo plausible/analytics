@@ -530,14 +530,14 @@ function Behaviours({ importedDataInView, setMode, mode }) {
                 active={mode === Mode.EXPLORATION}
                 onClick={setTabFactory(Mode.EXPLORATION)}
               >
-                Exploration
+                Explore
               </TabButton>
             )}
           </TabWrapper>
           {isRealtime() && <Pill className="-mt-1">last 30min</Pill>}
           {renderImportedQueryUnsupportedWarning()}
         </div>
-        {mode !== Mode.FUNNELS && (
+        {![Mode.FUNNELS, Mode.EXPLORATION].includes(mode) && (
           <MoreLink state={moreLinkState} linkProps={getMoreLinkProps()} />
         )}
       </ReportHeader>

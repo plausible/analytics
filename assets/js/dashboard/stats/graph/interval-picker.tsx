@@ -1,74 +1,27 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Popover, Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import { SegmentedControl } from '../../components/segmented-control'
-import { PlausibleSite } from '../../site-context'
-import { DashboardState } from '../../dashboard-state'
-import { Dayjs } from 'dayjs'
-import { DashboardPeriod } from '../../dashboard-time-periods'
+import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
+import { useDashboardStateContext } from '../../dashboard-state-context'
+import { useMatch } from 'react-router-dom'
+import { rootRoute } from '../../router'
+import { BlurMenuButtonOnEscape, popover } from '../../components/popover'
+import {
+  Interval,
+  GetIntervalProps,
+  validIntervals,
+  getDefaultInterval
+} from './intervals'
 
-const INTERVAL_LABELS: Record<string, string> = {
-  minute: 'Min',
-  hour: 'Hours',
-  day: 'Days',
-  week: 'Weeks',
-  month: 'Months'
-}
-
-function validIntervals(
-  site: Pick<PlausibleSite, 'validIntervalsByPeriod'>,
-  dashboardState: Pick<DashboardState, 'period' | 'to' | 'from'>
-): string[] {
-  if (
-    dashboardState.period === DashboardPeriod.custom &&
-    dashboardState.from &&
-    dashboardState.to
-  ) {
-    if (dashboardState.to.diff(dashboardState.from, 'days') < 7) {
-      return ['day']
-    } else if (dashboardState.to.diff(dashboardState.from, 'months') < 1) {
-      return ['day', 'week']
-    } else if (dashboardState.to.diff(dashboardState.from, 'months') < 12) {
-      return ['day', 'week', 'month']
-    } else {
-      return ['week', 'month']
-    }
-  } else {
-    return site.validIntervalsByPeriod[dashboardState.period]
-  }
-}
-
-export function getDefaultInterval(
-  dashboardState: Pick<DashboardState, 'period' | 'to' | 'from'>,
-  validIntervals: string[]
-): string {
-  const defaultByPeriod: Record<string, string> = {
-    day: 'hour',
-    '24h': 'hour',
-    '7d': 'day',
-    '6mo': 'month',
-    '12mo': 'month',
-    year: 'month'
-  }
-
-  if (
-    dashboardState.period === DashboardPeriod.custom &&
-    dashboardState.from &&
-    dashboardState.to
-  ) {
-    return defaultForCustomPeriod(dashboardState.from, dashboardState.to)
-  } else {
-    return defaultByPeriod[dashboardState.period] || validIntervals[0]
-  }
-}
-
-function defaultForCustomPeriod(from: Dayjs, to: Dayjs): string {
-  if (to.diff(from, 'days') < 30) {
-    return 'day'
-  } else if (to.diff(from, 'months') < 6) {
-    return 'week'
-  } else {
-    return 'month'
-  }
+const INTERVAL_LABELS: Record<Interval, string> = {
+  [Interval.minute]: 'Min',
+  [Interval.hour]: 'Hours',
+  [Interval.day]: 'Days',
+  [Interval.week]: 'Weeks',
+  [Interval.month]: 'Months'
 }
 
 function getStoredInterval(period: string, domain: string): string | null {
@@ -81,22 +34,56 @@ function getStoredInterval(period: string, domain: string): string | null {
   }
 }
 
-function storeInterval(period: string, domain: string, interval: string): void {
+function storeInterval(
+  period: string,
+  domain: string,
+  interval: Interval
+): void {
   storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
-export const useStoredInterval = (
-  site: PlausibleSite,
-  { to, from, period }: Pick<DashboardState, 'to' | 'from' | 'period'>
-) => {
-  const availableIntervals = useMemo(
-    () => validIntervals(site, { to, from, period }),
+export const useStoredInterval = (props: GetIntervalProps) => {
+  const { period, from, to, site, comparison, compare_from, compare_to } = props
+
+  // Dayjs objects are new references on every render, so we
+  // use valueOf() (ms since epoch) to get stable primitive
+  // values for dependency arrays.
+  const customFrom = from?.valueOf()
+  const customTo = to?.valueOf()
+  const customComparisonFrom = compare_from?.valueOf()
+  const customComparisonTo = compare_to?.valueOf()
+
+  const { availableIntervals, storableIntervals } = useMemo(() => {
+    return {
+      availableIntervals: validIntervals(props),
+      storableIntervals: validIntervals({ ...props, comparison: null })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [site, period, to?.valueOf() ?? null, from?.valueOf() ?? null]
+  }, [
+    site,
+    period,
+    customFrom,
+    customTo,
+    comparison,
+    customComparisonFrom,
+    customComparisonTo
+  ])
+
+  const isValid = useCallback(
+    (interval: string | null): interval is Interval =>
+      !!interval && (availableIntervals as string[]).includes(interval),
+    [availableIntervals]
   )
 
-  const isValid = (interval: string | null): interval is string =>
-    !!interval && availableIntervals.includes(interval)
+  // We skip storing interval selections that are only available
+  // due to a custom comparison period. E.g. even though `month`
+  // interval is available when comparing today with a whole year,
+  // we shouldn't store `interval__day__site.com = month`.
+  const isStorable = useCallback(
+    (interval: string | null): interval is Interval =>
+      !!interval && (storableIntervals as string[]).includes(interval),
+    [storableIntervals]
+  )
 
   const storedInterval = getStoredInterval(period, site.domain)
 
@@ -107,11 +94,13 @@ export const useStoredInterval = (
   }, [availableIntervals])
 
   const onIntervalClick = useCallback(
-    (interval: string) => {
-      storeInterval(period, site.domain, interval)
+    (interval: Interval) => {
+      if (isStorable(interval)) {
+        storeInterval(period, site.domain, interval)
+      }
       setSelectedInterval(interval)
     },
-    [period, site.domain]
+    [period, site, isStorable]
   )
 
   return {
@@ -119,7 +108,7 @@ export const useStoredInterval = (
       ? selectedInterval
       : isValid(storedInterval)
         ? storedInterval
-        : getDefaultInterval({ to, from, period }, availableIntervals),
+        : getDefaultInterval(props),
     onIntervalClick,
     availableIntervals
   }
@@ -130,9 +119,9 @@ export function IntervalPicker({
   onIntervalClick,
   options
 }: {
-  selectedInterval: string
-  onIntervalClick: (interval: string) => void
-  options: string[]
+  selectedInterval: Interval
+  onIntervalClick: (interval: Interval) => void
+  options: Interval[]
 }): JSX.Element | null {
   if (options.length === 0) {
     return null

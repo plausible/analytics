@@ -126,6 +126,102 @@ defmodule Plausible.Stats.QueryTest do
     end
   end
 
+  describe "timeseries with comparisons" do
+    test "returns more original time range buckets than comparison buckets",
+         %{site: site} do
+      populate_stats(site, [
+        # original time range
+        build(:pageview, user_id: 123, timestamp: ~N[2026-01-03 00:00:00]),
+        build(:pageview, user_id: 123, timestamp: ~N[2026-01-03 00:10:00]),
+        build(:pageview, timestamp: ~N[2026-01-05 00:00:00]),
+        # comparison time range
+        build(:pageview, timestamp: ~N[2025-12-16 00:00:00])
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors, :pageviews],
+          input_date_range: {:date_range, ~D[2025-12-25], ~D[2026-01-06]},
+          dimensions: ["time:week"],
+          include: %QueryInclude{
+            compare: {:date_range, ~D[2025-12-12], ~D[2025-12-21]},
+            time_labels: true,
+            time_label_result_indices: true
+          }
+        })
+
+      %Stats.QueryResult{results: results, comparison_results: comparison_results, meta: meta} =
+        Stats.query(site, query)
+
+      assert results == [
+               %{dimensions: ["2025-12-29"], metrics: [1, 2]},
+               %{dimensions: ["2026-01-05"], metrics: [1, 1]}
+             ]
+
+      assert comparison_results == [
+               %{dimensions: ["2025-12-15"], metrics: [1, 1], change: [0, 100]}
+             ]
+
+      assert meta[:time_labels] == ["2025-12-25", "2025-12-29", "2026-01-05"]
+      assert meta[:time_label_result_indices] == [nil, 0, 1]
+      assert meta[:comparison_time_labels] == ["2025-12-12", "2025-12-15"]
+      assert meta[:comparison_time_label_result_indices] == [nil, 0]
+    end
+
+    test "can return more comparison time buckets than original time range buckets",
+         %{site: site} do
+      populate_stats(site, [
+        # original time range
+        build(:pageview, user_id: 123, timestamp: ~N[2021-02-01 00:00:00]),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-02-01 00:10:00]),
+        build(:pageview, timestamp: ~N[2021-02-01 00:00:00]),
+        # comparison time range
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-04 00:00:00])
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors, :pageviews],
+          input_date_range: {:date_range, ~D[2021-02-01], ~D[2021-02-01]},
+          dimensions: ["time:day"],
+          include: %QueryInclude{
+            compare: {:date_range, ~D[2021-01-01], ~D[2021-01-05]},
+            time_labels: true,
+            time_label_result_indices: true
+          }
+        })
+
+      %Stats.QueryResult{results: results, comparison_results: comparison_results, meta: meta} =
+        Stats.query(site, query)
+
+      assert results == [
+               %{dimensions: ["2021-02-01"], metrics: [2, 3]}
+             ]
+
+      assert comparison_results == [
+               %{dimensions: ["2021-01-01"], metrics: [2, 2], change: [0, 50]},
+               %{dimensions: ["2021-01-02"], metrics: [1, 1], change: nil},
+               %{dimensions: ["2021-01-04"], metrics: [1, 1], change: nil}
+             ]
+
+      assert meta[:time_labels] == ["2021-02-01"]
+
+      assert meta[:comparison_time_labels] == [
+               "2021-01-01",
+               "2021-01-02",
+               "2021-01-03",
+               "2021-01-04",
+               "2021-01-05"
+             ]
+
+      assert meta[:time_label_result_indices] == [0]
+      assert meta[:comparison_time_label_result_indices] == [0, 1, nil, 2, nil]
+    end
+  end
+
   describe "session smearing respects query date range boundaries" do
     test "time:hour does not include buckets from outside the query range",
          %{site: site} do
@@ -393,6 +489,116 @@ defmodule Plausible.Stats.QueryTest do
       %Stats.QueryResult{results: results} = Stats.query(site, query)
 
       assert [%{dimensions: ["2021-01-01 00:00:00"], metrics: [1, 50.0]}] = results
+    end
+  end
+
+  describe "include.empty_metrics" do
+    test "if not asked for, no empty_metrics are returned under meta", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors],
+          input_date_range: :all
+        })
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert is_nil(meta[:empty_metrics])
+    end
+
+    for {metric, expected} <- [
+          {:visitors, 0},
+          {:visits, 0},
+          {:pageviews, 0},
+          {:views_per_visit, 0.0},
+          {:bounce_rate, 0.0},
+          {:visit_duration, nil}
+        ] do
+      test "default: empty #{metric} is #{expected}", %{site: site} do
+        {:ok, query} =
+          QueryBuilder.build(site, %ParsedQueryParams{
+            metrics: [unquote(metric)],
+            input_date_range: :all,
+            include: %QueryInclude{empty_metrics: true}
+          })
+
+        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+        assert meta[:empty_metrics] == [unquote(expected)]
+      end
+    end
+
+    for {metric, expected} <- [
+          {:time_on_page, nil},
+          {:scroll_depth, nil}
+        ] do
+      test "page filter: empty #{metric} is #{expected}", %{site: site} do
+        {:ok, query} =
+          QueryBuilder.build(site, %ParsedQueryParams{
+            metrics: [unquote(metric)],
+            input_date_range: :all,
+            include: %QueryInclude{empty_metrics: true},
+            filters: [[:is, "event:page", ["/"]]]
+          })
+
+        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+        assert meta[:empty_metrics] == [unquote(expected)]
+      end
+    end
+
+    for {metric, expected} <- [
+          {:events, 0},
+          {:group_conversion_rate, 0.0}
+        ] do
+      test "goal filter: empty #{metric} is #{expected}", %{site: site} do
+        insert(:goal, site: site, event_name: "Signup")
+
+        {:ok, query} =
+          QueryBuilder.build(site, %ParsedQueryParams{
+            metrics: [unquote(metric)],
+            input_date_range: :all,
+            include: %QueryInclude{empty_metrics: true},
+            filters: [[:is, "event:goal", ["Signup"]]]
+          })
+
+        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+        assert meta[:empty_metrics] == [unquote(expected)]
+      end
+    end
+
+    @tag :ee_only
+    test "goal filter: empty revenue metrics", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:average_revenue, :total_revenue],
+          input_date_range: :all,
+          include: %QueryInclude{empty_metrics: true},
+          filters: [[:is, "event:goal", ["Purchase"]]]
+        })
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert meta[:empty_metrics] == [
+               %{currency: :EUR, long: "€0.00", short: "€0.0", value: 0.0},
+               %{currency: :EUR, long: "€0.00", short: "€0.0", value: 0.0}
+             ]
+    end
+
+    test "is ignored when event:goal dimension used", %{site: site} do
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors],
+          input_date_range: :all,
+          include: %QueryInclude{empty_metrics: true},
+          dimensions: ["event:goal"]
+        })
+
+      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+
+      assert is_nil(meta[:empty_metrics])
     end
   end
 end

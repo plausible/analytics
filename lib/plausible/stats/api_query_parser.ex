@@ -221,14 +221,14 @@ defmodule Plausible.Stats.ApiQueryParser do
     end
   end
 
-  defp parse_dimensions(dimensions) when is_list(dimensions) do
+  def parse_dimensions(dimensions) when is_list(dimensions) do
     parse_list(
       dimensions,
       &parse_dimension_entry(&1, "Invalid dimensions '#{i(dimensions)}'")
     )
   end
 
-  defp parse_dimensions(nil), do: {:ok, []}
+  def parse_dimensions(nil), do: {:ok, []}
 
   def parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)

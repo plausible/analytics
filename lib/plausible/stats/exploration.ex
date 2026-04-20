@@ -8,8 +8,22 @@ defmodule Plausible.Stats.Exploration do
 
     @type t() :: %__MODULE__{}
 
-    @derive {Jason.Encoder, only: [:name, :pathname]}
-    defstruct [:name, :pathname]
+    @derive {Jason.Encoder, only: [:name, :pathname, :label]}
+    defstruct [:name, :pathname, :label]
+
+    @spec from(map()) :: t()
+    def from(step) do
+      new(step.name, step.pathname)
+    end
+
+    @spec new(String.t(), String.t()) :: t()
+    def new(name, pathname) do
+      %__MODULE__{
+        label: if(name == "pageview", do: "Visit", else: name) <> " " <> pathname,
+        name: name,
+        pathname: pathname
+      }
+    end
   end
 
   import Ecto.Query
@@ -21,6 +35,9 @@ defmodule Plausible.Stats.Exploration do
   alias Plausible.Stats.Query
 
   @type journey() :: [Journey.Step.t()]
+  @type direction() :: :forward | :backward
+
+  defguard is_direction(value) when value in [:forward, :backward]
 
   @type next_step() :: %{
           step: Journey.Step.t(),
@@ -31,80 +48,114 @@ defmodule Plausible.Stats.Exploration do
           step: Journey.Step.t(),
           visitors: non_neg_integer(),
           dropoff: non_neg_integer(),
-          dropoff_percentage: String.t()
+          dropoff_percentage: String.t(),
+          conversion_rate: String.t(),
+          conversion_rate_step: String.t()
         }
 
-  @spec next_steps(Query.t(), journey(), String.t()) ::
+  @spec next_steps(Query.t(), journey(), String.t(), direction()) ::
           {:ok, [next_step()]}
-  def next_steps(query, journey, search_term \\ "")
-
-  def next_steps(query, [], search_term) do
+  def next_steps(query, journey, search_term \\ "", direction \\ :forward)
+      when is_direction(direction) do
     query
     |> Base.base_event_query()
-    |> next_steps_first_query(search_term)
+    |> next_steps_query(journey, search_term, direction)
     |> ClickhouseRepo.all()
     |> then(&{:ok, &1})
   end
 
-  def next_steps(query, journey, search_term) do
-    query
-    |> Base.base_event_query()
-    |> next_steps_query(journey, search_term)
-    |> ClickhouseRepo.all()
-    |> then(&{:ok, &1})
-  end
-
-  @spec journey_funnel(Query.t(), journey()) ::
+  @spec journey_funnel(Query.t(), journey(), direction()) ::
           {:ok, [funnel_step()]} | {:error, :empty_journey}
-  def journey_funnel(_query, []), do: {:error, :empty_journey}
+  def journey_funnel(query, journey, direction \\ :forward)
 
-  def journey_funnel(query, journey) do
+  def journey_funnel(_query, [], _direction), do: {:error, :empty_journey}
+
+  def journey_funnel(query, journey, direction) when is_direction(direction) do
     query
     |> Base.base_event_query()
-    |> journey_funnel_query(journey)
+    |> journey_funnel_query(journey, direction)
     |> ClickhouseRepo.all()
     |> to_funnel(journey)
     |> then(&{:ok, &1})
   end
 
-  defp next_steps_first_query(query, search_term) do
-    q_steps = steps_query(query, 1)
+  @doc """
+  Builds a "teaser" funnel by greedily selecting steps.
 
-    from(s in subquery(q_steps),
-      where: selected_as(:next_name) != "",
-      select: %{
-        step: %Journey.Step{
-          name: selected_as(s.name1, :next_name),
-          pathname: selected_as(s.pathname1, :next_pathname)
-        },
-        visitors: selected_as(scale_sample(fragment("uniq(?)", s.user_id)), :count)
-      },
-      group_by: [selected_as(:next_name), selected_as(:next_pathname)],
-      order_by: [
-        desc: selected_as(:count),
-        asc: selected_as(:next_pathname),
-        asc: selected_as(:next_name)
-      ],
-      limit: 10
-    )
-    |> maybe_search(search_term)
+  We currently don't know what the "interesting" funnel might be,
+  but blindly following the most visited cascade, oftentimes results with
+  a repetitive back and forth between two pages.
+
+  Therefore we start with the most visited entry and 
+  iteratively pick the most popular next step, that hasn't appeared 
+  in the journey yet. Trailing slashes are ignored when 
+  comparing pathnames (e.g. `/foo` and `/foo/` are treated as
+  the same page - we should probably do that when deduplicating step candidates too).
+  """
+  @spec interesting_funnel(Query.t(), pos_integer()) ::
+          {:ok, [funnel_step()]} | {:error, :not_found}
+  def interesting_funnel(query, max_steps \\ 6) do
+    case build_interesting_journey(query, [], MapSet.new(), max_steps) do
+      [] -> {:error, :not_found}
+      journey -> journey_funnel(query, journey)
+    end
   end
 
-  defp next_steps_query(query, steps, search_term) do
+  defp build_interesting_journey(_query, journey, _seen, max_steps)
+       when length(journey) >= max_steps do
+    journey
+  end
+
+  defp build_interesting_journey(query, journey, seen, max_steps) do
+    {:ok, candidates} = next_steps(query, journey, "")
+
+    case find_unseen_step(candidates, seen) do
+      nil ->
+        journey
+
+      step ->
+        new_seen = MapSet.put(seen, normalize_step_key(step))
+        build_interesting_journey(query, journey ++ [step], new_seen, max_steps)
+    end
+  end
+
+  defp find_unseen_step(candidates, seen) do
+    Enum.find_value(candidates, fn %{step: step} ->
+      if not MapSet.member?(seen, normalize_step_key(step)), do: step
+    end)
+  end
+
+  defp normalize_step_key(%Journey.Step{name: name, pathname: pathname}) do
+    {name, normalize_pathname(pathname)}
+  end
+
+  defp normalize_pathname("/"), do: "/"
+  defp normalize_pathname(pathname), do: String.trim_trailing(pathname, "/")
+
+  defp next_steps_query(query, steps, search_term, direction) do
     next_step_idx = length(steps) + 1
-    q_steps = steps_query(query, next_step_idx)
+    q_steps = steps_query(query, next_step_idx, direction)
 
     next_name = :"name#{next_step_idx}"
     next_pathname = :"pathname#{next_step_idx}"
 
     q_next =
       from(s in subquery(q_steps),
-        # avoid cycling back to the beginning of the exploration
-        where:
-          selected_as(:next_name) != "" and
-            (selected_as(:next_name) != s.name1 or selected_as(:next_pathname) != s.pathname1),
+        where: selected_as(:next_name) != "",
         select: %{
           step: %Journey.Step{
+            label:
+              selected_as(
+                fragment(
+                  "concat(CASE WHEN ? = ? THEN ? ELSE ? END, ' ', ?)",
+                  selected_as(:next_name),
+                  "pageview",
+                  "Visit",
+                  selected_as(:next_name),
+                  selected_as(:next_pathname)
+                ),
+                :next_label
+              ),
             name: selected_as(field(s, ^next_name), :next_name),
             pathname: selected_as(field(s, ^next_pathname), :next_pathname)
           },
@@ -132,8 +183,8 @@ defmodule Plausible.Stats.Exploration do
     end)
   end
 
-  defp journey_funnel_query(query, steps) do
-    q_steps = steps_query(query, length(steps))
+  defp journey_funnel_query(query, steps, direction) do
+    q_steps = steps_query(query, length(steps), direction)
 
     [first_step | steps] = steps
 
@@ -165,32 +216,86 @@ defmodule Plausible.Stats.Exploration do
     end)
   end
 
-  defp steps_query(query, steps) when is_integer(steps) do
-    q_steps =
+  defp steps_query(query, steps, direction) when is_integer(steps) do
+    event_ordering = [asc: :timestamp, asc: :name, asc: :pathname]
+
+    q_pairs =
       from(e in query,
-        windows: [step_window: [partition_by: e.user_id, order_by: e.timestamp]],
+        windows: [
+          session_window: [
+            partition_by: e.user_id,
+            order_by: ^event_ordering
+          ]
+        ],
+        select: %{
+          site_id: e.site_id,
+          user_id: e.user_id,
+          _sample_factor: e._sample_factor,
+          name: e.name,
+          pathname: e.pathname,
+          timestamp: e.timestamp
+        },
+        where: e.name != "engagement",
+        order_by: ^event_ordering
+      )
+      |> select_previous(direction)
+
+    q_steps =
+      from(e in subquery(q_pairs),
+        windows: [step_window: [partition_by: e.user_id, order_by: ^event_ordering]],
         select: %{
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
           name1: e.name,
           pathname1: e.pathname
         },
-        where: e.name != "engagement",
-        order_by: e.timestamp
+        where: e.prev_name != e.name or e.prev_pathname != e.pathname,
+        order_by: ^event_ordering
       )
 
     if steps > 1 do
       Enum.reduce(1..(steps - 1), q_steps, fn idx, q ->
-        from(e in q,
-          select_merge: %{
-            ^:"name#{idx + 1}" => lead(e.name, ^idx) |> over(:step_window),
-            ^:"pathname#{idx + 1}" => lead(e.pathname, ^idx) |> over(:step_window)
-          }
-        )
+        select_next(q, idx, direction)
       end)
     else
       q_steps
     end
+  end
+
+  defp select_previous(query, :forward) do
+    from(e in query,
+      select_merge: %{
+        prev_pathname: lag(e.pathname) |> over(:session_window),
+        prev_name: lag(e.name) |> over(:session_window)
+      }
+    )
+  end
+
+  defp select_previous(query, :backward) do
+    from(e in query,
+      select_merge: %{
+        prev_pathname: lead(e.pathname) |> over(:session_window),
+        prev_name: lead(e.name) |> over(:session_window)
+      }
+    )
+  end
+
+  defp select_next(query, idx, :forward) do
+    from(e in query,
+      select_merge: %{
+        ^:"name#{idx + 1}" => lead(e.name, ^idx) |> over(:step_window),
+        ^:"pathname#{idx + 1}" => lead(e.pathname, ^idx) |> over(:step_window)
+      }
+    )
+  end
+
+  defp select_next(query, idx, :backward) do
+    from(e in query,
+      select_merge: %{
+        ^:"name#{idx + 1}" => lag(e.name, ^idx) |> over(:step_window),
+        ^:"pathname#{idx + 1}" => lag(e.pathname, ^idx) |> over(:step_window)
+      }
+    )
   end
 
   defp step_condition(step, count) do
@@ -204,11 +309,7 @@ defmodule Plausible.Stats.Exploration do
   defp maybe_search(query, search_term) do
     case String.trim(search_term) do
       term when byte_size(term) > 2 ->
-        from(s in query,
-          where:
-            ilike(selected_as(:next_name), ^"%#{term}%") or
-              ilike(selected_as(:next_pathname), ^"%#{term}%")
-        )
+        from(s in query, where: ilike(selected_as(:next_label), ^"%#{term}%"))
 
       _ ->
         query
@@ -218,25 +319,37 @@ defmodule Plausible.Stats.Exploration do
   defp to_funnel([result], journey) do
     journey
     |> Enum.with_index()
-    |> Enum.reduce(%{funnel: [], visitors_at_previous: nil}, fn {step, idx}, acc ->
+    |> Enum.reduce(%{funnel: [], visitors_at_previous: nil, total_visitors: nil}, fn {step, idx},
+                                                                                     acc ->
+      step = Journey.Step.from(step)
       current_visitors = Map.get(result, idx + 1, 0)
+      total_visitors = acc.total_visitors || current_visitors
 
       dropoff =
         if acc.visitors_at_previous, do: acc.visitors_at_previous - current_visitors, else: 0
 
       dropoff_percentage = percentage(dropoff, acc.visitors_at_previous)
+      conversion_rate = percentage(current_visitors, total_visitors)
+      conversion_rate_step = percentage(current_visitors, acc.visitors_at_previous)
 
       funnel = [
         %{
           step: step,
           visitors: current_visitors,
           dropoff: dropoff,
-          dropoff_percentage: dropoff_percentage
+          dropoff_percentage: dropoff_percentage,
+          conversion_rate: conversion_rate,
+          conversion_rate_step: conversion_rate_step
         }
         | acc.funnel
       ]
 
-      %{acc | funnel: funnel, visitors_at_previous: current_visitors}
+      %{
+        acc
+        | funnel: funnel,
+          visitors_at_previous: current_visitors,
+          total_visitors: total_visitors
+      }
     end)
     |> Map.fetch!(:funnel)
     |> Enum.reverse()

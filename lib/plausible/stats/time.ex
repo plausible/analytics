@@ -120,6 +120,109 @@ defmodule Plausible.Stats.Time do
     |> Enum.map(&format_datetime/1)
   end
 
+  def partial_time_labels(time_labels, query) do
+    time_dimension = time_dimension(query)
+
+    range_start = to_naive_in_tz!(query.utc_time_range.first, query.timezone)
+    range_end = to_naive_in_tz!(query.utc_time_range.last, query.timezone)
+    now = to_naive_in_tz!(query.now, query.timezone)
+
+    cutoff = if NaiveDateTime.before?(now, range_end), do: now, else: range_end
+
+    first_bucket = List.first(time_labels)
+    last_bucket = List.last(time_labels)
+
+    first_partial? =
+      case bucket_start(first_bucket, time_dimension) do
+        nil -> false
+        start -> NaiveDateTime.after?(range_start, start)
+      end
+
+    last_partial? =
+      case bucket_end(last_bucket, time_dimension) do
+        nil -> false
+        bucket_end -> NaiveDateTime.after?(bucket_end, cutoff)
+      end
+
+    [
+      if(first_partial?, do: first_bucket),
+      if(last_partial?, do: last_bucket)
+    ]
+    |> Enum.uniq()
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp bucket_start(label, "time:week") do
+    case Date.from_iso8601(label) do
+      {:ok, date} -> NaiveDateTime.new!(Date.beginning_of_week(date), ~T[00:00:00])
+      _ -> nil
+    end
+  end
+
+  defp bucket_start(label, _time_dimension) do
+    case Date.from_iso8601(label) do
+      {:ok, date} ->
+        NaiveDateTime.new!(date, ~T[00:00:00])
+
+      _ ->
+        case NaiveDateTime.from_iso8601(label) do
+          {:ok, naive_datetime} -> naive_datetime
+          _ -> nil
+        end
+    end
+  end
+
+  defp bucket_end(label, time_dimension) do
+    shift_unit =
+      case time_dimension do
+        "time:month" -> :month
+        "time:week" -> :week
+        "time:day" -> :day
+        "time:hour" -> :hour
+        "time:minute" -> :minute
+      end
+
+    case bucket_start(label, time_dimension) do
+      nil -> nil
+      start -> NaiveDateTime.shift(start, [{shift_unit, 1}, {:second, -1}])
+    end
+  end
+
+  defp to_naive_in_tz!(utc_datetime, timezone) do
+    utc_datetime
+    |> DateTime.shift_zone!(timezone)
+    |> DateTime.to_naive()
+  end
+
+  def present_index(time_labels, query) do
+    now = DateTime.shift_zone!(query.now, query.timezone)
+
+    current_label =
+      case time_dimension(query) do
+        "time:month" ->
+          DateTime.to_date(now)
+          |> Date.beginning_of_month()
+          |> Date.to_string()
+
+        "time:week" ->
+          DateTime.to_date(now)
+          |> date_or_weekstart(Query.date_range(query))
+          |> Date.to_string()
+
+        "time:day" ->
+          DateTime.to_date(now)
+          |> Date.to_string()
+
+        "time:hour" ->
+          Calendar.strftime(now, "%Y-%m-%d %H:00:00")
+
+        "time:minute" ->
+          Calendar.strftime(now, "%Y-%m-%d %H:%M:00")
+      end
+
+    Enum.find_index(time_labels, &(&1 == current_label))
+  end
+
   def date_or_weekstart(date, date_range) do
     weekstart = Date.beginning_of_week(date)
 
