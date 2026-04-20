@@ -51,6 +51,18 @@ function fetchFunnelData(site, dashboardState, steps, direction) {
   })
 }
 
+function fetchSuggestedJourney(site, dashboardState) {
+  return api.post(
+    url.apiPath(site, '/exploration/interesting-funnel'),
+    dashboardState,
+    {}
+  )
+}
+
+function isSameStep(step, otherStep) {
+  return step.name === otherStep.name && step.pathname === otherStep.pathname
+}
+
 function ExplorationColumn({
   header,
   steps,
@@ -63,7 +75,7 @@ function ExplorationColumn({
   direction
 }) {
   const site = useSiteContext()
-  const [loading, setLoading] = useState(steps !== null)
+  const [loading, setLoading] = useState(steps !== null && !selected)
   const [results, setResults] = useState([])
   const [filter, setFilter] = useState('')
   const stepsFingerprint =
@@ -76,13 +88,16 @@ function ExplorationColumn({
   )
 
   useEffect(() => {
-    if (selected) {
-      return
-    }
-
     if (steps === null) {
       setFilter('')
       setResults([])
+      setLoading(false)
+      return
+    }
+
+    if (selected) {
+      // When a step is already selected (pre-populated by "Suggest a journey"),
+      // fetch is unnecessary?
       setLoading(false)
       return
     }
@@ -120,6 +135,22 @@ function ExplorationColumn({
       ? results[0]?.visitors
       : maxVisitors || results[0]?.visitors
 
+  // When a step is selected we show only that one item.
+  // If the full results list has loaded and contains a matching entry we use it
+  // so the bar widths are still relative to the column's data; otherwise we
+  // fall back to a synthetic item built from the funnel data
+  const selectedResult =
+    selected && results.find(({ step }) => isSameStep(step, selected))
+
+  const listItems = selected
+    ? [
+        selectedResult || {
+          step: selected,
+          visitors: selectedVisitors ?? 0
+        }
+      ]
+    : results.slice(0, 10)
+
   return (
     <div className="min-w-80 flex-1 border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden">
       <div className="h-12 pl-4 pr-1.5 flex items-center justify-between">
@@ -152,29 +183,19 @@ function ExplorationColumn({
             <div></div>
           </div>
         </div>
-      ) : results.length === 0 ? (
+      ) : results.length === 0 && !selected ? (
         <div className="h-108 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
           {steps === null ? 'Select an event to continue' : 'No data'}
         </div>
       ) : (
         <ul className="flex flex-col gap-y-0.5 px-1.5 pb-1.5 h-108 overflow-y-auto">
-          {(selected
-            ? results.filter(
-                ({ step }) =>
-                  step.name === selected.name &&
-                  step.pathname === selected.pathname
-              )
-            : results.slice(0, 10)
-          ).map(({ step, visitors }) => {
-            const isSelected =
-              !!selected &&
-              step.name === selected.name &&
-              step.pathname === selected.pathname
+          {listItems.map(({ step, visitors }) => {
+            const isSelected = !!selected && isSameStep(step, selected)
             const visitorsToShow =
               isSelected && selectedVisitors !== null
                 ? selectedVisitors
                 : visitors
-            const conversionRateToShow =
+            const barWidth =
               isSelected && selectedConversionRate !== null
                 ? selectedConversionRate
                 : Math.round((visitors / stepMaxVisitors) * 100)
@@ -210,7 +231,7 @@ function ExplorationColumn({
                           ? 'bg-indigo-500 dark:bg-white'
                           : 'bg-indigo-300 dark:bg-gray-300 group-hover:bg-indigo-400 dark:group-hover:bg-white'
                       }`}
-                      style={{ width: `${conversionRateToShow}%` }}
+                      style={{ width: `${barWidth}%` }}
                     />
                   </div>
                 </button>
@@ -241,8 +262,49 @@ export function FunnelExploration() {
   const [steps, setSteps] = useState([])
   const [direction, setDirection] = useState(EXPLORATION_DIRECTIONS.FORWARD)
   const [funnel, setFunnel] = useState([])
+  // track in flight "Suggest a journey" request
+  const [isSuggestingJourney, setIsSuggestingJourney] = useState(false)
+  // counter to detect and discard stale suggestion responses
+  const suggestionRequestIdRef = useRef(0)
+
+  function cancelPendingSuggestion() {
+    suggestionRequestIdRef.current += 1
+    setIsSuggestingJourney(false)
+  }
+
+  function handleSuggestJourney() {
+    if (isSuggestingJourney) {
+      return
+    }
+
+    const requestId = ++suggestionRequestIdRef.current
+    setIsSuggestingJourney(true)
+
+    fetchSuggestedJourney(site, dashboardState)
+      .then((response) => {
+        // newer request (or an explicit cancel)
+        if (suggestionRequestIdRef.current !== requestId) {
+          return
+        }
+
+        if (response && response.length > 0) {
+          setSteps(response.map(({ step }) => step))
+          setFunnel(response)
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (suggestionRequestIdRef.current === requestId) {
+          setIsSuggestingJourney(false)
+        }
+      })
+  }
 
   function handleSelect(columnIndex, selected) {
+    if (isSuggestingJourney) {
+      cancelPendingSuggestion()
+    }
+
     if (selected === null) {
       setSteps(steps.slice(0, columnIndex))
     } else {
@@ -252,6 +314,11 @@ export function FunnelExploration() {
 
   function handleDirectionSelect(nextDirection) {
     if (nextDirection === direction) return
+
+    if (isSuggestingJourney) {
+      cancelPendingSuggestion()
+    }
+
     setDirection(nextDirection)
     setSteps([])
     setFunnel([])
@@ -299,31 +366,43 @@ export function FunnelExploration() {
             Explore
           </h4>
         </div>
-        <div className="flex shrink-0 gap-1 overflow-hidden">
-          <button
-            onClick={() =>
-              handleDirectionSelect(EXPLORATION_DIRECTIONS.FORWARD)
-            }
-            className={`px-2 py-1.5 text-xs font-medium rounded-md ${
-              direction === EXPLORATION_DIRECTIONS.FORWARD
-                ? 'bg-gray-150 text-gray-900 dark:bg-gray-750 dark:text-gray-100'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}
-          >
-            Starting point
-          </button>
-          <button
-            onClick={() =>
-              handleDirectionSelect(EXPLORATION_DIRECTIONS.BACKWARD)
-            }
-            className={`px-2 py-1.5 text-xs font-medium rounded-md ${
-              direction === EXPLORATION_DIRECTIONS.BACKWARD
-                ? 'bg-gray-150 text-gray-900 dark:bg-gray-750 dark:text-gray-100'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}
-          >
-            End point
-          </button>
+        <div className="flex shrink-0 items-center gap-3">
+          {steps.length === 0 &&
+            direction === EXPLORATION_DIRECTIONS.FORWARD && (
+              <button
+                onClick={handleSuggestJourney}
+                disabled={isSuggestingJourney}
+                className="text-xs font-medium text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200 disabled:opacity-50"
+              >
+                {isSuggestingJourney ? 'Suggesting...' : 'Suggest a journey'}
+              </button>
+            )}
+          <div className="flex gap-1 overflow-hidden">
+            <button
+              onClick={() =>
+                handleDirectionSelect(EXPLORATION_DIRECTIONS.FORWARD)
+              }
+              className={`px-2 py-1.5 text-xs font-medium rounded-md ${
+                direction === EXPLORATION_DIRECTIONS.FORWARD
+                  ? 'bg-gray-150 text-gray-900 dark:bg-gray-750 dark:text-gray-100'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              Starting point
+            </button>
+            <button
+              onClick={() =>
+                handleDirectionSelect(EXPLORATION_DIRECTIONS.BACKWARD)
+              }
+              className={`px-2 py-1.5 text-xs font-medium rounded-md ${
+                direction === EXPLORATION_DIRECTIONS.BACKWARD
+                  ? 'bg-gray-150 text-gray-900 dark:bg-gray-750 dark:text-gray-100'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              End point
+            </button>
+          </div>
         </div>
       </div>
 
