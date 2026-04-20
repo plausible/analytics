@@ -320,14 +320,13 @@ function InnerGraph<T extends GraphYValues>({
 
   useEffect(() => {
     const currentSvg = svgRef.current
-    if (currentSvg) {
+    if (currentSvg && pointsRef.current) {
+      const points = pointsRef.current
       const svg = d3.select(currentSvg)
 
       svg.on(
         'pointermove',
         (event) => {
-          const points = pointsRef.current
-          if (!points) return
           const { xPointer, yPointer } = getPosition(event)
           const inHoverableArea = isInHoverableArea(xPointer, yPointer)
           const closestIndexToPointer = inHoverableArea
@@ -357,7 +356,7 @@ function InnerGraph<T extends GraphYValues>({
         }
       }
     }
-  }, [onPointerMove, isInHoverableArea])
+  }, [onPointerMove, isInHoverableArea, data])
 
   useEffect(() => {
     const currentSvg = svgRef.current
@@ -377,7 +376,7 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('gotpointercapture', null)
       }
     }
-  }, [onGotPointerCapture, isInHoverableArea])
+  }, [onGotPointerCapture, isInHoverableArea, data])
 
   useEffect(() => {
     const currentSvg = svgRef.current
@@ -397,7 +396,7 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('pointerenter', null)
       }
     }
-  }, [onPointerEnter, isInHoverableArea])
+  }, [onPointerEnter, isInHoverableArea, data])
 
   useEffect(() => {
     const currentSvg = svgRef.current
@@ -418,18 +417,17 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('lostpointercapture pointerleave', null)
       }
     }
-  }, [onPointerLeave, isInHoverableArea])
+  }, [onPointerLeave, isInHoverableArea, data])
 
   useEffect(() => {
     const currentSvg = svgRef.current
-    if (currentSvg) {
+    if (currentSvg && pointsRef.current) {
       const svg = d3.select(currentSvg)
+      const points = pointsRef.current
       if (typeof onClick !== 'function') {
         svg.on('click', null)
       } else {
         svg.on('click', (event) => {
-          const points = pointsRef.current
-          if (!points) return
           const { xPointer, yPointer } = getPosition(event)
           const inHoverableArea = isInHoverableArea(xPointer, yPointer)
           const closestIndexToPointer = inHoverableArea
@@ -458,7 +456,7 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('click', null)
       }
     }
-  }, [onClick, isInHoverableArea])
+  }, [onClick, isInHoverableArea, data])
 
   useEffect(() => {
     pointsRef.current?.forEach(({ dots }, index) =>
@@ -469,7 +467,7 @@ function InnerGraph<T extends GraphYValues>({
         )
       )
     )
-  }, [highlightedIndex])
+  }, [highlightedIndex, data])
 
   return (
     <svg
