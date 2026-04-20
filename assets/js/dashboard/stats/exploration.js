@@ -130,10 +130,7 @@ function ExplorationColumn({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dashboardState, stepsFingerprint, filter, direction, site, selected])
 
-  const stepMaxVisitors =
-    direction === EXPLORATION_DIRECTIONS.BACKWARD
-      ? results[0]?.visitors
-      : maxVisitors || results[0]?.visitors
+  const stepMaxVisitors = maxVisitors || results[0]?.visitors
 
   // When a step is selected we show only that one item.
   // If the full results list has loaded and contains a matching entry we use it
