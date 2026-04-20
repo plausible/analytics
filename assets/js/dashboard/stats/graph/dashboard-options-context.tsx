@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState } from 'react'
 import { NoticeProps } from '../../components/notice'
+import { Interval } from './intervals'
 
 export type DashboardOptionsContextValue = {
-  selectedInterval: string
-  onIntervalClick: (interval: string) => void
-  availableIntervals: string[]
+  selectedInterval: Interval
+  onIntervalClick: (interval: Interval) => void
+  availableIntervals: Interval[]
   isRealtime: boolean
   importedSwitchVisible: boolean
   importedIntervalUnsupportedNotice: NoticeProps | null
