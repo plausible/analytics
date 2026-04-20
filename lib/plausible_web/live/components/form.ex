@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input name="my-input" errors={["oh no!"]} />
   """
 
-  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-750 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-800 transition-all duration-150 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500 rounded-md disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:border-gray-200 disabled:dark:border-gray-800 disabled:text-gray-900/40 disabled:dark:text-white/30 disabled:cursor-not-allowed"
+  @default_input_class "text-base text-gray-900 dark:text-white dark:bg-gray-750 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-800 transition-all duration-150 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500 rounded-md disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:border-gray-200 disabled:dark:border-gray-800 disabled:text-gray-900/40 disabled:dark:text-white/30 disabled:cursor-not-allowed"
 
   attr(:id, :any, default: nil)
   attr(:name, :any)
@@ -162,7 +162,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         id={@id}
         rows={@rest[:rows] || "6"}
         name={@name}
-        class="block w-full textarea border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
+        class="block w-full textarea border-1 border-gray-300 rounded-md p-4 text-base text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
         {@rest}
       >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       <.error :for={msg <- @errors}>{msg}</.error>

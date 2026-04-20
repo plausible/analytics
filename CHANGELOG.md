@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - Fixed issue with all non-interactive events being counted as interactive
 - Fixed countries map countries staying highlighted on Chrome
 - Fixed comparison tooltip in the top pages report missing date labels
+- Prevent Mobile Safari from auto-zooming when focusing text inputs and textareas sized below 16px
 
 ## v3.2.0 - 2026-01-16
 
