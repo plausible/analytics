@@ -317,7 +317,7 @@ export function FunnelExploration() {
     }
 
     setDirection(nextDirection)
-    setSteps([])
+    setSteps(steps.toReversed())
     setFunnel([])
   }
 
