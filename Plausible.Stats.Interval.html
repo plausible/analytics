@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D5DB1DF3.js"></script>
+    <script src="dist/sidebar_items-DC198260.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,9 +138,8 @@ Pages
 
 
     <section id="moduledoc">
-<p>Collection of functions to work with intervals.</p><p>The interval of a query defines the granularity of the data. You can think of
-it as a <code class="inline">GROUP BY</code> clause. Possible values are <code class="inline">minute</code>, <code class="inline">hour</code>, <code class="inline">day</code>,
-<code class="inline">week</code>, and <code class="inline">month</code>.</p>
+<p>[DEPRECATED] Stats API v2 handles &quot;intervals&quot; as time dimensions.
+See <code class="inline">Plausible.Stats.ApiQueryParser.parse_dimensions/1</code>.</p>
     </section>
 
 </div>
@@ -152,36 +151,6 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:opt/0" data-no-tooltip translate="no">opt()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:opts/0" data-no-tooltip translate="no">opts()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
-
-      </div>
-
-    </div>
-
-</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -193,15 +162,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the suggested interval (i.e. the time dimension) for the given query.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#list/0" data-no-tooltip translate="no">list()</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Returns the suggested interval for a given Stats API v1 (legacy) query.</p></div>
 
     </div>
 
@@ -213,118 +174,10 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     </div>
 
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#valid_by_period/1" data-no-tooltip translate="no">valid_by_period(opts \\ [])</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#valid_for_period?/3" data-no-tooltip translate="no">valid_for_period?(period, interval, opts \\ [])</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Returns whether the given interval is valid for a time period.</p></div>
-
-    </div>
-
 </div>
 
   </section>
 
-
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Types</span>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:opt/0">
-
-  <div class="detail-header">
-    <a href="#t:opt/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">opt()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L13" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> opt() :: {:site, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()} | {:from, <a href="https://hexdocs.pm/elixir/Date.html#t:t/0">Date.t</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:opts/0">
-
-  <div class="detail-header">
-    <a href="#t:opts/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">opts()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L14" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> opts() :: [<a href="#t:opt/0">opt</a>()]</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:t/0">
-
-  <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">t()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L12" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> t() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -342,7 +195,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">default_for_query(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L30" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L18" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -351,39 +204,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> default_for_query(<a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>()) :: <a href="#t:t/0">t</a>()</pre>
-
-      </div>
-
-<p>Returns the suggested interval (i.e. the time dimension) for the given query.</p>
-  </section>
-</section>
-<section class="detail" id="list/0">
-
-  <div class="detail-header">
-    <a href="#list/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">list()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L19" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> list() :: [<a href="#t:t/0">t</a>()]</pre>
-
-      </div>
-
-
+<p>Returns the suggested interval for a given Stats API v1 (legacy) query.</p>
   </section>
 </section>
 <section class="detail" id="valid?/1">
@@ -394,7 +215,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">valid?(interval)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L22" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L11" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -403,71 +224,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> valid?(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="valid_by_period/1">
-
-    <span id="valid_by_period/0"></span>
-
-  <div class="detail-header">
-    <a href="#valid_by_period/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">valid_by_period(opts \\ [])</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L77" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> valid_by_period(<a href="#t:opts/0">opts</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="valid_for_period?/3">
-
-    <span id="valid_for_period?/2"></span>
-
-  <div class="detail-header">
-    <a href="#valid_for_period?/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">valid_for_period?(period, interval, opts \\ [])</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L112" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> valid_for_period?(period(), <a href="#t:t/0">t</a>(), <a href="#t:opts/0">opts</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
-
-      </div>
-
-<p>Returns whether the given interval is valid for a time period.</p><p>Intervals longer than periods are not supported, e.g. current month stats with
-a month interval, or today stats with a week interval.</p><p>There are two dynamic states:</p><ul><li><code class="inline">custom</code> period is only applicable with <code class="inline">month</code> or <code class="inline">week</code> intervals,
- if the <code class="inline">opts[:from]</code> and <code class="inline">opts[:to]</code> range difference exceeds 12 months</li><li><code class="inline">all</code> period's interval options depend on particular site's <code class="inline">stats_start_date</code><ul><li>daily interval is excluded if the all-time range exceeds 12 months</li></ul></li></ul>
   </section>
 </section>
 
