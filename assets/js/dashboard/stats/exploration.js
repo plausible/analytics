@@ -97,7 +97,7 @@ function ExplorationColumn({
 
     if (selected) {
       // When a step is already selected (pre-populated by "Suggest a journey"),
-      // fetch is unnecessary?
+      // fetch is unnecessary
       setLoading(false)
       return
     }
