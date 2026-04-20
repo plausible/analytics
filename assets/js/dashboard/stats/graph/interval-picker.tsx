@@ -1,14 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Popover, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import classNames from 'classnames'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import * as storage from '../../util/storage'
 import { SegmentedControl } from '../../components/segmented-control'
-import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
-import { useDashboardStateContext } from '../../dashboard-state-context'
-import { useMatch } from 'react-router-dom'
-import { rootRoute } from '../../router'
-import { BlurMenuButtonOnEscape, popover } from '../../components/popover'
 import {
   Interval,
   GetIntervalProps,
