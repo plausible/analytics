@@ -60,7 +60,7 @@ defmodule Plausible.Stats.Exploration do
     query
     |> Base.base_event_query()
     |> next_steps_query(journey, search_term, direction)
-    |> ClickhouseRepo.all()
+    |> ClickhouseRepo.all(query: query)
     |> then(&{:ok, &1})
   end
 
@@ -74,7 +74,7 @@ defmodule Plausible.Stats.Exploration do
     query
     |> Base.base_event_query()
     |> journey_funnel_query(journey, direction)
-    |> ClickhouseRepo.all()
+    |> ClickhouseRepo.all(query: query)
     |> to_funnel(journey)
     |> then(&{:ok, &1})
   end
