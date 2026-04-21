@@ -165,10 +165,6 @@ export default function VisitorGraph({
     }
   }, [topStatsQuery.data, updateImportedDataInView])
 
-  // fetch realtime stats
-  const refetchTopStats = topStatsQuery.refetch
-  const refetchMainGraph = mainGraphQuery.refetch
-
   useEffect(() => {
     const onTick = () => {
       setIsRealtimeSilentUpdate({ topStats: true, mainGraph: true })
@@ -183,8 +179,6 @@ export default function VisitorGraph({
           return realtimeTopStatsOrMainGraphQuery
         }
       })
-      refetchTopStats()
-      refetchMainGraph()
     }
 
     if (isRealtime) {
@@ -194,7 +188,7 @@ export default function VisitorGraph({
     return () => {
       document.removeEventListener('tick', onTick)
     }
-  }, [queryClient, isRealtime, refetchTopStats, refetchMainGraph])
+  }, [queryClient, isRealtime])
 
   const importedSwitchVisible = !['no_imported_data', 'out_of_range'].includes(
     topStatsQuery.data?.meta.imports_skip_reason as string
