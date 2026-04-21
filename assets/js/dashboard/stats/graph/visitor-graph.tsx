@@ -12,7 +12,6 @@ import { PlausibleSite, useSiteContext } from '../../site-context'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Metric } from '../../../types/query-api'
 import { DashboardPeriod } from '../../dashboard-time-periods'
-import { DashboardState } from '../../dashboard-state'
 import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
 import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
@@ -172,17 +171,6 @@ export default function VisitorGraph({
   useEffect(() => {
     const onTick = () => {
       setIsRealtimeSilentUpdate({ topStats: true, mainGraph: true })
-      queryClient.invalidateQueries({
-        predicate: ({ queryKey }) => {
-          const realtimeTopStatsOrMainGraphQuery =
-            ['top-stats', 'main-graph'].includes(queryKey[0] as string) &&
-            typeof queryKey[1] === 'object' &&
-            (queryKey[1] as { dashboardState?: DashboardState })?.dashboardState
-              ?.period === DashboardPeriod.realtime
-
-          return realtimeTopStatsOrMainGraphQuery
-        }
-      })
       refetchTopStats()
       refetchMainGraph()
     }
