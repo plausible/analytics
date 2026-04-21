@@ -181,7 +181,8 @@ export default function VisitorGraph({
               ?.period === DashboardPeriod.realtime
 
           return realtimeTopStatsOrMainGraphQuery
-        }
+        },
+        refetchType: 'none'
       })
       refetchTopStats()
       refetchMainGraph()
