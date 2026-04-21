@@ -189,8 +189,8 @@ defmodule PlausibleWeb.Api.StatsController do
          {:ok, direction} <- parse_exploration_direction(params["direction"]),
          query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
          {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term, direction),
-           funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
-             json(conn, %{next: next_steps, funnel: funnel})
+         funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
+      json(conn, %{next: next_steps, funnel: funnel})
     else
       _ ->
         bad_request(conn, "There was an error with your request")
