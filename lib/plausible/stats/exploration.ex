@@ -60,6 +60,8 @@ defmodule Plausible.Stats.Exploration do
     query
     |> Base.base_event_query()
     |> next_steps_query(journey, search_term, direction)
+    # We pass the query struct to record query metadata for
+    # the CH debug console.
     |> ClickhouseRepo.all(query: query)
     |> then(&{:ok, &1})
   end
@@ -74,6 +76,8 @@ defmodule Plausible.Stats.Exploration do
     query
     |> Base.base_event_query()
     |> journey_funnel_query(journey, direction)
+    # We pass the query struct to record query metadata for
+    # the CH debug console.
     |> ClickhouseRepo.all(query: query)
     |> to_funnel(journey)
     |> then(&{:ok, &1})

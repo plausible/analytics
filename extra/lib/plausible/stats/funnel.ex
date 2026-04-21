@@ -36,6 +36,8 @@ defmodule Plausible.Stats.Funnel do
       |> Query.set(preloaded_goals: %{all: [], matching_toplevel_filters: goals})
       |> Base.base_event_query()
       |> funnel_query(funnel)
+      # We pass the query struct to record query metadata for
+      # the CH debug console.
       |> ClickhouseRepo.all(query: query)
 
     # Funnel definition steps are 1-indexed, if there's index 0 in the resulting query,
