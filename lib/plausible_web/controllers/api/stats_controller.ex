@@ -142,7 +142,11 @@ defmodule PlausibleWeb.Api.StatsController do
     with {:ok, journey} <- parse_journey(steps),
          {:ok, direction} <- parse_exploration_direction(params["direction"]),
          query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
-         {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term, direction) do
+         {:ok, next_steps} <-
+           Exploration.next_steps(query, journey,
+             search_term: search_term,
+             direction: direction
+           ) do
       json(conn, next_steps)
     else
       _ ->
@@ -188,7 +192,11 @@ defmodule PlausibleWeb.Api.StatsController do
     with {:ok, journey} <- parse_journey(steps),
          {:ok, direction} <- parse_exploration_direction(params["direction"]),
          query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
-         {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term, direction) do
+         {:ok, next_steps} <-
+           Exploration.next_steps(query, journey,
+             search_term: search_term,
+             direction: direction
+           ) do
       funnel =
         if include_funnel? do
           case Exploration.journey_funnel(query, journey, direction) do
