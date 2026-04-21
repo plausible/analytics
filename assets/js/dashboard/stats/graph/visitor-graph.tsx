@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
 import { fetchTopStats } from './fetch-top-stats'
 import { fetchMainGraph } from './fetch-main-graph'
-import { useStoredInterval } from './interval-picker'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -13,7 +12,8 @@ import { DashboardState } from '../../dashboard-state'
 import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
 import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
-import { useSetDashboardOptions } from './dashboard-options-context'
+import { useGraphIntervalContext } from './graph-interval-context'
+import { useSetImportsIncluded } from './imports-included-context'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
@@ -32,16 +32,7 @@ export default function VisitorGraph({
   const queryClient = useQueryClient()
   const startOfDay = nowForSite(site).startOf('day')
 
-  const { selectedInterval, onIntervalClick, availableIntervals } =
-    useStoredInterval({
-      site: site,
-      to: dashboardState.to,
-      from: dashboardState.from,
-      period: dashboardState.period,
-      comparison: dashboardState.comparison,
-      compare_to: dashboardState.compare_to,
-      compare_from: dashboardState.compare_from
-    })
+  const { selectedInterval } = useGraphIntervalContext()
 
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(
     getStoredMetric(site)
@@ -194,58 +185,25 @@ export default function VisitorGraph({
     }
   }, [queryClient, isRealtime, refetchTopStats, refetchMainGraph])
 
-  const importedSwitchVisible = !['no_imported_data', 'out_of_range'].includes(
+  const switchVisible = !['no_imported_data', 'out_of_range'].includes(
     topStatsQuery.data?.meta.imports_skip_reason as string
   )
-
-  const importedIntervalUnsupportedNotice = useMemo(
-    () =>
-      ['hour', 'minute'].includes(selectedInterval) &&
-      importedSwitchVisible &&
-      dashboardState.with_imported
-        ? {
-            title: 'Imported data not shown in graph',
-            description:
-              'Available as daily totals only. Switch to a daily view to include it.'
-          }
-        : null,
-    [selectedInterval, importedSwitchVisible, dashboardState.with_imported]
-  )
-
-  const importedSwitchDisabled =
+  const switchDisabled =
     topStatsQuery.data?.meta.imports_skip_reason === 'unsupported_query'
 
-  const setDashboardOptions = useSetDashboardOptions()
+  const setImportsIncluded = useSetImportsIncluded()
 
   useEffect(() => {
     if (topStatsQuery.data) {
-      setDashboardOptions({
-        selectedInterval,
-        onIntervalClick,
-        availableIntervals,
-        isRealtime,
-        importedSwitchVisible,
-        importedIntervalUnsupportedNotice,
-        importedSwitchDisabled
-      })
+      setImportsIncluded({ switchVisible, switchDisabled })
     } else {
-      setDashboardOptions(null)
+      setImportsIncluded(null)
     }
-  }, [
-    topStatsQuery.data,
-    selectedInterval,
-    onIntervalClick,
-    availableIntervals,
-    isRealtime,
-    importedSwitchVisible,
-    importedIntervalUnsupportedNotice,
-    importedSwitchDisabled,
-    setDashboardOptions
-  ])
+  }, [topStatsQuery.data, switchVisible, switchDisabled, setImportsIncluded])
 
   useEffect(() => {
-    return () => setDashboardOptions(null)
-  }, [setDashboardOptions])
+    return () => setImportsIncluded(null)
+  }, [setImportsIncluded])
 
   const { heightPx } = useGuessTopStatsHeight(site, topStatsBoundary)
 

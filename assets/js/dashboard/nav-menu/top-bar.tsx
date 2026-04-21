@@ -55,7 +55,7 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
         <SiteSwitcher />
         {showCurrentVisitors && <CurrentVisitors />}
       </div>
-      <div className="flex min-w-0 flex-1">
+      <div className="flex flex-1">
         <FiltersBar
           accessors={{
             topBar: (filtersBarElement) =>

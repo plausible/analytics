@@ -22,11 +22,9 @@ export function ChangeArrow({
   )
 
   if (change > 0) {
-    icon = <ArrowUpRightIcon className={arrowClassName} data-direction="up" />
+    icon = <ArrowUpRightIcon className={arrowClassName} />
   } else if (change < 0) {
-    icon = (
-      <ArrowDownRightIcon className={arrowClassName} data-direction="down" />
-    )
+    icon = <ArrowDownRightIcon className={arrowClassName} />
   }
 
   const formattedChange = hideNumber

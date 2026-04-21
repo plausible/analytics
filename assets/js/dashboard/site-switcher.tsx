@@ -75,8 +75,7 @@ const SiteSwitcherStatic = () => {
       data-testid="site-switcher-static"
       className={classNames(
         popover.toggleButton.classNames.rounded,
-        'gap-x-1.5 px-2.5 font-medium text-gray-700 dark:text-gray-100',
-        '!pl-0'
+        'gap-x-1.5 pl-0 pr-2.5 font-medium text-gray-700 dark:text-gray-100'
       )}
       title={currentSite.domain}
     >

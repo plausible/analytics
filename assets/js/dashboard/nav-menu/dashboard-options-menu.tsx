@@ -8,7 +8,8 @@ import { Toggle } from '../components/toggle'
 import { Spinner } from '../components/icons'
 import classNames from 'classnames'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
-import { useDashboardOptionsContext } from '../stats/graph/dashboard-options-context'
+import { useGraphIntervalContext } from '../stats/graph/graph-interval-context'
+import { useImportsIncludedContext } from '../stats/graph/imports-included-context'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { DashboardPeriod } from '../dashboard-time-periods'
 import { IntervalPicker } from '../stats/graph/interval-picker'
@@ -90,20 +91,12 @@ function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
 }
 
 function DashboardOptionsMenuItems() {
-  const options = useDashboardOptionsContext()!
+  const { selectedInterval, onIntervalClick, availableIntervals } =
+    useGraphIntervalContext()
+  const imports = useImportsIncludedContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  const {
-    selectedInterval,
-    onIntervalClick,
-    availableIntervals,
-    isRealtime,
-    importedSwitchVisible,
-    importedIntervalUnsupportedNotice,
-    importedSwitchDisabled
-  } = options
-
-  const showIntervalSection = !isRealtime && availableIntervals.length > 1
+  const showIntervalSection = availableIntervals.length > 1
 
   const dashboardRouteMatch = useMatch(rootRoute.path)
   const n = availableIntervals.length
@@ -153,20 +146,20 @@ function DashboardOptionsMenuItems() {
               options={availableIntervals}
             />
           )}
-          {!isRealtime && <ExportItem selectedInterval={selectedInterval} />}
-          {importedSwitchVisible && (
+          <ExportItem selectedInterval={selectedInterval} />
+          {imports.status === 'visible' && (
             <>
-              <ImportedSwitchItem disabled={importedSwitchDisabled} />
-              {importedSwitchDisabled ? (
+              <ImportedSwitchItem disabled={imports.disabled} />
+              {imports.disabled ? (
                 <Notice
                   className="m-1"
                   title="Imported data unavailable with current filters."
                 />
               ) : (
-                importedIntervalUnsupportedNotice && (
+                imports.intervalUnsupportedNotice && (
                   <Notice
                     className="m-1"
-                    {...importedIntervalUnsupportedNotice}
+                    {...imports.intervalUnsupportedNotice}
                   />
                 )
               )}
@@ -179,7 +172,7 @@ function DashboardOptionsMenuItems() {
 }
 
 export function DashboardOptionsMenu() {
-  const options = useDashboardOptionsContext()
+  const imports = useImportsIncludedContext()
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
 
@@ -187,7 +180,7 @@ export function DashboardOptionsMenu() {
     return null
   }
 
-  if (options === null) {
+  if (imports.status === 'loading') {
     return (
       <button
         disabled

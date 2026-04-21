@@ -18,8 +18,7 @@ import { useUserContext } from '../user-context'
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
 // where `..` represents an ideally equal length.
 // The following calculations guarantee that.
-const BUFFER_RIGHT_PX = 16 - PILL_X_GAP_PX
-const SEE_MORE_WIDTH_PX = 36
+const SEE_MORE_WIDTH_PX = 32
 const SEE_MORE_RIGHT_MARGIN_PX = PILL_X_GAP_PX
 const SEE_MORE_LEFT_MARGIN_PX = 0
 
@@ -161,8 +160,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
           topBar && leftSection && rightSection
             ? getElementWidthOrNull(topBar)! -
               getElementWidthOrNull(leftSection)! -
-              getElementWidthOrNull(rightSection)! -
-              BUFFER_RIGHT_PX
+              getElementWidthOrNull(rightSection)!
             : null,
         seeMoreWidth:
           SEE_MORE_LEFT_MARGIN_PX +
@@ -188,7 +186,6 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
 
   return (
     <div
-      style={{ paddingRight: BUFFER_RIGHT_PX }}
       className={classNames(
         'flex w-full items-center',
         visibility === null && 'invisible' // hide until we've calculated the positions
@@ -256,10 +253,11 @@ const SeeMoreMenu = ({
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.shadow,
           'justify-center',
-          'relative group',
-          'size-8'
+          'relative group'
         )}
         style={{
+          height: SEE_MORE_WIDTH_PX,
+          width: SEE_MORE_WIDTH_PX,
           marginLeft: SEE_MORE_LEFT_MARGIN_PX,
           marginRight: SEE_MORE_RIGHT_MARGIN_PX
         }}

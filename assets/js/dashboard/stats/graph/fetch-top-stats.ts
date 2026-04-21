@@ -148,7 +148,7 @@ type TopStatItem = {
   comparisonValue?: number
 }
 
-function formatTopStatsData(
+export function formatTopStatsData(
   topStatsResponse: api.QueryApiResponse,
   currentVisitorsResponse: api.QueryApiResponse | null,
   metrics: MetricDef[]
@@ -195,13 +195,26 @@ function formatTopStatsData(
 
   const timeRange = getPartialDayTimeRange(query.date_range)
 
-  return { topStats, meta, from, to, comparingFrom, comparingTo, timeRange }
+  const comparisonTimeRange = query.comparison_date_range
+    ? getPartialDayTimeRange(query.comparison_date_range as [string, string])
+    : null
+
+  return {
+    topStats,
+    meta,
+    from,
+    to,
+    comparingFrom,
+    comparingTo,
+    timeRange,
+    comparisonTimeRange
+  }
 }
+
+const END_OF_DAY = '23:59:59'
 
 // Returns "until HH:MM" when the date range is a partial day (period=day for
 // today, where the range is trimmed to the current time). Returns null otherwise.
-const END_OF_DAY = '23:59:59'
-
 export function getPartialDayTimeRange(
   dateRange: [string, string]
 ): string | null {

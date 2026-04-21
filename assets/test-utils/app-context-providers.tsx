@@ -13,6 +13,8 @@ import { getRouterBasepath } from '../js/dashboard/router'
 import { RoutelessModalsContextProvider } from '../js/dashboard/navigation/routeless-modals-context'
 import { SegmentsContextProvider } from '../js/dashboard/filtering/segments-context'
 import { SavedSegment, SavedSegments } from '../js/dashboard/filtering/segments'
+import { GraphIntervalProvider } from '../js/dashboard/stats/graph/graph-interval-context'
+import { ImportsIncludedProvider } from '../js/dashboard/stats/graph/imports-included-context'
 
 type TestContextProvidersProps = {
   children: ReactNode
@@ -92,7 +94,11 @@ export const TestContextProviders = ({
             <QueryClientProvider client={queryClient}>
               <RoutelessModalsContextProvider>
                 <DashboardStateContextProvider>
-                  {children}
+                  <GraphIntervalProvider>
+                    <ImportsIncludedProvider>
+                      {children}
+                    </ImportsIncludedProvider>
+                  </GraphIntervalProvider>
                 </DashboardStateContextProvider>
               </RoutelessModalsContextProvider>
             </QueryClientProvider>

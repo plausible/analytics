@@ -198,8 +198,8 @@ export default function TopStats({
                 {topStatNumberShort(stat.metric, stat.comparisonValue)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                {data.timeRange
-                  ? `${formatDayShort(parseUTCDate(data.comparingFrom))}, ${data.timeRange}`
+                {data.comparisonTimeRange
+                  ? `${formatDayShort(parseUTCDate(data.comparingFrom))}, ${data.comparisonTimeRange}`
                   : formatDateRange(site, data.comparingFrom, data.comparingTo)}
               </p>
             </div>

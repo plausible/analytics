@@ -21,7 +21,7 @@ it('renders up arrow for positive change', () => {
   const arrowElement = screen.getByTestId('change-arrow')
 
   expect(arrowElement).toHaveTextContent('↑ 1%')
-  expect(arrowElement.children[0]).toHaveAttribute('data-direction', 'up')
+  expect(arrowElement.children[0]).toHaveClass('text-green-500')
 })
 
 it('renders down arrow for negative change', () => {
@@ -30,7 +30,7 @@ it('renders down arrow for negative change', () => {
   const arrowElement = screen.getByTestId('change-arrow')
 
   expect(arrowElement).toHaveTextContent('↓ 10%')
-  expect(arrowElement.children[0]).toHaveAttribute('data-direction', 'down')
+  expect(arrowElement.children[0]).toHaveClass('text-red-500')
 })
 
 it('renders no arrow for no change', () => {
@@ -48,7 +48,7 @@ it('inverts arrow direction for positive bounce_rate change', () => {
   const arrowElement = screen.getByTestId('change-arrow')
 
   expect(arrowElement).toHaveTextContent('↑ 15%')
-  expect(arrowElement.children[0]).toHaveAttribute('data-direction', 'up')
+  expect(arrowElement.children[0]).toHaveClass('text-red-500')
 })
 
 it('inverts arrow direction for negative bounce_rate change', () => {
@@ -57,7 +57,7 @@ it('inverts arrow direction for negative bounce_rate change', () => {
   const arrowElement = screen.getByTestId('change-arrow')
 
   expect(arrowElement).toHaveTextContent('↓ 3%')
-  expect(arrowElement.children[0]).toHaveAttribute('data-direction', 'down')
+  expect(arrowElement.children[0]).toHaveClass('text-green-500')
 })
 
 it('renders with text hidden', () => {
@@ -68,7 +68,7 @@ it('renders with text hidden', () => {
   const arrowElement = screen.getByTestId('change-arrow')
 
   expect(arrowElement).toHaveTextContent('↓')
-  expect(arrowElement.children[0]).toHaveAttribute('data-direction', 'down')
+  expect(arrowElement.children[0]).toHaveClass('text-red-500')
 })
 
 it('renders no content with text hidden and 0 change', () => {
